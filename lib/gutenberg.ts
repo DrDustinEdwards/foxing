@@ -1,0 +1,67 @@
+const GUTENDEX_BASE = 'https://gutendex.com/books'
+
+export interface GutenbergBook {
+  id: number
+  title: string
+  authors: Array<{ name: string; birth_year: number | null; death_year: number | null }>
+  subjects: string[]
+  languages: string[]
+  download_count: number
+  formats: Record<string, string>
+}
+
+export interface GutenbergResponse {
+  count: number
+  next: string | null
+  previous: string | null
+  results: GutenbergBook[]
+}
+
+export async function searchBooks(query: string, page = 1): Promise<GutenbergResponse> {
+  const url = `${GUTENDEX_BASE}/?search=${encodeURIComponent(query)}&page=${page}`
+  const response = await fetch(url)
+  return response.json()
+}
+
+export async function getBooksBySubject(subject: string, page = 1): Promise<GutenbergResponse> {
+  const url = `${GUTENDEX_BASE}/?topic=${encodeURIComponent(subject)}&page=${page}`
+  const response = await fetch(url)
+  return response.json()
+}
+
+export async function getPopularBooks(page = 1): Promise<GutenbergResponse> {
+  const url = `${GUTENDEX_BASE}/?sort=popular&page=${page}`
+  const response = await fetch(url)
+  return response.json()
+}
+
+export async function getBook(id: number): Promise<GutenbergBook> {
+  const url = `${GUTENDEX_BASE}/${id}`
+  const response = await fetch(url)
+  return response.json()
+}
+
+export function getEpubUrl(book: GutenbergBook): string | null {
+  return (
+    book.formats['application/epub+zip'] ||
+    book.formats['application/epub'] ||
+    null
+  )
+}
+
+export function getCoverUrl(book: GutenbergBook): string | null {
+  return book.formats['image/jpeg'] || null
+}
+
+export function getAuthorName(book: GutenbergBook): string {
+  if (book.authors.length === 0) return 'Unknown Author'
+  return book.authors[0].name
+}
+
+export function getAuthorEra(book: GutenbergBook): string {
+  const author = book.authors[0]
+  if (!author) return 'Unknown era'
+  if (author.death_year) return `${author.death_year}`
+  if (author.birth_year) return `b. ${author.birth_year}`
+  return 'Unknown era'
+}
