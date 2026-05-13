@@ -19,3 +19,4 @@ expo-env.d.ts
 /android
 .metro-health-check*
 .claude/
+supabase/.temp/
