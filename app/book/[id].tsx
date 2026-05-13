@@ -12,11 +12,11 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   getBook,
   getCoverUrl,
-  getEpubUrl,
   getAuthorName,
   getAuthorEra,
   type GutenbergBook,
 } from '@/lib/gutenberg'
+import { ensureEpubInStorage } from '@/lib/storage'
 import { supabase } from '@/lib/supabase'
 
 export default function BookDetail() {
@@ -25,6 +25,8 @@ export default function BookDetail() {
   const [book, setBook] = useState<GutenbergBook | null>(null)
   const [loading, setLoading] = useState(true)
   const [savingStatus, setSavingStatus] = useState<string | null>(null)
+  const [preparing, setPreparing] = useState(false)
+  const [prepareError, setPrepareError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!id) return
@@ -45,8 +47,15 @@ export default function BookDetail() {
   }, [id])
 
   async function upsertBookRecord(b: GutenbergBook): Promise<string | null> {
+    setPrepareError(null)
+    setPreparing(true)
+    const epubUrl = await ensureEpubInStorage(b.id)
+    setPreparing(false)
+    if (!epubUrl) {
+      setPrepareError("We couldn't prepare this book for reading. Please try again.")
+      return null
+    }
     const cover = getCoverUrl(b)
-    const epub = getEpubUrl(b)
     const author = getAuthorName(b)
     const { data, error } = await supabase
       .from('books')
@@ -57,7 +66,7 @@ export default function BookDetail() {
           author,
           cover_url: cover,
           source: 'gutenberg',
-          epub_url: epub ?? '',
+          epub_url: epubUrl,
           language: b.languages[0] ?? 'en',
           subjects: b.subjects,
         },
@@ -203,9 +212,20 @@ export default function BookDetail() {
         </View>
 
         <View className="px-4 mt-8 gap-3">
+          {preparing ? (
+            <Text className="text-center text-xs mb-1" style={{ color: '#C4973A' }}>
+              Preparing book…
+            </Text>
+          ) : null}
+          {prepareError ? (
+            <Text className="text-center text-sm mb-1" style={{ color: '#D97757' }}>
+              {prepareError}
+            </Text>
+          ) : null}
+
           <Pressable
             onPress={startReading}
-            disabled={savingStatus === 'reading'}
+            disabled={!!savingStatus}
             className="rounded-xl py-4 items-center"
             style={{ backgroundColor: '#8B6914', opacity: savingStatus ? 0.6 : 1 }}
           >
@@ -220,7 +240,7 @@ export default function BookDetail() {
 
           <Pressable
             onPress={() => addToLibrary('want_to_read')}
-            disabled={savingStatus === 'want_to_read'}
+            disabled={!!savingStatus}
             className="rounded-xl py-4 items-center border"
             style={{ borderColor: '#3D2B1F', opacity: savingStatus ? 0.6 : 1 }}
           >
@@ -233,7 +253,7 @@ export default function BookDetail() {
 
           <Pressable
             onPress={() => addToLibrary('reading')}
-            disabled={savingStatus === 'reading'}
+            disabled={!!savingStatus}
             className="rounded-xl py-4 items-center border"
             style={{ borderColor: '#3D2B1F', opacity: savingStatus ? 0.6 : 1 }}
           >

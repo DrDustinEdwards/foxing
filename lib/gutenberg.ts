@@ -41,16 +41,21 @@ export async function getBook(id: number): Promise<GutenbergBook> {
   return response.json()
 }
 
-export function getEpubUrl(book: GutenbergBook): string | null {
-  return (
-    book.formats['application/epub+zip'] ||
-    book.formats['application/epub'] ||
-    null
-  )
+function toHttps(url: string | null | undefined): string | null {
+  if (!url) return null
+  return url.replace(/^http:\/\/www\.gutenberg\.org/i, 'https://www.gutenberg.org')
+            .replace(/^http:\/\//i, 'https://')
+}
+
+// Used internally by lib/storage.ts to seed a per-book copy into Supabase
+// Storage. UI code should never call this directly — read the Supabase
+// Storage URL off the books table instead.
+export function getEpubUrl(book: Pick<GutenbergBook, 'id'>): string {
+  return `https://aleph.pglaf.org/cache/epub/${book.id}/pg${book.id}.epub`
 }
 
 export function getCoverUrl(book: GutenbergBook): string | null {
-  return book.formats['image/jpeg'] || null
+  return toHttps(book.formats['image/jpeg'] || null)
 }
 
 export function getAuthorName(book: GutenbergBook): string {
