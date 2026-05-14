@@ -15,8 +15,18 @@ web-build/
 *.log
 expo-env.d.ts
 *.tsbuildinfo
-/ios
-/android
 .metro-health-check*
+
+# Native folders are committed (project is off Expo Go and on a dev client).
+# Inside android/, ignore the build/cache artifacts that don't belong in git.
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+android/local.properties
+android/keystores/
+ios/build/
+ios/Pods/
+ios/*.xcuserdata/
 .claude/
 supabase/.temp/
