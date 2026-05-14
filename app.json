@@ -31,6 +31,7 @@
     "plugins": [
       "expo-router",
       "expo-font",
+      "expo-dev-client",
       [
         "expo-splash-screen",
         {
@@ -39,7 +40,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#1a1208"
         }
-      ]
+      ],
+      "./plugins/with-android-desugaring.js"
     ],
     "experiments": {
       "typedRoutes": true
