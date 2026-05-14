@@ -1,6 +1,12 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo } from 'react'
+import { forwardRef, useImperativeHandle, useMemo } from 'react'
 import { Reader, useReader, type Theme } from '@epubjs-react-native/core'
-import { useFileSystem } from '@epubjs-react-native/expo-file-system'
+import { useFileSystem } from '@/lib/reader-file-system'
+
+// On iOS the native text-selection menu intercepts the touch gesture before
+// epub.js's `selected` event reaches React Native, so the bare onSelected
+// callback fires unreliably. The library's `menuItems` API adds entries to
+// that native menu — those entries are user-driven taps, so they always
+// deliver the cfi + selected text back through the message bridge.
 
 export interface ReaderTheme {
   background: string
@@ -37,6 +43,7 @@ function buildTheme(settings: ReaderSettings): Theme {
     body: {
       background: `${settings.theme.background} !important`,
       color: `${settings.theme.text} !important`,
+      'font-size': `${settings.fontSize}px !important`,
       'line-height': `${settings.lineHeight} !important`,
       padding: '16px !important',
     },
@@ -49,6 +56,14 @@ function buildTheme(settings: ReaderSettings): Theme {
 // Single-word selection (no whitespace, at least two letters) → word lookup.
 // Anything longer → passage analysis.
 const WORD_RE = /^[\p{L}\p{N}'-]{2,}$/u
+
+// epub.js CFI strings always start with the "epubcfi(" prefix. Passing a
+// malformed value to initialLocation can leave the rendition stuck on the
+// cover, so fall back to undefined unless the string parses as a CFI.
+function sanitizeCfi(value: string | undefined): string | undefined {
+  if (!value) return undefined
+  return value.startsWith('epubcfi(') ? value : undefined
+}
 
 export const ReaderWebView = forwardRef<ReaderRef, ReaderWebViewProps>(function ReaderWebView(
   {
@@ -69,8 +84,14 @@ export const ReaderWebView = forwardRef<ReaderRef, ReaderWebViewProps>(function 
   useImperativeHandle(
     ref,
     () => ({
-      prev: () => goPrevious(),
-      next: () => goNext(),
+      prev: () => {
+        console.log('[reader] ref.prev() → goPrevious')
+        goPrevious()
+      },
+      next: () => {
+        console.log('[reader] ref.next() → goNext')
+        goNext()
+      },
       goTo: (cfi: string) => goToLocation(cfi),
       applySettings: (settings: ReaderSettings) => {
         changeTheme(buildTheme(settings))
@@ -80,27 +101,77 @@ export const ReaderWebView = forwardRef<ReaderRef, ReaderWebViewProps>(function 
     [goNext, goPrevious, goToLocation, changeTheme, changeFontSize]
   )
 
-  const defaultTheme = useMemo(() => buildTheme(initialSettings), [initialSettings])
+  // Build defaultTheme once per mount from initial settings. The Reader
+  // applies defaultTheme on first display only; runtime updates go through
+  // changeTheme / changeFontSize via applySettings(). Re-emitting a new
+  // defaultTheme on every parent render would re-flow the rendition and
+  // can leave page-turn gestures stuck mid-transition.
+  const defaultTheme = useMemo(
+    () => buildTheme(initialSettings),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [],
+  )
 
-  // Apply font size once the rendition mounts. defaultTheme handles colors
-  // and line-height; changeFontSize is the only way to set initial font size.
-  useEffect(() => {
-    changeFontSize(`${initialSettings.fontSize}px`)
-  }, [changeFontSize, initialSettings.fontSize])
+  const safeInitialLocation = sanitizeCfi(initialCfi)
+  if (initialCfi && !safeInitialLocation) {
+    console.log('[reader] dropping malformed initialCfi:', initialCfi)
+  }
 
   return (
     <Reader
       src={epubUrl}
       fileSystem={useFileSystem}
-      initialLocation={initialCfi}
+      initialLocation={safeInitialLocation}
       defaultTheme={defaultTheme}
       flow="paginated"
-      enableSwipe
+      enableSwipe={true}
       enableSelection
       allowScriptedContent
-      onReady={() => onReady?.()}
-      onDisplayError={(reason) => onError?.(reason || 'Failed to display book')}
-      onLocationChange={(_total, currentLocation, progress, currentSection) => {
+      menuItems={[
+        {
+          label: 'Look up',
+          action: (_cfiRange, text) => {
+            const trimmed = text.trim()
+            console.log('[reader-webview] menu Look up', {
+              chars: trimmed.length,
+              preview: trimmed.slice(0, 40),
+            })
+            if (!trimmed) return true
+            if (WORD_RE.test(trimmed)) {
+              onWordTap?.(trimmed, trimmed)
+            } else {
+              onPassageSelect?.(trimmed)
+            }
+            return true
+          },
+        },
+        {
+          label: 'Analyze',
+          action: (_cfiRange, text) => {
+            const trimmed = text.trim()
+            console.log('[reader-webview] menu Analyze', {
+              chars: trimmed.length,
+            })
+            if (trimmed) onPassageSelect?.(trimmed)
+            return true
+          },
+        },
+      ]}
+      onReady={(totalLocations, currentLocation, progress) => {
+        console.log('[reader] onReady', { totalLocations, progress, cfi: currentLocation?.start?.cfi })
+        onReady?.()
+      }}
+      onDisplayError={(reason) => {
+        console.log('[reader] onDisplayError', reason)
+        onError?.(reason || 'Failed to display book')
+      }}
+      onLocationChange={(total, currentLocation, progress, currentSection) => {
+        console.log('[reader] onLocationChange', {
+          cfi: currentLocation?.start?.cfi,
+          progress,
+          total,
+          section: currentSection?.label,
+        })
         onLocationChange?.(currentLocation.start.cfi, progress)
         if (currentSection && onChapterChange) {
           onChapterChange({ title: currentSection.label || '', index: 0 })
@@ -108,6 +179,10 @@ export const ReaderWebView = forwardRef<ReaderRef, ReaderWebViewProps>(function 
       }}
       onSelected={(selectedText, _cfiRange) => {
         const text = selectedText.trim()
+        console.log('[reader-webview] onSelected fired', {
+          chars: text.length,
+          preview: text.slice(0, 40),
+        })
         if (!text) return
         if (WORD_RE.test(text)) {
           // We don't have the surrounding sentence from the library's

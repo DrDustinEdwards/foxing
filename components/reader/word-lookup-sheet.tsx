@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { View, Text, Modal, Pressable, ActivityIndicator, ScrollView } from 'react-native'
 import { lookupWord } from '@/lib/claude'
 import { supabase } from '@/lib/supabase'
+import { useColors } from '@/constants/colors'
 
 interface WordLookupSheetProps {
   visible: boolean
@@ -24,18 +25,21 @@ export function WordLookupSheet({
   era,
   onClose,
 }: WordLookupSheetProps) {
+  const colors = useColors()
   const [definition, setDefinition] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!visible || !word) return
+    console.log('[word-lookup] open', { word, bookTitle })
     setDefinition(null)
     setError(null)
     setLoading(true)
     ;(async () => {
       try {
         const result = await lookupWord(word, sentence, bookTitle, author, era)
+        console.log('[word-lookup] result', { word, chars: result.length })
         setDefinition(result)
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
@@ -48,7 +52,9 @@ export function WordLookupSheet({
           })
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Lookup failed')
+        const message = e instanceof Error ? e.message : 'Lookup failed'
+        console.warn('[word-lookup] error', message)
+        setError(message)
       } finally {
         setLoading(false)
       }
@@ -60,26 +66,31 @@ export function WordLookupSheet({
       <Pressable className="flex-1 justify-end" onPress={onClose}>
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl px-6 pt-6 pb-10"
-          style={{ backgroundColor: '#2A1F0F', maxHeight: '75%' }}
+          className="rounded-t-3xl px-6 pt-6 pb-10 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ maxHeight: '75%' }}
         >
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-2xl font-serif" style={{ color: '#C4973A' }}>
+            <Text className="font-display text-2xl text-brand-text-light dark:text-brand-text-dark">
               {word}
             </Text>
             <Pressable onPress={onClose}>
-              <Text className="text-base" style={{ color: '#8B6914' }}>
+              <Text className="font-ui text-base text-brand-text-light dark:text-brand-text-dark">
                 Close
               </Text>
             </Pressable>
           </View>
           <ScrollView>
             {loading ? (
-              <ActivityIndicator color="#8B6914" />
+              <ActivityIndicator color={colors.brandUi} />
             ) : error ? (
-              <Text style={{ color: '#D32F2F' }}>{error}</Text>
+              <View className="flex-row items-start gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
+                <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+                <Text className="font-ui flex-1 text-error-light dark:text-error-dark">
+                  {error}
+                </Text>
+              </View>
             ) : (
-              <Text className="text-base leading-7" style={{ color: '#E8D5B0' }}>
+              <Text className="font-body text-base leading-7 text-text-primary-light dark:text-text-primary-dark">
                 {definition}
               </Text>
             )}

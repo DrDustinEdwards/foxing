@@ -17,6 +17,12 @@ interface SettingsSheetProps {
 const FONT_SIZES = [14, 16, 18, 20, 22, 24]
 const LINE_HEIGHTS = [1.3, 1.5, 1.7, 1.9, 2.1]
 
+const READING_SWATCH: Record<ThemeKey, { bg: string; text: string }> = {
+  light: { bg: Colors.light.bgReading, text: Colors.light.textPrimary },
+  sepia: { bg: Colors.light.bgReadingSepia, text: Colors.light.textOnSepia },
+  dark: { bg: Colors.dark.bgReading, text: Colors.dark.textPrimary },
+}
+
 export function SettingsSheet({
   visible,
   fontSize,
@@ -32,19 +38,18 @@ export function SettingsSheet({
       <Pressable className="flex-1 justify-end" onPress={onClose}>
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl px-6 pt-6 pb-10"
-          style={{ backgroundColor: '#2A1F0F' }}
+          className="rounded-t-3xl px-6 pt-6 pb-10 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
         >
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-serif" style={{ color: '#C4973A' }}>
+            <Text className="font-display text-lg text-text-primary-light dark:text-text-primary-dark">
               Reading settings
             </Text>
             <Pressable onPress={onClose}>
-              <Text style={{ color: '#8B6914' }}>Done</Text>
+              <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">Done</Text>
             </Pressable>
           </View>
 
-          <Text className="text-sm mb-2" style={{ color: '#8B6914' }}>
+          <Text className="font-ui text-sm mb-2 text-text-secondary-light dark:text-text-secondary-dark">
             Font size
           </Text>
           <View className="flex-row gap-2 mb-5">
@@ -54,20 +59,27 @@ export function SettingsSheet({
                 <Pressable
                   key={s}
                   onPress={() => onChangeFontSize(s)}
-                  className="rounded-lg px-3 py-2"
-                  style={{
-                    backgroundColor: active ? '#8B6914' : '#1A1208',
-                    borderWidth: 1,
-                    borderColor: active ? '#C4973A' : '#3D2B1F',
-                  }}
+                  className={
+                    active
+                      ? 'rounded-lg px-3 py-2 border bg-brand-ui-light dark:bg-brand-ui-dark border-border-interactive-light dark:border-border-interactive-dark'
+                      : 'rounded-lg px-3 py-2 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark'
+                  }
                 >
-                  <Text style={{ color: active ? '#FDF8F0' : '#E8D5B0' }}>{s}</Text>
+                  <Text
+                    className={
+                      active
+                        ? 'font-ui text-text-on-brand'
+                        : 'font-ui text-text-primary-light dark:text-text-primary-dark'
+                    }
+                  >
+                    {s}
+                  </Text>
                 </Pressable>
               )
             })}
           </View>
 
-          <Text className="text-sm mb-2" style={{ color: '#8B6914' }}>
+          <Text className="font-ui text-sm mb-2 text-text-secondary-light dark:text-text-secondary-dark">
             Line height
           </Text>
           <View className="flex-row gap-2 mb-5">
@@ -77,48 +89,49 @@ export function SettingsSheet({
                 <Pressable
                   key={h}
                   onPress={() => onChangeLineHeight(h)}
-                  className="rounded-lg px-3 py-2"
-                  style={{
-                    backgroundColor: active ? '#8B6914' : '#1A1208',
-                    borderWidth: 1,
-                    borderColor: active ? '#C4973A' : '#3D2B1F',
-                  }}
+                  className={
+                    active
+                      ? 'rounded-lg px-3 py-2 border bg-brand-ui-light dark:bg-brand-ui-dark border-border-interactive-light dark:border-border-interactive-dark'
+                      : 'rounded-lg px-3 py-2 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark'
+                  }
                 >
-                  <Text style={{ color: active ? '#FDF8F0' : '#E8D5B0' }}>{h}</Text>
+                  <Text
+                    className={
+                      active
+                        ? 'font-ui text-text-on-brand'
+                        : 'font-ui text-text-primary-light dark:text-text-primary-dark'
+                    }
+                  >
+                    {h}
+                  </Text>
                 </Pressable>
               )
             })}
           </View>
 
-          <Text className="text-sm mb-2" style={{ color: '#8B6914' }}>
-            Theme
+          <Text className="font-ui text-sm mb-2 text-text-secondary-light dark:text-text-secondary-dark">
+            Reading theme
           </Text>
           <View className="flex-row gap-2">
             {(['light', 'sepia', 'dark'] as const).map((t) => {
               const active = t === theme
-              const swatch =
-                t === 'light'
-                  ? Colors.background.light
-                  : t === 'sepia'
-                  ? Colors.background.sepia
-                  : Colors.background.dark
+              const swatch = READING_SWATCH[t]
               return (
                 <Pressable
                   key={t}
                   onPress={() => onChangeTheme(t)}
                   className="flex-1 rounded-lg py-3 items-center"
                   style={{
-                    backgroundColor: swatch,
+                    backgroundColor: swatch.bg,
                     borderWidth: 2,
-                    borderColor: active ? '#C4973A' : 'transparent',
+                    borderColor: active ? Colors.light.brandUi : 'transparent',
                   }}
                 >
                   <Text
-                    style={{
-                      color: t === 'dark' ? Colors.text.dark : Colors.text.light,
-                      textTransform: 'capitalize',
-                    }}
+                    className="font-ui capitalize"
+                    style={{ color: swatch.text }}
                   >
+                    {active ? '◉ ' : ''}
                     {t}
                   </Text>
                 </Pressable>

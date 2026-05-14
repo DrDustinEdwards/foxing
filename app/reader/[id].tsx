@@ -3,7 +3,7 @@ import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { supabase } from '@/lib/supabase'
-import { Colors } from '@/constants/colors'
+import { Colors, useColors } from '@/constants/colors'
 import {
   ReaderWebView,
   type ReaderRef,
@@ -22,13 +22,16 @@ interface BookRow {
   epub_url: string
 }
 
-const THEMES: Record<ThemeKey, { background: string; text: string }> = {
-  light: { background: Colors.background.light, text: Colors.text.light },
-  sepia: { background: Colors.background.sepia, text: Colors.text.sepia },
-  dark: { background: Colors.background.dark, text: Colors.text.dark },
+// Reading canvas modes are independent of the app's UI theme — they're set by
+// the reader. The canvas always uses the bg-reading family of tokens.
+const READING_THEMES: Record<ThemeKey, { background: string; text: string }> = {
+  light: { background: Colors.light.bgReading, text: Colors.light.textPrimary },
+  sepia: { background: Colors.light.bgReadingSepia, text: Colors.light.textOnSepia },
+  dark: { background: Colors.dark.bgReading, text: Colors.dark.textPrimary },
 }
 
 export default function Reader() {
+  const colors = useColors()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const readerRef = useRef<ReaderRef>(null)
@@ -42,7 +45,8 @@ export default function Reader() {
   const [book, setBook] = useState<BookRow | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialCfi, setInitialCfi] = useState<string | null>(null)
-  const [chrome, setChrome] = useState(true)
+  const [readerState, setReaderState] = useState<'loading' | 'ready' | 'error'>('loading')
+  const [readerError, setReaderError] = useState<string | null>(null)
 
   const [fontSize, setFontSize] = useState(18)
   const [lineHeight, setLineHeight] = useState(1.7)
@@ -61,15 +65,17 @@ export default function Reader() {
     if (!id) return
     let mounted = true
     ;(async () => {
-      const { data: bookData } = await supabase
+      const { data: bookData, error: bookError } = await supabase
         .from('books')
         .select('id, title, author, epub_url')
         .eq('id', id)
         .single()
+      console.log('[reader] book query result', { bookData, error: bookError?.message })
       if (!mounted || !bookData) {
         setLoading(false)
         return
       }
+      console.log('[reader] epub_url being passed to WebView:', bookData.epub_url)
       setBook(bookData as BookRow)
 
       const { data: { user } } = await supabase.auth.getUser()
@@ -153,32 +159,32 @@ export default function Reader() {
     readerRef.current?.applySettings({
       fontSize: fs,
       lineHeight: lh,
-      theme: THEMES[tk],
+      theme: READING_THEMES[tk],
     })
   }
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center" style={{ backgroundColor: '#1A1208' }}>
-        <ActivityIndicator color="#8B6914" />
+      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+        <ActivityIndicator color={colors.brandUi} />
       </SafeAreaView>
     )
   }
 
   if (!book) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-8" style={{ backgroundColor: '#1A1208' }}>
-        <Text className="mb-4" style={{ color: '#E8D5B0' }}>
+      <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
+        <Text className="font-ui mb-4 text-text-primary-light dark:text-text-primary-dark">
           We couldn't load that book.
         </Text>
         <Pressable onPress={() => router.back()}>
-          <Text style={{ color: '#C4973A' }}>← Back</Text>
+          <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">← Back</Text>
         </Pressable>
       </SafeAreaView>
     )
   }
 
-  const themeColors = THEMES[themeKey]
+  const themeColors = READING_THEMES[themeKey]
   const initialSettings: ReaderSettings = {
     fontSize,
     lineHeight,
@@ -187,59 +193,130 @@ export default function Reader() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
-      <Pressable className="flex-1" onPress={() => setChrome((v) => !v)}>
-        <ReaderWebView
-          ref={readerRef}
-          epubUrl={book.epub_url}
-          initialCfi={initialCfi ?? undefined}
-          initialSettings={initialSettings}
-          onLocationChange={onLocation}
-          onChapterChange={(c) => setCurrentChapter({ title: c.title, index: 0 })}
-          onWordTap={(word, sentence) => setWordSheet({ word, sentence })}
-          onPassageSelect={(passage) => setPassageSheet(passage)}
-        />
-      </Pressable>
+      {/* No outer Pressable — on Android it claims the touch responder
+          and blocks the WebView from initiating native text selection.
+          Chrome (Close/Recap, page-turn arrows, Aa, Chat) is always
+          visible as a result. */}
+      <ReaderWebView
+        ref={readerRef}
+        epubUrl={book.epub_url}
+        initialCfi={initialCfi ?? undefined}
+        initialSettings={initialSettings}
+        onReady={() => {
+          setReaderState('ready')
+          setReaderError(null)
+        }}
+        onError={(message) => {
+          console.log('[reader] error', message)
+          setReaderState('error')
+          setReaderError(message)
+        }}
+        onLocationChange={onLocation}
+        onChapterChange={(c) => setCurrentChapter({ title: c.title, index: 0 })}
+        onWordTap={(word, sentence) => {
+          console.log('[reader] word tap', { word })
+          setWordSheet({ word, sentence })
+        }}
+        onPassageSelect={(passage) => {
+          console.log('[reader] passage select', { chars: passage.length })
+          setPassageSheet(passage)
+        }}
+      />
 
-      {chrome ? (
-        <SafeAreaView
-          edges={['top']}
-          pointerEvents="box-none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-          }}
+      {readerState === 'loading' ? (
+        <View
+          pointerEvents="none"
+          className="absolute inset-0 items-center justify-center"
+          style={{ backgroundColor: themeColors.background }}
         >
+          <ActivityIndicator color={colors.brandUi} />
+          <Text
+            className="font-ui mt-3 text-sm"
+            style={{ color: themeColors.text, opacity: 0.7 }}
+          >
+            Loading book…
+          </Text>
+        </View>
+      ) : null}
+
+      {readerState === 'error' ? (
+        <View
+          className="absolute inset-0 items-center justify-center px-6"
+          style={{ backgroundColor: themeColors.background }}
+        >
+          <View className="flex-row items-center gap-2 mb-3">
+            <Text className="font-ui text-error-light dark:text-error-dark text-lg">✕</Text>
+            <Text
+              className="font-ui-medium text-lg text-center"
+              style={{ color: themeColors.text }}
+            >
+              We couldn't open this book.
+            </Text>
+          </View>
+          <Text
+            className="font-ui text-sm mb-6 text-center"
+            style={{ color: themeColors.text, opacity: 0.7 }}
+          >
+            {readerError}
+          </Text>
+          <Text
+            className="font-mono text-xs mb-6 text-center"
+            style={{ color: themeColors.text, opacity: 0.5 }}
+          >
+            {book.epub_url}
+          </Text>
+          <Pressable onPress={() => router.back()}>
+            <Text className="font-ui text-base" style={{ color: colors.brandUi }}>
+              ← Back to library
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
+
+      <SafeAreaView
+        edges={['top']}
+        pointerEvents="box-none"
+        className="absolute top-0 left-0 right-0"
+      >
           <View
             className="flex-row items-center justify-between px-4 py-2"
             style={{ backgroundColor: themeColors.background, opacity: 0.95 }}
           >
             <Pressable onPress={() => router.back()}>
-              <Text style={{ color: Colors.primary, fontSize: 16 }}>Close</Text>
+              <Text className="font-ui text-base" style={{ color: colors.brandUi }}>
+                Close
+              </Text>
             </Pressable>
             <View className="flex-1 mx-3">
-              <Text numberOfLines={1} className="font-semibold text-center" style={{ color: themeColors.text }}>
+              <Text
+                numberOfLines={1}
+                className="font-ui-medium text-center"
+                style={{ color: themeColors.text }}
+              >
                 {book.title}
               </Text>
               {currentChapter.title ? (
-                <Text numberOfLines={1} className="text-center text-xs" style={{ color: Colors.primary }}>
+                <Text
+                  numberOfLines={1}
+                  className="font-ui text-center text-xs"
+                  style={{ color: colors.brandText }}
+                >
                   {currentChapter.title}
                 </Text>
               ) : null}
             </View>
             <Pressable onPress={() => setSummaryOpen(true)}>
-              <Text style={{ color: Colors.primary, fontSize: 16 }}>Recap</Text>
+              <Text className="font-ui text-base" style={{ color: colors.brandUi }}>
+                Recap
+              </Text>
             </Pressable>
           </View>
         </SafeAreaView>
-      ) : null}
 
-      {chrome ? (
         <SafeAreaView
           edges={['bottom']}
           pointerEvents="box-none"
-          style={{ position: 'absolute', bottom: 0, left: 0, right: 0 }}
+          className="absolute bottom-0 left-0 right-0"
         >
           <View
             className="px-4 py-3"
@@ -247,37 +324,42 @@ export default function Reader() {
           >
             <View className="flex-row items-center mb-3">
               <Pressable onPress={() => readerRef.current?.prev()} className="px-3 py-2">
-                <Text style={{ color: Colors.primary, fontSize: 18 }}>‹</Text>
+                <Text className="font-ui text-lg" style={{ color: colors.brandUi }}>‹</Text>
               </Pressable>
               <View className="flex-1 mx-3">
-                <View className="h-1 rounded-full" style={{ backgroundColor: Colors.border.dark }}>
+                <View
+                  className="h-1 rounded-full"
+                  style={{ backgroundColor: colors.borderSubtle }}
+                >
                   <View
                     className="h-1 rounded-full"
                     style={{
-                      backgroundColor: Colors.primary,
+                      backgroundColor: colors.brandUi,
                       width: `${Math.round(progress * 100)}%`,
                     }}
                   />
                 </View>
-                <Text className="text-xs mt-1 text-center" style={{ color: Colors.primary }}>
+                <Text
+                  className="font-mono text-xs mt-1 text-center"
+                  style={{ color: colors.brandText }}
+                >
                   {Math.round(progress * 100)}%
                 </Text>
               </View>
               <Pressable onPress={() => readerRef.current?.next()} className="px-3 py-2">
-                <Text style={{ color: Colors.primary, fontSize: 18 }}>›</Text>
+                <Text className="font-ui text-lg" style={{ color: colors.brandUi }}>›</Text>
               </Pressable>
             </View>
             <View className="flex-row justify-around">
               <Pressable onPress={() => setShowSettings(true)} className="py-2 px-4">
-                <Text style={{ color: Colors.primary }}>Aa</Text>
+                <Text className="font-display" style={{ color: colors.brandUi }}>Aa</Text>
               </Pressable>
               <Pressable onPress={() => setChatOpen(true)} className="py-2 px-4">
-                <Text style={{ color: Colors.primary }}>Chat</Text>
+                <Text className="font-ui" style={{ color: colors.brandUi }}>Chat</Text>
               </Pressable>
             </View>
           </View>
         </SafeAreaView>
-      ) : null}
 
       <SettingsSheet
         visible={showSettings}

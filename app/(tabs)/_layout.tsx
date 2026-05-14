@@ -1,16 +1,21 @@
 import { Tabs } from 'expo-router'
-import { Colors } from '@/constants/colors'
+import { useColors } from '@/constants/colors'
+import { Fonts } from '@/constants/fonts'
 
 export default function TabsLayout() {
+  const colors = useColors()
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: Colors.primary,
-        tabBarInactiveTintColor: '#666',
+        tabBarActiveTintColor: colors.brandText,
+        tabBarInactiveTintColor: colors.textTertiary,
+        tabBarLabelStyle: {
+          fontFamily: Fonts.ui,
+        },
         tabBarStyle: {
-          backgroundColor: Colors.background.dark,
-          borderTopColor: Colors.border.dark,
+          backgroundColor: colors.bgSurface,
+          borderTopColor: colors.borderSubtle,
         },
       }}
     >

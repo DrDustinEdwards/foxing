@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
 import { supabase } from '@/lib/supabase'
+import { useColors } from '@/constants/colors'
 
 interface Profile {
   display_name: string | null
@@ -17,6 +18,7 @@ interface Stats {
 }
 
 export default function ProfileScreen() {
+  const colors = useColors()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [stats, setStats] = useState<Stats>({ finished: 0, streak: 0, pages: 0, vocab: 0 })
   const [loading, setLoading] = useState(true)
@@ -78,25 +80,24 @@ export default function ProfileScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1208' }}>
+    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         <View className="items-center mt-4 mb-8">
-          <View
-            className="w-24 h-24 rounded-full items-center justify-center mb-3"
-            style={{ backgroundColor: '#2A1F0F' }}
-          >
-            <Text className="text-3xl" style={{ color: '#C4973A' }}>
+          <View className="w-24 h-24 rounded-full items-center justify-center mb-3 bg-brand-subtle-light dark:bg-brand-subtle-dark">
+            <Text className="font-display text-3xl text-brand-subtle-text-light dark:text-brand-subtle-text-dark">
               {profile?.display_name?.[0]?.toUpperCase() ?? '?'}
             </Text>
           </View>
-          <Text className="text-2xl font-serif" style={{ color: '#E8D5B0' }}>
+          <Text className="font-display text-2xl text-text-primary-light dark:text-text-primary-dark">
             {profile?.display_name ?? 'Reader'}
           </Text>
-          <Text style={{ color: '#8B6914' }}>@{profile?.username ?? 'reader'}</Text>
+          <Text className="font-mono text-text-tertiary-light dark:text-text-tertiary-dark">
+            @{profile?.username ?? 'reader'}
+          </Text>
         </View>
 
         {loading ? (
-          <ActivityIndicator color="#8B6914" />
+          <ActivityIndicator color={colors.brandUi} />
         ) : (
           <View className="flex-row flex-wrap justify-between mb-8">
             <StatCard label="Books finished" value={stats.finished} />
@@ -108,10 +109,10 @@ export default function ProfileScreen() {
 
         <Pressable
           onPress={signOut}
-          className="rounded-xl py-4 items-center"
-          style={{ backgroundColor: '#2A1F0F', borderWidth: 1, borderColor: '#3D2B1F' }}
+          className="flex-row justify-center items-center gap-2 rounded-xl py-4 border border-border-interactive-light dark:border-border-interactive-dark bg-bg-surface-light dark:bg-bg-surface-dark"
         >
-          <Text style={{ color: '#D32F2F' }}>Sign out</Text>
+          <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+          <Text className="font-ui text-error-light dark:text-error-dark">Sign out</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -121,13 +122,13 @@ export default function ProfileScreen() {
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
     <View
-      className="rounded-xl p-4 mb-3"
-      style={{ width: '48%', backgroundColor: '#2A1F0F' }}
+      className="rounded-xl p-4 mb-3 bg-bg-surface-light dark:bg-bg-surface-dark border border-border-subtle-light dark:border-border-subtle-dark"
+      style={{ width: '48%' }}
     >
-      <Text className="text-3xl font-serif" style={{ color: '#C4973A' }}>
+      <Text className="font-display text-3xl text-brand-text-light dark:text-brand-text-dark">
         {value}
       </Text>
-      <Text className="text-xs mt-1" style={{ color: '#8B6914' }}>
+      <Text className="font-ui text-xs mt-1 text-text-tertiary-light dark:text-text-tertiary-dark">
         {label}
       </Text>
     </View>

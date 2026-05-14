@@ -1,14 +1,39 @@
 import { useEffect, useState } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
-import { View, ActivityIndicator } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as Linking from 'expo-linking'
+import * as SplashScreen from 'expo-splash-screen'
+import { useFonts } from 'expo-font'
 import { ReaderProvider } from '@epubjs-react-native/core'
 import { Session } from '@supabase/supabase-js'
+import {
+  Fraunces_300Light,
+  Fraunces_600SemiBold,
+  Fraunces_700Bold,
+  Fraunces_300Light_Italic,
+  Fraunces_600SemiBold_Italic,
+  Fraunces_700Bold_Italic,
+} from '@expo-google-fonts/fraunces'
+import {
+  SourceSerif4_300Light,
+  SourceSerif4_400Regular,
+  SourceSerif4_600SemiBold,
+  SourceSerif4_400Regular_Italic,
+} from '@expo-google-fonts/source-serif-4'
+import { DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans'
+import { DMMono_400Regular, DMMono_500Medium } from '@expo-google-fonts/dm-mono'
 import { supabase } from '@/lib/supabase'
-import { Colors } from '@/constants/colors'
 import '../global.css'
+
+// Keep the splash screen up until both auth and fonts are ready. This prevents
+// the visible flash of the platform fallback typeface that happens when the
+// app paints with a system font and then re-renders once the bundled font
+// asset registers.
+SplashScreen.preventAutoHideAsync().catch(() => {
+  // ignore — preventAutoHideAsync rejects if the splash already auto-hid
+  // (e.g. during fast refresh). It's not actionable.
+})
 
 // Parse tokens out of a Supabase auth deep link. Email-confirmation links
 // land here as foxing://auth/callback#access_token=...&refresh_token=...
@@ -43,14 +68,52 @@ async function handleAuthDeepLink(url: string) {
 
 export default function RootLayout() {
   const [session, setSession] = useState<Session | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [authLoading, setAuthLoading] = useState(true)
+  const [splashTimeoutReached, setSplashTimeoutReached] = useState(false)
   const segments = useSegments()
   const router = useRouter()
+
+  const [fontsLoaded, fontsError] = useFonts({
+    Fraunces_300Light,
+    Fraunces_600SemiBold,
+    Fraunces_700Bold,
+    Fraunces_300Light_Italic,
+    Fraunces_600SemiBold_Italic,
+    Fraunces_700Bold_Italic,
+    SourceSerif4_300Light,
+    SourceSerif4_400Regular,
+    SourceSerif4_600SemiBold,
+    SourceSerif4_400Regular_Italic,
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMMono_400Regular,
+    DMMono_500Medium,
+  })
+
+  useEffect(() => {
+    console.log('[boot] fonts state', { fontsLoaded, fontsError: fontsError?.message })
+    if (fontsError) {
+      // A font failure shouldn't block the app forever — log and continue with
+      // platform fallbacks. Visual regression is preferable to a frozen splash.
+      console.warn('[fonts] failed to load', fontsError)
+    }
+  }, [fontsLoaded, fontsError])
+
+  // Hard ceiling on how long the splash can stay up. If something hangs (font
+  // load stuck, auth network call never resolving, etc.) we'd rather show the
+  // app with platform fallbacks than freeze on the splash forever.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      console.warn('[boot] splash timeout reached — forcing ready')
+      setSplashTimeoutReached(true)
+    }, 8000)
+    return () => clearTimeout(t)
+  }, [])
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
-      setLoading(false)
+      setAuthLoading(false)
     })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -75,7 +138,7 @@ export default function RootLayout() {
   }, [])
 
   useEffect(() => {
-    if (loading) return
+    if (authLoading) return
 
     const inAuthGroup = segments[0] === '(auth)'
 
@@ -84,15 +147,31 @@ export default function RootLayout() {
     } else if (session && inAuthGroup) {
       router.replace('/(tabs)')
     }
-  }, [session, segments, loading])
+  }, [session, segments, authLoading])
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Colors.background.dark }}>
-        <ActivityIndicator color={Colors.primary} />
-      </View>
-    )
-  }
+  const ready =
+    splashTimeoutReached || ((fontsLoaded || !!fontsError) && !authLoading)
+
+  // Hide the native splash as soon as we're ready. useEffect runs after every
+  // render where `ready` is true, so this is more reliable than onLayout
+  // (which only fires after the root view actually paints — and never fires
+  // at all if something throws before then).
+  useEffect(() => {
+    if (!ready) return
+    console.log('[boot] ready — hiding splash', {
+      fontsLoaded,
+      fontsError: fontsError?.message,
+      authLoading,
+      timedOut: splashTimeoutReached,
+    })
+    SplashScreen.hideAsync().catch((e) => {
+      console.warn('[boot] hideAsync failed', e)
+    })
+  }, [ready, fontsLoaded, fontsError, authLoading, splashTimeoutReached])
+
+  // Render nothing until ready. The native splash stays up because we called
+  // preventAutoHideAsync at module load.
+  if (!ready) return null
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

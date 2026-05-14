@@ -16,24 +16,30 @@ export function BookCard({ book, variant = 'grid' }: BookCardProps) {
 
   return (
     <Pressable onPress={() => router.push(`/book/${book.id}`)} className={widthClass}>
-      <View
-        className="rounded-lg overflow-hidden aspect-[2/3] mb-2"
-        style={{ backgroundColor: '#2A1F0F' }}
-      >
+      <View className="rounded-lg overflow-hidden aspect-[2/3] mb-2 bg-bg-sunken-light dark:bg-bg-sunken-dark">
         {cover ? (
           <Image source={{ uri: cover }} className="w-full h-full" resizeMode="cover" />
         ) : (
           <View className="flex-1 items-center justify-center p-2">
-            <Text className="text-center text-xs" style={{ color: '#C4973A' }} numberOfLines={4}>
+            <Text
+              className="font-display text-center text-xs text-text-secondary-light dark:text-text-secondary-dark"
+              numberOfLines={4}
+            >
               {book.title}
             </Text>
           </View>
         )}
       </View>
-      <Text className="text-sm font-semibold" style={{ color: '#E8D5B0' }} numberOfLines={2}>
+      <Text
+        className="font-ui-medium text-sm text-text-primary-light dark:text-text-primary-dark"
+        numberOfLines={2}
+      >
         {book.title}
       </Text>
-      <Text className="text-xs" style={{ color: '#8B6914' }} numberOfLines={1}>
+      <Text
+        className="font-ui text-xs text-text-tertiary-light dark:text-text-tertiary-dark"
+        numberOfLines={1}
+      >
         {author}
       </Text>
     </Pressable>
