@@ -1,14 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { type Locator } from 'react-native-readium'
 import { supabase } from '@/lib/supabase'
 import { Colors, useColors } from '@/constants/colors'
 import {
-  ReaderWebView,
+  ReaderReadium,
   type ReaderRef,
   type ReaderSettings,
-} from '@/components/reader/reader-webview'
+} from '@/components/reader/reader-readium'
 import { SettingsSheet, type ThemeKey } from '@/components/reader/settings-sheet'
 import { WordLookupSheet } from '@/components/reader/word-lookup-sheet'
 import { PassageAnalysisSheet } from '@/components/reader/passage-analysis-sheet'
@@ -30,21 +31,41 @@ const READING_THEMES: Record<ThemeKey, { background: string; text: string }> = {
   dark: { background: Colors.dark.bgReading, text: Colors.dark.textPrimary },
 }
 
+const CHROME_AUTO_HIDE_MS = 4000
+
+// Stored progress is the JSON-serialized Locator. Old @epubjs-react-native
+// CFI strings are not compatible — try to parse, fall back to undefined so
+// Readium starts at the beginning. (Acceptable one-time migration cost; the
+// reader will re-save in Locator format the moment the user moves a page.)
+function parseStoredLocator(stored: string | null | undefined): Locator | undefined {
+  if (!stored) return undefined
+  try {
+    const parsed = JSON.parse(stored)
+    if (parsed && typeof parsed === 'object' && typeof parsed.href === 'string') {
+      return parsed as Locator
+    }
+  } catch {
+    // Not JSON — assume it's a legacy epubcfi string we can't restore.
+  }
+  return undefined
+}
+
 export default function Reader() {
   const colors = useColors()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const readerRef = useRef<ReaderRef>(null)
   const sessionIdRef = useRef<string | null>(null)
-  const positionRef = useRef<{ cfi: string | null; percentage: number }>({
-    cfi: null,
-    percentage: 0,
+  const positionRef = useRef<{ locator: Locator | null; progression: number }>({
+    locator: null,
+    progression: 0,
   })
   const lastSaveRef = useRef<number>(Date.now())
+  const chromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [book, setBook] = useState<BookRow | null>(null)
   const [loading, setLoading] = useState(true)
-  const [initialCfi, setInitialCfi] = useState<string | null>(null)
+  const [initialLocator, setInitialLocator] = useState<Locator | undefined>(undefined)
   const [readerState, setReaderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [readerError, setReaderError] = useState<string | null>(null)
 
@@ -52,6 +73,9 @@ export default function Reader() {
   const [lineHeight, setLineHeight] = useState(1.7)
   const [themeKey, setThemeKey] = useState<ThemeKey>('dark')
   const [showSettings, setShowSettings] = useState(false)
+
+  // Chrome starts hidden; tap toggles; auto-hides after 4s of no touch.
+  const [chrome, setChrome] = useState(false)
 
   const [currentChapter, setCurrentChapter] = useState({ title: '', index: 0 })
   const [progress, setProgress] = useState(0)
@@ -75,7 +99,7 @@ export default function Reader() {
         setLoading(false)
         return
       }
-      console.log('[reader] epub_url being passed to WebView:', bookData.epub_url)
+      console.log('[reader] epub_url being passed to ReadiumView:', bookData.epub_url)
       setBook(bookData as BookRow)
 
       const { data: { user } } = await supabase.auth.getUser()
@@ -86,7 +110,8 @@ export default function Reader() {
           .eq('user_id', user.id)
           .eq('book_id', bookData.id)
           .maybeSingle()
-        if (ub?.progress_cfi) setInitialCfi(ub.progress_cfi)
+        const restored = parseStoredLocator(ub?.progress_cfi)
+        if (restored) setInitialLocator(restored)
         if (ub?.progress_percentage) setProgress(ub.progress_percentage)
 
         const { data: sess } = await supabase
@@ -116,8 +141,28 @@ export default function Reader() {
     }
   }, [])
 
+  // Auto-hide chrome 4s after it appears. Cancel/reset whenever it changes.
+  useEffect(() => {
+    if (chromeTimerRef.current) {
+      clearTimeout(chromeTimerRef.current)
+      chromeTimerRef.current = null
+    }
+    if (chrome) {
+      chromeTimerRef.current = setTimeout(() => {
+        setChrome(false)
+      }, CHROME_AUTO_HIDE_MS)
+    }
+    return () => {
+      if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
+    }
+  }, [chrome])
+
+  const toggleChrome = useCallback(() => {
+    setChrome((v) => !v)
+  }, [])
+
   async function saveProgress() {
-    if (!book || !positionRef.current.cfi) return
+    if (!book || !positionRef.current.locator) return
     if (Date.now() - lastSaveRef.current < 5000) return
     lastSaveRef.current = Date.now()
     const { data: { user } } = await supabase.auth.getUser()
@@ -129,8 +174,10 @@ export default function Reader() {
           user_id: user.id,
           book_id: book.id,
           status: 'reading',
-          progress_cfi: positionRef.current.cfi,
-          progress_percentage: positionRef.current.percentage,
+          // Reuse the existing progress_cfi text column to store the
+          // serialized Readium Locator. parseStoredLocator on next open.
+          progress_cfi: JSON.stringify(positionRef.current.locator),
+          progress_percentage: positionRef.current.progression,
         },
         { onConflict: 'user_id,book_id' }
       )
@@ -144,9 +191,9 @@ export default function Reader() {
       .eq('id', sessionIdRef.current)
   }
 
-  function onLocation(cfi: string, percentage: number) {
-    positionRef.current = { cfi, percentage }
-    setProgress(percentage)
+  function onLocation(locator: Locator, progression: number) {
+    positionRef.current = { locator, progression }
+    setProgress(progression)
   }
 
   function applySettings(next: Partial<{ fontSize: number; lineHeight: number; theme: ThemeKey }>) {
@@ -193,14 +240,10 @@ export default function Reader() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
-      {/* No outer Pressable — on Android it claims the touch responder
-          and blocks the WebView from initiating native text selection.
-          Chrome (Close/Recap, page-turn arrows, Aa, Chat) is always
-          visible as a result. */}
-      <ReaderWebView
+      <ReaderReadium
         ref={readerRef}
         epubUrl={book.epub_url}
-        initialCfi={initialCfi ?? undefined}
+        initialLocator={initialLocator}
         initialSettings={initialSettings}
         onReady={() => {
           setReaderState('ready')
@@ -221,6 +264,17 @@ export default function Reader() {
           console.log('[reader] passage select', { chars: passage.length })
           setPassageSheet(passage)
         }}
+      />
+
+      {/* Tap-to-toggle-chrome overlay. pointerEvents="box-only" makes the
+          overlay catch taps without children participating; we mount it as
+          a sibling to ReadiumView so native selection on the Readium view
+          underneath is unaffected (Readium's native gesture recognizers
+          live below the JS responder layer). */}
+      <Pressable
+        onPress={toggleChrome}
+        pointerEvents="box-only"
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
       />
 
       {readerState === 'loading' ? (
@@ -273,11 +327,12 @@ export default function Reader() {
         </View>
       ) : null}
 
-      <SafeAreaView
-        edges={['top']}
-        pointerEvents="box-none"
-        className="absolute top-0 left-0 right-0"
-      >
+      {chrome ? (
+        <SafeAreaView
+          edges={['top']}
+          pointerEvents="box-none"
+          className="absolute top-0 left-0 right-0"
+        >
           <View
             className="flex-row items-center justify-between px-4 py-2"
             style={{ backgroundColor: themeColors.background, opacity: 0.95 }}
@@ -312,7 +367,9 @@ export default function Reader() {
             </Pressable>
           </View>
         </SafeAreaView>
+      ) : null}
 
+      {chrome ? (
         <SafeAreaView
           edges={['bottom']}
           pointerEvents="box-none"
@@ -360,6 +417,7 @@ export default function Reader() {
             </View>
           </View>
         </SafeAreaView>
+      ) : null}
 
       <SettingsSheet
         visible={showSettings}
