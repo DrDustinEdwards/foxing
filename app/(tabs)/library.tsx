@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from 'rea
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { supabase } from '@/lib/supabase'
+import { useColors } from '@/constants/colors'
 
 type Status = 'reading' | 'want_to_read' | 'finished'
 
@@ -25,6 +26,7 @@ const TABS: Array<{ key: Status; label: string }> = [
 ]
 
 export default function Library() {
+  const colors = useColors()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Status>('reading')
   const [books, setBooks] = useState<UserBookRow[]>([])
@@ -58,9 +60,9 @@ export default function Library() {
   }, [fetchBooks])
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1208' }}>
+    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="px-4 pt-2 pb-4">
-        <Text className="text-3xl font-serif" style={{ color: '#8B6914' }}>
+        <Text className="font-display text-3xl text-text-primary-light dark:text-text-primary-dark">
           Library
         </Text>
       </View>
@@ -72,10 +74,20 @@ export default function Library() {
             <Pressable
               key={t.key}
               onPress={() => setActiveTab(t.key)}
-              className="flex-1 py-2 items-center"
-              style={{ borderBottomWidth: 2, borderBottomColor: active ? '#8B6914' : '#3D2B1F' }}
+              className={
+                active
+                  ? 'flex-1 py-2 items-center border-b-2 border-border-interactive-light dark:border-border-interactive-dark'
+                  : 'flex-1 py-2 items-center border-b-2 border-border-subtle-light dark:border-border-subtle-dark'
+              }
             >
-              <Text style={{ color: active ? '#C4973A' : '#8B6914', fontSize: 13 }} numberOfLines={1}>
+              <Text
+                className={
+                  active
+                    ? 'font-ui text-brand-text-light dark:text-brand-text-dark text-[13px]'
+                    : 'font-ui text-text-tertiary-light dark:text-text-tertiary-dark text-[13px]'
+                }
+                numberOfLines={1}
+              >
                 {t.label}
               </Text>
             </Pressable>
@@ -85,20 +97,19 @@ export default function Library() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
         {loading ? (
-          <ActivityIndicator color="#8B6914" />
+          <ActivityIndicator color={colors.brandUi} />
         ) : books.length === 0 ? (
           <View className="items-center mt-12 px-8">
-            <Text className="text-center mb-4" style={{ color: '#E8D5B0' }}>
+            <Text className="font-ui text-center mb-4 text-text-secondary-light dark:text-text-secondary-dark">
               {activeTab === 'reading' && "You're not reading anything yet."}
               {activeTab === 'want_to_read' && 'Your reading list is empty.'}
               {activeTab === 'finished' && "You haven't finished a book yet."}
             </Text>
             <Pressable
               onPress={() => router.push('/(tabs)')}
-              className="rounded-xl px-6 py-3"
-              style={{ backgroundColor: '#8B6914' }}
+              className="rounded-xl px-6 py-3 bg-brand-ui-light dark:bg-brand-ui-dark"
             >
-              <Text style={{ color: '#FDF8F0' }}>Discover books</Text>
+              <Text className="font-ui text-text-on-brand">Discover books</Text>
             </Pressable>
           </View>
         ) : (
@@ -106,36 +117,37 @@ export default function Library() {
             <Pressable
               key={entry.id}
               onPress={() => router.push(`/book/${entry.book.id}`)}
-              className="flex-row mb-4 rounded-xl p-3"
-              style={{ backgroundColor: '#2A1F0F' }}
+              className="flex-row mb-4 rounded-xl p-3 bg-bg-surface-light dark:bg-bg-surface-dark border border-border-subtle-light dark:border-border-subtle-dark"
             >
-              <View
-                className="w-16 h-24 rounded mr-3 overflow-hidden"
-                style={{ backgroundColor: '#3D2B1F' }}
-              >
+              <View className="w-16 h-24 rounded mr-3 overflow-hidden bg-bg-sunken-light dark:bg-bg-sunken-dark">
                 {entry.book.cover_url ? (
                   <Image source={{ uri: entry.book.cover_url }} className="w-full h-full" />
                 ) : null}
               </View>
               <View className="flex-1 justify-center">
-                <Text className="font-semibold" style={{ color: '#E8D5B0' }} numberOfLines={2}>
+                <Text
+                  className="font-ui-medium text-text-primary-light dark:text-text-primary-dark"
+                  numberOfLines={2}
+                >
                   {entry.book.title}
                 </Text>
-                <Text style={{ color: '#8B6914' }} numberOfLines={1}>
+                <Text
+                  className="font-ui text-text-tertiary-light dark:text-text-tertiary-dark"
+                  numberOfLines={1}
+                >
                   {entry.book.author}
                 </Text>
                 {activeTab === 'reading' ? (
                   <View className="mt-2">
-                    <View className="h-1 rounded-full" style={{ backgroundColor: '#3D2B1F' }}>
+                    <View className="h-1 rounded-full bg-bg-sunken-light dark:bg-bg-sunken-dark">
                       <View
-                        className="h-1 rounded-full"
+                        className="h-1 rounded-full bg-brand-ui-light dark:bg-brand-ui-dark"
                         style={{
-                          backgroundColor: '#8B6914',
                           width: `${Math.max(0, Math.min(100, entry.progress_percentage * 100))}%`,
                         }}
                       />
                     </View>
-                    <Text className="text-xs mt-1" style={{ color: '#8B6914' }}>
+                    <Text className="font-mono text-xs mt-1 text-text-tertiary-light dark:text-text-tertiary-dark">
                       {Math.round(entry.progress_percentage * 100)}%
                     </Text>
                   </View>

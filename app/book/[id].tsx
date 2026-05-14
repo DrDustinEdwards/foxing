@@ -18,8 +18,10 @@ import {
 } from '@/lib/gutenberg'
 import { ensureEpubInStorage } from '@/lib/storage'
 import { supabase } from '@/lib/supabase'
+import { useColors } from '@/constants/colors'
 
 export default function BookDetail() {
+  const colors = useColors()
   const { id } = useLocalSearchParams<{ id: string }>()
   const router = useRouter()
   const [book, setBook] = useState<GutenbergBook | null>(null)
@@ -135,20 +137,20 @@ export default function BookDetail() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center" style={{ backgroundColor: '#1A1208' }}>
-        <ActivityIndicator color="#8B6914" />
+      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+        <ActivityIndicator color={colors.brandUi} />
       </SafeAreaView>
     )
   }
 
   if (!book) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-8" style={{ backgroundColor: '#1A1208' }}>
-        <Text className="text-center" style={{ color: '#E8D5B0' }}>
+      <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
+        <Text className="font-ui text-center text-text-primary-light dark:text-text-primary-dark">
           Book not found.
         </Text>
         <Pressable onPress={() => router.back()} className="mt-6">
-          <Text style={{ color: '#C4973A' }}>← Back</Text>
+          <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">← Back</Text>
         </Pressable>
       </SafeAreaView>
     )
@@ -159,11 +161,11 @@ export default function BookDetail() {
   const description = book.subjects[0] ?? 'A classic work from the public domain.'
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1208' }}>
+    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <View className="flex-row items-center px-4 py-2">
           <Pressable onPress={() => router.back()}>
-            <Text className="text-base" style={{ color: '#C4973A' }}>
+            <Text className="font-ui text-base text-brand-text-light dark:text-brand-text-dark">
               ← Back
             </Text>
           </Pressable>
@@ -171,22 +173,20 @@ export default function BookDetail() {
 
         <View className="items-center px-4 mt-2">
           <View
-            className="rounded-lg overflow-hidden mb-4"
-            style={{
-              width: '60%',
-              aspectRatio: 2 / 3,
-              backgroundColor: '#2A1F0F',
-            }}
+            className="rounded-lg overflow-hidden mb-4 bg-bg-sunken-light dark:bg-bg-sunken-dark"
+            style={{ width: '60%', aspectRatio: 2 / 3 }}
           >
             {cover ? (
               <Image source={{ uri: cover }} className="w-full h-full" resizeMode="cover" />
             ) : null}
           </View>
-          <Text className="text-2xl font-serif text-center mb-1" style={{ color: '#E8D5B0' }}>
+          <Text className="font-display text-2xl text-center mb-1 text-text-primary-light dark:text-text-primary-dark">
             {book.title}
           </Text>
-          <Text style={{ color: '#C4973A' }}>{getAuthorName(book)}</Text>
-          <Text className="text-xs mt-1" style={{ color: '#8B6914' }}>
+          <Text className="font-ui text-text-secondary-light dark:text-text-secondary-dark">
+            {getAuthorName(book)}
+          </Text>
+          <Text className="font-ui text-xs mt-1 text-text-tertiary-light dark:text-text-tertiary-dark">
             {era}
           </Text>
         </View>
@@ -196,43 +196,51 @@ export default function BookDetail() {
             {book.subjects.slice(0, 6).map((s) => (
               <View
                 key={s}
-                className="rounded-full px-3 py-1"
-                style={{ backgroundColor: '#2A1F0F' }}
+                className="rounded-full px-3 py-1 bg-brand-subtle-light dark:bg-brand-subtle-dark"
               >
-                <Text className="text-xs" style={{ color: '#C4973A' }} numberOfLines={1}>
+                <Text
+                  className="font-ui text-xs text-brand-subtle-text-light dark:text-brand-subtle-text-dark"
+                  numberOfLines={1}
+                >
                   {s}
                 </Text>
               </View>
             ))}
           </View>
 
-          <Text className="text-sm leading-6" style={{ color: '#E8D5B0' }}>
+          <Text className="font-body text-base leading-7 text-text-primary-light dark:text-text-primary-dark">
             {description}
           </Text>
         </View>
 
         <View className="px-4 mt-8 gap-3">
           {preparing ? (
-            <Text className="text-center text-xs mb-1" style={{ color: '#C4973A' }}>
-              Preparing book…
-            </Text>
+            <View className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-info-bg-light dark:bg-info-bg-dark">
+              <Text className="font-ui text-info-light dark:text-info-dark">ℹ</Text>
+              <Text className="font-ui text-center text-xs text-info-light dark:text-info-dark">
+                Preparing book…
+              </Text>
+            </View>
           ) : null}
           {prepareError ? (
-            <Text className="text-center text-sm mb-1" style={{ color: '#D97757' }}>
-              {prepareError}
-            </Text>
+            <View className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
+              <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+              <Text className="font-ui text-center text-sm text-error-light dark:text-error-dark flex-1">
+                {prepareError}
+              </Text>
+            </View>
           ) : null}
 
           <Pressable
             onPress={startReading}
             disabled={!!savingStatus}
-            className="rounded-xl py-4 items-center"
-            style={{ backgroundColor: '#8B6914', opacity: savingStatus ? 0.6 : 1 }}
+            className="rounded-xl py-4 items-center bg-brand-ui-light dark:bg-brand-ui-dark"
+            style={{ opacity: savingStatus ? 0.6 : 1 }}
           >
             {savingStatus === 'reading' ? (
-              <ActivityIndicator color="#FDF8F0" />
+              <ActivityIndicator color={colors.textOnBrand} />
             ) : (
-              <Text className="font-semibold" style={{ color: '#FDF8F0' }}>
+              <Text className="font-ui-medium text-text-on-brand">
                 Start reading
               </Text>
             )}
@@ -241,23 +249,27 @@ export default function BookDetail() {
           <Pressable
             onPress={() => addToLibrary('want_to_read')}
             disabled={!!savingStatus}
-            className="rounded-xl py-4 items-center border"
-            style={{ borderColor: '#3D2B1F', opacity: savingStatus ? 0.6 : 1 }}
+            className="rounded-xl py-4 items-center border border-border-interactive-light dark:border-border-interactive-dark"
+            style={{ opacity: savingStatus ? 0.6 : 1 }}
           >
             {savingStatus === 'want_to_read' ? (
-              <ActivityIndicator color="#C4973A" />
+              <ActivityIndicator color={colors.brandUi} />
             ) : (
-              <Text style={{ color: '#E8D5B0' }}>Add to Want to Read</Text>
+              <Text className="font-ui text-text-primary-light dark:text-text-primary-dark">
+                Add to Want to Read
+              </Text>
             )}
           </Pressable>
 
           <Pressable
             onPress={() => addToLibrary('reading')}
             disabled={!!savingStatus}
-            className="rounded-xl py-4 items-center border"
-            style={{ borderColor: '#3D2B1F', opacity: savingStatus ? 0.6 : 1 }}
+            className="rounded-xl py-4 items-center border border-border-interactive-light dark:border-border-interactive-dark"
+            style={{ opacity: savingStatus ? 0.6 : 1 }}
           >
-            <Text style={{ color: '#E8D5B0' }}>Mark as Currently Reading</Text>
+            <Text className="font-ui text-text-primary-light dark:text-text-primary-dark">
+              Mark as Currently Reading
+            </Text>
           </Pressable>
         </View>
       </ScrollView>

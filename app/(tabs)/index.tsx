@@ -17,6 +17,7 @@ import {
   type GutenbergBook,
 } from '@/lib/gutenberg'
 import { BookCard } from '@/components/ui/book-card'
+import { useColors } from '@/constants/colors'
 
 const GENRES = [
   'Fiction',
@@ -30,6 +31,7 @@ const GENRES = [
 ]
 
 export default function Discover() {
+  const colors = useColors()
   const [query, setQuery] = useState('')
   const [popular, setPopular] = useState<GutenbergBook[]>([])
   const [searchResults, setSearchResults] = useState<GutenbergBook[]>([])
@@ -98,15 +100,15 @@ export default function Discover() {
   const activeResults = query.trim().length > 0 ? searchResults : genreResults
 
   return (
-    <SafeAreaView className="flex-1" style={{ backgroundColor: '#1A1208' }}>
+    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <ScrollView
         contentContainerStyle={{ paddingBottom: 40 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#8B6914" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brandUi} />
         }
       >
         <View className="px-4 pt-2 pb-4">
-          <Text className="text-3xl font-serif mb-4" style={{ color: '#8B6914' }}>
+          <Text className="font-display text-3xl mb-4 text-text-primary-light dark:text-text-primary-dark">
             Discover
           </Text>
           <TextInput
@@ -114,15 +116,14 @@ export default function Discover() {
             onChangeText={setQuery}
             onSubmitEditing={handleSearch}
             placeholder="Search for books or authors"
-            placeholderTextColor="#8B6914"
+            placeholderTextColor={colors.textTertiary}
             returnKeyType="search"
-            className="rounded-xl px-4 py-3 text-base"
-            style={{ backgroundColor: '#2A1F0F', color: '#E8D5B0' }}
+            className="font-ui rounded-xl px-4 py-3 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
           />
         </View>
 
         <View className="px-4 mb-6">
-          <Text className="text-base font-semibold mb-3" style={{ color: '#E8D5B0' }}>
+          <Text className="font-ui-medium text-base mb-3 text-text-secondary-light dark:text-text-secondary-dark">
             Browse by genre
           </Text>
           <View className="flex-row flex-wrap gap-2">
@@ -132,14 +133,21 @@ export default function Discover() {
                 <Pressable
                   key={g}
                   onPress={() => selectGenre(g)}
-                  className="rounded-full px-4 py-2"
-                  style={{
-                    backgroundColor: active ? '#8B6914' : '#2A1F0F',
-                    borderWidth: 1,
-                    borderColor: active ? '#C4973A' : '#3D2B1F',
-                  }}
+                  className={
+                    active
+                      ? 'rounded-full px-4 py-2 border bg-brand-ui-light dark:bg-brand-ui-dark border-border-interactive-light dark:border-border-interactive-dark'
+                      : 'rounded-full px-4 py-2 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark'
+                  }
                 >
-                  <Text style={{ color: active ? '#FDF8F0' : '#E8D5B0' }}>{g}</Text>
+                  <Text
+                    className={
+                      active
+                        ? 'font-ui text-text-on-brand'
+                        : 'font-ui text-text-primary-light dark:text-text-primary-dark'
+                    }
+                  >
+                    {g}
+                  </Text>
                 </Pressable>
               )
             })}
@@ -148,13 +156,15 @@ export default function Discover() {
 
         {showingResults ? (
           <View className="px-4">
-            <Text className="text-base font-semibold mb-3" style={{ color: '#E8D5B0' }}>
+            <Text className="font-ui-medium text-base mb-3 text-text-secondary-light dark:text-text-secondary-dark">
               {query ? `Results for "${query}"` : selectedGenre}
             </Text>
             {searching ? (
-              <ActivityIndicator color="#8B6914" />
+              <ActivityIndicator color={colors.brandUi} />
             ) : activeResults.length === 0 ? (
-              <Text style={{ color: '#8B6914' }}>No books found.</Text>
+              <Text className="font-ui text-text-tertiary-light dark:text-text-tertiary-dark">
+                No books found.
+              </Text>
             ) : (
               <View className="flex-row flex-wrap justify-between">
                 {activeResults.map((book) => (
@@ -165,7 +175,7 @@ export default function Discover() {
           </View>
         ) : (
           <View>
-            <Text className="text-base font-semibold mb-3 px-4" style={{ color: '#E8D5B0' }}>
+            <Text className="font-ui-medium text-base mb-3 px-4 text-text-secondary-light dark:text-text-secondary-dark">
               Popular classics
             </Text>
             {loading ? (
@@ -173,8 +183,7 @@ export default function Discover() {
                 {[1, 2, 3, 4].map((i) => (
                   <View
                     key={i}
-                    className="w-32 h-48 rounded-lg mr-4"
-                    style={{ backgroundColor: '#2A1F0F', opacity: 0.5 }}
+                    className="w-32 h-48 rounded-lg mr-4 bg-skeleton-base-light dark:bg-skeleton-base-dark"
                   />
                 ))}
               </View>

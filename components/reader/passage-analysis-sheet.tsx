@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { View, Text, Modal, Pressable, ActivityIndicator, ScrollView } from 'react-native'
 import { analyzePassage } from '@/lib/claude'
+import { useColors } from '@/constants/colors'
 
 type Mode = 'rewrite' | 'historical' | 'literary' | 'thematic' | 'motivation'
 
@@ -29,21 +30,26 @@ export function PassageAnalysisSheet({
   era,
   onClose,
 }: PassageAnalysisSheetProps) {
+  const colors = useColors()
   const [result, setResult] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeMode, setActiveMode] = useState<Mode | null>(null)
 
   async function run(mode: Mode) {
+    console.log('[passage-analysis] run', { mode, passageChars: passage.length })
     setActiveMode(mode)
     setLoading(true)
     setError(null)
     setResult(null)
     try {
       const text = await analyzePassage(passage, mode, bookTitle, author, era)
+      console.log('[passage-analysis] result', { mode, chars: text.length })
       setResult(text)
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Analysis failed')
+      const message = e instanceof Error ? e.message : 'Analysis failed'
+      console.warn('[passage-analysis] error', message)
+      setError(message)
     } finally {
       setLoading(false)
     }
@@ -61,23 +67,26 @@ export function PassageAnalysisSheet({
       <Pressable className="flex-1 justify-end" onPress={handleClose}>
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl px-6 pt-6 pb-10"
-          style={{ backgroundColor: '#2A1F0F', maxHeight: '85%' }}
+          className="rounded-t-3xl px-6 pt-6 pb-10 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ maxHeight: '85%' }}
         >
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-lg font-serif" style={{ color: '#C4973A' }}>
+            <Text className="font-display text-lg text-text-primary-light dark:text-text-primary-dark">
               Passage analysis
             </Text>
             <Pressable onPress={handleClose}>
-              <Text style={{ color: '#8B6914' }}>Close</Text>
+              <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">Close</Text>
             </Pressable>
           </View>
 
           <View
-            className="rounded-lg p-3 mb-4"
-            style={{ backgroundColor: '#1A1208', maxHeight: 100 }}
+            className="rounded-lg p-3 mb-4 bg-bg-sunken-light dark:bg-bg-sunken-dark border-l-4 border-border-brand-light dark:border-border-brand-dark"
+            style={{ maxHeight: 100 }}
           >
-            <Text className="italic text-sm" style={{ color: '#E8D5B0' }} numberOfLines={4}>
+            <Text
+              className="font-body italic text-sm text-text-secondary-light dark:text-text-secondary-dark"
+              numberOfLines={4}
+            >
               "{passage}"
             </Text>
           </View>
@@ -90,14 +99,19 @@ export function PassageAnalysisSheet({
                   <Pressable
                     key={m.key}
                     onPress={() => run(m.key)}
-                    className="rounded-full px-3 py-2"
-                    style={{
-                      backgroundColor: active ? '#8B6914' : '#1A1208',
-                      borderWidth: 1,
-                      borderColor: active ? '#C4973A' : '#3D2B1F',
-                    }}
+                    className={
+                      active
+                        ? 'rounded-full px-3 py-2 border bg-brand-ui-light dark:bg-brand-ui-dark border-border-interactive-light dark:border-border-interactive-dark'
+                        : 'rounded-full px-3 py-2 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark'
+                    }
                   >
-                    <Text className="text-xs" style={{ color: active ? '#FDF8F0' : '#E8D5B0' }}>
+                    <Text
+                      className={
+                        active
+                          ? 'font-ui text-xs text-text-on-brand'
+                          : 'font-ui text-xs text-text-primary-light dark:text-text-primary-dark'
+                      }
+                    >
                       {m.label}
                     </Text>
                   </Pressable>
@@ -108,15 +122,20 @@ export function PassageAnalysisSheet({
 
           <ScrollView>
             {loading ? (
-              <ActivityIndicator color="#8B6914" />
+              <ActivityIndicator color={colors.brandUi} />
             ) : error ? (
-              <Text style={{ color: '#D32F2F' }}>{error}</Text>
+              <View className="flex-row items-start gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
+                <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+                <Text className="font-ui flex-1 text-error-light dark:text-error-dark">
+                  {error}
+                </Text>
+              </View>
             ) : result ? (
-              <Text className="text-base leading-7" style={{ color: '#E8D5B0' }}>
+              <Text className="font-body text-base leading-7 text-text-primary-light dark:text-text-primary-dark">
                 {result}
               </Text>
             ) : (
-              <Text className="text-sm" style={{ color: '#8B6914' }}>
+              <Text className="font-ui text-sm text-text-tertiary-light dark:text-text-tertiary-dark">
                 Pick an analysis above to begin.
               </Text>
             )}

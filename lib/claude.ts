@@ -1,39 +1,77 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { supabase } from './supabase'
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-})
+type Action = 'word_lookup' | 'passage_analysis' | 'chapter_summary' | 'chat'
+
+// Calls go through the ai-companion Edge Function so the Anthropic key never
+// ships to the device. supabase.functions.invoke() automatically attaches the
+// signed-in user's JWT (or the project's anon key as a fallback). The Edge
+// Function is configured with verify_jwt: true and rejects raw publishable
+// keys with UNAUTHORIZED_INVALID_JWT_FORMAT — so we MUST go through invoke(),
+// not raw fetch with EXPO_PUBLIC_SUPABASE_ANON_KEY.
+async function callAiCompanion(action: Action, payload: unknown): Promise<string> {
+  const startedAt = Date.now()
+  console.log('[claude] →', action, summarize(payload))
+
+  const { data, error } = await supabase.functions.invoke<{ result?: string; error?: string }>(
+    'ai-companion',
+    { body: { action, payload } },
+  )
+
+  const elapsedMs = Date.now() - startedAt
+
+  if (error) {
+    // FunctionsHttpError (non-2xx), FunctionsRelayError (network/CORS),
+    // FunctionsFetchError (transport). All have .message and FunctionsHttpError
+    // also exposes .context (the Response).
+    let detail = error.message
+    const ctx = (error as unknown as { context?: Response }).context
+    if (ctx && typeof ctx.text === 'function') {
+      try {
+        const body = await ctx.text()
+        if (body) detail += ` — ${body}`
+      } catch {
+        // ignore — context already consumed
+      }
+    }
+    console.warn('[claude] ✕', action, `${elapsedMs}ms`, detail)
+    throw new Error(detail)
+  }
+
+  if (data?.error) {
+    console.warn('[claude] ✕', action, `${elapsedMs}ms`, data.error)
+    throw new Error(data.error)
+  }
+
+  const result = data?.result ?? ''
+  console.log('[claude] ✓', action, `${elapsedMs}ms`, `${result.length} chars`)
+  return result
+}
+
+// Tiny payload summary for logs — avoids dumping the entire chat history
+// or a multi-paragraph passage into Metro output.
+function summarize(payload: unknown): Record<string, unknown> {
+  if (!payload || typeof payload !== 'object') return {}
+  const out: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
+    if (typeof value === 'string') {
+      out[key] = value.length > 60 ? `${value.slice(0, 60)}… (${value.length})` : value
+    } else if (Array.isArray(value)) {
+      out[key] = `Array(${value.length})`
+    } else {
+      out[key] = value
+    }
+  }
+  return out
+}
 
 export async function lookupWord(
   word: string,
   sentence: string,
   bookTitle: string,
   author: string,
-  era: string
+  era: string,
 ): Promise<string> {
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 1000,
-    messages: [
-      {
-        role: 'user',
-        content: `You are a literary companion helping someone read "${bookTitle}" by ${author} (${era}).
-
-The reader has tapped on the word: "${word}"
-
-It appears in this sentence: "${sentence}"
-
-Explain this word in 2-3 short paragraphs:
-1. What it means in plain English
-2. Its etymology or historical context if relevant
-3. What it means specifically in this sentence and this book's context
-
-Be warm, concise, and genuinely helpful. Write as if you're a knowledgeable friend, not a dictionary.`,
-      },
-    ],
-  })
-
-  return message.content[0].type === 'text' ? message.content[0].text : ''
+  return callAiCompanion('word_lookup', { word, sentence, bookTitle, author, era })
 }
 
 export async function analyzePassage(
@@ -41,34 +79,15 @@ export async function analyzePassage(
   analysisType: 'rewrite' | 'historical' | 'literary' | 'thematic' | 'motivation',
   bookTitle: string,
   author: string,
-  era: string
+  era: string,
 ): Promise<string> {
-  const prompts = {
-    rewrite: `Rewrite this passage in clear, plain modern English while preserving its meaning and emotional tone.`,
-    historical: `Explain the historical context of this passage. What was happening in the world when this was written? What would a contemporary reader of ${author}'s time have understood that modern readers might miss?`,
-    literary: `Identify and explain the literary devices used in this passage (metaphor, irony, foreshadowing, alliteration, imagery, etc.). Be specific about where each device appears and what effect it creates.`,
-    thematic: `Explain the thematic significance of this passage. Why does this moment matter in the larger context of the book? What ideas or themes does it develop or reveal?`,
-    motivation: `Analyze the character motivations revealed in this passage. What does this moment tell us about what the characters want, fear, or believe?`,
-  }
-
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 2000,
-    messages: [
-      {
-        role: 'user',
-        content: `You are a literary companion helping someone read "${bookTitle}" by ${author} (${era}).
-
-Passage: "${passage}"
-
-${prompts[analysisType]}
-
-Be warm, insightful, and genuinely helpful. Write as if you're a knowledgeable friend who loves this book.`,
-      },
-    ],
+  return callAiCompanion('passage_analysis', {
+    passage,
+    analysisType,
+    bookTitle,
+    author,
+    era,
   })
-
-  return message.content[0].type === 'text' ? message.content[0].text : ''
 }
 
 export async function getChapterSummary(
@@ -77,30 +96,16 @@ export async function getChapterSummary(
   timing: 'before' | 'after',
   bookTitle: string,
   author: string,
-  previousChapterContent?: string
+  previousChapterContent?: string,
 ): Promise<string> {
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 3000,
-    messages: [
-      {
-        role: 'user',
-        content: timing === 'before'
-          ? `You are a literary companion helping someone read "${bookTitle}" by ${author}.
-
-The reader is about to start Chapter ${chapterNumber}: "${chapterTitle}".
-
-Give a brief, engaging catch-up summary of what has happened in the book so far — just enough to refresh their memory and get them ready to read. Keep it to 3-4 sentences. No spoilers for what comes next.`
-          : `You are a literary companion helping someone read "${bookTitle}" by ${author}.
-
-The reader just finished Chapter ${chapterNumber}: "${chapterTitle}".
-
-Give a consolidating summary of what happened in this chapter — the key events, character developments, and any important details worth remembering. Keep it to 4-5 sentences.`,
-      },
-    ],
+  return callAiCompanion('chapter_summary', {
+    chapterTitle,
+    chapterNumber,
+    timing,
+    bookTitle,
+    author,
+    previousChapterContent,
   })
-
-  return message.content[0].type === 'text' ? message.content[0].text : ''
 }
 
 export async function chatWithCompanion(
@@ -108,24 +113,13 @@ export async function chatWithCompanion(
   bookTitle: string,
   author: string,
   currentChapter: string,
-  spoilerFree: boolean
+  spoilerFree: boolean,
 ): Promise<string> {
-  const systemPrompt = spoilerFree
-    ? `You are a warm, knowledgeable literary companion helping someone read "${bookTitle}" by ${author}. They are currently reading "${currentChapter}".
-
-IMPORTANT: The reader has spoiler-free mode ON. Do not reveal anything that happens after their current position in the book. If asked about future events, gently decline and encourage them to keep reading.
-
-Engage thoughtfully with their questions about the book. Help them understand difficult passages, historical context, character motivations, and literary themes. Be conversational and genuinely enthusiastic about the book.`
-    : `You are a warm, knowledgeable literary companion helping someone read "${bookTitle}" by ${author}. They are currently reading "${currentChapter}".
-
-You can discuss any part of the book including the ending. Engage thoughtfully with their questions about the book. Help them understand difficult passages, historical context, character motivations, and literary themes. Be conversational and genuinely enthusiastic about the book.`
-
-  const response = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
-    max_tokens: 4000,
-    system: systemPrompt,
-    messages: messages,
+  return callAiCompanion('chat', {
+    messages,
+    bookTitle,
+    author,
+    currentChapter,
+    spoilerFree,
   })
-
-  return response.content[0].type === 'text' ? response.content[0].text : ''
 }
