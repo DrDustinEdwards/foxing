@@ -45,6 +45,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c131a57e-b524-4e53-9f2f-d45558f0c8d2"
+      }
+    },
+    "owner": "dustinedwards"
   }
 }
