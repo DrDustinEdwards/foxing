@@ -64,14 +64,35 @@ function summarize(payload: unknown): Record<string, unknown> {
   return out
 }
 
+// All four functions accept optional `bookId`, `currentChapter`, and
+// `progress` (0..1) so the Edge Function can stamp them into its
+// per-request COMPANION_RESPONSE log line and inject them into the
+// dynamic context block of the system prompt. Older callers that don't
+// pass these still work — the Edge Function logs `undefined` and the
+// prompt falls back to "(not provided)" / "unknown".
+
+export interface CompanionContext {
+  bookId?: string
+  currentChapter?: string
+  progress?: number
+}
+
 export async function lookupWord(
   word: string,
   sentence: string,
   bookTitle: string,
   author: string,
   era: string,
+  context: CompanionContext = {},
 ): Promise<string> {
-  return callAiCompanion('word_lookup', { word, sentence, bookTitle, author, era })
+  return callAiCompanion('word_lookup', {
+    word,
+    sentence,
+    bookTitle,
+    author,
+    era,
+    ...context,
+  })
 }
 
 export async function analyzePassage(
@@ -80,6 +101,7 @@ export async function analyzePassage(
   bookTitle: string,
   author: string,
   era: string,
+  context: CompanionContext = {},
 ): Promise<string> {
   return callAiCompanion('passage_analysis', {
     passage,
@@ -87,6 +109,7 @@ export async function analyzePassage(
     bookTitle,
     author,
     era,
+    ...context,
   })
 }
 
@@ -97,6 +120,7 @@ export async function getChapterSummary(
   bookTitle: string,
   author: string,
   previousChapterContent?: string,
+  context: CompanionContext = {},
 ): Promise<string> {
   return callAiCompanion('chapter_summary', {
     chapterTitle,
@@ -105,6 +129,7 @@ export async function getChapterSummary(
     bookTitle,
     author,
     previousChapterContent,
+    ...context,
   })
 }
 
@@ -114,6 +139,7 @@ export async function chatWithCompanion(
   author: string,
   currentChapter: string,
   spoilerFree: boolean,
+  context: Omit<CompanionContext, 'currentChapter'> = {},
 ): Promise<string> {
   return callAiCompanion('chat', {
     messages,
@@ -121,5 +147,6 @@ export async function chatWithCompanion(
     author,
     currentChapter,
     spoilerFree,
+    ...context,
   })
 }

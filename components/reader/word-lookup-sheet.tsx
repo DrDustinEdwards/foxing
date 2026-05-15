@@ -12,6 +12,8 @@ interface WordLookupSheetProps {
   bookId: string
   author: string
   era: string
+  currentChapter?: string
+  progress?: number
   onClose: () => void
 }
 
@@ -23,6 +25,8 @@ export function WordLookupSheet({
   bookId,
   author,
   era,
+  currentChapter,
+  progress,
   onClose,
 }: WordLookupSheetProps) {
   const colors = useColors()
@@ -38,7 +42,11 @@ export function WordLookupSheet({
     setLoading(true)
     ;(async () => {
       try {
-        const result = await lookupWord(word, sentence, bookTitle, author, era)
+        const result = await lookupWord(word, sentence, bookTitle, author, era, {
+          bookId,
+          currentChapter,
+          progress,
+        })
         console.log('[word-lookup] result', { word, chars: result.length })
         setDefinition(result)
         const { data: { user } } = await supabase.auth.getUser()
@@ -59,7 +67,7 @@ export function WordLookupSheet({
         setLoading(false)
       }
     })()
-  }, [visible, word, sentence, bookTitle, bookId, author, era])
+  }, [visible, word, sentence, bookTitle, bookId, author, era, currentChapter, progress])
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>

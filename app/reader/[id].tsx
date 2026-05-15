@@ -420,6 +420,8 @@ export default function Reader() {
           bookId={book.id}
           author={book.author}
           era=""
+          currentChapter={currentChapter.title}
+          progress={progress}
           onClose={() => setWordSheet(null)}
         />
       ) : null}
@@ -431,6 +433,9 @@ export default function Reader() {
           bookTitle={book.title}
           author={book.author}
           era=""
+          bookId={book.id}
+          currentChapter={currentChapter.title}
+          progress={progress}
           onClose={() => setPassageSheet(null)}
         />
       ) : null}
@@ -442,6 +447,8 @@ export default function Reader() {
         bookTitle={book.title}
         author={book.author}
         timing="after"
+        bookId={book.id}
+        progress={progress}
         onClose={() => setSummaryOpen(false)}
       />
 
@@ -450,6 +457,8 @@ export default function Reader() {
         bookTitle={book.title}
         author={book.author}
         currentChapter={currentChapter.title || 'the current chapter'}
+        bookId={book.id}
+        progress={progress}
         onClose={() => setChatOpen(false)}
       />
     </View>
