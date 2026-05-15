@@ -1,4 +1,3 @@
-import * as FileSystem from 'expo-file-system/legacy'
 import { supabase } from './supabase'
 import { getEpubUrl } from './gutenberg'
 
@@ -25,48 +24,6 @@ async function epubExistsInBucket(gutenbergId: number): Promise<boolean> {
     return false
   }
   return data?.some((f) => f.name === name) ?? false
-}
-
-// react-native-readium's native code reads the `file.url` as a local
-// filesystem path — it cannot fetch remote http(s) URLs. So once Supabase
-// Storage hands us the public download URL, we mirror it into the device's
-// cache directory and pass Readium a `file://` URI pointing at the cached
-// copy. Subsequent opens skip the download.
-function localCachePath(remoteUrl: string): string {
-  // Use the URL's last path segment as the cache filename (e.g. pg84.epub).
-  // No hashing needed — Supabase paths are already unique per book.
-  const filename = remoteUrl.split('/').pop() || 'book.epub'
-  const dir = FileSystem.cacheDirectory ?? ''
-  return `${dir}foxing-epubs/${filename}`
-}
-
-export async function ensureEpubLocallyCached(remoteUrl: string): Promise<string | null> {
-  try {
-    const localPath = localCachePath(remoteUrl)
-    const dir = localPath.substring(0, localPath.lastIndexOf('/'))
-
-    const info = await FileSystem.getInfoAsync(localPath)
-    if (info.exists && info.size && info.size > 0) {
-      console.log('[storage] using cached EPUB', { localPath, size: info.size })
-      return localPath
-    }
-
-    await FileSystem.makeDirectoryAsync(dir, { intermediates: true }).catch(() => {
-      // ignore — dir already exists
-    })
-
-    console.log('[storage] downloading EPUB to cache', { remoteUrl, localPath })
-    const result = await FileSystem.downloadAsync(remoteUrl, localPath)
-    if (result.status !== 200) {
-      console.warn('[storage] download failed', result.status)
-      return null
-    }
-    console.log('[storage] cached EPUB', { localPath, status: result.status })
-    return localPath
-  } catch (e) {
-    console.warn('[storage] ensureEpubLocallyCached error', e)
-    return null
-  }
 }
 
 export async function ensureEpubInStorage(gutenbergId: number): Promise<string | null> {
