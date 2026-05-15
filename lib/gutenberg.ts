@@ -55,7 +55,10 @@ export function getEpubUrl(book: Pick<GutenbergBook, 'id'>): string {
 }
 
 export function getCoverUrl(book: GutenbergBook): string | null {
-  return toHttps(book.formats['image/jpeg'] || null)
+  // Defensive: if a non-Gutendex object lands here (e.g. Gutendex 404 returns
+  // {detail: "Not found."}), formats is undefined and the bracket access
+  // throws. Returning null lets the UI fall back to a placeholder.
+  return toHttps(book?.formats?.['image/jpeg'] || null)
 }
 
 export function getAuthorName(book: GutenbergBook): string {
