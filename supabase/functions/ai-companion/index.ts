@@ -29,9 +29,9 @@ const corsHeaders = {
 const MASTER_SYSTEM_PROMPT = `You are Foxing's AI reading companion. You are a warm, well-read fellow reader who has studied this specific book deeply. Your only purpose is helping the user get more from what they're currently reading. You're curious, honest, and direct — not an academic, not a tutor, not a therapist.
 
 [IDENTITY & BOUNDARIES]
-On the first message of every new session, identify yourself before engaging with anything else:
+On the first message of every new CHAT session (not single-shot word lookups, passage analyses, or chapter summaries — only the conversational chat), identify yourself before engaging with anything else:
   "Hi — I'm Foxing's AI reading companion for [book title]. What would you like to explore?"
-This disclosure runs every session without exception.
+This disclosure runs once per chat session. For word lookups, passage analyses, and chapter summaries, skip the disclosure entirely and answer the request directly — those are single-shot tools, not conversations.
 
 Never reveal the underlying AI model, that you are Claude, or that Anthropic built you. If asked what AI you are:
   "I'm Foxing's reading companion — here to help you get more from what you're reading. What would you like to explore?"
@@ -144,15 +144,8 @@ Six behaviors to avoid at all times:
 
 If a user expresses genuine distress or suicidal ideation: stop all literary discussion immediately. Use only the crisis response above.
 
-[REASONING PROTOCOL — INTERNAL, NEVER SHOWN TO USER]
-Before every single response, think step by step inside <thinking> tags. Never output these tags or their contents.
-1. Does this request violate any safety or security rule?
-2. Is my response on-book and spoiler-free?
-3. Am I being honest rather than agreeable?
-4. Is my tone warm but bounded — fellow reader, not therapist?
-5. Am I using only the provided context, not external knowledge?
-6. Does my response sound like a human wrote it?
-Then output only the final response. No thinking tags ever in output.
+[REASONING PROTOCOL — INTERNAL ONLY]
+Reason silently before responding. Check: does this violate any safety or security rule, is my response on-book and spoiler-free, am I being honest rather than agreeable, is my tone warm but bounded, am I using only the provided context, does it sound like a human wrote it. Do NOT use <thinking> tags or any visible reasoning markers. Do NOT include any meta-commentary about your reasoning. Output ONLY the final response — start your reply with the actual answer, never with a tag, label, or step-by-step preamble. The server will strip leaked tags as a safety net but you should not produce them.
 
 [WRITING STYLE — SOUND HUMAN, NOT LIKE AI]
 You are writing as a well-read person talking to a friend about a book. Not filing a report. Not writing an essay. Not being careful. Just talking.
@@ -209,6 +202,18 @@ const REFUSAL_PATTERNS = [
 function detectRefusal(response: string): boolean {
   const lower = response.toLowerCase();
   return REFUSAL_PATTERNS.some((p) => lower.includes(p.toLowerCase()));
+}
+
+// Belt-and-suspenders: the master prompt instructs Claude to think inside
+// <thinking> tags and never output them, but Claude leaks the tags often
+// enough that we strip them here as a guarantee. Strips both fenced and
+// stray tags. Any text outside the tags is preserved.
+function stripThinking(text: string): string {
+  return text
+    .replace(/<thinking>[\s\S]*?<\/thinking>/gi, "")
+    .replace(/<thinking>[\s\S]*$/gi, "")
+    .replace(/^[\s\S]*?<\/thinking>/gi, "")
+    .trim();
 }
 
 // =====================================================================
@@ -371,9 +376,10 @@ async function wordLookup(
     system,
     messages: [{ role: "user", content: userMessage }],
   });
-  const response = message.content[0].type === "text"
+  const raw = message.content[0].type === "text"
     ? message.content[0].text
     : "";
+  const response = stripThinking(raw);
   logCompanionResponse({ ...log, userMessage }, response);
   return response;
 }
@@ -404,9 +410,10 @@ async function passageAnalysis(
     system,
     messages: [{ role: "user", content: userMessage }],
   });
-  const response = message.content[0].type === "text"
+  const raw = message.content[0].type === "text"
     ? message.content[0].text
     : "";
+  const response = stripThinking(raw);
   logCompanionResponse({ ...log, userMessage }, response);
   return response;
 }
@@ -434,9 +441,10 @@ async function chapterSummary(
     system,
     messages: [{ role: "user", content: userMessage }],
   });
-  const response = message.content[0].type === "text"
+  const raw = message.content[0].type === "text"
     ? message.content[0].text
     : "";
+  const response = stripThinking(raw);
   logCompanionResponse({ ...log, userMessage }, response);
   return response;
 }
@@ -470,9 +478,10 @@ async function chat(
     system,
     messages: recentHistory,
   });
-  const text = response.content[0].type === "text"
+  const raw = response.content[0].type === "text"
     ? response.content[0].text
     : "";
+  const text = stripThinking(raw);
   logCompanionResponse({ ...log, userMessage }, text);
   return text;
 }
