@@ -116,7 +116,7 @@ export default function Library() {
           books.map((entry) => (
             <Pressable
               key={entry.id}
-              onPress={() => router.push(`/book/${entry.book.id}`)}
+              onPress={() => router.push(`/reader/${entry.book.id}`)}
               className="flex-row mb-4 rounded-xl p-3 bg-bg-surface-light dark:bg-bg-surface-dark border border-border-subtle-light dark:border-border-subtle-dark"
             >
               <View className="w-16 h-24 rounded mr-3 overflow-hidden bg-bg-sunken-light dark:bg-bg-sunken-dark">
