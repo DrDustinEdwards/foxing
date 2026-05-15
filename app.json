@@ -40,8 +40,7 @@
           "resizeMode": "contain",
           "backgroundColor": "#1a1208"
         }
-      ],
-      "./plugins/with-android-readium-deps.js"
+      ]
     ],
     "experiments": {
       "typedRoutes": true
