@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { View, Text, Pressable, ActivityIndicator } from 'react-native'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { supabase } from '@/lib/supabase'
@@ -42,11 +42,16 @@ export default function Reader() {
   })
   const lastSaveRef = useRef<number>(Date.now())
 
+  const chromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const [book, setBook] = useState<BookRow | null>(null)
   const [loading, setLoading] = useState(true)
   const [initialCfi, setInitialCfi] = useState<string | null>(null)
   const [readerState, setReaderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [readerError, setReaderError] = useState<string | null>(null)
+  // Chrome (top + bottom toolbars) starts hidden — tap anywhere on the
+  // reading area to summon, then auto-hides 4s after appearing.
+  const [chrome, setChrome] = useState(false)
 
   const [fontSize, setFontSize] = useState(18)
   const [lineHeight, setLineHeight] = useState(1.7)
@@ -115,6 +120,22 @@ export default function Reader() {
       endSession()
     }
   }, [])
+
+  // Auto-hide chrome 4s after it appears. Cancel/reset on each toggle.
+  useEffect(() => {
+    if (chromeTimerRef.current) {
+      clearTimeout(chromeTimerRef.current)
+      chromeTimerRef.current = null
+    }
+    if (chrome) {
+      chromeTimerRef.current = setTimeout(() => setChrome(false), 4000)
+    }
+    return () => {
+      if (chromeTimerRef.current) clearTimeout(chromeTimerRef.current)
+    }
+  }, [chrome])
+
+  const toggleChrome = useCallback(() => setChrome((v) => !v), [])
 
   async function saveProgress() {
     if (!book || !positionRef.current.cfi) return
@@ -193,10 +214,12 @@ export default function Reader() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
-      {/* No outer Pressable — on Android it claims the touch responder
-          and blocks the WebView from initiating native text selection.
-          Chrome (Close/Recap, page-turn arrows, Aa, Chat) is always
-          visible as a result. */}
+      {/* The WebView is NOT wrapped in a Pressable — on Android that
+          claims the touch responder and blocks native text selection
+          (long-press → selection bubble with Look up / Analyze for AI).
+          Instead, a transparent tap-overlay sits on top — but only when
+          chrome is HIDDEN. Once chrome is visible, the overlay unmounts
+          so long-press in the reading area can still start selection. */}
       <ReaderWebView
         ref={readerRef}
         epubUrl={book.epub_url}
@@ -222,6 +245,18 @@ export default function Reader() {
           setPassageSheet(passage)
         }}
       />
+
+      {/* Tap-to-summon-chrome overlay. pointerEvents="box-only" makes the
+          View itself catch tap events without forwarding them; only mounted
+          when chrome is hidden so it never blocks long-press selection
+          while the toolbars are visible. */}
+      {!chrome ? (
+        <Pressable
+          onPress={toggleChrome}
+          pointerEvents="box-only"
+          style={StyleSheet.absoluteFill}
+        />
+      ) : null}
 
       {readerState === 'loading' ? (
         <View
@@ -273,6 +308,7 @@ export default function Reader() {
         </View>
       ) : null}
 
+      {chrome ? (
       <SafeAreaView
         edges={['top']}
         pointerEvents="box-none"
@@ -312,7 +348,9 @@ export default function Reader() {
             </Pressable>
           </View>
         </SafeAreaView>
+      ) : null}
 
+      {chrome ? (
         <SafeAreaView
           edges={['bottom']}
           pointerEvents="box-none"
@@ -360,6 +398,7 @@ export default function Reader() {
             </View>
           </View>
         </SafeAreaView>
+      ) : null}
 
       <SettingsSheet
         visible={showSettings}
