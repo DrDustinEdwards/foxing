@@ -159,7 +159,9 @@ android {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlinx:kotlinx-datetime:0.6.0"
+    implementation "org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.6.1"
+    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:1.7.3"
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1"
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.2"
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")

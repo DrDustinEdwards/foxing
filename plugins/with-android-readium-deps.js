@@ -23,7 +23,14 @@
 const { withAppBuildGradle } = require('expo/config-plugins')
 
 const DESUGAR_VERSION = '2.1.2'
-const KOTLINX_DATETIME_VERSION = '0.6.0'
+// Match Readium 3.1.0's transitive deps exactly to avoid GMM variant
+// resolution surprises. We use the -jvm artifacts (not the multiplatform
+// ones) because Gradle Module Metadata has caused ClassNotFoundException
+// at runtime for kotlinx.datetime.Instant even when classes appear in the
+// dex — the fix is to force the JVM-targeted artifact directly.
+const KOTLINX_DATETIME_VERSION = '0.6.1'
+const KOTLINX_SERIALIZATION_JSON_VERSION = '1.7.3'
+const KOTLINX_COROUTINES_VERSION = '1.10.1'
 
 const COMPILE_OPTIONS_BLOCK = `
     compileOptions {
@@ -33,7 +40,9 @@ const COMPILE_OPTIONS_BLOCK = `
     }
 `
 const DESUGAR_LINE = `    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${DESUGAR_VERSION}"`
-const KOTLINX_DATETIME_LINE = `    implementation "org.jetbrains.kotlinx:kotlinx-datetime:${KOTLINX_DATETIME_VERSION}"`
+const KOTLINX_DATETIME_LINE = `    implementation "org.jetbrains.kotlinx:kotlinx-datetime-jvm:${KOTLINX_DATETIME_VERSION}"`
+const KOTLINX_SERIALIZATION_LINE = `    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm:${KOTLINX_SERIALIZATION_JSON_VERSION}"`
+const KOTLINX_COROUTINES_LINE = `    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${KOTLINX_COROUTINES_VERSION}"`
 
 function patchBuildGradle(contents) {
   let out = contents
@@ -56,11 +65,16 @@ function patchBuildGradle(contents) {
     )
   }
 
-  // Add the missing kotlinx-datetime dependency for Readium's metadata parser.
-  if (!out.includes('kotlinx-datetime')) {
+  // Add Readium's transitive Kotlin runtime deps using the JVM-targeted
+  // artifacts. Even though Readium's POM declares these, Gradle Module
+  // Metadata variant resolution has produced runtime ClassNotFoundException
+  // for kotlinx.datetime.Instant — pinning the -jvm artifacts forces a
+  // single, deterministic variant into the APK.
+  if (!out.includes('kotlinx-datetime-jvm')) {
     out = out.replace(
       /dependencies\s*\{\s*\n/,
-      (match) => `${match}${KOTLINX_DATETIME_LINE}\n`,
+      (match) =>
+        `${match}${KOTLINX_DATETIME_LINE}\n${KOTLINX_SERIALIZATION_LINE}\n${KOTLINX_COROUTINES_LINE}\n`,
     )
   }
 
