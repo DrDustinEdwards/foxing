@@ -20,6 +20,8 @@ interface CompanionChatProps {
   bookTitle: string
   author: string
   currentChapter: string
+  bookId?: string
+  progress?: number
   onClose: () => void
 }
 
@@ -33,6 +35,8 @@ export function CompanionChat({
   bookTitle,
   author,
   currentChapter,
+  bookId,
+  progress,
   onClose,
 }: CompanionChatProps) {
   const colors = useColors()
@@ -59,7 +63,8 @@ export function CompanionChat({
         bookTitle,
         author,
         currentChapter,
-        spoilerFree
+        spoilerFree,
+        { bookId, progress },
       )
       console.log('[companion-chat] reply', { chars: reply.length })
       setMessages([...updated, { role: 'assistant', content: reply }])

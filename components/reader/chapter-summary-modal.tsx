@@ -10,6 +10,8 @@ interface ChapterSummaryModalProps {
   bookTitle: string
   author: string
   timing: 'before' | 'after'
+  bookId?: string
+  progress?: number
   onClose: () => void
 }
 
@@ -20,6 +22,8 @@ export function ChapterSummaryModal({
   bookTitle,
   author,
   timing,
+  bookId,
+  progress,
   onClose,
 }: ChapterSummaryModalProps) {
   const colors = useColors()
@@ -35,7 +39,15 @@ export function ChapterSummaryModal({
     setSummary(null)
     ;(async () => {
       try {
-        const s = await getChapterSummary(chapterTitle, chapterNumber, timing, bookTitle, author)
+        const s = await getChapterSummary(
+          chapterTitle,
+          chapterNumber,
+          timing,
+          bookTitle,
+          author,
+          undefined,
+          { bookId, currentChapter: chapterTitle, progress },
+        )
         console.log('[chapter-summary] result', { chars: s.length })
         setSummary(s)
       } catch (e) {

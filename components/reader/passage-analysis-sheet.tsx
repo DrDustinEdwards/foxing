@@ -19,6 +19,9 @@ interface PassageAnalysisSheetProps {
   bookTitle: string
   author: string
   era: string
+  bookId?: string
+  currentChapter?: string
+  progress?: number
   onClose: () => void
 }
 
@@ -28,6 +31,9 @@ export function PassageAnalysisSheet({
   bookTitle,
   author,
   era,
+  bookId,
+  currentChapter,
+  progress,
   onClose,
 }: PassageAnalysisSheetProps) {
   const colors = useColors()
@@ -43,7 +49,11 @@ export function PassageAnalysisSheet({
     setError(null)
     setResult(null)
     try {
-      const text = await analyzePassage(passage, mode, bookTitle, author, era)
+      const text = await analyzePassage(passage, mode, bookTitle, author, era, {
+        bookId,
+        currentChapter,
+        progress,
+      })
       console.log('[passage-analysis] result', { mode, chars: text.length })
       setResult(text)
     } catch (e) {
