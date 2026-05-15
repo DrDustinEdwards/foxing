@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { type Locator } from 'react-native-readium'
 import { supabase } from '@/lib/supabase'
+import { ensureEpubLocallyCached } from '@/lib/storage'
 import { Colors, useColors } from '@/constants/colors'
 import {
   ReaderReadium,
@@ -65,6 +66,8 @@ export default function Reader() {
 
   const [book, setBook] = useState<BookRow | null>(null)
   const [loading, setLoading] = useState(true)
+  const [localEpubPath, setLocalEpubPath] = useState<string | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
   const [initialLocator, setInitialLocator] = useState<Locator | undefined>(undefined)
   const [readerState, setReaderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [readerError, setReaderError] = useState<string | null>(null)
@@ -99,8 +102,20 @@ export default function Reader() {
         setLoading(false)
         return
       }
-      console.log('[reader] epub_url being passed to ReadiumView:', bookData.epub_url)
+      console.log('[reader] book.epub_url (remote):', bookData.epub_url)
       setBook(bookData as BookRow)
+
+      // Readium reads file.url as a local path; mirror the remote EPUB into
+      // the device cache before passing it to ReadiumView. Cached after
+      // first download so subsequent opens are instant.
+      const cached = await ensureEpubLocallyCached(bookData.epub_url)
+      if (!mounted) return
+      if (!cached) {
+        setDownloadError("We couldn't download the book file. Please try again.")
+      } else {
+        console.log('[reader] local epub path:', cached)
+        setLocalEpubPath(cached)
+      }
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
@@ -240,9 +255,10 @@ export default function Reader() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
+      {localEpubPath ? (
       <ReaderReadium
         ref={readerRef}
-        epubUrl={book.epub_url}
+        epubUrl={localEpubPath}
         initialLocator={initialLocator}
         initialSettings={initialSettings}
         onReady={() => {
@@ -265,6 +281,45 @@ export default function Reader() {
           setPassageSheet(passage)
         }}
       />
+      ) : null}
+
+      {!localEpubPath && !downloadError ? (
+        <View
+          pointerEvents="none"
+          className="absolute inset-0 items-center justify-center"
+          style={{ backgroundColor: themeColors.background }}
+        >
+          <ActivityIndicator color={colors.brandUi} />
+          <Text
+            className="font-ui mt-3 text-sm"
+            style={{ color: themeColors.text, opacity: 0.7 }}
+          >
+            Downloading book…
+          </Text>
+        </View>
+      ) : null}
+
+      {downloadError ? (
+        <View
+          className="absolute inset-0 items-center justify-center px-6"
+          style={{ backgroundColor: themeColors.background }}
+        >
+          <View className="flex-row items-center gap-2 mb-3">
+            <Text className="font-ui text-error-light dark:text-error-dark text-lg">✕</Text>
+            <Text
+              className="font-ui-medium text-lg text-center"
+              style={{ color: themeColors.text }}
+            >
+              {downloadError}
+            </Text>
+          </View>
+          <Pressable onPress={() => router.back()}>
+            <Text className="font-ui text-base" style={{ color: colors.brandUi }}>
+              ← Back to library
+            </Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {/* Tap-to-toggle-chrome overlay. pointerEvents="box-only" makes the
           overlay catch taps without children participating; we mount it as
