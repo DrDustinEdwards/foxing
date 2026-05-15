@@ -41,7 +41,7 @@
           "backgroundColor": "#1a1208"
         }
       ],
-      "./plugins/with-android-desugaring.js"
+      "./plugins/with-android-readium-deps.js"
     ],
     "experiments": {
       "typedRoutes": true
