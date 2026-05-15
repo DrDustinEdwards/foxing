@@ -60,7 +60,12 @@ function combinedSlug(b: Pick<SeBook, 'authorSlug' | 'titleSlug'>): string {
 }
 
 function epubDownloadUrl(b: Pick<SeBook, 'authorSlug' | 'titleSlug'>): string {
-  return `${CATALOG_BASE}/ebooks/${b.authorSlug}/${b.titleSlug}/downloads/${b.authorSlug}_${b.titleSlug}.epub`
+  // Critical: SE serves an HTML "Your Download Has Started!" interstitial
+  // page (8.8 KB, content-type text/html, but HTTP 200) when the bare URL
+  // is hit. The actual binary EPUB lives behind the `?source=download`
+  // query string. Without it, the seeder silently uploads HTML pages
+  // disguised as .epub files. We add the param here for every download.
+  return `${CATALOG_BASE}/ebooks/${b.authorSlug}/${b.titleSlug}/downloads/${b.authorSlug}_${b.titleSlug}.epub?source=download`
 }
 
 // =====================================================================
@@ -299,7 +304,24 @@ async function downloadEpub(url: string): Promise<ArrayBuffer> {
   if (!res.ok) {
     throw new Error(`download failed: ${res.status} ${res.statusText}`)
   }
-  return await res.arrayBuffer()
+  const buf = await res.arrayBuffer()
+
+  // Sanity: EPUB files are zip archives, which start with the magic bytes
+  // PK\x03\x04 (the "PK" signature for ZIP). If we got something else
+  // (e.g. SE's HTML interstitial) we've fetched the wrong URL — fail
+  // loudly so we don't pollute the bucket with garbage.
+  if (buf.byteLength < 4) {
+    throw new Error(`download too small to be EPUB: ${buf.byteLength} bytes`)
+  }
+  const head = new Uint8Array(buf, 0, 4)
+  if (head[0] !== 0x50 || head[1] !== 0x4b || head[2] !== 0x03 || head[3] !== 0x04) {
+    const ct = res.headers.get('content-type') || 'unknown'
+    throw new Error(
+      `not a ZIP/EPUB (first 4 bytes: ${[...head].map((b) => b.toString(16).padStart(2, '0')).join(' ')}, content-type: ${ct}, size: ${buf.byteLength})`,
+    )
+  }
+
+  return buf
 }
 
 async function uploadEpub(
@@ -347,6 +369,36 @@ async function insertBookRow(
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+// Robust error stringifier. Supabase StorageError objects aren't always
+// `instanceof Error` and their default toString() yields "[object Object]",
+// which is what was hiding the real cause in earlier runs. Walk likely
+// shapes (Error, string, plain object with .message / .error / .error.message)
+// and fall through to JSON for everything else.
+function describeError(e: unknown): string {
+  if (e instanceof Error) return e.message
+  if (typeof e === 'string') return e
+  if (e && typeof e === 'object') {
+    const o = e as Record<string, unknown>
+    if (typeof o.message === 'string') {
+      const status = typeof o.status === 'number' ? ` [${o.status}]` : ''
+      return `${o.message}${status}`
+    }
+    if (typeof o.error === 'string') return o.error
+    if (
+      o.error && typeof o.error === 'object' &&
+      typeof (o.error as Record<string, unknown>).message === 'string'
+    ) {
+      return (o.error as Record<string, unknown>).message as string
+    }
+    try {
+      return JSON.stringify(e)
+    } catch {
+      return String(e)
+    }
+  }
+  return String(e)
 }
 
 // =====================================================================
@@ -428,8 +480,7 @@ async function main() {
       )
     } catch (e) {
       failed++
-      const msg = e instanceof Error ? e.message : String(e)
-      console.warn(`[seed] ✕ ${slug} (${book.title}) — ${msg}`)
+      console.warn(`[seed] ✕ ${slug} (${book.title}) — ${describeError(e)}`)
     }
   }
 
