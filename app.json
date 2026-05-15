@@ -41,14 +41,6 @@
           "backgroundColor": "#1a1208"
         }
       ],
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "kotlinVersion": "2.1.20"
-          }
-        }
-      ],
       "./plugins/with-android-readium-deps.js"
     ],
     "experiments": {
