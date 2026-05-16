@@ -78,7 +78,10 @@ export function ChapterSummaryModal({
           <Text className="font-ui text-xs mb-4 text-text-tertiary-light dark:text-text-tertiary-dark">
             {chapterTitle}
           </Text>
-          <ScrollView>
+          {/* flex:1 keeps the body inside the modal's maxHeight bound so
+              long summaries scroll instead of pushing the "Got it" button
+              off-screen. */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
             {loading ? (
               <ActivityIndicator color={colors.brandUi} />
             ) : error ? (

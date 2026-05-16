@@ -11,10 +11,12 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview'
 
 import { ensureFoliateRuntime } from '@/lib/foliate-assets'
 import { ensureEpubLocallyCached } from '@/lib/epub-cache'
+import type { HighlightColor } from '@/components/reader/floating-pill'
+import type { WordWiseHint } from '@/lib/claude'
 
-// Callback shape mirrors the old @epubjs-react-native/core ReaderWebView so
-// the reader screen wiring stays unchanged. Signature additions: onTap (used
-// to drive the chrome toggle without an absolute-fill Pressable overlay).
+// Callback shape mirrors the old ReaderWebView so the reader screen wiring
+// stays simple. Position info on word/passage callbacks lets the host
+// render a FloatingPill anchored to the actual on-screen word.
 
 export interface ReaderTheme {
   background: string
@@ -25,6 +27,19 @@ export interface ReaderSettings {
   fontSize: number
   lineHeight: number
   theme: ReaderTheme
+  // Optional extended controls — host can omit; bridge applies defaults.
+  fontFamily?: string
+  bold?: boolean
+  paragraphSpacing?: number
+  marginPx?: number
+  justify?: boolean
+}
+
+export interface ReaderRect {
+  x: number
+  y: number
+  width: number
+  height: number
 }
 
 export interface ReaderRef {
@@ -32,6 +47,10 @@ export interface ReaderRef {
   next: () => void
   goTo: (cfi: string) => void
   applySettings: (settings: ReaderSettings) => void
+  addHighlight: (cfi: string, color: HighlightColor) => void
+  removeHighlight: (cfi: string) => void
+  setWordWiseEnabled: (enabled: boolean) => void
+  applyWordWiseHints: (hints: WordWiseHint[]) => void
 }
 
 interface FoliateReaderWebViewProps {
@@ -40,23 +59,34 @@ interface FoliateReaderWebViewProps {
   initialSettings: ReaderSettings
   onReady?: () => void
   onError?: (message: string) => void
-  onLocationChange?: (cfi: string, fraction: number) => void
+  onLocationChange?: (cfi: string, fraction: number, pageWordCount?: number, pageText?: string) => void
   onChapterChange?: (chapter: { title: string; index: number }) => void
-  onWordTap?: (word: string, sentence: string) => void
-  onPassageSelect?: (passage: string) => void
+  onWordTapped?: (word: string, surroundingText: string, cfi: string | null, rect: ReaderRect) => void
+  onPassageSelected?: (text: string, cfi: string | null, rect: ReaderRect) => void
   onTap?: () => void
 }
-
-const WORD_RE = /^[\p{L}\p{N}'-]{2,}$/u
 
 type BridgeMessage =
   | { type: 'ready' }
   | { type: 'opened'; metadata: { title: string | null; author: string | null } }
   | { type: 'error'; message: string }
-  | { type: 'locationChange'; cfi: string | null; fraction: number; tocLabel: string | null }
+  | {
+      type: 'locationChange'
+      cfi: string | null
+      fraction: number
+      tocLabel: string | null
+      pageWordCount?: number
+      pageText?: string
+    }
   | { type: 'tap' }
-  | { type: 'wordSelected'; word: string; cfi: string | null }
-  | { type: 'passageSelected'; text: string; cfi: string | null }
+  | {
+      type: 'wordTapped'
+      word: string
+      cfi: string | null
+      surroundingText: string
+      rect: ReaderRect
+    }
+  | { type: 'passageSelected'; text: string; cfi: string | null; rect: ReaderRect }
 
 function buildThemeJson(s: ReaderSettings): string {
   return JSON.stringify({
@@ -64,6 +94,11 @@ function buildThemeJson(s: ReaderSettings): string {
     text: s.theme.text,
     fontSize: s.fontSize,
     lineHeight: s.lineHeight,
+    fontFamily: s.fontFamily,
+    bold: s.bold,
+    paragraphSpacing: s.paragraphSpacing,
+    marginPx: s.marginPx,
+    justify: s.justify,
   })
 }
 
@@ -77,8 +112,8 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
       onError,
       onLocationChange,
       onChapterChange,
-      onWordTap,
-      onPassageSelect,
+      onWordTapped,
+      onPassageSelected,
       onTap,
     },
     ref,
@@ -88,14 +123,9 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
     const [base64, setBase64] = useState<string | null>(null)
     const [bootError, setBootError] = useState<string | null>(null)
 
-    // Track whether the bridge has signaled 'ready' — until it does,
-    // calls to injectJavaScript are no-ops on the JS side. We queue
-    // openBook for after ready.
     const bridgeReadyRef = useRef(false)
     const openedRef = useRef(false)
 
-    // Stage 1: extract the foliate runtime and download the EPUB. Both
-    // happen in parallel.
     useEffect(() => {
       let cancelled = false
       ;(async () => {
@@ -121,8 +151,6 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
       }
     }, [epubUrl])
 
-    // Inject runs once when the bridge signals 'ready'. Re-running on
-    // subsequent re-renders would re-open the book and lose position.
     const openBookIfReady = useCallback(() => {
       if (openedRef.current) return
       if (!bridgeReadyRef.current) return
@@ -147,7 +175,6 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
       webRef.current?.injectJavaScript(js)
     }, [base64, initialCfi, initialSettings])
 
-    // Try to open whenever either side becomes ready.
     useEffect(() => {
       if (bridgeReadyRef.current && base64) openBookIfReady()
     }, [base64, openBookIfReady])
@@ -170,6 +197,26 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
           const themeJson = buildThemeJson(s)
           webRef.current?.injectJavaScript(
             `window.foliateBridge.applyTheme(${themeJson}); true;`,
+          )
+        },
+        addHighlight: (cfi: string, color: HighlightColor) => {
+          webRef.current?.injectJavaScript(
+            `window.foliateBridge.addHighlight(${JSON.stringify(cfi)}, ${JSON.stringify(color)}); true;`,
+          )
+        },
+        removeHighlight: (cfi: string) => {
+          webRef.current?.injectJavaScript(
+            `window.foliateBridge.removeHighlight(${JSON.stringify(cfi)}); true;`,
+          )
+        },
+        setWordWiseEnabled: (enabled: boolean) => {
+          webRef.current?.injectJavaScript(
+            `window.foliateBridge.setWordWiseEnabled(${enabled ? 'true' : 'false'}); true;`,
+          )
+        },
+        applyWordWiseHints: (hints: WordWiseHint[]) => {
+          webRef.current?.injectJavaScript(
+            `window.foliateBridge.applyWordWiseHints(${JSON.stringify(hints)}); true;`,
           )
         },
       }),
@@ -199,7 +246,7 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
           onError?.(msg.message)
           break
         case 'locationChange':
-          if (msg.cfi) onLocationChange?.(msg.cfi, msg.fraction)
+          if (msg.cfi) onLocationChange?.(msg.cfi, msg.fraction, msg.pageWordCount, msg.pageText)
           if (msg.tocLabel != null) {
             onChapterChange?.({ title: msg.tocLabel, index: 0 })
           }
@@ -207,15 +254,11 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
         case 'tap':
           onTap?.()
           break
-        case 'wordSelected':
-          if (WORD_RE.test(msg.word)) {
-            onWordTap?.(msg.word, msg.word)
-          } else {
-            onPassageSelect?.(msg.word)
-          }
+        case 'wordTapped':
+          onWordTapped?.(msg.word, msg.surroundingText, msg.cfi, msg.rect)
           break
         case 'passageSelected':
-          onPassageSelect?.(msg.text)
+          onPassageSelected?.(msg.text, msg.cfi, msg.rect)
           break
       }
     }
@@ -252,21 +295,15 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
         ref={webRef}
         source={{ uri: readerHtmlUri }}
         onMessage={handleMessage}
-        // Android: foliate's modules import each other relative to reader.html;
-        // need both file-access flags so the WebView lets ./view.js etc. resolve.
         allowFileAccess
         allowFileAccessFromFileURLs
         allowUniversalAccessFromFileURLs
-        // Foliate uses ES modules + dynamic import + Blob URLs.
         javaScriptEnabled
         domStorageEnabled
         originWhitelist={['*']}
-        // Prevent vertical scroll bouncing on iOS over the reader area.
         bounces={false}
-        // Don't let the WebView intercept presentation of nav-style links.
         setSupportMultipleWindows={false}
         style={{ flex: 1, backgroundColor: initialSettings.theme.background }}
-        // Surface webview load errors as bootError.
         onError={(e) => {
           const msg = e.nativeEvent?.description || 'webview load error'
           console.warn('[foliate] webview onError', msg)

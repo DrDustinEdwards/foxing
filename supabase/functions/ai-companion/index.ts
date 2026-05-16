@@ -182,6 +182,29 @@ const CHAPTER_SUMMARY_APPENDIX = `Give a short plain-language summary of this ch
 
 const CHAT_APPENDIX = `Talk about the book with the reader like a fellow reader would. Stay warm and curious. Encourage them when they're confused. After 4-5 exchanges drifting off-topic, pull back to the book. After 30 minutes continuous chat, suggest a natural break. Never encourage personal disclosures unrelated to reading.`;
 
+const CHARACTER_MAP_APPENDIX = `List all characters the reader has encountered up to the current chapter and progress percentage. For each character provide: name, role (one of: protagonist / antagonist / supporting / minor), one-sentence description based ONLY on what has been revealed so far in the book at this point, and key relationships to other characters as a string array.
+
+STRICT spoiler rule: never include character information that hasn't been revealed by the reader's current position. If a character later turns out to be a villain but hasn't been revealed as one yet, describe them as the reader currently knows them.
+
+Output JSON only. No markdown fences. No prose preamble. Exact shape:
+{ "characters": [ { "name": string, "role": string, "description": string, "relationships": string[] } ] }
+
+If the book at this position has no clear characters yet (e.g. user is still in front matter), return { "characters": [] }.`;
+
+const WORD_WISE_APPENDIX = `Identify the 3-5 most likely unfamiliar words for a general adult reader on this page. For each word, give a 3-5 word contextual hint that reflects how THIS author uses it in THIS context — not a dictionary definition, a reading aid.
+
+Output JSON only. No markdown fences. No prose. Exact shape:
+[ { "word": string, "hint": string } ]
+
+If no difficult words are present, return []. Maximum 5 entries. Prefer words that the reader might genuinely pause on, not common ones with multiple meanings.`;
+
+const SEMANTIC_SEARCH_APPENDIX = `The reader is searching for a specific scene or moment in the book. Given their search query and the list of chapter names, identify which chapters most likely contain what they're looking for. You only know the chapter names plus the book title and author — use that plus general knowledge of the work's structure.
+
+Output JSON only. No markdown fences. No prose. Exact shape:
+{ "results": [ { "chapterName": string, "confidence": "high" | "medium" | "low", "explanation": string } ] }
+
+Maximum 3 results. Only include chapters with medium or high confidence. The explanation is one sentence — what the reader will likely find there.`;
+
 // =====================================================================
 // Refusal logging — used by ops to spot prompt injection attempts and
 // crisis content. Pattern matches reflect canonical phrases from the
@@ -224,7 +247,10 @@ type ActionType =
   | "word_lookup"
   | "passage_analysis"
   | "chapter_summary"
-  | "chat";
+  | "chat"
+  | "character_map"
+  | "word_wise"
+  | "semantic_search";
 
 type WordLookupPayload = {
   word: string;
@@ -269,6 +295,32 @@ type ChatPayload = {
   progress?: number;
 };
 
+type CharacterMapPayload = {
+  bookTitle: string;
+  author: string;
+  currentChapter: string;
+  bookId?: string;
+  progress?: number;
+};
+
+type WordWisePayload = {
+  pageText: string;
+  bookTitle: string;
+  author: string;
+  currentChapter: string;
+  bookId?: string;
+  progress?: number;
+};
+
+type SemanticSearchPayload = {
+  query: string;
+  bookTitle: string;
+  author: string;
+  chapterList: string[];
+  bookId?: string;
+  progress?: number;
+};
+
 type PromptContext = {
   bookTitle: string;
   author: string;
@@ -298,6 +350,12 @@ function appendixFor(action: ActionType): string {
       return CHAPTER_SUMMARY_APPENDIX;
     case "chat":
       return CHAT_APPENDIX;
+    case "character_map":
+      return CHARACTER_MAP_APPENDIX;
+    case "word_wise":
+      return WORD_WISE_APPENDIX;
+    case "semantic_search":
+      return SEMANTIC_SEARCH_APPENDIX;
   }
 }
 
@@ -449,6 +507,97 @@ async function chapterSummary(
   return response;
 }
 
+// JSON-shaped actions don't go through stripThinking — instead they go
+// through stripJsonFences to peel off any markdown fence Claude wraps the
+// response in. The host-side parser tolerates fenced output too, but
+// stripping here keeps the wire format clean and the bytes count smaller.
+function stripJsonFences(text: string): string {
+  const t = text.trim();
+  const m = /^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(t);
+  return m ? m[1].trim() : t;
+}
+
+async function characterMap(
+  p: CharacterMapPayload,
+  log: Omit<LogContext, "userMessage">,
+): Promise<string> {
+  const providedContext = `The reader is requesting a character roster as of their current position. Show only what they would know at this point.`;
+  const system = buildSystemPrompt("character_map", {
+    bookTitle: p.bookTitle,
+    author: p.author,
+    currentChapter: p.currentChapter || "",
+    progress: p.progress,
+    providedContext,
+  });
+  const userMessage = `Give me a spoiler-free character map for "${p.bookTitle}" up to ${p.currentChapter || "where I am"}.`;
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: 1500,
+    system,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+  const response = stripJsonFences(stripThinking(raw));
+  logCompanionResponse({ ...log, userMessage }, response);
+  return response;
+}
+
+async function wordWise(
+  p: WordWisePayload,
+  log: Omit<LogContext, "userMessage">,
+): Promise<string> {
+  // Cap pageText to keep token usage bounded — a typical paginated EPUB
+  // page is 200-400 words; even at 600 we're under ~1k tokens of input.
+  const trimmed = (p.pageText ?? "").slice(0, 4000);
+  const providedContext = `Visible page text (truncated to 4000 chars): """${trimmed}"""`;
+  const system = buildSystemPrompt("word_wise", {
+    bookTitle: p.bookTitle,
+    author: p.author,
+    currentChapter: p.currentChapter || "",
+    progress: p.progress,
+    providedContext,
+  });
+  const userMessage = `Pick the 3-5 hardest words on this page and give a short contextual hint for each.`;
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: 400,
+    system,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+  const response = stripJsonFences(stripThinking(raw));
+  logCompanionResponse({ ...log, userMessage }, response);
+  return response;
+}
+
+async function semanticSearch(
+  p: SemanticSearchPayload,
+  log: Omit<LogContext, "userMessage">,
+): Promise<string> {
+  // Cap chapter list at 200 entries to keep token use bounded — modern
+  // EPUBs occasionally ship hundreds of micro-sections.
+  const chapters = (p.chapterList ?? []).slice(0, 200);
+  const providedContext = `Chapter list (in order): ${chapters.map((c, i) => `${i + 1}. ${c}`).join("\n")}\n\nReader's query: """${p.query}"""`;
+  const system = buildSystemPrompt("semantic_search", {
+    bookTitle: p.bookTitle,
+    author: p.author,
+    currentChapter: "",
+    progress: undefined,
+    providedContext,
+  });
+  const userMessage = `Which chapters most likely contain: "${p.query}"?`;
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: 600,
+    system,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+  const response = stripJsonFences(stripThinking(raw));
+  logCompanionResponse({ ...log, userMessage }, response);
+  return response;
+}
+
 async function chat(
   p: ChatPayload,
   log: Omit<LogContext, "userMessage">,
@@ -553,6 +702,27 @@ Deno.serve(async (req) => {
         break;
       case "chat":
         result = await chat(payload as ChatPayload, {
+          type: action,
+          bookId,
+          userId,
+        });
+        break;
+      case "character_map":
+        result = await characterMap(payload as CharacterMapPayload, {
+          type: action,
+          bookId,
+          userId,
+        });
+        break;
+      case "word_wise":
+        result = await wordWise(payload as WordWisePayload, {
+          type: action,
+          bookId,
+          userId,
+        });
+        break;
+      case "semantic_search":
+        result = await semanticSearch(payload as SemanticSearchPayload, {
           type: action,
           bookId,
           userId,

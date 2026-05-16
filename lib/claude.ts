@@ -1,6 +1,13 @@
 import { supabase } from './supabase'
 
-type Action = 'word_lookup' | 'passage_analysis' | 'chapter_summary' | 'chat'
+type Action =
+  | 'word_lookup'
+  | 'passage_analysis'
+  | 'chapter_summary'
+  | 'chat'
+  | 'character_map'
+  | 'word_wise'
+  | 'semantic_search'
 
 // Calls go through the ai-companion Edge Function so the Anthropic key never
 // ships to the device. supabase.functions.invoke() automatically attaches the
@@ -149,4 +156,100 @@ export async function chatWithCompanion(
     spoilerFree,
     ...context,
   })
+}
+
+// Structured outputs from the new action types: each returns JSON. The
+// Edge Function returns JSON-text (we asked Claude for JSON-only); we
+// parse on the client and return typed objects. If parsing fails, surface
+// a clear error so the host can render a "couldn't generate" state
+// instead of crashing.
+
+export interface CharacterEntry {
+  name: string
+  role: 'protagonist' | 'antagonist' | 'supporting' | 'minor' | string
+  description: string
+  relationships: string[]
+}
+
+export async function getCharacterMap(
+  bookTitle: string,
+  author: string,
+  currentChapter: string,
+  context: CompanionContext = {},
+): Promise<CharacterEntry[]> {
+  const raw = await callAiCompanion('character_map', {
+    bookTitle,
+    author,
+    currentChapter,
+    ...context,
+  })
+  return parseJsonArrayResponse<CharacterEntry>(raw, 'characters')
+}
+
+export interface WordWiseHint {
+  word: string
+  hint: string
+}
+
+export async function getWordWiseHints(
+  pageText: string,
+  bookTitle: string,
+  author: string,
+  currentChapter: string,
+  context: CompanionContext = {},
+): Promise<WordWiseHint[]> {
+  const raw = await callAiCompanion('word_wise', {
+    pageText,
+    bookTitle,
+    author,
+    currentChapter,
+    ...context,
+  })
+  return parseJsonArrayResponse<WordWiseHint>(raw)
+}
+
+export interface SemanticSearchResult {
+  chapterName: string
+  confidence: 'high' | 'medium' | 'low'
+  explanation: string
+}
+
+export async function semanticSearch(
+  query: string,
+  bookTitle: string,
+  author: string,
+  chapterList: string[],
+  context: CompanionContext = {},
+): Promise<SemanticSearchResult[]> {
+  const raw = await callAiCompanion('semantic_search', {
+    query,
+    bookTitle,
+    author,
+    chapterList,
+    ...context,
+  })
+  return parseJsonArrayResponse<SemanticSearchResult>(raw, 'results')
+}
+
+// Tolerate Claude wrapping JSON in markdown fences ``` ... ``` or in a
+// containing object like { "characters": [ ... ] }. The optional `objectKey`
+// arg picks the array out of an object response.
+function parseJsonArrayResponse<T>(raw: string, objectKey?: string): T[] {
+  if (!raw) return []
+  let text = raw.trim()
+  // Strip a single ```json ... ``` fence if present.
+  const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i)
+  if (fenced) text = fenced[1].trim()
+  try {
+    const parsed = JSON.parse(text)
+    if (Array.isArray(parsed)) return parsed as T[]
+    if (objectKey && parsed && typeof parsed === 'object' && Array.isArray(parsed[objectKey])) {
+      return parsed[objectKey] as T[]
+    }
+    console.warn('[claude] unexpected JSON shape, returning empty:', Object.keys(parsed ?? {}))
+    return []
+  } catch (e) {
+    console.warn('[claude] JSON parse failed:', e instanceof Error ? e.message : e, 'raw:', text.slice(0, 200))
+    return []
+  }
 }

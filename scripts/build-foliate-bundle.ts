@@ -52,10 +52,12 @@ async function main() {
   await mkdir(OUT_DIR, { recursive: true })
   // Bundle includes a `version` so foliate-assets.ts can detect when to
   // re-extract on launch (e.g. user upgraded the app and the bundle changed).
-  // Bumped manually here when the file list or contents change in a way the
-  // runtime needs to notice.
+  // Bumped manually here when EITHER (a) the foliate file list/contents
+  // change or (b) assets/foliate/reader.html changes — both live in the
+  // same vN/ runtime directory, so a stale extraction of either keeps
+  // serving old code until the version key changes.
   const payload = {
-    version: 1,
+    version: 3,
     files: bundle,
   }
   await writeFile(OUT_PATH, JSON.stringify(payload), 'utf8')
