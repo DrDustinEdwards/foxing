@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View, Text, Modal, Pressable, ScrollView, ActivityIndicator } from 'react-native'
+import { X as XIcon, Dot } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { getCharacterMap, type CharacterEntry } from '@/lib/claude'
@@ -107,7 +108,7 @@ export function CharacterMapSheet({
               </View>
             ) : error ? (
               <View className="rounded-xl p-4 flex-row gap-2 items-start bg-error-bg-light dark:bg-error-bg-dark">
-                <Text style={{ color: colors.error }}>✕</Text>
+                <XIcon color={colors.error} size={16} />
                 <Text style={{ fontFamily: Fonts.ui, color: colors.error, flex: 1 }}>{error}</Text>
               </View>
             ) : !chars || chars.length === 0 ? (
@@ -161,12 +162,17 @@ export function CharacterMapSheet({
                           Relationships
                         </Text>
                         {c.relationships.map((r, i) => (
-                          <Text
-                            key={i}
-                            style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textSecondary, marginBottom: 4 }}
-                          >
-                            • {r}
-                          </Text>
+                          <View key={i} className="flex-row items-start mb-1">
+                            <Dot color={colors.textTertiary} size={16} />
+                            <Text
+                              style={{
+                                fontFamily: Fonts.ui, fontSize: 13,
+                                color: colors.textSecondary, flex: 1, marginLeft: 2,
+                              }}
+                            >
+                              {r}
+                            </Text>
+                          </View>
                         ))}
                       </View>
                     )}

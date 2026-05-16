@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { CaretLeft, TextAa, List as ListIcon, BookmarkSimple, X as XIcon } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -429,8 +430,9 @@ export default function Reader() {
         <Text className="font-ui mb-4 text-text-primary-light dark:text-text-primary-dark">
           We couldn't load that book.
         </Text>
-        <Pressable onPress={() => router.back()}>
-          <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">← Back</Text>
+        <Pressable onPress={() => router.back()} className="flex-row items-center">
+          <CaretLeft color={colors.brandText} size={18} />
+          <Text className="font-ui text-brand-text-light dark:text-brand-text-dark ml-1">Back</Text>
         </Pressable>
       </SafeAreaView>
     )
@@ -511,7 +513,7 @@ export default function Reader() {
           style={{ backgroundColor: themeColors.background }}
         >
           <View className="flex-row items-center gap-2 mb-3">
-            <Text className="font-ui text-error-light dark:text-error-dark text-lg">✕</Text>
+            <XIcon color={colors.error} size={20} />
             <Text
               className="font-ui-medium text-lg text-center"
               style={{ color: themeColors.text }}
@@ -525,9 +527,10 @@ export default function Reader() {
           >
             {readerError}
           </Text>
-          <Pressable onPress={() => router.back()}>
-            <Text className="font-ui text-base" style={{ color: colors.brandUi }}>
-              ← Back to library
+          <Pressable onPress={() => router.back()} className="flex-row items-center">
+            <CaretLeft color={colors.brandUi} size={18} />
+            <Text className="font-ui text-base ml-1" style={{ color: colors.brandUi }}>
+              Back to library
             </Text>
           </Pressable>
         </View>
@@ -546,9 +549,8 @@ export default function Reader() {
         onHighlight={handleHighlight}
       />
 
-      {/* TOP CHROME BAR — Back · title · [Aa] [☰] [🔖] (overlapping, never
-          shrinks the page). 0.95 opacity over the canvas so a hint of text
-          shows through, matching the spec's "completely visible behind". */}
+      {/* TOP CHROME BAR — Back · title · Aa · ☰ · bookmark. Phosphor
+          regular weight throughout via IconContext at app root. */}
       {chrome ? (
         <SafeAreaView
           edges={['top']}
@@ -559,9 +561,14 @@ export default function Reader() {
             className="flex-row items-center justify-between px-3 py-2"
             style={{ backgroundColor: themeColors.background, opacity: 0.95 }}
           >
-            <Pressable onPress={() => router.back()} className="px-2 py-2">
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 16, color: colors.brandUi }}>
-                ‹ Back
+            <Pressable
+              onPress={() => router.back()}
+              className="px-2 py-2 flex-row items-center"
+              accessibilityLabel="Back"
+            >
+              <CaretLeft color={colors.brandUi} size={20} />
+              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 16, color: colors.brandUi, marginLeft: 2 }}>
+                Back
               </Text>
             </Pressable>
             <Text
@@ -575,19 +582,17 @@ export default function Reader() {
             </Text>
             <View className="flex-row items-center">
               <Pressable onPress={() => setShowSettings(true)} className="px-2 py-2" accessibilityLabel="Typography">
-                <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.brandUi }}>
-                  Aa
-                </Text>
+                <TextAa color={colors.brandUi} size={22} />
               </Pressable>
               <Pressable onPress={() => setMenuOpen(true)} className="px-2 py-2" accessibilityLabel="Menu">
-                <Text style={{ fontSize: 18, color: colors.brandUi }}>☰</Text>
+                <ListIcon color={colors.brandUi} size={22} />
               </Pressable>
               <Pressable
                 onPress={() => setHighlightsOpen(true)}
                 className="px-2 py-2"
                 accessibilityLabel="Bookmarks"
               >
-                <Text style={{ fontSize: 18, color: colors.brandUi }}>🔖</Text>
+                <BookmarkSimple color={colors.brandUi} size={22} />
               </Pressable>
             </View>
           </View>

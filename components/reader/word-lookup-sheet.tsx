@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { View, Text, Modal, Pressable, ActivityIndicator, ScrollView } from 'react-native'
+import { X as XIcon } from 'phosphor-react-native'
 import { lookupWord } from '@/lib/claude'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
@@ -95,7 +96,7 @@ export function WordLookupSheet({
               <ActivityIndicator color={colors.brandUi} />
             ) : error ? (
               <View className="flex-row items-start gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
-                <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+                <XIcon color={colors.error} size={16} />
                 <Text className="font-ui flex-1 text-error-light dark:text-error-dark">
                   {error}
                 </Text>

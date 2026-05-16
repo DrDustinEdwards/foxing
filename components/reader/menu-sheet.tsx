@@ -1,4 +1,8 @@
 import { View, Text, Modal, Pressable, ScrollView, Share } from 'react-native'
+import {
+  BookOpen, Users, BookmarkSimple, Books, MagnifyingGlass, Share as ShareIcon,
+  CaretRight, type Icon,
+} from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -20,18 +24,18 @@ interface MenuSheetProps {
 
 interface MenuItem {
   key: MenuAction | 'share'
-  icon: string
+  Icon: Icon
   label: string
   subtitle: string
 }
 
 const ITEMS: MenuItem[] = [
-  { key: 'story-so-far', icon: '📖', label: 'Story So Far', subtitle: 'Catch up without spoilers' },
-  { key: 'character-map', icon: '👥', label: 'Character Map', subtitle: 'Characters you’ve met so far' },
-  { key: 'highlights', icon: '🔖', label: 'My Highlights', subtitle: 'Your notes and highlights' },
-  { key: 'vocabulary', icon: '📚', label: 'Vocabulary', subtitle: 'Words you’ve looked up' },
-  { key: 'search', icon: '🔍', label: 'Search', subtitle: 'Find anything in this book' },
-  { key: 'share', icon: '📤', label: 'Share', subtitle: 'Share this book with a friend' },
+  { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far', subtitle: 'Catch up without spoilers' },
+  { key: 'character-map', Icon: Users, label: 'Character Map', subtitle: 'Characters you’ve met so far' },
+  { key: 'highlights', Icon: BookmarkSimple, label: 'My Highlights', subtitle: 'Your notes and highlights' },
+  { key: 'vocabulary', Icon: Books, label: 'Vocabulary', subtitle: 'Words you’ve looked up' },
+  { key: 'search', Icon: MagnifyingGlass, label: 'Search', subtitle: 'Find anything in this book' },
+  { key: 'share', Icon: ShareIcon, label: 'Share', subtitle: 'Share this book with a friend' },
 ]
 
 export function MenuSheet({
@@ -103,7 +107,7 @@ export function MenuSheet({
                     marginRight: 14,
                   }}
                 >
-                  <Text style={{ fontSize: 18 }}>{item.icon}</Text>
+                  <item.Icon color={colors.brandUi} size={20} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}>
@@ -115,7 +119,7 @@ export function MenuSheet({
                     {item.subtitle}
                   </Text>
                 </View>
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 18, color: colors.textTertiary }}>›</Text>
+                <CaretRight color={colors.textTertiary} size={18} />
               </Pressable>
             ))}
           </ScrollView>

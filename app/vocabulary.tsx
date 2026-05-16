@@ -5,6 +5,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter, useLocalSearchParams } from 'expo-router'
+import { CaretLeft, X as XIcon, Check } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -80,9 +81,10 @@ export default function VocabularyScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="flex-row items-center justify-between px-5 py-3">
-        <Pressable onPress={() => router.back()}>
-          <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, fontSize: 16 }}>
-            ← Back
+        <Pressable onPress={() => router.back()} className="flex-row items-center">
+          <CaretLeft color={colors.brandText} size={18} />
+          <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, fontSize: 16, marginLeft: 2 }}>
+            Back
           </Text>
         </Pressable>
         <Text
@@ -133,7 +135,7 @@ export default function VocabularyScreen() {
           </View>
         ) : error ? (
           <View className="rounded-xl p-3 flex-row gap-2 items-start bg-error-bg-light dark:bg-error-bg-dark">
-            <Text style={{ color: colors.error }}>✕</Text>
+            <XIcon color={colors.error} size={16} />
             <Text style={{ fontFamily: Fonts.ui, color: colors.error, flex: 1 }}>{error}</Text>
           </View>
         ) : filtered.length === 0 ? (
@@ -162,11 +164,14 @@ export default function VocabularyScreen() {
                     {r.word}
                   </Text>
                   {r.mastered && (
-                    <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.success, marginLeft: 8 }}
-                    >
-                      ✓ Mastered
-                    </Text>
+                    <View className="flex-row items-center" style={{ marginLeft: 8 }}>
+                      <Check color={colors.success} size={12} />
+                      <Text
+                        style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.success, marginLeft: 2 }}
+                      >
+                        Mastered
+                      </Text>
+                    </View>
                   )}
                 </View>
                 {r.book_title ? (
@@ -362,11 +367,12 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                 </Pressable>
                 <Pressable
                   onPress={markMastered}
-                  className="flex-1 rounded-full py-3 items-center bg-brand-ui-light dark:bg-brand-ui-dark"
+                  className="flex-1 rounded-full py-3 items-center flex-row justify-center bg-brand-ui-light dark:bg-brand-ui-dark"
                 >
-                  <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                    Mastered ✓
+                  <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand, marginRight: 6 }}>
+                    Mastered
                   </Text>
+                  <Check color={colors.textOnBrand} size={14} />
                 </Pressable>
               </View>
             </ScrollView>

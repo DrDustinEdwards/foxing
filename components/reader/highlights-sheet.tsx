@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { View, Text, Modal, Pressable, ScrollView, ActivityIndicator } from 'react-native'
+import { X as XIcon } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { supabase } from '@/lib/supabase'
@@ -142,7 +143,7 @@ export function HighlightsSheet({
               </View>
             ) : error ? (
               <View className="rounded-xl p-4 flex-row gap-2 items-start bg-error-bg-light dark:bg-error-bg-dark">
-                <Text style={{ color: colors.error }}>✕</Text>
+                <XIcon color={colors.error} size={16} />
                 <Text style={{ fontFamily: Fonts.ui, color: colors.error, flex: 1 }}>{error}</Text>
               </View>
             ) : filtered.length === 0 ? (

@@ -9,6 +9,7 @@ import {
   TextInput,
   useWindowDimensions,
 } from 'react-native'
+import { CheckCircle, CaretRight } from 'phosphor-react-native'
 import { useColors, Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import {
@@ -439,17 +440,22 @@ function CanvasTab({
                 >
                   Aa
                 </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.ui,
-                    fontSize: 11,
-                    color: swatch.text,
-                    marginTop: 4,
-                    opacity: 0.7,
-                  }}
-                >
-                  {active ? '◉ ' : ''}{swatch.label}
-                </Text>
+                <View className="flex-row items-center mt-1">
+                  {active ? (
+                    <CheckCircle color={swatch.text} size={12} />
+                  ) : null}
+                  <Text
+                    style={{
+                      fontFamily: Fonts.ui,
+                      fontSize: 11,
+                      color: swatch.text,
+                      opacity: 0.7,
+                      marginLeft: active ? 4 : 0,
+                    }}
+                  >
+                    {swatch.label}
+                  </Text>
+                </View>
               </Pressable>
             )
           })}
@@ -636,7 +642,7 @@ function ThemeCard({ theme, active, onPress }: { theme: SavedTheme; active: bool
           {theme.isPreset ? 'Preset' : 'Custom'}
         </Text>
       </View>
-      <Text style={{ fontFamily: Fonts.ui, fontSize: 18, color: colors.brandText }}>›</Text>
+      <CaretRight color={colors.brandText} size={18} />
     </Pressable>
   )
 }

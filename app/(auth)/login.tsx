@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { X as XIcon } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 
@@ -59,7 +60,7 @@ export default function Login() {
 
           {error ? (
             <View className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
-              <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+              <XIcon color={colors.error} size={16} />
               <Text className="font-ui text-center text-error-light dark:text-error-dark">
                 {error}
               </Text>
