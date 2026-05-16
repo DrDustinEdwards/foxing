@@ -87,7 +87,10 @@ export function WordLookupSheet({
               </Text>
             </Pressable>
           </View>
-          <ScrollView>
+          {/* flex:1 + the parent's maxHeight gives the ScrollView a bounded
+              height; without flex:1 the ScrollView would size to its content
+              and the inner Text would overflow the sheet without scrolling. */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
             {loading ? (
               <ActivityIndicator color={colors.brandUi} />
             ) : error ? (

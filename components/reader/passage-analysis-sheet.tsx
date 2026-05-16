@@ -130,7 +130,10 @@ export function PassageAnalysisSheet({
             </View>
           </ScrollView>
 
-          <ScrollView>
+          {/* Result ScrollView gets flex:1 so it bounds within the sheet's
+              maxHeight; otherwise long passage analyses overflow the sheet
+              without scrolling. */}
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
             {loading ? (
               <ActivityIndicator color={colors.brandUi} />
             ) : error ? (

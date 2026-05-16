@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -22,6 +22,10 @@ interface CompanionChatProps {
   currentChapter: string
   bookId?: string
   progress?: number
+  // When set, the chat opens with this message pre-shown as the assistant's
+  // first turn (e.g. "I selected this passage: '...' — what would you like
+  // to discuss?"). Reset whenever the chat re-opens for a different passage.
+  seedAssistantMessage?: string | null
   onClose: () => void
 }
 
@@ -37,6 +41,7 @@ export function CompanionChat({
   currentChapter,
   bookId,
   progress,
+  seedAssistantMessage,
   onClose,
 }: CompanionChatProps) {
   const colors = useColors()
@@ -44,6 +49,20 @@ export function CompanionChat({
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [spoilerFree, setSpoilerFree] = useState(true)
+
+  // Seed the assistant's opening message every time the chat opens with
+  // a (possibly new) seed string. We re-seed on `visible` flips so closing
+  // and re-opening with a different passage replaces the seed cleanly.
+  useEffect(() => {
+    if (!visible) return
+    if (seedAssistantMessage) {
+      setMessages([{ role: 'assistant', content: seedAssistantMessage }])
+    } else {
+      setMessages([])
+    }
+    setInput('')
+    setSending(false)
+  }, [visible, seedAssistantMessage])
 
   async function send() {
     if (!input.trim() || sending) return

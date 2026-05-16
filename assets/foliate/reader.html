@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Foxing Reader</title>
   <style>
-    /* The body is the canvas; foliate-view fills it. We let the host
-       (React Native) override background/color via applyTheme(). */
+    /* The body is the canvas; foliate-view fills it. The host (React Native)
+       overrides background/color via applyTheme(). */
     html, body {
       margin: 0;
       padding: 0;
@@ -16,13 +16,18 @@
       background: #1a1a1a;
       color: #ffffff;
       font-family: -apple-system, system-ui, sans-serif;
+      /* OS selection is suppressed at the host level too — defense in depth.
+         Real selection suppression happens inside each chapter iframe via
+         the CSS we inject in applyThemeNow(). */
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
     }
     foliate-view {
       display: block;
       width: 100%;
       height: 100%;
     }
-    /* Loading splash — replaced when the book opens. */
     #loading {
       position: absolute;
       inset: 0;
@@ -38,21 +43,30 @@
   <div id="loading">Preparing reader…</div>
 
   <script type="module">
-    // The bridge speaks JSON over window.ReactNativeWebView.postMessage.
-    // Inbound calls are dispatched via window.foliateBridge.* (set up below)
-    // which the RN host invokes via injectJavaScript.
+    // ─────────────────────────────────────────────────────────────────────
+    // Bridge: messages flow as JSON over RNWebView's postMessage. Inbound
+    // calls from the RN host arrive via window.foliateBridge.* (see bottom)
+    // which the host invokes through injectJavaScript.
+    //
+    // OUTBOUND messages — every type:
+    //   { type: 'ready' }                    bridge harness loaded
+    //   { type: 'opened', metadata }         book parsed, first page rendered
+    //   { type: 'error', message }           any caught error
+    //   { type: 'locationChange', cfi, fraction, tocLabel, pageWordCount }
+    //                                        relocate event from foliate
+    //   { type: 'tap' }                      tap on empty area (chrome toggle)
+    //   { type: 'wordTapped', word, cfi, surroundingText, rect }
+    //                                        tap on a word — open word pill
+    //   { type: 'passageSelected', text, cfi, rect }
+    //                                        long-press + drag — open passage pill
+    //   { type: 'pillDismiss' }              user tapped outside an active pill
+    // ─────────────────────────────────────────────────────────────────────
+
     const post = (msg) => {
-      try {
-        window.ReactNativeWebView?.postMessage(JSON.stringify(msg))
-      } catch (e) {
-        // Older WebView versions occasionally throw on bigger payloads;
-        // keep going so a single bad message doesn't kill the bridge.
-        console.error('postMessage failed:', e)
-      }
+      try { window.ReactNativeWebView?.postMessage(JSON.stringify(msg)) }
+      catch (e) { console.error('postMessage failed:', e) }
     }
 
-    // Surface uncaught errors so the host can show them rather than
-    // leaving the user looking at a blank canvas.
     window.addEventListener('error', (e) => {
       post({ type: 'error', message: e.message || 'unknown script error' })
     })
@@ -61,16 +75,14 @@
       post({ type: 'error', message: m })
     })
 
-    // Load the foliate-view web component. view.js itself dynamically
-    // imports vendor/zip.js, paginator.js, fixed-layout.js, epub.js, etc.
-    // — so all those siblings must already be on disk in this directory.
     await import('./view.js')
 
     let view = null
-    let lastSelectionCfi = null
 
-    // Convert base64 → Blob without going through atob+charCodeAt for the
-    // whole string (which would peak at 3x memory). Process in chunks.
+    // ─────────────────────────────────────────────────────────────────────
+    // EPUB load
+    // ─────────────────────────────────────────────────────────────────────
+
     function base64ToBlob(b64, mimeType) {
       const byteChars = atob(b64)
       const bytes = new Uint8Array(byteChars.length)
@@ -78,82 +90,37 @@
       return new Blob([bytes], { type: mimeType })
     }
 
-    // Single-word vs passage routing. Same regex shape as the old reader.
-    const WORD_RE = /^[\p{L}\p{N}'-]{2,}$/u
-
-    // Foliate's renderer mounts each chapter inside an iframe. The 'load'
-    // event fires when a new section becomes visible; that's where we
-    // attach selection + tap listeners on the inner doc.
-    function wireDocumentEvents(doc) {
-      // Tap detection: a click with no active text selection. We fire
-      // before letting foliate handle the click for nav, so the host
-      // can toggle chrome on every tap without breaking page-turn taps.
-      doc.addEventListener('click', (e) => {
-        const sel = doc.getSelection?.()
-        if (sel && !sel.isCollapsed && sel.toString().trim()) return
-        // Don't toggle chrome on link taps — foliate handles those.
-        if (e.target.closest && e.target.closest('a[href]')) return
-        post({ type: 'tap' })
-      }, true)
-
-      // Selection: fire on selectionchange but debounce so we only emit
-      // the final state after the user lifts the finger.
-      let selTimer = null
-      const onSelChange = () => {
-        if (selTimer) clearTimeout(selTimer)
-        selTimer = setTimeout(() => {
-          const sel = doc.getSelection?.()
-          if (!sel || sel.isCollapsed) return
-          const text = sel.toString().trim()
-          if (!text) return
-          let cfi = null
-          try {
-            const range = sel.getRangeAt(0)
-            cfi = view?.getCFI?.(currentIndex(), range) ?? null
-          } catch {}
-          lastSelectionCfi = cfi
-          if (WORD_RE.test(text)) {
-            post({ type: 'wordSelected', word: text, cfi })
-          } else {
-            post({ type: 'passageSelected', text, cfi })
-          }
-        }, 250)
-      }
-      doc.addEventListener('selectionchange', onSelChange)
-      doc.addEventListener('mouseup', onSelChange)
-      doc.addEventListener('touchend', onSelChange)
-    }
-
-    let _currentIndex = 0
-    function currentIndex() { return _currentIndex }
-
     async function openBookFromBase64(base64, mime = 'application/epub+zip') {
       const blob = base64ToBlob(base64, mime)
       const file = new File([blob], 'book.epub', { type: mime })
 
-      // foliate-view is registered globally by view.js's import side effect.
       view = document.createElement('foliate-view')
       document.body.append(view)
 
-      // Wire events BEFORE open() so we don't miss the first 'load'.
       view.addEventListener('load', (e) => {
         const { doc, index } = e.detail
         _currentIndex = index
         wireDocumentEvents(doc)
+        // Re-apply the per-section CSS (selection suppression + theme) every
+        // time a new chapter mounts — the iframe's stylesheet is fresh per
+        // chapter, so the inject from openBook only covered the first one.
+        if (currentTheme) applyChapterCSS(doc, currentTheme)
       })
       view.addEventListener('relocate', (e) => {
         const { fraction, cfi, tocItem } = e.detail
+        const sample = readVisiblePage()
         post({
           type: 'locationChange',
           cfi: cfi ?? null,
           fraction: typeof fraction === 'number' ? fraction : 0,
           tocLabel: tocItem?.label || null,
+          pageWordCount: sample.wordCount,
+          pageText: sample.text,
         })
       })
 
-      try {
-        await view.open(file)
-      } catch (e) {
+      try { await view.open(file) }
+      catch (e) {
         post({ type: 'error', message: e?.message || 'open failed' })
         return
       }
@@ -161,13 +128,11 @@
       const splash = document.getElementById('loading')
       if (splash) splash.remove()
 
-      // Apply any pending theme (queued before openBook resolves).
       if (pendingTheme) {
         applyThemeNow(pendingTheme)
         pendingTheme = null
       }
 
-      // Render the first page.
       view.renderer.next()
 
       const meta = view.book?.metadata ?? {}
@@ -182,60 +147,518 @@
       })
     }
 
+    let _currentIndex = 0
+    function currentIndex() { return _currentIndex }
+
+    // Reads the visible iframe doc body and returns both a word-count
+    // (used by the host's WPM tracker) and a truncated text sample (used
+    // by the Word Wise hint fetch). Truncation cap of 4000 chars matches
+    // the Edge Function's `wordWise` handler so we don't ship more than
+    // it'll keep.
+    function readVisiblePage() {
+      try {
+        const contents = view?.renderer?.getContents?.() ?? []
+        const visible = contents.find((c) => c.index === _currentIndex)
+        if (!visible?.doc) return { wordCount: 0, text: '' }
+        const text = (visible.doc.body?.innerText ?? '').trim()
+        const wordCount = text.split(/\s+/).filter(Boolean).length
+        return { wordCount, text: text.slice(0, 4000) }
+      } catch {
+        return { wordCount: 0, text: '' }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Theme + selection-suppression CSS
+    // ─────────────────────────────────────────────────────────────────────
+
     let pendingTheme = null
-    function applyThemeNow(theme) {
-      const { background, text, fontSize, lineHeight } = theme
-      // Body background is the gutter color visible in the side margins.
-      document.body.style.background = background
-      document.body.style.color = text
-      // The CSS injected into each loaded section's iframe.
-      const css = `
+    let currentTheme = null
+
+    function chapterCSS(theme) {
+      const { background, text, fontSize, lineHeight, fontFamily, bold, paragraphSpacing, marginPx, justify } = theme
+      // user-select:none + -webkit-touch-callout:none collectively suppress
+      // the OS selection handles AND the long-press context menu inside
+      // every chapter iframe. Custom tap detection (caretRangeFromPoint)
+      // happens regardless of whether the OS sees a selection.
+      return `
         @namespace epub "http://www.idpf.org/2007/ops";
-        html { color-scheme: ${background.match(/#?[0-9a-f]{3,8}/i) && parseInt(background.replace('#',''), 16) < 0x808080 ? 'dark' : 'light'}; }
+        html { color-scheme: ${isDarkColor(background) ? 'dark' : 'light'}; }
+        html, body, p, li, blockquote, dd, span, div {
+          -webkit-user-select: none !important;
+          user-select: none !important;
+          -webkit-touch-callout: none !important;
+        }
         body {
           background: ${background} !important;
           color: ${text} !important;
+          font-family: ${fontFamily || 'Source Serif 4, Georgia, serif'} !important;
           font-size: ${fontSize}px !important;
           line-height: ${lineHeight} !important;
-          padding: 16px !important;
+          font-weight: ${bold ? 600 : 400} !important;
+          padding: ${marginPx ?? 16}px !important;
         }
         p, li, blockquote, dd, span, div { color: ${text} !important; }
+        p { margin-top: ${paragraphSpacing ?? 0.6}em !important; margin-bottom: ${paragraphSpacing ?? 0.6}em !important; }
+        ${justify === false
+          ? `p, li, blockquote, dd { text-align: start !important; }`
+          : `p, li, blockquote, dd { text-align: justify !important; }`
+        }
         a:link { color: lightblue; }
         pre { white-space: pre-wrap !important; }
         aside[epub|type~="endnote"],
         aside[epub|type~="footnote"],
         aside[epub|type~="note"],
         aside[epub|type~="rearnote"] { display: none; }
+        /* Word Wise inline hints. Wrapper stays inline-block so the
+           superscript hugs its target word; pointer-events:none on the
+           hint lets taps fall through to the word for the standard
+           wordTapped flow. */
+        .foxing-ww-wrapper { display: inline-block; }
+        .foxing-ww-hint {
+          display: inline-block;
+          vertical-align: super;
+          font-size: 0.6em;
+          margin-left: 2px;
+          color: ${text} !important;
+          opacity: 0.55;
+          font-style: italic;
+          pointer-events: none;
+          white-space: nowrap;
+          user-select: none;
+        }
       `
+    }
+
+    function isDarkColor(c) {
+      // Crude darkness check — used only to set color-scheme so default
+      // browser-rendered controls (links, scrollbars) match the canvas.
+      const m = /^#?([0-9a-f]{6})$/i.exec(c?.replace?.('#', '') ?? '')
+      if (!m) return c?.toLowerCase?.().includes('1a') || false
+      const v = parseInt(m[1], 16)
+      const r = (v >> 16) & 0xff, g = (v >> 8) & 0xff, b = v & 0xff
+      return (0.299 * r + 0.587 * g + 0.114 * b) < 128
+    }
+
+    function applyChapterCSS(doc, theme) {
+      // Inject our style into the iframe's head so it overrides anything in
+      // the book's own stylesheet. setStyles() does this for already-loaded
+      // sections but new sections need it re-applied on load.
+      try {
+        const css = chapterCSS(theme)
+        let styleEl = doc.getElementById('foxing-injected-css')
+        if (!styleEl) {
+          styleEl = doc.createElement('style')
+          styleEl.id = 'foxing-injected-css'
+          doc.head.appendChild(styleEl)
+        }
+        styleEl.textContent = css
+      } catch (e) { console.warn('applyChapterCSS failed:', e) }
+    }
+
+    function applyThemeNow(theme) {
+      currentTheme = theme
+      document.body.style.background = theme.background
+      document.body.style.color = theme.text
+      const css = chapterCSS(theme)
       view?.renderer?.setStyles?.(css)
+      // Also push into any iframes that are already mounted — setStyles
+      // covers most foliate paths but injecting directly is the belt to
+      // its suspenders.
+      try {
+        const contents = view?.renderer?.getContents?.() ?? []
+        for (const c of contents) {
+          if (c?.doc) applyChapterCSS(c.doc, theme)
+        }
+      } catch {}
     }
 
     function applyTheme(theme) {
-      if (!view) {
-        pendingTheme = theme
+      if (!view) { pendingTheme = theme; return }
+      applyThemeNow(theme)
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Tap + drag detection inside chapter iframes
+    // ─────────────────────────────────────────────────────────────────────
+
+    // 'click' fires on every gesture end — including drags. We instead time
+    // the touch sequence ourselves so we can distinguish tap vs drag and
+    // route to the right pill. user-select:none means the OS won't render a
+    // selection during drag; we synthesize one purely so we can extract text.
+
+    const TAP_DURATION_MS = 300
+    const TAP_MAX_MOVE_PX = 10
+
+    function wireDocumentEvents(doc) {
+      let startX = 0, startY = 0, startT = 0, moved = 0
+      let activeTouch = null
+
+      doc.addEventListener('contextmenu', (e) => e.preventDefault(), true)
+
+      doc.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) { activeTouch = null; return }
+        const t = e.touches[0]
+        startX = t.clientX
+        startY = t.clientY
+        startT = Date.now()
+        moved = 0
+        activeTouch = t.identifier
+      }, { passive: true })
+
+      doc.addEventListener('touchmove', (e) => {
+        if (activeTouch === null) return
+        const t = Array.from(e.touches).find((x) => x.identifier === activeTouch)
+        if (!t) return
+        const dx = t.clientX - startX
+        const dy = t.clientY - startY
+        moved = Math.max(moved, Math.hypot(dx, dy))
+      }, { passive: true })
+
+      doc.addEventListener('touchend', (e) => {
+        if (activeTouch === null) return
+        const t = Array.from(e.changedTouches).find((x) => x.identifier === activeTouch)
+        activeTouch = null
+        if (!t) return
+
+        const endX = t.clientX
+        const endY = t.clientY
+        const duration = Date.now() - startT
+
+        if (moved < TAP_MAX_MOVE_PX) {
+          handleTap(doc, endX, endY, duration)
+        } else {
+          handleDrag(doc, startX, startY, endX, endY)
+        }
+      }, { passive: true })
+    }
+
+    function handleTap(doc, x, y, _duration) {
+      const range = caretRangeAt(doc, x, y)
+      if (!range) {
+        // Hit empty area — chrome toggle.
+        post({ type: 'tap' })
         return
       }
-      applyThemeNow(theme)
+      const wordRange = expandRangeToWord(range)
+      if (!wordRange) {
+        post({ type: 'tap' })
+        return
+      }
+      const word = wordRange.toString().trim()
+      if (!word || !/[\p{L}\p{N}]/u.test(word)) {
+        post({ type: 'tap' })
+        return
+      }
+
+      const surroundingText = extractSurroundingSentence(wordRange)
+      const cfi = safeGetCFI(wordRange)
+      const rect = mapRectToHostDoc(doc, wordRange.getBoundingClientRect())
+      post({ type: 'wordTapped', word, cfi, surroundingText, rect })
+    }
+
+    function handleDrag(doc, sx, sy, ex, ey) {
+      const startRange = caretRangeAt(doc, sx, sy)
+      const endRange = caretRangeAt(doc, ex, ey)
+      if (!startRange || !endRange) {
+        post({ type: 'tap' })
+        return
+      }
+      const range = doc.createRange()
+      // Order start/end by document position so the Range is well-formed
+      // regardless of drag direction.
+      const cmp = startRange.compareBoundaryPoints(Range.START_TO_START, endRange)
+      const a = cmp <= 0 ? startRange : endRange
+      const b = cmp <= 0 ? endRange : startRange
+      try {
+        range.setStart(a.startContainer, a.startOffset)
+        range.setEnd(b.endContainer, b.endOffset)
+      } catch {
+        post({ type: 'tap' })
+        return
+      }
+      const text = range.toString().trim()
+      if (!text || text.length < 2) {
+        post({ type: 'tap' })
+        return
+      }
+      const cfi = safeGetCFI(range)
+      const rect = mapRectToHostDoc(doc, range.getBoundingClientRect())
+      post({ type: 'passageSelected', text, cfi, rect })
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Range helpers
+    // ─────────────────────────────────────────────────────────────────────
+
+    function caretRangeAt(doc, x, y) {
+      // caretRangeFromPoint is the Chrome/WebKit API used by Android
+      // System WebView. caretPositionFromPoint is the Firefox spec name
+      // (returns {offsetNode, offset}); fall back to it just in case.
+      if (typeof doc.caretRangeFromPoint === 'function') {
+        return doc.caretRangeFromPoint(x, y)
+      }
+      if (typeof doc.caretPositionFromPoint === 'function') {
+        const p = doc.caretPositionFromPoint(x, y)
+        if (!p) return null
+        const r = doc.createRange()
+        r.setStart(p.offsetNode, p.offset)
+        r.setEnd(p.offsetNode, p.offset)
+        return r
+      }
+      return null
+    }
+
+    // Word characters: letters/numbers/apostrophes/hyphens. Unicode-aware so
+    // accented words ("naïveté") match cleanly.
+    const WORD_CHAR_RE = /[\p{L}\p{N}'\-’]/u
+
+    function expandRangeToWord(range) {
+      const node = range.startContainer
+      if (node.nodeType !== Node.TEXT_NODE) return null
+      const text = node.nodeValue ?? ''
+      let start = range.startOffset
+      let end = range.startOffset
+      while (start > 0 && WORD_CHAR_RE.test(text[start - 1])) start--
+      while (end < text.length && WORD_CHAR_RE.test(text[end])) end++
+      if (start === end) return null
+      const r = node.ownerDocument.createRange()
+      r.setStart(node, start)
+      r.setEnd(node, end)
+      return r
+    }
+
+    function extractSurroundingSentence(wordRange) {
+      // Walk the parent text content for sentence terminators on either
+      // side of the word. Falls back to the whole paragraph if no
+      // terminator is found within ~500 chars in either direction.
+      const node = wordRange.startContainer
+      if (node.nodeType !== Node.TEXT_NODE) return wordRange.toString()
+      const block = node.parentElement?.closest?.('p, li, blockquote, dd, div, section') ?? node.parentElement
+      const text = (block?.innerText ?? node.nodeValue ?? '').replace(/\s+/g, ' ').trim()
+      if (!text) return wordRange.toString()
+
+      const word = wordRange.toString().trim()
+      const idx = text.indexOf(word)
+      if (idx < 0) return text.length > 240 ? word : text
+
+      // Walk back to previous sentence terminator + space.
+      let start = idx
+      const back = text.lastIndexOf('. ', idx - 1)
+      const back2 = text.lastIndexOf('! ', idx - 1)
+      const back3 = text.lastIndexOf('? ', idx - 1)
+      const startCandidate = Math.max(back, back2, back3)
+      if (startCandidate >= 0 && idx - startCandidate < 500) start = startCandidate + 2
+      else start = Math.max(0, idx - 240)
+
+      // Walk forward to next sentence terminator.
+      let end = idx + word.length
+      const f1 = text.indexOf('. ', end)
+      const f2 = text.indexOf('! ', end)
+      const f3 = text.indexOf('? ', end)
+      const candidates = [f1, f2, f3].filter((n) => n >= 0)
+      const endCandidate = candidates.length ? Math.min(...candidates) : -1
+      if (endCandidate >= 0 && endCandidate - end < 500) end = endCandidate + 1
+      else end = Math.min(text.length, end + 240)
+
+      return text.slice(start, end).trim()
+    }
+
+    function safeGetCFI(range) {
+      try { return view?.getCFI?.(currentIndex(), range) ?? null }
+      catch { return null }
+    }
+
+    function mapRectToHostDoc(doc, rect) {
+      // Range coords are iframe-local. The iframe itself is positioned
+      // somewhere inside the host doc — convert by adding the iframe's
+      // own getBoundingClientRect so the host (and React Native) sees
+      // coords relative to the WebView's render area.
+      try {
+        const frame = doc.defaultView?.frameElement
+        const off = frame ? frame.getBoundingClientRect() : { left: 0, top: 0 }
+        return {
+          x: rect.left + off.left,
+          y: rect.top + off.top,
+          width: rect.width,
+          height: rect.height,
+        }
+      } catch {
+        return { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // Highlights — visual overlay
+    // ─────────────────────────────────────────────────────────────────────
+    // The host stores the canonical highlight list in Supabase; the WebView
+    // just paints what the host tells it to via addHighlight/removeHighlight.
+
+    async function addHighlight(cfi, color) {
+      if (!view || !cfi) return
+      try {
+        await view.addAnnotation({ value: cfi, color })
+      } catch (e) { post({ type: 'error', message: 'addHighlight failed: ' + (e?.message || 'unknown') }) }
+    }
+
+    async function removeHighlight(cfi) {
+      if (!view || !cfi) return
+      try { await view.deleteAnnotation({ value: cfi }) }
+      catch {}
+    }
+
+    // foliate-view emits 'draw-annotation' so its overlayer knows what fill
+    // to use for our annotation. Map color slug → CSS color from the design
+    // system's hl-X-t tokens (the "text" tier — the most readable highlight
+    // tone in either light or dark mode).
+    const HIGHLIGHT_COLOR_CSS = {
+      amber:   '#F5C060',
+      auburn:  '#F0A070',
+      yellow:  '#F4E47B',
+      sage:    '#72CA9A',
+      cobalt:  '#70A6DB',
+      crimson: '#E46872',
+      purple:  '#B58DE2',
+    }
+
+    function wireAnnotationDraw() {
+      view?.addEventListener?.('draw-annotation', (e) => {
+        const { draw, annotation } = e.detail
+        const color = HIGHLIGHT_COLOR_CSS[annotation?.color] || HIGHLIGHT_COLOR_CSS.amber
+        // Overlayer is loaded at runtime by foliate; the highlight function
+        // is its built-in renderer for translucent rect highlights.
+        const overlay = view?.constructor?.Overlayer ?? globalThis.Overlayer
+        if (overlay?.highlight) {
+          draw(overlay.highlight, { color })
+        } else {
+          // Fallback: tag with color so the user sees something even if the
+          // highlight renderer wasn't loaded.
+          draw((ctx, rects) => {
+            ctx.fillStyle = color
+            for (const r of rects) ctx.fillRect(r.x, r.y, r.width, r.height)
+          }, { color })
+        }
+      })
     }
 
     async function goToCfi(cfi) {
       if (!view || !cfi) return
-      try { await view.goTo(cfi) } catch (e) {
-        post({ type: 'error', message: 'goTo failed: ' + (e?.message || 'unknown') })
-      }
+      try { await view.goTo(cfi) }
+      catch (e) { post({ type: 'error', message: 'goTo failed: ' + (e?.message || 'unknown') }) }
     }
 
     function goNext() { view?.renderer?.next() }
     function goPrev() { view?.renderer?.prev() }
 
-    // Public bridge — the RN host injects calls like
-    // `window.foliateBridge.openBookFromBase64('AAA...')` via injectJavaScript.
+    // ─────────────────────────────────────────────────────────────────────
+    // AI Word Wise — inline superscript hints
+    // ─────────────────────────────────────────────────────────────────────
+    // Enable/disable comes from the host via prefs. Hints arrive per-page
+    // after the host fetches them from the wordWise Edge Function action.
+    // We only mutate text nodes in the active iframe doc and undo the
+    // mutation before applying new hints.
+
+    let wordWiseEnabled = false
+    const WW_WRAPPER_CLASS = 'foxing-ww-wrapper'
+    const WW_HINT_CLASS = 'foxing-ww-hint'
+
+    function setWordWiseEnabled(enabled) {
+      wordWiseEnabled = !!enabled
+      if (!wordWiseEnabled) clearAllWordWiseHints()
+    }
+
+    function clearAllWordWiseHints() {
+      const contents = view?.renderer?.getContents?.() ?? []
+      for (const c of contents) if (c?.doc) clearWordWiseHints(c.doc)
+    }
+
+    function clearWordWiseHints(doc) {
+      const wrappers = doc.querySelectorAll('.' + WW_WRAPPER_CLASS)
+      for (const w of wrappers) {
+        const parent = w.parentNode
+        if (!parent) continue
+        // Replace the wrapper with a text node of the original word.
+        const word = w.getAttribute('data-ww-original') || w.firstChild?.nodeValue || ''
+        parent.replaceChild(doc.createTextNode(word), w)
+      }
+    }
+
+    function applyWordWiseHints(hints) {
+      if (!wordWiseEnabled) return
+      const list = Array.isArray(hints) ? hints : []
+      const contents = view?.renderer?.getContents?.() ?? []
+      for (const c of contents) {
+        if (!c?.doc) continue
+        if (c.index !== _currentIndex) continue
+        clearWordWiseHints(c.doc)
+        for (const h of list) {
+          if (h?.word && h?.hint) injectHint(c.doc, String(h.word), String(h.hint))
+        }
+      }
+    }
+
+    function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
+
+    function injectHint(doc, word, hint) {
+      // Walk visible text nodes for the first match. Skip nodes already
+      // inside a wrapper so we don't re-wrap on a re-apply.
+      const walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+        acceptNode: (n) => {
+          if (!n.nodeValue) return NodeFilter.FILTER_REJECT
+          if (n.parentElement?.closest('.' + WW_WRAPPER_CLASS)) return NodeFilter.FILTER_REJECT
+          // Skip <script>/<style>/hidden subtrees.
+          const tag = n.parentElement?.tagName?.toLowerCase()
+          if (tag === 'script' || tag === 'style') return NodeFilter.FILTER_REJECT
+          return NodeFilter.FILTER_ACCEPT
+        },
+      })
+      const re = new RegExp(`\\b${escapeRegex(word)}\\b`, 'i')
+      let node
+      while ((node = walker.nextNode())) {
+        const text = node.nodeValue
+        const m = re.exec(text)
+        if (!m) continue
+        const before = text.slice(0, m.index)
+        const matched = text.slice(m.index, m.index + m[0].length)
+        const after = text.slice(m.index + m[0].length)
+        const wrapper = doc.createElement('span')
+        wrapper.className = WW_WRAPPER_CLASS
+        wrapper.setAttribute('data-ww-original', matched)
+        wrapper.appendChild(doc.createTextNode(matched))
+        const sup = doc.createElement('sup')
+        sup.className = WW_HINT_CLASS
+        sup.textContent = hint
+        sup.setAttribute('aria-label', `Hint: ${hint}`)
+        wrapper.appendChild(sup)
+        const parent = node.parentNode
+        if (!parent) return
+        if (before) parent.insertBefore(doc.createTextNode(before), node)
+        parent.insertBefore(wrapper, node)
+        if (after) parent.insertBefore(doc.createTextNode(after), node)
+        parent.removeChild(node)
+        return // first occurrence only
+      }
+    }
+
+    // Patched openBook also hooks the annotation draw event after the view
+    // is created, so we wire it once here:
+    const _origOpen = openBookFromBase64
+    async function openBookFromBase64Wrapped(b64, mime) {
+      const result = await _origOpen(b64, mime)
+      wireAnnotationDraw()
+      return result
+    }
+
     window.foliateBridge = {
-      openBookFromBase64,
+      openBookFromBase64: openBookFromBase64Wrapped,
       applyTheme,
       goToCfi,
       goNext,
       goPrev,
+      addHighlight,
+      removeHighlight,
+      setWordWiseEnabled,
+      applyWordWiseHints,
     }
 
     post({ type: 'ready' })
