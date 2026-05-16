@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { View, Text, Pressable, ActivityIndicator, StyleSheet } from 'react-native'
+import { View, Text, Pressable, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { supabase } from '@/lib/supabase'
 import { Colors, useColors } from '@/constants/colors'
 import {
-  ReaderWebView,
+  FoliateReaderWebView,
   type ReaderRef,
   type ReaderSettings,
-} from '@/components/reader/reader-webview'
+} from '@/components/reader/foliate-reader-webview'
 import { SettingsSheet, type ThemeKey } from '@/components/reader/settings-sheet'
 import { WordLookupSheet } from '@/components/reader/word-lookup-sheet'
 import { PassageAnalysisSheet } from '@/components/reader/passage-analysis-sheet'
@@ -214,13 +214,12 @@ export default function Reader() {
 
   return (
     <View className="flex-1" style={{ backgroundColor: themeColors.background }}>
-      {/* The WebView is NOT wrapped in a Pressable — on Android that
-          claims the touch responder and blocks native text selection
-          (long-press → selection bubble with Look up / Analyze for AI).
-          Instead, a transparent tap-overlay sits on top — but only when
-          chrome is HIDDEN. Once chrome is visible, the overlay unmounts
-          so long-press in the reading area can still start selection. */}
-      <ReaderWebView
+      {/* Foliate's reader.html bridge fires a 'tap' message on every click
+          inside the iframe doc that isn't a text selection or link. The
+          chrome toggle is driven from that bridge message instead of an
+          absolute-fill Pressable overlay — that overlay used to block
+          long-press selection on Android, this approach doesn't. */}
+      <FoliateReaderWebView
         ref={readerRef}
         epubUrl={book.epub_url}
         initialCfi={initialCfi ?? undefined}
@@ -244,19 +243,8 @@ export default function Reader() {
           console.log('[reader] passage select', { chars: passage.length })
           setPassageSheet(passage)
         }}
+        onTap={toggleChrome}
       />
-
-      {/* Tap-to-summon-chrome overlay. pointerEvents="box-only" makes the
-          View itself catch tap events without forwarding them; only mounted
-          when chrome is hidden so it never blocks long-press selection
-          while the toolbars are visible. */}
-      {!chrome ? (
-        <Pressable
-          onPress={toggleChrome}
-          pointerEvents="box-only"
-          style={StyleSheet.absoluteFill}
-        />
-      ) : null}
 
       {readerState === 'loading' ? (
         <View

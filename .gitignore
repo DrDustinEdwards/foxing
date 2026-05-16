@@ -31,3 +31,6 @@ ios/*.xcuserdata/
 .claude/
 supabase/.temp/
 scripts/catalog-cache.json
+# foliate bundle.json IS committed — it's a build artifact EAS needs
+# without running the regen script first. The submodule lives at
+# libs/foliate-js and is tracked via .gitmodules.
