@@ -32,6 +32,7 @@
       "expo-router",
       "expo-font",
       "expo-dev-client",
+      "expo-updates",
       [
         "expo-splash-screen",
         {
@@ -44,6 +45,15 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "updates": {
+      "url": "https://u.expo.dev/c131a57e-b524-4e53-9f2f-d45558f0c8d2",
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0
+    },
+    "runtimeVersion": {
+      "policy": "fingerprint"
     },
     "extra": {
       "router": {},
