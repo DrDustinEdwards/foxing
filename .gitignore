@@ -30,3 +30,4 @@ ios/Pods/
 ios/*.xcuserdata/
 .claude/
 supabase/.temp/
+scripts/catalog-cache.json

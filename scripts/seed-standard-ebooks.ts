@@ -28,21 +28,42 @@
 // Resumable: every run lists existing files in epubs/se/ and skips books
 // whose EPUB is already cached. Safe to interrupt and re-run.
 //
-// Rate limit: SE runs on a single 2GB VPS; their etiquette asks ≤1
-// request per 5 seconds. We sleep CATALOG_SLEEP_MS between catalog page
-// fetches and EPUB_SLEEP_MS between EPUB downloads to be polite.
+// Rate limit: SE runs on a single 2GB VPS. Their published etiquette asks
+// ≤1 request per 5 seconds, but in practice their proxy starts returning
+// 429 around the ~90th sustained download. We sleep CATALOG_SLEEP_MS
+// between catalog page fetches and EPUB_SLEEP_MS between EPUB downloads,
+// and on a 429 we wait RATE_LIMIT_BACKOFF_MS and retry the failing book
+// once before marking it failed.
 
 import { createClient } from '@supabase/supabase-js'
 import { Buffer } from 'node:buffer'
+import { readFile, writeFile } from 'node:fs/promises'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 const CATALOG_BASE = 'https://standardebooks.org'
 const PER_PAGE = 48 // max SE accepts per catalog page
-const CATALOG_SLEEP_MS = 2000 // small HTML page; 2s is polite
-const EPUB_SLEEP_MS = 5000 // EPUB file download; SE's 5s rule
+const CATALOG_SLEEP_MS = 3000 // 32 catalog pages back-to-back at 2s started 429ing too — 3s is the safe floor
+const EPUB_SLEEP_MS = 20000 // SE's proxy throttled at 15s too; 20s is the new floor
+const RATE_LIMIT_BACKOFF_MS = 60000 // wait this long after a 429 before retrying once
+const POST_SCRAPE_COOLDOWN_MS = 5 * 60 * 1000 // even a paced 32-page scrape leaves the IP throttled — wait it out before downloads begin
 const BUCKET = 'epubs'
 const SE_PREFIX = 'se/' // storage path prefix for SE books
 
 const USER_AGENT = 'Foxing/1.0 (catalog seeder; +https://foxing.app)'
+
+// Local catalog cache. Scraping all 32 pages of /ebooks once contributes
+// to the 429 wave on resume runs that already have most EPUBs cached, so
+// we persist the full catalog to disk on first scrape and reuse it for
+// 24 hours. Pass --refresh-catalog to force a re-scrape regardless of age.
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
+const CATALOG_CACHE_PATH = join(SCRIPT_DIR, 'catalog-cache.json')
+const CATALOG_CACHE_TTL_MS = 24 * 60 * 60 * 1000
+
+interface CatalogCache {
+  fetchedAt: string // ISO timestamp
+  books: SeBook[]
+}
 
 interface SeBook {
   authorSlug: string // e.g. mary-shelley
@@ -77,14 +98,22 @@ interface Flags {
   wipe: boolean
   confirm: boolean
   limit: number | null
+  refreshCatalog: boolean
 }
 
 function parseFlags(argv: string[]): Flags {
-  const flags: Flags = { dryRun: false, wipe: false, confirm: false, limit: null }
+  const flags: Flags = {
+    dryRun: false,
+    wipe: false,
+    confirm: false,
+    limit: null,
+    refreshCatalog: false,
+  }
   for (const arg of argv.slice(2)) {
     if (arg === '--dry-run') flags.dryRun = true
     else if (arg === '--wipe') flags.wipe = true
     else if (arg === '--confirm') flags.confirm = true
+    else if (arg === '--refresh-catalog') flags.refreshCatalog = true
     else if (arg.startsWith('--limit=')) {
       const n = parseInt(arg.slice('--limit='.length), 10)
       if (!Number.isFinite(n) || n < 1) {
@@ -94,10 +123,11 @@ function parseFlags(argv: string[]): Flags {
       flags.limit = n
     } else if (arg === '--help' || arg === '-h') {
       console.log(`Usage: npx tsx scripts/seed-standard-ebooks.ts [flags]
-  --dry-run        Scrape the catalog and log what would happen, no writes.
-  --limit=N        Process only the first N entries.
-  --wipe           Delete all rows from books and all files from epubs/. Requires --confirm.
-  --confirm        Required alongside --wipe to actually perform the destructive step.
+  --dry-run          Scrape the catalog and log what would happen, no writes.
+  --limit=N          Process only the first N entries.
+  --refresh-catalog  Force a fresh catalog scrape (bypass the 24h local cache).
+  --wipe             Delete all rows from books and all files from epubs/. Requires --confirm.
+  --confirm          Required alongside --wipe to actually perform the destructive step.
 
 Env vars:
   SUPABASE_URL              (required for non-dry-run)
@@ -182,6 +212,81 @@ async function fetchCatalogPage(page: number): Promise<string> {
     throw new Error(`catalog page ${page} failed: ${res.status} ${res.statusText}`)
   }
   return await res.text()
+}
+
+async function loadCachedCatalog(): Promise<CatalogCache | null> {
+  try {
+    const raw = await readFile(CATALOG_CACHE_PATH, 'utf8')
+    const parsed = JSON.parse(raw) as CatalogCache
+    if (
+      typeof parsed.fetchedAt !== 'string' ||
+      !Array.isArray(parsed.books)
+    ) {
+      console.warn('[seed] catalog cache is malformed — ignoring')
+      return null
+    }
+    return parsed
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === 'ENOENT') return null
+    console.warn(`[seed] catalog cache read failed (${describeError(e)}) — ignoring`)
+    return null
+  }
+}
+
+async function saveCachedCatalog(books: SeBook[]): Promise<void> {
+  const payload: CatalogCache = {
+    fetchedAt: new Date().toISOString(),
+    books,
+  }
+  await writeFile(CATALOG_CACHE_PATH, JSON.stringify(payload), 'utf8')
+  console.log(`[seed] catalog cached to ${CATALOG_CACHE_PATH}`)
+}
+
+interface CatalogResult {
+  books: SeBook[]
+  freshlyScraped: boolean // true if we hit SE this run; signals the post-scrape cooldown
+}
+
+async function getCatalog(forceRefresh: boolean): Promise<CatalogResult> {
+  if (!forceRefresh) {
+    const cached = await loadCachedCatalog()
+    if (cached) {
+      const ageMs = Date.now() - new Date(cached.fetchedAt).getTime()
+      const ageHours = (ageMs / (60 * 60 * 1000)).toFixed(1)
+      if (ageMs < CATALOG_CACHE_TTL_MS) {
+        console.log(
+          `[seed] using cached catalog (${cached.books.length} books, ${ageHours}h old) — pass --refresh-catalog to re-scrape`,
+        )
+        return { books: cached.books, freshlyScraped: false }
+      }
+      console.log(
+        `[seed] catalog cache is ${ageHours}h old (TTL ${CATALOG_CACHE_TTL_MS / (60 * 60 * 1000)}h) — re-scraping`,
+      )
+    }
+  } else {
+    console.log('[seed] --refresh-catalog: bypassing cache')
+  }
+
+  const books = await scrapeFullCatalog()
+  await saveCachedCatalog(books)
+  return { books, freshlyScraped: true }
+}
+
+// Sleeps for `totalMs` while logging a countdown every `tickMs`. Used for
+// the post-scrape cooldown so it's clear the script is waiting on purpose
+// instead of hung.
+async function countdownSleep(totalMs: number, tickMs: number, label: string): Promise<void> {
+  const startedAt = Date.now()
+  const endsAt = startedAt + totalMs
+  while (true) {
+    const remaining = endsAt - Date.now()
+    if (remaining <= 0) break
+    const mins = Math.floor(remaining / 60000)
+    const secs = Math.floor((remaining % 60000) / 1000)
+    const mmss = `${mins}:${secs.toString().padStart(2, '0')}`
+    console.log(`[seed] ${label} ${mmss} remaining…`)
+    await sleep(Math.min(tickMs, remaining))
+  }
 }
 
 async function scrapeFullCatalog(): Promise<SeBook[]> {
@@ -299,8 +404,21 @@ async function listExistingSlugs(supabase: AdminClient): Promise<Set<string>> {
   return slugs
 }
 
+// Typed signal so the retry wrapper can distinguish rate-limit failures
+// (worth waiting and retrying) from permanent failures (404, 5xx, malformed
+// EPUB) that won't recover.
+class RateLimitError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'RateLimitError'
+  }
+}
+
 async function downloadEpub(url: string): Promise<ArrayBuffer> {
   const res = await fetch(url, { headers: { 'User-Agent': USER_AGENT } })
+  if (res.status === 429) {
+    throw new RateLimitError(`download failed: 429 Too Many Requests`)
+  }
   if (!res.ok) {
     throw new Error(`download failed: ${res.status} ${res.statusText}`)
   }
@@ -421,11 +539,24 @@ async function main() {
     await wipeAll(supabase)
   }
 
-  const books = await scrapeFullCatalog()
+  const { books, freshlyScraped } = await getCatalog(flags.refreshCatalog)
   const limited = flags.limit !== null ? books.slice(0, flags.limit) : books
   console.log(
     `[seed] processing ${limited.length} books${flags.limit !== null ? ` (--limit=${flags.limit})` : ''}`,
   )
+
+  // Even paced at 3s/page, scraping all 32 catalog pages leaves SE's proxy
+  // throttling our IP — the first downloads then 429 immediately. Wait it
+  // out before hitting the EPUB endpoint. Skipped when the catalog came
+  // from local cache (no fresh requests means no throttle to recover from)
+  // and skipped on dry-run (no downloads coming).
+  if (freshlyScraped && !flags.dryRun) {
+    console.log(
+      `[seed] catalog scraped — waiting ${POST_SCRAPE_COOLDOWN_MS / 60000} minutes before downloads to let rate limit reset…`,
+    )
+    await countdownSleep(POST_SCRAPE_COOLDOWN_MS, 30000, 'cooldown:')
+    console.log('[seed] cooldown complete — starting downloads')
+  }
 
   const existing = supabase ? await listExistingSlugs(supabase) : new Set<string>()
   if (supabase) {
@@ -467,7 +598,20 @@ async function main() {
       if (!supabase) throw new Error('unreachable')
 
       await sleep(EPUB_SLEEP_MS)
-      const data = await downloadEpub(epubDownloadUrl(book))
+      let data: ArrayBuffer
+      try {
+        data = await downloadEpub(epubDownloadUrl(book))
+      } catch (e) {
+        if (e instanceof RateLimitError) {
+          console.warn(
+            `[seed] · 429 on ${slug}, backing off ${RATE_LIMIT_BACKOFF_MS / 1000}s then retrying once`,
+          )
+          await sleep(RATE_LIMIT_BACKOFF_MS)
+          data = await downloadEpub(epubDownloadUrl(book))
+        } else {
+          throw e
+        }
+      }
       await uploadEpub(supabase, slug, data)
 
       const publicUrl = publicUrlFor(supabase, slug)
