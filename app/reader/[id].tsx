@@ -40,11 +40,13 @@ import {
   FONT_FAMILY_CSS,
 } from '@/lib/reader-settings'
 import { getWordWiseHints } from '@/lib/claude'
+import { resolvePreferredEpubUrl } from '@/lib/books'
 
 interface BookRow {
   id: string
   title: string
   author: string
+  source: string
   epub_url: string
 }
 
@@ -150,7 +152,7 @@ export default function Reader() {
     ;(async () => {
       const { data: bookData, error: bookError } = await supabase
         .from('books')
-        .select('id, title, author, epub_url')
+        .select('id, title, author, source, epub_url')
         .eq('id', id)
         .single()
       console.log('[reader] book query result', { bookData, error: bookError?.message })
@@ -158,7 +160,16 @@ export default function Reader() {
         setLoading(false)
         return
       }
-      setBook(bookData as BookRow)
+
+      // Prefer the Standard Ebooks edition when one exists. We swap only
+      // the epub_url — book.id stays the row the user tapped, so their
+      // progress, highlights, and vocabulary remain associated with it.
+      // Resolve BEFORE setBook so the WebView mounts straight to the SE
+      // bytes; otherwise the Gutenberg URL would briefly download first.
+      const typedBook = bookData as BookRow
+      const preferredUrl = await resolvePreferredEpubUrl(typedBook)
+      if (!mounted) return
+      setBook({ ...typedBook, epub_url: preferredUrl })
 
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
