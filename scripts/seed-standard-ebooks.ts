@@ -44,7 +44,7 @@ import { fileURLToPath } from 'node:url'
 const CATALOG_BASE = 'https://standardebooks.org'
 const PER_PAGE = 48 // max SE accepts per catalog page
 const CATALOG_SLEEP_MS = 3000 // 32 catalog pages back-to-back at 2s started 429ing too — 3s is the safe floor
-const EPUB_SLEEP_MS = 20000 // SE's proxy throttled at 15s too; 20s is the new floor
+const EPUB_SLEEP_MS = 5000 // SE's published etiquette asks for ≤1 request per 5 seconds; honor that floor
 const RATE_LIMIT_BACKOFF_MS = 60000 // wait this long after a 429 before retrying once
 const POST_SCRAPE_COOLDOWN_MS = 5 * 60 * 1000 // even a paced 32-page scrape leaves the IP throttled — wait it out before downloads begin
 const BUCKET = 'epubs'
@@ -98,7 +98,9 @@ interface Flags {
   wipe: boolean
   confirm: boolean
   limit: number | null
+  startFrom: number | null
   refreshCatalog: boolean
+  missing: boolean
 }
 
 function parseFlags(argv: string[]): Flags {
@@ -107,13 +109,16 @@ function parseFlags(argv: string[]): Flags {
     wipe: false,
     confirm: false,
     limit: null,
+    startFrom: null,
     refreshCatalog: false,
+    missing: false,
   }
   for (const arg of argv.slice(2)) {
     if (arg === '--dry-run') flags.dryRun = true
     else if (arg === '--wipe') flags.wipe = true
     else if (arg === '--confirm') flags.confirm = true
     else if (arg === '--refresh-catalog') flags.refreshCatalog = true
+    else if (arg === '--missing') flags.missing = true
     else if (arg.startsWith('--limit=')) {
       const n = parseInt(arg.slice('--limit='.length), 10)
       if (!Number.isFinite(n) || n < 1) {
@@ -121,11 +126,26 @@ function parseFlags(argv: string[]): Flags {
         process.exit(2)
       }
       flags.limit = n
+    } else if (arg.startsWith('--start-from=')) {
+      const n = parseInt(arg.slice('--start-from='.length), 10)
+      if (!Number.isFinite(n) || n < 1) {
+        console.error(`[seed] invalid --start-from value: ${arg}`)
+        process.exit(2)
+      }
+      flags.startFrom = n
     } else if (arg === '--help' || arg === '-h') {
       console.log(`Usage: npx tsx scripts/seed-standard-ebooks.ts [flags]
   --dry-run          Scrape the catalog and log what would happen, no writes.
   --limit=N          Process only the first N entries.
+  --start-from=N     Skip directly to entry N (1-indexed). Useful for manual
+                     session batching after SE's sustained-download 429 wall —
+                     the bucket-existence check still runs, but iteration
+                     starts at N so we don't scan thousands of skips.
   --refresh-catalog  Force a fresh catalog scrape (bypass the 24h local cache).
+  --missing          Compare cached catalog against bucket contents, print every
+                     slug present in the catalog but missing from the bucket,
+                     then exit. No downloads, no DB writes. Ignores --limit and
+                     --start-from (always reports on the full catalog).
   --wipe             Delete all rows from books and all files from epubs/. Requires --confirm.
   --confirm          Required alongside --wipe to actually perform the destructive step.
 
@@ -385,22 +405,38 @@ async function wipeAll(supabase: AdminClient) {
 }
 
 async function listExistingSlugs(supabase: AdminClient): Promise<Set<string>> {
+  // Supabase Storage's list(prefix) returns ONE directory level at a time.
+  // Folder entries come back with id: null and don't include their contents.
+  // SE translator books are stored as `se/{author_title}/{translator}.epub`
+  // (the catalog's titleSlug contains a slash for translated works, and
+  // combinedSlug() preserves it). To detect those as cached on resume we
+  // recurse one level into each folder entry and join with '/' so the
+  // returned slug exactly matches what combinedSlug(book) produces.
   const slugs = new Set<string>()
-  let offset = 0
-  while (true) {
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .list(SE_PREFIX, { limit: 1000, offset })
-    if (error) throw error
-    if (!data || data.length === 0) break
-    for (const f of data) {
-      if (f.id !== null && f.name.endsWith('.epub')) {
-        slugs.add(f.name.replace(/\.epub$/i, ''))
+
+  async function listLevel(prefix: string, slugPrefix: string): Promise<void> {
+    let offset = 0
+    while (true) {
+      const { data, error } = await supabase.storage
+        .from(BUCKET)
+        .list(prefix, { limit: 1000, offset })
+      if (error) throw error
+      if (!data || data.length === 0) break
+      for (const f of data) {
+        if (f.id === null) {
+          // Folder — recurse. SE only nests one level (translator slug),
+          // but listLevel handles arbitrary depth defensively.
+          await listLevel(`${prefix}${f.name}/`, `${slugPrefix}${f.name}/`)
+        } else if (f.name.endsWith('.epub')) {
+          slugs.add(`${slugPrefix}${f.name.replace(/\.epub$/i, '')}`)
+        }
       }
+      if (data.length < 1000) break
+      offset += data.length
     }
-    if (data.length < 1000) break
-    offset += data.length
   }
+
+  await listLevel(SE_PREFIX, '')
   return slugs
 }
 
@@ -464,11 +500,104 @@ function publicUrlFor(supabase: AdminClient, slug: string): string {
   return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl
 }
 
+// ─────────────────────────────────────────────────────────────────────
+// Cross-edition dedupe on upsert
+// ─────────────────────────────────────────────────────────────────────
+// Two-step write so the seeder doesn't recreate the (Gutenberg, SE)
+// duplicate pairs the dedupe migration cleaned up:
+//   1. Look for an existing row that matches by normalized title +
+//      author surname (regardless of source).
+//   2. If found → UPDATE that row in place (preserves its UUID +
+//      any user_books / highlights / vocabulary FK refs).
+//      If not found → INSERT a fresh SE row.
+// The previous `upsert(onConflict: epub_url)` only dedupe'd against
+// re-runs of the SE seeder itself, which is why the Gutenberg-Frankenstein
+// pair survived the first SE pass.
+
+function normalizeTitle(s: string): string {
+  return s
+    .toLowerCase()
+    .split(/[;:]/)[0]
+    .replace(/^\s*(the|a|an)\s+/i, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function authorSurname(s: string): string {
+  const t = s.toLowerCase().trim()
+  if (!t) return ''
+  if (t.includes(',')) return t.split(',')[0].trim()
+  const parts = t.split(/\s+/)
+  return parts[parts.length - 1]
+}
+
+interface ExistingBook {
+  id: string
+  title: string
+  author: string
+  source: string
+}
+
+async function findExistingBook(
+  supabase: AdminClient,
+  book: SeBook,
+): Promise<ExistingBook | null> {
+  // Author column is small enough that a prefix match on the surname keeps
+  // the row set tiny — then we tighten on the JS side. Postgres `ilike`
+  // is case-insensitive and uses an index seek on author when one exists,
+  // sequential scan otherwise (still fast at 1.4k rows).
+  const surname = authorSurname(book.author)
+  if (!surname) return null
+  const { data, error } = await supabase
+    .from('books')
+    .select('id, title, author, source')
+    .ilike('author', `%${surname}%`)
+  if (error || !data) return null
+
+  const target = normalizeTitle(book.title)
+  for (const cand of data) {
+    if (
+      normalizeTitle(cand.title) === target &&
+      authorSurname(cand.author) === surname
+    ) {
+      return cand as ExistingBook
+    }
+  }
+  return null
+}
+
 async function insertBookRow(
   supabase: AdminClient,
   book: SeBook,
   publicUrl: string,
 ): Promise<void> {
+  const existing = await findExistingBook(supabase, book)
+
+  if (existing) {
+    // Promote in place. Source flips to standard_ebooks; title/author/
+    // cover/epub_url adopt the SE values. We don't touch gutenberg_id
+    // (kept as a cross-reference) or subjects (may have curated data).
+    const { error } = await supabase
+      .from('books')
+      .update({
+        title: book.title,
+        author: book.author,
+        cover_url: book.coverUrl,
+        source: 'standard_ebooks',
+        epub_url: publicUrl,
+      })
+      .eq('id', existing.id)
+    if (error) throw error
+    if (existing.source !== 'standard_ebooks') {
+      console.log(
+        `[seed] · merged ${existing.source} row → SE (kept id ${existing.id.slice(0, 8)}…)`,
+      )
+    }
+    return
+  }
+
+  // No match — insert fresh. onConflict: 'epub_url' still guards against
+  // re-running the SE seeder by itself.
   const { error } = await supabase.from('books').upsert(
     {
       title: book.title,
@@ -540,6 +669,36 @@ async function main() {
   }
 
   const { books, freshlyScraped } = await getCatalog(flags.refreshCatalog)
+
+  // --missing: report-only diff between the catalog and what's in the
+  // bucket. Reports the full catalog regardless of --limit/--start-from,
+  // and exits before the post-scrape cooldown so the diff is fast.
+  if (flags.missing) {
+    if (!supabase) {
+      console.error(
+        '[seed] --missing requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (cannot inspect bucket)',
+      )
+      process.exit(2)
+    }
+    if (flags.limit !== null || flags.startFrom !== null) {
+      console.log('[seed] --missing ignores --limit and --start-from; reporting on full catalog')
+    }
+    const existing = await listExistingSlugs(supabase)
+    console.log(
+      `[seed] ${existing.size} books cached in ${BUCKET}/${SE_PREFIX}, ${books.length} in catalog`,
+    )
+    const missingSlugs: string[] = []
+    for (const b of books) {
+      const slug = combinedSlug(b)
+      if (!existing.has(slug)) missingSlugs.push(slug)
+    }
+    for (const slug of missingSlugs) {
+      console.log(slug)
+    }
+    console.log(`[seed] ${missingSlugs.length} of ${books.length} books missing`)
+    return
+  }
+
   const limited = flags.limit !== null ? books.slice(0, flags.limit) : books
   console.log(
     `[seed] processing ${limited.length} books${flags.limit !== null ? ` (--limit=${flags.limit})` : ''}`,
@@ -563,14 +722,29 @@ async function main() {
     console.log(
       `[seed] ${existing.size} books already cached in ${BUCKET}/${SE_PREFIX}, will skip those`,
     )
+    // Sample the first 5 detected slugs so we can eyeball that nested
+    // translator paths (e.g. "author_title/translator") are picked up.
+    const sample = [...existing].slice(0, 5)
+    if (sample.length > 0) {
+      console.log(`[seed] sample cached slugs: ${sample.map((s) => `"${s}"`).join(', ')}`)
+    }
   }
 
   let downloaded = 0
   let skipped = 0
   let failed = 0
+  let oversize = 0
   let upserted = 0
 
-  for (let i = 0; i < limited.length; i++) {
+  // --start-from is 1-indexed for human readability ("start from book 91"),
+  // so subtract 1 for the 0-based loop. Skipped entries are not counted in
+  // downloaded/skipped/failed — they're just not visited this run.
+  const startIndex = flags.startFrom !== null ? Math.max(0, flags.startFrom - 1) : 0
+  if (startIndex > 0) {
+    console.log(`[seed] --start-from=${flags.startFrom}: skipping first ${startIndex} entries`)
+  }
+
+  for (let i = startIndex; i < limited.length; i++) {
     const book = limited[i]
     const slug = combinedSlug(book)
     const idx = `${i + 1}/${limited.length}`
@@ -623,13 +797,25 @@ async function main() {
         `[seed] ✓ ${book.title} (${(data.byteLength / 1024).toFixed(0)} KB) ${idx}`,
       )
     } catch (e) {
-      failed++
-      console.warn(`[seed] ✕ ${slug} (${book.title}) — ${describeError(e)}`)
+      const msg = describeError(e)
+      // Supabase Storage free tier caps individual files at 50 MB. SE's
+      // omnibus collected works (e.g. complete Balzac, Shakespeare folios)
+      // trip this. It's a permanent failure for this book — there's no
+      // retry that helps — so log it distinctly and skip.
+      if (/exceeded maximum allowed size/i.test(msg)) {
+        oversize++
+        console.warn(
+          `[seed] ⚠ ${slug} (${book.title}) — too large for Storage tier, skipping permanently`,
+        )
+      } else {
+        failed++
+        console.warn(`[seed] ✕ ${slug} (${book.title}) — ${msg}`)
+      }
     }
   }
 
   console.log(
-    `[seed] done. downloaded=${downloaded} skipped=${skipped} failed=${failed} books_upserted=${upserted}`,
+    `[seed] done. downloaded=${downloaded} skipped=${skipped} oversize=${oversize} failed=${failed} books_upserted=${upserted}`,
   )
 }
 
