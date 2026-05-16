@@ -3,6 +3,7 @@ import {
   View, Text, Modal, Pressable, ScrollView, TextInput, ActivityIndicator,
   KeyboardAvoidingView, Platform,
 } from 'react-native'
+import { X as XIcon } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { semanticSearch, type SemanticSearchResult } from '@/lib/claude'
@@ -142,7 +143,7 @@ export function SearchSheet({
                 </View>
               ) : error ? (
                 <View className="rounded-xl p-3 flex-row gap-2 items-start bg-error-bg-light dark:bg-error-bg-dark">
-                  <Text style={{ color: colors.error }}>✕</Text>
+                  <XIcon color={colors.error} size={16} />
                   <Text style={{ fontFamily: Fonts.ui, color: colors.error, flex: 1 }}>{error}</Text>
                 </View>
               ) : aiResults ? (

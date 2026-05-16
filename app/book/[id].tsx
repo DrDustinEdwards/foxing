@@ -9,6 +9,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
+import { CaretLeft, Info, X as XIcon } from 'phosphor-react-native'
 import {
   getBook,
   getCoverUrl,
@@ -149,8 +150,9 @@ export default function BookDetail() {
         <Text className="font-ui text-center text-text-primary-light dark:text-text-primary-dark">
           Book not found.
         </Text>
-        <Pressable onPress={() => router.back()} className="mt-6">
-          <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">← Back</Text>
+        <Pressable onPress={() => router.back()} className="mt-6 flex-row items-center">
+          <CaretLeft color={colors.brandText} size={18} />
+          <Text className="font-ui text-brand-text-light dark:text-brand-text-dark ml-1">Back</Text>
         </Pressable>
       </SafeAreaView>
     )
@@ -164,9 +166,10 @@ export default function BookDetail() {
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
         <View className="flex-row items-center px-4 py-2">
-          <Pressable onPress={() => router.back()}>
-            <Text className="font-ui text-base text-brand-text-light dark:text-brand-text-dark">
-              ← Back
+          <Pressable onPress={() => router.back()} className="flex-row items-center">
+            <CaretLeft color={colors.brandText} size={18} />
+            <Text className="font-ui text-base text-brand-text-light dark:text-brand-text-dark ml-1">
+              Back
             </Text>
           </Pressable>
         </View>
@@ -216,7 +219,7 @@ export default function BookDetail() {
         <View className="px-4 mt-8 gap-3">
           {preparing ? (
             <View className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-info-bg-light dark:bg-info-bg-dark">
-              <Text className="font-ui text-info-light dark:text-info-dark">ℹ</Text>
+              <Info color={colors.info} size={16} />
               <Text className="font-ui text-center text-xs text-info-light dark:text-info-dark">
                 Preparing book…
               </Text>
@@ -224,7 +227,7 @@ export default function BookDetail() {
           ) : null}
           {prepareError ? (
             <View className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
-              <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+              <XIcon color={colors.error} size={16} />
               <Text className="font-ui text-center text-sm text-error-light dark:text-error-dark flex-1">
                 {prepareError}
               </Text>

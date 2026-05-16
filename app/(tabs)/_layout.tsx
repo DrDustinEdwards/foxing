@@ -1,4 +1,5 @@
 import { Tabs } from 'expo-router'
+import { Compass, Books, UserCircle } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -23,21 +24,21 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Discover',
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, size }) => <Compass color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="library"
         options={{
           title: 'Library',
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, size }) => <Books color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, size }) => <UserCircle color={color} size={size} />,
         }}
       />
     </Tabs>

@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react'
 import { View, Text, Pressable, useWindowDimensions } from 'react-native'
+import {
+  MagnifyingGlass,
+  ClipboardText,
+  Palette,
+  ChatCircle,
+  X as XIcon,
+} from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -118,14 +125,11 @@ export function FloatingPill({
     fontFamily: Fonts.uiMedium,
     fontSize: 13,
     color: colors.textSecondary,
-    marginLeft: 4,
+    marginLeft: 6,
   }
 
-  const iconStyle = {
-    fontFamily: Fonts.uiMedium,
-    fontSize: 15,
-    color: colors.brandText,
-  }
+  const ICON_SIZE = 18
+  const iconColor = colors.brandText
 
   // Color-picker mode: swatch row inside the pill.
   if (showColors) {
@@ -157,7 +161,7 @@ export function FloatingPill({
           onPress={() => setShowColors(false)}
           style={{ paddingHorizontal: 8, paddingVertical: 6 }}
         >
-          <Text style={iconStyle}>✕</Text>
+          <XIcon color={iconColor} size={ICON_SIZE} />
         </Pressable>
       </View>
     )
@@ -176,7 +180,7 @@ export function FloatingPill({
           }}
           style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8 }}
         >
-          <Text style={iconStyle}>🔍</Text>
+          <MagnifyingGlass color={iconColor} size={ICON_SIZE} />
           <Text style={labelStyle}>Look up</Text>
         </Pressable>
       ) : (
@@ -187,7 +191,7 @@ export function FloatingPill({
             onPress={() => onAnalyze?.()}
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8 }}
           >
-            <Text style={iconStyle}>📋</Text>
+            <ClipboardText color={iconColor} size={ICON_SIZE} />
             <Text style={labelStyle}>Analyze</Text>
           </Pressable>
           <View style={{ width: 1, height: 22, backgroundColor: colors.borderSubtle, marginHorizontal: 4 }} />
@@ -200,7 +204,7 @@ export function FloatingPill({
         onPress={() => setShowColors(true)}
         style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8 }}
       >
-        <Text style={iconStyle}>🎨</Text>
+        <Palette color={iconColor} size={ICON_SIZE} />
         <Text style={labelStyle}>Highlight</Text>
       </Pressable>
 
@@ -213,7 +217,7 @@ export function FloatingPill({
             onPress={() => onDiscuss?.()}
             style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 10, paddingVertical: 8 }}
           >
-            <Text style={iconStyle}>💬</Text>
+            <ChatCircle color={iconColor} size={ICON_SIZE} />
             <Text style={labelStyle}>Discuss</Text>
           </Pressable>
         </>
@@ -226,7 +230,7 @@ export function FloatingPill({
         onPress={onDismiss}
         style={{ paddingHorizontal: 10, paddingVertical: 8 }}
       >
-        <Text style={iconStyle}>✕</Text>
+        <XIcon color={iconColor} size={ICON_SIZE} />
       </Pressable>
     </View>
   )

@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect } from 'expo-router'
+import { X as XIcon } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 
@@ -111,7 +112,7 @@ export default function ProfileScreen() {
           onPress={signOut}
           className="flex-row justify-center items-center gap-2 rounded-xl py-4 border border-border-interactive-light dark:border-border-interactive-dark bg-bg-surface-light dark:bg-bg-surface-dark"
         >
-          <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+          <XIcon color={colors.error} size={16} />
           <Text className="font-ui text-error-light dark:text-error-dark">Sign out</Text>
         </Pressable>
       </ScrollView>

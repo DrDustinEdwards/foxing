@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { Info, X as XIcon } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 
@@ -76,7 +77,7 @@ export default function Signup() {
         {confirmationSent ? (
           <View className="gap-4 items-center">
             <View className="flex-row items-center gap-2 rounded-lg px-4 py-3 bg-info-bg-light dark:bg-info-bg-dark">
-              <Text className="font-ui text-info-light dark:text-info-dark">ℹ</Text>
+              <Info color={colors.info} size={18} />
               <Text className="font-ui text-center text-base text-text-primary-light dark:text-text-primary-dark flex-1">
                 Check your email to confirm your account, then sign in.
               </Text>
@@ -119,7 +120,7 @@ export default function Signup() {
 
           {error ? (
             <View className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
-              <Text className="font-ui text-error-light dark:text-error-dark">✕</Text>
+              <XIcon color={colors.error} size={16} />
               <Text className="font-ui text-center text-error-light dark:text-error-dark">
                 {error}
               </Text>

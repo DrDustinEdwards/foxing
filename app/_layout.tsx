@@ -7,6 +7,7 @@ import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
 import { ReaderProvider } from '@epubjs-react-native/core'
 import { Session } from '@supabase/supabase-js'
+import { IconContext } from 'phosphor-react-native'
 import {
   Fraunces_300Light,
   Fraunces_600SemiBold,
@@ -175,10 +176,15 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <ReaderProvider>
-        <Stack screenOptions={{ headerShown: false }} />
-        <StatusBar style="auto" />
-      </ReaderProvider>
+      {/* Default Phosphor weight + size for every icon in the app. Per
+          design spec the regular weight is the only one we use; setting
+          it here means individual call sites don't have to remember. */}
+      <IconContext.Provider value={{ weight: 'regular', size: 20 }}>
+        <ReaderProvider>
+          <Stack screenOptions={{ headerShown: false }} />
+          <StatusBar style="auto" />
+        </ReaderProvider>
+      </IconContext.Provider>
     </GestureHandlerRootView>
   )
 }
