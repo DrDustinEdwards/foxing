@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* All tokens come from design-system.md. CSS custom properties only,
+   no hardcoded hex outside this file. */
+
+[data-mode="light"] {
+  --bg-base: #FAF6EE;
+  --bg-surface: #FFFFFF;
+  --bg-elevated: #FFFFFF;
+  --bg-sunken: #F2EAD8;
+  --bg-hover: #E5D8BF;
+  --bg-selected: #FAE0D6;
+  --bg-disabled: #EDE6DC;
+  --bg-reading: #FEFCF8;
+  --bg-reading-sepia: #F5EDDA;
+  --bg-reading-oled: #000000;
+
+  --text-primary: #16100B;
+  --text-secondary: #3E3028;
+  --text-tertiary: #815E41;
+  --text-disabled: #CFC7BC;
+  --text-on-brand: #FFFFFF;
+  --text-on-amber: #16100B;
+  --text-on-dark: #F5EDDE;
+
+  --brand-ui: #D4622E;
+  --brand-text: #B04A1C;
+  --brand-hover: #8A3610;
+  --brand-secondary: #F5A623;
+  --brand-subtle: #FAE0D6;
+  --brand-subtle-text: #632507;
+
+  --success: #2B6443;
+  --success-bg: #EEF5EF;
+  --success-border: #D2E9D8;
+  --success-border-interactive: #196639;
+  --warning: #605206;
+  --warning-bg: #FCF5CF;
+  --warning-border: #E8DC80;
+  --warning-border-interactive: #665B19;
+  --error: #8D253F;
+  --error-bg: #FAF0F3;
+  --error-border: #F5D5DF;
+  --error-border-interactive: #66192D;
+  --info: #2B6391;
+  --info-bg: #EEF3F8;
+  --info-border: #D5E4F2;
+  --info-border-interactive: #194466;
+
+  --border-subtle: #E5D8BF;
+  --border-default: #CFC7BC;
+  --border-interactive: #7A4329;
+  --border-strong: #815E41;
+  --border-brand: #E58D6D;
+  --border-focus: #B04A1C;
+
+  --hl-amber: #FEF0C0;   --hl-amber-t: #5C3A00;
+  --hl-auburn: #FAD8C8;  --hl-auburn-t: #5A1E08;
+  --hl-yellow: #FAF3C6;  --hl-yellow-t: #554B07;
+  --hl-sage: #C8EDD5;    --hl-sage-t: #133520;
+  --hl-cobalt: #C8DFEF;  --hl-cobalt-t: #133656;
+  --hl-crimson: #F5D0DC; --hl-crimson-t: #4F1223;
+  --hl-purple: #DFD3EE;  --hl-purple-t: #361C54;
+
+  --skeleton-base: #EDE6DC;
+  --skeleton-shimmer: #F5EFE6;
+  --tooltip-bg: #261E17;
+  --tooltip-text: #F5EDDE;
+  --comment-bg: #EEF3F8;
+  --comment-border: #D5E4F2;
+  --spoiler-bg: #3E3028;
+  --spoiler-text: #3E3028;
+  --drag-target: #FAE0D6;
+  --drag-border: #D4622E;
+  --lookup-glow: #FAC455;
+  --presence-online: #1F7A4A;
+  --presence-away: #8A5B0F;
+  --overlay: rgba(22,16,11,0.5);
+
+  --section-cream: #FAF6EE;
+  --section-auburn: #D4622E;
+  --section-deep-auburn: #8A3610;
+  --section-charcoal: #16100B;
+  --section-amber: #F5A623;
+  --section-sage: #2B6443;
+
+  --gradient-hero: linear-gradient(135deg, #D4622E, #8A3610);
+  --gradient-warm: linear-gradient(135deg, #F5A623, #D4622E);
+  --gradient-dark: linear-gradient(135deg, #16100B, #261E17);
+  --gradient-subtle: linear-gradient(180deg, #FAF6EE, #F2EAD8);
+
+  --scrim-light: rgba(22,16,11,0.45);
+  --scrim-dark: rgba(22,16,11,0.65);
+  --scrim-auburn: rgba(180,74,28,0.55);
+
+  --shadow-sm: 0 1px 3px rgba(22,16,11,.07), 0 1px 2px rgba(22,16,11,.05);
+  --shadow-md: 0 4px 12px rgba(22,16,11,.09), 0 2px 4px rgba(22,16,11,.06);
+  --shadow-lg: 0 16px 32px rgba(22,16,11,.11), 0 4px 8px rgba(22,16,11,.07);
+}
+
+[data-mode="dark"], .dark {
+  --bg-base: #16100B;
+  --bg-surface: #1F1710;
+  --bg-elevated: #2A1F16;
+  --bg-sunken: #100D08;
+  --bg-hover: #261C13;
+  --bg-selected: #3A2418;
+  --bg-disabled: #1E1810;
+  --bg-reading: #1A1410;
+  --bg-reading-sepia: #1E190E;
+  --bg-reading-oled: #000000;
+
+  --text-primary: #F5EDDE;
+  --text-secondary: #C4AE96;
+  --text-tertiary: #A28269;
+  --text-disabled: #4A3628;
+  --text-on-brand: #FFFFFF;
+  --text-on-amber: #16100B;
+  --text-on-dark: #F5EDDE;
+
+  --brand-ui: #E07840;
+  --brand-text: #E07840;
+  --brand-hover: #E88F58;
+  --brand-secondary: #F79C40;
+  --brand-subtle: #2E1C0E;
+  --brand-subtle-text: #F0A070;
+
+  --success: #72CA9A;
+  --success-bg: #0D2018;
+  --success-border: #72CA9A;
+  --success-border-interactive: #72CA9A;
+  --warning: #F3DA49;
+  --warning-bg: #221C00;
+  --warning-border: #F3DA49;
+  --warning-border-interactive: #F3DA49;
+  --error: #E46872;
+  --error-bg: #220A0E;
+  --error-border: #E46872;
+  --error-border-interactive: #E46872;
+  --info: #70A6DB;
+  --info-bg: #091220;
+  --info-border: #70A6DB;
+  --info-border-interactive: #70A6DB;
+
+  --border-subtle: #261C13;
+  --border-default: #3A2C22;
+  --border-interactive: #BE7A37;
+  --border-strong: #6A5040;
+  --border-brand: #E07840;
+  --border-focus: #F5B840;
+
+  --hl-amber: #2E2008;   --hl-amber-t: #F5C060;
+  --hl-auburn: #2E1808;  --hl-auburn-t: #F0A070;
+  --hl-yellow: #3D360B;  --hl-yellow-t: #F4E47B;
+  --hl-sage: #0A1E12;    --hl-sage-t: #72CA9A;
+  --hl-cobalt: #081018;  --hl-cobalt-t: #70A6DB;
+  --hl-crimson: #20080E; --hl-crimson-t: #E46872;
+  --hl-purple: #231532;  --hl-purple-t: #B58DE2;
+
+  --skeleton-base: #261C13;
+  --skeleton-shimmer: #3A2C22;
+  --tooltip-bg: #F5EDDE;
+  --tooltip-text: #16100B;
+  --comment-bg: #0C1420;
+  --comment-border: #1A3050;
+  --spoiler-bg: #C4AE96;
+  --spoiler-text: #C4AE96;
+  --drag-target: #3A2418;
+  --drag-border: #E07840;
+  --lookup-glow: #3A2C00;
+  --presence-online: #4CAF7D;
+  --presence-away: #F5B840;
+  --overlay: rgba(0,0,0,0.7);
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.4),  0 1px 2px rgba(0,0,0,.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.5), 0 2px 4px rgba(0,0,0,.4);
+  --shadow-lg: 0 16px 32px rgba(0,0,0,.6),0 4px 8px rgba(0,0,0,.5);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+html {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+
+body {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  [data-mode="light"] {
+    --text-tertiary: #443122;
+    --brand-subtle-text: #492412;
+    --border-default: #5E4E42;
+    --border-subtle: #CFC7BC;
+  }
+  [data-mode="dark"], .dark {
+    --text-tertiary: #B9A492;
+    --brand-subtle-text: #F5C8A0;
+    --border-default: #6A5040;
+    --border-subtle: #3A2C22;
+  }
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline: 3px solid Highlight;
+    outline-offset: 2px;
+  }
+  .btn, .icon-btn, .tab {
+    border: 1px solid transparent;
+  }
+}
