@@ -1,0 +1,34 @@
+﻿[seed] using cached catalog (1434 books, 10.9h old) ΓÇö pass --refresh-catalog to re-scrape
+[seed] 1403 books cached in epubs/se/, 1434 in catalog
+ring-lardner_poetry
+helen-herron-taft_recollections-of-full-years
+robert-louis-stevenson_travel-essays
+edward-whymper_scrambles-amongst-the-alps-in-the-years-1860-69
+jacob-riis_how-the-other-half-lives
+cordwainer-smith_short-fiction
+james-joyce_exiles
+william-morris_the-house-of-the-wolfings
+margaret-oliphant_miss-marjoribanks
+edgar-rice-burroughs_the-mucker
+walter-s-masterman_the-wrong-letter
+p-g-wodehouse_the-head-of-kays
+cicely-hamilton_theodore-savage
+theodore-roosevelt_through-the-brazilian-wilderness
+a-w-tozer_the-pursuit-of-god
+anthony-trollope_short-fiction
+beatrix-potter_short-fiction
+hilaire-belloc_the-path-to-rome
+t-e-lawrence_seven-pillars-of-wisdom
+w-somerset-maugham_the-magician
+anthony-trollope_framley-parsonage
+jane-addams_twenty-years-at-hull-house
+s-m-mitra_hindu-tales-from-the-sanskrit
+sinclair-lewis_main-street
+p-g-wodehouse_ukridge-stories
+edward-lear_nonsense-books
+ulysses-s-grant_personal-memoirs-of-ulysses-s-grant
+maurice-leblanc_813/alexander-teixeira-de-mattos
+kate-chopin_the-awakening
+lewis-carroll_through-the-looking-glass/john-tenniel
+lewis-carroll_alices-adventures-in-wonderland/john-tenniel
+[seed] 31 of 1434 books missing

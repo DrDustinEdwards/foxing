@@ -1,0 +1,36 @@
+node_modules/
+.expo/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+.env
+.env.local
+.DS_Store
+*.log
+expo-env.d.ts
+*.tsbuildinfo
+.metro-health-check*
+
+# Native folders are committed (project is off Expo Go and on a dev client).
+# Inside android/, ignore the build/cache artifacts that don't belong in git.
+android/.gradle/
+android/build/
+android/app/build/
+android/.cxx/
+android/local.properties
+android/keystores/
+ios/build/
+ios/Pods/
+ios/*.xcuserdata/
+.claude/
+supabase/.temp/
+scripts/catalog-cache.json
+# foliate bundle.json IS committed, it's a build artifact EAS needs
+# without running the regen script first. The submodule lives at
+# libs/foliate-js and is tracked via .gitmodules.
