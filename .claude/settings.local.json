@@ -126,7 +126,12 @@
       "Bash(npx pnpm *)",
       "Bash(pnpm install *)",
       "Bash(echo \"---exit=$?\")",
-      "Bash(pnpm --filter web build)"
+      "Bash(pnpm --filter web build)",
+      "Bash(mv apps/mobile/.gitmodules .gitmodules)",
+      "Bash(sed -i 's|path = libs/foliate-js|path = apps/mobile/libs/foliate-js|' .gitmodules)",
+      "Bash(rm -f apps/mobile/libs/foliate-js/.git)",
+      "Bash(sed -i 's|worktree = .*/libs/foliate-js|worktree = ../../../../apps/mobile/libs/foliate-js|' .git/modules/libs/foliate-js/config)",
+      "Bash(echo \"gitdir: ../../../../.git/modules/libs/foliate-js\")"
     ]
   }
 }
