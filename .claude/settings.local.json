@@ -139,7 +139,8 @@
       "Bash(echo \"exit: $?\")",
       "Bash(npx next *)",
       "Bash(echo \"tsc exit: $?\")",
-      "PowerShell(Get-NetTCPConnection *)"
+      "PowerShell(Get-NetTCPConnection *)",
+      "Bash(pnpm add *)"
     ]
   }
 }
