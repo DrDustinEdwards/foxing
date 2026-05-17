@@ -25,25 +25,28 @@ import {
 } from '@/lib/queries'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 import { bookJsonLd } from '@/lib/structured-data'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
 
+// Build-time only. Uses the admin client because the server client calls
+// next/headers cookies(), which fails outside a request scope. The books
+// table is public catalog data, so service-role reads here are safe.
 export async function generateStaticParams() {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
   ) {
     return []
   }
-  const sb = createClient()
-  const { data } = await sb
+  const supabase = createAdminClient()
+  const { data: books } = await supabase
     .from('books')
     .select('id')
     .order('created_at', { ascending: false })
-    .limit(200)
-  return ((data as { id: string }[] | null) ?? []).map((b) => ({
-    slug: b.id,
+    .limit(500)
+  return ((books as { id: string }[] | null) ?? []).map((book) => ({
+    slug: book.id,
   }))
 }
 
