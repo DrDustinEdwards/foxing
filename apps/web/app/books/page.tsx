@@ -1,0 +1,195 @@
+import Link from 'next/link'
+import type { Metadata } from 'next'
+import { BookCard } from '@/components/book-card'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Footer } from '@/components/layout/footer'
+import { Nav } from '@/components/layout/nav'
+import { PageWrapper } from '@/components/layout/page-wrapper'
+import { fetchBooksList } from '@/lib/queries'
+import { getNavUser } from '@/lib/nav-user'
+import { siteOrigin } from '@/lib/foxing'
+
+export const dynamic = 'force-dynamic'
+
+interface BooksSearchParams {
+  mood?: string
+  search?: string
+  era?: string
+  length?: string
+  q?: string
+  page?: string
+}
+
+function pageTitle(params: BooksSearchParams): string {
+  if (params.mood) return `${capitalize(params.mood)} books`
+  if (params.era) return `${params.era} books`
+  if (params.length) return `${capitalize(params.length)} books`
+  if (params.search || params.q) return `Search results`
+  return 'All books'
+}
+
+function capitalize(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1)
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: BooksSearchParams
+}): Promise<Metadata> {
+  const title = pageTitle(searchParams)
+  return {
+    title: `${title} · Foxing`,
+    alternates: { canonical: `${siteOrigin()}/books` },
+  }
+}
+
+export default async function BooksPage({
+  searchParams,
+}: {
+  searchParams: BooksSearchParams
+}) {
+  const navUser = await getNavUser()
+  const page = Math.max(1, Number(searchParams.page) || 1)
+  const search = searchParams.search ?? searchParams.q
+  const { items, total } = await fetchBooksList({
+    mood: searchParams.mood,
+    search,
+    era: searchParams.era,
+    page,
+    pageSize: 24,
+  })
+  const totalPages = Math.max(1, Math.ceil(total / 24))
+  const title = pageTitle(searchParams)
+  const activeFilters: { key: string; label: string }[] = []
+  if (searchParams.mood)
+    activeFilters.push({ key: 'mood', label: `Mood: ${searchParams.mood}` })
+  if (searchParams.era)
+    activeFilters.push({ key: 'era', label: `Era: ${searchParams.era}` })
+  if (searchParams.length)
+    activeFilters.push({
+      key: 'length',
+      label: `Length: ${searchParams.length}`,
+    })
+  if (search) activeFilters.push({ key: 'search', label: `“${search}”` })
+
+  return (
+    <div className="flex min-h-screen flex-col bg-bg-base">
+      <Nav user={navUser} />
+      <main className="flex-1">
+        <PageWrapper className="py-10">
+          <h1 className="font-fraunces text-[2rem] text-text-primary">
+            {title}
+          </h1>
+          <p className="mt-2 font-dm-sans text-sm text-text-tertiary">
+            {total.toLocaleString()} {total === 1 ? 'book' : 'books'}
+          </p>
+
+          {activeFilters.length > 0 && (
+            <div className="mt-4 flex flex-wrap items-center gap-2">
+              {activeFilters.map((f) => (
+                <span
+                  key={f.key}
+                  className="rounded-full bg-brand-subtle px-3 py-1 font-dm-sans text-xs text-brand-subtle-text"
+                >
+                  {f.label}
+                </span>
+              ))}
+              <Link
+                href="/books"
+                className="font-dm-sans text-xs text-brand-text hover:underline"
+              >
+                Clear
+              </Link>
+            </div>
+          )}
+
+          {items.length === 0 ? (
+            <div className="mt-10">
+              <EmptyState
+                heading="No books match those filters."
+                action={
+                  <Link
+                    href="/books"
+                    className="font-dm-sans text-sm text-brand-text hover:underline"
+                  >
+                    See all books
+                  </Link>
+                }
+              />
+            </div>
+          ) : (
+            <>
+              <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4">
+                {items.map((b) => (
+                  <BookCard key={b.id} book={b} size="md" />
+                ))}
+              </div>
+              <Pagination
+                page={page}
+                totalPages={totalPages}
+                params={searchParams}
+              />
+            </>
+          )}
+        </PageWrapper>
+      </main>
+      <Footer />
+    </div>
+  )
+}
+
+function Pagination({
+  page,
+  totalPages,
+  params,
+}: {
+  page: number
+  totalPages: number
+  params: BooksSearchParams
+}) {
+  if (totalPages <= 1) return null
+  function hrefFor(target: number): string {
+    const q = new URLSearchParams()
+    if (params.mood) q.set('mood', params.mood)
+    if (params.era) q.set('era', params.era)
+    if (params.length) q.set('length', params.length)
+    if (params.search) q.set('search', params.search)
+    if (params.q) q.set('q', params.q)
+    if (target > 1) q.set('page', String(target))
+    const s = q.toString()
+    return s ? `/books?${s}` : '/books'
+  }
+  return (
+    <nav
+      aria-label="Pagination"
+      className="mt-10 flex items-center justify-between gap-3"
+    >
+      <Link
+        href={hrefFor(Math.max(1, page - 1))}
+        aria-disabled={page === 1}
+        className={
+          page === 1
+            ? 'pointer-events-none font-dm-sans text-sm text-text-disabled'
+            : 'font-dm-sans text-sm text-brand-text hover:underline'
+        }
+      >
+        ← Previous
+      </Link>
+      <span className="font-dm-mono text-xs text-text-tertiary">
+        Page {page} of {totalPages}
+      </span>
+      <Link
+        href={hrefFor(Math.min(totalPages, page + 1))}
+        aria-disabled={page === totalPages}
+        className={
+          page === totalPages
+            ? 'pointer-events-none font-dm-sans text-sm text-text-disabled'
+            : 'font-dm-sans text-sm text-brand-text hover:underline'
+        }
+      >
+        Next →
+      </Link>
+    </nav>
+  )
+}
