@@ -8,6 +8,7 @@ const PROTECTED_PREFIXES = [
   '/home',
   '/lists',
   '/goals',
+  '/highlights',
   '/find-next-book',
   '/admin',
 ]
