@@ -1,0 +1,53 @@
+﻿{
+  "id": "7705b060-cea3-45f1-a815-45520444ea81",
+  "status": "ERRORED",
+  "platform": "ANDROID",
+  "error": {
+    "errorCode": "UNKNOWN_ERROR",
+    "message": "Unknown error. See logs of the Configure expo-updates build phase for more information."
+  },
+  "artifacts": {},
+  "fingerprint": {
+    "id": "019e3128-645b-7310-9ada-c0fee4b3b520",
+    "hash": "9a94e637c0a02feb62b29a6cc92de842b3a00dd3"
+  },
+  "initiatingActor": {
+    "id": "a0ff0135-f0a1-4611-8317-8b28c038dcf8",
+    "displayName": "dustinedwards"
+  },
+  "logFiles": [
+    "https://job-logs.eascdn.net/production/7705b060-cea3-45f1-a815-45520444ea81/1778941191567-54c460b7-c127-4f29-83d8-0c3394d5a2a1.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260516%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260516T144005Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=8417f5c5e499fe9c74c4b3b03592bfb5278405fb1a254e86b11de81efe885b66ed16f9840d6d53ff6354f66c100567a4331945aaaa374133b523bfd98cd291b248bafeb6539595c5c579433db0ab9fce56da358ab9369e81bec1b4e7f4b6f1dd5e9177e4292a310a8e046d3992258df56f1172aa898ce82fe34ec72a975d62908d616b7db7946beaae72377876137c26521ec9a21140dcaaef87dc9ee5a14bd7bbcc91e38867bd18329c51dffb14adfaadd578b1d6cf710746d1837ecd8a4a86a65aabd67c15a1f350e9204f10d5533d0fce5940b9489b5b192f539078b026bf64172b5f30ff66c968493c8fcd16990136bda5405fe906de702bd9c62799dfcd",
+    "https://job-logs.eascdn.net/production/7705b060-cea3-45f1-a815-45520444ea81/1778941192739-d4923d3a-55a2-41e0-bef1-7f11f15310c2.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260516%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260516T144005Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=534a1ca542231111c4fdb387d6090236c74788bdb7425d4804c111a4b7cf3216daf60fd73aa318e1d9d8f9cbc36f25b92e6ab023954a2cf0e72749ba1383ed797b2aed44f670bc147711d86a294889e602f4e812d7599aa3821da29ec574597c3634e38c45adf930c07d34823bc238977b3a35495299f9043d9f94428a56d0994e46e3e933d96b3fd5c9ce75e08647f07194c80bafd20f83e7bfa92c6d111a768f70c25af8b96c53e0db0c90116cb1d6109629c50fe0bf6791bdec2aab0294989c4d00ec9972e9deaa21a28bd6cfa56637e96b14878b18ad20f70ec7b58f3dfe91c362ebfc011b2b9d9cc713bad41af88916e8fa1ce4b6e8c3d2e3fd67d5724c",
+    "https://job-logs.eascdn.net/production/7705b060-cea3-45f1-a815-45520444ea81/1778941193010-1c602dc9-c157-4f2b-9168-c3dbed8431b9.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260516%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260516T144005Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=67f5c8b9acf09589ebca780b8eb52e1158ba51d33e8b8798ab0856c8cd66b4997b0a296b3c1968b1bde4d49e93f3e4862a19b5bb1decbec7826e10100dc6c9ea79216af0578a493f60f4f476a721d7e8f0ba74aafb129c28a8b39df26b6dd5c36b9c86d1a849a143bce771f37a76adaf2a3fa6443efdfd384f3adb4751ab1c3aa1ef1f88262c1c478c64e14c8a2ba642a464ea70b3104c763a1bb51773984a3144a2c53e2d9efcb55499bd41a97d1512edf90449e258896bdd6650e362b92fcce44a4fef999240963ac3721e9956cc47b2a014a68fce0c5de377527837ccf7f26a74cca597cc822bf35cb7cf6d6e13bd3fcb381b57bd16046dd2eb8fdc56a0d8",
+    "https://job-logs.eascdn.net/production/7705b060-cea3-45f1-a815-45520444ea81/1778941193209-d90d0333-8c67-4a3f-b8cc-cad5adc3f51e.txt?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20260516%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20260516T144005Z&X-Goog-Expires=900&X-Goog-SignedHeaders=host&X-Goog-Signature=5fd3e536ed3d01f40c25f168003a8a238015e40318c662ec040c65d77710b067dc7a2cc6ffda33ac0e603f33a53c022b57f02018b6d35a9c2271312e29e8ce85311388afd7973528666eb7d5e33261d1b6bfa9560b927b3d0c1a4a15fa902a6273d6eee557aa2da27ce9a1befe50b5136f89d036eb473f5834d23e45af4b5297fda7ab099227800f2cbbd5e98201cbf228a9f9cffcb284d6cd85979df5f593a9f3a9c20b3b8b1493dffad987745396a6c449c46dd50d353196bdb7669455ebef0107e0002fac183e4474020858ff667a5187e08690f6a6ee644559b76e643daa9180be5a401d08810a98a48129f93c2117d3d1613b71436b5c612f9b59df4f22"
+  ],
+  "project": {
+    "id": "c131a57e-b524-4e53-9f2f-d45558f0c8d2",
+    "name": "foxing",
+    "slug": "foxing",
+    "ownerAccount": {
+      "id": "ab506717-8936-4d28-b5b4-0e74478a6814",
+      "name": "dustinedwards"
+    }
+  },
+  "channel": "preview",
+  "distribution": "INTERNAL",
+  "buildProfile": "preview",
+  "sdkVersion": "54.0.0",
+  "appVersion": "1.0.0",
+  "appBuildVersion": "13",
+  "runtimeVersion": "9a94e637c0a02feb62b29a6cc92de842b3a00dd3",
+  "gitCommitHash": "f8c22528509ec9ce16d8641c2eac329d6ee8849c",
+  "gitCommitMessage": "feat(updates): wire EAS Update with fingerprint runtime policy\n\nInstalls expo-updates and configures OTA delivery so JS-only changes\n(UI, logic, AI prompts, sheets, screens) can ship via\n  npx eas update --channel preview --message \"...\"\nwithout a full APK rebuild. Only native changes (new native deps,\nplugin config edits, etc.) require a fresh EAS build.\n\napp.json:\n- Adds \"expo-updates\" to plugins\n- expo.updates: url + checkAutomatically: ON_LOAD (poll on cold start)\n  + fallbackToCacheTimeout: 0 (don't block boot waiting for the network)\n- expo.runtimeVersion: { policy: \"fingerprint\" } — EAS auto-computes a\n  hash of the native side per build; OTAs only land on builds with\n  matching fingerprint, so native dep changes naturally gate updates\n  to a fresh build without manual version bumps.\n\neas.json:\n- Each build profile (development/preview/production) gets a matching\n  channel: \"<name>\" so the published APK polls the right update feed.\n\nCaveats:\n- Existing preview APKs (#10, #11) were built before this config and\n  will NOT receive OTA updates. The next preview build creates the\n  first APK that polls \"preview\" channel.\n- The native fingerprint changes on this commit (added expo-updates\n  module), so build #12 will be a fresh native compile. Subsequent\n  JS-only commits land via `eas update`.\n\nWorkflow going forward:\n  Native change (deps, plugins, android/ios edits)\n    → npx eas build --profile preview --platform android\n  Pure JS/TS/asset change\n    → npx eas update --channel preview --message \"what changed\"\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+  "priority": "HIGH",
+  "createdAt": "2026-05-16T14:19:51.230Z",
+  "updatedAt": "2026-05-16T14:21:13.056Z",
+  "completedAt": "2026-05-16T14:21:08.938Z",
+  "expirationDate": "2026-08-14T14:19:51.248Z",
+  "isForIosSimulator": false,
+  "metrics": {
+    "buildWaitTime": 159,
+    "buildQueueTime": 42770,
+    "buildDuration": 34500
+  }
+}
