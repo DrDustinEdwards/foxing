@@ -13,7 +13,7 @@ import { HighlightCard } from '@/components/highlight-card'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReviewCard } from '@/components/review-card'
-import { bookshopUrl, worldcatUrl } from '@foxing/utils'
+import { WhereToRead } from '@/components/where-to-read'
 import { getNavUser } from '@/lib/nav-user'
 import {
   fetchAiCache,
@@ -23,8 +23,8 @@ import {
   fetchPublicClubsForBook,
   fetchSimilarBooks,
 } from '@/lib/queries'
-import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
-import { bookJsonLd } from '@/lib/structured-data'
+import { appBookDeeplink } from '@/lib/foxing'
+import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
@@ -56,23 +56,18 @@ export async function generateMetadata({
   params: { slug: string }
 }): Promise<Metadata> {
   const book = await fetchBookById(params.slug)
-  if (!book) return { title: 'Book not found · Foxing' }
+  if (!book) return { title: 'Book not found' }
   const aiDesc = await fetchAiCache(book.id, 'book_description')
-  const fallback = book.description ?? ''
-  const description = (aiDesc || fallback).slice(0, 160)
-  const origin = siteOrigin()
-  return {
-    title: `${book.title} by ${book.author} · Foxing`,
-    description: description || undefined,
-    alternates: { canonical: `${origin}/book/${book.id}` },
-    openGraph: {
-      title: `${book.title} by ${book.author}`,
-      description: description || undefined,
-      url: `${origin}/book/${book.id}`,
-      images: book.cover_url ? [{ url: book.cover_url }] : undefined,
-      type: 'book',
-    },
-  }
+  const description = aiDesc ?? book.description ?? null
+  return buildBookMetadata({
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    description,
+    themes: book.themes,
+    word_count: book.word_count,
+    cover_url: book.cover_url,
+  })
 }
 
 export default async function BookPage({
@@ -101,13 +96,96 @@ export default async function BookPage({
     ? aiAuthorBio.split('\n').filter(Boolean).slice(0, 2).join(' ')
     : null
 
+  const isCommunityBook = book.source_type === 'community' || !book.epub_url
+
+  const bookJsonLdStr = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Book',
+    '@id': `${FOXING_BASE_URL}/book/${book.id}`,
+    name: book.title,
+    author: {
+      '@type': 'Person',
+      name: book.author,
+      url: `${FOXING_BASE_URL}/author/${encodeURIComponent(book.author)}`,
+    },
+    description:
+      description ??
+      (isCommunityBook
+        ? `${book.title} by ${book.author}, on Foxing.`
+        : `Read ${book.title} by ${book.author} free on Foxing.`),
+    url: `${FOXING_BASE_URL}/book/${book.id}`,
+    inLanguage: book.language ?? 'en',
+    genre: book.themes?.[0] ?? 'Fiction',
+    ...(book.isbn13 ? { isbn: book.isbn13 } : book.isbn ? { isbn: book.isbn } : {}),
+    ...(book.publisher
+      ? { publisher: { '@type': 'Organization', name: book.publisher } }
+      : { publisher: { '@type': 'Organization', name: 'Foxing', url: FOXING_BASE_URL } }),
+    ...(book.publication_year ? { datePublished: String(book.publication_year) } : {}),
+    numberOfPages: book.word_count
+      ? Math.round(book.word_count / 250)
+      : undefined,
+    ...(isCommunityBook
+      ? {}
+      : {
+          isAccessibleForFree: true,
+          offers: {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'USD',
+            availability: 'https://schema.org/InStock',
+            url: `${FOXING_BASE_URL}/book/${book.id}`,
+          },
+        }),
+    ...(book.rating_count >= 3 && typeof book.avg_rating === 'number'
+      ? {
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            ratingValue: book.avg_rating.toFixed(1),
+            ratingCount: book.rating_count,
+            bestRating: '5',
+            worstRating: '1',
+          },
+        }
+      : {}),
+  })
+
+  const breadcrumbJsonLdStr = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: FOXING_BASE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Books',
+        item: `${FOXING_BASE_URL}/books`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: book.title,
+        item: `${FOXING_BASE_URL}/book/${book.id}`,
+      },
+    ],
+  })
+
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <Nav user={navUser} />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: bookJsonLd(book) }}
+        dangerouslySetInnerHTML={{ __html: bookJsonLdStr }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLdStr }}
       />
       <main className="flex-1">
         <BookHero book={book} />
@@ -115,7 +193,19 @@ export default async function BookPage({
           <div className="flex flex-col">
             <BookHeader book={book} />
             <ActionBar bookId={book.id} hasEpub={Boolean(book.epub_url)} />
-            <WhereToRead book={book} />
+            <WhereToRead
+              book={{
+                id: book.id,
+                title: book.title,
+                author: book.author,
+                isbn: book.isbn,
+                isbn13: book.isbn13,
+                amazon_url: book.amazon_url,
+                bookshop_url: book.bookshop_url,
+                source_type: book.source_type,
+                epub_url: book.epub_url,
+              }}
+            />
             <ReviewsSection
               reviews={reviews}
               total={book.rating_count}
@@ -252,52 +342,6 @@ function ActionBar({ bookId, hasEpub }: { bookId: string; hasEpub: boolean }) {
         </Link>
       </p>
     </div>
-  )
-}
-
-function WhereToRead({
-  book,
-}: {
-  book: Awaited<ReturnType<typeof fetchBookById>> & object
-}) {
-  return (
-    <section className="border-t border-border-subtle py-6">
-      <h2 className="mb-4 font-fraunces text-xl text-text-primary">
-        Where to read this
-      </h2>
-      <ul className="flex flex-col gap-2">
-        {book.epub_url && (
-          <li>
-            <Link
-              href={appBookDeeplink(book.id)}
-              className="font-dm-sans text-sm text-brand-text hover:underline"
-            >
-              Read free in Foxing
-            </Link>
-          </li>
-        )}
-        <li>
-          <Link
-            href={worldcatUrl(book.title, book.author)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-dm-sans text-sm text-brand-text hover:underline"
-          >
-            Find in a library
-          </Link>
-        </li>
-        <li>
-          <Link
-            href={bookshopUrl(book.title, book.author)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-dm-sans text-sm text-brand-text hover:underline"
-          >
-            Buy a copy
-          </Link>
-        </li>
-      </ul>
-    </section>
   )
 }
 

@@ -4,7 +4,8 @@ const ROW_ONE = [
   { href: '/discover', label: 'Discover' },
   { href: '/books', label: 'Books' },
   { href: '/clubs', label: 'Clubs' },
-  { href: '/people', label: 'People' },
+  { href: '/book-clubs', label: 'Celebrity Picks' },
+  { href: '/book-of-the-month', label: 'Book of the Month' },
 ] as const
 
 const ROW_TWO = [

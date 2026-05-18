@@ -22,6 +22,14 @@ export interface Book {
   cover_url: string | null
   epub_url: string | null
   source: 'standard_ebooks' | 'gutenberg'
+  source_type: 'catalog' | 'community' | null
+  isbn: string | null
+  isbn13: string | null
+  publication_year: number | null
+  publisher: string | null
+  external_url: string | null
+  amazon_url: string | null
+  bookshop_url: string | null
   mood_tags: string[] | null
   pacing: 'slow' | 'medium' | 'fast' | null
   content_warnings: Record<string, string[]> | null
@@ -30,6 +38,19 @@ export interface Book {
   weighted_rating: number | null
   raw_rating: number | null
   rating_count: number
+  created_at: string
+}
+
+export interface BookOfMonth {
+  id: string
+  book_id: string
+  year: number
+  month: number
+  category: string | null
+  curator_note: string | null
+  amazon_url: string | null
+  bookshop_url: string | null
+  is_published: boolean
   created_at: string
 }
 
