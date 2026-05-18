@@ -311,7 +311,7 @@ export interface PublicHighlight {
   text: string
   note: string | null
   created_at: string
-  book: { id: string; title: string; author: string; cover_url: string | null } | null
+  book: { id: string; slug: string | null; title: string; author: string; cover_url: string | null } | null
   author: {
     username: string
     display_name: string
@@ -503,7 +503,7 @@ export async function fetchProfileStats(userId: string): Promise<ProfileStats> {
 }
 
 export interface ProfileReview extends BookReview {
-  book: { id: string; title: string; author: string; cover_url: string | null } | null
+  book: { id: string; slug: string | null; title: string; author: string; cover_url: string | null } | null
 }
 
 export async function fetchProfileReviews(
@@ -532,6 +532,7 @@ export async function fetchProfileReviews(
       created_at: string
       books: {
         id: string
+        slug: string | null
         title: string
         author: string
         cover_url: string | null
@@ -618,7 +619,7 @@ export async function fetchPublicClubs(limit = 24): Promise<PublicClub[]> {
   const { data } = await sb
     .from('clubs')
     .select(
-      `id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})`,
+      CLUB_BASE_COLS,
     )
     .eq('visibility', 'public')
     .order('member_count', { ascending: false })
@@ -687,7 +688,7 @@ export async function fetchActiveClubs(limit = 3): Promise<PublicClub[]> {
   const { data } = await sb
     .from('clubs')
     .select(
-      `id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})`,
+      CLUB_BASE_COLS,
     )
     .eq('visibility', 'public')
     .lt('member_count', 10)
@@ -702,7 +703,7 @@ export interface PublicQuote {
   text: string
   note: string | null
   created_at: string
-  book: { id: string; title: string; author: string; cover_url: string | null } | null
+  book: { id: string; slug: string | null; title: string; author: string; cover_url: string | null } | null
   author: {
     username: string
     display_name: string

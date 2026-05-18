@@ -121,7 +121,7 @@ export default async function UserLibraryPage({
               {items.map((entry) => (
                 <li key={entry.id}>
                   <Link
-                    href={`/book/${entry.book.id}`}
+                    href={`/book/${entry.book.slug ?? entry.book.id}`}
                     className="group flex flex-col gap-2"
                   >
                     <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">

@@ -70,7 +70,7 @@ export default async function PassagePage({
             </blockquote>
             <div className="flex items-center gap-4">
               <Link
-                href={`/book/${passage.book.id}`}
+                href={`/book/${passage.book.slug ?? passage.book.id}`}
                 className="relative h-24 w-16 overflow-hidden rounded bg-bg-sunken shadow-sm"
               >
                 {passage.book.cover_url && (
@@ -85,7 +85,7 @@ export default async function PassagePage({
               </Link>
               <div className="flex flex-col items-start">
                 <Link
-                  href={`/book/${passage.book.id}`}
+                  href={`/book/${passage.book.slug ?? passage.book.id}`}
                   className="font-fraunces text-base text-text-primary hover:text-brand-text"
                 >
                   {passage.book.title}

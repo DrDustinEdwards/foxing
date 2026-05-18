@@ -597,6 +597,7 @@ export function buildQuoteMetadata(quote: {
 
 export function buildClubMetadata(club: {
   id: string
+  slug?: string | null
   name: string
   description?: string | null
   current_book_title?: string | null
@@ -618,7 +619,7 @@ export function buildClubMetadata(club: {
     }.`
   }
 
-  const url = `${BASE_URL}/clubs/${club.id}`
+  const url = `${BASE_URL}/clubs/${club.slug ?? club.id}`
 
   return {
     title,
@@ -1061,6 +1062,7 @@ export function buildUserDiaryMetadata(
 
 export function buildDiaryEntryMetadata(entry: {
   id: string
+  slug?: string | null
   username: string
   display_name: string
   book_title: string
@@ -1087,7 +1089,7 @@ export function buildDiaryEntryMetadata(entry: {
     ...(entry.book_cover_url ? { cover: entry.book_cover_url } : {}),
   })
   const ogImage = `${DEFAULT_OG_IMAGE}?${ogParams.toString()}`
-  const url = `${BASE_URL}/u/${entry.username}/diary/${entry.id}`
+  const url = `${BASE_URL}/u/${entry.username}/diary/${entry.slug ?? entry.id}`
   return {
     title: clampTitle(title),
     description: clampDescription(description),
@@ -1138,6 +1140,7 @@ export function buildUserListsMetadata(
 
 export function buildReadingListMetadata(list: {
   id: string
+  slug?: string | null
   title: string
   description?: string | null
   username: string
@@ -1169,7 +1172,7 @@ export function buildReadingListMetadata(list: {
       : {}),
   })
   const ogImage = `${DEFAULT_OG_IMAGE}?${ogParams.toString()}`
-  const url = `${BASE_URL}/u/${list.username}/lists/${list.id}`
+  const url = `${BASE_URL}/u/${list.username}/lists/${list.slug ?? list.id}`
 
   return {
     title: clampTitle(title),

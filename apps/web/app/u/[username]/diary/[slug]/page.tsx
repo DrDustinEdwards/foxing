@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
@@ -9,7 +9,7 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
 import { ShareButton } from '@/components/share-button'
 import { StarRating } from '@/components/ui/star-rating'
-import { fetchProfileByUsername } from '@/lib/queries'
+import { fetchProfileByUsername, isUuid } from '@/lib/queries'
 import { fetchPublicDiaryEntry } from '@/lib/missing-pages-queries'
 import { buildDiaryEntryMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
@@ -20,7 +20,7 @@ export const revalidate = 300
 export async function generateMetadata({
   params,
 }: {
-  params: { username: string; id: string }
+  params: { username: string; slug: string }
 }): Promise<Metadata> {
   const profile = await fetchProfileByUsername(params.username)
   if (!profile || !profile.is_public) {
@@ -28,13 +28,14 @@ export async function generateMetadata({
   }
   const entry = await fetchPublicDiaryEntry({
     userId: profile.id,
-    id: params.id,
+    slugOrId: params.slug,
   })
   if (!entry) {
     return { title: 'Entry not found', robots: { index: false, follow: true } }
   }
   return buildDiaryEntryMetadata({
     id: entry.id,
+    slug: entry.slug,
     username: profile.username,
     display_name: profile.display_name,
     book_title: entry.book.title,
@@ -49,7 +50,7 @@ export async function generateMetadata({
 export default async function UserDiaryEntryPage({
   params,
 }: {
-  params: { username: string; id: string }
+  params: { username: string; slug: string }
 }) {
   const [navUser, profile] = await Promise.all([
     getNavUser(),
@@ -69,12 +70,17 @@ export default async function UserDiaryEntryPage({
   }
   const entry = await fetchPublicDiaryEntry({
     userId: profile.id,
-    id: params.id,
+    slugOrId: params.slug,
   })
   if (!entry) notFound()
+  if (isUuid(params.slug) && entry.slug && entry.slug !== params.slug) {
+    permanentRedirect(`/u/${profile.username}/diary/${entry.slug}`)
+  }
 
   const origin = siteOrigin()
-  const url = `${origin}/u/${profile.username}/diary/${entry.id}`
+  const entryPath = entry.slug ?? entry.id
+  const url = `${origin}/u/${profile.username}/diary/${entryPath}`
+  const bookPath = entry.book.slug ?? entry.book.id
   const reviewJsonLd: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'Review',
@@ -115,7 +121,7 @@ export default async function UserDiaryEntryPage({
           <article className="mt-6 flex flex-col gap-6">
             <header className="flex items-start gap-5">
               <Link
-                href={`/book/${entry.book.id}`}
+                href={`/book/${bookPath}`}
                 className="relative h-36 w-24 shrink-0 overflow-hidden rounded bg-bg-sunken shadow-sm"
               >
                 {entry.book.cover_url && (
@@ -134,7 +140,7 @@ export default async function UserDiaryEntryPage({
                 </time>
                 <h1 className="font-fraunces text-[1.75rem] text-text-primary">
                   <Link
-                    href={`/book/${entry.book.id}`}
+                    href={`/book/${bookPath}`}
                     className="hover:text-brand-text"
                   >
                     {entry.book.title}

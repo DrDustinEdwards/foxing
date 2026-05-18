@@ -574,6 +574,7 @@ export async function fetchPublicLibrary(
 
 export interface PublicDiaryEntry {
   id: string
+  slug: string | null
   log_date: string
   rating: number | null
   review: string | null
@@ -594,7 +595,7 @@ export async function fetchPublicDiary(
   let q = sb()
     .from('diary_entries')
     .select(
-      'id, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+      'id, slug, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
     .eq('privacy', 'public')
@@ -609,6 +610,7 @@ export async function fetchPublicDiary(
     .filter((r) => r.books !== null)
     .map((r) => ({
       id: r.id,
+      slug: r.slug,
       log_date: r.log_date,
       rating: r.rating,
       review: r.review,
@@ -618,18 +620,35 @@ export async function fetchPublicDiary(
 
 export async function fetchPublicDiaryEntry(opts: {
   userId: string
-  id: string
+  slugOrId: string
 }): Promise<PublicDiaryEntry | null> {
   if (!hasEnv()) return null
-  const { data, error } = await sb()
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      opts.slugOrId,
+    )
+  let { data, error } = await sb()
     .from('diary_entries')
     .select(
-      'id, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+      'id, slug, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', opts.userId)
-    .eq('id', opts.id)
+    .eq('slug', opts.slugOrId)
     .eq('privacy', 'public')
     .maybeSingle()
+  if ((!data || error) && isUuid) {
+    const fallback = await sb()
+      .from('diary_entries')
+      .select(
+        'id, slug, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+      )
+      .eq('user_id', opts.userId)
+      .eq('id', opts.slugOrId)
+      .eq('privacy', 'public')
+      .maybeSingle()
+    data = fallback.data
+    error = fallback.error
+  }
   if (error || !data) return null
   const r = data as unknown as Omit<PublicDiaryEntry, 'book'> & {
     books: PublicDiaryEntry['book'] | null
@@ -637,6 +656,7 @@ export async function fetchPublicDiaryEntry(opts: {
   if (!r.books) return null
   return {
     id: r.id,
+    slug: r.slug,
     log_date: r.log_date,
     rating: r.rating,
     review: r.review,
@@ -646,6 +666,7 @@ export async function fetchPublicDiaryEntry(opts: {
 
 export interface PublicReadingList {
   id: string
+  slug: string | null
   title: string
   description: string | null
   is_public: boolean
@@ -659,7 +680,7 @@ export async function fetchPublicReadingLists(
   if (!hasEnv()) return []
   const { data, error } = await sb()
     .from('reading_lists')
-    .select('id, title, description, is_public, is_featured, created_at')
+    .select('id, slug, title, description, is_public, is_featured, created_at')
     .eq('user_id', userId)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
@@ -669,16 +690,33 @@ export async function fetchPublicReadingLists(
 
 export async function fetchPublicReadingList(opts: {
   userId: string
-  id: string
+  slugOrId: string
 }): Promise<PublicReadingList | null> {
   if (!hasEnv()) return null
-  const { data, error } = await sb()
+  const isUuid =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      opts.slugOrId,
+    )
+  let { data, error } = await sb()
     .from('reading_lists')
-    .select('id, title, description, is_public, is_featured, created_at')
+    .select('id, slug, title, description, is_public, is_featured, created_at')
     .eq('user_id', opts.userId)
-    .eq('id', opts.id)
+    .eq('slug', opts.slugOrId)
     .eq('is_public', true)
     .maybeSingle()
+  if ((!data || error) && isUuid) {
+    const fallback = await sb()
+      .from('reading_lists')
+      .select(
+        'id, slug, title, description, is_public, is_featured, created_at',
+      )
+      .eq('user_id', opts.userId)
+      .eq('id', opts.slugOrId)
+      .eq('is_public', true)
+      .maybeSingle()
+    data = fallback.data
+    error = fallback.error
+  }
   if (error || !data) return null
   return data as PublicReadingList
 }

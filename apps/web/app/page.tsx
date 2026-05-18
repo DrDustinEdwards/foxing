@@ -117,7 +117,7 @@ function PassageOfDaySection({ passage }: { passage: PassageOfDay }) {
           </blockquote>
           <figcaption className="flex flex-col items-center gap-1">
             <Link
-              href={`/book/${passage.book.id}`}
+              href={`/book/${passage.book.slug ?? passage.book.id}`}
               className="font-dm-sans text-xs text-text-tertiary hover:text-text-primary"
             >
               <span className="font-medium text-text-secondary">
@@ -264,7 +264,7 @@ function TodaysPick({
         </p>
         <div className="grid gap-8 md:grid-cols-[200px_1fr] md:items-start">
           <Link
-            href={`/book/${book.id}`}
+            href={`/book/${book.slug ?? book.id}`}
             className="block w-[200px] overflow-hidden rounded-md shadow-md"
           >
             <div className="relative aspect-[2/3] w-[200px] bg-bg-sunken">
@@ -283,7 +283,7 @@ function TodaysPick({
             <div>
               <h3 className="font-fraunces text-2xl text-text-primary">
                 <Link
-                  href={`/book/${book.id}`}
+                  href={`/book/${book.slug ?? book.id}`}
                   className="hover:text-brand-text"
                 >
                   {book.title}
@@ -361,7 +361,7 @@ function CommunitySection({
             <div key={r.id} className="flex flex-col gap-3">
               {r.book && (
                 <Link
-                  href={`/book/${r.book.id}`}
+                  href={`/book/${r.book.slug ?? r.book.id}`}
                   className="flex items-center gap-3"
                 >
                   <div className="relative h-16 w-12 overflow-hidden rounded bg-bg-sunken">

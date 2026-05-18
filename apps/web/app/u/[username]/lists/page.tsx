@@ -76,7 +76,7 @@ export default async function UserListsPage({
               {lists.map((l) => (
                 <li key={l.id}>
                   <Link
-                    href={`/u/${profile.username}/lists/${l.id}`}
+                    href={`/u/${profile.username}/lists/${l.slug ?? l.id}`}
                     className="flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
                   >
                     <h2 className="font-fraunces text-base text-text-primary">

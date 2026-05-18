@@ -104,7 +104,7 @@ function CurrentlyReadingCard({
   return (
     <section className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-bg-surface p-5 md:flex-row md:items-start">
       <Link
-        href={`/book/${entry.book.id}`}
+        href={`/book/${entry.book.slug ?? entry.book.id}`}
         className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken shadow-sm"
       >
         {entry.book.cover_url && (
@@ -123,7 +123,7 @@ function CurrentlyReadingCard({
             Currently reading
           </p>
           <Link
-            href={`/book/${entry.book.id}`}
+            href={`/book/${entry.book.slug ?? entry.book.id}`}
             className="mt-1 block font-fraunces text-xl text-text-primary hover:text-brand-text"
           >
             {entry.book.title}

@@ -37,18 +37,21 @@ interface JournalData {
   cover_image_url: string | null
 }
 
-async function loadBook(id: string): Promise<BookData | null> {
+async function loadBook(opts: {
+  id?: string | null
+  slug?: string | null
+}): Promise<BookData | null> {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
   )
     return null
+  if (!opts.slug && !opts.id) return null
   const admin = createAdminClient()
-  const { data } = await admin
-    .from('books')
-    .select('title, author, cover_url')
-    .eq('id', id)
-    .maybeSingle()
+  const query = admin.from('books').select('title, author, cover_url')
+  const { data } = opts.slug
+    ? await query.eq('slug', opts.slug).maybeSingle()
+    : await query.eq('id', opts.id!).maybeSingle()
   return (data as BookData | null) ?? null
 }
 
@@ -106,9 +109,10 @@ export async function GET(request: NextRequest) {
     if (inlineTitle && inlineAuthor) {
       return bookOG({ title: inlineTitle, author: inlineAuthor, cover_url: cover })
     }
+    const slug = params.get('slug')
     const id = params.get('id')
-    if (!id) return defaultOG()
-    const book = await loadBook(id)
+    if (!slug && !id) return defaultOG()
+    const book = await loadBook({ slug, id })
     if (!book) return defaultOG()
     return bookOG(book)
   }

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import type { Book, Club } from '@/types/database'
 
 interface ClubCardProps {
-  club: Pick<Club, 'id' | 'name' | 'cover_url'>
+  club: Pick<Club, 'id' | 'name' | 'cover_url'> & { slug?: string | null }
   currentBook?: Pick<Book, 'title' | 'cover_url'> | null
   memberCount?: number
   readingNow?: number
@@ -18,7 +18,7 @@ export function ClubCard({
 }: ClubCardProps) {
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
-      <Link href={`/clubs/${club.id}`} className="font-fraunces text-base text-text-primary hover:text-brand-text">
+      <Link href={`/clubs/${club.slug ?? club.id}`} className="font-fraunces text-base text-text-primary hover:text-brand-text">
         {club.name}
       </Link>
       {currentBook && (
@@ -49,7 +49,7 @@ export function ClubCard({
           {memberCount ?? 0} members
           {typeof readingNow === 'number' ? ` · ${readingNow} reading now` : ''}
         </span>
-        <Link href={`/clubs/${club.id}`}>
+        <Link href={`/clubs/${club.slug ?? club.id}`}>
           <Button variant="secondary" size="sm">Join</Button>
         </Link>
       </div>
