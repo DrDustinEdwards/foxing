@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { BookCard } from '@/components/book-card'
+import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Button } from '@/components/ui/button'
 import { ClubCard } from '@/components/club-card'
 import { Footer } from '@/components/layout/footer'
@@ -108,7 +109,7 @@ function TodaysPickCard({
           href={`/book/${book.slug ?? book.id}`}
           className="relative aspect-[2/3] w-[140px] shrink-0 overflow-hidden rounded-md bg-bg-sunken shadow-sm"
         >
-          {book.cover_url && (
+          {book.cover_url ? (
             <Image
               src={book.cover_url}
               alt={book.title}
@@ -116,6 +117,8 @@ function TodaysPickCard({
               sizes="140px"
               className="object-cover"
             />
+          ) : (
+            <BookCoverPlaceholder title={book.title} author={book.author} />
           )}
         </Link>
         <div className="flex flex-col gap-2">

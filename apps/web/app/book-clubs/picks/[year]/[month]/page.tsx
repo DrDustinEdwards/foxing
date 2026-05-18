@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
@@ -244,13 +245,18 @@ function PickCard({ pick }: { pick: MonthlyPicksRow }) {
           href={bookHref}
           className="relative h-[180px] w-[120px] shrink-0 overflow-hidden rounded-md bg-bg-sunken shadow-sm"
         >
-          {pick.book.cover_url && (
+          {pick.book.cover_url ? (
             <Image
               src={pick.book.cover_url}
               alt={`Cover of ${pick.book.title}`}
               fill
               sizes="120px"
               className="object-cover"
+            />
+          ) : (
+            <BookCoverPlaceholder
+              title={pick.book.title}
+              author={pick.book.author}
             />
           )}
         </Link>
