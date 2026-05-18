@@ -1,63 +1,131 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
 import { Link } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { Info, X as XIcon } from 'phosphor-react-native'
+import { Info, X as XIcon, Check } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
+
+const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
+
+type UsernameState =
+  | { kind: 'idle' }
+  | { kind: 'invalid'; reason: string }
+  | { kind: 'checking' }
+  | { kind: 'available' }
+  | { kind: 'taken' }
+  | { kind: 'error' }
+
+function validateUsernameFormat(raw: string): { ok: true } | { ok: false; reason: string } {
+  if (raw.length < 3) return { ok: false, reason: 'Username must be at least 3 characters.' }
+  if (raw.length > 30) return { ok: false, reason: 'Username must be 30 characters or fewer.' }
+  if (!USERNAME_RE.test(raw)) {
+    return {
+      ok: false,
+      reason: 'Use letters, numbers, underscores, or hyphens. Cannot start or end with _ or -.',
+    }
+  }
+  return { ok: true }
+}
 
 export default function Signup() {
   const colors = useColors()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [username, setUsername] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmationSent, setConfirmationSent] = useState(false)
+  const [usernameState, setUsernameState] = useState<UsernameState>({ kind: 'idle' })
+
+  const normalizedUsername = username.trim().toLowerCase()
+
+  useEffect(() => {
+    if (normalizedUsername.length < 3) {
+      setUsernameState({ kind: 'idle' })
+      return
+    }
+    const formatCheck = validateUsernameFormat(normalizedUsername)
+    if (!formatCheck.ok) {
+      setUsernameState({ kind: 'invalid', reason: formatCheck.reason })
+      return
+    }
+    setUsernameState({ kind: 'checking' })
+    let cancelled = false
+    const t = setTimeout(async () => {
+      const { data, error: queryError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', normalizedUsername)
+        .limit(1)
+        .maybeSingle()
+      if (cancelled) return
+      if (queryError && queryError.code !== 'PGRST116') {
+        setUsernameState({ kind: 'error' })
+        return
+      }
+      setUsernameState(data ? { kind: 'taken' } : { kind: 'available' })
+    }, 400)
+    return () => {
+      cancelled = true
+      clearTimeout(t)
+    }
+  }, [normalizedUsername])
 
   async function signUp() {
-    console.log('[signup] signUp() called', {
-      email,
-      passwordLength: password.length,
-      displayName,
-    })
     setLoading(true)
     setError(null)
     try {
+      const formatCheck = validateUsernameFormat(normalizedUsername)
+      if (!formatCheck.ok) {
+        setError(formatCheck.reason)
+        return
+      }
+      if (usernameState.kind === 'taken') {
+        setError('That username is taken. Please choose another.')
+        return
+      }
       const emailRedirectTo = 'https://foxing.app/auth-callback'
-      console.log('[signup] emailRedirectTo', emailRedirectTo)
-      const { data, error } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
         options: {
-          data: { display_name: displayName.trim() },
+          data: {
+            display_name: displayName.trim(),
+            username: normalizedUsername,
+          },
           emailRedirectTo,
         },
       })
-      console.log('[signup] signUp() response', {
-        hasUser: !!data?.user,
-        hasSession: !!data?.session,
-        errorMessage: error?.message,
-      })
-      if (error) {
-        setError(error.message)
+      if (signUpError) {
+        const msg = signUpError.message
+        if (/duplicate|unique|already|conflict/i.test(msg) && /username|profile/i.test(msg)) {
+          setError('That username was just taken. Please choose another.')
+        } else {
+          setError(msg)
+        }
         return
       }
-      // Email confirmation is on: user exists but no session was established.
-      // The root layout only redirects when a session appears, so without
-      // this branch the screen looks frozen.
       if (data.user && !data.session) {
         setConfirmationSent(true)
       }
     } catch (err) {
-      console.log('[signup] signUp() threw', err)
       setError(err instanceof Error ? err.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
   }
 
-  const disabled = loading || !email || !password || !displayName
+  const disabled =
+    loading ||
+    !email ||
+    !password ||
+    !displayName ||
+    !username ||
+    usernameState.kind === 'taken' ||
+    usernameState.kind === 'checking' ||
+    usernameState.kind === 'invalid'
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -113,6 +181,20 @@ export default function Signup() {
             keyboardType="email-address"
             className="font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
           />
+          <View className="gap-1">
+            <TextInput
+              value={username}
+              onChangeText={setUsername}
+              placeholder="Username"
+              placeholderTextColor={colors.textTertiary}
+              autoCapitalize="none"
+              autoComplete="username"
+              autoCorrect={false}
+              maxLength={30}
+              className="font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
+            />
+            <UsernameStatus state={usernameState} username={normalizedUsername} colors={colors} />
+          </View>
           <TextInput
             value={password}
             onChangeText={setPassword}
@@ -169,5 +251,59 @@ export default function Signup() {
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>
+  )
+}
+
+function UsernameStatus({
+  state,
+  username,
+  colors,
+}: {
+  state: UsernameState
+  username: string
+  colors: ReturnType<typeof useColors>
+}) {
+  if (state.kind === 'idle') return null
+  if (state.kind === 'invalid') {
+    return (
+      <Text accessibilityLiveRegion="polite" className="font-ui text-xs px-2 text-error-light dark:text-error-dark">
+        {state.reason}
+      </Text>
+    )
+  }
+  if (state.kind === 'checking') {
+    return (
+      <View accessibilityLiveRegion="polite" className="flex-row items-center gap-1 px-2">
+        <ActivityIndicator size="small" color={colors.textTertiary} />
+        <Text className="font-ui text-xs text-text-tertiary-light dark:text-text-tertiary-dark">
+          Checking...
+        </Text>
+      </View>
+    )
+  }
+  if (state.kind === 'available') {
+    return (
+      <View accessibilityLiveRegion="polite" className="flex-row items-center gap-1 px-2">
+        <Check color={colors.success} size={14} />
+        <Text className="font-ui text-xs text-success-light dark:text-success-dark">
+          {username} is available
+        </Text>
+      </View>
+    )
+  }
+  if (state.kind === 'taken') {
+    return (
+      <View accessibilityLiveRegion="polite" className="flex-row items-center gap-1 px-2">
+        <XIcon color={colors.error} size={14} />
+        <Text className="font-ui text-xs text-error-light dark:text-error-dark">
+          {username} is taken
+        </Text>
+      </View>
+    )
+  }
+  return (
+    <Text accessibilityLiveRegion="polite" className="font-ui text-xs px-2 text-text-tertiary-light dark:text-text-tertiary-dark">
+      Could not check availability. Try again.
+    </Text>
   )
 }
