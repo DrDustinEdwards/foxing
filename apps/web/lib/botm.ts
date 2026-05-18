@@ -18,6 +18,8 @@ export interface BookOfMonthRow {
 export interface BookOfMonthPick extends BookOfMonthRow {
   book: {
     id: string
+    slug: string | null
+    author_slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -37,7 +39,7 @@ export interface BookOfMonthPickWithRating extends BookOfMonthPick {
 }
 
 const PICK_COLS =
-  'id, book_id, year, month, category, curator_note, amazon_url, bookshop_url, is_published, created_at, book:book_id(id, title, author, cover_url, description, isbn, isbn13, publication_year, publisher, source_type, epub_url)' as const
+  'id, book_id, year, month, category, curator_note, amazon_url, bookshop_url, is_published, created_at, book:book_id(id, slug, author_slug, title, author, cover_url, description, isbn, isbn13, publication_year, publisher, source_type, epub_url)' as const
 
 function hasEnv(): boolean {
   return Boolean(

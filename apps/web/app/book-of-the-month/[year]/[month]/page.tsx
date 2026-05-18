@@ -233,14 +233,14 @@ function PickBlock({
           </span>
         )}
         <h2 className="font-fraunces text-3xl text-text-primary">
-          <Link href={`/book/${pick.book.id}`} className="hover:text-brand-text">
+          <Link href={`/book/${pick.book.slug ?? pick.book.id}`} className="hover:text-brand-text">
             {pick.book.title}
           </Link>
         </h2>
         <p className="font-dm-sans text-base text-text-tertiary">
           by{' '}
           <Link
-            href={`/author/${encodeURIComponent(pick.book.author)}`}
+            href={`/author/${pick.book.author_slug ?? encodeURIComponent(pick.book.author)}`}
             className="text-brand-text hover:underline"
           >
             {pick.book.author}

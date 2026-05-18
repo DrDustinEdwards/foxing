@@ -34,6 +34,8 @@ export interface ExternalPickWithBook extends ExternalPick {
   club: Pick<ExternalClub, 'id' | 'slug' | 'name' | 'short_name'>
   book: {
     id: string
+    slug: string | null
+    author_slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -49,7 +51,7 @@ export interface ExternalPickWithBook extends ExternalPick {
 }
 
 const PICK_COLS =
-  'id, club_id, book_id, picked_at, pick_month, pick_year, category, official_url, notes, is_published, club:club_id(id, slug, name, short_name), book:book_id(id, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url)' as const
+  'id, club_id, book_id, picked_at, pick_month, pick_year, category, official_url, notes, is_published, club:club_id(id, slug, name, short_name), book:book_id(id, slug, author_slug, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url)' as const
 
 function hasEnv(): boolean {
   return Boolean(

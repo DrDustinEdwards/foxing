@@ -26,6 +26,7 @@ interface ActiveClub {
 
 interface TopBook {
   id: string
+  slug: string | null
   title: string
   author: string
   cover_url: string | null
@@ -72,7 +73,7 @@ export default async function AdminOverviewPage() {
       .limit(500),
     admin
       .from('user_books')
-      .select('book_id, books:book_id(id, title, author, cover_url)')
+      .select('book_id, books:book_id(id, slug, title, author, cover_url)')
       .eq('status', 'reading')
       .limit(500),
   ])
@@ -103,7 +104,13 @@ export default async function AdminOverviewPage() {
   const bookCounts = new Map<string, TopBook>()
   for (const row of (currentlyReadingRes.data as unknown as Array<{
     book_id: string
-    books: { id: string; title: string; author: string; cover_url: string | null } | null
+    books: {
+      id: string
+      slug: string | null
+      title: string
+      author: string
+      cover_url: string | null
+    } | null
   }> | null) ?? []) {
     if (!row.books) continue
     const existing = bookCounts.get(row.books.id)
@@ -111,6 +118,7 @@ export default async function AdminOverviewPage() {
     else
       bookCounts.set(row.books.id, {
         id: row.books.id,
+        slug: row.books.slug,
         title: row.books.title,
         author: row.books.author,
         cover_url: row.books.cover_url,
@@ -210,7 +218,7 @@ export default async function AdminOverviewPage() {
                   className="flex flex-col gap-2 rounded-md border border-border-subtle p-3"
                 >
                   <Link
-                    href={`/book/${b.id}`}
+                    href={`/book/${b.slug ?? b.id}`}
                     className="relative aspect-[2/3] w-full overflow-hidden rounded bg-bg-sunken"
                   >
                     {b.cover_url && (

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { fetchAllPicksForAdmin, monthName } from '@/lib/botm'
+import { BotmCandidates } from './candidates'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,6 +31,10 @@ export default async function AdminBookOfMonthPage() {
           </Button>
         </Link>
       </header>
+
+      <div className="mt-6">
+        <BotmCandidates />
+      </div>
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-border-subtle bg-bg-surface">
         <table className="min-w-full text-left font-dm-sans text-sm">

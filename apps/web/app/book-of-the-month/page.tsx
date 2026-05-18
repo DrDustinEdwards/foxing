@@ -222,7 +222,7 @@ function CurrentPick({
         </span>
         <h2 className="font-fraunces text-[2rem] leading-tight text-text-primary">
           <Link
-            href={`/book/${pick.book.id}`}
+            href={`/book/${pick.book.slug ?? pick.book.id}`}
             className="hover:text-brand-text"
           >
             {pick.book.title}
@@ -231,7 +231,7 @@ function CurrentPick({
         <p className="font-dm-sans text-base text-text-tertiary">
           by{' '}
           <Link
-            href={`/author/${encodeURIComponent(pick.book.author)}`}
+            href={`/author/${pick.book.author_slug ?? encodeURIComponent(pick.book.author)}`}
             className="text-brand-text hover:underline"
           >
             {pick.book.author}
@@ -275,7 +275,7 @@ function CurrentPick({
               Join the book club
             </Button>
           </Link>
-          <Link href={`/book/${pick.book.id}`}>
+          <Link href={`/book/${pick.book.slug ?? pick.book.id}`}>
             <Button variant="ghost" size="md">
               Discuss on Foxing
             </Button>

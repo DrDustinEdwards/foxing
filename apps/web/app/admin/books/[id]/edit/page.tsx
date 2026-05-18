@@ -8,7 +8,7 @@ import { BookEditForm } from './book-edit-form'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'Edit book · Foxing',
+  title: 'Edit book, Foxing admin',
 }
 
 interface BookRow {
@@ -18,6 +18,14 @@ interface BookRow {
   description: string | null
   cover_url: string | null
   themes: string[] | null
+  mood_tags: string[] | null
+  content_warnings: string[] | null
+  pacing: string | null
+  is_staff_pick: boolean | null
+  staff_pick_note: string | null
+  isbn: string | null
+  isbn13: string | null
+  publication_year: number | null
   reading_difficulty: number | null
   word_count: number | null
   source: string | null
@@ -32,7 +40,7 @@ export default async function AdminBookEditPage({
   const { data } = await admin
     .from('books')
     .select(
-      'id, title, author, description, cover_url, themes, reading_difficulty, word_count, source',
+      'id, title, author, description, cover_url, themes, mood_tags, content_warnings, pacing, is_staff_pick, staff_pick_note, isbn, isbn13, publication_year, reading_difficulty, word_count, source',
     )
     .eq('id', params.id)
     .maybeSingle()

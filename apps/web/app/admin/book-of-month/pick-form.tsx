@@ -38,14 +38,20 @@ interface Props {
     bookshop_url: string | null
     is_published: boolean
   }
+  prefill?: {
+    book: BookSelection
+    curator_note: string | null
+  }
 }
 
 const now = new Date()
 const DEFAULT_YEAR = now.getUTCFullYear()
 const DEFAULT_MONTH = now.getUTCMonth() + 1
 
-export function PickForm({ mode, pickId, initial }: Props) {
-  const [book, setBook] = useState<BookSelection | null>(initial?.book ?? null)
+export function PickForm({ mode, pickId, initial, prefill }: Props) {
+  const [book, setBook] = useState<BookSelection | null>(
+    initial?.book ?? prefill?.book ?? null,
+  )
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
 
@@ -207,7 +213,7 @@ export function PickForm({ mode, pickId, initial }: Props) {
           name="curator_note"
           rows={4}
           maxLength={280}
-          defaultValue={initial?.curator_note ?? ''}
+          defaultValue={initial?.curator_note ?? prefill?.curator_note ?? ''}
           placeholder="What does this book actually do? One or two sentences."
           className="rounded-md border border-border-interactive bg-bg-surface px-3 py-2 font-source-serif-4 text-base text-text-primary"
         />
