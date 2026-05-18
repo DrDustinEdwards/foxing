@@ -23,7 +23,7 @@ export default function robots(): MetadataRoute.Robots {
     '/stats',
     '/highlights',
     '/goals',
-    '/lists',
+    '/my-lists',
     '/find-next-book',
     '/settings',
   ]

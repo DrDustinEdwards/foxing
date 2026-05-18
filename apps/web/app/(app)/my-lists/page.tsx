@@ -41,7 +41,7 @@ export default async function ListsPage({
         <h1 className="font-fraunces text-[2rem] text-text-primary">
           Lists
         </h1>
-        <Link href="/lists/new">
+        <Link href="/my-lists/new">
           <Button variant="primary" size="sm">
             Create a list
           </Button>
@@ -55,7 +55,7 @@ export default async function ListsPage({
         {TABS.map((t) => (
           <Link
             key={t.id}
-            href={`/lists?tab=${t.id}`}
+            href={`/my-lists?tab=${t.id}`}
             className={cn(
               '-mb-px border-b-2 px-4 py-2 font-dm-sans text-sm transition-colors',
               tab === t.id
@@ -78,7 +78,7 @@ export default async function ListsPage({
             }
             action={
               tab === 'mine' ? (
-                <Link href="/lists/new">
+                <Link href="/my-lists/new">
                   <Button variant="primary" size="sm">
                     Create your first list
                   </Button>
@@ -108,7 +108,7 @@ export default async function ListsPage({
 function ListSummaryCard({ list }: { list: UserList }) {
   return (
     <Link
-      href={`/lists/${list.id}`}
+      href={`/my-lists/${list.id}`}
       className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
     >
       <h2 className="font-fraunces text-base text-text-primary">{list.title}</h2>

@@ -43,7 +43,7 @@ export async function generateMetadata({
   return {
     title: `${list.title} · Foxing`,
     description: list.description ?? undefined,
-    alternates: { canonical: `${siteOrigin()}/lists/${list.id}` },
+    alternates: { canonical: `${siteOrigin()}/my-lists/${list.id}` },
   }
 }
 
@@ -68,7 +68,7 @@ export default async function ListDetailPage({
         Reorder, share, and add books from the Foxing app.
       </p>
       <Link
-        href="/lists"
+        href="/my-lists"
         className="mt-6 inline-block font-dm-sans text-sm text-brand-text hover:underline"
       >
         Back to lists

@@ -87,7 +87,7 @@ Foxing is a free mobile app and web platform for reading, tracking, and discussi
 
 - /admin, administrative interface
 - /api, internal API routes
-- /home, /library, /diary, /stats, /highlights, /goals, /lists, authenticated user data
+- /home, /library, /diary, /stats, /highlights, /goals, /my-lists, authenticated user data
 
 ## Facts for AI accuracy
 
