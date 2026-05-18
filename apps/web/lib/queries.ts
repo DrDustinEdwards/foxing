@@ -30,6 +30,14 @@ export interface BookFull extends BookSummary {
   reading_difficulty: number | null
   gutenberg_id: number | null
   source: string | null
+  source_type: 'catalog' | 'community' | null
+  isbn: string | null
+  isbn13: string | null
+  publication_year: number | null
+  publisher: string | null
+  external_url: string | null
+  amazon_url: string | null
+  bookshop_url: string | null
   created_at: string
 }
 
@@ -37,7 +45,7 @@ const BOOK_SUMMARY_COLS =
   'id, title, author, cover_url, themes' as const
 
 const BOOK_FULL_COLS =
-  'id, title, author, cover_url, themes, description, epub_url, language, subjects, word_count, series_name, series_order, country, reading_difficulty, gutenberg_id, source, created_at' as const
+  'id, title, author, cover_url, themes, description, epub_url, language, subjects, word_count, series_name, series_order, country, reading_difficulty, gutenberg_id, source, source_type, isbn, isbn13, publication_year, publisher, external_url, amazon_url, bookshop_url, created_at' as const
 
 function supabase() {
   return createClient()
@@ -529,8 +537,17 @@ export interface PublicClub {
     title: string
     author: string
     cover_url: string | null
+    isbn: string | null
+    isbn13: string | null
+    source_type: 'catalog' | 'community' | null
+    epub_url: string | null
+    amazon_url: string | null
+    bookshop_url: string | null
   } | null
 }
+
+const CLUB_CURRENT_BOOK_COLS =
+  'id, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url' as const
 
 export async function fetchPublicClubById(
   id: string,
@@ -540,7 +557,7 @@ export async function fetchPublicClubById(
   const { data } = await sb
     .from('clubs')
     .select(
-      'id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(id, title, author, cover_url)',
+      `id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})`,
     )
     .eq('id', id)
     .eq('visibility', 'public')
@@ -554,7 +571,7 @@ export async function fetchPublicClubs(limit = 24): Promise<PublicClub[]> {
   const { data } = await sb
     .from('clubs')
     .select(
-      'id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(id, title, author, cover_url)',
+      `id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})`,
     )
     .eq('visibility', 'public')
     .order('member_count', { ascending: false })
@@ -623,7 +640,7 @@ export async function fetchActiveClubs(limit = 3): Promise<PublicClub[]> {
   const { data } = await sb
     .from('clubs')
     .select(
-      'id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(id, title, author, cover_url)',
+      `id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})`,
     )
     .eq('visibility', 'public')
     .lt('member_count', 10)

@@ -26,6 +26,8 @@ const NAV: NavItem[] = [
   { href: '/admin', label: 'Overview', icon: HouseIcon, exact: true },
   { href: '/admin/users', label: 'Users', icon: UsersIcon },
   { href: '/admin/books', label: 'Books', icon: BookOpenIcon },
+  { href: '/admin/book-of-month', label: 'Book of Month', icon: BookOpenIcon },
+  { href: '/admin/celebrity-picks', label: 'Celebrity Picks', icon: UsersIcon },
   { href: '/admin/clubs', label: 'Clubs', icon: UsersThreeIcon },
   { href: '/admin/content', label: 'Content', icon: FlagIcon },
   { href: '/admin/notifications', label: 'Notifications', icon: BellIcon },

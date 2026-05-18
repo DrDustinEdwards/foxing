@@ -99,6 +99,31 @@ export default async function ClubPage({
                   </p>
                 </div>
               </div>
+              {(club.current_book.source_type === 'community' ||
+                !club.current_book.epub_url) && (
+                <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
+                  <p className="font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
+                    Get the book
+                  </p>
+                  <WhereToRead
+                    variant="inline"
+                    book={{
+                      id: club.current_book.id,
+                      title: club.current_book.title,
+                      author: club.current_book.author,
+                      isbn: club.current_book.isbn,
+                      isbn13: club.current_book.isbn13,
+                      amazon_url: club.current_book.amazon_url,
+                      bookshop_url: club.current_book.bookshop_url,
+                      source_type: club.current_book.source_type,
+                      epub_url: club.current_book.epub_url,
+                    }}
+                  />
+                  <p className="font-dm-sans text-xs text-text-tertiary">
+                    All members read from the same edition.
+                  </p>
+                </div>
+              )}
             </section>
           )}
 
