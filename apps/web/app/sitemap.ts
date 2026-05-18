@@ -90,33 +90,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = createAdminClient()
 
-  const [booksRes, profilesRes, journalRes, clubsRes, listsRes] =
-    await Promise.all([
-      supabase
-        .from('books')
-        .select('id, slug, author_slug, updated_at, created_at')
-        .order('title', { ascending: true })
-        .limit(2000),
-      supabase
-        .from('profiles')
-        .select('username, updated_at, created_at')
-        .eq('is_public', true)
-        .limit(10_000),
-      supabase
-        .from('journal_posts')
-        .select('slug, updated_at, published_at')
-        .eq('is_published', true),
-      supabase
-        .from('clubs')
-        .select('id, slug, updated_at, created_at')
-        .eq('visibility', 'public')
-        .limit(1000),
-      supabase
-        .from('reading_lists')
-        .select('id, slug, updated_at, created_at, profiles:user_id(username)')
-        .eq('is_public', true)
-        .limit(2000),
-    ])
+  const [
+    booksRes,
+    profilesRes,
+    journalRes,
+    clubsRes,
+    listsRes,
+    celebrityPicksRes,
+  ] = await Promise.all([
+    supabase
+      .from('books')
+      .select('id, slug, author_slug, updated_at, created_at')
+      .order('title', { ascending: true })
+      .limit(2000),
+    supabase
+      .from('profiles')
+      .select('username, updated_at, created_at')
+      .eq('is_public', true)
+      .limit(10_000),
+    supabase
+      .from('journal_posts')
+      .select('slug, updated_at, published_at')
+      .eq('is_published', true),
+    supabase
+      .from('clubs')
+      .select('id, slug, updated_at, created_at')
+      .eq('visibility', 'public')
+      .limit(1000),
+    supabase
+      .from('reading_lists')
+      .select('id, slug, updated_at, created_at, profiles:user_id(username)')
+      .eq('is_public', true)
+      .limit(2000),
+    supabase
+      .from('external_book_club_picks')
+      .select(
+        'pick_month, pick_year, external_book_clubs:club_id(slug)',
+      )
+      .eq('is_published', true),
+  ])
 
   const bookRows = (booksRes.data as Array<{
     id: string
@@ -221,6 +233,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }))
 
+  // Celebrity picks: monthly roundup URLs for the last 24 months.
+  const monthlyRoundupPages: MetadataRoute.Sitemap = []
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(
+      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1),
+    )
+    const y = d.getUTCFullYear()
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+    monthlyRoundupPages.push({
+      url: `${FOXING_BASE_URL}/book-clubs/picks/${y}/${m}`,
+      lastModified: i === 0 ? now : d,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    })
+  }
+
+  // Celebrity picks: every published club+month pick.
+  type CelebrityPickRow = {
+    pick_month: number | null
+    pick_year: number | null
+    external_book_clubs:
+      | { slug: string }
+      | { slug: string }[]
+      | null
+  }
+  const celebrityPickPages: MetadataRoute.Sitemap = []
+  for (const row of (celebrityPicksRes.data as unknown as
+    | CelebrityPickRow[]
+    | null) ?? []) {
+    if (!row.pick_month || !row.pick_year) continue
+    const clubRel = Array.isArray(row.external_book_clubs)
+      ? row.external_book_clubs[0]
+      : row.external_book_clubs
+    if (!clubRel?.slug) continue
+    const m = String(row.pick_month).padStart(2, '0')
+    celebrityPickPages.push({
+      url: `${FOXING_BASE_URL}/book-clubs/${clubRel.slug}/${row.pick_year}/${m}`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    })
+  }
+
   return [
     ...staticPages,
     ...bookPages,
@@ -229,5 +284,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...profilePages,
     ...clubPages,
     ...listPages,
+    ...monthlyRoundupPages,
+    ...celebrityPickPages,
   ]
 }
