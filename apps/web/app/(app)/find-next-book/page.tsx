@@ -33,40 +33,60 @@ export default async function FindNextBookPage() {
       {isUnlocked ? (
         <FindNextBookWizard />
       ) : (
-        <UpgradeCard />
+        <PaywallPreview />
       )}
     </PageWrapper>
   )
 }
 
-function UpgradeCard() {
+function PaywallPreview() {
   return (
-    <div className="mt-8 flex flex-col gap-4 rounded-xl border border-border-subtle bg-bg-surface p-6">
-      <div className="relative overflow-hidden rounded-lg bg-bg-sunken p-4">
-        <p className="select-none font-source-serif-4 text-base text-text-secondary blur-[2px]">
-          Three books picked for you, with one specific line each on why this
-          mood, this pace, this era. No filler.
-        </p>
+    <div className="relative mt-8">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none select-none blur-[3px]"
+      >
+        <FindNextBookWizard />
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4"
+            >
+              <div className="h-40 rounded bg-bg-sunken" />
+              <div className="h-3 w-3/4 rounded bg-bg-sunken" />
+              <div className="h-3 w-1/2 rounded bg-bg-sunken" />
+              <div className="mt-2 h-12 rounded bg-bg-sunken" />
+            </div>
+          ))}
+        </div>
       </div>
-      <div>
-        <h2 className="font-fraunces text-xl text-text-primary">
-          A Foxing Plus feature
-        </h2>
-        <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-          Plus also covers Deep Dive analysis and unlimited AI lookups.
-        </p>
-      </div>
-      <div className="flex flex-wrap gap-3">
-        <Link href="/pricing">
-          <Button variant="primary" size="md">
-            Upgrade to Plus
-          </Button>
-        </Link>
-        <Link href="/books">
-          <Button variant="secondary" size="md">
-            Browse the catalog
-          </Button>
-        </Link>
+      <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-b from-transparent via-bg-base/80 to-bg-base">
+        <div className="mx-auto flex max-w-md flex-col items-center gap-4 rounded-xl border border-border-default bg-bg-elevated p-6 text-center shadow-lg">
+          <h2 className="font-fraunces text-xl text-text-primary">
+            Unlock with Foxing Plus
+          </h2>
+          <p className="font-source-serif-4 text-sm text-text-secondary">
+            Three books picked for the mood and pace you want, with a real
+            reason for each. Plus also covers Deep Dive analysis and
+            unlimited AI lookups.
+          </p>
+          <p className="font-dm-mono text-xs uppercase tracking-wide text-text-tertiary">
+            $9.99/month · 7-day free trial
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link href="/pricing">
+              <Button variant="primary" size="md">
+                Upgrade to Plus
+              </Button>
+            </Link>
+            <Link href="/books">
+              <Button variant="ghost" size="md">
+                Browse the catalog
+              </Button>
+            </Link>
+          </div>
+        </div>
       </div>
     </div>
   )
