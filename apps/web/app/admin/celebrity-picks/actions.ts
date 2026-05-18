@@ -323,6 +323,108 @@ export async function addManualCelebrityPick(
   return { ok: true }
 }
 
+interface BackfillResult {
+  ok: boolean
+  inserted?: number
+  skipped?: number
+  message?: string
+  error?: string
+}
+
+/**
+ * Fire the backfill-club-picks Edge Function for one specific club. Used by
+ * the admin "Backfill" control to re-run historical scraping on demand
+ * (the DB insert trigger covers the automatic path for new clubs).
+ */
+export async function triggerClubBackfill(
+  clubSlug: string,
+): Promise<BackfillResult> {
+  const slug = clubSlug.trim()
+  if (!slug) return { ok: false, error: 'Club slug required.' }
+
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', userId)
+    .maybeSingle()
+  if (!(profile as { is_admin: boolean | null } | null)?.is_admin) {
+    return { ok: false, error: 'Admin access required.' }
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!supabaseUrl || !serviceKey) {
+    return {
+      ok: false,
+      error: 'Supabase env not configured on this environment.',
+    }
+  }
+
+  let res: Response
+  try {
+    res = await fetch(`${supabaseUrl}/functions/v1/backfill-club-picks`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ club_slug: slug }),
+      cache: 'no-store',
+    })
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof Error
+          ? `Edge function unreachable: ${err.message}`
+          : 'Edge function unreachable.',
+    }
+  }
+
+  const text = await res.text()
+  type EdgeBody = {
+    club?: string
+    inserted?: number
+    skipped?: number
+    message?: string
+    error?: string
+  }
+  let body: EdgeBody | null = null
+  try {
+    body = JSON.parse(text) as EdgeBody
+  } catch {
+    body = null
+  }
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: body?.error ?? `Backfill failed (HTTP ${res.status}).`,
+    }
+  }
+
+  const inserted = body?.inserted ?? 0
+  const skipped = body?.skipped ?? 0
+
+  revalidatePath('/admin/celebrity-picks')
+  revalidatePath('/book-clubs')
+  revalidatePath(`/book-clubs/${slug}`)
+
+  return {
+    ok: true,
+    inserted,
+    skipped,
+    message:
+      body?.message ??
+      (inserted > 0
+        ? `Done. ${inserted} new pick${inserted === 1 ? '' : 's'} added (${skipped} already on file).`
+        : `Done. No new picks found (${skipped} already on file).`),
+  }
+}
+
 interface RunNowResult {
   ok: boolean
   published?: number
