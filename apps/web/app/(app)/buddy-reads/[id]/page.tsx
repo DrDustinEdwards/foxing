@@ -11,7 +11,7 @@ import {
   type BuddyRead,
   type BuddyReadPost,
 } from '@/lib/missing-pages-queries'
-import { BUDDY_READS_METADATA } from '@/lib/metadata-extras'
+import { BUDDY_READS_METADATA } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
 
 export const dynamic = 'force-dynamic'

@@ -13,7 +13,7 @@ import {
   fetchPublicDiary,
   fetchUserCounts,
 } from '@/lib/missing-pages-queries'
-import { buildUserDiaryMetadata } from '@/lib/metadata-extras'
+import { buildUserDiaryMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 

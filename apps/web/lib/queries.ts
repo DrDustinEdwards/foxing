@@ -11,6 +11,8 @@ import { dayOfYear } from '@/lib/foxing'
  */
 export interface BookSummary {
   id: string
+  slug: string | null
+  author_slug: string | null
   title: string
   author: string
   cover_url: string | null
@@ -42,10 +44,17 @@ export interface BookFull extends BookSummary {
 }
 
 const BOOK_SUMMARY_COLS =
-  'id, title, author, cover_url, themes' as const
+  'id, slug, author_slug, title, author, cover_url, themes' as const
 
 const BOOK_FULL_COLS =
-  'id, title, author, cover_url, themes, description, epub_url, language, subjects, word_count, series_name, series_order, country, reading_difficulty, gutenberg_id, source, source_type, isbn, isbn13, publication_year, publisher, external_url, amazon_url, bookshop_url, created_at' as const
+  'id, slug, author_slug, title, author, cover_url, themes, description, epub_url, language, subjects, word_count, series_name, series_order, country, reading_difficulty, gutenberg_id, source, source_type, isbn, isbn13, publication_year, publisher, external_url, amazon_url, bookshop_url, created_at' as const
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+export function isUuid(s: string): boolean {
+  return UUID_RE.test(s)
+}
 
 function supabase() {
   return createClient()
@@ -126,7 +135,7 @@ export interface CommunityReview {
   rating: number | null
   review: string
   created_at: string
-  book: Pick<BookSummary, 'id' | 'title' | 'author' | 'cover_url'> | null
+  book: Pick<BookSummary, 'id' | 'slug' | 'title' | 'author' | 'cover_url'> | null
   author: {
     username: string
     display_name: string
@@ -147,7 +156,7 @@ export async function fetchCommunityReviews(
     const { data } = await sb
       .from('user_books')
       .select(
-        'id, user_id, book_id, rating, review, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+        'id, user_id, book_id, rating, review, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
       )
       .eq('review_is_public', true)
       .not('review', 'is', null)
@@ -165,7 +174,7 @@ export async function fetchCommunityReviews(
         review: string
         created_at: string
         books:
-          | Pick<BookSummary, 'id' | 'title' | 'author' | 'cover_url'>
+          | Pick<BookSummary, 'id' | 'slug' | 'title' | 'author' | 'cover_url'>
           | null
         profiles: {
           username: string
@@ -191,24 +200,12 @@ export interface BookWithRating extends BookFull {
   rating_count: number
 }
 
-/**
- * Resolve a book by id or by a slug-style id-prefix match. Since the
- * schema lacks a slug column we accept the raw uuid.
- */
-export async function fetchBookById(id: string): Promise<BookWithRating | null> {
-  if (!hasEnv()) return null
+async function attachRatingStats(book: BookFull): Promise<BookWithRating> {
   const sb = supabase()
-  const { data: book } = await sb
-    .from('books')
-    .select(BOOK_FULL_COLS)
-    .eq('id', id)
-    .maybeSingle()
-  if (!book) return null
-
   const { data: ratings } = await sb
     .from('user_books')
     .select('rating')
-    .eq('book_id', id)
+    .eq('book_id', book.id)
     .not('rating', 'is', null)
   let avg: number | null = null
   let count = 0
@@ -219,7 +216,40 @@ export async function fetchBookById(id: string): Promise<BookWithRating | null> 
     count = nums.length
     if (count > 0) avg = nums.reduce((s, n) => s + n, 0) / count
   }
-  return { ...(book as BookFull), avg_rating: avg, rating_count: count }
+  return { ...book, avg_rating: avg, rating_count: count }
+}
+
+/**
+ * Resolve a book by UUID. Kept for legacy callers and the redirect path
+ * on the slug route. New code should prefer fetchBookBySlug.
+ */
+export async function fetchBookById(id: string): Promise<BookWithRating | null> {
+  if (!hasEnv()) return null
+  const sb = supabase()
+  const { data: book } = await sb
+    .from('books')
+    .select(BOOK_FULL_COLS)
+    .eq('id', id)
+    .maybeSingle()
+  if (!book) return null
+  return attachRatingStats(book as BookFull)
+}
+
+/**
+ * Resolve a book by slug, the canonical web URL identifier.
+ */
+export async function fetchBookBySlug(
+  slug: string,
+): Promise<BookWithRating | null> {
+  if (!hasEnv()) return null
+  const sb = supabase()
+  const { data: book } = await sb
+    .from('books')
+    .select(BOOK_FULL_COLS)
+    .eq('slug', slug)
+    .maybeSingle()
+  if (!book) return null
+  return attachRatingStats(book as BookFull)
 }
 
 export interface BookReview {
@@ -298,7 +328,7 @@ export async function fetchBookHighlights(
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
     )
     .eq('book_id', bookId)
     .eq('is_public', true)
@@ -363,7 +393,7 @@ export interface ClubSummary {
   cover_url: string | null
   current_book_id: string | null
   member_count: number
-  current_book: Pick<BookSummary, 'id' | 'title' | 'cover_url'> | null
+  current_book: Pick<BookSummary, 'id' | 'slug' | 'title' | 'cover_url'> | null
 }
 
 export async function fetchPublicClubsForBook(
@@ -375,7 +405,7 @@ export async function fetchPublicClubsForBook(
   const { data } = await sb
     .from('clubs')
     .select(
-      'id, name, description, cover_url, current_book_id, member_count, current_book:current_book_id(id, title, cover_url)',
+      'id, name, description, cover_url, current_book_id, member_count, current_book:current_book_id(id, slug, title, cover_url)',
     )
     .eq('current_book_id', bookId)
     .eq('visibility', 'public')
@@ -412,7 +442,7 @@ export async function fetchProfileByUsername(
 
 export interface ProfileFavorite {
   position: number
-  book: Pick<BookSummary, 'id' | 'title' | 'author' | 'cover_url'>
+  book: Pick<BookSummary, 'id' | 'slug' | 'title' | 'author' | 'cover_url'>
 }
 
 export async function fetchUserFavorites(
@@ -422,13 +452,13 @@ export async function fetchUserFavorites(
   const sb = supabase()
   const { data } = await sb
     .from('user_favorites')
-    .select('position, books:book_id(id, title, author, cover_url)')
+    .select('position, books:book_id(id, slug, title, author, cover_url)')
     .eq('user_id', userId)
     .order('position', { ascending: true })
   if (!data) return []
   return (data as unknown as Array<{
     position: number
-    books: Pick<BookSummary, 'id' | 'title' | 'author' | 'cover_url'> | null
+    books: Pick<BookSummary, 'id' | 'slug' | 'title' | 'author' | 'cover_url'> | null
   }>)
     .filter((r) => r.books !== null)
     .map((r) => ({ position: r.position, book: r.books! }))
@@ -485,7 +515,7 @@ export async function fetchProfileReviews(
   const { data } = await sb
     .from('user_books')
     .select(
-      'id, user_id, rating, review, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, user_id, rating, review, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
     )
     .eq('user_id', userId)
     .eq('review_is_public', true)
@@ -526,6 +556,7 @@ export async function fetchProfileReviews(
 
 export interface PublicClub {
   id: string
+  slug: string | null
   name: string
   description: string | null
   cover_url: string | null
@@ -534,6 +565,7 @@ export interface PublicClub {
   visibility: string
   current_book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -547,7 +579,10 @@ export interface PublicClub {
 }
 
 const CLUB_CURRENT_BOOK_COLS =
-  'id, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url' as const
+  'id, slug, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url' as const
+
+const CLUB_BASE_COLS =
+  `id, slug, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})` as const
 
 export async function fetchPublicClubById(
   id: string,
@@ -556,10 +591,22 @@ export async function fetchPublicClubById(
   const sb = supabase()
   const { data } = await sb
     .from('clubs')
-    .select(
-      `id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})`,
-    )
+    .select(CLUB_BASE_COLS)
     .eq('id', id)
+    .eq('visibility', 'public')
+    .maybeSingle()
+  return (data as unknown as PublicClub | null) ?? null
+}
+
+export async function fetchPublicClubBySlug(
+  slug: string,
+): Promise<PublicClub | null> {
+  if (!hasEnv()) return null
+  const sb = supabase()
+  const { data } = await sb
+    .from('clubs')
+    .select(CLUB_BASE_COLS)
+    .eq('slug', slug)
     .eq('visibility', 'public')
     .maybeSingle()
   return (data as unknown as PublicClub | null) ?? null
@@ -673,7 +720,7 @@ export async function fetchPublicQuotes(
   const { data, count } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
       { count: 'exact' },
     )
     .eq('is_public', true)
@@ -691,7 +738,7 @@ export async function fetchQuoteById(id: string): Promise<PublicQuote | null> {
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
     )
     .eq('id', id)
     .eq('is_public', true)
@@ -728,7 +775,7 @@ export async function searchAll(query: string): Promise<{
     sb
       .from('clubs')
       .select(
-        'id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(id, title, author, cover_url)',
+        'id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(id, slug, title, author, cover_url)',
       )
       .eq('visibility', 'public')
       .ilike('name', like)
@@ -808,6 +855,27 @@ export async function fetchBooksByAuthor(
 }
 
 /**
+ * All books for a given author_slug. Preferred over fetchBooksByAuthor for
+ * the public /author/[slug] route because it avoids the ILIKE wildcard and
+ * uses the indexed slug column.
+ */
+export async function fetchBooksByAuthorSlug(
+  authorSlug: string,
+): Promise<BookSummary[]> {
+  if (!hasEnv()) return []
+  const sb = supabase()
+  const { data } = await sb
+    .from('books')
+    .select(BOOK_SUMMARY_COLS)
+    .eq('author_slug', authorSlug)
+    .order('title', { ascending: true })
+    .limit(100)
+  return (
+    (data as unknown as BookSummary[] | null) ?? []
+  ).map((b) => ({ ...b, weighted_rating: null }))
+}
+
+/**
  * Recent public highlights from any book by this author.
  */
 export async function fetchHighlightsByAuthor(
@@ -827,11 +895,60 @@ export async function fetchHighlightsByAuthor(
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
     )
     .in('book_id', ids)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(limit)
   return (data as unknown as PublicHighlight[] | null) ?? []
+}
+
+/**
+ * Recent public highlights for books matching a given author_slug.
+ * Mirrors fetchHighlightsByAuthor but uses the indexed slug column.
+ */
+export async function fetchHighlightsByAuthorSlug(
+  authorSlug: string,
+  limit = 3,
+): Promise<PublicHighlight[]> {
+  if (!hasEnv()) return []
+  const sb = supabase()
+  const { data: books } = await sb
+    .from('books')
+    .select('id')
+    .eq('author_slug', authorSlug)
+    .limit(100)
+  const ids = ((books as { id: string }[] | null) ?? []).map((b) => b.id)
+  if (ids.length === 0) return []
+  const { data } = await sb
+    .from('highlights')
+    .select(
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+    )
+    .in('book_id', ids)
+    .eq('is_public', true)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  return (data as unknown as PublicHighlight[] | null) ?? []
+}
+
+/**
+ * Look up a books.author_slug given an exact author display name.
+ * Used by the legacy URL-decoded fallback on /author/[slug] to issue a
+ * permanent redirect to the canonical author_slug URL.
+ */
+export async function fetchAuthorSlugByName(
+  authorName: string,
+): Promise<string | null> {
+  if (!hasEnv()) return null
+  const sb = supabase()
+  const { data } = await sb
+    .from('books')
+    .select('author_slug')
+    .ilike('author', authorName)
+    .not('author_slug', 'is', null)
+    .limit(1)
+    .maybeSingle()
+  return (data as { author_slug: string | null } | null)?.author_slug ?? null
 }

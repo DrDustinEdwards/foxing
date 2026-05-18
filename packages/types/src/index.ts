@@ -15,30 +15,41 @@ export type Privacy = 'public' | 'close_friends' | 'private'
 
 export interface Book {
   id: string
-  slug: string | null
+  slug: string
+  author_slug: string
   title: string
   author: string
-  description: string | null
-  cover_url: string | null
-  epub_url: string | null
-  source: 'standard_ebooks' | 'gutenberg'
-  source_type: 'catalog' | 'community' | null
-  isbn: string | null
-  isbn13: string | null
-  publication_year: number | null
-  publisher: string | null
-  external_url: string | null
-  amazon_url: string | null
-  bookshop_url: string | null
-  mood_tags: string[] | null
-  pacing: 'slow' | 'medium' | 'fast' | null
-  content_warnings: Record<string, string[]> | null
-  is_staff_pick: boolean
-  staff_pick_note: string | null
-  weighted_rating: number | null
-  raw_rating: number | null
-  rating_count: number
-  created_at: string
+  description?: string | null
+  cover_url?: string | null
+  epub_url?: string | null
+  source: string
+  source_type?: string | null
+  language?: string | null
+  subjects?: string[]
+  themes?: string[]
+  mood_tags?: string[]
+  pacing?: string | null
+  content_warnings?: string[]
+  word_count?: number | null
+  series_name?: string | null
+  series_order?: number | null
+  series_position?: number | null
+  country?: string | null
+  is_staff_pick?: boolean
+  staff_pick_note?: string | null
+  weighted_rating?: number | null
+  raw_rating?: number | null
+  rating_count?: number
+  isbn?: string | null
+  isbn13?: string | null
+  publication_year?: number | null
+  publisher?: string | null
+  external_url?: string | null
+  amazon_url?: string | null
+  bookshop_url?: string | null
+  added_by?: string | null
+  updated_at?: string | null
+  created_at?: string
 }
 
 export interface BookOfMonth {
@@ -46,27 +57,35 @@ export interface BookOfMonth {
   book_id: string
   year: number
   month: number
-  category: string | null
-  curator_note: string | null
-  amazon_url: string | null
-  bookshop_url: string | null
+  category?: string | null
+  curator_note?: string | null
+  amazon_url?: string | null
+  bookshop_url?: string | null
   is_published: boolean
-  created_at: string
+  created_at?: string
 }
 
 export interface Profile {
   id: string
   username: string
   display_name: string
-  avatar_url: string | null
-  bio: string | null
-  reading_personality: string | null
+  avatar_url?: string | null
+  backdrop_url?: string | null
+  bio?: string | null
+  reading_personality?: string | null
+  favorite_genres?: string[]
   is_public: boolean
-  is_admin: boolean
-  subscription_tier: SubscriptionTier
-  backdrop_url: string | null
-  favorite_genres: string[] | null
-  created_at: string
+  is_admin?: boolean
+  is_suspended?: boolean
+  is_verified_author?: boolean
+  is_verified_educator?: boolean
+  subscription_tier?: SubscriptionTier | string | null
+  total_books_read?: number
+  total_highlights?: number
+  xp_points?: number
+  reading_level?: string | null
+  created_at?: string
+  updated_at?: string | null
 }
 
 export interface UserBook {
@@ -74,19 +93,28 @@ export interface UserBook {
   user_id: string
   book_id: string
   status: ReadingStatus
-  rating: number | null
-  rating_half: number | null
-  review: string | null
-  review_is_public: boolean
-  mood_tags: string[] | null
-  pacing: string | null
-  format_read: 'print' | 'audio' | 'ebook' | 'unknown' | null
-  edition_read: string | null
-  date_started: string | null
-  date_finished: string | null
-  paused_at: string | null
-  paused_note: string | null
-  created_at: string
+  rating?: number | null
+  rating_half?: number | null
+  review?: string | null
+  review_is_public?: boolean
+  review_likes?: number
+  mood_tags?: string[]
+  pacing?: string | null
+  format_read?: string | null
+  edition_read?: string | null
+  is_favorite?: boolean
+  personal_notes?: string | null
+  paused_note?: string | null
+  progress_cfi?: string | null
+  progress_percentage?: number | null
+  started_at?: string | null
+  finished_at?: string | null
+  date_started?: string | null
+  date_finished?: string | null
+  abandoned_at?: string | null
+  paused_at?: string | null
+  updated_at?: string | null
+  created_at?: string
 }
 
 export interface Highlight {
@@ -94,35 +122,89 @@ export interface Highlight {
   user_id: string
   book_id: string
   text: string
-  cfi: string | null
-  color: string
-  note: string | null
+  cfi?: string | null
+  color?: string | null
+  note?: string | null
+  chapter?: string | null
   is_public: boolean
-  created_at: string
+  like_count?: number
+  created_at?: string
+  updated_at?: string | null
 }
 
 export interface Club {
   id: string
+  slug?: string | null
   name: string
-  description: string | null
-  cover_url: string | null
+  description?: string | null
+  cover_url?: string | null
+  creator_id?: string | null
+  current_book_id?: string | null
+  visibility: 'public' | 'private' | 'secret'
+  member_count?: number
+  member_approval?: boolean
+  max_members?: number | null
+  reading_pace?: string | null
+  chapters_per_week?: number | null
+  genre_tags?: string[]
+  is_public?: boolean
+  created_by?: string
+  created_at?: string
+  updated_at?: string | null
+}
+
+export interface ReadingList {
+  id: string
+  user_id: string
+  slug?: string | null
+  title: string
+  description?: string | null
   is_public: boolean
-  created_by: string
-  current_book_id: string | null
-  created_at: string
+  is_featured?: boolean
+  cover_url?: string | null
+  like_count?: number
+  created_at?: string
+  updated_at?: string | null
 }
 
 export interface DiaryEntry {
   id: string
   user_id: string
   book_id: string
+  slug?: string | null
   log_date: string
-  rating_half: number | null
-  review: string | null
+  rating_half?: number | null
+  review?: string | null
   privacy: Privacy
-  is_draft: boolean
-  is_reread: boolean
-  created_at: string
+  is_draft?: boolean
+  is_reread?: boolean
+  created_at?: string
+  updated_at?: string | null
+}
+
+export interface JournalPost {
+  id: string
+  title: string
+  slug: string
+  content: string
+  excerpt?: string | null
+  cover_image_url?: string | null
+  author_id?: string | null
+  author_name?: string | null
+  is_published: boolean
+  published_at?: string | null
+  tags?: string[]
+  created_at?: string
+  updated_at?: string | null
+}
+
+export interface BookAICache {
+  id: string
+  book_id: string
+  action: string
+  content: string
+  created_at?: string
+  updated_at?: string | null
 }
 
 export interface UserFavorite {
@@ -131,28 +213,35 @@ export interface UserFavorite {
   position: number
 }
 
-export interface ReadingList {
+export interface ReadingGoal {
   id: string
   user_id: string
-  title: string
-  description: string | null
-  is_public: boolean
-  is_featured: boolean
-  created_at: string
+  year: number
+  target: number
+  type: 'books' | 'pages'
 }
 
-export interface JournalPost {
+export interface ReadingStreak {
+  user_id: string
+  current_streak: number
+  longest_streak: number
+  last_read_date?: string | null
+  updated_at?: string | null
+}
+
+export interface ExternalBookClub {
   id: string
-  title: string
   slug: string
-  content: string
-  excerpt: string | null
-  cover_image_url: string | null
-  author_id: string | null
-  is_published: boolean
-  published_at: string | null
-  tags: string[] | null
-  created_at: string
+  name: string
+  short_name: string
+  description?: string | null
+  curator?: string | null
+  website_url?: string | null
+  logo_url?: string | null
+  cadence?: string | null
+  focus?: string | null
+  sort_order?: number
+  is_active?: boolean
 }
 
 export interface Badge {

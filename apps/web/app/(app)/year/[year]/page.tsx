@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ShareButton } from '@/components/share-button'
 import { fetchYearStats } from '@/lib/missing-pages-queries'
-import { buildYearInReadingMetadata } from '@/lib/metadata-extras'
+import { buildYearInReadingMetadata } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
 

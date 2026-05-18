@@ -8,7 +8,7 @@ import {
   fetchPublicChallenges,
   type ChallengeRow,
 } from '@/lib/missing-pages-queries'
-import { buildChallengesIndexMetadata } from '@/lib/metadata-extras'
+import { buildChallengesIndexMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 600

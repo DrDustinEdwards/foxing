@@ -13,7 +13,7 @@ import {
   fetchPublicUserReviews,
   fetchUserCounts,
 } from '@/lib/missing-pages-queries'
-import { buildUserReviewsMetadata } from '@/lib/metadata-extras'
+import { buildUserReviewsMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 

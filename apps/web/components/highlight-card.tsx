@@ -3,7 +3,7 @@ import { Avatar } from '@/components/ui/avatar'
 
 interface HighlightCardProps {
   text: string
-  book: { title: string; author: string; id: string }
+  book: { title: string; author: string; id: string; slug?: string | null }
   author?: {
     username: string
     display_name: string
@@ -12,7 +12,7 @@ interface HighlightCardProps {
 }
 
 export function HighlightCard({ text, book, author }: HighlightCardProps) {
-  const bookHref = `/book/${book.id}`
+  const bookHref = `/book/${book.slug ?? book.id}`
   return (
     <figure className="flex flex-col gap-3 rounded-lg border-l-[3px] border-brand-ui bg-bg-surface p-4 shadow-sm">
       <blockquote className="font-source-serif-4 text-[15px] italic text-text-primary">

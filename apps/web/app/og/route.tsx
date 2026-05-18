@@ -1,3 +1,8 @@
+/* eslint-disable @next/next/no-img-element --
+ * next/og's ImageResponse uses Satori, which cannot render <Image /> from
+ * next/image. Raw <img> tags are the correct and only option inside this
+ * file. Suppress the rule globally for this route.
+ */
 import { ImageResponse } from 'next/og'
 import { type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'

@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchSeriesIndex } from '@/lib/missing-pages-queries'
-import { buildSeriesIndexMetadata } from '@/lib/metadata-extras'
+import { buildSeriesIndexMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 3600

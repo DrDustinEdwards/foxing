@@ -21,7 +21,7 @@ export function ListCard({
   const [primary, ...secondary] = covers.slice(0, 3)
   return (
     <Link
-      href={`/lists/${list.id}`}
+      href={`/my-lists/${list.id}`}
       className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
     >
       <div className="grid h-32 grid-cols-3 gap-1 overflow-hidden rounded">

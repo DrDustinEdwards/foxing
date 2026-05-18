@@ -11,7 +11,7 @@ import {
   fetchPublicReadingLists,
   fetchUserCounts,
 } from '@/lib/missing-pages-queries'
-import { buildUserListsMetadata } from '@/lib/metadata-extras'
+import { buildUserListsMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 300

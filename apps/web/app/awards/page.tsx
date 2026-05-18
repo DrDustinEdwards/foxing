@@ -10,7 +10,7 @@ import {
   type AwardCategory,
   type AwardBookHit,
 } from '@/lib/missing-pages-queries'
-import { buildAwardsMetadata } from '@/lib/metadata-extras'
+import { buildAwardsMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 86400

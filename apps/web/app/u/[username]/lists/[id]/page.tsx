@@ -8,7 +8,7 @@ import { PrivateProfileNotice } from '@/components/private-profile-notice'
 import { ShareButton } from '@/components/share-button'
 import { fetchProfileByUsername } from '@/lib/queries'
 import { fetchPublicReadingList } from '@/lib/missing-pages-queries'
-import { buildReadingListMetadata } from '@/lib/metadata-extras'
+import { buildReadingListMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
 

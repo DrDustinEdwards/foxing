@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Footer } from '@/components/layout/footer'
@@ -8,23 +8,52 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchAiCache,
-  fetchBooksByAuthor,
-  fetchHighlightsByAuthor,
+  fetchAuthorSlugByName,
+  fetchBooksByAuthorSlug,
+  fetchHighlightsByAuthorSlug,
 } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
 import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86_400
+
+// Build-time only. Pulls every distinct author_slug so each author page
+// can be statically generated. Uses the admin client because cookies()
+// is not available outside a request scope.
+export async function generateStaticParams() {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return []
+  }
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('books')
+    .select('author_slug')
+    .not('author_slug', 'is', null)
+    .limit(5000)
+  const seen = new Set<string>()
+  for (const row of (data as { author_slug: string | null }[] | null) ?? []) {
+    if (row.author_slug) seen.add(row.author_slug)
+  }
+  return [...seen].map((slug) => ({ slug }))
+}
 
 export async function generateMetadata({
   params,
 }: {
   params: { slug: string }
 }): Promise<Metadata> {
-  const authorName = decodeURIComponent(params.slug)
-  const books = await fetchBooksByAuthor(authorName)
+  const books = await fetchBooksByAuthorSlug(params.slug)
+  if (books.length === 0) {
+    return { title: 'Author not found', robots: { index: false, follow: true } }
+  }
+  const authorName = books[0].author
   return buildAuthorMetadata(
     authorName,
+    params.slug,
     books.map((b) => b.title),
   )
 }
@@ -34,15 +63,27 @@ export default async function AuthorPage({
 }: {
   params: { slug: string }
 }) {
-  const authorName = decodeURIComponent(params.slug)
-  const [navUser, books, highlights] = await Promise.all([
+  const [navUser, books] = await Promise.all([
     getNavUser(),
-    fetchBooksByAuthor(authorName),
-    fetchHighlightsByAuthor(authorName, 3),
+    fetchBooksByAuthorSlug(params.slug),
   ])
-  if (books.length === 0) notFound()
 
-  const aiBio = books[0] ? await fetchAiCache(books[0].id, 'author_bio') : null
+  // Legacy URL fallback: when the request looks like an encoded display
+  // name, resolve to a canonical author_slug and 301 to that URL.
+  if (books.length === 0) {
+    const decoded = decodeURIComponent(params.slug)
+    if (decoded !== params.slug || /\s/.test(decoded)) {
+      const canonicalSlug = await fetchAuthorSlugByName(decoded)
+      if (canonicalSlug) {
+        permanentRedirect(`/author/${canonicalSlug}`)
+      }
+    }
+    notFound()
+  }
+
+  const authorName = books[0].author
+  const highlights = await fetchHighlightsByAuthorSlug(params.slug, 3)
+  const aiBio = await fetchAiCache(books[0].id, 'author_bio')
 
   // Themes the author works in, sampled from their books.
   const themeSet = new Set<string>()
