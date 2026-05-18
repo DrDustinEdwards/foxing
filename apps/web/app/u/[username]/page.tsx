@@ -8,14 +8,18 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReviewCard } from '@/components/review-card'
 import {
+  fetchIsFollowing,
   fetchProfileByUsername,
   fetchProfileReviews,
   fetchProfileStats,
+  fetchTasteCompatibility,
   fetchUserFavorites,
 } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { profileJsonLd } from '@/lib/structured-data'
 import { buildProfileMetadata } from '@/lib/metadata'
+import { Badge } from '@/components/ui/badge'
+import { FollowButton } from './follow-button'
 
 export const revalidate = 300
 
@@ -68,10 +72,18 @@ export default async function ProfilePage({
     )
   }
 
-  const [favorites, stats, reviews] = await Promise.all([
+  const viewerId = await getAuthedUserId()
+  const isOwnProfile = viewerId === profile.id
+  const [favorites, stats, reviews, isFollowing, taste] = await Promise.all([
     fetchUserFavorites(profile.id),
     fetchProfileStats(profile.id),
     fetchProfileReviews(profile.id, 3),
+    viewerId && !isOwnProfile
+      ? fetchIsFollowing({ followerId: viewerId, followingId: profile.id })
+      : Promise.resolve(false),
+    viewerId && !isOwnProfile
+      ? fetchTasteCompatibility({ viewerId, profileId: profile.id })
+      : Promise.resolve(null),
   ])
 
   return (
@@ -92,25 +104,41 @@ export default async function ProfilePage({
       />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col items-start gap-4 md:flex-row md:items-center">
-            <Avatar
-              src={profile.avatar_url}
-              name={profile.display_name}
-              size="lg"
-            />
-            <div className="flex flex-col gap-1">
-              <h1 className="font-fraunces text-[1.75rem] leading-none text-text-primary">
-                {profile.display_name}
-              </h1>
-              <span className="font-dm-sans text-sm text-text-tertiary">
-                @{profile.username}
-              </span>
-              {profile.reading_personality && (
-                <p className="mt-1 max-w-prose font-source-serif-4 italic text-text-tertiary">
-                  {profile.reading_personality}
-                </p>
-              )}
+          <header className="flex flex-col items-start gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col items-start gap-4 md:flex-row md:items-center">
+              <Avatar
+                src={profile.avatar_url}
+                name={profile.display_name}
+                size="lg"
+              />
+              <div className="flex flex-col gap-1">
+                <h1 className="font-fraunces text-[1.75rem] leading-none text-text-primary">
+                  {profile.display_name}
+                </h1>
+                <span className="font-dm-sans text-sm text-text-tertiary">
+                  @{profile.username}
+                </span>
+                {profile.reading_personality && (
+                  <p className="mt-1 max-w-prose font-source-serif-4 italic text-text-tertiary">
+                    {profile.reading_personality}
+                  </p>
+                )}
+                {taste && (
+                  <Badge variant="brand" className="mt-2 w-fit">
+                    {taste.shared === 0
+                      ? 'No book overlap yet'
+                      : `${taste.percent}% taste match`}
+                  </Badge>
+                )}
+              </div>
             </div>
+            {viewerId && !isOwnProfile && (
+              <FollowButton
+                targetUserId={profile.id}
+                username={profile.username}
+                initiallyFollowing={isFollowing}
+              />
+            )}
           </header>
 
           <section className="mt-10">
