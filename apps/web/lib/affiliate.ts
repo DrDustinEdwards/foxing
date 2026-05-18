@@ -8,29 +8,45 @@
  * themselves and they ship in every outbound URL anyway.
  */
 
-const AMAZON_TAG = process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG ?? ''
-const BOOKSHOP_ID = process.env.NEXT_PUBLIC_BOOKSHOP_AFFILIATE_ID ?? ''
-
 function cleanIsbn(isbn: string): string {
   return isbn.replace(/[^0-9Xx]/g, '')
 }
 
-export function amazonBookUrl(isbnOrAsin: string): string {
-  const id = cleanIsbn(isbnOrAsin)
-  const base = `https://www.amazon.com/dp/${id}`
-  return AMAZON_TAG ? `${base}?tag=${AMAZON_TAG}` : base
+export function amazonUrl(
+  isbn10: string | null | undefined,
+): string | null {
+  if (!isbn10) return null
+  const id = cleanIsbn(isbn10)
+  if (!id) return null
+  const tag = process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG
+  return tag
+    ? `https://www.amazon.com/dp/${id}?tag=${tag}`
+    : `https://www.amazon.com/dp/${id}`
 }
 
 export function amazonSearchUrl(title: string, author: string): string {
-  const params = new URLSearchParams({ k: `${title} ${author}`, i: 'stripbooks' })
-  if (AMAZON_TAG) params.set('tag', AMAZON_TAG)
+  const tag = process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG
+  const params = new URLSearchParams({
+    k: `${title} ${author}`,
+    i: 'stripbooks',
+  })
+  if (tag) params.set('tag', tag)
   return `https://www.amazon.com/s?${params.toString()}`
 }
 
-export function bookshopBookUrl(isbn: string): string {
-  const id = cleanIsbn(isbn)
-  if (!BOOKSHOP_ID) return `https://bookshop.org/book/${id}`
-  return `https://bookshop.org/a/${BOOKSHOP_ID}/${id}`
+export function bookshopUrl(
+  isbn13: string | null | undefined,
+  fallbackUrl?: string | null,
+): string | null {
+  if (!isbn13 && !fallbackUrl) return null
+  const id = process.env.NEXT_PUBLIC_BOOKSHOP_AFFILIATE_ID
+  if (isbn13) {
+    const cleaned = cleanIsbn(isbn13)
+    return id
+      ? `https://bookshop.org/a/${id}/${cleaned}`
+      : (fallbackUrl ?? `https://bookshop.org/isbn/${cleaned}`)
+  }
+  return fallbackUrl ?? null
 }
 
 export function bookshopSearchUrl(title: string, author: string): string {
@@ -57,11 +73,6 @@ export interface AffiliateBook {
   bookshop_url?: string | null
 }
 
-/**
- * Resolve the best available URL for each purchase channel. An admin
- * override on the book row wins; otherwise we build an affiliate link
- * from the ISBN; otherwise we fall back to a search.
- */
 export interface ResolvedAffiliateLinks {
   bookshop: string
   amazon: string
@@ -70,19 +81,27 @@ export interface ResolvedAffiliateLinks {
   hasIsbn: boolean
 }
 
+/**
+ * Build the four purchase channels for a book. ISBN-based affiliate URLs
+ * take priority over any per-row override stored in the DB, so the affiliate
+ * tag is always credited. Per-row overrides remain as a fallback when no
+ * ISBN is recorded; search URLs are the final fallback.
+ */
 export function resolveAffiliateLinks(
   book: AffiliateBook,
 ): ResolvedAffiliateLinks {
-  const isbn = book.isbn13 ?? book.isbn ?? null
+  const isbn13 = book.isbn13 ?? null
+  const isbn10 = book.isbn ?? null
   return {
     bookshop:
-      book.bookshop_url ??
-      (isbn ? bookshopBookUrl(isbn) : bookshopSearchUrl(book.title, book.author)),
+      bookshopUrl(isbn13, book.bookshop_url) ??
+      bookshopSearchUrl(book.title, book.author),
     amazon:
+      amazonUrl(isbn10) ??
       book.amazon_url ??
-      (isbn ? amazonBookUrl(isbn) : amazonSearchUrl(book.title, book.author)),
+      amazonSearchUrl(book.title, book.author),
     worldcat: worldcatBookUrl(book.title, book.author),
     ebookSearch: ebookSearchUrl(book.title, book.author),
-    hasIsbn: Boolean(isbn),
+    hasIsbn: Boolean(isbn13 ?? isbn10),
   }
 }
