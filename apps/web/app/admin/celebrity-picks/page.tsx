@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { PickEditor } from './pick-editor'
 import { MissingClubAdd } from './missing-club-add'
 import { MonthTabs } from './month-tabs'
+import { RunNowButton } from './run-now-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -115,6 +116,19 @@ export default async function AdminCelebrityPicksPage({
       </header>
 
       <MonthTabs current={{ year, month }} />
+
+      <section className="mt-6 flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="font-dm-sans text-sm font-medium text-text-primary">
+            Manual trigger
+          </p>
+          <p className="font-dm-sans text-xs text-text-tertiary">
+            Skip the schedule. The cron runs on the 2nd and 12th; use this
+            after Reese or Oprah announce off-cycle.
+          </p>
+        </div>
+        <RunNowButton />
+      </section>
 
       {clubs.length === 0 ? (
         <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">
