@@ -7,11 +7,14 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchActiveChallenges,
   fetchBooksFinishedThisYear,
+  fetchReadingActivity,
   fetchReadingStreak,
   fetchUserGoal,
 } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { appBookDeeplink } from '@/lib/foxing'
+import { StreakHeatmap } from './streak-heatmap'
+import { ChallengeToggleButton } from './challenge-toggle-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,11 +27,12 @@ export default async function GoalsPage() {
   if (!userId) redirect('/sign-in')
 
   const year = new Date().getFullYear()
-  const [goal, finishedCount, streak, challenges] = await Promise.all([
+  const [goal, finishedCount, streak, challenges, activity] = await Promise.all([
     fetchUserGoal(userId, year),
     fetchBooksFinishedThisYear(userId),
     fetchReadingStreak(userId),
     fetchActiveChallenges(userId),
+    fetchReadingActivity(userId),
   ])
 
   const target = goal?.target ?? 0
@@ -80,6 +84,15 @@ export default async function GoalsPage() {
             </Link>
           </div>
         )}
+      </section>
+
+      <section className="mt-8">
+        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Reading activity, last 52 weeks
+        </h2>
+        <div className="overflow-x-auto rounded-lg border border-border-subtle bg-bg-surface p-4">
+          <StreakHeatmap activity={activity} />
+        </div>
       </section>
 
       <section className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -145,14 +158,17 @@ export default async function GoalsPage() {
                       </p>
                     )}
                   </div>
-                  <Link href={appBookDeeplink(`challenges/${c.id}`)}>
-                    <Button
-                      variant={joined ? 'secondary' : 'primary'}
-                      size="sm"
-                    >
-                      {joined ? 'Open in app' : 'Join in app'}
-                    </Button>
-                  </Link>
+                  <div className="flex flex-wrap gap-2">
+                    <ChallengeToggleButton
+                      challengeId={c.id}
+                      initiallyJoined={joined}
+                    />
+                    <Link href={appBookDeeplink(`challenges/${c.id}`)}>
+                      <Button variant="ghost" size="sm">
+                        Open in app
+                      </Button>
+                    </Link>
+                  </div>
                 </li>
               )
             })}

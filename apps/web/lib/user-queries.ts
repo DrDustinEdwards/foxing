@@ -201,6 +201,49 @@ export async function fetchUserHighlights(
     .filter((x): x is UserHighlight => x !== null)
 }
 
+/**
+ * Per-day reading-activity counts for the last 52 weeks. Combines
+ * reading_sessions (started_at) with user_books.finished_at so a day
+ * counts as active if the user opened the reader or finished a book.
+ * Keyed by YYYY-MM-DD.
+ */
+export async function fetchReadingActivity(
+  userId: string,
+  weeks = 52,
+): Promise<Record<string, number>> {
+  const since = new Date()
+  since.setDate(since.getDate() - weeks * 7)
+  const sinceIso = since.toISOString()
+  const [sessionsRes, finishedRes] = await Promise.all([
+    sb()
+      .from('reading_sessions')
+      .select('started_at')
+      .eq('user_id', userId)
+      .gte('started_at', sinceIso)
+      .limit(5000),
+    sb()
+      .from('user_books')
+      .select('finished_at')
+      .eq('user_id', userId)
+      .eq('status', 'finished')
+      .gte('finished_at', sinceIso)
+      .limit(2000),
+  ])
+  const counts: Record<string, number> = {}
+  function bump(iso: string | null) {
+    if (!iso) return
+    const day = iso.slice(0, 10)
+    counts[day] = (counts[day] ?? 0) + 1
+  }
+  for (const r of (sessionsRes.data ?? []) as { started_at: string | null }[]) {
+    bump(r.started_at)
+  }
+  for (const r of (finishedRes.data ?? []) as { finished_at: string | null }[]) {
+    bump(r.finished_at)
+  }
+  return counts
+}
+
 export interface UserGoal {
   id: string
   type: string
