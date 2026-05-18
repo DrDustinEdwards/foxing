@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
@@ -7,7 +6,8 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchBooksList } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { buildBooksListingMetadata } from '@/lib/metadata'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,6 +17,7 @@ interface BooksSearchParams {
   era?: string
   length?: string
   q?: string
+  genre?: string
   page?: string
 }
 
@@ -32,16 +33,34 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
+async function getBookCount(): Promise<number | undefined> {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return undefined
+  }
+  const supabase = createAdminClient()
+  const { count } = await supabase
+    .from('books')
+    .select('id', { count: 'exact', head: true })
+  return count ?? undefined
+}
+
 export async function generateMetadata({
   searchParams,
 }: {
   searchParams: BooksSearchParams
-}): Promise<Metadata> {
-  const title = pageTitle(searchParams)
-  return {
-    title: `${title} · Foxing`,
-    alternates: { canonical: `${siteOrigin()}/books` },
-  }
+}) {
+  const count = await getBookCount()
+  return buildBooksListingMetadata({
+    mood: searchParams.mood,
+    era: searchParams.era,
+    length: searchParams.length,
+    genre: searchParams.genre,
+    search: searchParams.search ?? searchParams.q,
+    count,
+  })
 }
 
 export default async function BooksPage({

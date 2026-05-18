@@ -12,8 +12,10 @@ import {
   fetchClubPostsPreview,
   fetchPublicClubById,
 } from '@/lib/queries'
+import { WhereToRead } from '@/components/where-to-read'
 import { getNavUser } from '@/lib/nav-user'
-import { appClubDeeplink, siteOrigin } from '@/lib/foxing'
+import { appClubDeeplink } from '@/lib/foxing'
+import { buildClubMetadata } from '@/lib/metadata'
 
 export const revalidate = 60
 
@@ -23,21 +25,15 @@ export async function generateMetadata({
   params: { id: string }
 }): Promise<Metadata> {
   const club = await fetchPublicClubById(params.id)
-  if (!club) return { title: 'Club not found · Foxing' }
-  const description =
-    club.description ?? `${club.member_count} readers in this club.`
-  const origin = siteOrigin()
-  return {
-    title: `${club.name} · Foxing`,
-    description,
-    alternates: { canonical: `${origin}/clubs/${club.id}` },
-    openGraph: {
-      title: club.name,
-      description,
-      url: `${origin}/clubs/${club.id}`,
-      images: club.cover_url ? [{ url: club.cover_url }] : undefined,
-    },
-  }
+  if (!club) return { title: 'Club not found' }
+  return buildClubMetadata({
+    id: club.id,
+    name: club.name,
+    description: club.description,
+    current_book_title: club.current_book?.title,
+    current_book_author: club.current_book?.author,
+    member_count: club.member_count,
+  })
 }
 
 export default async function ClubPage({
@@ -72,35 +68,62 @@ export default async function ClubPage({
           </header>
 
           {club.current_book && (
-            <section className="mt-8 flex flex-col gap-4 rounded-lg border border-border-subtle bg-bg-surface p-5 md:flex-row md:items-start">
-              <Link
-                href={`/book/${club.current_book.id}`}
-                className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken"
-              >
-                {club.current_book.cover_url && (
-                  <Image
-                    src={club.current_book.cover_url}
-                    alt={club.current_book.title}
-                    fill
-                    sizes="128px"
-                    className="object-cover"
-                  />
-                )}
-              </Link>
-              <div className="flex flex-col gap-2">
-                <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-                  Reading now
-                </p>
+            <section className="mt-8 flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
+              <div className="flex flex-col gap-4 md:flex-row md:items-start">
                 <Link
                   href={`/book/${club.current_book.id}`}
-                  className="font-fraunces text-xl text-text-primary hover:text-brand-text"
+                  className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken"
                 >
-                  {club.current_book.title}
+                  {club.current_book.cover_url && (
+                    <Image
+                      src={club.current_book.cover_url}
+                      alt={club.current_book.title}
+                      fill
+                      sizes="128px"
+                      className="object-cover"
+                    />
+                  )}
                 </Link>
-                <p className="font-dm-sans text-sm text-text-tertiary">
-                  {club.current_book.author}
-                </p>
+                <div className="flex flex-col gap-2">
+                  <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                    Reading now
+                  </p>
+                  <Link
+                    href={`/book/${club.current_book.id}`}
+                    className="font-fraunces text-xl text-text-primary hover:text-brand-text"
+                  >
+                    {club.current_book.title}
+                  </Link>
+                  <p className="font-dm-sans text-sm text-text-tertiary">
+                    {club.current_book.author}
+                  </p>
+                </div>
               </div>
+              {(club.current_book.source_type === 'community' ||
+                !club.current_book.epub_url) && (
+                <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
+                  <p className="font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
+                    Get the book
+                  </p>
+                  <WhereToRead
+                    variant="inline"
+                    book={{
+                      id: club.current_book.id,
+                      title: club.current_book.title,
+                      author: club.current_book.author,
+                      isbn: club.current_book.isbn,
+                      isbn13: club.current_book.isbn13,
+                      amazon_url: club.current_book.amazon_url,
+                      bookshop_url: club.current_book.bookshop_url,
+                      source_type: club.current_book.source_type,
+                      epub_url: club.current_book.epub_url,
+                    }}
+                  />
+                  <p className="font-dm-sans text-xs text-text-tertiary">
+                    All members read from the same edition.
+                  </p>
+                </div>
+              )}
             </section>
           )}
 

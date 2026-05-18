@@ -11,6 +11,7 @@ import { formatRelativeDate } from '@foxing/utils'
 import { fetchQuoteById } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
+import { buildQuoteMetadata } from '@/lib/metadata'
 
 export const revalidate = 3600
 
@@ -20,26 +21,14 @@ export async function generateMetadata({
   params: { id: string }
 }): Promise<Metadata> {
   const quote = await fetchQuoteById(params.id)
-  if (!quote) return { title: 'Passage not found · Foxing' }
-  const origin = siteOrigin()
-  const passage =
-    quote.text.length > 200
-      ? `${quote.text.slice(0, 200).trimEnd()}...`
-      : quote.text
-  const bookTitle = quote.book?.title ?? ''
-  return {
-    title: bookTitle
-      ? `${bookTitle} passage · Foxing`
-      : 'Passage · Foxing',
-    description: passage,
-    alternates: { canonical: `${origin}/quotes/${params.id}` },
-    openGraph: {
-      title: bookTitle ? `From ${bookTitle}` : 'A passage from Foxing',
-      description: passage,
-      url: `${origin}/quotes/${params.id}`,
-      type: 'article',
-    },
-  }
+  if (!quote || !quote.book) return { title: 'Passage not found' }
+  return buildQuoteMetadata({
+    id: quote.id,
+    text: quote.text,
+    book_title: quote.book.title,
+    book_author: quote.book.author,
+    username: quote.author?.username ?? 'reader',
+  })
 }
 
 export default async function QuotePage({

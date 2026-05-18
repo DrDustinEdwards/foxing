@@ -1,16 +1,12 @@
-import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 86_400
 
-export const metadata: Metadata = {
-  title: 'Terms · Foxing',
-  alternates: { canonical: `${siteOrigin()}/terms` },
-}
+export const metadata = STATIC_PAGE_METADATA['/terms']
 
 export default async function TermsPage() {
   const navUser = await getNavUser()

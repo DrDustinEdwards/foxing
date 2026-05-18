@@ -11,23 +11,13 @@ import { UserCard } from '@/components/user-card'
 import { searchAll } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
-import { siteOrigin } from '@/lib/foxing'
+import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const dynamic = 'force-dynamic'
 
 type Tab = 'books' | 'people' | 'clubs'
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: { q?: string }
-}): Promise<Metadata> {
-  const q = searchParams.q ?? ''
-  return {
-    title: q ? `Search: ${q} · Foxing` : 'Search · Foxing',
-    alternates: { canonical: `${siteOrigin()}/search` },
-  }
-}
+export const metadata: Metadata = STATIC_PAGE_METADATA['/search']
 
 export default async function SearchPage({
   searchParams,
