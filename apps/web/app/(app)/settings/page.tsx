@@ -5,7 +5,9 @@ import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
+import type { Theme } from '@/lib/theme'
 import { AccountSection } from './account-section'
+import { AppearanceSection } from './appearance-section'
 import { VisibilitySection } from './visibility-section'
 import { AccountActionsSection } from './account-actions-section'
 
@@ -26,6 +28,12 @@ interface SettingsProfile {
   progress_is_public: boolean | null
   subscription_tier: string | null
   is_admin: boolean | null
+  theme_preference: string | null
+}
+
+function asTheme(value: string | null | undefined): Theme | undefined {
+  if (value === 'light' || value === 'dark' || value === 'system') return value
+  return undefined
 }
 
 export default async function SettingsPage() {
@@ -36,7 +44,7 @@ export default async function SettingsPage() {
   const { data } = await sb
     .from('profiles')
     .select(
-      'id, username, display_name, avatar_url, bio, is_public, progress_is_public, subscription_tier, is_admin',
+      'id, username, display_name, avatar_url, bio, is_public, progress_is_public, subscription_tier, is_admin, theme_preference',
     )
     .eq('id', userId)
     .maybeSingle()
@@ -68,6 +76,10 @@ export default async function SettingsPage() {
             progress_is_public: Boolean(profile.progress_is_public),
           }}
         />
+      </Section>
+
+      <Section heading="Appearance">
+        <AppearanceSection initial={asTheme(profile.theme_preference)} />
       </Section>
 
       <Section heading="Subscription">

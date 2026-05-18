@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/cn'
 
 interface NavUser {
@@ -191,6 +192,8 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
           >
             <SearchIcon />
           </Link>
+
+          <ThemeToggle className="hidden md:inline-flex" />
 
           {user ? (
             <>
@@ -472,6 +475,12 @@ function MobileSheet({
             onClose={onClose}
           />
         </li>
+        <li className="mt-3 border-t border-border-subtle pt-3">
+          <p className="mb-2 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            Appearance
+          </p>
+          <MobileThemePicker onChange={onClose} />
+        </li>
         {!user && (
           <li className="mt-2 flex gap-2 border-t border-border-subtle pt-3">
             <Link href="/sign-in" className="flex-1" onClick={onClose}>
@@ -488,6 +497,45 @@ function MobileSheet({
         )}
       </ul>
     </div>
+  )
+}
+
+function MobileThemePicker({ onChange }: { onChange: () => void }) {
+  return (
+    <div className="flex items-center gap-2 rounded-md bg-bg-sunken p-1">
+      <MobileThemeOption value="light" label="Light" onChange={onChange} />
+      <MobileThemeOption value="dark" label="Dark" onChange={onChange} />
+      <MobileThemeOption value="system" label="System" onChange={onChange} />
+    </div>
+  )
+}
+
+function MobileThemeOption({
+  value,
+  label,
+  onChange,
+}: {
+  value: 'light' | 'dark' | 'system'
+  label: string
+  onChange: () => void
+}) {
+  // Inline import so the nav stays a single file. setStoredTheme is a
+  // pure client helper and safe inside this client component.
+  const handleClick = () => {
+    void import('@/lib/theme').then((m) => m.setStoredTheme(value))
+    void import('@/app/(app)/settings/theme-actions').then((m) =>
+      m.saveThemePreference(value),
+    )
+    onChange()
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="flex-1 rounded-md px-3 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+    >
+      {label}
+    </button>
   )
 }
 
