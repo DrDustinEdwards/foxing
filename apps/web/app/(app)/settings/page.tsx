@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import type { Theme } from '@/lib/theme'
 import { AccountSection } from './account-section'
+import { AccountCredentialsSection } from './account-credentials-section'
 import { AppearanceSection } from './appearance-section'
 import { VisibilitySection } from './visibility-section'
 import { AccountActionsSection } from './account-actions-section'
@@ -41,15 +42,19 @@ export default async function SettingsPage() {
   if (!userId) redirect('/sign-in?next=/settings')
 
   const sb = createClient()
-  const { data } = await sb
-    .from('profiles')
-    .select(
-      'id, username, display_name, avatar_url, bio, is_public, progress_is_public, subscription_tier, is_admin, theme_preference',
-    )
-    .eq('id', userId)
-    .maybeSingle()
+  const [{ data }, { data: authData }] = await Promise.all([
+    sb
+      .from('profiles')
+      .select(
+        'id, username, display_name, avatar_url, bio, is_public, progress_is_public, subscription_tier, is_admin, theme_preference',
+      )
+      .eq('id', userId)
+      .maybeSingle(),
+    sb.auth.getUser(),
+  ])
   const profile = data as SettingsProfile | null
   if (!profile) redirect('/sign-in')
+  const email = authData.user?.email ?? ''
 
   const tier = profile.subscription_tier ?? 'free'
 
@@ -60,10 +65,16 @@ export default async function SettingsPage() {
       </h1>
 
       <Section heading="Account">
+        <AccountCredentialsSection
+          email={email}
+          username={profile.username}
+        />
+      </Section>
+
+      <Section heading="Profile">
         <AccountSection
           initial={{
             display_name: profile.display_name,
-            username: profile.username,
             bio: profile.bio ?? '',
           }}
         />

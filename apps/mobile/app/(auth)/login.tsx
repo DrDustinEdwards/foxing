@@ -101,6 +101,19 @@ export default function Login() {
             </Text>
           </Pressable>
 
+          <View className="items-center mt-2">
+            <Link href={'/(auth)/forgot-password' as never} asChild>
+              <Pressable
+                accessibilityRole="link"
+                accessibilityLabel="Forgot password"
+              >
+                <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">
+                  Forgot password?
+                </Text>
+              </Pressable>
+            </Link>
+          </View>
+
           <View className="flex-row justify-center mt-4">
             <Text className="font-ui text-text-secondary-light dark:text-text-secondary-dark">
               New here?{' '}

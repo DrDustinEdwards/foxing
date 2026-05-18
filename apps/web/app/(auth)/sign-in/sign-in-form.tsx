@@ -60,6 +60,7 @@ export function SignInForm({ nextPath }: { nextPath: string }) {
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          hint="Don't know your username? Sign in with your email. You can find your username in Settings."
         />
         <Input
           label="Password"

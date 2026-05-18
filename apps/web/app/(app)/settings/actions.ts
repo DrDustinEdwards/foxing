@@ -15,7 +15,7 @@ const USERNAME_PATTERN = /^[a-z0-9](?:[a-z0-9_]{1,28}[a-z0-9])?$/i
 
 type ProfileUpdateResult =
   | { ok: true }
-  | { ok: false; error: string; field?: 'username' | 'display_name' | 'bio' }
+  | { ok: false; error: string; field?: 'display_name' | 'bio' }
 
 export async function updateProfile(
   formData: FormData,
@@ -27,7 +27,6 @@ export async function updateProfile(
   if (!user) return { ok: false, error: 'Sign in to update your profile.' }
 
   const displayName = String(formData.get('display_name') ?? '').trim()
-  const usernameRaw = String(formData.get('username') ?? '').trim().toLowerCase()
   const bio = String(formData.get('bio') ?? '').trim()
 
   if (!displayName) {
@@ -40,18 +39,54 @@ export async function updateProfile(
       field: 'display_name',
     }
   }
-  if (!USERNAME_PATTERN.test(usernameRaw)) {
-    return {
-      ok: false,
-      error: 'Username must be 3 to 30 characters, letters/numbers/underscore.',
-      field: 'username',
-    }
-  }
   if (bio.length > 200) {
     return { ok: false, error: 'Bio must be 200 characters or fewer.', field: 'bio' }
   }
 
-  // Username uniqueness check (exclude the current user).
+  const { error } = await sb
+    .from('profiles')
+    .update({
+      display_name: displayName,
+      bio: bio || null,
+    })
+    .eq('id', user.id)
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/settings')
+  // Revalidate public profile route after display_name change.
+  const { data: current } = await sb
+    .from('profiles')
+    .select('username')
+    .eq('id', user.id)
+    .maybeSingle()
+  const currentUsername = (current as { username: string } | null)?.username
+  if (currentUsername) revalidatePath(`/u/${currentUsername}`)
+  return { ok: true }
+}
+
+type UsernameUpdateResult =
+  | { ok: true; username: string }
+  | { ok: false; error: string }
+
+export async function updateUsername(
+  formData: FormData,
+): Promise<UsernameUpdateResult> {
+  const sb = createClient()
+  const {
+    data: { user },
+  } = await sb.auth.getUser()
+  if (!user) return { ok: false, error: 'Sign in to update your username.' }
+
+  const usernameRaw = String(formData.get('username') ?? '')
+    .trim()
+    .toLowerCase()
+  if (!USERNAME_PATTERN.test(usernameRaw)) {
+    return {
+      ok: false,
+      error: 'Username must be 3 to 30 characters, letters/numbers/underscore.',
+    }
+  }
+
   const { data: existing } = await sb
     .from('profiles')
     .select('id')
@@ -59,22 +94,28 @@ export async function updateProfile(
     .neq('id', user.id)
     .maybeSingle()
   if (existing) {
-    return { ok: false, error: 'That username is taken.', field: 'username' }
+    return { ok: false, error: 'That username is taken.' }
   }
+
+  const { data: prior } = await sb
+    .from('profiles')
+    .select('username')
+    .eq('id', user.id)
+    .maybeSingle()
+  const priorUsername = (prior as { username: string } | null)?.username
 
   const { error } = await sb
     .from('profiles')
-    .update({
-      display_name: displayName,
-      username: usernameRaw,
-      bio: bio || null,
-    })
+    .update({ username: usernameRaw })
     .eq('id', user.id)
   if (error) return { ok: false, error: error.message }
 
   revalidatePath('/settings')
   revalidatePath(`/u/${usernameRaw}`)
-  return { ok: true }
+  if (priorUsername && priorUsername !== usernameRaw) {
+    revalidatePath(`/u/${priorUsername}`)
+  }
+  return { ok: true, username: usernameRaw }
 }
 
 export async function updateVisibility(

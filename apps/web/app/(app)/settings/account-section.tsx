@@ -8,19 +8,17 @@ import { updateProfile } from './actions'
 interface Props {
   initial: {
     display_name: string
-    username: string
     bio: string
   }
 }
 
 export function AccountSection({ initial }: Props) {
   const [displayName, setDisplayName] = useState(initial.display_name)
-  const [username, setUsername] = useState(initial.username)
   const [bio, setBio] = useState(initial.bio)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [fieldError, setFieldError] = useState<
-    'display_name' | 'username' | 'bio' | null
+    'display_name' | 'bio' | null
   >(null)
   const [saved, setSaved] = useState(false)
 
@@ -32,7 +30,6 @@ export function AccountSection({ initial }: Props) {
     setSaving(true)
     const fd = new FormData()
     fd.set('display_name', displayName)
-    fd.set('username', username)
     fd.set('bio', bio)
     const res = await updateProfile(fd)
     setSaving(false)
@@ -54,14 +51,6 @@ export function AccountSection({ initial }: Props) {
         maxLength={60}
         required
         error={fieldError === 'display_name' ? error ?? undefined : undefined}
-      />
-      <Input
-        label="Username"
-        value={username}
-        onChange={(e) => setUsername(e.target.value)}
-        hint="3 to 30 characters, letters/numbers/underscore."
-        required
-        error={fieldError === 'username' ? error ?? undefined : undefined}
       />
       <div className="flex flex-col gap-1.5">
         <label
