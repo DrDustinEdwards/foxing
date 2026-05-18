@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Badge } from '@/components/ui/badge'
 import { StarRating } from '@/components/ui/star-rating'
 import { cn } from '@/lib/cn'
@@ -60,9 +61,7 @@ export function BookCard({
             className="object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-text-tertiary">
-            <BookIcon />
-          </div>
+          <BookCoverPlaceholder title={book.title} author={book.author} />
         )}
       </div>
       <div className="flex flex-col gap-0.5">
@@ -85,20 +84,3 @@ export function BookCard({
   )
 }
 
-function BookIcon() {
-  return (
-    <svg
-      width="32"
-      height="32"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
-    </svg>
-  )
-}

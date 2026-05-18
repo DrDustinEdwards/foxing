@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
@@ -314,7 +315,7 @@ export default async function ClubMonthlyPickPage({
               href={`/book/${pick.book.slug ?? pick.book.id}`}
               className="relative mx-auto aspect-[2/3] w-[200px] overflow-hidden rounded-md bg-bg-sunken shadow-md md:mx-0"
             >
-              {pick.book.cover_url && (
+              {pick.book.cover_url ? (
                 <Image
                   src={pick.book.cover_url}
                   alt={`Cover of ${pick.book.title}`}
@@ -322,6 +323,11 @@ export default async function ClubMonthlyPickPage({
                   sizes="200px"
                   className="object-cover"
                   priority
+                />
+              ) : (
+                <BookCoverPlaceholder
+                  title={pick.book.title}
+                  author={pick.book.author}
                 />
               )}
             </Link>

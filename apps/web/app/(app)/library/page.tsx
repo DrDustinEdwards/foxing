@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
+import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -188,13 +189,18 @@ function LibraryCard({
       className="group flex flex-col gap-2"
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">
-        {entry.book.cover_url && (
+        {entry.book.cover_url ? (
           <Image
             src={entry.book.cover_url}
             alt={entry.book.title}
             fill
             sizes="(max-width: 768px) 45vw, 18vw"
             className="object-cover"
+          />
+        ) : (
+          <BookCoverPlaceholder
+            title={entry.book.title}
+            author={entry.book.author}
           />
         )}
         {entry.status === 'reading' && progress > 0 && (
