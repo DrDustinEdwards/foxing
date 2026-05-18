@@ -74,7 +74,7 @@ export async function fetchActiveClubs(): Promise<ExternalClub[]> {
   const { data } = await sb
     .from('external_book_clubs')
     .select('*')
-    .eq('is_active', true)
+    .order('is_active', { ascending: false, nullsFirst: false })
     .order('sort_order', { ascending: true })
     .order('name', { ascending: true })
   return (data as ExternalClub[] | null) ?? []

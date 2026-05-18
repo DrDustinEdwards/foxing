@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
+  type ExternalClub,
   fetchActiveClubs,
   fetchCurrentMonthPicks,
   monthLabel,
@@ -65,6 +66,9 @@ export default async function BookClubsPage() {
     existing.push(p)
     picksByClub.set(p.club_id, existing)
   }
+
+  const activeClubs = clubs.filter((c) => c.is_active !== false)
+  const archivedClubs = clubs.filter((c) => c.is_active === false)
 
   const now = new Date()
   const month = monthLabel(now.getUTCMonth() + 1)
@@ -165,55 +169,96 @@ export default async function BookClubsPage() {
               All clubs
             </h2>
             <ul className="mt-6 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-              {clubs.map((club) => (
+              {activeClubs.map((club) => (
                 <li key={club.id}>
-                  <Link
-                    href={`/book-clubs/${club.slug}`}
-                    className="group block rounded-lg border border-border-subtle bg-bg-surface p-5 hover:border-border-interactive"
-                  >
-                    <div className="flex items-start gap-4">
-                      {club.logo_url ? (
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-bg-sunken">
-                          <Image
-                            src={club.logo_url}
-                            alt=""
-                            fill
-                            sizes="48px"
-                            className="object-cover"
-                          />
-                        </div>
-                      ) : (
-                        <div
-                          aria-hidden="true"
-                          className="grid h-12 w-12 shrink-0 place-items-center rounded bg-brand-subtle font-fraunces text-xl text-brand-subtle-text"
-                        >
-                          {club.short_name.charAt(0)}
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="font-fraunces text-lg text-text-primary group-hover:text-brand-text">
-                          {club.name}
-                        </p>
-                        {club.curator && (
-                          <p className="font-dm-sans text-sm text-text-tertiary">
-                            Curated by {club.curator}
-                          </p>
-                        )}
-                        {club.description && (
-                          <p className="mt-2 line-clamp-2 font-source-serif-4 text-sm text-text-secondary">
-                            {club.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </Link>
+                  <ClubCard club={club} />
                 </li>
               ))}
             </ul>
           </section>
+
+          {archivedClubs.length > 0 && (
+            <section className="mt-16">
+              <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                Archived Clubs
+              </h2>
+              <ul className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                {archivedClubs.map((club) => (
+                  <li key={club.id}>
+                    <ClubCard club={club} archived />
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
         </PageWrapper>
       </main>
       <Footer />
     </div>
   )
 }
+
+function ClubCard({
+  club,
+  archived = false,
+}: {
+  club: ClubCardData
+  archived?: boolean
+}) {
+  return (
+    <Link
+      href={`/book-clubs/${club.slug}`}
+      className={`group block rounded-lg border border-border-subtle bg-bg-surface p-5 hover:border-border-interactive ${
+        archived ? 'opacity-75' : ''
+      }`}
+    >
+      <div className="flex items-start gap-4">
+        {club.logo_url ? (
+          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded bg-bg-sunken">
+            <Image
+              src={club.logo_url}
+              alt=""
+              fill
+              sizes="48px"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          <div
+            aria-hidden="true"
+            className="grid h-12 w-12 shrink-0 place-items-center rounded bg-brand-subtle font-fraunces text-xl text-brand-subtle-text"
+          >
+            {club.short_name.charAt(0)}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="font-fraunces text-lg text-text-primary group-hover:text-brand-text">
+              {club.name}
+            </p>
+            {archived && (
+              <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+                Archived
+              </span>
+            )}
+          </div>
+          {club.curator && (
+            <p className="font-dm-sans text-sm text-text-tertiary">
+              Curated by {club.curator}
+            </p>
+          )}
+          {club.description && (
+            <p className="mt-2 line-clamp-2 font-source-serif-4 text-sm text-text-secondary">
+              {club.description}
+            </p>
+          )}
+        </div>
+      </div>
+    </Link>
+  )
+}
+
+type ClubCardData = Pick<
+  ExternalClub,
+  'id' | 'slug' | 'name' | 'short_name' | 'curator' | 'description' | 'logo_url'
+>
