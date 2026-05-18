@@ -189,17 +189,24 @@ interface PickWithQuoteRow {
 }
 
 export async function fetchPicksForMonth(
-  year: number,
-  month: number,
+  year: number | string,
+  month: number | string,
 ): Promise<MonthlyPicksRow[]> {
   if (!hasEnv()) return []
+  // Coerce defensively so callers passing URL params ('05') still match
+  // the DB's integer column.
+  const yearNum =
+    typeof year === 'number' ? year : Number.parseInt(year, 10)
+  const monthNum =
+    typeof month === 'number' ? month : Number.parseInt(month, 10)
+  if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum)) return []
   const sb = createClient()
   const { data } = await sb
     .from('external_book_club_picks')
     .select(PICK_COLS_WITH_QUOTE)
     .eq('is_published', true)
-    .eq('pick_month', month)
-    .eq('pick_year', year)
+    .eq('pick_month', monthNum)
+    .eq('pick_year', yearNum)
   const rows = (data as unknown as PickWithQuoteRow[] | null) ?? []
   const valid = rows.filter((r) => r.book && r.club)
   if (valid.length === 0) return []
@@ -246,10 +253,15 @@ export interface PickForClubAndMonth extends MonthlyPicksRow {}
 
 export async function fetchPickByClubSlugAndMonth(
   clubSlug: string,
-  year: number,
-  month: number,
+  year: number | string,
+  month: number | string,
 ): Promise<PickForClubAndMonth | null> {
   if (!hasEnv()) return null
+  const yearNum =
+    typeof year === 'number' ? year : Number.parseInt(year, 10)
+  const monthNum =
+    typeof month === 'number' ? month : Number.parseInt(month, 10)
+  if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum)) return null
   const sb = createClient()
   const { data: club } = await sb
     .from('external_book_clubs')
@@ -263,8 +275,8 @@ export async function fetchPickByClubSlugAndMonth(
     .select(PICK_COLS_WITH_QUOTE)
     .eq('is_published', true)
     .eq('club_id', clubRow.id)
-    .eq('pick_month', month)
-    .eq('pick_year', year)
+    .eq('pick_month', monthNum)
+    .eq('pick_year', yearNum)
     .maybeSingle()
   const row = data as unknown as PickWithQuoteRow | null
   if (!row || !row.book || !row.club) return null
@@ -298,13 +310,18 @@ export async function fetchPickByClubSlugAndMonth(
 
 export async function fetchAdjacentPicksForClub(
   clubId: string,
-  year: number,
-  month: number,
+  year: number | string,
+  month: number | string,
   count = 3,
 ): Promise<MonthlyPicksRow[]> {
   if (!hasEnv()) return []
+  const yearNum =
+    typeof year === 'number' ? year : Number.parseInt(year, 10)
+  const monthNum =
+    typeof month === 'number' ? month : Number.parseInt(month, 10)
+  if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum)) return []
   const sb = createClient()
-  const sentinel = year * 12 + month
+  const sentinel = yearNum * 12 + monthNum
   const { data } = await sb
     .from('external_book_club_picks')
     .select(PICK_COLS_WITH_QUOTE)

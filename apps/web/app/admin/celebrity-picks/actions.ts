@@ -1,5 +1,6 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -320,4 +321,126 @@ export async function addManualCelebrityPick(
   revalidatePath(`/book-clubs/picks/${year}/${monthPad}`)
 
   return { ok: true }
+}
+
+interface RunNowResult {
+  ok: boolean
+  published?: number
+  skipped?: number
+  total?: number
+  message?: string
+  error?: string
+}
+
+/**
+ * Manually trigger the celebrity-picks cron without waiting for the Vercel
+ * schedule. The admin layout already gates this UI, but we re-check
+ * is_admin here so the action can't be invoked from an arbitrary form.
+ *
+ * Calls the local /api/cron/celebrity-picks route with the CRON_SECRET,
+ * which then forwards the request to the Supabase Edge Function. The
+ * Edge Function is what actually scrapes, calls Claude, and writes picks.
+ */
+export async function triggerCelebrityPicksCron(): Promise<RunNowResult> {
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', userId)
+    .maybeSingle()
+  if (!(profile as { is_admin: boolean | null } | null)?.is_admin) {
+    return { ok: false, error: 'Admin access required.' }
+  }
+
+  const secret = process.env.CRON_SECRET
+  if (!secret) {
+    return {
+      ok: false,
+      error: 'CRON_SECRET not configured on this environment.',
+    }
+  }
+
+  const h = headers()
+  const host =
+    h.get('x-forwarded-host') ?? h.get('host') ?? 'localhost:3000'
+  const proto = h.get('x-forwarded-proto') ?? 'https'
+  const url = `${proto}://${host}/api/cron/celebrity-picks`
+
+  let res: Response
+  try {
+    res = await fetch(url, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${secret}` },
+      cache: 'no-store',
+    })
+  } catch (err) {
+    return {
+      ok: false,
+      error:
+        err instanceof Error
+          ? `Cron route unreachable: ${err.message}`
+          : 'Cron route unreachable.',
+    }
+  }
+
+  const text = await res.text()
+  type EdgeResult = {
+    published?: unknown
+    skipped?: unknown
+    total?: unknown
+  }
+  type ProxyBody = {
+    ok?: boolean
+    result?: EdgeResult | { raw?: unknown }
+    error?: string
+    detail?: string
+  }
+  let body: ProxyBody | null = null
+  try {
+    body = JSON.parse(text) as ProxyBody
+  } catch {
+    body = null
+  }
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      error:
+        body?.error ?? body?.detail ?? `Run failed (HTTP ${res.status}).`,
+    }
+  }
+
+  const result = body?.result as EdgeResult | undefined
+  const publishedRaw = result?.published
+  const publishedCount = Array.isArray(publishedRaw)
+    ? publishedRaw.length
+    : typeof publishedRaw === 'number'
+      ? publishedRaw
+      : 0
+  const skippedRaw = result?.skipped
+  const skippedCount = Array.isArray(skippedRaw)
+    ? skippedRaw.length
+    : typeof skippedRaw === 'number'
+      ? skippedRaw
+      : 0
+  const totalCount =
+    typeof result?.total === 'number'
+      ? result.total
+      : publishedCount + skippedCount
+
+  revalidatePath('/admin/celebrity-picks')
+  revalidatePath('/book-clubs')
+
+  return {
+    ok: true,
+    published: publishedCount,
+    skipped: skippedCount,
+    total: totalCount,
+    message:
+      publishedCount > 0
+        ? `Done. Published ${publishedCount} pick${publishedCount === 1 ? '' : 's'}.`
+        : 'Done. No new picks found (everything already on file).',
+  }
 }
