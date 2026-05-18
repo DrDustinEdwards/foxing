@@ -8,6 +8,7 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchPicksForMonth,
+  monthHasAnyPicks,
   monthLabel,
   nextMonth,
   pickMonthLabel,
@@ -113,6 +114,10 @@ export default async function MonthlyRoundupPage({
 
   const prev = previousMonth(year, month)
   const next = nextMonth(year, month)
+  const [hasPrev, hasNext] = await Promise.all([
+    monthHasAnyPicks(prev.year, prev.month),
+    monthHasAnyPicks(next.year, next.month),
+  ])
 
   const jsonLd = buildItemListJsonLd(picks, year, month)
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(label)
@@ -167,23 +172,33 @@ export default async function MonthlyRoundupPage({
             </>
           )}
 
-          <nav
-            aria-label="Adjacent months"
-            className="mt-12 flex items-center justify-between border-t border-border-subtle pt-6 font-dm-sans text-sm"
-          >
-            <Link
-              href={`/book-clubs/picks/${prev.year}/${formatMonth(prev.month)}`}
-              className="text-brand-text hover:underline"
+          {(hasPrev || hasNext) && (
+            <nav
+              aria-label="Adjacent months"
+              className="mt-12 flex items-center justify-between border-t border-border-subtle pt-6 font-dm-sans text-sm"
             >
-              ← {monthLabel(prev.month)} {prev.year}
-            </Link>
-            <Link
-              href={`/book-clubs/picks/${next.year}/${formatMonth(next.month)}`}
-              className="text-brand-text hover:underline"
-            >
-              {monthLabel(next.month)} {next.year} →
-            </Link>
-          </nav>
+              {hasPrev ? (
+                <Link
+                  href={`/book-clubs/picks/${prev.year}/${formatMonth(prev.month)}`}
+                  className="text-brand-text hover:underline"
+                >
+                  ← {monthLabel(prev.month)} {prev.year}
+                </Link>
+              ) : (
+                <span />
+              )}
+              {hasNext ? (
+                <Link
+                  href={`/book-clubs/picks/${next.year}/${formatMonth(next.month)}`}
+                  className="text-brand-text hover:underline"
+                >
+                  {monthLabel(next.month)} {next.year} →
+                </Link>
+              ) : (
+                <span />
+              )}
+            </nav>
+          )}
         </PageWrapper>
       </main>
       <Footer />

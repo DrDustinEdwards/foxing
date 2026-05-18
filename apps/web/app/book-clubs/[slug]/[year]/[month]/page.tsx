@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
+  clubHasPickForMonth,
   fetchAdjacentPicksForClub,
   fetchAllPickStaticParams,
   fetchClubBySlug,
@@ -132,6 +133,7 @@ export default async function ClubMonthlyPickPage({
     const club = await fetchClubBySlug(params.slug)
     if (!club) notFound()
     const prev = previousMonth(year, month)
+    const hasPrev = await clubHasPickForMonth(club.id, prev.year, prev.month)
     return (
       <div className="flex min-h-screen flex-col bg-bg-base">
         <Nav user={navUser} />
@@ -166,12 +168,14 @@ export default async function ClubMonthlyPickPage({
               Foxing auto-publishes new picks shortly after they appear. Check
               the previous month or come back soon.
             </p>
-            <Link
-              href={`/book-clubs/${club.slug}/${prev.year}/${formatMonth(prev.month)}`}
-              className="mt-6 inline-block font-dm-sans text-sm text-brand-text hover:underline"
-            >
-              ← {monthLabel(prev.month)} {prev.year} pick
-            </Link>
+            {hasPrev && (
+              <Link
+                href={`/book-clubs/${club.slug}/${prev.year}/${formatMonth(prev.month)}`}
+                className="mt-6 inline-block font-dm-sans text-sm text-brand-text hover:underline"
+              >
+                ← {monthLabel(prev.month)} {prev.year} pick
+              </Link>
+            )}
           </PageWrapper>
         </main>
         <Footer />
@@ -187,6 +191,10 @@ export default async function ClubMonthlyPickPage({
   )
   const prev = previousMonth(year, month)
   const next = nextMonth(year, month)
+  const [hasPrevPick, hasNextPick] = await Promise.all([
+    clubHasPickForMonth(pick.club_full.id, prev.year, prev.month),
+    clubHasPickForMonth(pick.club_full.id, next.year, next.month),
+  ])
   const affiliate = resolveAffiliateLinks({
     title: pick.book.title,
     author: pick.book.author,
@@ -406,44 +414,50 @@ export default async function ClubMonthlyPickPage({
             </Link>
           </section>
 
-          <section className="mt-10">
-            <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-              Other months
-            </h2>
-            <nav
-              aria-label="Other picks from this club"
-              className="flex flex-col gap-2 font-dm-sans text-sm"
-            >
-              <Link
-                href={`/book-clubs/${pick.club_full.slug}/${prev.year}/${formatMonth(prev.month)}`}
-                className="text-brand-text hover:underline"
+          {(hasPrevPick || hasNextPick || adjacent.length > 0) && (
+            <section className="mt-10">
+              <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                Other months
+              </h2>
+              <nav
+                aria-label="Other picks from this club"
+                className="flex flex-col gap-2 font-dm-sans text-sm"
               >
-                ← {monthLabel(prev.month)} {prev.year}
-              </Link>
-              {adjacent.length > 0 && (
-                <ul className="flex flex-col gap-1 font-dm-sans text-sm text-text-tertiary">
-                  {adjacent.map((other) => (
-                    <li key={other.id}>
-                      <Link
-                        href={`/book-clubs/${other.club_full.slug}/${other.pick_year}/${formatMonth(other.pick_month ?? 1)}`}
-                        className="hover:text-text-primary"
-                      >
-                        {other.pick_year && other.pick_month
-                          ? `${monthLabel(other.pick_month)} ${other.pick_year}: ${other.book.title}`
-                          : other.book.title}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <Link
-                href={`/book-clubs/${pick.club_full.slug}/${next.year}/${formatMonth(next.month)}`}
-                className="text-brand-text hover:underline"
-              >
-                {monthLabel(next.month)} {next.year} →
-              </Link>
-            </nav>
-          </section>
+                {hasPrevPick && (
+                  <Link
+                    href={`/book-clubs/${pick.club_full.slug}/${prev.year}/${formatMonth(prev.month)}`}
+                    className="text-brand-text hover:underline"
+                  >
+                    ← {monthLabel(prev.month)} {prev.year}
+                  </Link>
+                )}
+                {adjacent.length > 0 && (
+                  <ul className="flex flex-col gap-1 font-dm-sans text-sm text-text-tertiary">
+                    {adjacent.map((other) => (
+                      <li key={other.id}>
+                        <Link
+                          href={`/book-clubs/${other.club_full.slug}/${other.pick_year}/${formatMonth(other.pick_month ?? 1)}`}
+                          className="hover:text-text-primary"
+                        >
+                          {other.pick_year && other.pick_month
+                            ? `${monthLabel(other.pick_month)} ${other.pick_year}: ${other.book.title}`
+                            : other.book.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {hasNextPick && (
+                  <Link
+                    href={`/book-clubs/${pick.club_full.slug}/${next.year}/${formatMonth(next.month)}`}
+                    className="text-brand-text hover:underline"
+                  >
+                    {monthLabel(next.month)} {next.year} →
+                  </Link>
+                )}
+              </nav>
+            </section>
+          )}
         </PageWrapper>
       </main>
       <Footer />

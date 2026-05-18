@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { revalidatePath } from 'next/cache'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Vercel Cron handler for the celebrity-picks monthly run.
@@ -9,6 +11,10 @@ import { NextResponse, type NextRequest } from 'next/server'
  * Function, which does the actual scraping and Claude calls. The two
  * secrets are kept separate so we can rotate Vercel's caller secret
  * without touching the Supabase deploy.
+ *
+ * After the Edge Function returns successfully, we revalidate the previous
+ * month's pages so the newly-landed picks make the prev page's "next month"
+ * link appear.
  */
 
 export const runtime = 'nodejs'
@@ -16,6 +22,41 @@ export const dynamic = 'force-dynamic'
 
 const SUPABASE_FUNCTION_URL =
   'https://ekjpsuewrkvqzbuteurc.supabase.co/functions/v1/celebrity-pick-finder'
+
+function pad2(n: number): string {
+  return String(n).padStart(2, '0')
+}
+
+function previousMonth(year: number, month: number): { year: number; month: number } {
+  if (month === 1) return { year: year - 1, month: 12 }
+  return { year, month: month - 1 }
+}
+
+async function revalidatePreviousMonthPages(): Promise<void> {
+  const now = new Date()
+  const curYear = now.getUTCFullYear()
+  const curMonth = now.getUTCMonth() + 1
+  const cur = { year: curYear, month: curMonth }
+  const prev = previousMonth(curYear, curMonth)
+
+  revalidatePath(`/book-clubs/picks/${cur.year}/${pad2(cur.month)}`)
+  revalidatePath(`/book-clubs/picks/${prev.year}/${pad2(prev.month)}`)
+
+  try {
+    const admin = createAdminClient()
+    const { data } = await admin
+      .from('external_book_clubs')
+      .select('slug')
+    const slugs = (data as { slug: string }[] | null) ?? []
+    for (const { slug } of slugs) {
+      revalidatePath(`/book-clubs/${slug}/${cur.year}/${pad2(cur.month)}`)
+      revalidatePath(`/book-clubs/${slug}/${prev.year}/${pad2(prev.month)}`)
+    }
+  } catch {
+    // If we cannot enumerate clubs, the cron still succeeded; the prev
+    // month roundup will still revalidate on its own ISR window.
+  }
+}
 
 export async function GET(request: NextRequest) {
   const expected = process.env.CRON_SECRET
@@ -64,6 +105,10 @@ export async function GET(request: NextRequest) {
     body = JSON.parse(text)
   } catch {
     body = { raw: text }
+  }
+
+  if (response.ok) {
+    await revalidatePreviousMonthPages()
   }
 
   return NextResponse.json(
