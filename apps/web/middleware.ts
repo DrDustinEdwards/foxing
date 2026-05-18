@@ -6,7 +6,7 @@ const PROTECTED_PREFIXES = [
   '/diary',
   '/stats',
   '/home',
-  '/lists',
+  '/my-lists',
   '/goals',
   '/highlights',
   '/find-next-book',

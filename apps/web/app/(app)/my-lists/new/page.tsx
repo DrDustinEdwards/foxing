@@ -17,7 +17,7 @@ export default function NewListPage() {
         show up here.
       </p>
       <Link
-        href="/lists"
+        href="/my-lists"
         className="mt-6 inline-block font-dm-sans text-sm text-brand-text hover:underline"
       >
         Back to lists
