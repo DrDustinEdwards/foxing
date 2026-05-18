@@ -5,7 +5,10 @@
 // (is_published = true). Admins get a notification listing what landed.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import {
+  createClient,
+  SupabaseClient,
+} from 'https://esm.sh/@supabase/supabase-js@2'
 
 const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -40,6 +43,73 @@ async function callClaude(prompt: string, maxTokens = 1000): Promise<string> {
   })
   const data = await res.json()
   return data.content?.[0]?.text ?? ''
+}
+
+async function storeBookCover(
+  supabase: SupabaseClient,
+  imageUrl: string,
+  bookSlug: string,
+): Promise<string | null> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 8000)
+    const res = await fetch(imageUrl, {
+      headers: { 'User-Agent': 'Foxing/1.0 (foxing.app)' },
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const buffer = await res.arrayBuffer()
+    if (buffer.byteLength < 256) return null
+    const contentType = res.headers.get('content-type') ?? 'image/jpeg'
+    const ext = contentType.includes('png')
+      ? 'png'
+      : contentType.includes('webp')
+        ? 'webp'
+        : 'jpg'
+    const fileName = `${bookSlug}.${ext}`
+    const { error } = await supabase.storage
+      .from('covers')
+      .upload(fileName, buffer, {
+        contentType,
+        upsert: true,
+        cacheControl: '31536000',
+      })
+    if (error) return null
+    const { data } = supabase.storage.from('covers').getPublicUrl(fileName)
+    return data.publicUrl
+  } catch {
+    return null
+  }
+}
+
+async function lookupOpenLibraryCover(
+  title: string,
+  author: string,
+): Promise<string | null> {
+  try {
+    const q = encodeURIComponent(`${title} ${author}`)
+    const res = await fetch(
+      `https://openlibrary.org/search.json?q=${q}&limit=1`,
+      { headers: { 'User-Agent': 'Foxing/1.0 (foxing.app)' } },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      docs?: Array<{ cover_i?: number; isbn?: string[] }>
+    }
+    const doc = data.docs?.[0]
+    if (!doc) return null
+    if (doc.cover_i) {
+      return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
+    }
+    const isbn = doc.isbn?.[0]
+    if (isbn) {
+      return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
+    }
+    return null
+  } catch {
+    return null
+  }
 }
 
 async function fetchAndExtract(
@@ -251,6 +321,15 @@ If you don't know with certainty, return: {"book_title":"","author":""}`,
     if (existingBook && existingBook.length > 0) {
       bookId = existingBook[0].id
     } else {
+      let coverUrl: string | null = null
+      const openLibCover = await lookupOpenLibraryCover(
+        pick.book_title,
+        pick.author,
+      )
+      if (openLibCover) {
+        coverUrl = await storeBookCover(supabase, openLibCover, bookSlug)
+      }
+
       const { data: newBook } = await supabase
         .from('books')
         .insert({
@@ -263,6 +342,7 @@ If you don't know with certainty, return: {"book_title":"","author":""}`,
           slug: bookSlug,
           source: 'community',
           source_type: 'community',
+          cover_url: coverUrl,
           description: pick.curator_quote
             ? pick.curator_quote.slice(0, 200)
             : null,
