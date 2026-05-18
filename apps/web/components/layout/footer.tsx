@@ -1,65 +1,99 @@
 import Link from 'next/link'
 
-const ROW_ONE = [
-  { href: '/discover', label: 'Discover' },
-  { href: '/books', label: 'Books' },
-  { href: '/clubs', label: 'Clubs' },
-  { href: '/book-clubs', label: 'Celebrity Picks' },
-  { href: '/book-of-the-month', label: 'Book of the Month' },
-] as const
+interface FooterLink {
+  href: string
+  label: string
+  external?: boolean
+}
 
-const ROW_TWO = [
-  { href: '/about', label: 'About' },
-  { href: '/pricing', label: 'Pricing' },
-  { href: '/journal', label: 'Journal' },
-  { href: '/privacy', label: 'Privacy' },
-  { href: '/terms', label: 'Terms' },
-] as const
+interface FooterColumn {
+  heading: string
+  links: FooterLink[]
+}
+
+const COLUMNS: FooterColumn[] = [
+  {
+    heading: 'Foxing',
+    links: [
+      { href: '/about', label: 'About' },
+      { href: '/journal', label: 'Journal' },
+      { href: '/pricing', label: 'Pricing' },
+      { href: '#download', label: 'Download the app' },
+    ],
+  },
+  {
+    heading: 'Read',
+    links: [
+      { href: '/books', label: 'All Books' },
+      { href: '/book-clubs', label: 'Book Clubs' },
+      { href: '/book-of-the-month', label: 'Book of the Month' },
+      { href: '/awards', label: 'Award Winners' },
+      { href: '/challenges', label: 'Reading Challenges' },
+    ],
+  },
+  {
+    heading: 'Community',
+    links: [
+      { href: '/people', label: 'People' },
+      { href: '/clubs', label: 'Public Clubs' },
+      { href: '/lists', label: 'Reading Lists' },
+      { href: '/quotes', label: 'Quotes' },
+    ],
+  },
+  {
+    heading: 'Legal',
+    links: [
+      { href: '/privacy', label: 'Privacy Policy' },
+      { href: '/terms', label: 'Terms of Service' },
+    ],
+  },
+]
 
 export function Footer() {
+  const year = new Date().getFullYear()
   return (
     <footer className="border-t border-border-subtle bg-bg-surface">
-      <div className="mx-auto flex w-full max-w-page flex-col gap-6 px-6 py-8 md:flex-row md:items-start md:justify-between md:px-12">
-        <div className="flex flex-col gap-1">
-          <span className="font-fraunces text-xl text-brand-ui">
-            <span aria-hidden="true">🦊 </span>
-            Foxing
-          </span>
-          <span className="font-source-serif-4 italic text-text-tertiary">
-            reading, together.
-          </span>
+      <div className="mx-auto w-full max-w-page px-6 py-12 md:px-12">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(4,1fr)]">
+          <div className="flex flex-col gap-2">
+            <span className="font-fraunces text-xl text-brand-ui">
+              <span aria-hidden="true">🦊 </span>
+              Foxing
+            </span>
+            <span className="font-source-serif-4 italic text-text-tertiary">
+              reading, together.
+            </span>
+          </div>
+          {COLUMNS.map((column) => (
+            <nav key={column.heading} aria-label={column.heading}>
+              <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                {column.heading}
+              </p>
+              <ul className="flex flex-col gap-2">
+                {column.links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      href={link.href}
+                      className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
-        <nav aria-label="Footer">
-          <ul className="flex flex-wrap gap-x-6 gap-y-2">
-            {ROW_ONE.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-          <ul className="mt-2 flex flex-wrap gap-x-6 gap-y-2">
-            {ROW_TWO.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </div>
       <div className="border-t border-border-subtle">
-        <p className="mx-auto max-w-page px-6 py-3 font-dm-mono text-[11px] text-text-tertiary md:px-12">
-          © {new Date().getFullYear()} Foxing
-        </p>
+        <div className="mx-auto flex max-w-page flex-col gap-1 px-6 py-4 md:flex-row md:items-center md:justify-between md:px-12">
+          <p className="font-dm-mono text-[11px] text-text-tertiary">
+            © {year} Foxing · Built for readers
+          </p>
+          <p className="font-dm-mono text-[11px] text-text-tertiary">
+            No ads. No algorithms selling you books.
+          </p>
+        </div>
       </div>
     </footer>
   )
