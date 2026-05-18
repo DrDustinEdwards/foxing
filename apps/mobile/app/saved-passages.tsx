@@ -328,7 +328,7 @@ export default function SavedPassagesScreen() {
                           <Switch
                             value={!!e.is_public}
                             onValueChange={() => onTogglePublic(e)}
-                            trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+                            trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
                             accessibilityLabel="Public passage toggle"
                           />
                         </View>

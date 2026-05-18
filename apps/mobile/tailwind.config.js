@@ -40,6 +40,11 @@ module.exports = {
         "brand-subtle": { light: "#FAE0D6", dark: "#2E1C0E", DEFAULT: "#FAE0D6" },
         "brand-subtle-text": { light: "#632507", dark: "#F0A070", DEFAULT: "#632507" },
 
+        // Toggle / active binary controls (sky blue, complement of auburn)
+        "toggle-on": { light: "#43a1d8", dark: "#43a1d8", DEFAULT: "#43a1d8" },
+        "toggle-on-hover": { light: "#2B87BC", dark: "#5AAFE0", DEFAULT: "#2B87BC" },
+        "toggle-on-subtle": { light: "#D6EDF8", dark: "#0D1E2A", DEFAULT: "#D6EDF8" },
+
         // Backgrounds
         "bg-base": { light: "#FAF6EE", dark: "#16100B", DEFAULT: "#FAF6EE" },
         "bg-surface": { light: "#FFFFFF", dark: "#1F1710", DEFAULT: "#FFFFFF" },

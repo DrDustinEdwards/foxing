@@ -939,7 +939,7 @@ function ToggleRow({
       <Switch
         value={value}
         onValueChange={onChange}
-        trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+        trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
       />
     </View>
   )

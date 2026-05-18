@@ -32,6 +32,10 @@
   --brand-subtle: #FAE0D6;
   --brand-subtle-text: #632507;
 
+  --toggle-on: #43a1d8;
+  --toggle-on-hover: #2B87BC;
+  --toggle-on-subtle: #D6EDF8;
+
   --success: #2B6443;
   --success-bg: #EEF5EF;
   --success-border: #D2E9D8;
@@ -126,6 +130,10 @@
   --brand-secondary: #F79C40;
   --brand-subtle: #2E1C0E;
   --brand-subtle-text: #F0A070;
+
+  --toggle-on: #43a1d8;
+  --toggle-on-hover: #5AAFE0;
+  --toggle-on-subtle: #0D1E2A;
 
   --success: #72CA9A;
   --success-bg: #0D2018;

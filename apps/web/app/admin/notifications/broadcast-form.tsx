@@ -94,6 +94,7 @@ export function BroadcastForm() {
                 value={opt.value}
                 checked={target === opt.value}
                 onChange={() => setTarget(opt.value)}
+                className="accent-toggle-on"
               />
               {opt.label}
             </label>

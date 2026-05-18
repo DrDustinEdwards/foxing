@@ -244,7 +244,7 @@ export function PickForm({ mode, pickId, initial, prefill }: Props) {
           type="checkbox"
           name="is_published"
           defaultChecked={initial?.is_published ?? false}
-          className="h-4 w-4 rounded border-border-interactive"
+          className="h-4 w-4 rounded border-border-interactive accent-toggle-on"
         />
         Published
       </label>

@@ -36,6 +36,9 @@ const config: Config = {
           subtle: 'var(--brand-subtle)',
           'subtle-text': 'var(--brand-subtle-text)',
         },
+        'toggle-on': 'var(--toggle-on)',
+        'toggle-on-hover': 'var(--toggle-on-hover)',
+        'toggle-on-subtle': 'var(--toggle-on-subtle)',
         success: {
           DEFAULT: 'var(--success)',
           bg: 'var(--success-bg)',

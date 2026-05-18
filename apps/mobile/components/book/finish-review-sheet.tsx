@@ -237,7 +237,7 @@ export function FinishReviewSheet({
               <Switch
                 value={isPublic}
                 onValueChange={setIsPublic}
-                trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+                trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
               />
             </View>
           </ScrollView>

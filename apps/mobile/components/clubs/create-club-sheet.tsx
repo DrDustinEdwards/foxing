@@ -283,7 +283,7 @@ function BasicsStep({
         <Switch
           value={draft.isPublic}
           onValueChange={(v) => setDraft({ ...draft, isPublic: v })}
-          trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+          trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
         />
       </View>
     </View>
