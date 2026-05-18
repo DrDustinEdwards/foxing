@@ -1,9 +1,12 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { fetchAllPicksForAdmin, monthLabel } from '@/lib/book-clubs'
-import { DeletePickButton } from './delete-pick-button'
+import { monthLabel } from '@/lib/book-clubs'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { PickEditor } from './pick-editor'
+import { MissingClubAdd } from './missing-club-add'
+import { MonthTabs } from './month-tabs'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,119 +14,208 @@ export const metadata: Metadata = {
   title: 'Celebrity picks, admin',
 }
 
-export default async function AdminCelebrityPicksPage() {
-  const picks = await fetchAllPicksForAdmin()
+interface ClubRow {
+  id: string
+  slug: string
+  name: string
+  short_name: string
+  curator: string | null
+  sort_order: number | null
+  is_active: boolean | null
+}
+
+interface PickRow {
+  id: string
+  club_id: string
+  book_id: string
+  pick_month: number | null
+  pick_year: number | null
+  is_published: boolean | null
+  is_auto_discovered: boolean | null
+  auto_source: string | null
+  curator_quote: string | null
+  official_announcement_url: string | null
+  last_edited_at: string | null
+  books: { id: string; title: string; author: string } | null
+}
+
+interface SearchParams {
+  year?: string
+  month?: string
+}
+
+function nowPair() {
+  const d = new Date()
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 }
+}
+
+function parseTab(searchParams: SearchParams): { year: number; month: number } {
+  const fallback = nowPair()
+  const year = Number(searchParams.year)
+  const month = Number(searchParams.month)
+  const validYear = Number.isInteger(year) && year >= 2000 && year <= 2100
+  const validMonth = Number.isInteger(month) && month >= 1 && month <= 12
+  return {
+    year: validYear ? year : fallback.year,
+    month: validMonth ? month : fallback.month,
+  }
+}
+
+export default async function AdminCelebrityPicksPage({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}) {
+  const { year, month } = parseTab(searchParams)
+  const admin = createAdminClient()
+
+  const [{ data: clubRows }, { data: pickRows }] = await Promise.all([
+    admin
+      .from('external_book_clubs')
+      .select('id, slug, name, short_name, curator, sort_order, is_active')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true })
+      .order('name', { ascending: true }),
+    admin
+      .from('external_book_club_picks')
+      .select(
+        'id, club_id, book_id, pick_month, pick_year, is_published, is_auto_discovered, auto_source, curator_quote, official_announcement_url, last_edited_at, books:book_id(id, title, author)',
+      )
+      .eq('pick_month', month)
+      .eq('pick_year', year),
+  ])
+
+  const clubs = (clubRows as ClubRow[] | null) ?? []
+  const picks = ((pickRows as unknown as PickRow[] | null) ?? []).filter(
+    (p) => p.books !== null,
+  )
+
+  const byClubId = new Map<string, PickRow>()
+  for (const p of picks) byClubId.set(p.club_id, p)
+
+  const monthName = monthLabel(month)
 
   return (
     <div className="p-6 md:p-10">
-      <header className="flex items-start justify-between gap-4">
+      <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-fraunces text-[2rem] text-text-primary">
             Celebrity picks
           </h1>
           <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-            {picks.length} pick{picks.length === 1 ? '' : 's'} on file
+            {monthName} {year} · {picks.length} of {clubs.length} clubs have a
+            pick
           </p>
         </div>
         <Link href="/admin/celebrity-picks/new">
-          <Button variant="primary" size="md">
-            New pick
+          <Button variant="secondary" size="sm">
+            New pick (custom date)
           </Button>
         </Link>
       </header>
 
-      {picks.length === 0 && (
-        <section className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border-subtle bg-brand-subtle p-6">
-          <div>
-            <h2 className="font-fraunces text-xl text-text-primary">
-              No celebrity picks have been added yet.
-            </h2>
-            <p className="mt-1 max-w-prose font-source-serif-4 text-sm text-text-secondary">
-              The /book-clubs page is live but every club is empty until you
-              add their picks. Start with this month.
-            </p>
-          </div>
-          <Link href="/admin/celebrity-picks/new">
-            <Button variant="primary" size="lg">
-              Add this month&apos;s picks
-            </Button>
-          </Link>
+      <MonthTabs current={{ year, month }} />
+
+      {clubs.length === 0 ? (
+        <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">
+          No active clubs to manage.
+        </p>
+      ) : (
+        <section className="mt-8 flex flex-col gap-3">
+          {clubs.map((club) => {
+            const pick = byClubId.get(club.id)
+            return pick ? (
+              <PickRowItem key={club.id} club={club} pick={pick} />
+            ) : (
+              <MissingClubRow
+                key={club.id}
+                club={club}
+                year={year}
+                month={month}
+              />
+            )
+          })}
         </section>
       )}
-
-      <div className="mt-6 overflow-x-auto rounded-lg border border-border-subtle bg-bg-surface">
-        <table className="min-w-full text-left font-dm-sans text-sm">
-          <thead className="border-b border-border-subtle bg-bg-sunken text-xs uppercase tracking-wide text-text-tertiary">
-            <tr>
-              <th className="px-3 py-2">Cover</th>
-              <th className="px-3 py-2">Club</th>
-              <th className="px-3 py-2">Date</th>
-              <th className="px-3 py-2">Book</th>
-              <th className="px-3 py-2">Status</th>
-              <th className="px-3 py-2 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border-subtle">
-            {picks.map((pick) => (
-              <tr key={pick.id} className="hover:bg-bg-hover">
-                <td className="px-3 py-2">
-                  <div className="relative h-14 w-10 overflow-hidden rounded bg-bg-sunken">
-                    {pick.book.cover_url && (
-                      <Image
-                        src={pick.book.cover_url}
-                        alt=""
-                        fill
-                        sizes="40px"
-                        className="object-cover"
-                      />
-                    )}
-                  </div>
-                </td>
-                <td className="px-3 py-2">
-                  <Link
-                    href={`/book-clubs/${pick.club.slug}`}
-                    className="text-brand-text hover:underline"
-                  >
-                    {pick.club.short_name}
-                  </Link>
-                </td>
-                <td className="px-3 py-2 text-text-tertiary">
-                  {pick.pick_month && pick.pick_year
-                    ? `${monthLabel(pick.pick_month)} ${pick.pick_year}`
-                    : pick.picked_at.slice(0, 10)}
-                </td>
-                <td className="px-3 py-2">
-                  <div className="font-medium text-text-primary">
-                    {pick.book.title}
-                  </div>
-                  <div className="text-xs text-text-tertiary">
-                    {pick.book.author}
-                  </div>
-                </td>
-                <td className="px-3 py-2">
-                  {pick.is_published ? (
-                    <span className="rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-xs text-brand-subtle-text">
-                      Published
-                    </span>
-                  ) : (
-                    <span className="rounded-full bg-bg-sunken px-2 py-0.5 font-dm-mono text-xs text-text-tertiary">
-                      Draft
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2 text-right">
-                  <DeletePickButton id={pick.id} />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {picks.length === 0 && (
-          <p className="px-4 py-6 font-source-serif-4 text-sm text-text-tertiary">
-            No picks yet. Add the first one.
-          </p>
-        )}
-      </div>
     </div>
+  )
+}
+
+function PickRowItem({ club, pick }: { club: ClubRow; pick: PickRow }) {
+  const sourceLabel =
+    pick.auto_source === 'manual' || !pick.is_auto_discovered
+      ? 'Manual'
+      : pick.auto_source
+        ? `Auto, ${pick.auto_source}`
+        : 'Auto'
+  const sourceVariant: 'brand' | 'info' | 'neutral' =
+    pick.auto_source === 'manual' || !pick.is_auto_discovered
+      ? 'brand'
+      : pick.auto_source === 'web_search'
+        ? 'info'
+        : 'neutral'
+  return (
+    <article className="rounded-lg border border-border-subtle bg-bg-surface p-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            {club.name}
+          </p>
+          <p className="font-fraunces text-base text-text-primary">
+            {pick.books?.title}
+          </p>
+          <p className="font-dm-sans text-sm text-text-tertiary">
+            {pick.books?.author}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant={sourceVariant}>{sourceLabel}</Badge>
+          {!pick.is_published && <Badge variant="warning">Draft</Badge>}
+        </div>
+      </header>
+      <PickEditor
+        pickId={pick.id}
+        initial={{
+          book_title: pick.books?.title ?? '',
+          book_author: pick.books?.author ?? '',
+          curator_quote: pick.curator_quote ?? '',
+          official_announcement_url: pick.official_announcement_url ?? '',
+        }}
+      />
+    </article>
+  )
+}
+
+function MissingClubRow({
+  club,
+  year,
+  month,
+}: {
+  club: ClubRow
+  year: number
+  month: number
+}) {
+  return (
+    <article className="flex flex-col gap-3 rounded-lg border border-dashed border-border-default bg-bg-sunken p-4">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            {club.name}
+          </p>
+          {club.curator && (
+            <p className="font-dm-sans text-xs text-text-tertiary">
+              {club.curator}
+            </p>
+          )}
+        </div>
+        <Badge variant="neutral">Missing</Badge>
+      </header>
+      <MissingClubAdd
+        clubId={club.id}
+        clubName={club.name}
+        year={year}
+        month={month}
+      />
+    </article>
   )
 }
