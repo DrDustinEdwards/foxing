@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -11,6 +12,7 @@ interface NavUser {
   display_name: string
   avatar_url: string | null
   is_admin: boolean
+  subscription_tier: 'free' | 'plus' | 'patron'
 }
 
 interface NavProps {
@@ -18,68 +20,109 @@ interface NavProps {
   unreadNotifications?: number
 }
 
+// Primary nav. /clubs (user-created reading clubs) lives in the secondary
+// authenticated bar; /book-clubs (celebrity picks) is its own primary
+// entry, distinct from /clubs.
 const PRIMARY_LINKS = [
-  { href: '/discover', label: 'Discover' },
-  { href: '/books', label: 'Books' },
-  { href: '/clubs', label: 'Clubs' },
-  { href: '/people', label: 'People' },
-  { href: '/journal', label: 'Journal' },
-] as const
-
-const BOOK_CLUBS_ITEMS = [
-  {
-    href: '/book-clubs',
-    label: 'Celebrity Picks',
-    description: 'Oprah, Reese, Jenna, and more',
-  },
+  { href: '/books', label: 'Books', match: '/books' },
+  { href: '/book-clubs', label: 'Book Clubs', match: '/book-clubs' },
   {
     href: '/book-of-the-month',
     label: 'Book of the Month',
-    description: "Foxing's monthly pick",
+    match: '/book-of-the-month',
   },
+  { href: '/journal', label: 'Journal', match: '/journal' },
+  { href: '/people', label: 'Community', match: '/people' },
+] as const
+
+const BOOKS_MENU_BROWSE = [
+  { href: '/books', label: 'All Books' },
+  { href: '/discover', label: 'By Mood' },
+  { href: '/series', label: 'Series' },
+  { href: '/awards', label: 'Award Winners' },
+  { href: '/challenges', label: 'Reading Challenges' },
+] as const
+
+const BOOKS_MENU_THEMES = [
+  'dark',
+  'mysterious',
+  'adventurous',
+  'romantic',
+  'funny',
+  'reflective',
+  'emotional',
+  'hopeful',
+  'tense',
+  'lighthearted',
+] as const
+
+const FEATURED_CLUBS = [
+  { slug: 'oprah', label: 'Oprah' },
+  { slug: 'reese', label: 'Reese' },
+  { slug: 'jenna', label: 'Jenna Bush Hager' },
+  { slug: 'gma', label: 'GMA' },
+  { slug: 'belletrist', label: 'Belletrist' },
+  { slug: 'dua-lipa', label: 'Dua Lipa' },
 ] as const
 
 const MOBILE_LINKS = [
-  { href: '/discover', label: 'Discover' },
   { href: '/books', label: 'Books' },
-  { href: '/clubs', label: 'Reading Clubs' },
-  { href: '/book-clubs', label: 'Celebrity Book Club Picks' },
+  { href: '/discover', label: 'By Mood' },
+  { href: '/series', label: 'Series' },
+  { href: '/awards', label: 'Award Winners' },
+  { href: '/challenges', label: 'Reading Challenges' },
+  { href: '/book-clubs', label: 'Celebrity Book Clubs' },
   { href: '/book-of-the-month', label: 'Book of the Month' },
-  { href: '/people', label: 'People' },
+  { href: '/clubs', label: 'Reading Clubs' },
   { href: '/journal', label: 'Journal' },
+  { href: '/people', label: 'Community' },
+  { href: '/quotes', label: 'Quotes' },
 ] as const
 
+function currentMonthPath(): string {
+  const d = new Date()
+  const y = d.getUTCFullYear()
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+  return `/book-clubs/picks/${y}/${m}`
+}
+
+function isActivePath(pathname: string, match: string): boolean {
+  if (match === '/') return pathname === '/'
+  return pathname === match || pathname.startsWith(`${match}/`)
+}
+
 export function Nav({ user, unreadNotifications = 0 }: NavProps) {
+  const pathname = usePathname() ?? ''
   const [mobileOpen, setMobileOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [bookClubsOpen, setBookClubsOpen] = useState(false)
-  const bookClubsRef = useRef<HTMLLIElement>(null)
+  const [openMega, setOpenMega] = useState<'books' | 'book-clubs' | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const accountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     function onPointerDown(event: PointerEvent) {
       if (
-        bookClubsRef.current &&
-        !bookClubsRef.current.contains(event.target as Node)
+        accountRef.current &&
+        !accountRef.current.contains(event.target as Node)
       ) {
-        setBookClubsOpen(false)
+        setMenuOpen(false)
       }
     }
     document.addEventListener('pointerdown', onPointerDown)
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
-  function openBookClubs() {
+  function openMenu(key: 'books' | 'book-clubs') {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current)
       closeTimer.current = null
     }
-    setBookClubsOpen(true)
+    setOpenMega(key)
   }
 
-  function scheduleCloseBookClubs() {
+  function scheduleClose() {
     if (closeTimer.current) clearTimeout(closeTimer.current)
-    closeTimer.current = setTimeout(() => setBookClubsOpen(false), 150)
+    closeTimer.current = setTimeout(() => setOpenMega(null), 150)
   }
 
   return (
@@ -87,7 +130,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
       <nav className="mx-auto flex h-14 w-full max-w-page items-center justify-between px-6">
         <div className="flex items-center gap-2">
           <Link
-            href="/"
+            href={user ? '/home' : '/'}
             className="flex items-center gap-2 font-fraunces text-xl text-brand-ui"
           >
             <span aria-hidden="true">🦊</span>
@@ -95,64 +138,49 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
           </Link>
         </div>
 
-        <ul className="hidden items-center gap-6 md:flex">
-          <li>
-            <Link
-              href="/discover"
-              className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
-            >
-              Discover
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/books"
-              className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
-            >
-              Books
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/clubs"
-              className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
-            >
-              Clubs
-            </Link>
-          </li>
-          <li
-            ref={bookClubsRef}
-            className="relative"
-            onMouseEnter={openBookClubs}
-            onMouseLeave={scheduleCloseBookClubs}
-          >
-            <button
-              type="button"
-              aria-haspopup="menu"
-              aria-expanded={bookClubsOpen}
-              onClick={() => setBookClubsOpen((v) => !v)}
-              onFocus={openBookClubs}
-              className="flex items-center gap-1 font-dm-sans text-sm text-text-secondary hover:text-text-primary"
-            >
-              Book Clubs
-              <ChevronDownIcon />
-            </button>
-            {bookClubsOpen && (
-              <BookClubsDropdown onClose={() => setBookClubsOpen(false)} />
-            )}
-          </li>
-          {PRIMARY_LINKS.filter(
-            (link) => !['/discover', '/books', '/clubs'].includes(link.href),
-          ).map((link) => (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="font-dm-sans text-sm text-text-secondary hover:text-text-primary"
+        <ul className="hidden items-center gap-1 md:flex">
+          {PRIMARY_LINKS.map((link) => {
+            const isActive = isActivePath(pathname, link.match)
+            const hasMega = link.href === '/books' || link.href === '/book-clubs'
+            const megaKey = link.href === '/books' ? 'books' : 'book-clubs'
+            return (
+              <li
+                key={link.href}
+                className="relative"
+                onMouseEnter={
+                  hasMega
+                    ? () => openMenu(megaKey as 'books' | 'book-clubs')
+                    : undefined
+                }
+                onMouseLeave={hasMega ? scheduleClose : undefined}
               >
-                {link.label}
-              </Link>
-            </li>
-          ))}
+                <Link
+                  href={link.href}
+                  className={cn(
+                    'inline-flex h-9 items-center rounded-md px-3 font-dm-sans text-sm transition-colors',
+                    isActive
+                      ? 'text-brand-text'
+                      : 'text-text-secondary hover:text-text-primary',
+                  )}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {link.label}
+                </Link>
+                {isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand-ui"
+                  />
+                )}
+                {hasMega && openMega === megaKey && (
+                  <MegaMenu
+                    kind={megaKey as 'books' | 'book-clubs'}
+                    onLinkClick={() => setOpenMega(null)}
+                  />
+                )}
+              </li>
+            )
+          })}
         </ul>
 
         <div className="flex items-center gap-2">
@@ -185,7 +213,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                   </span>
                 )}
               </Link>
-              <div className="relative">
+              <div className="relative" ref={accountRef}>
                 <button
                   type="button"
                   onClick={() => setMenuOpen((v) => !v)}
@@ -201,21 +229,21 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                   />
                 </button>
                 {menuOpen && (
-                  <AccountMenu
-                    username={user.username}
-                    isAdmin={user.is_admin}
-                    onClose={() => setMenuOpen(false)}
-                  />
+                  <AccountMenu user={user} onClose={() => setMenuOpen(false)} />
                 )}
               </div>
             </>
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Link href="/sign-in">
-                <Button variant="ghost" size="sm">Sign in</Button>
+                <Button variant="ghost" size="sm">
+                  Sign in
+                </Button>
               </Link>
               <Link href="/sign-up">
-                <Button variant="primary" size="sm">Join free</Button>
+                <Button variant="primary" size="sm">
+                  Join free
+                </Button>
               </Link>
             </div>
           )}
@@ -232,105 +260,298 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
         </div>
       </nav>
 
+      {user && <SecondaryAuthBar pathname={pathname} />}
+
       {mobileOpen && (
-        <div className="border-t border-border-subtle bg-bg-surface md:hidden">
-          <ul className="flex flex-col px-6 py-3">
-            {MOBILE_LINKS.map((link) => (
-              <li key={link.href}>
-                <Link
-                  href={link.href}
-                  className="block py-2 font-dm-sans text-base text-text-primary"
-                  onClick={() => setMobileOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              </li>
-            ))}
-            <li>
-              <Link
-                href="/search"
-                className="block py-2 font-dm-sans text-base text-text-primary"
-                onClick={() => setMobileOpen(false)}
-              >
-                Search
-              </Link>
-            </li>
-            {!user && (
-              <li className="mt-2 flex gap-2 border-t border-border-subtle pt-3">
-                <Link href="/sign-in" className="flex-1">
-                  <Button variant="ghost" size="md" fullWidth>Sign in</Button>
-                </Link>
-                <Link href="/sign-up" className="flex-1">
-                  <Button variant="primary" size="md" fullWidth>Join free</Button>
-                </Link>
-              </li>
-            )}
-          </ul>
-        </div>
+        <MobileSheet
+          user={user}
+          pathname={pathname}
+          onClose={() => setMobileOpen(false)}
+        />
       )}
     </header>
   )
 }
 
-function BookClubsDropdown({ onClose }: { onClose: () => void }) {
+function SecondaryAuthBar({ pathname }: { pathname: string }) {
+  const items = [
+    { href: '/home', label: 'Home' },
+    { href: '/library', label: 'Library' },
+    { href: '/diary', label: 'Diary' },
+    { href: '/feed', label: 'Feed' },
+    { href: '/clubs', label: 'Clubs' },
+    { href: '/people', label: 'People' },
+  ]
   return (
-    <div
-      role="menu"
-      className="absolute left-1/2 top-8 z-50 w-72 -translate-x-1/2 overflow-hidden rounded-md border border-border-subtle bg-bg-elevated shadow-md"
-    >
-      <ul className="flex flex-col py-1">
-        {BOOK_CLUBS_ITEMS.map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              role="menuitem"
-              onClick={onClose}
-              className="flex items-start gap-3 px-4 py-3 hover:bg-bg-hover"
-            >
-              {item.href === '/book-clubs' ? (
-                <UsersIcon />
-              ) : (
-                <StarIcon />
-              )}
-              <div className="flex flex-col">
-                <span className="font-dm-sans text-sm font-medium text-text-primary">
-                  {item.label}
-                </span>
-                <span className="font-dm-sans text-xs text-text-tertiary">
-                  {item.description}
-                </span>
-              </div>
-            </Link>
-          </li>
-        ))}
+    <div className="hidden border-t border-border-subtle bg-bg-sunken md:block">
+      <ul className="mx-auto flex h-10 w-full max-w-page items-center gap-1 px-6">
+        {items.map((item) => {
+          const isActive = isActivePath(pathname, item.href)
+          return (
+            <li key={item.href}>
+              <Link
+                href={item.href}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn(
+                  'inline-flex h-7 items-center rounded-md px-3 font-dm-sans text-xs',
+                  isActive
+                    ? 'bg-brand-subtle text-brand-subtle-text'
+                    : 'text-text-tertiary hover:text-text-primary',
+                )}
+              >
+                {item.label}
+              </Link>
+            </li>
+          )
+        })}
       </ul>
     </div>
   )
 }
 
-function AccountMenu({
-  username,
-  isAdmin,
+function MegaMenu({
+  kind,
+  onLinkClick,
+}: {
+  kind: 'books' | 'book-clubs'
+  onLinkClick: () => void
+}) {
+  if (kind === 'books') {
+    return (
+      <div className="absolute left-1/2 top-9 z-50 w-[520px] -translate-x-1/2 rounded-lg border border-border-subtle bg-bg-elevated p-5 shadow-lg">
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              Browse
+            </p>
+            <ul className="flex flex-col gap-1">
+              {BOOKS_MENU_BROWSE.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    onClick={onLinkClick}
+                    role="menuitem"
+                    className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              Themes
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {BOOKS_MENU_THEMES.map((theme) => (
+                <Link
+                  key={theme}
+                  href={`/themes/${theme}`}
+                  onClick={onLinkClick}
+                  role="menuitem"
+                  className="rounded-full bg-brand-subtle px-2.5 py-1 font-dm-sans text-xs capitalize text-brand-subtle-text hover:bg-bg-hover"
+                >
+                  {theme}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="absolute left-1/2 top-9 z-50 w-[440px] -translate-x-1/2 rounded-lg border border-border-subtle bg-bg-elevated p-5 shadow-lg">
+      <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        Featured clubs
+      </p>
+      <ul className="grid grid-cols-2 gap-1">
+        {FEATURED_CLUBS.map((club) => (
+          <li key={club.slug}>
+            <Link
+              href={`/book-clubs/${club.slug}`}
+              onClick={onLinkClick}
+              role="menuitem"
+              className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+            >
+              {club.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-3 flex flex-col gap-1 border-t border-border-subtle pt-3">
+        <Link
+          href="/book-clubs"
+          onClick={onLinkClick}
+          role="menuitem"
+          className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
+        >
+          View all 30 clubs →
+        </Link>
+        <Link
+          href={currentMonthPath()}
+          onClick={onLinkClick}
+          role="menuitem"
+          className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
+        >
+          This month&apos;s picks →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+function MobileSheet({
+  user,
+  pathname,
   onClose,
 }: {
-  username: string
-  isAdmin: boolean
+  user: NavUser | null
+  pathname: string
+  onClose: () => void
+}) {
+  return (
+    <div className="border-t border-border-subtle bg-bg-surface md:hidden">
+      <ul className="flex flex-col px-6 py-3">
+        {user && (
+          <li className="border-b border-border-subtle pb-2">
+            <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              You
+            </p>
+            <div className="mt-2 flex flex-col gap-1">
+              <MobileLink
+                href="/home"
+                label="Home"
+                pathname={pathname}
+                onClose={onClose}
+              />
+              <MobileLink
+                href="/library"
+                label="My library"
+                pathname={pathname}
+                onClose={onClose}
+              />
+              <MobileLink
+                href="/diary"
+                label="Reading diary"
+                pathname={pathname}
+                onClose={onClose}
+              />
+              <MobileLink
+                href="/feed"
+                label="Feed"
+                pathname={pathname}
+                onClose={onClose}
+              />
+              <MobileLink
+                href="/clubs"
+                label="Reading clubs"
+                pathname={pathname}
+                onClose={onClose}
+              />
+            </div>
+          </li>
+        )}
+        {MOBILE_LINKS.map((link) => (
+          <li key={link.href}>
+            <MobileLink
+              href={link.href}
+              label={link.label}
+              pathname={pathname}
+              onClose={onClose}
+            />
+          </li>
+        ))}
+        <li>
+          <MobileLink
+            href="/search"
+            label="Search"
+            pathname={pathname}
+            onClose={onClose}
+          />
+        </li>
+        {!user && (
+          <li className="mt-2 flex gap-2 border-t border-border-subtle pt-3">
+            <Link href="/sign-in" className="flex-1" onClick={onClose}>
+              <Button variant="ghost" size="md" fullWidth>
+                Sign in
+              </Button>
+            </Link>
+            <Link href="/sign-up" className="flex-1" onClick={onClose}>
+              <Button variant="primary" size="md" fullWidth>
+                Join free
+              </Button>
+            </Link>
+          </li>
+        )}
+      </ul>
+    </div>
+  )
+}
+
+function MobileLink({
+  href,
+  label,
+  pathname,
+  onClose,
+}: {
+  href: string
+  label: string
+  pathname: string
+  onClose: () => void
+}) {
+  const isActive = isActivePath(pathname, href)
+  return (
+    <Link
+      href={href}
+      onClick={onClose}
+      aria-current={isActive ? 'page' : undefined}
+      className={cn(
+        'block rounded-md px-2 py-2 font-dm-sans text-base',
+        isActive
+          ? 'bg-brand-subtle text-brand-subtle-text'
+          : 'text-text-primary',
+      )}
+    >
+      {label}
+    </Link>
+  )
+}
+
+function AccountMenu({
+  user,
+  onClose,
+}: {
+  user: NavUser
   onClose: () => void
 }) {
   const items = [
     { href: '/library', label: 'My library' },
     { href: '/diary', label: 'Reading diary' },
     { href: '/stats', label: 'Stats' },
-    { href: `/u/${username}`, label: 'Profile' },
-    { href: '/settings', label: 'Settings' },
+    { href: '/goals', label: 'Goals' },
+    { href: '/vocabulary', label: 'Vocabulary' },
+    { href: '/my-lists', label: 'My lists' },
+    { href: '/buddy-reads', label: 'Buddy reads' },
   ]
+  const showPlusBadge = user.subscription_tier === 'free'
   return (
     <div
       role="menu"
       className={cn(
-        'absolute right-0 top-12 z-50 w-52 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md',
+        'absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md',
       )}
     >
+      <div className="border-b border-border-subtle px-4 py-3">
+        <p className="font-dm-sans text-sm font-medium text-text-primary">
+          {user.display_name}
+        </p>
+        <p className="font-dm-mono text-xs text-text-tertiary">
+          @{user.username}
+        </p>
+      </div>
       <ul className="flex flex-col py-1">
         {items.map((item) => (
           <li key={item.href}>
@@ -344,8 +565,43 @@ function AccountMenu({
             </Link>
           </li>
         ))}
-        {isAdmin && (
-          <li className="border-t border-border-subtle">
+        <li className="border-t border-border-subtle">
+          <Link
+            href="/find-next-book"
+            role="menuitem"
+            className="flex items-center justify-between gap-2 px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+            onClick={onClose}
+          >
+            <span>Find next book</span>
+            {showPlusBadge && (
+              <span className="rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text">
+                Plus
+              </span>
+            )}
+          </Link>
+        </li>
+        <li className="border-t border-border-subtle">
+          <Link
+            href={`/u/${user.username}`}
+            role="menuitem"
+            className="block px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+            onClick={onClose}
+          >
+            Profile
+          </Link>
+        </li>
+        <li>
+          <Link
+            href="/settings"
+            role="menuitem"
+            className="block px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+            onClick={onClose}
+          >
+            Settings
+          </Link>
+        </li>
+        {user.is_admin && (
+          <li>
             <Link
               href="/admin"
               role="menuitem"
@@ -425,65 +681,6 @@ function SearchIcon() {
     >
       <circle cx="11" cy="11" r="7" />
       <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  )
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  )
-}
-
-function UsersIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="mt-0.5 text-brand-ui"
-    >
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  )
-}
-
-function StarIcon() {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-      className="mt-0.5 text-brand-ui"
-    >
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   )
 }

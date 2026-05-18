@@ -6,6 +6,7 @@ export interface NavUser {
   display_name: string
   avatar_url: string | null
   is_admin: boolean
+  subscription_tier: 'free' | 'plus' | 'patron'
 }
 
 /**
@@ -30,7 +31,7 @@ export async function getNavUser(): Promise<NavUser | null> {
   if (!user) return null
   const { data } = await sb
     .from('profiles')
-    .select('username, display_name, avatar_url, is_admin')
+    .select('username, display_name, avatar_url, is_admin, subscription_tier')
     .eq('id', user.id)
     .maybeSingle()
   if (!data) return null
@@ -39,12 +40,18 @@ export async function getNavUser(): Promise<NavUser | null> {
     display_name: string
     avatar_url: string | null
     is_admin: boolean | null
+    subscription_tier: string | null
   }
+  const tier: NavUser['subscription_tier'] =
+    row.subscription_tier === 'plus' || row.subscription_tier === 'patron'
+      ? row.subscription_tier
+      : 'free'
   return {
     username: row.username,
     display_name: row.display_name,
     avatar_url: row.avatar_url,
     is_admin: Boolean(row.is_admin),
+    subscription_tier: tier,
   }
 }
 
