@@ -140,7 +140,15 @@
       "Bash(npx next *)",
       "Bash(echo \"tsc exit: $?\")",
       "PowerShell(Get-NetTCPConnection *)",
-      "Bash(pnpm add *)"
+      "Bash(pnpm add *)",
+      "Bash(python -c \"import json, sys; data = json.load\\(sys.stdin\\); text = json.loads\\(data[0]['text']\\); print\\('\\\\n'.join\\(t['name'] for t in text['tables']\\)\\)\")",
+      "PowerShell($pwd; Get-ChildItem -Recurse -Filter \"missing-pages-queries*\" | Select-Object FullName)",
+      "PowerShell(npx tsc --noEmit -p .)",
+      "PowerShell($pwd.Path)",
+      "PowerShell(Push-Location apps\\\\web; npx tsc --noEmit; $exit = $LASTEXITCODE; Pop-Location; Write-Output \"exit_code=$exit\")",
+      "Bash(mkdir -p \"app/\\(app\\)/my-lists/[id]\" \"app/\\(app\\)/my-lists/new\")",
+      "Bash(mv \"app/\\(app\\)/lists/[id]/page.tsx\" \"app/\\(app\\)/my-lists/[id]/page.tsx\")",
+      "Bash(rmdir \"app/\\(app\\)/lists/[id]\" \"app/\\(app\\)/lists/new\" \"app/\\(app\\)/lists\")"
     ]
   }
 }
