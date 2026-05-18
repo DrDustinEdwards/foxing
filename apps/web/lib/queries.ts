@@ -935,6 +935,63 @@ export async function fetchHighlightsByAuthorSlug(
 }
 
 /**
+ * Whether a follow edge exists between two profiles.
+ */
+export async function fetchIsFollowing(opts: {
+  followerId: string
+  followingId: string
+}): Promise<boolean> {
+  if (!hasEnv()) return false
+  const sb = supabase()
+  const { count } = await sb
+    .from('follows')
+    .select('follower_id', { count: 'exact', head: true })
+    .eq('follower_id', opts.followerId)
+    .eq('following_id', opts.followingId)
+  return (count ?? 0) > 0
+}
+
+/**
+ * Taste compatibility: percentage of viewer's finished books that the
+ * profile owner has also finished. Returns null when the viewer has
+ * fewer than three finished books, since the signal is too noisy.
+ */
+export async function fetchTasteCompatibility(opts: {
+  viewerId: string
+  profileId: string
+}): Promise<{ percent: number; shared: number } | null> {
+  if (!hasEnv()) return null
+  const sb = supabase()
+  const [viewerRes, profileRes] = await Promise.all([
+    sb
+      .from('user_books')
+      .select('book_id')
+      .eq('user_id', opts.viewerId)
+      .eq('status', 'finished'),
+    sb
+      .from('user_books')
+      .select('book_id')
+      .eq('user_id', opts.profileId)
+      .eq('status', 'finished'),
+  ])
+  const viewerIds = new Set(
+    ((viewerRes.data as { book_id: string }[] | null) ?? []).map(
+      (r) => r.book_id,
+    ),
+  )
+  if (viewerIds.size < 3) return null
+  const profileIds = new Set(
+    ((profileRes.data as { book_id: string }[] | null) ?? []).map(
+      (r) => r.book_id,
+    ),
+  )
+  let shared = 0
+  for (const id of viewerIds) if (profileIds.has(id)) shared += 1
+  const percent = Math.min(100, Math.round((shared / viewerIds.size) * 100))
+  return { percent, shared }
+}
+
+/**
  * Look up a books.author_slug given an exact author display name.
  * Used by the legacy URL-decoded fallback on /author/[slug] to issue a
  * permanent redirect to the canonical author_slug URL.
