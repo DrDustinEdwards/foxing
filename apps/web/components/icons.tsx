@@ -94,3 +94,73 @@ export function QuoteIcon({ size, className }: IconProps) {
     </svg>
   )
 }
+
+export function HouseIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-7h-6v7H4a1 1 0 0 1-1-1z" />
+    </svg>
+  )
+}
+
+export function UsersIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </svg>
+  )
+}
+
+export function UsersThreeIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <circle cx="6" cy="8" r="3" />
+      <circle cx="18" cy="8" r="3" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M2 19c0-2 2-4 4-4s4 2 4 4" />
+      <path d="M14 19c0-2 2-4 4-4s4 2 4 4" />
+      <path d="M8 21c0-2 2-4 4-4s4 2 4 4" />
+    </svg>
+  )
+}
+
+export function FlagIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" y1="22" x2="4" y2="15" />
+    </svg>
+  )
+}
+
+export function BellIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  )
+}
+
+export function ChartBarIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <line x1="3" y1="20" x2="21" y2="20" />
+      <line x1="6" y1="20" x2="6" y2="10" />
+      <line x1="11" y1="20" x2="11" y2="4" />
+      <line x1="16" y1="20" x2="16" y2="13" />
+    </svg>
+  )
+}
+
+export function PencilIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 1 1 3 3L7 19l-4 1 1-4z" />
+    </svg>
+  )
+}
