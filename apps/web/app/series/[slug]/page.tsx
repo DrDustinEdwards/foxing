@@ -8,7 +8,6 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchSeriesBySlug,
-  fetchSeriesIndex,
 } from '@/lib/missing-pages-queries'
 import {
   buildSeriesMetadata,
@@ -16,12 +15,38 @@ import {
 } from '@/lib/metadata-extras'
 import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86400
 
+// Build-time only. Uses the admin client because the server client calls
+// next/headers cookies(), which fails outside a request scope. Books are
+// public catalog data, so service-role reads here are safe.
 export async function generateStaticParams() {
-  const index = await fetchSeriesIndex()
-  return index.slice(0, 50).map((s) => ({ slug: s.slug }))
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return []
+  }
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('books')
+    .select('series_name')
+    .not('series_name', 'is', null)
+    .neq('series_name', '')
+    .limit(5000)
+  const seen = new Set<string>()
+  const slugs: string[] = []
+  for (const row of (data as { series_name: string | null }[] | null) ?? []) {
+    if (!row.series_name) continue
+    const slug = slugifySeriesName(row.series_name)
+    if (seen.has(slug)) continue
+    seen.add(slug)
+    slugs.push(slug)
+    if (slugs.length >= 50) break
+  }
+  return slugs.map((slug) => ({ slug }))
 }
 
 export async function generateMetadata({
