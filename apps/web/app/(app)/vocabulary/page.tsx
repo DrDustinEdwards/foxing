@@ -7,6 +7,7 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchVocabulary } from '@/lib/missing-pages-queries'
 import { VOCABULARY_METADATA } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { MasteredToggle } from './mastered-toggle'
 
 export const dynamic = 'force-dynamic'
 
@@ -143,18 +144,23 @@ export default async function VocabularyPage({
                   &ldquo;{e.context_sentence}&rdquo;
                 </p>
               )}
-              {e.book ? (
-                <Link
-                  href={`/book/${e.book.slug ?? e.book.id}`}
-                  className="font-dm-sans text-xs text-text-tertiary hover:text-text-primary"
-                >
-                  {e.book.title}
-                </Link>
-              ) : e.book_title ? (
-                <span className="font-dm-sans text-xs text-text-tertiary">
-                  {e.book_title}
-                </span>
-              ) : null}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                {e.book ? (
+                  <Link
+                    href={`/book/${e.book.slug ?? e.book.id}`}
+                    className="font-dm-sans text-xs text-text-tertiary hover:text-text-primary"
+                  >
+                    {e.book.title}
+                  </Link>
+                ) : e.book_title ? (
+                  <span className="font-dm-sans text-xs text-text-tertiary">
+                    {e.book_title}
+                  </span>
+                ) : (
+                  <span />
+                )}
+                <MasteredToggle id={e.id} initiallyMastered={Boolean(e.mastered)} />
+              </div>
             </li>
           ))}
         </ul>
