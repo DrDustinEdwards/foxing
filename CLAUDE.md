@@ -37,6 +37,12 @@ Always run from the right directory:
   Install:         run from repo root (pnpm install)
   Types/utils:     run from repo root
 
+SUPABASE CLI — ALWAYS run from repo root, not apps/web:
+  cd /path/to/foxing  (repo root, where supabase/ folder lives)
+  npx supabase functions deploy [name] --project-ref ekjpsuewrkvqzbuteurc
+  npx supabase secrets set KEY=value --project-ref ekjpsuewrkvqzbuteurc
+  Running from apps/web will fail — supabase/ is not found there.
+
 Web build check before every push:
   cd apps/web && npx tsc --noEmit
 
@@ -74,6 +80,14 @@ Web build check before every push:
 
 8. npx tsc --noEmit must pass before every git push. No exceptions.
 
+9. Never read, display, log, or reference the contents of .env files.
+   Environment variables are secrets. Acknowledge they exist but never show values.
+
+10. Cover images always go to Supabase Storage bucket 'covers'.
+    Never store third-party image URLs as cover_url — always download and store.
+    Cover lookup order: Open Library → Google Books (zoom=3) → iTunes (600x900bb)
+    Stub detection: content-length < 200 bytes = not a real cover, try next source.
+
 ---
 
 ## DB FACTS
@@ -83,20 +97,19 @@ All migrations applied. Key columns that exist:
          epub_url, source, source_type, themes, mood_tags, pacing,
          content_warnings, is_staff_pick, weighted_rating, rating_count,
          isbn, isbn13, series_name, series_order, series_position,
-         updated_at, created_at
+         amazon_url, bookshop_url, updated_at, created_at
   user_books: rating_half (1-10 half-star), date_started, date_finished,
               mood_tags, format_read, paused_note, review_likes, updated_at
   profiles: is_admin, subscription_tier (free/plus/patron), is_suspended,
-            total_books_read, total_highlights, backdrop_url, is_public
+            total_books_read, total_highlights, backdrop_url, is_public,
+            theme_preference (light/dark/system)
   clubs: slug (name + 4-char id suffix)
   reading_lists: slug, is_featured, like_count
   diary_entries: slug (book_slug + date), privacy (private/public/friends)
   highlights: like_count, updated_at
-  highlight_likes: table exists
-  reading_list_books, reading_list_likes: tables exist
-  book_of_the_month: table exists
-  external_book_clubs: seeded with 10 clubs (oprah, reese, jenna, gma, etc.)
-  external_book_club_picks: table exists
+  external_book_clubs: 30 clubs seeded
+  external_book_club_picks: curator_quote, is_published (default TRUE),
+    is_auto_discovered, auto_source, auto_confidence
 
 ---
 
@@ -106,9 +119,7 @@ Read from the Foxing Vault MCP for detailed specs:
   context.md           — project overview and current state
   ai-writing-tells.md  — writing rules (read before writing any copy)
   design-system.md     — color tokens, typography
-  url-structure.md     — canonical URL decisions
-  metadata-architecture.md — how metadata is structured
-  monetization.md      — pricing strategy
+  celebrity-picks-automation.md — picks automation spec
 
 ---
 
