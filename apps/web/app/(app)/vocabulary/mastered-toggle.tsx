@@ -36,7 +36,7 @@ export function MasteredToggle({
       className={cn(
         'rounded-full border px-3 py-0.5 font-dm-sans text-xs transition-colors',
         mastered
-          ? 'border-success bg-success-bg text-success'
+          ? 'border-toggle-on bg-toggle-on-subtle text-toggle-on-hover'
           : 'border-border-subtle bg-bg-surface text-text-tertiary hover:bg-bg-hover',
       )}
     >

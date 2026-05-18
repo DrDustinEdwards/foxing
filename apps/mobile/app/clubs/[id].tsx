@@ -972,7 +972,7 @@ function NewThreadSheet({
               <Switch
                 value={hasSpoilers}
                 onValueChange={setHasSpoilers}
-                trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+                trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
               />
             </View>
           </ScrollView>

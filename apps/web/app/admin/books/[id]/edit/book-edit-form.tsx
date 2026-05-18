@@ -174,12 +174,19 @@ export function BookEditForm({ book, cacheCount }: Props) {
                 name="pacing"
                 value={opt}
                 defaultChecked={book.pacing === opt}
+                className="accent-toggle-on"
               />
               <span className="capitalize">{opt}</span>
             </label>
           ))}
           <label className="flex items-center gap-2 font-dm-sans text-sm text-text-tertiary">
-            <input type="radio" name="pacing" value="" defaultChecked={!book.pacing} />
+            <input
+              type="radio"
+              name="pacing"
+              value=""
+              defaultChecked={!book.pacing}
+              className="accent-toggle-on"
+            />
             <span>Unset</span>
           </label>
         </div>
@@ -235,7 +242,7 @@ export function BookEditForm({ book, cacheCount }: Props) {
             name="is_staff_pick"
             checked={staffPick}
             onChange={(e) => setStaffPick(e.target.checked)}
-            className="h-4 w-4 rounded border-border-interactive"
+            className="h-4 w-4 rounded border-border-interactive accent-toggle-on"
           />
           Staff pick
         </label>

@@ -390,7 +390,7 @@ export default function ThreadScreen() {
               <Switch
                 value={hasSpoilers}
                 onValueChange={setHasSpoilers}
-                trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+                trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
               />
               <Text
                 style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary, marginLeft: 8 }}

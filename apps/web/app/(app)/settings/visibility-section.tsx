@@ -92,7 +92,7 @@ function ToggleRow({
         id={id}
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="mt-1 h-4 w-4 rounded border-border-interactive"
+        className="mt-1 h-4 w-4 rounded border-border-interactive accent-toggle-on"
       />
       <div className="flex flex-col">
         <span className="font-dm-sans text-sm font-medium text-text-primary">

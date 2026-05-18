@@ -106,7 +106,7 @@ export function AdminToggle({
           checked={value}
           onChange={handleChange}
           disabled={saving}
-          className="h-4 w-4 rounded border-border-interactive"
+          className="h-4 w-4 rounded border-border-interactive accent-toggle-on"
         />
         <span>Admin (full access to /admin)</span>
       </label>
@@ -151,7 +151,7 @@ export function SuspendedToggle({
           checked={value}
           onChange={handleChange}
           disabled={saving}
-          className="h-4 w-4 rounded border-border-interactive"
+          className="h-4 w-4 rounded border-border-interactive accent-toggle-on"
         />
         <span>
           Suspended {value ? '(signed out, cannot sign in)' : ''}

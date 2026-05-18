@@ -11,6 +11,11 @@ interface ColorTokens {
   brandSubtle: string
   brandSubtleText: string
 
+  // Toggle / active binary controls (sky blue, complement of auburn)
+  toggleOn: string
+  toggleOnHover: string
+  toggleOnSubtle: string
+
   // Backgrounds
   bgBase: string
   bgSurface: string
@@ -108,6 +113,10 @@ export const Colors: { light: ColorTokens; dark: ColorTokens } = {
     brandSubtle: '#FAE0D6',
     brandSubtleText: '#632507',
 
+    toggleOn: '#43a1d8',
+    toggleOnHover: '#2B87BC',
+    toggleOnSubtle: '#D6EDF8',
+
     bgBase: '#FAF6EE',
     bgSurface: '#FFFFFF',
     bgElevated: '#FFFFFF',
@@ -194,6 +203,10 @@ export const Colors: { light: ColorTokens; dark: ColorTokens } = {
     brandSecondary: '#F79C40',
     brandSubtle: '#2E1C0E',
     brandSubtleText: '#F0A070',
+
+    toggleOn: '#43a1d8',
+    toggleOnHover: '#5AAFE0',
+    toggleOnSubtle: '#0D1E2A',
 
     bgBase: '#16100B',
     bgSurface: '#1F1710',
