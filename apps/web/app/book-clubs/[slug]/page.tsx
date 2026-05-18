@@ -16,26 +16,7 @@ import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const revalidate = 3600
-export const dynamicParams = true
-
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.SUPABASE_SERVICE_ROLE_KEY
-  ) {
-    return []
-  }
-  const admin = createAdminClient()
-  const { data } = await admin
-    .from('external_book_clubs')
-    .select('slug')
-    .eq('is_active', true)
-    .not('slug', 'is', null)
-  return ((data as { slug: string | null }[] | null) ?? [])
-    .filter((c): c is { slug: string } => typeof c.slug === 'string')
-    .map((c) => ({ slug: c.slug }))
-}
+export const dynamic = 'force-dynamic'
 
 function truncateText(s: string, max: number): string {
   if (s.length <= max) return s
