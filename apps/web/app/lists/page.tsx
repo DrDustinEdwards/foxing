@@ -8,7 +8,7 @@ import {
   type ListsSort,
   type PublicListRow,
 } from '@/lib/missing-pages-queries'
-import { buildListsIndexMetadata } from '@/lib/metadata-extras'
+import { buildListsIndexMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 

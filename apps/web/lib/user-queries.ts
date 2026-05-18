@@ -30,6 +30,7 @@ export interface LibraryEntry {
   is_favorite: boolean
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -45,7 +46,7 @@ export async function fetchLibrary(
   const { data } = await sb()
     .from('user_books')
     .select(
-      'id, status, rating, progress_percentage, started_at, finished_at, created_at, is_favorite, books:book_id(id, title, author, cover_url, themes, word_count)',
+      'id, status, rating, progress_percentage, started_at, finished_at, created_at, is_favorite, books:book_id(id, slug, title, author, cover_url, themes, word_count)',
     )
     .eq('user_id', userId)
     .eq('status', status)
@@ -162,6 +163,7 @@ export interface UserHighlight {
   created_at: string
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -174,7 +176,7 @@ export async function fetchUserHighlights(
   const { data } = await sb()
     .from('highlights')
     .select(
-      'id, text, note, color, chapter, is_public, created_at, books:book_id(id, title, author, cover_url)',
+      'id, text, note, color, chapter, is_public, created_at, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
@@ -309,6 +311,7 @@ export interface DiaryEntry {
   privacy: string
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -322,7 +325,7 @@ export async function fetchDiaryEntries(
   let q = sb()
     .from('diary_entries')
     .select(
-      'id, log_date, rating, review, privacy, books:book_id(id, title, author, cover_url)',
+      'id, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
   if (year) {

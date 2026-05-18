@@ -12,7 +12,7 @@ import {
 import {
   buildSeriesMetadata,
   slugifySeriesName,
-} from '@/lib/metadata-extras'
+} from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 import { createAdminClient } from '@/lib/supabase/admin'

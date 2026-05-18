@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Badge } from '@/components/ui/badge'
@@ -18,10 +18,12 @@ import { getNavUser } from '@/lib/nav-user'
 import {
   fetchAiCache,
   fetchBookById,
+  fetchBookBySlug,
   fetchBookHighlights,
   fetchBookReviews,
   fetchPublicClubsForBook,
   fetchSimilarBooks,
+  isUuid,
 } from '@/lib/queries'
 import { appBookDeeplink } from '@/lib/foxing'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
@@ -42,12 +44,21 @@ export async function generateStaticParams() {
   const supabase = createAdminClient()
   const { data: books } = await supabase
     .from('books')
-    .select('id')
+    .select('slug')
+    .not('slug', 'is', null)
     .order('created_at', { ascending: false })
     .limit(500)
-  return ((books as { id: string }[] | null) ?? []).map((book) => ({
-    slug: book.id,
-  }))
+  return ((books as { slug: string }[] | null) ?? [])
+    .filter((b) => Boolean(b.slug))
+    .map((b) => ({ slug: b.slug }))
+}
+
+async function resolveBook(slugOrId: string) {
+  let book = await fetchBookBySlug(slugOrId)
+  if (!book && isUuid(slugOrId)) {
+    book = await fetchBookById(slugOrId)
+  }
+  return book
 }
 
 export async function generateMetadata({
@@ -55,12 +66,13 @@ export async function generateMetadata({
 }: {
   params: { slug: string }
 }): Promise<Metadata> {
-  const book = await fetchBookById(params.slug)
+  const book = await resolveBook(params.slug)
   if (!book) return { title: 'Book not found' }
   const aiDesc = await fetchAiCache(book.id, 'book_description')
   const description = aiDesc ?? book.description ?? null
   return buildBookMetadata({
     id: book.id,
+    slug: book.slug,
     title: book.title,
     author: book.author,
     description,
@@ -77,9 +89,15 @@ export default async function BookPage({
 }) {
   const [navUser, book] = await Promise.all([
     getNavUser(),
-    fetchBookById(params.slug),
+    resolveBook(params.slug),
   ])
   if (!book) notFound()
+
+  // If the visitor arrived via a legacy UUID URL, send them to the
+  // canonical slug-based one with a permanent redirect for SEO equity.
+  if (isUuid(params.slug) && book.slug && book.slug !== params.slug) {
+    permanentRedirect(`/book/${book.slug}`)
+  }
 
   const [reviews, highlights, similar, clubs, aiDescription, aiAuthorBio] =
     await Promise.all([
@@ -98,22 +116,24 @@ export default async function BookPage({
 
   const isCommunityBook = book.source_type === 'community' || !book.epub_url
 
+  const bookPath = book.slug ?? book.id
+  const authorPath = book.author_slug ?? encodeURIComponent(book.author)
   const bookJsonLdStr = JSON.stringify({
     '@context': 'https://schema.org',
     '@type': 'Book',
-    '@id': `${FOXING_BASE_URL}/book/${book.id}`,
+    '@id': `${FOXING_BASE_URL}/book/${bookPath}`,
     name: book.title,
     author: {
       '@type': 'Person',
       name: book.author,
-      url: `${FOXING_BASE_URL}/author/${encodeURIComponent(book.author)}`,
+      url: `${FOXING_BASE_URL}/author/${authorPath}`,
     },
     description:
       description ??
       (isCommunityBook
         ? `${book.title} by ${book.author}, on Foxing.`
         : `Read ${book.title} by ${book.author} free on Foxing.`),
-    url: `${FOXING_BASE_URL}/book/${book.id}`,
+    url: `${FOXING_BASE_URL}/book/${bookPath}`,
     inLanguage: book.language ?? 'en',
     genre: book.themes?.[0] ?? 'Fiction',
     ...(book.isbn13 ? { isbn: book.isbn13 } : book.isbn ? { isbn: book.isbn } : {}),
@@ -133,7 +153,7 @@ export default async function BookPage({
             price: '0',
             priceCurrency: 'USD',
             availability: 'https://schema.org/InStock',
-            url: `${FOXING_BASE_URL}/book/${book.id}`,
+            url: `${FOXING_BASE_URL}/book/${bookPath}`,
           },
         }),
     ...(book.rating_count >= 3 && typeof book.avg_rating === 'number'
@@ -169,7 +189,7 @@ export default async function BookPage({
         '@type': 'ListItem',
         position: 3,
         name: book.title,
-        item: `${FOXING_BASE_URL}/book/${book.id}`,
+        item: `${FOXING_BASE_URL}/book/${bookPath}`,
       },
     ],
   })
@@ -227,6 +247,7 @@ export default async function BookPage({
           <Sidebar
             similar={similar}
             authorName={book.author}
+            authorSlug={book.author_slug}
             authorBio={authorBioExcerpt}
           />
         </PageWrapper>
@@ -281,7 +302,7 @@ function BookHeader({
       <p className="font-dm-sans text-base text-text-secondary">
         by{' '}
         <Link
-          href={`/author/${encodeURIComponent(book.author)}`}
+          href={`/author/${book.author_slug ?? encodeURIComponent(book.author)}`}
           className="text-brand-text hover:underline"
         >
           {book.author}
@@ -486,12 +507,15 @@ function ClubsSection({
 function Sidebar({
   similar,
   authorName,
+  authorSlug,
   authorBio,
 }: {
   similar: Awaited<ReturnType<typeof fetchSimilarBooks>>
   authorName: string
+  authorSlug: string | null
   authorBio: string | null
 }) {
+  const authorHref = `/author/${authorSlug ?? encodeURIComponent(authorName)}`
   return (
     <aside className="flex flex-col gap-8">
       {similar.length > 0 && (
@@ -518,7 +542,7 @@ function Sidebar({
         </h3>
         <p className="font-fraunces text-base text-text-primary">
           <Link
-            href={`/author/${encodeURIComponent(authorName)}`}
+            href={authorHref}
             className="hover:text-brand-text"
           >
             {authorName}
@@ -530,7 +554,7 @@ function Sidebar({
           </p>
         )}
         <Link
-          href={`/author/${encodeURIComponent(authorName)}`}
+          href={authorHref}
           className="mt-2 inline-block font-dm-sans text-sm text-brand-text hover:underline"
         >
           More by {authorName}

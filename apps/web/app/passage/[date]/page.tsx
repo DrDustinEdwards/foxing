@@ -8,7 +8,7 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ShareButton } from '@/components/share-button'
 import { fetchPassageOfDay } from '@/lib/missing-pages-queries'
-import { buildPassageMetadata } from '@/lib/metadata-extras'
+import { buildPassageMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 

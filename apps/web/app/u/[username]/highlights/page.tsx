@@ -11,7 +11,7 @@ import {
   fetchPublicUserHighlights,
   fetchUserCounts,
 } from '@/lib/missing-pages-queries'
-import { buildUserHighlightsMetadata } from '@/lib/metadata-extras'
+import { buildUserHighlightsMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 300

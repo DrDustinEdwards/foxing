@@ -148,7 +148,21 @@
       "PowerShell(Push-Location apps\\\\web; npx tsc --noEmit; $exit = $LASTEXITCODE; Pop-Location; Write-Output \"exit_code=$exit\")",
       "Bash(mkdir -p \"app/\\(app\\)/my-lists/[id]\" \"app/\\(app\\)/my-lists/new\")",
       "Bash(mv \"app/\\(app\\)/lists/[id]/page.tsx\" \"app/\\(app\\)/my-lists/[id]/page.tsx\")",
-      "Bash(rmdir \"app/\\(app\\)/lists/[id]\" \"app/\\(app\\)/lists/new\" \"app/\\(app\\)/lists\")"
+      "Bash(rmdir \"app/\\(app\\)/lists/[id]\" \"app/\\(app\\)/lists/new\" \"app/\\(app\\)/lists\")",
+      "Bash(xargs sed -i \"s|from '@/lib/metadata-extras'|from '@/lib/metadata'|g\")",
+      "Bash(sed -i 's|books:book_id\\(id, title, author, cover_url|books:book_id\\(id, slug, title, author, cover_url|g' lib/queries.ts lib/user-queries.ts lib/missing-pages-queries.ts)",
+      "Bash(sed -i 's|book:book_id\\(id, title, author, cover_url|book:book_id\\(id, slug, title, author, cover_url|g' lib/missing-pages-queries.ts)",
+      "Bash(sed -i 's|books:book_id\\(id, title, cover_url|books:book_id\\(id, slug, title, cover_url|g' lib/missing-pages-queries.ts)",
+      "Bash(sed -i 's|current_book:current_book_id\\(id, title, cover_url\\)|current_book:current_book_id\\(id, slug, title, cover_url\\)|g' lib/queries.ts)",
+      "Bash(sed -i 's|current_book:current_book_id\\(id, title, author, cover_url\\)|current_book:current_book_id\\(id, slug, title, author, cover_url\\)|g' lib/queries.ts)",
+      "Bash(sed -i \"s|Pick<BookSummary, 'id' \\\\\\\\| 'title' \\\\\\\\| 'author' \\\\\\\\| 'cover_url'>|Pick<BookSummary, 'id' \\\\\\\\| 'slug' \\\\\\\\| 'title' \\\\\\\\| 'author' \\\\\\\\| 'cover_url'>|g\" lib/queries.ts)",
+      "Bash(sed -i \"s|Pick<BookSummary, 'id' \\\\\\\\| 'title' \\\\\\\\| 'cover_url'>|Pick<BookSummary, 'id' \\\\\\\\| 'slug' \\\\\\\\| 'title' \\\\\\\\| 'cover_url'>|g\" lib/queries.ts)",
+      "Bash(grep -nB1 \"title: string\" lib/missing-pages-queries.ts)",
+      "Bash(grep -nB2 -A8 \"^export interface .*Book\\\\b\\\\|book: {\" lib/missing-pages-queries.ts)",
+      "PowerShell(pnpm add *)",
+      "Bash(mkdir -p 'app/clubs/[slug]')",
+      "Bash(mv 'app/clubs/[id]/page.tsx' 'app/clubs/[slug]/page.tsx')",
+      "Bash(rmdir 'app/clubs/[id]')"
     ]
   }
 }

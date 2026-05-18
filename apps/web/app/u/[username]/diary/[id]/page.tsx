@@ -11,7 +11,7 @@ import { ShareButton } from '@/components/share-button'
 import { StarRating } from '@/components/ui/star-rating'
 import { fetchProfileByUsername } from '@/lib/queries'
 import { fetchPublicDiaryEntry } from '@/lib/missing-pages-queries'
-import { buildDiaryEntryMetadata } from '@/lib/metadata-extras'
+import { buildDiaryEntryMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 

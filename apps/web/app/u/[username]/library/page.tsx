@@ -14,7 +14,7 @@ import {
   fetchPublicLibrary,
   fetchUserCounts,
 } from '@/lib/missing-pages-queries'
-import { buildUserLibraryMetadata } from '@/lib/metadata-extras'
+import { buildUserLibraryMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 

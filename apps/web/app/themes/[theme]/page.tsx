@@ -11,7 +11,7 @@ import {
 import {
   THEME_DEFINITIONS,
   buildThemeMetadata,
-} from '@/lib/metadata-extras'
+} from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 86400

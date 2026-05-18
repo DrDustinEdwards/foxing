@@ -27,6 +27,39 @@ export async function toggleUserAdmin(formData: FormData) {
   revalidatePath(`/admin/users/${id}`)
 }
 
+export async function toggleUserSuspended(formData: FormData) {
+  const id = String(formData.get('id') ?? '')
+  const next = formData.get('next') === 'true'
+  if (!id) return
+  const admin = createAdminClient()
+  await admin.from('profiles').update({ is_suspended: next }).eq('id', id)
+  // Ban the auth user for ~100 years on suspend, clear ban on unsuspend.
+  // The auth admin API only takes a duration string and the value 'none'
+  // to remove the ban.
+  await admin.auth.admin.updateUserById(id, {
+    ban_duration: next ? '876600h' : 'none',
+  })
+  revalidatePath(`/admin/users/${id}`)
+}
+
+export async function sendAdminNotification(formData: FormData) {
+  const id = String(formData.get('id') ?? '')
+  const title = String(formData.get('title') ?? '').trim().slice(0, 120)
+  const body = String(formData.get('body') ?? '').trim().slice(0, 500)
+  if (!id || !title || !body) {
+    throw new Error('title and body required')
+  }
+  const admin = createAdminClient()
+  await admin.from('notifications').insert({
+    user_id: id,
+    type: 'admin_message',
+    title,
+    body,
+    data: { from: 'admin' },
+  })
+  revalidatePath(`/admin/users/${id}`)
+}
+
 export async function deleteUser(formData: FormData) {
   const id = String(formData.get('id') ?? '')
   if (!id) return

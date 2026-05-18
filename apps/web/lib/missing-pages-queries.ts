@@ -1,6 +1,6 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
-import { slugifySeriesName } from '@/lib/metadata-extras'
+import { slugifySeriesName } from '@/lib/metadata'
 
 /**
  * Data fetchers backing the missing-pages routes (people, series, themes,
@@ -127,6 +127,7 @@ export interface SeriesSummary {
 
 export interface SeriesBook {
   id: string
+  slug: string | null
   title: string
   author: string
   cover_url: string | null
@@ -237,6 +238,7 @@ export const AWARD_CATEGORIES: AwardCategory[] = [
 
 export interface AwardBookHit {
   id: string
+  slug: string | null
   title: string
   author: string
   cover_url: string | null
@@ -314,6 +316,7 @@ export async function fetchPublicChallenges(): Promise<ChallengeRow[]> {
 
 export interface ThemeBook {
   id: string
+  slug: string | null
   title: string
   author: string
   cover_url: string | null
@@ -418,6 +421,7 @@ export interface PassageOfDay {
   date: string
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -437,7 +441,7 @@ export async function fetchPassageOfDay(
   const { data } = await sb()
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name)',
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name)',
     )
     .eq('is_public', true)
     .not('note', 'is', null)
@@ -478,7 +482,7 @@ async function fetchPassageFallback(
   const { data } = await sb()
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, title, author, cover_url), profiles:user_id(username, display_name)',
+      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name)',
     )
     .eq('is_public', true)
     .order('created_at', { ascending: false })
@@ -530,6 +534,7 @@ export interface PublicLibraryEntry {
   created_at: string
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -545,7 +550,7 @@ export async function fetchPublicLibrary(
   let q = sb()
     .from('user_books')
     .select(
-      'id, status, rating, finished_at, created_at, books:book_id(id, title, author, cover_url, themes)',
+      'id, status, rating, finished_at, created_at, books:book_id(id, slug, title, author, cover_url, themes)',
     )
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
@@ -574,6 +579,7 @@ export interface PublicDiaryEntry {
   review: string | null
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -588,7 +594,7 @@ export async function fetchPublicDiary(
   let q = sb()
     .from('diary_entries')
     .select(
-      'id, log_date, rating, review, privacy, books:book_id(id, title, author, cover_url)',
+      'id, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
     .eq('privacy', 'public')
@@ -618,7 +624,7 @@ export async function fetchPublicDiaryEntry(opts: {
   const { data, error } = await sb()
     .from('diary_entries')
     .select(
-      'id, log_date, rating, review, privacy, books:book_id(id, title, author, cover_url)',
+      'id, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', opts.userId)
     .eq('id', opts.id)
@@ -686,6 +692,7 @@ export interface PublicHighlightEntry {
   created_at: string
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -700,7 +707,7 @@ export async function fetchPublicUserHighlights(
   let q = sb()
     .from('highlights')
     .select(
-      'id, text, note, chapter, color, created_at, books:book_id(id, title, author, cover_url)',
+      'id, text, note, chapter, color, created_at, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
     .eq('is_public', true)
@@ -731,6 +738,7 @@ export interface PublicUserReview {
   created_at: string
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -745,7 +753,7 @@ export async function fetchPublicUserReviews(
   let q = sb()
     .from('user_books')
     .select(
-      'id, rating, review, created_at, books:book_id(id, title, author, cover_url)',
+      'id, rating, review, created_at, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
     .eq('review_is_public', true)
@@ -836,7 +844,7 @@ export interface VocabularyEntry {
   mastered: boolean | null
   looked_up_at: string | null
   created_at: string | null
-  book: { id: string; title: string; cover_url: string | null } | null
+  book: { id: string; slug: string | null; title: string; cover_url: string | null } | null
 }
 
 export async function fetchVocabulary(
@@ -846,7 +854,7 @@ export async function fetchVocabulary(
   const { data, error } = await sb()
     .from('vocabulary')
     .select(
-      'id, word, definition, context, ai_context, context_sentence, book_title, book_id, mastered, looked_up_at, created_at, books:book_id(id, title, cover_url)',
+      'id, word, definition, context, ai_context, context_sentence, book_title, book_id, mastered, looked_up_at, created_at, books:book_id(id, slug, title, cover_url)',
     )
     .eq('user_id', userId)
     .order('looked_up_at', { ascending: false })
@@ -919,7 +927,7 @@ export async function fetchYearStats(
     sb()
       .from('user_books')
       .select(
-        'rating, finished_at, books:book_id(id, title, author, cover_url, word_count, themes)',
+        'rating, finished_at, books:book_id(id, slug, title, author, cover_url, word_count, themes)',
       )
       .eq('user_id', userId)
       .eq('status', 'finished')
@@ -944,6 +952,7 @@ export async function fetchYearStats(
     finished_at: string | null
     books: {
       id: string
+      slug: string | null
       title: string
       author: string
       cover_url: string | null
@@ -1067,6 +1076,7 @@ export interface BuddyRead {
   is_active: boolean
   book: {
     id: string
+    slug: string | null
     title: string
     author: string
     cover_url: string | null
@@ -1090,7 +1100,7 @@ export async function fetchUserBuddyReads(
   const { data } = await sb()
     .from('buddy_reads')
     .select(
-      'id, book_id, user1_id, user2_id, started_at, is_active, book:book_id(id, title, author, cover_url), user1:user1_id(username, display_name, avatar_url), user2:user2_id(username, display_name, avatar_url)',
+      'id, book_id, user1_id, user2_id, started_at, is_active, book:book_id(id, slug, title, author, cover_url), user1:user1_id(username, display_name, avatar_url), user2:user2_id(username, display_name, avatar_url)',
     )
     .or(`user1_id.eq.${userId},user2_id.eq.${userId}`)
     .order('started_at', { ascending: false })
@@ -1105,7 +1115,7 @@ export async function fetchBuddyReadById(
   const { data } = await sb()
     .from('buddy_reads')
     .select(
-      'id, book_id, user1_id, user2_id, started_at, is_active, book:book_id(id, title, author, cover_url), user1:user1_id(username, display_name, avatar_url), user2:user2_id(username, display_name, avatar_url)',
+      'id, book_id, user1_id, user2_id, started_at, is_active, book:book_id(id, slug, title, author, cover_url), user1:user1_id(username, display_name, avatar_url), user2:user2_id(username, display_name, avatar_url)',
     )
     .eq('id', id)
     .maybeSingle()

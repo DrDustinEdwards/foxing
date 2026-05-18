@@ -8,6 +8,7 @@ type Size = 'sm' | 'md' | 'lg'
 
 export interface BookCardBook {
   id: string
+  slug?: string | null
   title: string
   author: string
   cover_url: string | null
@@ -38,7 +39,7 @@ export function BookCard({
   const firstMood = book.themes?.[0]
   return (
     <Link
-      href={`/book/${book.id}`}
+      href={`/book/${book.slug ?? book.id}`}
       className={cn(
         'group flex flex-col gap-2 transition-transform duration-200 hover:-translate-y-0.5',
         dims.wrap,

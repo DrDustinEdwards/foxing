@@ -5,7 +5,7 @@ import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicPeople, type PeopleSort } from '@/lib/missing-pages-queries'
-import { buildPeopleMetadata } from '@/lib/metadata-extras'
+import { buildPeopleMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 

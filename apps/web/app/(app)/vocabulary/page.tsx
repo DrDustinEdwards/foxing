@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchVocabulary } from '@/lib/missing-pages-queries'
-import { VOCABULARY_METADATA } from '@/lib/metadata-extras'
+import { VOCABULARY_METADATA } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
 
 export const dynamic = 'force-dynamic'
