@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { monthLabel } from '@/lib/book-clubs'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { BackfillClubButton } from './backfill-club-button'
 import { PickEditor } from './pick-editor'
 import { MissingClubAdd } from './missing-club-add'
 import { MonthTabs } from './month-tabs'
@@ -70,23 +71,31 @@ export default async function AdminCelebrityPicksPage({
   const { year, month } = parseTab(searchParams)
   const admin = createAdminClient()
 
-  const [{ data: clubRows }, { data: pickRows }] = await Promise.all([
-    admin
-      .from('external_book_clubs')
-      .select('id, slug, name, short_name, curator, sort_order, is_active')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
-      .order('name', { ascending: true }),
-    admin
-      .from('external_book_club_picks')
-      .select(
-        'id, club_id, book_id, pick_month, pick_year, is_published, is_auto_discovered, auto_source, curator_quote, official_announcement_url, last_edited_at, books:book_id(id, title, author)',
-      )
-      .eq('pick_month', month)
-      .eq('pick_year', year),
-  ])
+  const [{ data: clubRows }, { data: allClubRows }, { data: pickRows }] =
+    await Promise.all([
+      admin
+        .from('external_book_clubs')
+        .select('id, slug, name, short_name, curator, sort_order, is_active')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('name', { ascending: true }),
+      admin
+        .from('external_book_clubs')
+        .select('slug, name')
+        .order('is_active', { ascending: false, nullsFirst: false })
+        .order('name', { ascending: true }),
+      admin
+        .from('external_book_club_picks')
+        .select(
+          'id, club_id, book_id, pick_month, pick_year, is_published, is_auto_discovered, auto_source, curator_quote, official_announcement_url, last_edited_at, books:book_id(id, title, author)',
+        )
+        .eq('pick_month', month)
+        .eq('pick_year', year),
+    ])
 
   const clubs = (clubRows as ClubRow[] | null) ?? []
+  const allClubs =
+    (allClubRows as Array<{ slug: string; name: string }> | null) ?? []
   const picks = ((pickRows as unknown as PickRow[] | null) ?? []).filter(
     (p) => p.books !== null,
   )
@@ -128,6 +137,19 @@ export default async function AdminCelebrityPicksPage({
           </p>
         </div>
         <RunNowButton />
+      </section>
+
+      <section className="mt-3 flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <p className="font-dm-sans text-sm font-medium text-text-primary">
+            Backfill historical picks
+          </p>
+          <p className="font-dm-sans text-xs text-text-tertiary">
+            Re-scrape BookNotification for the selected club. New picks get
+            covers and notifications; existing months are skipped.
+          </p>
+        </div>
+        <BackfillClubButton clubs={allClubs} />
       </section>
 
       {clubs.length === 0 ? (
