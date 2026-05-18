@@ -2,12 +2,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { WhereToRead } from '@/components/where-to-read'
 import {
+  type Era,
+  type ExternalPickWithBook,
   fetchAllPicksForClub,
   fetchClubBySlug,
   monthLabel,
@@ -71,14 +71,7 @@ export default async function ExternalBookClubPage({
   ])
 
   const stats = await buildClubStats(picks)
-
-  const groupedByYear = new Map<number, typeof picks>()
-  for (const pick of picks) {
-    const year = pick.pick_year ?? new Date(pick.picked_at).getUTCFullYear()
-    const existing = groupedByYear.get(year) ?? []
-    existing.push(pick)
-    groupedByYear.set(year, existing)
-  }
+  const eras = club.eras && club.eras.length > 0 ? club.eras : null
 
   const breadcrumbJsonLd = JSON.stringify({
     '@context': 'https://schema.org',
@@ -165,6 +158,23 @@ export default async function ExternalBookClubPage({
             </div>
           </header>
 
+          {club.is_active === false && (
+            <div
+              role="note"
+              className="mt-8 flex items-center gap-3 rounded-md border border-border-subtle bg-bg-sunken px-4 py-3 font-dm-sans text-sm text-text-tertiary"
+            >
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="h-4 w-4 shrink-0"
+              >
+                <path d="M3 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4Zm1 4h12v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Zm4 3a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" />
+              </svg>
+              <span>This club is no longer active.</span>
+            </div>
+          )}
+
           {picks.length === 0 ? (
             <p className="mt-12 font-source-serif-4 text-base text-text-tertiary">
               No published picks yet for this club.
@@ -172,110 +182,22 @@ export default async function ExternalBookClubPage({
           ) : (
             <>
               <ClubStatsBar stats={stats} />
-              <section className="mt-10 flex flex-col gap-12">
-                {[...groupedByYear.entries()]
-                .sort((a, b) => b[0] - a[0])
-                .map(([year, items]) => (
-                  <div key={year}>
-                    <h2 className="font-fraunces text-2xl text-text-primary">
-                      {year}
-                    </h2>
-                    <ul className="mt-4 flex flex-col gap-6">
-                      {items.map((pick) => {
-                        const monthHref =
-                          pick.pick_month && pick.pick_year
-                            ? `/book-clubs/${club.slug}/${pick.pick_year}/${String(pick.pick_month).padStart(2, '0')}`
-                            : null
-                        const monthString = pick.pick_month
-                          ? `${monthLabel(pick.pick_month)} ${pick.pick_year ?? year}`
-                          : pick.picked_at.slice(0, 10)
-                        return (
-                        <li
-                          key={pick.id}
-                          className="grid gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4 md:grid-cols-[120px_1fr]"
-                        >
-                          <Link
-                            href={`/book/${pick.book.slug ?? pick.book.id}`}
-                            className="relative aspect-[2/3] w-[120px] overflow-hidden rounded bg-bg-sunken"
-                          >
-                            {pick.book.cover_url && (
-                              <Image
-                                src={pick.book.cover_url}
-                                alt={pick.book.title}
-                                fill
-                                sizes="120px"
-                                className="object-cover"
-                              />
-                            )}
-                          </Link>
-                          <div className="flex flex-col gap-3">
-                            <div>
-                              <p className="font-dm-mono text-xs uppercase tracking-wider text-text-tertiary">
-                                {monthHref ? (
-                                  <Link
-                                    href={monthHref}
-                                    className="hover:text-text-primary"
-                                  >
-                                    {monthString}
-                                  </Link>
-                                ) : (
-                                  monthString
-                                )}
-                                {pick.category ? ` · ${pick.category}` : ''}
-                              </p>
-                              <h3 className="mt-1 font-fraunces text-xl text-text-primary">
-                                <Link
-                                  href={`/book/${pick.book.slug ?? pick.book.id}`}
-                                  className="hover:text-brand-text"
-                                >
-                                  {pick.book.title}
-                                </Link>
-                              </h3>
-                              <p className="font-dm-sans text-sm text-text-tertiary">
-                                {pick.book.author}
-                              </p>
-                            </div>
-                            {typeof pick.avg_rating === 'number' &&
-                              pick.rating_count > 0 && (
-                                <div className="flex items-center gap-2">
-                                  <StarRating
-                                    value={pick.avg_rating}
-                                    size="sm"
-                                    readOnly
-                                  />
-                                  <span className="font-dm-mono text-xs text-text-tertiary">
-                                    {pick.avg_rating.toFixed(1)} from{' '}
-                                    {pick.rating_count} ratings
-                                  </span>
-                                </div>
-                              )}
-                            {pick.notes && (
-                              <p className="font-source-serif-4 text-sm text-text-secondary">
-                                {pick.notes}
-                              </p>
-                            )}
-                            <WhereToRead
-                              variant="inline"
-                              book={{
-                                id: pick.book.id,
-                                title: pick.book.title,
-                                author: pick.book.author,
-                                isbn: pick.book.isbn,
-                                isbn13: pick.book.isbn13,
-                                amazon_url: pick.book.amazon_url,
-                                bookshop_url: pick.book.bookshop_url,
-                                source_type: pick.book.source_type,
-                                epub_url: pick.book.epub_url,
-                              }}
-                            />
-                          </div>
-                        </li>
-                        )
-                      })}
-                    </ul>
-                  </div>
-                ))}
-              </section>
+              {eras ? (
+                <div className="mt-10 flex flex-col gap-14">
+                  {groupPicksByEra(eras, picks).map((bucket) => (
+                    <EraSection
+                      key={bucket.era.label}
+                      clubSlug={club.slug}
+                      era={bucket.era}
+                      picks={bucket.picks}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-10">
+                  <PickTable clubSlug={club.slug} picks={picks} />
+                </div>
+              )}
             </>
           )}
         </PageWrapper>
@@ -285,12 +207,137 @@ export default async function ExternalBookClubPage({
   )
 }
 
+interface EraBucket {
+  era: Era
+  picks: ExternalPickWithBook[]
+}
+
+function groupPicksByEra(
+  eras: Era[],
+  picks: ExternalPickWithBook[],
+): EraBucket[] {
+  return eras.map((era) => ({
+    era,
+    picks: picks.filter((p) => {
+      const year = p.pick_year ?? new Date(p.picked_at).getUTCFullYear()
+      if (year < era.start_year) return false
+      if (era.end_year !== null && year > era.end_year) return false
+      return true
+    }),
+  }))
+}
+
+function EraSection({
+  clubSlug,
+  era,
+  picks,
+}: {
+  clubSlug: string
+  era: Era
+  picks: ExternalPickWithBook[]
+}) {
+  const yearRange =
+    era.end_year === null
+      ? `${era.start_year}, present`
+      : `${era.start_year}, ${era.end_year}`
+  return (
+    <section>
+      <h2 className="font-fraunces text-2xl text-text-primary">{era.label}</h2>
+      <p className="mt-1 font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
+        {yearRange} · {picks.length} {picks.length === 1 ? 'pick' : 'picks'}
+      </p>
+      <p className="mt-3 max-w-prose font-source-serif-4 text-base text-text-secondary">
+        {era.description}
+      </p>
+      <div className="mt-6">
+        {picks.length === 0 ? (
+          <p className="font-source-serif-4 text-sm text-text-tertiary">
+            No picks recorded for this era.
+          </p>
+        ) : (
+          <PickTable clubSlug={clubSlug} picks={picks} />
+        )}
+      </div>
+    </section>
+  )
+}
+
+function PickTable({
+  clubSlug,
+  picks,
+}: {
+  clubSlug: string
+  picks: ExternalPickWithBook[]
+}) {
+  return (
+    <ul className="flex flex-col divide-y divide-border-subtle border-y border-border-subtle">
+      {picks.map((pick) => {
+        const year =
+          pick.pick_year ?? new Date(pick.picked_at).getUTCFullYear()
+        const monthHref =
+          pick.pick_month && pick.pick_year
+            ? `/book-clubs/${clubSlug}/${pick.pick_year}/${String(pick.pick_month).padStart(2, '0')}`
+            : null
+        const monthString = pick.pick_month
+          ? `${monthLabel(pick.pick_month)} ${year}`
+          : String(year)
+        const innerRow = (
+          <div className="grid grid-cols-[3.5rem_2.75rem_1fr] items-center gap-3 py-3 sm:grid-cols-[5.5rem_2.75rem_1fr_auto]">
+            <span className="font-dm-mono text-xs uppercase tracking-wider text-text-tertiary">
+              {monthString}
+            </span>
+            <span className="relative h-10 w-7 overflow-hidden rounded-sm bg-bg-sunken">
+              {pick.book.cover_url && (
+                <Image
+                  src={pick.book.cover_url}
+                  alt=""
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                />
+              )}
+            </span>
+            <span className="flex flex-col">
+              <span className="font-fraunces text-base text-text-primary">
+                {pick.book.title}
+              </span>
+              <span className="font-dm-sans text-sm text-text-tertiary">
+                {pick.book.author}
+              </span>
+            </span>
+            <span className="hidden font-dm-mono text-xs text-text-tertiary sm:inline">
+              {pick.rating_count > 0 && typeof pick.avg_rating === 'number'
+                ? `${pick.avg_rating.toFixed(1)} from ${pick.rating_count}`
+                : ''}
+            </span>
+          </div>
+        )
+        return (
+          <li key={pick.id}>
+            {monthHref ? (
+              <Link
+                href={monthHref}
+                className="block hover:bg-bg-sunken"
+              >
+                {innerRow}
+              </Link>
+            ) : (
+              innerRow
+            )}
+          </li>
+        )
+      })}
+    </ul>
+  )
+}
+
 interface ClubStats {
   totalPicks: number
   firstYear: number | null
   topTheme: string | null
   avgRating: number | null
   ratingCount: number
+  mostRecent: { month: number; year: number } | null
 }
 
 async function buildClubStats(
@@ -303,12 +350,22 @@ async function buildClubStats(
       topTheme: null,
       avgRating: null,
       ratingCount: 0,
+      mostRecent: null,
     }
   }
   let firstYear: number | null = null
+  let mostRecent: { month: number; year: number } | null = null
   for (const p of picks) {
     const y = p.pick_year ?? new Date(p.picked_at).getUTCFullYear()
     if (firstYear == null || y < firstYear) firstYear = y
+    const m = p.pick_month ?? new Date(p.picked_at).getUTCMonth() + 1
+    if (
+      !mostRecent ||
+      y > mostRecent.year ||
+      (y === mostRecent.year && m > mostRecent.month)
+    ) {
+      mostRecent = { month: m, year: y }
+    }
   }
   let ratingSum = 0
   let ratingCount = 0
@@ -320,8 +377,6 @@ async function buildClubStats(
   }
   const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null
 
-  // Pull themes for top-genre. createAdminClient ensures the read succeeds
-  // regardless of the visitor's session.
   let topTheme: string | null = null
   if (
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -355,6 +410,7 @@ async function buildClubStats(
     topTheme,
     avgRating,
     ratingCount,
+    mostRecent,
   }
 }
 
@@ -364,6 +420,11 @@ function ClubStatsBar({ stats }: { stats: ClubStats }) {
     parts.push(`${stats.totalPicks} picks since ${stats.firstYear}`)
   } else {
     parts.push(`${stats.totalPicks} picks`)
+  }
+  if (stats.mostRecent) {
+    parts.push(
+      `Most recent: ${monthLabel(stats.mostRecent.month)} ${stats.mostRecent.year}`,
+    )
   }
   if (stats.topTheme) {
     parts.push(`Most picked theme: ${stats.topTheme}`)

@@ -2,6 +2,13 @@ import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
+export interface Era {
+  label: string
+  start_year: number
+  end_year: number | null
+  description: string
+}
+
 export interface ExternalClub {
   id: string
   slug: string
@@ -15,6 +22,7 @@ export interface ExternalClub {
   focus: string | null
   sort_order: number | null
   is_active: boolean | null
+  eras: Era[] | null
 }
 
 export interface ExternalPick {
