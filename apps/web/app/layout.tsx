@@ -1,8 +1,25 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Fraunces, Source_Serif_4, DM_Sans, DM_Mono } from 'next/font/google'
-import { ThemeProvider } from '@/components/theme-provider'
 import { FOXING_BASE_URL } from '@/lib/metadata'
+
+// Runs before any paint. Reads the stored preference from localStorage and
+// sets data-mode + color-scheme on <html> so there is no flash of the
+// wrong theme. Falls back to the OS preference when stored is 'system'
+// or absent. Failures swallow silently because localStorage can throw in
+// some embedded contexts.
+const THEME_INIT_SCRIPT = `(function() {
+  try {
+    var theme = localStorage.getItem('theme') || 'system';
+    var resolved = theme;
+    if (theme === 'system') {
+      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-mode', resolved);
+    document.documentElement.style.colorScheme = resolved;
+  } catch (e) {}
+})();`
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -165,6 +182,12 @@ export default function RootLayout({
       className={`${fraunces.variable} ${sourceSerif.variable} ${dmSans.variable} ${dmMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}
+        />
+      </head>
       <body>
         <script
           type="application/ld+json"
@@ -176,7 +199,7 @@ export default function RootLayout({
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{ __html: WEBSITE_JSONLD }}
         />
-        <ThemeProvider>{children}</ThemeProvider>
+        {children}
       </body>
     </html>
   )
