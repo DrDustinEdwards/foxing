@@ -163,6 +163,8 @@ export async function fetchAllPicksForClub(
     .select(PICK_COLS)
     .eq('club_id', clubId)
     .eq('is_published', true)
+    .order('pick_year', { ascending: false, nullsFirst: false })
+    .order('pick_month', { ascending: false, nullsFirst: false })
     .order('picked_at', { ascending: false })
   const rows = ((data as unknown as ExternalPickWithBook[] | null) ?? []).filter(
     (row) => row.book && row.club,
