@@ -14,6 +14,7 @@ import {
 } from '@/lib/book-clubs'
 import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
 
@@ -68,6 +69,8 @@ export default async function ExternalBookClubPage({
     getNavUser(),
     fetchAllPicksForClub(club.id),
   ])
+
+  const stats = await buildClubStats(picks)
 
   const groupedByYear = new Map<number, typeof picks>()
   for (const pick of picks) {
@@ -167,8 +170,10 @@ export default async function ExternalBookClubPage({
               No published picks yet for this club.
             </p>
           ) : (
-            <section className="mt-12 flex flex-col gap-12">
-              {[...groupedByYear.entries()]
+            <>
+              <ClubStatsBar stats={stats} />
+              <section className="mt-10 flex flex-col gap-12">
+                {[...groupedByYear.entries()]
                 .sort((a, b) => b[0] - a[0])
                 .map(([year, items]) => (
                   <div key={year}>
@@ -176,7 +181,15 @@ export default async function ExternalBookClubPage({
                       {year}
                     </h2>
                     <ul className="mt-4 flex flex-col gap-6">
-                      {items.map((pick) => (
+                      {items.map((pick) => {
+                        const monthHref =
+                          pick.pick_month && pick.pick_year
+                            ? `/book-clubs/${club.slug}/${pick.pick_year}/${String(pick.pick_month).padStart(2, '0')}`
+                            : null
+                        const monthString = pick.pick_month
+                          ? `${monthLabel(pick.pick_month)} ${pick.pick_year ?? year}`
+                          : pick.picked_at.slice(0, 10)
+                        return (
                         <li
                           key={pick.id}
                           className="grid gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4 md:grid-cols-[120px_1fr]"
@@ -198,9 +211,16 @@ export default async function ExternalBookClubPage({
                           <div className="flex flex-col gap-3">
                             <div>
                               <p className="font-dm-mono text-xs uppercase tracking-wider text-text-tertiary">
-                                {pick.pick_month
-                                  ? `${monthLabel(pick.pick_month)} ${pick.pick_year ?? year}`
-                                  : pick.picked_at.slice(0, 10)}
+                                {monthHref ? (
+                                  <Link
+                                    href={monthHref}
+                                    className="hover:text-text-primary"
+                                  >
+                                    {monthString}
+                                  </Link>
+                                ) : (
+                                  monthString
+                                )}
                                 {pick.category ? ` · ${pick.category}` : ''}
                               </p>
                               <h3 className="mt-1 font-fraunces text-xl text-text-primary">
@@ -250,15 +270,110 @@ export default async function ExternalBookClubPage({
                             />
                           </div>
                         </li>
-                      ))}
+                        )
+                      })}
                     </ul>
                   </div>
                 ))}
-            </section>
+              </section>
+            </>
           )}
         </PageWrapper>
       </main>
       <Footer />
     </div>
+  )
+}
+
+interface ClubStats {
+  totalPicks: number
+  firstYear: number | null
+  topTheme: string | null
+  avgRating: number | null
+  ratingCount: number
+}
+
+async function buildClubStats(
+  picks: Awaited<ReturnType<typeof fetchAllPicksForClub>>,
+): Promise<ClubStats> {
+  if (picks.length === 0) {
+    return {
+      totalPicks: 0,
+      firstYear: null,
+      topTheme: null,
+      avgRating: null,
+      ratingCount: 0,
+    }
+  }
+  let firstYear: number | null = null
+  for (const p of picks) {
+    const y = p.pick_year ?? new Date(p.picked_at).getUTCFullYear()
+    if (firstYear == null || y < firstYear) firstYear = y
+  }
+  let ratingSum = 0
+  let ratingCount = 0
+  for (const p of picks) {
+    if (typeof p.avg_rating === 'number' && p.rating_count > 0) {
+      ratingSum += p.avg_rating * p.rating_count
+      ratingCount += p.rating_count
+    }
+  }
+  const avgRating = ratingCount > 0 ? ratingSum / ratingCount : null
+
+  // Pull themes for top-genre. createAdminClient ensures the read succeeds
+  // regardless of the visitor's session.
+  let topTheme: string | null = null
+  if (
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    const admin = createAdminClient()
+    const ids = picks.map((p) => p.book.id)
+    const { data } = await admin
+      .from('books')
+      .select('themes')
+      .in('id', ids)
+    const counts = new Map<string, number>()
+    for (const row of (data as { themes: string[] | null }[] | null) ?? []) {
+      if (!row.themes) continue
+      for (const t of row.themes) {
+        counts.set(t, (counts.get(t) ?? 0) + 1)
+      }
+    }
+    let bestCount = 0
+    for (const [theme, count] of counts) {
+      if (count > bestCount) {
+        bestCount = count
+        topTheme = theme
+      }
+    }
+  }
+
+  return {
+    totalPicks: picks.length,
+    firstYear,
+    topTheme,
+    avgRating,
+    ratingCount,
+  }
+}
+
+function ClubStatsBar({ stats }: { stats: ClubStats }) {
+  const parts: string[] = []
+  if (stats.firstYear) {
+    parts.push(`${stats.totalPicks} picks since ${stats.firstYear}`)
+  } else {
+    parts.push(`${stats.totalPicks} picks`)
+  }
+  if (stats.topTheme) {
+    parts.push(`Most picked theme: ${stats.topTheme}`)
+  }
+  if (stats.avgRating != null) {
+    parts.push(`Avg Foxing rating: ${stats.avgRating.toFixed(1)}/5`)
+  }
+  return (
+    <p className="mt-10 font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
+      {parts.join(' · ')}
+    </p>
   )
 }
