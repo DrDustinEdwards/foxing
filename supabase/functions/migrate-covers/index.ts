@@ -3,6 +3,10 @@
 // hotlink protection) and re-uploads them to the public 'covers' Supabase
 // Storage bucket, then updates books.cover_url to the new public URL.
 //
+// If the primary cover_url returns the 43-byte Open Library "no cover"
+// stub, falls through to Google Books (by ISBN13) then iTunes (by
+// title + author) before giving up.
+//
 // Usage:
 //   POST /functions/v1/migrate-covers?batch=100&offset=0
 //   Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY or CRON_SECRET>
@@ -16,10 +20,23 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET') ?? ''
 
+// Open Library returns a 43-byte placeholder when no cover is on file.
+// Anything below this threshold is treated as a stub.
+const MIN_REAL_COVER_BYTES = 256
+
 interface BookRow {
   id: string
   slug: string
+  title: string | null
+  author: string | null
+  isbn13: string | null
   cover_url: string | null
+}
+
+interface FetchedImage {
+  buffer: ArrayBuffer
+  contentType: string | null
+  sourceUrl: string
 }
 
 function isServiceRoleJWT(token: string): boolean {
@@ -45,6 +62,115 @@ function extOf(contentType: string | null, url: string): string {
   if (lower.includes('.webp')) return 'webp'
   if (lower.includes('.gif')) return 'gif'
   return 'jpg'
+}
+
+async function fetchImage(url: string): Promise<FetchedImage | null> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), 10000)
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Foxing/1.0 (foxing.app; book cover migration)',
+        Accept: 'image/*,*/*;q=0.8',
+      },
+    })
+    clearTimeout(timer)
+    if (!res.ok) return null
+    const buffer = await res.arrayBuffer()
+    if (buffer.byteLength < MIN_REAL_COVER_BYTES) return null
+    return {
+      buffer,
+      contentType: res.headers.get('content-type'),
+      sourceUrl: url,
+    }
+  } catch {
+    return null
+  }
+}
+
+async function lookupGoogleBooks(isbn13: string): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}&fields=items(volumeInfo(imageLinks))`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      items?: Array<{
+        volumeInfo?: {
+          imageLinks?: {
+            thumbnail?: string
+            small?: string
+            medium?: string
+            large?: string
+            extraLarge?: string
+          }
+        }
+      }>
+    }
+    const links = data.items?.[0]?.volumeInfo?.imageLinks
+    const url =
+      links?.extraLarge ??
+      links?.large ??
+      links?.medium ??
+      links?.small ??
+      links?.thumbnail
+    if (!url) return null
+    return url
+      .replace('zoom=1', 'zoom=3')
+      .replace('&edge=curl', '')
+      .replace('http://', 'https://')
+  } catch {
+    return null
+  }
+}
+
+async function lookupItunes(
+  title: string,
+  author: string,
+): Promise<string | null> {
+  try {
+    const query = encodeURIComponent(`${title} ${author}`.trim())
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${query}&media=ebook&limit=5`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    if (!res.ok) return null
+    const data = (await res.json()) as {
+      results?: Array<{ trackName?: string; artworkUrl100?: string }>
+    }
+    const firstWord = title.toLowerCase().split(/\s+/)[0] ?? ''
+    const match = data.results?.find((r) =>
+      r.trackName?.toLowerCase().includes(firstWord),
+    )
+    if (!match?.artworkUrl100) return null
+    return match.artworkUrl100.replace('100x100bb', '600x900bb')
+  } catch {
+    return null
+  }
+}
+
+async function resolveCover(book: BookRow): Promise<FetchedImage | null> {
+  if (book.cover_url) {
+    const primary = await fetchImage(book.cover_url)
+    if (primary) return primary
+  }
+  if (book.isbn13) {
+    const gb = await lookupGoogleBooks(book.isbn13)
+    if (gb) {
+      const img = await fetchImage(gb)
+      if (img) return img
+    }
+  }
+  if (book.title && book.author) {
+    const it = await lookupItunes(book.title, book.author)
+    if (it) {
+      const img = await fetchImage(it)
+      if (img) return img
+    }
+  }
+  return null
 }
 
 serve(async (req: Request) => {
@@ -79,7 +205,7 @@ serve(async (req: Request) => {
 
   const { data: rows, error: fetchErr } = await supabase
     .from('books')
-    .select('id, slug, cover_url')
+    .select('id, slug, title, author, isbn13, cover_url')
     .not('cover_url', 'is', null)
     .not('cover_url', 'ilike', '%supabase%')
     .order('id', { ascending: true })
@@ -98,46 +224,27 @@ serve(async (req: Request) => {
   const errors: Array<{ slug: string; reason: string }> = []
 
   for (const book of books) {
-    if (!book.cover_url || !book.slug) {
+    if (!book.slug) {
       failed++
-      errors.push({ slug: book.slug ?? book.id, reason: 'missing_cover_or_slug' })
+      errors.push({ slug: book.id, reason: 'missing_slug' })
       continue
     }
 
     try {
-      const controller = new AbortController()
-      const timer = setTimeout(() => controller.abort(), 10000)
-      const imgRes = await fetch(book.cover_url, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': 'Foxing/1.0 (foxing.app; book cover migration)',
-          Accept: 'image/*,*/*;q=0.8',
-        },
-      })
-      clearTimeout(timer)
-
-      if (!imgRes.ok) {
+      const image = await resolveCover(book)
+      if (!image) {
         failed++
-        errors.push({ slug: book.slug, reason: `http_${imgRes.status}` })
+        errors.push({ slug: book.slug, reason: 'no_real_cover_found' })
         continue
       }
 
-      const contentType = imgRes.headers.get('content-type')
-      const buffer = await imgRes.arrayBuffer()
-
-      if (buffer.byteLength < 256) {
-        failed++
-        errors.push({ slug: book.slug, reason: 'too_small' })
-        continue
-      }
-
-      const ext = extOf(contentType, book.cover_url)
+      const ext = extOf(image.contentType, image.sourceUrl)
       const fileName = `${book.slug}.${ext}`
 
       const { error: uploadErr } = await supabase.storage
         .from('covers')
-        .upload(fileName, buffer, {
-          contentType: contentType ?? 'image/jpeg',
+        .upload(fileName, image.buffer, {
+          contentType: image.contentType ?? 'image/jpeg',
           upsert: true,
           cacheControl: '31536000',
         })

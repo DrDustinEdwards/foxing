@@ -83,33 +83,96 @@ async function storeBookCover(
   }
 }
 
-async function lookupOpenLibraryCover(
+// Open Library returns a 43-byte gray placeholder when no cover is on file.
+// Any cover smaller than this is treated as a stub and triggers the fallback.
+const OL_STUB_BYTES = 200
+
+async function lookupBookCover(
+  isbn13: string | null | undefined,
   title: string,
   author: string,
 ): Promise<string | null> {
-  try {
-    const q = encodeURIComponent(`${title} ${author}`)
-    const res = await fetch(
-      `https://openlibrary.org/search.json?q=${q}&limit=1`,
-      { headers: { 'User-Agent': 'Foxing/1.0 (foxing.app)' } },
-    )
-    if (!res.ok) return null
-    const data = (await res.json()) as {
-      docs?: Array<{ cover_i?: number; isbn?: string[] }>
+  // Source 1: Open Library by ISBN (best for older / well-indexed titles)
+  if (isbn13) {
+    try {
+      const olUrl = `https://covers.openlibrary.org/b/isbn/${isbn13}-L.jpg`
+      const res = await fetch(olUrl, {
+        signal: AbortSignal.timeout(5000),
+        headers: { 'User-Agent': 'Foxing/1.0 (foxing.app)' },
+      })
+      if (res.ok) {
+        const len = parseInt(res.headers.get('content-length') ?? '0', 10)
+        if (len > OL_STUB_BYTES) return olUrl
+      }
+    } catch {
+      // fall through
     }
-    const doc = data.docs?.[0]
-    if (!doc) return null
-    if (doc.cover_i) {
-      return `https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`
-    }
-    const isbn = doc.isbn?.[0]
-    if (isbn) {
-      return `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`
-    }
-    return null
-  } catch {
-    return null
   }
+
+  // Source 2: Google Books (best for new releases)
+  if (isbn13) {
+    try {
+      const gbRes = await fetch(
+        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}&fields=items(volumeInfo(imageLinks))`,
+        { signal: AbortSignal.timeout(5000) },
+      )
+      if (gbRes.ok) {
+        const data = (await gbRes.json()) as {
+          items?: Array<{
+            volumeInfo?: {
+              imageLinks?: {
+                thumbnail?: string
+                small?: string
+                medium?: string
+                large?: string
+                extraLarge?: string
+              }
+            }
+          }>
+        }
+        const links = data.items?.[0]?.volumeInfo?.imageLinks
+        const url =
+          links?.extraLarge ??
+          links?.large ??
+          links?.medium ??
+          links?.small ??
+          links?.thumbnail
+        if (url) {
+          return url
+            .replace('zoom=1', 'zoom=3')
+            .replace('&edge=curl', '')
+            .replace('http://', 'https://')
+        }
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  // Source 3: iTunes / Apple Books (good for new releases and audiobooks)
+  try {
+    const query = encodeURIComponent(`${title} ${author}`.trim())
+    const itRes = await fetch(
+      `https://itunes.apple.com/search?term=${query}&media=ebook&limit=5`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    if (itRes.ok) {
+      const data = (await itRes.json()) as {
+        results?: Array<{ trackName?: string; artworkUrl100?: string }>
+      }
+      const firstWord = title.toLowerCase().split(/\s+/)[0] ?? ''
+      const match = data.results?.find((r) =>
+        r.trackName?.toLowerCase().includes(firstWord),
+      )
+      if (match?.artworkUrl100) {
+        return match.artworkUrl100.replace('100x100bb', '600x900bb')
+      }
+    }
+  } catch {
+    // fall through
+  }
+
+  return null
 }
 
 async function fetchAndExtract(
@@ -322,12 +385,13 @@ If you don't know with certainty, return: {"book_title":"","author":""}`,
       bookId = existingBook[0].id
     } else {
       let coverUrl: string | null = null
-      const openLibCover = await lookupOpenLibraryCover(
+      const sourceUrl = await lookupBookCover(
+        null,
         pick.book_title,
         pick.author,
       )
-      if (openLibCover) {
-        coverUrl = await storeBookCover(supabase, openLibCover, bookSlug)
+      if (sourceUrl) {
+        coverUrl = await storeBookCover(supabase, sourceUrl, bookSlug)
       }
 
       const { data: newBook } = await supabase
