@@ -308,6 +308,38 @@ export async function fetchPickByClubSlugAndMonth(
   }
 }
 
+export async function monthHasAnyPicks(
+  year: number,
+  month: number,
+): Promise<boolean> {
+  if (!hasEnv()) return false
+  const sb = createClient()
+  const { count } = await sb
+    .from('external_book_club_picks')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_published', true)
+    .eq('pick_month', month)
+    .eq('pick_year', year)
+  return (count ?? 0) > 0
+}
+
+export async function clubHasPickForMonth(
+  clubId: string,
+  year: number,
+  month: number,
+): Promise<boolean> {
+  if (!hasEnv()) return false
+  const sb = createClient()
+  const { count } = await sb
+    .from('external_book_club_picks')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_published', true)
+    .eq('club_id', clubId)
+    .eq('pick_month', month)
+    .eq('pick_year', year)
+  return (count ?? 0) > 0
+}
+
 export async function fetchAdjacentPicksForClub(
   clubId: string,
   year: number | string,

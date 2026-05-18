@@ -179,36 +179,36 @@ function Pagination({
     const s = q.toString()
     return s ? `/books?${s}` : '/books'
   }
+  const hasPrev = page > 1
+  const hasNext = page < totalPages
   return (
     <nav
       aria-label="Pagination"
       className="mt-10 flex items-center justify-between gap-3"
     >
-      <Link
-        href={hrefFor(Math.max(1, page - 1))}
-        aria-disabled={page === 1}
-        className={
-          page === 1
-            ? 'pointer-events-none font-dm-sans text-sm text-text-disabled'
-            : 'font-dm-sans text-sm text-brand-text hover:underline'
-        }
-      >
-        ← Previous
-      </Link>
+      {hasPrev ? (
+        <Link
+          href={hrefFor(page - 1)}
+          className="font-dm-sans text-sm text-brand-text hover:underline"
+        >
+          ← Previous
+        </Link>
+      ) : (
+        <span />
+      )}
       <span className="font-dm-mono text-xs text-text-tertiary">
         Page {page} of {totalPages}
       </span>
-      <Link
-        href={hrefFor(Math.min(totalPages, page + 1))}
-        aria-disabled={page === totalPages}
-        className={
-          page === totalPages
-            ? 'pointer-events-none font-dm-sans text-sm text-text-disabled'
-            : 'font-dm-sans text-sm text-brand-text hover:underline'
-        }
-      >
-        Next →
-      </Link>
+      {hasNext ? (
+        <Link
+          href={hrefFor(page + 1)}
+          className="font-dm-sans text-sm text-brand-text hover:underline"
+        >
+          Next →
+        </Link>
+      ) : (
+        <span />
+      )}
     </nav>
   )
 }
