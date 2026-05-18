@@ -479,7 +479,7 @@ function MobileSheet({
           <p className="mb-2 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
             Appearance
           </p>
-          <MobileThemePicker onChange={onClose} />
+          <MobileThemePicker />
         </li>
         {!user && (
           <li className="mt-2 flex gap-2 border-t border-border-subtle pt-3">
@@ -500,42 +500,56 @@ function MobileSheet({
   )
 }
 
-function MobileThemePicker({ onChange }: { onChange: () => void }) {
-  return (
-    <div className="flex items-center gap-2 rounded-md bg-bg-sunken p-1">
-      <MobileThemeOption value="light" label="Light" onChange={onChange} />
-      <MobileThemeOption value="dark" label="Dark" onChange={onChange} />
-      <MobileThemeOption value="system" label="System" onChange={onChange} />
-    </div>
-  )
-}
+function MobileThemePicker() {
+  const [isDark, setIsDark] = useState(false)
 
-function MobileThemeOption({
-  value,
-  label,
-  onChange,
-}: {
-  value: 'light' | 'dark' | 'system'
-  label: string
-  onChange: () => void
-}) {
-  // Inline import so the nav stays a single file. setStoredTheme is a
-  // pure client helper and safe inside this client component.
-  const handleClick = () => {
-    void import('@/lib/theme').then((m) => m.setStoredTheme(value))
+  useEffect(() => {
+    let cancelled = false
+    void import('@/lib/theme').then((m) => {
+      if (!cancelled) setIsDark(m.resolvedTheme() === 'dark')
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  function handleToggle() {
+    const next: 'light' | 'dark' = isDark ? 'light' : 'dark'
+    setIsDark(!isDark)
+    void import('@/lib/theme').then((m) => {
+      m.setStoredTheme(next)
+      m.applyTheme(next)
+    })
     void import('@/app/(app)/settings/theme-actions').then((m) =>
-      m.saveThemePreference(value),
+      m.saveThemePreference(next),
     )
-    onChange()
   }
+
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className="flex-1 rounded-md px-3 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-    >
-      {label}
-    </button>
+    <div className="flex items-center justify-between gap-3 rounded-md bg-bg-sunken px-3 py-2">
+      <span className="font-dm-sans text-sm text-text-primary">Dark mode</span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isDark}
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        onClick={handleToggle}
+        className={cn(
+          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
+          isDark
+            ? 'bg-[var(--toggle-on)] hover:bg-[var(--toggle-on-hover)]'
+            : 'bg-border-default hover:bg-border-strong',
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-block h-5 w-5 transform rounded-full bg-bg-surface shadow-sm transition-transform',
+            isDark ? 'translate-x-[22px]' : 'translate-x-0.5',
+          )}
+        />
+      </button>
+    </div>
   )
 }
 

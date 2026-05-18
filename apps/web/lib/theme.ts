@@ -65,15 +65,6 @@ export function resolvedTheme(): ResolvedTheme {
   return stored
 }
 
-/**
- * Cycle order used by the nav toggle button.
- */
-export function nextTheme(current: Theme): Theme {
-  if (current === 'light') return 'dark'
-  if (current === 'dark') return 'system'
-  return 'light'
-}
-
 export function themeLabel(theme: Theme): string {
   if (theme === 'light') return 'Light'
   if (theme === 'dark') return 'Dark'
