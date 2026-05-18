@@ -36,6 +36,15 @@ interface ClubSource {
   bnPath: string
 }
 
+function getEraLabel(clubSlug: string, year: number): string | null {
+  if (clubSlug === 'oprah') {
+    if (year <= 2011) return 'Original Club'
+    if (year <= 2018) return 'Book Club 2.0'
+    return 'Apple TV+ Era'
+  }
+  return null
+}
+
 const CLUBS: ClubSource[] = [
   { slug: 'oprah', bnPath: 'oprahs-book-club' },
   { slug: 'reese', bnPath: 'reeses-book-club' },
@@ -81,9 +90,10 @@ interface ScrapedPick {
 }
 
 function parseLabel(raw: string): { month: number; year: number } | null {
-  const cleaned = raw.replace(/\s+/g, ' ').replace(/\bPick\b/i, '').trim()
-  // "April '18" or "April 2018"
-  const tickMatch = cleaned.match(/^([A-Za-z]+)\s+'(\d{2})$/)
+  const cleaned = raw.replace(/\s+/g, ' ').trim()
+  // "April '18 Pick", "May '26 Sunnie Select", "April 2018 Pick", etc.
+  // Trailing words after the year are ignored.
+  const tickMatch = cleaned.match(/^([A-Za-z]+)\s+'(\d{2})\b/)
   if (tickMatch) {
     const month = MONTHS[tickMatch[1].toLowerCase()]
     if (!month) return null
@@ -91,7 +101,7 @@ function parseLabel(raw: string): { month: number; year: number } | null {
     const year = yy < 50 ? 2000 + yy : 1900 + yy
     return { month, year }
   }
-  const fullMatch = cleaned.match(/^([A-Za-z]+)\s+(\d{4})$/)
+  const fullMatch = cleaned.match(/^([A-Za-z]+)\s+(\d{4})\b/)
   if (fullMatch) {
     const month = MONTHS[fullMatch[1].toLowerCase()]
     if (!month) return null
@@ -399,6 +409,7 @@ async function createBook(
 }
 
 async function insertPick(
+  clubSlug: string,
   clubId: string,
   bookId: string,
   month: number,
@@ -416,6 +427,7 @@ async function insertPick(
       is_auto_discovered: true,
       auto_source: 'booknotification',
       auto_confidence: 'high',
+      era_label: getEraLabel(clubSlug, year),
       notes: 'Backfilled from BookNotification.com',
     },
   ]
@@ -473,7 +485,7 @@ async function processClub(source: ClubSource, club: Club): Promise<void> {
       failed++
       continue
     }
-    const ok = await insertPick(club.id, bookId, pick.month, pick.year)
+    const ok = await insertPick(source.slug, club.id, bookId, pick.month, pick.year)
     if (ok) {
       inserted++
       existing.add(key)
