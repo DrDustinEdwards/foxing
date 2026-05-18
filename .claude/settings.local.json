@@ -162,7 +162,17 @@
       "PowerShell(pnpm add *)",
       "Bash(mkdir -p 'app/clubs/[slug]')",
       "Bash(mv 'app/clubs/[id]/page.tsx' 'app/clubs/[slug]/page.tsx')",
-      "Bash(rmdir 'app/clubs/[id]')"
+      "Bash(rmdir 'app/clubs/[id]')",
+      "Bash(mkdir -p 'app/u/[username]/lists/[slug]')",
+      "Bash(mv 'app/u/[username]/lists/[id]/page.tsx' 'app/u/[username]/lists/[slug]/page.tsx')",
+      "Bash(rmdir 'app/u/[username]/lists/[id]')",
+      "Bash(mkdir -p 'app/u/[username]/diary/[slug]')",
+      "Bash(mv 'app/u/[username]/diary/[id]/page.tsx' 'app/u/[username]/diary/[slug]/page.tsx')",
+      "Bash(python -c ' *)",
+      "PowerShell(Push-Location apps\\\\web; npx tsc --noEmit 2>&1; $exit = $LASTEXITCODE; Pop-Location; Write-Output \"exit_code=$exit\")",
+      "Bash(sed -i \"s|book: { id: string; title: string; author: string; cover_url: string \\\\| null } \\\\| null|book: { id: string; slug: string \\\\| null; title: string; author: string; cover_url: string \\\\| null } \\\\| null|g\" lib/queries.ts)",
+      "Bash(sed -i \"s|book: { id: string; title: string; author: string; cover_url: string \\\\| null }$|book: { id: string; slug: string \\\\| null; title: string; author: string; cover_url: string \\\\| null }|\" lib/missing-pages-queries.ts lib/user-queries.ts)",
+      "PowerShell(Push-Location apps\\\\web; npx tsc --noEmit 2>&1 | Select-String -Pattern \"error TS\" -CaseSensitive | Select-Object -First 30; $exit = $LASTEXITCODE; Pop-Location; Write-Output \"exit_code=$exit\")"
     ]
   }
 }
