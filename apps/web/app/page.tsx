@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
@@ -14,46 +13,133 @@ import {
   fetchPopularThisWeek,
   fetchTodaysPick,
 } from '@/lib/queries'
-import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
+import {
+  fetchPassageOfDay,
+  todayISODate,
+  type PassageOfDay,
+} from '@/lib/missing-pages-queries'
+import { appBookDeeplink } from '@/lib/foxing'
 
 export const revalidate = 600
 
-export const metadata: Metadata = {
-  title: 'Foxing · reading, together.',
-  description:
-    'A platform for reading classic books with an AI companion, book clubs, and a community of serious readers.',
-  alternates: { canonical: siteOrigin() },
-  openGraph: {
-    title: 'Foxing · reading, together.',
-    description:
-      'A platform for reading classic books with an AI companion, book clubs, and a community of serious readers.',
-    url: siteOrigin(),
-    siteName: 'Foxing',
-    type: 'website',
-  },
-}
+// Title and description live in the root layout; the home page renders
+// at the canonical site URL so the default metadata is exactly right.
+
+const FAQ_JSONLD = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: [
+    {
+      '@type': 'Question',
+      name: 'Where can I read classic books for free?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Foxing offers 1,400+ public domain classic books completely free, including Frankenstein, Pride and Prejudice, Sherlock Holmes, and Dracula. No subscription is required to read. Foxing is available on iOS, Android, and web at foxing.app.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What classic books are available to read online free?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Foxing includes all major public domain works: Jane Austen (Pride and Prejudice, Sense and Sensibility, Emma), Charles Dickens, Mary Shelley (Frankenstein), Bram Stoker (Dracula), Arthur Conan Doyle (Sherlock Holmes), Mark Twain, Charlotte Bronte (Jane Eyre), and 1,400+ more titles from Standard Ebooks and Project Gutenberg.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'What is Foxing?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Foxing is a reading app for classic literature. It offers 1,400+ free public domain books, an AI companion that helps you understand what you are reading, book clubs with chapter-by-chapter discussions, and a reading community. Available on iOS, Android, and web.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Is Foxing free to use?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes. The Foxing reader and all 1,400+ classic books are completely free. Foxing Plus ($9.99 per month) adds unlimited AI companion features, book clubs, and full reading stats. A 7-day free trial is available.',
+      },
+    },
+    {
+      '@type': 'Question',
+      name: 'Does Foxing have an AI for reading?',
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: 'Yes. Foxing includes an AI companion powered by Claude. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. Free users get 3 AI lookups per day. Foxing Plus gives unlimited access.',
+      },
+    },
+  ],
+})
 
 export default async function HomePage() {
-  const [navUser, todaysPick, popular, reviews] = await Promise.all([
+  const today = todayISODate()
+  const [navUser, todaysPick, popular, passage, reviews] = await Promise.all([
     getNavUser(),
     fetchTodaysPick(),
     fetchPopularThisWeek(8),
+    fetchPassageOfDay(today),
     fetchCommunityReviews(3),
   ])
 
   return (
     <div className="flex min-h-screen flex-col">
       <Nav user={navUser} />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: FAQ_JSONLD }}
+      />
       <main className="flex-1">
         <Hero />
         <ValueProps />
         {todaysPick && <TodaysPick book={todaysPick} />}
         <PopularThisWeek books={popular} />
+        {passage && <PassageOfDaySection passage={passage} />}
         {reviews.length > 0 && <CommunitySection reviews={reviews} />}
         <DownloadCta />
       </main>
       <Footer />
     </div>
+  )
+}
+
+function PassageOfDaySection({ passage }: { passage: PassageOfDay }) {
+  return (
+    <section className="bg-[var(--bg-surface)]">
+      <PageWrapper className="py-16 md:py-20">
+        <p className="mb-6 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Passage of the day
+        </p>
+        <figure className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
+          <blockquote className="font-source-serif-4 text-[17px] italic leading-relaxed text-text-primary">
+            &ldquo;{passage.text}&rdquo;
+          </blockquote>
+          <figcaption className="flex flex-col items-center gap-1">
+            <Link
+              href={`/book/${passage.book.id}`}
+              className="font-dm-sans text-xs text-text-tertiary hover:text-text-primary"
+            >
+              <span className="font-medium text-text-secondary">
+                {passage.book.title}
+              </span>
+              <span> · {passage.book.author}</span>
+            </Link>
+            {passage.author && (
+              <span className="font-dm-sans text-[11px] text-text-tertiary">
+                Saved by @{passage.author.username}
+              </span>
+            )}
+          </figcaption>
+          <Link
+            href={`/passage/${passage.date}`}
+            className="font-dm-sans text-sm text-brand-text hover:underline"
+          >
+            See today&apos;s passage
+          </Link>
+        </figure>
+      </PageWrapper>
+    </section>
   )
 }
 
