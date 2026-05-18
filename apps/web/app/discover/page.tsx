@@ -105,7 +105,7 @@ function TodaysPickCard({
       </p>
       <div className="flex flex-col gap-5 md:flex-row md:items-start">
         <Link
-          href={`/book/${book.id}`}
+          href={`/book/${book.slug ?? book.id}`}
           className="relative aspect-[2/3] w-[140px] shrink-0 overflow-hidden rounded-md bg-bg-sunken shadow-sm"
         >
           {book.cover_url && (
@@ -120,7 +120,7 @@ function TodaysPickCard({
         </Link>
         <div className="flex flex-col gap-2">
           <Link
-            href={`/book/${book.id}`}
+            href={`/book/${book.slug ?? book.id}`}
             className="font-fraunces text-xl text-text-primary hover:text-brand-text"
           >
             {book.title}

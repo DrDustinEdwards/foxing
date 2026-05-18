@@ -132,7 +132,7 @@ export default async function ProfilePage({
                   <div key={r.id} className="flex flex-col gap-2">
                     {r.book && (
                       <Link
-                        href={`/book/${r.book.id}`}
+                        href={`/book/${r.book.slug ?? r.book.id}`}
                         className="font-fraunces text-sm text-text-primary hover:text-brand-text"
                       >
                         {r.book.title}
@@ -186,7 +186,7 @@ function FavoritesRow({
         return (
           <Link
             key={pos}
-            href={`/book/${book.id}`}
+            href={`/book/${book.slug ?? book.id}`}
             className="relative h-[108px] w-[72px] shrink-0 overflow-hidden rounded-md bg-bg-sunken"
           >
             {book.cover_url && (

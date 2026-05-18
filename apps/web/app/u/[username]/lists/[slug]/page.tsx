@@ -1,12 +1,12 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
 import { ShareButton } from '@/components/share-button'
-import { fetchProfileByUsername } from '@/lib/queries'
+import { fetchProfileByUsername, isUuid } from '@/lib/queries'
 import { fetchPublicReadingList } from '@/lib/missing-pages-queries'
 import { buildReadingListMetadata } from '@/lib/metadata'
 import { getNavUser } from '@/lib/nav-user'
@@ -17,7 +17,7 @@ export const revalidate = 300
 export async function generateMetadata({
   params,
 }: {
-  params: { username: string; id: string }
+  params: { username: string; slug: string }
 }): Promise<Metadata> {
   const profile = await fetchProfileByUsername(params.username)
   if (!profile || !profile.is_public) {
@@ -25,13 +25,14 @@ export async function generateMetadata({
   }
   const list = await fetchPublicReadingList({
     userId: profile.id,
-    id: params.id,
+    slugOrId: params.slug,
   })
   if (!list) {
     return { title: 'List not found', robots: { index: false, follow: true } }
   }
   return buildReadingListMetadata({
     id: list.id,
+    slug: list.slug,
     title: list.title,
     description: list.description,
     username: profile.username,
@@ -42,7 +43,7 @@ export async function generateMetadata({
 export default async function UserListDetailPage({
   params,
 }: {
-  params: { username: string; id: string }
+  params: { username: string; slug: string }
 }) {
   const [navUser, profile] = await Promise.all([
     getNavUser(),
@@ -62,12 +63,15 @@ export default async function UserListDetailPage({
   }
   const list = await fetchPublicReadingList({
     userId: profile.id,
-    id: params.id,
+    slugOrId: params.slug,
   })
   if (!list) notFound()
+  if (isUuid(params.slug) && list.slug && list.slug !== params.slug) {
+    permanentRedirect(`/u/${profile.username}/lists/${list.slug}`)
+  }
 
   const origin = siteOrigin()
-  const url = `${origin}/u/${profile.username}/lists/${list.id}`
+  const url = `${origin}/u/${profile.username}/lists/${list.slug ?? list.id}`
   const itemListJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'ItemList',

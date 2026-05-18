@@ -61,7 +61,7 @@ export default async function QuotePage({
               <figcaption className="mt-6 flex items-center gap-3 border-t border-border-subtle pt-4">
                 {quote.book.cover_url && (
                   <Link
-                    href={`/book/${quote.book.id}`}
+                    href={`/book/${quote.book.slug ?? quote.book.id}`}
                     className="relative h-14 w-10 shrink-0 overflow-hidden rounded bg-bg-sunken"
                   >
                     <Image
@@ -75,7 +75,7 @@ export default async function QuotePage({
                 )}
                 <div className="flex min-w-0 flex-col">
                   <Link
-                    href={`/book/${quote.book.id}`}
+                    href={`/book/${quote.book.slug ?? quote.book.id}`}
                     className="truncate font-fraunces text-sm text-text-primary hover:text-brand-text"
                   >
                     {quote.book.title}

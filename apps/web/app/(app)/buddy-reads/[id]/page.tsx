@@ -48,7 +48,7 @@ function BuddyReadHeader({ buddyRead }: { buddyRead: BuddyRead }) {
     <header className="mt-6 flex flex-col gap-5 md:flex-row md:items-start">
       {buddyRead.book && (
         <Link
-          href={`/book/${buddyRead.book.id}`}
+          href={`/book/${buddyRead.book.slug ?? buddyRead.book.id}`}
           className="relative h-40 w-28 shrink-0 overflow-hidden rounded bg-bg-sunken shadow-sm"
         >
           {buddyRead.book.cover_url && (

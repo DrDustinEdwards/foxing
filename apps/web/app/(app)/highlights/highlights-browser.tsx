@@ -102,7 +102,7 @@ export function HighlightsBrowser({ items }: Props) {
             <li key={g.book.id} className="flex flex-col gap-3">
               <header>
                 <Link
-                  href={`/book/${g.book.id}`}
+                  href={`/book/${g.book.slug ?? g.book.id}`}
                   className="font-fraunces text-lg text-text-primary hover:text-brand-text"
                 >
                   {g.book.title}

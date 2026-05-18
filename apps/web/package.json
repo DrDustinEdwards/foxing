@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "enrich-themes": "tsx scripts/enrich-themes.ts",
+    "enrich-descriptions": "tsx scripts/enrich-descriptions.ts",
     "vercel-build": "cd ../.. && pnpm install && pnpm --filter web build"
   },
   "dependencies": {

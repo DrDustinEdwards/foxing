@@ -145,7 +145,7 @@ export default async function VocabularyPage({
               )}
               {e.book ? (
                 <Link
-                  href={`/book/${e.book.id}`}
+                  href={`/book/${e.book.slug ?? e.book.id}`}
                   className="font-dm-sans text-xs text-text-tertiary hover:text-text-primary"
                 >
                   {e.book.title}

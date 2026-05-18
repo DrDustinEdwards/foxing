@@ -111,7 +111,7 @@ export default async function UserReviewsPage({
                   className="flex gap-4 rounded-lg border border-border-subtle bg-bg-surface p-5"
                 >
                   <Link
-                    href={`/book/${r.book.id}`}
+                    href={`/book/${r.book.slug ?? r.book.id}`}
                     className="relative h-24 w-16 shrink-0 overflow-hidden rounded bg-bg-sunken"
                   >
                     {r.book.cover_url && (
@@ -126,7 +126,7 @@ export default async function UserReviewsPage({
                   </Link>
                   <div className="flex min-w-0 flex-1 flex-col gap-2">
                     <Link
-                      href={`/book/${r.book.id}`}
+                      href={`/book/${r.book.slug ?? r.book.id}`}
                       className="truncate font-fraunces text-base text-text-primary hover:text-brand-text"
                     >
                       {r.book.title}

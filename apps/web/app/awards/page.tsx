@@ -88,7 +88,7 @@ function AwardSection({
           {books.map((b) => (
             <li key={b.id}>
               <Link
-                href={`/book/${b.id}`}
+                href={`/book/${b.slug ?? b.id}`}
                 className="group flex flex-col gap-2"
               >
                 <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">

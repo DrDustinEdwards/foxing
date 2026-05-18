@@ -92,7 +92,7 @@ export default async function SeriesDetailPage({
         '@type': 'Book',
         name: b.title,
         author: { '@type': 'Person', name: b.author },
-        url: `${origin}/book/${b.id}`,
+        url: `${origin}/book/${b.slug ?? b.id}`,
         image: b.cover_url ?? undefined,
       },
     })),
@@ -127,7 +127,7 @@ export default async function SeriesDetailPage({
                   {b.series_order ?? i + 1}
                 </span>
                 <Link
-                  href={`/book/${b.id}`}
+                  href={`/book/${b.slug ?? b.id}`}
                   className="relative h-28 w-20 shrink-0 overflow-hidden rounded bg-bg-sunken"
                 >
                   {b.cover_url && (
@@ -142,7 +142,7 @@ export default async function SeriesDetailPage({
                 </Link>
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <Link
-                    href={`/book/${b.id}`}
+                    href={`/book/${b.slug ?? b.id}`}
                     className="font-fraunces text-lg text-text-primary hover:text-brand-text"
                   >
                     {b.title}

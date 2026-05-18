@@ -174,7 +174,7 @@ function DiaryList({
           className="flex gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4"
         >
           <Link
-            href={`/book/${e.book.id}`}
+            href={`/book/${e.book.slug ?? e.book.id}`}
             className="relative h-20 w-14 shrink-0 overflow-hidden rounded bg-bg-sunken"
           >
             {e.book.cover_url && (
@@ -197,7 +197,7 @@ function DiaryList({
               </span>
             </div>
             <Link
-              href={`/book/${e.book.id}`}
+              href={`/book/${e.book.slug ?? e.book.id}`}
               className="truncate font-fraunces text-base text-text-primary hover:text-brand-text"
             >
               {e.book.title}

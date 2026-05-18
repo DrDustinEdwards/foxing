@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -12,22 +12,53 @@ import { formatRelativeDate } from '@foxing/utils'
 import {
   fetchClubPostsPreview,
   fetchPublicClubById,
+  fetchPublicClubBySlug,
+  isUuid,
 } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
 import { appClubDeeplink } from '@/lib/foxing'
 import { buildClubMetadata } from '@/lib/metadata'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 60
+
+export async function generateStaticParams() {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return []
+  }
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('clubs')
+    .select('slug')
+    .eq('visibility', 'public')
+    .not('slug', 'is', null)
+    .limit(500)
+  return ((data as { slug: string }[] | null) ?? [])
+    .filter((c) => Boolean(c.slug))
+    .map((c) => ({ slug: c.slug }))
+}
+
+async function resolveClub(slugOrId: string) {
+  let club = await fetchPublicClubBySlug(slugOrId)
+  if (!club && isUuid(slugOrId)) {
+    club = await fetchPublicClubById(slugOrId)
+  }
+  return club
+}
 
 export async function generateMetadata({
   params,
 }: {
-  params: { id: string }
+  params: { slug: string }
 }): Promise<Metadata> {
-  const club = await fetchPublicClubById(params.id)
+  const club = await resolveClub(params.slug)
   if (!club) return { title: 'Club not found' }
   return buildClubMetadata({
     id: club.id,
+    slug: club.slug,
     name: club.name,
     description: club.description,
     current_book_title: club.current_book?.title,
@@ -39,14 +70,18 @@ export async function generateMetadata({
 export default async function ClubPage({
   params,
 }: {
-  params: { id: string }
+  params: { slug: string }
 }) {
   const [navUser, club] = await Promise.all([
     getNavUser(),
-    fetchPublicClubById(params.id),
+    resolveClub(params.slug),
   ])
   if (!club) notFound()
+  if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
+    permanentRedirect(`/clubs/${club.slug}`)
+  }
   const posts = await fetchClubPostsPreview(club.id, 3)
+  const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -67,11 +102,11 @@ export default async function ClubPage({
             )}
           </header>
 
-          {club.current_book && (
+          {club.current_book && bookPath && (
             <section className="mt-8 flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
               <div className="flex flex-col gap-4 md:flex-row md:items-start">
                 <Link
-                  href={`/book/${club.current_book.id}`}
+                  href={`/book/${bookPath}`}
                   className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken"
                 >
                   {club.current_book.cover_url && (
@@ -89,7 +124,7 @@ export default async function ClubPage({
                     Reading now
                   </p>
                   <Link
-                    href={`/book/${club.current_book.id}`}
+                    href={`/book/${bookPath}`}
                     className="font-fraunces text-xl text-text-primary hover:text-brand-text"
                   >
                     {club.current_book.title}

@@ -94,7 +94,7 @@ export default async function UserHighlightsPage({
               {Array.from(grouped.values()).map(({ book, items }) => (
                 <section key={book.id} className="flex flex-col gap-3">
                   <Link
-                    href={`/book/${book.id}`}
+                    href={`/book/${book.slug ?? book.id}`}
                     className="font-fraunces text-base text-text-primary hover:text-brand-text"
                   >
                     {book.title}{' '}

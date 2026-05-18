@@ -90,53 +90,65 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = createAdminClient()
 
-  const [booksRes, profilesRes, journalRes, clubsRes] = await Promise.all([
-    supabase
-      .from('books')
-      .select('id, author, created_at')
-      .order('title', { ascending: true })
-      .limit(2000),
-    supabase
-      .from('profiles')
-      .select('username, updated_at, created_at')
-      .eq('is_public', true)
-      .limit(10_000),
-    supabase
-      .from('journal_posts')
-      .select('slug, updated_at, published_at')
-      .eq('is_published', true),
-    supabase
-      .from('clubs')
-      .select('id, updated_at, created_at')
-      .eq('visibility', 'public')
-      .limit(1000),
-  ])
+  const [booksRes, profilesRes, journalRes, clubsRes, listsRes] =
+    await Promise.all([
+      supabase
+        .from('books')
+        .select('id, slug, author_slug, updated_at, created_at')
+        .order('title', { ascending: true })
+        .limit(2000),
+      supabase
+        .from('profiles')
+        .select('username, updated_at, created_at')
+        .eq('is_public', true)
+        .limit(10_000),
+      supabase
+        .from('journal_posts')
+        .select('slug, updated_at, published_at')
+        .eq('is_published', true),
+      supabase
+        .from('clubs')
+        .select('id, slug, updated_at, created_at')
+        .eq('visibility', 'public')
+        .limit(1000),
+      supabase
+        .from('reading_lists')
+        .select('id, slug, updated_at, created_at, profiles:user_id(username)')
+        .eq('is_public', true)
+        .limit(2000),
+    ])
 
   const bookRows = (booksRes.data as Array<{
     id: string
-    author: string
+    slug: string | null
+    author_slug: string | null
+    updated_at: string | null
     created_at: string
   }> | null) ?? []
 
-  const bookPages: MetadataRoute.Sitemap = bookRows.map((b) => ({
-    url: `${FOXING_BASE_URL}/book/${b.id}`,
-    lastModified: b.created_at ? new Date(b.created_at) : now,
-    changeFrequency: 'monthly',
-    priority: 0.8,
-  }))
-
-  const authorNames = new Set<string>()
-  for (const b of bookRows) {
-    if (b.author) authorNames.add(b.author.trim())
-  }
-  const authorPages: MetadataRoute.Sitemap = [...authorNames]
-    .filter(Boolean)
-    .map((author) => ({
-      url: `${FOXING_BASE_URL}/author/${encodeURIComponent(author)}`,
-      lastModified: now,
+  const bookPages: MetadataRoute.Sitemap = bookRows
+    .filter((b) => Boolean(b.slug))
+    .map((b) => ({
+      url: `${FOXING_BASE_URL}/book/${b.slug}`,
+      lastModified: b.updated_at
+        ? new Date(b.updated_at)
+        : b.created_at
+          ? new Date(b.created_at)
+          : now,
       changeFrequency: 'monthly',
-      priority: 0.7,
+      priority: 0.8,
     }))
+
+  const authorSlugs = new Set<string>()
+  for (const b of bookRows) {
+    if (b.author_slug) authorSlugs.add(b.author_slug)
+  }
+  const authorPages: MetadataRoute.Sitemap = [...authorSlugs].map((slug) => ({
+    url: `${FOXING_BASE_URL}/author/${slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.7,
+  }))
 
   const profilePages: MetadataRoute.Sitemap = (
     (profilesRes.data as Array<{
@@ -175,17 +187,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const clubPages: MetadataRoute.Sitemap = (
     (clubsRes.data as Array<{
       id: string
+      slug: string | null
       updated_at: string | null
       created_at: string
     }> | null) ?? []
-  ).map((c) => ({
-    url: `${FOXING_BASE_URL}/clubs/${c.id}`,
-    lastModified: c.updated_at
-      ? new Date(c.updated_at)
-      : new Date(c.created_at),
-    changeFrequency: 'weekly',
-    priority: 0.5,
-  }))
+  )
+    .filter((c) => Boolean(c.slug))
+    .map((c) => ({
+      url: `${FOXING_BASE_URL}/clubs/${c.slug}`,
+      lastModified: c.updated_at
+        ? new Date(c.updated_at)
+        : new Date(c.created_at),
+      changeFrequency: 'weekly',
+      priority: 0.5,
+    }))
+
+  const listPages: MetadataRoute.Sitemap = (
+    (listsRes.data as unknown as Array<{
+      id: string
+      slug: string | null
+      updated_at: string | null
+      created_at: string
+      profiles: { username: string } | null
+    }> | null) ?? []
+  )
+    .filter((l) => Boolean(l.slug) && Boolean(l.profiles?.username))
+    .map((l) => ({
+      url: `${FOXING_BASE_URL}/u/${l.profiles!.username}/lists/${l.slug}`,
+      lastModified: l.updated_at
+        ? new Date(l.updated_at)
+        : new Date(l.created_at),
+      changeFrequency: 'monthly',
+      priority: 0.5,
+    }))
 
   return [
     ...staticPages,
@@ -194,5 +228,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...journalPages,
     ...profilePages,
     ...clubPages,
+    ...listPages,
   ]
 }
