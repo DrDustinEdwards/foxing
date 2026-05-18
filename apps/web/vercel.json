@@ -1,5 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "cd ../.. && pnpm install",
-  "buildCommand": "cd ../.. && pnpm --filter web build"
+  "buildCommand": "cd ../.. && pnpm --filter web build",
+  "crons": [
+    {
+      "path": "/api/cron/celebrity-picks",
+      "schedule": "0 9 2 * *"
+    },
+    {
+      "path": "/api/cron/celebrity-picks",
+      "schedule": "0 9 12 * *"
+    }
+  ]
 }
