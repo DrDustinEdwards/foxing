@@ -3,6 +3,20 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import {
+  fetchBotmCandidates,
+  generateCuratorNote,
+  type BotmCandidate,
+} from '@/lib/botm-suggestions'
+
+export interface BotmSuggestion extends BotmCandidate {
+  curator_note: string
+}
+
+export async function runBotmSuggest(): Promise<BotmSuggestion[]> {
+  const candidates = await fetchBotmCandidates()
+  return candidates.map((c) => ({ ...c, curator_note: generateCuratorNote(c) }))
+}
 
 interface SavePayload {
   id?: string

@@ -1,12 +1,24 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+
+export type BroadcastTarget = 'all' | 'free' | 'plus' | 'patron' | 'user'
 
 interface SendInput {
   title: string
   body: string
-  target: 'all' | 'plus' | 'patron'
+  target: BroadcastTarget
+  username?: string
+}
+
+async function getAdminId(): Promise<string | null> {
+  const sb = createClient()
+  const {
+    data: { user },
+  } = await sb.auth.getUser()
+  return user?.id ?? null
 }
 
 export async function sendBroadcast(input: SendInput): Promise<{
@@ -21,15 +33,32 @@ export async function sendBroadcast(input: SendInput): Promise<{
   if (body.length > 600) return { ok: false, error: 'Body too long.' }
 
   const admin = createAdminClient()
-  let query = admin.from('profiles').select('id')
-  if (input.target === 'plus') {
-    query = query.eq('subscription_tier', 'plus')
-  } else if (input.target === 'patron') {
-    query = query.eq('subscription_tier', 'patron')
+
+  let ids: string[] = []
+  if (input.target === 'user') {
+    const username = input.username?.trim() ?? ''
+    if (!username) return { ok: false, error: 'Username required for single-user target.' }
+    const { data: row } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('username', username)
+      .maybeSingle()
+    const found = row as { id: string } | null
+    if (!found) return { ok: false, error: `No user @${username}.` }
+    ids = [found.id]
+  } else {
+    let query = admin.from('profiles').select('id')
+    if (input.target === 'free') {
+      query = query.or('subscription_tier.eq.free,subscription_tier.is.null')
+    } else if (input.target === 'plus') {
+      query = query.eq('subscription_tier', 'plus')
+    } else if (input.target === 'patron') {
+      query = query.eq('subscription_tier', 'patron')
+    }
+    const { data: profiles, error } = await query
+    if (error) return { ok: false, error: error.message }
+    ids = ((profiles as { id: string }[] | null) ?? []).map((p) => p.id)
   }
-  const { data: profiles, error } = await query
-  if (error) return { ok: false, error: error.message }
-  const ids = ((profiles as { id: string }[] | null) ?? []).map((p) => p.id)
   if (ids.length === 0) return { ok: true, sent: 0 }
 
   const batchSize = 100
@@ -48,6 +77,15 @@ export async function sendBroadcast(input: SendInput): Promise<{
     }
     sent += batch.length
   }
+
+  await admin.from('admin_notification_log').insert({
+    title,
+    body,
+    target_type: input.target,
+    target_value: input.target === 'user' ? (input.username ?? null) : null,
+    recipient_count: sent,
+    sent_by: await getAdminId(),
+  })
 
   revalidatePath('/admin/notifications')
   return { ok: true, sent }

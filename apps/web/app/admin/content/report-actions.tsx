@@ -11,11 +11,18 @@ import {
 interface Props {
   reportId: string
   postId: string | null
+  postType: string | null
   authorId: string | null
   reason: string
 }
 
-export function ReportActions({ reportId, postId, authorId, reason }: Props) {
+export function ReportActions({
+  reportId,
+  postId,
+  postType,
+  authorId,
+  reason,
+}: Props) {
   const [pending, setPending] = useState<'dismiss' | 'delete' | 'warn' | null>(
     null,
   )
@@ -30,12 +37,13 @@ export function ReportActions({ reportId, postId, authorId, reason }: Props) {
 
   async function handleDelete() {
     if (!postId) return
-    if (!window.confirm('Delete the reported post and resolve the report?'))
+    if (!window.confirm('Delete the reported post and mark the report as actioned?'))
       return
     setPending('delete')
     const fd = new FormData()
     fd.set('reportId', reportId)
     fd.set('postId', postId)
+    fd.set('postType', postType ?? 'club_post')
     await deletePostFromReport(fd)
     setPending(null)
   }

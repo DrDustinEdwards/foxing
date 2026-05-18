@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { sendBroadcast } from './actions'
-
-type Target = 'all' | 'plus' | 'patron'
+import { sendBroadcast, type BroadcastTarget } from './actions'
 
 export function BroadcastForm() {
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [target, setTarget] = useState<Target>('all')
+  const [target, setTarget] = useState<BroadcastTarget>('all')
+  const [username, setUsername] = useState('')
   const [pending, setPending] = useState(false)
   const [result, setResult] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -19,22 +18,24 @@ export function BroadcastForm() {
     e.preventDefault()
     setError(null)
     setResult(null)
-    if (
-      !window.confirm(
-        `Send "${title}" to ${target === 'all' ? 'all users' : `${target} subscribers`}?`,
-      )
-    )
-      return
+    const targetLabel =
+      target === 'all'
+        ? 'all users'
+        : target === 'user'
+          ? `@${username}`
+          : `${target} subscribers`
+    if (!window.confirm(`Send "${title}" to ${targetLabel}?`)) return
     setPending(true)
-    const res = await sendBroadcast({ title, body, target })
+    const res = await sendBroadcast({ title, body, target, username })
     setPending(false)
     if (!res.ok) {
       setError(res.error ?? 'Send failed.')
       return
     }
-    setResult(`Sent to ${res.sent ?? 0} users.`)
+    setResult(`Sent to ${res.sent ?? 0} user${res.sent === 1 ? '' : 's'}.`)
     setTitle('')
     setBody('')
+    setUsername('')
   }
 
   return (
@@ -69,24 +70,46 @@ export function BroadcastForm() {
         </span>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="target"
-          className="font-dm-sans text-sm text-text-secondary"
-        >
+      <fieldset className="flex flex-col gap-2">
+        <legend className="font-dm-sans text-sm text-text-secondary">
           Send to
-        </label>
-        <select
-          id="target"
-          value={target}
-          onChange={(e) => setTarget(e.target.value as Target)}
-          className="h-10 rounded-md border border-border-interactive bg-bg-surface px-2 font-dm-sans text-sm text-text-primary"
-        >
-          <option value="all">All users</option>
-          <option value="plus">Plus subscribers</option>
-          <option value="patron">Patron subscribers</option>
-        </select>
-      </div>
+        </legend>
+        <div className="flex flex-wrap gap-4">
+          {(
+            [
+              { value: 'all', label: 'All users' },
+              { value: 'free', label: 'Free' },
+              { value: 'plus', label: 'Plus' },
+              { value: 'patron', label: 'Patron' },
+              { value: 'user', label: 'Single user' },
+            ] as Array<{ value: BroadcastTarget; label: string }>
+          ).map((opt) => (
+            <label
+              key={opt.value}
+              className="flex items-center gap-2 font-dm-sans text-sm text-text-primary"
+            >
+              <input
+                type="radio"
+                name="target"
+                value={opt.value}
+                checked={target === opt.value}
+                onChange={() => setTarget(opt.value)}
+              />
+              {opt.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
+
+      {target === 'user' && (
+        <Input
+          label="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          placeholder="no @ prefix"
+          required
+        />
+      )}
 
       {title && body && (
         <div className="rounded-md border border-border-subtle bg-bg-sunken p-3">

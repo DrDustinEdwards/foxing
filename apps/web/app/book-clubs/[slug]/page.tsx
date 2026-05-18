@@ -182,7 +182,7 @@ export default async function ExternalBookClubPage({
                           className="grid gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4 md:grid-cols-[120px_1fr]"
                         >
                           <Link
-                            href={`/book/${pick.book.id}`}
+                            href={`/book/${pick.book.slug ?? pick.book.id}`}
                             className="relative aspect-[2/3] w-[120px] overflow-hidden rounded bg-bg-sunken"
                           >
                             {pick.book.cover_url && (
@@ -205,7 +205,7 @@ export default async function ExternalBookClubPage({
                               </p>
                               <h3 className="mt-1 font-fraunces text-xl text-text-primary">
                                 <Link
-                                  href={`/book/${pick.book.id}`}
+                                  href={`/book/${pick.book.slug ?? pick.book.id}`}
                                   className="hover:text-brand-text"
                                 >
                                   {pick.book.title}

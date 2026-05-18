@@ -32,6 +32,25 @@ export default async function AdminCelebrityPicksPage() {
         </Link>
       </header>
 
+      {picks.length === 0 && (
+        <section className="mt-6 flex flex-col items-start gap-3 rounded-lg border border-border-subtle bg-brand-subtle p-6">
+          <div>
+            <h2 className="font-fraunces text-xl text-text-primary">
+              No celebrity picks have been added yet.
+            </h2>
+            <p className="mt-1 max-w-prose font-source-serif-4 text-sm text-text-secondary">
+              The /book-clubs page is live but every club is empty until you
+              add their picks. Start with this month.
+            </p>
+          </div>
+          <Link href="/admin/celebrity-picks/new">
+            <Button variant="primary" size="lg">
+              Add this month&apos;s picks
+            </Button>
+          </Link>
+        </section>
+      )}
+
       <div className="mt-6 overflow-x-auto rounded-lg border border-border-subtle bg-bg-surface">
         <table className="min-w-full text-left font-dm-sans text-sm">
           <thead className="border-b border-border-subtle bg-bg-sunken text-xs uppercase tracking-wide text-text-tertiary">

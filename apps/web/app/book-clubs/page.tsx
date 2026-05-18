@@ -114,7 +114,7 @@ export default async function BookClubsPage() {
                     className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4"
                   >
                     <Link
-                      href={`/book/${pick.book.id}`}
+                      href={`/book/${pick.book.slug ?? pick.book.id}`}
                       className="relative aspect-[2/3] w-full overflow-hidden rounded bg-bg-sunken"
                     >
                       {pick.book.cover_url && (
@@ -136,7 +136,7 @@ export default async function BookClubsPage() {
                       </Link>
                       <p className="mt-1 line-clamp-2 font-fraunces text-lg text-text-primary">
                         <Link
-                          href={`/book/${pick.book.id}`}
+                          href={`/book/${pick.book.slug ?? pick.book.id}`}
                           className="hover:text-brand-text"
                         >
                           {pick.book.title}
