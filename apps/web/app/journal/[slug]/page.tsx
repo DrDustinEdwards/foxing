@@ -7,7 +7,6 @@ import { Markdown } from '@/components/markdown'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
-  fetchAllJournalSlugs,
   fetchJournalPostBySlug,
   fetchRelatedPosts,
   formatLongDate,
@@ -16,12 +15,28 @@ import {
 } from '@/lib/journal'
 import { getNavUser } from '@/lib/nav-user'
 import { buildJournalPostMetadata, FOXING_BASE_URL } from '@/lib/metadata'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
 
+// Build-time only. Uses the admin client because the server client calls
+// next/headers cookies(), which fails outside a request scope. Published
+// journal posts are public, so service-role reads here are safe.
 export async function generateStaticParams() {
-  const slugs = await fetchAllJournalSlugs()
-  return slugs.map((slug) => ({ slug }))
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return []
+  }
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('journal_posts')
+    .select('slug')
+    .eq('is_published', true)
+  return ((data as { slug: string }[] | null) ?? []).map((p) => ({
+    slug: p.slug,
+  }))
 }
 
 export async function generateMetadata({
