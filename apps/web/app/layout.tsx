@@ -2,6 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Fraunces, Source_Serif_4, DM_Sans, DM_Mono } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
+import { FOXING_BASE_URL } from '@/lib/metadata'
 
 const fraunces = Fraunces({
   subsets: ['latin'],
@@ -29,9 +30,128 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Foxing',
-  description: 'reading, together.',
+  metadataBase: new URL(FOXING_BASE_URL),
+  title: {
+    default: 'Foxing · reading, together.',
+    template: '%s · Foxing',
+  },
+  description:
+    'Read 1,400+ classic books free. AI companion, book clubs, and a community of serious readers. Frankenstein, Pride and Prejudice, Sherlock Holmes, and more.',
+  applicationName: 'Foxing',
+  keywords: [
+    'classic books',
+    'public domain books',
+    'read online free',
+    'book clubs',
+    'AI reading companion',
+    'Frankenstein',
+    'Jane Austen',
+    'reading app',
+    'Sherlock Holmes',
+    'Standard Ebooks',
+  ],
+  authors: [{ name: 'Foxing', url: FOXING_BASE_URL }],
+  creator: 'Foxing',
+  publisher: 'Foxing',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: FOXING_BASE_URL,
+    siteName: 'Foxing',
+    title: 'Foxing · reading, together.',
+    description:
+      'Read 1,400+ classic books free. AI companion, book clubs, and serious readers.',
+    images: [
+      {
+        url: `${FOXING_BASE_URL}/og`,
+        width: 1200,
+        height: 630,
+        alt: 'Foxing, reading together.',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Foxing · reading, together.',
+    description:
+      'Read 1,400+ classic books free. AI companion, book clubs, and serious readers.',
+    images: [`${FOXING_BASE_URL}/og`],
+    creator: '@foxingreads',
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+  alternates: {
+    canonical: FOXING_BASE_URL,
+    types: { 'application/rss+xml': `${FOXING_BASE_URL}/feed.rss` },
+  },
 }
+
+const ORGANIZATION_JSONLD = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  '@id': `${FOXING_BASE_URL}/#organization`,
+  name: 'Foxing',
+  url: FOXING_BASE_URL,
+  logo: {
+    '@type': 'ImageObject',
+    url: `${FOXING_BASE_URL}/icon.png`,
+    width: 512,
+    height: 512,
+  },
+  description:
+    'Foxing is a reading platform offering 1,400+ free public domain classic books with an AI companion, book clubs, and a community reading experience.',
+  sameAs: [
+    'https://twitter.com/foxingreads',
+    'https://instagram.com/foxingreads',
+    'https://apps.apple.com/app/foxing',
+  ],
+  contactPoint: {
+    '@type': 'ContactPoint',
+    email: 'hello@foxing.app',
+    contactType: 'customer support',
+  },
+  foundingDate: '2026',
+  knowsAbout: [
+    'Classic literature',
+    'Public domain books',
+    'Reading communities',
+    'AI-assisted reading',
+    'Book clubs',
+    'Literary analysis',
+  ],
+})
+
+const WEBSITE_JSONLD = JSON.stringify({
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  '@id': `${FOXING_BASE_URL}/#website`,
+  url: FOXING_BASE_URL,
+  name: 'Foxing',
+  description: 'reading, together.',
+  publisher: { '@id': `${FOXING_BASE_URL}/#organization` },
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${FOXING_BASE_URL}/search?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+})
 
 export default function RootLayout({
   children,
@@ -46,6 +166,16 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: ORGANIZATION_JSONLD }}
+        />
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: WEBSITE_JSONLD }}
+        />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

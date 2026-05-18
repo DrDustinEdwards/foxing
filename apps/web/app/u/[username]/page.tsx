@@ -14,8 +14,8 @@ import {
   fetchUserFavorites,
 } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
 import { profileJsonLd } from '@/lib/structured-data'
+import { buildProfileMetadata } from '@/lib/metadata'
 
 export const revalidate = 300
 
@@ -25,26 +25,17 @@ export async function generateMetadata({
   params: { username: string }
 }): Promise<Metadata> {
   const profile = await fetchProfileByUsername(params.username)
-  if (!profile) return { title: 'Profile not found · Foxing' }
+  if (!profile) return { title: 'Profile not found' }
   if (!profile.is_public) {
-    return { title: `@${profile.username} · Foxing` }
+    return { title: `@${profile.username}`, robots: { index: false, follow: false } }
   }
-  const origin = siteOrigin()
-  const description = profile.reading_personality
-    ? `${profile.reading_personality}. Foxing reader.`
-    : 'Foxing reader.'
-  return {
-    title: `${profile.display_name} (@${profile.username}) · Foxing`,
-    description,
-    alternates: { canonical: `${origin}/u/${profile.username}` },
-    openGraph: {
-      title: `${profile.display_name} on Foxing`,
-      description,
-      url: `${origin}/u/${profile.username}`,
-      images: profile.avatar_url ? [{ url: profile.avatar_url }] : undefined,
-      type: 'profile',
-    },
-  }
+  const stats = await fetchProfileStats(profile.id)
+  return buildProfileMetadata({
+    display_name: profile.display_name,
+    username: profile.username,
+    reading_personality: profile.reading_personality,
+    books_count: stats.books_finished,
+  })
 }
 
 export default async function ProfilePage({

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import type { Metadata } from 'next'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { HighlightCard } from '@/components/highlight-card'
@@ -7,15 +6,11 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicQuotes } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 300
 
-export const metadata: Metadata = {
-  title: 'Passages readers saved · Foxing',
-  description: 'Public highlights from books in the Foxing library.',
-  alternates: { canonical: `${siteOrigin()}/quotes` },
-}
+export const metadata = STATIC_PAGE_METADATA['/quotes']
 
 export default async function QuotesPage({
   searchParams,

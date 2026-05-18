@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import type { Metadata } from 'next'
 import { ClubCard } from '@/components/club-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
@@ -7,15 +6,11 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicClubs } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 60
 
-export const metadata: Metadata = {
-  title: 'Reading clubs · Foxing',
-  description: 'Active book clubs you can join.',
-  alternates: { canonical: `${siteOrigin()}/clubs` },
-}
+export const metadata = STATIC_PAGE_METADATA['/clubs']
 
 export default async function ClubsIndexPage() {
   const [navUser, clubs] = await Promise.all([

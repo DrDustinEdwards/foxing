@@ -1,6 +1,5 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Button } from '@/components/ui/button'
 import { ClubCard } from '@/components/club-card'
@@ -15,15 +14,14 @@ import {
   fetchTodaysPick,
 } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
-import { ERAS, LENGTHS, MOODS, appBookDeeplink, siteOrigin } from '@/lib/foxing'
+import { ERAS, LENGTHS, MOODS, appBookDeeplink } from '@/lib/foxing'
+import { buildDiscoverMetadata } from '@/lib/metadata'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Discover · Foxing',
-  description:
-    'Today’s pick, trending books, mood-based browsing, and active reading clubs.',
-  alternates: { canonical: `${siteOrigin()}/discover` },
+export async function generateMetadata() {
+  const popular = await fetchPopularThisWeek(2)
+  return buildDiscoverMetadata(popular.map((b) => b.title))
 }
 
 export default async function DiscoverPage() {

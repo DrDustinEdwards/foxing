@@ -1,16 +1,12 @@
-import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 86_400
 
-export const metadata: Metadata = {
-  title: 'Privacy · Foxing',
-  alternates: { canonical: `${siteOrigin()}/privacy` },
-}
+export const metadata = STATIC_PAGE_METADATA['/privacy']
 
 export default async function PrivacyPage() {
   const navUser = await getNavUser()

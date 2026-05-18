@@ -1,21 +1,15 @@
 import Link from 'next/link'
-import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 import { cn } from '@/lib/cn'
 
 export const revalidate = 3600
 
-export const metadata: Metadata = {
-  title: 'Pricing · Foxing',
-  description:
-    'Free, Plus, and Patron. Pick the tier that fits how you read.',
-  alternates: { canonical: `${siteOrigin()}/pricing` },
-}
+export const metadata = STATIC_PAGE_METADATA['/pricing']
 
 interface PricingPageProps {
   searchParams: { period?: 'monthly' | 'yearly' }

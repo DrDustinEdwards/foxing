@@ -12,7 +12,7 @@ import {
   fetchHighlightsByAuthor,
 } from '@/lib/queries'
 import { getNavUser } from '@/lib/nav-user'
-import { siteOrigin } from '@/lib/foxing'
+import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 
 export const revalidate = 86_400
 
@@ -21,17 +21,12 @@ export async function generateMetadata({
 }: {
   params: { slug: string }
 }): Promise<Metadata> {
-  const author = decodeURIComponent(params.slug)
-  const origin = siteOrigin()
-  return {
-    title: `${author} · Foxing`,
-    alternates: { canonical: `${origin}/author/${params.slug}` },
-    openGraph: {
-      title: `${author} on Foxing`,
-      type: 'profile',
-      url: `${origin}/author/${params.slug}`,
-    },
-  }
+  const authorName = decodeURIComponent(params.slug)
+  const books = await fetchBooksByAuthor(authorName)
+  return buildAuthorMetadata(
+    authorName,
+    books.map((b) => b.title),
+  )
 }
 
 export default async function AuthorPage({
@@ -49,9 +44,35 @@ export default async function AuthorPage({
 
   const aiBio = books[0] ? await fetchAiCache(books[0].id, 'author_bio') : null
 
+  // Themes the author works in, sampled from their books.
+  const themeSet = new Set<string>()
+  for (const b of books) {
+    for (const t of b.themes ?? []) themeSet.add(t)
+  }
+  const knowsAbout = [...themeSet].slice(0, 8)
+
+  const personJsonLdStr = JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    '@id': `${FOXING_BASE_URL}/author/${params.slug}`,
+    name: authorName,
+    url: `${FOXING_BASE_URL}/author/${params.slug}`,
+    description:
+      aiBio ??
+      `${authorName}, read their complete works free on Foxing.`,
+    sameAs: [] as string[],
+    jobTitle: 'Author',
+    knowsAbout,
+  })
+
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <Nav user={navUser} />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: personJsonLdStr }}
+      />
       <main className="flex-1">
         <PageWrapper className="py-12">
           <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
