@@ -1,8 +1,9 @@
 // celebrity-pick-finder
-// Runs monthly (pg_cron: 0 9 6 * *). Scrapes Book Riot, Tertulia, and Reese's
-// Book Club RSS, then falls back to Claude web search for any of the Big 4
-// (Oprah, Reese, Jenna, GMA) still missing. Every pick is auto-published
-// (is_published = true). Admins get a notification listing what landed.
+// Runs monthly (pg_cron: 0 9 6 * *). Scrapes Book Riot, Tertulia, Reese's
+// Book Club RSS, and BookNotification.com club pages. Falls back to Claude
+// web search for any of the Big 4 (Oprah, Reese, Jenna, GMA) still missing.
+// Every pick is auto-published (is_published = true). Admins get a
+// notification listing what landed.
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import {
@@ -208,6 +209,90 @@ async function fetchAndExtract(
   }
 }
 
+// BookNotification.com publishes per-club tables of historical picks at
+// /book-clubs/<bnPath>/. The most recent row at the top of the table is the
+// current pick. We use it as a deterministic, no-LLM source.
+interface BNClub {
+  slug: string
+  label: string
+  match: string
+  bnPath: string
+}
+
+const BN_CLUBS: BNClub[] = [
+  { slug: 'oprah', label: "Oprah's Book Club", match: 'oprah', bnPath: 'oprahs-book-club' },
+  { slug: 'reese', label: "Reese's Book Club", match: 'reese', bnPath: 'reeses-book-club' },
+  { slug: 'jenna', label: 'Read with Jenna', match: 'jenna', bnPath: 'read-with-jenna-book-club' },
+  { slug: 'gma', label: 'GMA Book Club', match: 'morning', bnPath: 'good-morning-america-book-club' },
+  { slug: 'belletrist', label: 'Belletrist', match: 'belletrist', bnPath: 'belletrist-book-club' },
+  { slug: 'service95', label: 'Service95 Book Club', match: 'service95', bnPath: 'service95-book-club' },
+  { slug: 'barnes-noble', label: 'Barnes & Noble Book Club', match: 'barnes', bnPath: 'barnes-noble-book-club' },
+  { slug: 'good-housekeeping', label: 'Good Housekeeping Book Club', match: 'housekeeping', bnPath: 'good-housekeeping-book-club' },
+  { slug: 'jack-carr', label: 'Jack Carr Book Club', match: 'carr', bnPath: 'jack-carr-book-club' },
+  { slug: 'late-show', label: 'Late Show Book Club', match: 'late show', bnPath: 'the-late-show-book-club' },
+  { slug: 'library-science', label: 'Library Science', match: 'library science', bnPath: 'library-science-book-club' },
+  { slug: 'natalie-portman', label: "Natalie Portman's Book Club", match: 'portman', bnPath: 'natalie-portmans-book-club' },
+  { slug: 'katie-couric', label: 'Katie Couric Book Club', match: 'couric', bnPath: 'katie-couric-book-club' },
+  { slug: 'anthony-jeselnik', label: 'Jeselnik Book Club', match: 'jeselnik', bnPath: 'jeselnik-book-club' },
+  { slug: 'richard-judy', label: 'Richard & Judy Book Club', match: 'richard', bnPath: 'richard-judy-book-club' },
+  { slug: 'audacious', label: 'The Audacious Book Club', match: 'audacious', bnPath: 'the-audacious-book-club' },
+  { slug: 'sunnie-reads', label: 'Sunnie Reads', match: 'sunnie', bnPath: 'sunnie-reads-book-club' },
+  { slug: 'tearoom', label: 'TeaTime Book Club', match: 'teatime', bnPath: 'teatime-book-club' },
+]
+
+const BN_MONTH_NAMES: Record<number, string> = {
+  1: 'January', 2: 'February', 3: 'March', 4: 'April', 5: 'May', 6: 'June',
+  7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December',
+}
+
+function bnStripTags(s: string): string {
+  return s
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&')
+    .replace(/&#39;/g, "'")
+    .replace(/&#8217;/g, "'")
+    .replace(/&quot;/g, '"')
+    .trim()
+}
+
+async function scrapeBookNotificationLatest(
+  bnPath: string,
+  month: number,
+  year: number,
+): Promise<{ title: string; author: string } | null> {
+  try {
+    const res = await fetch(
+      `https://booknotification.com/book-clubs/${bnPath}/`,
+      {
+        headers: { 'User-Agent': 'Foxing/1.0 (foxing.app; book discovery)' },
+        signal: AbortSignal.timeout(8000),
+      },
+    )
+    if (!res.ok) return null
+    const html = await res.text()
+    const tableMatch = html.match(/<table id="clublist"[\s\S]*?<\/table>/)
+    if (!tableMatch) return null
+    const monthLong = BN_MONTH_NAMES[month]
+    const yyShort = String(year).slice(-2)
+    const rows = [...tableMatch[0].matchAll(/<tr[\s\S]*?<\/tr>/g)]
+    for (const r of rows) {
+      const tds = [...r[0].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((m) => m[1])
+      if (tds.length < 4) continue
+      const label = bnStripTags(tds[1] ?? '')
+      const wantFull = `${monthLong} ${year}`
+      const wantTick = `${monthLong} '${yyShort}`
+      if (!label.startsWith(wantFull) && !label.startsWith(wantTick)) continue
+      const author = bnStripTags(tds[2] ?? '')
+      const title = bnStripTags(tds[3] ?? '')
+      if (!title || !author) return null
+      return { title, author }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
 serve(async (req: Request) => {
   const authHeader = req.headers.get('Authorization')
   if (authHeader !== `Bearer ${CRON_SECRET}`) {
@@ -287,6 +372,24 @@ Include every club you can find. If you cannot find a pick for a club, omit it.`
     }
   } catch {
     // continue
+  }
+
+  // BookNotification.com: deterministic per-club source, no LLM needed.
+  for (const club of BN_CLUBS) {
+    const found = allResults.some((r) =>
+      r.club_name.toLowerCase().includes(club.match),
+    )
+    if (found) continue
+    const hit = await scrapeBookNotificationLatest(club.bnPath, monthNum, year)
+    if (hit) {
+      allResults.push({
+        club_name: club.label,
+        book_title: hit.title,
+        author: hit.author,
+        source: 'booknotification',
+        confidence: 'high',
+      })
+    }
   }
 
   // Web search fallback for the Big 4
