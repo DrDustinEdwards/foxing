@@ -153,6 +153,52 @@ export async function GET(request: NextRequest) {
     return journalOG(post)
   }
 
+  if (type === 'book-of-month') {
+    return bookOfMonthOG({
+      title: params.get('title') ?? '',
+      author: params.get('author') ?? '',
+      cover_url: params.get('cover'),
+      month: params.get('month') ?? '',
+      year: params.get('year') ?? '',
+    })
+  }
+
+  if (type === 'diary') {
+    return diaryOG({
+      name: params.get('name') ?? 'A reader',
+      title: params.get('title') ?? '',
+      author: params.get('author') ?? '',
+      cover_url: params.get('cover'),
+      rating: params.get('rating'),
+    })
+  }
+
+  if (type === 'list') {
+    return listOG({
+      title: params.get('title') ?? '',
+      creator: params.get('creator') ?? '',
+      count: params.get('count') ?? '',
+      covers: params.getAll('cover'),
+    })
+  }
+
+  if (type === 'club') {
+    return clubOG({
+      name: params.get('name') ?? '',
+      members: params.get('members') ?? '',
+      book_title: params.get('title') ?? '',
+      book_cover: params.get('cover'),
+    })
+  }
+
+  if (type === 'quote') {
+    return quoteOG({
+      text: params.get('text') ?? '',
+      title: params.get('title') ?? '',
+      author: params.get('author') ?? '',
+    })
+  }
+
   return defaultOG()
 }
 
@@ -492,6 +538,513 @@ function journalOG(post: JournalData) {
           >
             foxing.app/journal
           </div>
+        </div>
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT },
+  )
+}
+
+function bookOfMonthOG(data: {
+  title: string
+  author: string
+  cover_url: string | null
+  month: string
+  year: string
+}) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          background: CHARCOAL,
+          color: CREAM,
+        }}
+      >
+        <div
+          style={{
+            width: 420,
+            height: HEIGHT,
+            display: 'flex',
+            background: '#2A1A0E',
+            overflow: 'hidden',
+          }}
+        >
+          {data.cover_url && (
+            <img
+              src={data.cover_url}
+              width={420}
+              height={HEIGHT}
+              style={{ objectFit: 'cover' }}
+              alt=""
+            />
+          )}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            padding: 64,
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <span
+              style={{
+                alignSelf: 'flex-start',
+                padding: '6px 16px',
+                borderRadius: 999,
+                background: AUBURN,
+                color: 'white',
+                fontFamily: 'monospace',
+                fontSize: 18,
+                letterSpacing: 2,
+              }}
+            >
+              BOOK OF THE MONTH
+            </span>
+            <span
+              style={{
+                color: '#C4AE96',
+                fontFamily: 'monospace',
+                fontSize: 22,
+                letterSpacing: 4,
+              }}
+            >
+              {`${data.month.toUpperCase()} ${data.year}`}
+            </span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div
+              style={{
+                fontSize: 60,
+                lineHeight: 1.05,
+                fontFamily: 'serif',
+                fontWeight: 600,
+                color: CREAM,
+              }}
+            >
+              {clamp(data.title, 80)}
+            </div>
+            <div
+              style={{
+                fontSize: 28,
+                color: '#C4AE96',
+                fontStyle: 'italic',
+                fontFamily: 'serif',
+              }}
+            >
+              {`by ${clamp(data.author, 50)}`}
+            </div>
+          </div>
+          <FoxingMark tint={AUBURN} />
+        </div>
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT },
+  )
+}
+
+function diaryOG(data: {
+  name: string
+  title: string
+  author: string
+  cover_url: string | null
+  rating: string | null
+}) {
+  const stars = data.rating ? Math.max(0, Math.min(5, Number(data.rating))) : 0
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          background: CREAM,
+          color: CHARCOAL,
+          padding: 64,
+        }}
+      >
+        <div
+          style={{
+            width: 240,
+            height: 360,
+            background: '#E5D8BF',
+            display: 'flex',
+            overflow: 'hidden',
+            borderRadius: 8,
+            marginRight: 48,
+            boxShadow: '0 16px 32px rgba(22,16,11,0.18)',
+          }}
+        >
+          {data.cover_url && (
+            <img
+              src={data.cover_url}
+              width={240}
+              height={360}
+              style={{ objectFit: 'cover' }}
+              alt=""
+            />
+          )}
+        </div>
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <FoxingMark />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <span
+              style={{
+                fontFamily: 'monospace',
+                fontSize: 22,
+                color: TEXT_TERTIARY,
+                letterSpacing: 3,
+              }}
+            >
+              READ
+            </span>
+            <div
+              style={{
+                fontSize: 48,
+                fontFamily: 'serif',
+                fontWeight: 600,
+                lineHeight: 1.1,
+              }}
+            >
+              {clamp(`${data.name} on ${data.title}`, 70)}
+            </div>
+            <div
+              style={{
+                fontSize: 24,
+                color: TEXT_TERTIARY,
+                fontStyle: 'italic',
+                fontFamily: 'serif',
+              }}
+            >
+              {`by ${clamp(data.author, 50)}`}
+            </div>
+            {data.rating && stars > 0 && (
+              <div
+                style={{
+                  fontSize: 40,
+                  letterSpacing: 6,
+                  color: AUBURN,
+                }}
+              >
+                {'★'.repeat(Math.round(stars))}
+                <span style={{ color: '#D6C3A3' }}>
+                  {'★'.repeat(Math.max(0, 5 - Math.round(stars)))}
+                </span>
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              fontSize: 22,
+              color: TEXT_TERTIARY,
+              fontFamily: 'sans-serif',
+            }}
+          >
+            foxing.app
+          </div>
+        </div>
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT },
+  )
+}
+
+function listOG(data: {
+  title: string
+  creator: string
+  count: string
+  covers: string[]
+}) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          background: CHARCOAL,
+          color: CREAM,
+          padding: 80,
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          position: 'relative',
+        }}
+      >
+        {data.covers.length > 0 && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              opacity: 0.18,
+              filter: 'blur(8px)',
+            }}
+          >
+            {data.covers.slice(0, 3).map((url, i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  height: '100%',
+                  display: 'flex',
+                  overflow: 'hidden',
+                }}
+              >
+                <img
+                  src={url}
+                  width={400}
+                  height={HEIGHT}
+                  style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                  alt=""
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <FoxingMark tint={AUBURN} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <span
+            style={{
+              fontFamily: 'monospace',
+              fontSize: 22,
+              color: '#C4AE96',
+              letterSpacing: 4,
+            }}
+          >
+            LIST
+          </span>
+          <div
+            style={{
+              fontSize: 84,
+              fontFamily: 'serif',
+              fontWeight: 600,
+              lineHeight: 1.05,
+            }}
+          >
+            {clamp(data.title, 60)}
+          </div>
+          <div
+            style={{
+              fontSize: 28,
+              color: '#C4AE96',
+              fontStyle: 'italic',
+              fontFamily: 'serif',
+            }}
+          >
+            {data.creator && `by ${clamp(data.creator, 40)} · `}
+            {data.count && `${data.count} books`}
+          </div>
+        </div>
+        <div
+          style={{
+            fontSize: 22,
+            color: '#A28269',
+            fontFamily: 'sans-serif',
+          }}
+        >
+          foxing.app/lists
+        </div>
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT },
+  )
+}
+
+function clubOG(data: {
+  name: string
+  members: string
+  book_title: string
+  book_cover: string | null
+}) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          background: CREAM,
+          color: CHARCOAL,
+          padding: 64,
+        }}
+      >
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+          }}
+        >
+          <FoxingMark />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <span
+              style={{
+                fontFamily: 'monospace',
+                fontSize: 22,
+                color: TEXT_TERTIARY,
+                letterSpacing: 4,
+              }}
+            >
+              READING CLUB
+            </span>
+            <div
+              style={{
+                fontSize: 72,
+                fontFamily: 'serif',
+                fontWeight: 600,
+                lineHeight: 1.05,
+              }}
+            >
+              {clamp(data.name, 40)}
+            </div>
+            {data.members && (
+              <div
+                style={{
+                  fontSize: 28,
+                  color: TEXT_TERTIARY,
+                  fontFamily: 'sans-serif',
+                }}
+              >
+                {`${data.members} members`}
+              </div>
+            )}
+            {data.book_title && (
+              <div
+                style={{
+                  fontSize: 26,
+                  color: '#3E3028',
+                  fontStyle: 'italic',
+                  fontFamily: 'serif',
+                }}
+              >
+                {`Reading ${clamp(data.book_title, 50)}`}
+              </div>
+            )}
+          </div>
+          <div
+            style={{
+              fontSize: 22,
+              color: TEXT_TERTIARY,
+              fontFamily: 'sans-serif',
+            }}
+          >
+            foxing.app/clubs
+          </div>
+        </div>
+        {data.book_cover && (
+          <div
+            style={{
+              width: 280,
+              height: 420,
+              alignSelf: 'center',
+              marginLeft: 48,
+              display: 'flex',
+              overflow: 'hidden',
+              borderRadius: 8,
+              boxShadow: '0 16px 32px rgba(22,16,11,0.18)',
+              background: '#E5D8BF',
+            }}
+          >
+            <img
+              src={data.book_cover}
+              width={280}
+              height={420}
+              style={{ objectFit: 'cover' }}
+              alt=""
+            />
+          </div>
+        )}
+      </div>
+    ),
+    { width: WIDTH, height: HEIGHT },
+  )
+}
+
+function quoteOG(data: {
+  text: string
+  title: string
+  author: string
+}) {
+  return new ImageResponse(
+    (
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          background: CHARCOAL,
+          color: CREAM,
+          padding: 96,
+          justifyContent: 'space-between',
+        }}
+      >
+        <div
+          style={{
+            fontSize: 80,
+            color: AUBURN,
+            fontFamily: 'serif',
+            lineHeight: 1,
+          }}
+        >
+          “
+        </div>
+        <div
+          style={{
+            fontSize: 44,
+            fontFamily: 'serif',
+            fontStyle: 'italic',
+            lineHeight: 1.25,
+            color: CREAM,
+            textAlign: 'center',
+            padding: '0 32px',
+            display: 'flex',
+          }}
+        >
+          {clamp(data.text, 220)}
+        </div>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-end',
+          }}
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span
+              style={{
+                fontSize: 24,
+                color: '#C4AE96',
+                fontFamily: 'serif',
+                fontStyle: 'italic',
+              }}
+            >
+              {data.title && `from ${clamp(data.title, 40)}`}
+            </span>
+            <span
+              style={{
+                fontSize: 22,
+                color: '#A28269',
+                fontFamily: 'sans-serif',
+              }}
+            >
+              {data.author && `by ${clamp(data.author, 40)}`}
+            </span>
+          </div>
+          <FoxingMark tint={AUBURN} />
         </div>
       </div>
     ),
