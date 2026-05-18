@@ -10,10 +10,12 @@ interface NavUser {
   username: string
   display_name: string
   avatar_url: string | null
+  is_admin: boolean
 }
 
 interface NavProps {
   user: NavUser | null
+  unreadNotifications?: number
 }
 
 const PRIMARY_LINKS = [
@@ -47,7 +49,7 @@ const MOBILE_LINKS = [
   { href: '/journal', label: 'Journal' },
 ] as const
 
-export function Nav({ user }: NavProps) {
+export function Nav({ user, unreadNotifications = 0 }: NavProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [bookClubsOpen, setBookClubsOpen] = useState(false)
@@ -163,25 +165,50 @@ export function Nav({ user }: NavProps) {
           </Link>
 
           {user ? (
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setMenuOpen((v) => !v)}
-                className="rounded-full"
-                aria-haspopup="menu"
-                aria-expanded={menuOpen}
-                aria-label={`Account menu for ${user.display_name}`}
+            <>
+              <Link
+                href="/notifications"
+                aria-label={
+                  unreadNotifications > 0
+                    ? `Notifications, ${unreadNotifications} unread`
+                    : 'Notifications'
+                }
+                className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
               >
-                <Avatar
-                  src={user.avatar_url}
-                  name={user.display_name}
-                  size="md"
-                />
-              </button>
-              {menuOpen && (
-                <AccountMenu username={user.username} onClose={() => setMenuOpen(false)} />
-              )}
-            </div>
+                <BellIcon />
+                {unreadNotifications > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-ui px-1 font-dm-mono text-[10px] font-medium text-text-on-brand"
+                  >
+                    {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                  </span>
+                )}
+              </Link>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="rounded-full"
+                  aria-haspopup="menu"
+                  aria-expanded={menuOpen}
+                  aria-label={`Account menu for ${user.display_name}`}
+                >
+                  <Avatar
+                    src={user.avatar_url}
+                    name={user.display_name}
+                    size="md"
+                  />
+                </button>
+                {menuOpen && (
+                  <AccountMenu
+                    username={user.username}
+                    isAdmin={user.is_admin}
+                    onClose={() => setMenuOpen(false)}
+                  />
+                )}
+              </div>
+            </>
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Link href="/sign-in">
@@ -283,9 +310,11 @@ function BookClubsDropdown({ onClose }: { onClose: () => void }) {
 
 function AccountMenu({
   username,
+  isAdmin,
   onClose,
 }: {
   username: string
+  isAdmin: boolean
   onClose: () => void
 }) {
   const items = [
@@ -315,6 +344,19 @@ function AccountMenu({
             </Link>
           </li>
         ))}
+        {isAdmin && (
+          <li className="border-t border-border-subtle">
+            <Link
+              href="/admin"
+              role="menuitem"
+              className="flex items-center gap-2 px-4 py-2 font-dm-sans text-sm text-brand-ui hover:bg-bg-hover"
+              onClick={onClose}
+            >
+              <ShieldIcon />
+              Admin dashboard
+            </Link>
+          </li>
+        )}
         <li className="border-t border-border-subtle">
           <form action="/sign-out" method="post">
             <button
@@ -328,6 +370,43 @@ function AccountMenu({
         </li>
       </ul>
     </div>
+  )
+}
+
+function ShieldIcon() {
+  return (
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
   )
 }
 
