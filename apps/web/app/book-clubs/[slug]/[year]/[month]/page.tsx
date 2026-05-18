@@ -21,7 +21,6 @@ import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600
-export const dynamicParams = true
 
 interface PageParams {
   slug: string
