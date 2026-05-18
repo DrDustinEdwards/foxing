@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation'
 import { type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
-import { getNavUser } from '@/lib/nav-user'
+import { getNavUser, getUnreadNotificationCount } from '@/lib/nav-user'
 
 /**
  * Layout for all authenticated routes. Middleware already gates these to
@@ -10,11 +10,14 @@ import { getNavUser } from '@/lib/nav-user'
  * each need to.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const user = await getNavUser()
+  const [user, unreadNotifications] = await Promise.all([
+    getNavUser(),
+    getUnreadNotificationCount(),
+  ])
   if (!user) redirect('/sign-in')
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={user} />
+      <Nav user={user} unreadNotifications={unreadNotifications} />
       <main className="flex-1">{children}</main>
       <Footer />
     </div>
