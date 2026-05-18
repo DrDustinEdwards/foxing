@@ -10,6 +10,7 @@ import { fetchDiaryEntries } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { formatRelativeDate } from '@foxing/utils'
 import { cn } from '@/lib/cn'
+import { LogEntryDialog } from './log-entry-dialog'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,11 +38,7 @@ export default async function DiaryPage({
         <h1 className="font-fraunces text-[2rem] text-text-primary">
           Reading diary
         </h1>
-        <Link href="/diary/new">
-          <Button variant="primary" size="sm">
-            Add entry
-          </Button>
-        </Link>
+        <LogEntryDialog />
       </div>
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -56,13 +53,7 @@ export default async function DiaryPage({
         <div className="mt-10">
           <EmptyState
             heading="No entries yet."
-            action={
-              <Link href="/diary/new">
-                <Button variant="primary" size="sm">
-                  Log a book
-                </Button>
-              </Link>
-            }
+            action={<LogEntryDialog />}
           />
         </div>
       ) : view === 'list' ? (
