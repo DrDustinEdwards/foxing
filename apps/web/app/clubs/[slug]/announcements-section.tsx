@@ -123,7 +123,7 @@ function AnnouncementCard({
         </span>
         {isEvent && (
           <a
-            href={`/events/${a.id}/calendar`}
+            href={`/events/calendar/${a.id}`}
             className="text-brand-text hover:underline"
           >
             Add to calendar
