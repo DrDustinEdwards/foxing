@@ -89,6 +89,7 @@ export interface ReadingStreak {
   total_books_finished: number
   total_pages_read: number
   total_highlights: number
+  streak_freeze_credits: number
 }
 
 export async function fetchReadingStreak(
@@ -97,20 +98,20 @@ export async function fetchReadingStreak(
   const { data } = await sb()
     .from('reading_streaks')
     .select(
-      'current_streak, longest_streak, last_read_date, total_books_finished, total_pages_read, total_highlights',
+      'current_streak, longest_streak, last_read_date, total_books_finished, total_pages_read, total_highlights, streak_freeze_credits',
     )
     .eq('user_id', userId)
     .maybeSingle()
-  return (
-    (data as ReadingStreak | null) ?? {
-      current_streak: 0,
-      longest_streak: 0,
-      last_read_date: null,
-      total_books_finished: 0,
-      total_pages_read: 0,
-      total_highlights: 0,
-    }
-  )
+  const row = data as Partial<ReadingStreak> | null
+  return {
+    current_streak: row?.current_streak ?? 0,
+    longest_streak: row?.longest_streak ?? 0,
+    last_read_date: row?.last_read_date ?? null,
+    total_books_finished: row?.total_books_finished ?? 0,
+    total_pages_read: row?.total_pages_read ?? 0,
+    total_highlights: row?.total_highlights ?? 0,
+    streak_freeze_credits: row?.streak_freeze_credits ?? 0,
+  }
 }
 
 export interface FinishedBookForStats {

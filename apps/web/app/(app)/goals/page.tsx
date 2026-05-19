@@ -16,6 +16,7 @@ import { appBookDeeplink } from '@/lib/foxing'
 import { StreakHeatmap } from './streak-heatmap'
 import { ChallengeToggleButton } from './challenge-toggle-button'
 import { GoalSetter } from './goal-setter'
+import { UseFreezeButton } from './use-freeze-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,6 +109,12 @@ export default async function GoalsPage() {
         />
       </section>
 
+      <FreezeSection
+        credits={streak.streak_freeze_credits}
+        currentStreak={streak.current_streak}
+        lastRead={streak.last_read_date}
+      />
+
       <section className="mt-10">
         <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
           Community challenges
@@ -166,6 +173,52 @@ export default async function GoalsPage() {
         )}
       </section>
     </PageWrapper>
+  )
+}
+
+function FreezeSection({
+  credits,
+  currentStreak,
+  lastRead,
+}: {
+  credits: number
+  currentStreak: number
+  lastRead: string | null
+}) {
+  const today = new Date()
+  const yesterday = new Date(today)
+  yesterday.setDate(today.getDate() - 1)
+  const yesterdayISO = yesterday.toISOString().slice(0, 10)
+  const atRisk =
+    credits > 0 && currentStreak > 0 && lastRead === yesterdayISO
+  return (
+    <section className="mt-6 flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-5">
+      <header>
+        <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Streak freeze
+        </h2>
+        <p className="mt-1 font-fraunces text-xl text-text-primary">
+          {credits} freeze {credits === 1 ? 'credit' : 'credits'} available
+        </p>
+      </header>
+      {credits === 0 ? (
+        <p className="font-source-serif-4 text-sm text-text-secondary">
+          Earn freeze credits by reading consistently. You earn 1 freeze
+          credit for every 7-day streak milestone.
+        </p>
+      ) : atRisk ? (
+        <div className="flex flex-col gap-2">
+          <p className="font-source-serif-4 text-sm text-text-secondary">
+            Your streak is at risk. Use a freeze to protect it for today.
+          </p>
+          <UseFreezeButton />
+        </div>
+      ) : (
+        <p className="font-source-serif-4 text-sm text-text-secondary">
+          You earn 1 freeze credit for every 7-day streak milestone.
+        </p>
+      )}
+    </section>
   )
 }
 
