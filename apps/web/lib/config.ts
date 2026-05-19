@@ -23,5 +23,5 @@ export const PLUS_PRICE_ANNUAL_LABEL = `${PLUS_PRICE_ANNUAL}/year`
 export const PLUS_ANNUAL_SAVINGS_LABEL = `Save ${PLUS_ANNUAL_SAVINGS}`
 export const PLUS_TRIAL_LABEL = `${PLUS_TRIAL_DAYS}-day free trial`
 
-// "$12.99/month or $129.99/year" — used in meta descriptions and copy.
+// "$12.99/month or $129.99/year": used in meta descriptions and copy.
 export const PLUS_PRICE_COMBINED_LABEL = `${PLUS_PRICE_MONTHLY_LABEL} or ${PLUS_PRICE_ANNUAL_LABEL}`

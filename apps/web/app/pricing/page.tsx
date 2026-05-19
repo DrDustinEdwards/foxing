@@ -4,6 +4,12 @@ import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { getNavUser } from '@/lib/nav-user'
+import {
+  PLUS_ANNUAL_SAVINGS_LABEL,
+  PLUS_PRICE_ANNUAL,
+  PLUS_PRICE_MONTHLY,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 import { cn } from '@/lib/cn'
 
@@ -34,7 +40,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
               alongside you, plus book club creation and more.
             </p>
             <p className="mt-4 font-dm-sans text-xs text-text-tertiary">
-              7-day free trial. No credit card required. Cancel anytime.
+              {PLUS_TRIAL_LABEL}. No credit card required. Cancel anytime.
             </p>
           </header>
 
@@ -59,7 +65,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
             <PricingCard
               highlight
               name="Plus"
-              price={period === 'yearly' ? '$129.99' : '$12.99'}
+              price={period === 'yearly' ? PLUS_PRICE_ANNUAL : PLUS_PRICE_MONTHLY}
               cadence={period === 'yearly' ? 'per year' : 'per month'}
               cta="Start with Plus"
               ctaHref="/sign-up?plan=plus"
@@ -125,7 +131,7 @@ function PeriodToggle({ period }: { period: 'monthly' | 'yearly' }) {
               : 'text-text-tertiary hover:text-text-primary',
           )}
         >
-          Yearly (Save $26)
+          Yearly ({PLUS_ANNUAL_SAVINGS_LABEL})
         </Link>
       </div>
     </div>

@@ -19,6 +19,11 @@ import {
   type PassageOfDay,
 } from '@/lib/missing-pages-queries'
 import { appBookDeeplink } from '@/lib/foxing'
+import {
+  FREE_AI_LOOKUPS_PER_DAY,
+  PLUS_PRICE_MONTHLY_LABEL,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 
 export const revalidate = 600
 
@@ -58,7 +63,7 @@ const FAQ_JSONLD = JSON.stringify({
       name: 'Is Foxing free to use?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. The Foxing reader and all 1,400+ classic books are completely free. Foxing Plus ($9.99 per month) adds unlimited AI companion features, book clubs, and full reading stats. A 7-day free trial is available.',
+        text: `Yes. The Foxing reader and all 1,400+ classic books are completely free. Foxing Plus (${PLUS_PRICE_MONTHLY_LABEL}) adds unlimited AI companion features, book clubs, and full reading stats. A ${PLUS_TRIAL_LABEL} is available.`,
       },
     },
     {
@@ -66,7 +71,7 @@ const FAQ_JSONLD = JSON.stringify({
       name: 'Does Foxing have an AI for reading?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: 'Yes. Foxing includes an AI companion powered by Claude. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. Free users get 3 AI lookups per day. Foxing Plus gives unlimited access.',
+        text: `Yes. Foxing includes an AI companion powered by Claude. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. Free users get ${FREE_AI_LOOKUPS_PER_DAY} AI lookups per day. Foxing Plus gives unlimited access.`,
       },
     },
   ],

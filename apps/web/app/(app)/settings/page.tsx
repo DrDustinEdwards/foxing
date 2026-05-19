@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import type { Theme } from '@/lib/theme'
@@ -149,8 +150,8 @@ function SubscriptionPanel({ tier }: { tier: string }) {
       </div>
       {tier === 'free' ? (
         <p className="font-dm-sans text-sm text-text-tertiary">
-          Plus adds unlimited AI lookups, book clubs, and full stats. 7-day
-          free trial, no credit card.
+          Plus adds unlimited AI lookups, book clubs, and full stats.{' '}
+          {PLUS_TRIAL_LABEL}, no credit card.
         </p>
       ) : (
         <p className="font-dm-sans text-sm text-text-tertiary">
