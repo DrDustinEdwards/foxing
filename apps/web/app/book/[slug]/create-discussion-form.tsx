@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DISCUSSION_TYPES, type DiscussionType } from '@/lib/discussions'
+import { DISCUSSION_TYPES, type DiscussionType } from '@/lib/discussion-types'
 import { createDiscussion } from './actions'
 
 interface Props {
