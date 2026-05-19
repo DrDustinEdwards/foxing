@@ -121,6 +121,140 @@ export interface FinishedBookForStats {
   themes: string[] | null
 }
 
+export interface RecentReadingSession {
+  id: string
+  started_at: string
+  ended_at: string | null
+  pages_read: number
+  avg_wpm: number | null
+  book: {
+    id: string
+    slug: string | null
+    title: string
+    author: string
+  } | null
+}
+
+export async function fetchRecentSessions(
+  userId: string,
+  limit = 10,
+): Promise<RecentReadingSession[]> {
+  const { data } = await sb()
+    .from('reading_sessions')
+    .select(
+      'id, started_at, ended_at, pages_read, avg_wpm, books:book_id(id, slug, title, author)',
+    )
+    .eq('user_id', userId)
+    .not('ended_at', 'is', null)
+    .order('ended_at', { ascending: false })
+    .limit(limit)
+  return ((data as unknown as Array<
+    Omit<RecentReadingSession, 'book'> & {
+      books: RecentReadingSession['book'] | null
+    }
+  > | null) ?? []).map((r) => ({
+    id: r.id,
+    started_at: r.started_at,
+    ended_at: r.ended_at,
+    pages_read: r.pages_read,
+    avg_wpm: r.avg_wpm,
+    book: r.books,
+  }))
+}
+
+export interface ReadingTimeStats {
+  total_minutes: number
+  sessions_with_pages: number
+}
+
+export async function fetchReadingTimeStats(
+  userId: string,
+): Promise<ReadingTimeStats> {
+  const { data } = await sb()
+    .from('reading_sessions')
+    .select('started_at, ended_at, pages_read')
+    .eq('user_id', userId)
+    .not('ended_at', 'is', null)
+  const rows = (data as
+    | { started_at: string; ended_at: string; pages_read: number }[]
+    | null) ?? []
+  let totalMs = 0
+  let withPages = 0
+  for (const r of rows) {
+    const dur =
+      new Date(r.ended_at).getTime() - new Date(r.started_at).getTime()
+    if (dur > 0) totalMs += dur
+    if (r.pages_read > 0) withPages++
+  }
+  return {
+    total_minutes: Math.round(totalMs / 60000),
+    sessions_with_pages: withPages,
+  }
+}
+
+export interface AuthorAndFormatStats {
+  top_author: { name: string; count: number } | null
+  longest_book:
+    | { title: string; slug: string | null; id: string; word_count: number }
+    | null
+  format_counts: Record<string, number>
+}
+
+export async function fetchAuthorAndFormatStats(
+  userId: string,
+): Promise<AuthorAndFormatStats> {
+  const { data } = await sb()
+    .from('user_books')
+    .select(
+      'format_read, books:book_id(id, slug, title, author, word_count)',
+    )
+    .eq('user_id', userId)
+    .eq('status', 'finished')
+  const rows = (data as
+    | Array<{
+        format_read: string | null
+        books: {
+          id: string
+          slug: string | null
+          title: string
+          author: string
+          word_count: number | null
+        } | null
+      }>
+    | null) ?? []
+  const authorCounts = new Map<string, number>()
+  const formatCounts: Record<string, number> = {}
+  let longest: AuthorAndFormatStats['longest_book'] = null
+  for (const r of rows) {
+    if (r.books) {
+      authorCounts.set(
+        r.books.author,
+        (authorCounts.get(r.books.author) ?? 0) + 1,
+      )
+      if (
+        r.books.word_count &&
+        (!longest || r.books.word_count > longest.word_count)
+      ) {
+        longest = {
+          id: r.books.id,
+          slug: r.books.slug,
+          title: r.books.title,
+          word_count: r.books.word_count,
+        }
+      }
+    }
+    const f = (r.format_read ?? 'unknown').toLowerCase()
+    formatCounts[f] = (formatCounts[f] ?? 0) + 1
+  }
+  let topAuthor: AuthorAndFormatStats['top_author'] = null
+  for (const [name, count] of authorCounts) {
+    if (!topAuthor || count > topAuthor.count) {
+      topAuthor = { name, count }
+    }
+  }
+  return { top_author: topAuthor, longest_book: longest, format_counts: formatCounts }
+}
+
 export async function fetchFinishedBooksForStats(
   userId: string,
   since?: string,
