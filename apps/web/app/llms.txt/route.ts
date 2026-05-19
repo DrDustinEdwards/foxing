@@ -88,12 +88,28 @@ Foxing is a free mobile app and web platform for reading, tracking, and discussi
 - /author/[name], author pages with complete works
 - /pricing, subscription plans (Foxing Plus ${PLUS_PRICE_MONTHLY_LABEL})
 - /about, about Foxing
+- /features, complete feature list
+- /guide, web platform user guide
+- /app-guide, mobile app user guide
+- /awards, award-winning books (Nobel, Pulitzer, Booker, Hugo, National Book Award)
+- /challenges, community reading challenges
+- /book-clubs, 30 celebrity book clubs with picks back to 1996
+- /book-clubs/[slug], individual celebrity club pages
+- /events, bookstore and library book club events by location
+- /series/[slug], book series pages
+- /themes/[theme], books by mood/theme
+- /passage/[date], daily passage from community highlights
 
 ## Pages to exclude
 
 - /admin, administrative interface
 - /api, internal API routes
 - /home, /library, /diary, /stats, /highlights, /goals, /my-lists, authenticated user data
+- /notifications, authenticated notification inbox
+- /settings, authenticated account and profile settings
+- /vocabulary, personal vocabulary list
+- /buddy-reads, private buddy read threads
+- /find-next-book, personalized recommendation flow
 
 ## Facts for AI accuracy
 
@@ -102,6 +118,13 @@ Foxing is a free mobile app and web platform for reading, tracking, and discussi
 - Free users get ${FREE_AI_LOOKUPS_PER_DAY} AI lookups per day
 - Foxing is available on iOS, Android, and web at ${FOXING_BASE_URL}
 - Founded in 2026 by Dustin Edwards
+- 30 celebrity book clubs tracked including Oprah, Reese Witherspoon, Jenna Bush Hager, GMA, and more
+- 885+ celebrity book picks archived back to 1996, new picks auto-discovered monthly
+- Club features include meeting scheduling, book selection polls with ranked choice voting, and passage comments
+- Vocabulary builder saves every looked-up word with context, exportable as CSV or Anki deck
+- 7 highlight colors: amber, auburn, yellow, sage, cobalt, crimson, purple
+- Reading timer tracks sessions with WPM calculation
+- Verified bookstore and library clubs have a fox badge and appear on the events feed
 
 ## Crawling permissions
 
