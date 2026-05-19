@@ -10,6 +10,7 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
 import { formatRelativeDate } from '@foxing/utils'
 import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
+import { fetchUpcomingMeetings } from '@/lib/club-meetings'
 import { fetchClubMembers, getClubRole, isClubMod } from '@/lib/club-membership'
 import {
   fetchClubPostsPreview,
@@ -22,6 +23,7 @@ import { appClubDeeplink } from '@/lib/foxing'
 import { buildClubMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AnnouncementsSection } from './announcements-section'
+import { MeetingsSection } from './meetings-section'
 import { ModerationPanel } from './moderation-panel'
 import { PostAnnouncementForm } from './post-announcement-form'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
@@ -87,12 +89,14 @@ export default async function ClubPage({
   if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
     permanentRedirect(`/clubs/${club.slug}`)
   }
-  const [posts, announcements, role] = await Promise.all([
+  const [posts, announcements, meetings, role] = await Promise.all([
     fetchClubPostsPreview(club.id, 3),
     fetchAnnouncementsForClub(club.id),
+    fetchUpcomingMeetings(club.id, userId),
     getClubRole(club.id, userId),
   ])
   const canModerate = isClubMod(role)
+  const isMember = role !== null
   const members = canModerate ? await fetchClubMembers(club.id) : []
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
@@ -133,6 +137,16 @@ export default async function ClubPage({
               />
             </section>
           )}
+
+          <MeetingsSection
+            clubId={club.id}
+            clubSlug={club.slug ?? club.id}
+            meetings={meetings}
+            canModerate={canModerate}
+            isMember={isMember}
+            defaultCity={club.bookstore_city}
+            defaultState={club.bookstore_state}
+          />
 
           {club.current_book && bookPath && (
             <section className="mt-8 flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
