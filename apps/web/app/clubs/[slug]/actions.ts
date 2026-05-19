@@ -365,6 +365,56 @@ export async function inviteClubMember(
   return { ok: true }
 }
 
+export async function approveClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .update({ status: 'active', joined_at: new Date().toISOString() })
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+    .eq('status', 'pending')
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function declineClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .delete()
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+    .eq('status', 'pending')
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
 export async function removeClubPost(
   formData: FormData,
 ): Promise<ActionResult> {

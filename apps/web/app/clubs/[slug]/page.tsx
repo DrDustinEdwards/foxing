@@ -109,16 +109,15 @@ export default async function ClubPage({
   const isMember = role !== null
   const members = canModerate ? await fetchClubMembers(club.id) : []
   const adminClient = createAdminClient()
-  const { data: adminClubRow } =
-    role === 'admin'
-      ? await adminClient
-          .from('clubs')
-          .select(
-            'member_approval, max_members, reading_pace, chapters_per_week, genre_tags',
-          )
-          .eq('id', club.id)
-          .maybeSingle()
-      : { data: null }
+  const { data: adminClubRow } = canModerate
+    ? await adminClient
+        .from('clubs')
+        .select(
+          'member_approval, max_members, reading_pace, chapters_per_week, genre_tags',
+        )
+        .eq('id', club.id)
+        .maybeSingle()
+    : { data: null }
   const adminClubFields = (adminClubRow as {
     member_approval: boolean | null
     max_members: number | null
@@ -126,6 +125,38 @@ export default async function ClubPage({
     chapters_per_week: number | null
     genre_tags: string[] | null
   } | null) ?? null
+  const showPending = canModerate && adminClubFields?.member_approval === true
+  const { data: pendingRows } = showPending
+    ? await adminClient
+        .from('club_members')
+        .select(
+          'user_id, joined_at, profile:user_id(username, display_name, avatar_url)',
+        )
+        .eq('club_id', club.id)
+        .eq('status', 'pending')
+        .order('joined_at', { ascending: true })
+    : { data: null }
+  const pendingMembers = (
+    (pendingRows as
+      | Array<{
+          user_id: string
+          joined_at: string
+          profile: {
+            username: string
+            display_name: string
+            avatar_url: string | null
+          } | null
+        }>
+      | null) ?? []
+  )
+    .filter((r) => r.profile)
+    .map((r) => ({
+      user_id: r.user_id,
+      joined_at: r.joined_at,
+      username: r.profile!.username,
+      display_name: r.profile!.display_name,
+      avatar_url: r.profile!.avatar_url,
+    }))
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -280,6 +311,8 @@ export default async function ClubPage({
                 display_name: m.profile?.display_name ?? '',
                 avatar_url: m.profile?.avatar_url ?? null,
               }))}
+              pending={pendingMembers}
+              showPending={showPending}
             />
           )}
 
