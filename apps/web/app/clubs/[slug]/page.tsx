@@ -9,16 +9,22 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
 import { formatRelativeDate } from '@foxing/utils'
+import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
+import { fetchClubMembers, getClubRole, isClubMod } from '@/lib/club-membership'
 import {
   fetchClubPostsPreview,
   fetchPublicClubById,
   fetchPublicClubBySlug,
   isUuid,
 } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { appClubDeeplink } from '@/lib/foxing'
 import { buildClubMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { AnnouncementsSection } from './announcements-section'
+import { ModerationPanel } from './moderation-panel'
+import { PostAnnouncementForm } from './post-announcement-form'
+import { VerifiedBookstoreHeader } from './verified-bookstore-header'
 
 export const revalidate = 60
 
@@ -72,15 +78,22 @@ export default async function ClubPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, club] = await Promise.all([
+  const [navUser, club, userId] = await Promise.all([
     getNavUser(),
     resolveClub(params.slug),
+    getAuthedUserId(),
   ])
   if (!club) notFound()
   if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
     permanentRedirect(`/clubs/${club.slug}`)
   }
-  const posts = await fetchClubPostsPreview(club.id, 3)
+  const [posts, announcements, role] = await Promise.all([
+    fetchClubPostsPreview(club.id, 3),
+    fetchAnnouncementsForClub(club.id),
+    getClubRole(club.id, userId),
+  ])
+  const canModerate = isClubMod(role)
+  const members = canModerate ? await fetchClubMembers(club.id) : []
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -101,6 +114,25 @@ export default async function ClubPage({
               </p>
             )}
           </header>
+
+          <VerifiedBookstoreHeader club={club} />
+
+          <AnnouncementsSection
+            clubId={club.id}
+            announcements={announcements}
+            canModerate={canModerate}
+          />
+
+          {canModerate && (
+            <section className="mt-6">
+              <PostAnnouncementForm
+                clubId={club.id}
+                defaultCity={club.bookstore_city}
+                defaultState={club.bookstore_state}
+                canPin
+              />
+            </section>
+          )}
 
           {club.current_book && bookPath && (
             <section className="mt-8 flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
@@ -174,6 +206,23 @@ export default async function ClubPage({
               </Button>
             </Link>
           </section>
+
+          {canModerate && (
+            <ModerationPanel
+              clubId={club.id}
+              isAdmin={role === 'admin'}
+              members={members.map((m) => ({
+                user_id: m.user_id,
+                role: m.role,
+                status: m.status,
+                muted_until: m.muted_until,
+                banned_at: m.banned_at,
+                username: m.profile?.username ?? '',
+                display_name: m.profile?.display_name ?? '',
+                avatar_url: m.profile?.avatar_url ?? null,
+              }))}
+            />
+          )}
 
           {posts.length > 0 && (
             <section className="mt-10">
