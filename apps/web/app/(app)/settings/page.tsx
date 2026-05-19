@@ -10,8 +10,10 @@ import type { Theme } from '@/lib/theme'
 import { AccountSection } from './account-section'
 import { AccountCredentialsSection } from './account-credentials-section'
 import { AppearanceSection } from './appearance-section'
+import { CloseFriendsSection } from './close-friends-section'
 import { VisibilitySection } from './visibility-section'
 import { AccountActionsSection } from './account-actions-section'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
@@ -59,6 +61,34 @@ export default async function SettingsPage() {
 
   const tier = profile.subscription_tier ?? 'free'
 
+  const admin = createAdminClient()
+  const { data: friendRows } = await admin
+    .from('close_friends')
+    .select(
+      'friend_id, profile:friend_id(username, display_name, avatar_url)',
+    )
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+  const closeFriends = (
+    (friendRows as
+      | Array<{
+          friend_id: string
+          profile: {
+            username: string
+            display_name: string
+            avatar_url: string | null
+          } | null
+        }>
+      | null) ?? []
+  )
+    .filter((r) => r.profile)
+    .map((r) => ({
+      user_id: r.friend_id,
+      username: r.profile!.username,
+      display_name: r.profile!.display_name,
+      avatar_url: r.profile!.avatar_url,
+    }))
+
   return (
     <PageWrapper className="max-w-[640px] py-10">
       <h1 className="font-fraunces text-[1.75rem] text-text-primary">
@@ -96,6 +126,10 @@ export default async function SettingsPage() {
 
       <Section heading="Subscription">
         <SubscriptionPanel tier={tier} />
+      </Section>
+
+      <Section heading="Close friends">
+        <CloseFriendsSection friends={closeFriends} />
       </Section>
 
       <Section heading="Account actions">
