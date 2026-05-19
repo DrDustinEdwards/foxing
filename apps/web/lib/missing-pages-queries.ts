@@ -255,7 +255,7 @@ export async function fetchAwardWinners(
     .join(',')
   const { data } = await sb()
     .from('books')
-    .select('id, title, author, cover_url, themes')
+    .select('id, slug, title, author, cover_url, themes')
     .or(orParts)
     .limit(limit)
   return (data as AwardBookHit[] | null) ?? []
