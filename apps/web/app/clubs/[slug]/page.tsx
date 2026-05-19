@@ -157,6 +157,46 @@ export default async function ClubPage({
       display_name: r.profile!.display_name,
       avatar_url: r.profile!.avatar_url,
     }))
+
+  const { data: reportRows } = canModerate
+    ? await adminClient
+        .from('post_reports')
+        .select(
+          'id, post_id, reason, created_at, post:post_id(content, author_id, has_spoiler, thread:thread_id(club_id), author:author_id(display_name)), reporter:reporter_id(display_name)',
+        )
+        .eq('status', 'pending')
+        .eq('post_type', 'club_post')
+        .order('created_at', { ascending: true })
+    : { data: null }
+  type ReportRowShape = {
+    id: string
+    post_id: string
+    reason: string
+    created_at: string
+    post: {
+      content: string
+      author_id: string
+      has_spoiler: boolean | null
+      thread: { club_id: string } | null
+      author: { display_name: string } | null
+    } | null
+    reporter: { display_name: string } | null
+  }
+  const reports = ((reportRows as unknown as ReportRowShape[] | null) ?? [])
+    .filter((r) => r.post && r.post.thread?.club_id === club.id)
+    .map((r) => ({
+      id: r.id,
+      post_id: r.post_id,
+      reason: r.reason,
+      created_at: r.created_at,
+      post: {
+        content: r.post!.content,
+        author_id: r.post!.author_id,
+        author_name: r.post!.author?.display_name ?? 'Reader',
+        has_spoiler: Boolean(r.post!.has_spoiler),
+      },
+      reporter_name: r.reporter?.display_name ?? 'Reader',
+    }))
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -313,6 +353,7 @@ export default async function ClubPage({
               }))}
               pending={pendingMembers}
               showPending={showPending}
+              reports={reports}
             />
           )}
 

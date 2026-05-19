@@ -17,6 +17,10 @@ import {
   PendingMembersPanel,
   type PendingMemberView,
 } from './pending-members-panel'
+import {
+  ReportedPostsPanel,
+  type ReportView,
+} from './reported-posts-panel'
 
 interface MemberView {
   user_id: string
@@ -35,6 +39,7 @@ interface Props {
   members: MemberView[]
   pending?: PendingMemberView[]
   showPending?: boolean
+  reports?: ReportView[]
 }
 
 export function ModerationPanel({
@@ -43,6 +48,7 @@ export function ModerationPanel({
   members,
   pending = [],
   showPending = false,
+  reports = [],
 }: Props) {
   const [open, setOpen] = useState(false)
   if (!open) {
@@ -64,6 +70,7 @@ export function ModerationPanel({
       {showPending && (
         <PendingMembersPanel clubId={clubId} pending={pending} />
       )}
+      <ReportedPostsPanel clubId={clubId} reports={reports} />
       <MembersPanel clubId={clubId} isAdmin={isAdmin} members={members} />
     </section>
   )
