@@ -13,6 +13,10 @@ import {
   muteClubMember,
   removeClubMember,
 } from './actions'
+import {
+  PendingMembersPanel,
+  type PendingMemberView,
+} from './pending-members-panel'
 
 interface MemberView {
   user_id: string
@@ -29,9 +33,17 @@ interface Props {
   clubId: string
   isAdmin: boolean
   members: MemberView[]
+  pending?: PendingMemberView[]
+  showPending?: boolean
 }
 
-export function ModerationPanel({ clubId, isAdmin, members }: Props) {
+export function ModerationPanel({
+  clubId,
+  isAdmin,
+  members,
+  pending = [],
+  showPending = false,
+}: Props) {
   const [open, setOpen] = useState(false)
   if (!open) {
     return (
@@ -49,6 +61,9 @@ export function ModerationPanel({ clubId, isAdmin, members }: Props) {
         </Button>
       </header>
       <InvitePanel clubId={clubId} />
+      {showPending && (
+        <PendingMembersPanel clubId={clubId} pending={pending} />
+      )}
       <MembersPanel clubId={clubId} isAdmin={isAdmin} members={members} />
     </section>
   )
