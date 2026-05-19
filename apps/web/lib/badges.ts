@@ -244,7 +244,26 @@ export async function checkAndAwardBadges(
   await tryAward('hundred_highlights', async () => highlightCount >= 100)
 
   const streak = await fetchStreak(admin, userId)
+  const beforeAwardedCount = awarded.length
   await tryAward('week_streak', async () => streak >= 7)
+  if (
+    awarded.length > beforeAwardedCount &&
+    awarded[awarded.length - 1] === 'week_streak'
+  ) {
+    // Reward the milestone with one streak freeze credit.
+    const { data: row } = await admin
+      .from('reading_streaks')
+      .select('streak_freeze_credits')
+      .eq('user_id', userId)
+      .maybeSingle()
+    const current =
+      (row as { streak_freeze_credits: number | null } | null)
+        ?.streak_freeze_credits ?? 0
+    await admin
+      .from('reading_streaks')
+      .update({ streak_freeze_credits: current + 1 })
+      .eq('user_id', userId)
+  }
   await tryAward('month_streak', async () => streak >= 30)
   await tryAward('year_streak', async () => streak >= 365)
 
