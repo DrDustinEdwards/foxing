@@ -13,6 +13,7 @@ import {
   UsersIcon,
   UsersThreeIcon,
 } from '@/components/icons'
+import { FoxMark } from '@/components/ui/fox-mark'
 import { cn } from '@/lib/cn'
 
 interface NavItem {
@@ -52,8 +53,12 @@ export function AdminSidebar({ adminName }: Props) {
     <>
       {/* Mobile top bar */}
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#3A2C22] bg-[#16100B] px-4 text-[#F5EDDE] md:hidden">
-        <Link href="/admin" className="font-fraunces text-lg text-brand-ui">
-          <span aria-hidden="true">🦊 </span>Admin
+        <Link
+          href="/admin"
+          className="inline-flex items-center gap-2 font-fraunces text-lg text-brand-ui"
+        >
+          <FoxMark size={24} />
+          Admin
         </Link>
         <button
           type="button"
@@ -125,8 +130,12 @@ export function AdminSidebar({ adminName }: Props) {
         className="fixed bottom-0 left-0 top-0 z-30 hidden w-60 flex-col border-r border-[#3A2C22] bg-[#16100B] text-[#F5EDDE] md:flex"
       >
         <div className="border-b border-[#3A2C22] px-5 py-4">
-          <Link href="/admin" className="font-fraunces text-xl text-brand-ui">
-            <span aria-hidden="true">🦊 </span>Foxing
+          <Link
+            href="/admin"
+            className="inline-flex items-center gap-2 font-fraunces text-xl text-brand-ui"
+          >
+            <FoxMark size={28} />
+            Foxing
           </Link>
           <p className="mt-1 font-dm-mono text-[11px] uppercase tracking-wider text-[#A28269]">
             Admin
