@@ -20,7 +20,9 @@ import { profileJsonLd } from '@/lib/structured-data'
 import { buildProfileMetadata } from '@/lib/metadata'
 import { Badge } from '@/components/ui/badge'
 import { fetchUserBadges } from '@/lib/badges'
+import { fetchPublicCommonplace } from '@/lib/commonplace'
 import { BadgesSection } from './badges-section'
+import { CommonplaceProfileSection } from './commonplace-section'
 import { FollowButton } from './follow-button'
 
 export const revalidate = 300
@@ -76,19 +78,27 @@ export default async function ProfilePage({
 
   const viewerId = await getAuthedUserId()
   const isOwnProfile = viewerId === profile.id
-  const [favorites, stats, reviews, isFollowing, taste, badges] =
-    await Promise.all([
-      fetchUserFavorites(profile.id),
-      fetchProfileStats(profile.id),
-      fetchProfileReviews(profile.id, 3),
-      viewerId && !isOwnProfile
-        ? fetchIsFollowing({ followerId: viewerId, followingId: profile.id })
-        : Promise.resolve(false),
-      viewerId && !isOwnProfile
-        ? fetchTasteCompatibility({ viewerId, profileId: profile.id })
-        : Promise.resolve(null),
-      fetchUserBadges(profile.id),
-    ])
+  const [
+    favorites,
+    stats,
+    reviews,
+    isFollowing,
+    taste,
+    badges,
+    commonplace,
+  ] = await Promise.all([
+    fetchUserFavorites(profile.id),
+    fetchProfileStats(profile.id),
+    fetchProfileReviews(profile.id, 3),
+    viewerId && !isOwnProfile
+      ? fetchIsFollowing({ followerId: viewerId, followingId: profile.id })
+      : Promise.resolve(false),
+    viewerId && !isOwnProfile
+      ? fetchTasteCompatibility({ viewerId, profileId: profile.id })
+      : Promise.resolve(null),
+    fetchUserBadges(profile.id),
+    fetchPublicCommonplace(profile.id, 3),
+  ])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -155,6 +165,11 @@ export default async function ProfilePage({
           <StatsRow stats={stats} username={profile.username} />
 
           <BadgesSection username={profile.username} badges={badges} />
+
+          <CommonplaceProfileSection
+            username={profile.username}
+            entries={commonplace}
+          />
 
           {reviews.length > 0 && (
             <section className="mt-12">

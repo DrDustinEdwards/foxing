@@ -599,6 +599,7 @@ function AccountMenu({
     { href: '/my-lists', label: 'My lists' },
     { href: '/buddy-reads', label: 'Buddy reads' },
     { href: '/saved-posts', label: 'Saved posts' },
+    { href: '/commonplace', label: 'Commonplace book' },
   ]
   const showPlusBadge = user.subscription_tier === 'free'
   return (
