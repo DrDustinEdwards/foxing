@@ -15,6 +15,7 @@ import { getAuthedUserId } from '@/lib/nav-user'
 import { appBookDeeplink } from '@/lib/foxing'
 import { StreakHeatmap } from './streak-heatmap'
 import { ChallengeToggleButton } from './challenge-toggle-button'
+import { GoalSetter } from './goal-setter'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,21 +69,10 @@ export default async function GoalsPage() {
             <p className="font-dm-mono text-xs text-text-tertiary">
               {pct}% there
             </p>
+            <GoalSetter currentTarget={target} year={year} />
           </div>
         ) : (
-          <div className="mt-3 flex flex-col gap-3">
-            <p className="font-source-serif-4 text-base text-text-secondary">
-              No goal set for {year}. Set one to track progress.
-            </p>
-            <Link
-              href={appBookDeeplink('settings/goals')}
-              className="self-start"
-            >
-              <Button variant="primary" size="sm">
-                Set a goal in the app
-              </Button>
-            </Link>
-          </div>
+          <GoalSetter currentTarget={null} year={year} />
         )}
       </section>
 
