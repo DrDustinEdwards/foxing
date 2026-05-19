@@ -70,7 +70,7 @@ export function EventCard({ event }: { event: PublicEvent }) {
       )}
       <div className="mt-1 flex flex-wrap items-center justify-between gap-2 font-dm-mono text-xs">
         <a
-          href={`/events/${event.id}/calendar`}
+          href={`/events/calendar/${event.id}`}
           className="text-brand-text hover:underline"
         >
           Add to calendar
