@@ -1,9 +1,22 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchEventStates } from '@/lib/events'
-import { FOXING_BASE_URL } from '@/lib/metadata'
+import { FOXING_BASE_URL, slugifySeriesName } from '@/lib/metadata'
 
 export const revalidate = 3600
+
+const THEME_SLUGS = [
+  'dark',
+  'lighthearted',
+  'emotional',
+  'tense',
+  'hopeful',
+  'funny',
+  'mysterious',
+  'adventurous',
+  'reflective',
+  'romantic',
+] as const
 
 /**
  * Dynamic sitemap. Lists every public URL Foxing wants Google to index:
@@ -75,6 +88,54 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
+      url: `${FOXING_BASE_URL}/features`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
+      url: `${FOXING_BASE_URL}/guide`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${FOXING_BASE_URL}/app-guide`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${FOXING_BASE_URL}/awards`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.7,
+    },
+    {
+      url: `${FOXING_BASE_URL}/challenges`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: `${FOXING_BASE_URL}/people`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.6,
+    },
+    {
+      url: `${FOXING_BASE_URL}/book-clubs`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.9,
+    },
+    {
+      url: `${FOXING_BASE_URL}/book-of-the-month`,
+      lastModified: now,
+      changeFrequency: 'monthly',
+      priority: 0.8,
+    },
+    {
       url: `${FOXING_BASE_URL}/privacy`,
       lastModified: now,
       changeFrequency: 'yearly',
@@ -86,6 +147,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.3,
     },
+    ...THEME_SLUGS.map((slug) => ({
+      url: `${FOXING_BASE_URL}/themes/${slug}`,
+      lastModified: now,
+      changeFrequency: 'monthly' as const,
+      priority: 0.6,
+    })),
   ]
 
   if (
@@ -104,6 +171,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     clubsRes,
     listsRes,
     celebrityPicksRes,
+    externalClubsRes,
+    seriesRes,
   ] = await Promise.all([
     supabase
       .from('books')
@@ -135,6 +204,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         'pick_month, pick_year, external_book_clubs:club_id(slug)',
       )
       .eq('is_published', true),
+    supabase
+      .from('external_book_clubs')
+      .select('slug')
+      .limit(200),
+    supabase
+      .from('books')
+      .select('series_name')
+      .not('series_name', 'is', null)
+      .limit(5000),
   ])
 
   const bookRows = (booksRes.data as Array<{
@@ -240,22 +318,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
     }))
 
-  // Celebrity picks: monthly roundup URLs for the last 24 months.
-  const monthlyRoundupPages: MetadataRoute.Sitemap = []
-  for (let i = 0; i < 24; i++) {
-    const d = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - i, 1),
-    )
-    const y = d.getUTCFullYear()
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0')
-    monthlyRoundupPages.push({
-      url: `${FOXING_BASE_URL}/book-clubs/picks/${y}/${m}`,
-      lastModified: i === 0 ? now : d,
-      changeFrequency: 'weekly',
-      priority: 0.9,
-    })
-  }
-
   // Celebrity picks: every published club+month pick.
   type CelebrityPickRow = {
     pick_month: number | null
@@ -265,10 +327,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       | { slug: string }[]
       | null
   }
+  const celebrityPickRows: CelebrityPickRow[] =
+    (celebrityPicksRes.data as unknown as CelebrityPickRow[] | null) ?? []
+
   const celebrityPickPages: MetadataRoute.Sitemap = []
-  for (const row of (celebrityPicksRes.data as unknown as
-    | CelebrityPickRow[]
-    | null) ?? []) {
+  const roundupKeys = new Set<string>()
+  for (const row of celebrityPickRows) {
     if (!row.pick_month || !row.pick_year) continue
     const clubRel = Array.isArray(row.external_book_clubs)
       ? row.external_book_clubs[0]
@@ -281,7 +345,49 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.8,
     })
+    roundupKeys.add(`${row.pick_year}-${m}`)
   }
+
+  // Monthly roundup pages: every distinct (year, month) with a published pick.
+  const monthlyRoundupPages: MetadataRoute.Sitemap = [...roundupKeys].map(
+    (key) => {
+      const [yStr, mStr] = key.split('-')
+      return {
+        url: `${FOXING_BASE_URL}/book-clubs/picks/${yStr}/${mStr}`,
+        lastModified: now,
+        changeFrequency: 'weekly',
+        priority: 0.9,
+      }
+    },
+  )
+
+  // Celebrity club profile pages: one per external book club.
+  const externalClubRows =
+    (externalClubsRes.data as Array<{ slug: string | null }> | null) ?? []
+  const externalClubPages: MetadataRoute.Sitemap = externalClubRows
+    .filter((c) => Boolean(c.slug))
+    .map((c) => ({
+      url: `${FOXING_BASE_URL}/book-clubs/${c.slug}`,
+      lastModified: now,
+      changeFrequency: 'weekly',
+      priority: 0.8,
+    }))
+
+  // Series pages: every distinct series_name, slugified.
+  const seriesRows =
+    (seriesRes.data as Array<{ series_name: string | null }> | null) ?? []
+  const seriesSlugs = new Set<string>()
+  for (const row of seriesRows) {
+    if (!row.series_name) continue
+    const slug = slugifySeriesName(row.series_name)
+    if (slug) seriesSlugs.add(slug)
+  }
+  const seriesPages: MetadataRoute.Sitemap = [...seriesSlugs].map((slug) => ({
+    url: `${FOXING_BASE_URL}/series/${slug}`,
+    lastModified: now,
+    changeFrequency: 'monthly',
+    priority: 0.6,
+  }))
 
   const eventStates = await fetchEventStates()
   const eventStatePages: MetadataRoute.Sitemap = eventStates.map((s) => ({
@@ -301,6 +407,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...listPages,
     ...monthlyRoundupPages,
     ...celebrityPickPages,
+    ...externalClubPages,
+    ...seriesPages,
     ...eventStatePages,
   ]
 }
