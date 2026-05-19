@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { checkAndAwardBadges } from '@/lib/badges'
 
 interface GoodreadsRow {
   title: string
@@ -75,6 +76,7 @@ export async function importGoodreadsRows(rows: GoodreadsRow[]) {
     if (!upsertError) result.inserted += 1
   }
 
+  await checkAndAwardBadges(user.id)
   revalidatePath('/library')
   return { ok: true as const, ...result }
 }

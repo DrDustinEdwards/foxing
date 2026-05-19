@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { checkAndAwardBadges } from '@/lib/badges'
 import {
   generateAndStoreDiscussionGuide,
   type DiscussionQuestion,
@@ -132,6 +133,7 @@ export async function createDiscussionPost(
     .update({ updated_at: new Date().toISOString() })
     .eq('id', discussionId)
 
+  await checkAndAwardBadges(userId)
   if (bookSlug) {
     revalidatePath(`/book/${bookSlug}`)
     revalidatePath(`/book/${bookSlug}/discussions/${discussionId}`)
