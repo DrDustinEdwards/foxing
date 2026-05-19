@@ -29,6 +29,7 @@ import { appBookDeeplink } from '@/lib/foxing'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { ReadingTimerWidget } from '@/components/reading-timer-widget'
 import { DiscussionGuideSection } from './discussion-guide-section'
 
 export const revalidate = 3600
@@ -236,6 +237,14 @@ export default async function BookPage({
                 epub_url: book.epub_url,
               }}
             />
+            {navUser && (
+              <ReadingTimerWidget
+                bookId={book.id}
+                bookSlug={book.slug}
+                bookTitle={book.title}
+                wordCount={book.word_count}
+              />
+            )}
             <ReviewsSection
               reviews={reviews}
               total={book.rating_count}
