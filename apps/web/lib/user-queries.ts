@@ -192,6 +192,88 @@ export async function fetchReadingTimeStats(
   }
 }
 
+export interface MoodCount {
+  mood: string
+  count: number
+}
+
+export async function fetchMoodDistribution(
+  userId: string,
+  since?: string,
+  until?: string,
+): Promise<MoodCount[]> {
+  let q = sb()
+    .from('user_books')
+    .select('mood_tags, finished_at')
+    .eq('user_id', userId)
+    .eq('status', 'finished')
+    .not('mood_tags', 'is', null)
+  if (since) q = q.gte('finished_at', since)
+  if (until) q = q.lte('finished_at', until)
+  const { data } = await q
+  const rows = (data as
+    | { mood_tags: string[] | null; finished_at: string | null }[]
+    | null) ?? []
+  const counts = new Map<string, number>()
+  for (const r of rows) {
+    if (!r.mood_tags) continue
+    for (const m of r.mood_tags) {
+      const key = m.trim()
+      if (!key) continue
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+  }
+  return [...counts.entries()]
+    .map(([mood, count]) => ({ mood, count }))
+    .sort((a, b) => b.count - a.count)
+}
+
+export interface PacePoint {
+  month: string
+  avg_wpm: number | null
+}
+
+export async function fetchReadingPace(
+  userId: string,
+  since?: string,
+  until?: string,
+): Promise<{ points: PacePoint[]; sessionCount: number }> {
+  let q = sb()
+    .from('reading_sessions')
+    .select('ended_at, avg_wpm')
+    .eq('user_id', userId)
+    .not('ended_at', 'is', null)
+    .not('avg_wpm', 'is', null)
+    .gt('avg_wpm', 0)
+  if (since) q = q.gte('ended_at', since)
+  if (until) q = q.lte('ended_at', until)
+  const { data } = await q
+  const rows = (data as
+    | { ended_at: string | null; avg_wpm: number | null }[]
+    | null) ?? []
+  const buckets = new Map<string, { sum: number; count: number }>()
+  for (const r of rows) {
+    if (!r.ended_at || r.avg_wpm == null) continue
+    const d = new Date(r.ended_at)
+    const key = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+    const b = buckets.get(key) ?? { sum: 0, count: 0 }
+    b.sum += r.avg_wpm
+    b.count += 1
+    buckets.set(key, b)
+  }
+  const sortedKeys = [...buckets.keys()].sort()
+  const points: PacePoint[] = sortedKeys.map((k) => {
+    const [year, month] = k.split('-').map(Number)
+    const label = new Date(Date.UTC(year, month - 1, 1)).toLocaleString(
+      'en-US',
+      { month: 'short' },
+    )
+    const b = buckets.get(k)!
+    return { month: label, avg_wpm: Math.round(b.sum / b.count) }
+  })
+  return { points, sessionCount: rows.length }
+}
+
 export interface AuthorAndFormatStats {
   top_author: { name: string; count: number } | null
   longest_book:
