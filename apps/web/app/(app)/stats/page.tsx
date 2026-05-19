@@ -50,12 +50,13 @@ export default async function StatsPage() {
     (sum, f) => sum + (f.word_count ? Math.round(f.word_count / 250) : 0),
     0,
   )
-  const rated = finished.filter((f): f is typeof f & { rating: number } =>
-    typeof f.rating === 'number',
+  const ratedHalf = finished.filter(
+    (f): f is typeof f & { rating_half: number } =>
+      typeof f.rating_half === 'number',
   )
   const avgRating =
-    rated.length > 0
-      ? rated.reduce((s, f) => s + f.rating, 0) / rated.length
+    ratedHalf.length > 0
+      ? ratedHalf.reduce((s, f) => s + f.rating_half / 2, 0) / ratedHalf.length
       : null
 
   return (
