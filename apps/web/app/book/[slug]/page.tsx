@@ -26,8 +26,10 @@ import {
   isUuid,
 } from '@/lib/queries'
 import { appBookDeeplink } from '@/lib/foxing'
+import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { DiscussionGuideSection } from './discussion-guide-section'
 
 export const revalidate = 3600
 
@@ -99,15 +101,23 @@ export default async function BookPage({
     permanentRedirect(`/book/${book.slug}`)
   }
 
-  const [reviews, highlights, similar, clubs, aiDescription, aiAuthorBio] =
-    await Promise.all([
-      fetchBookReviews(book.id, 5),
-      fetchBookHighlights(book.id, 3),
-      fetchSimilarBooks(book.id, 5),
-      fetchPublicClubsForBook(book.id, 3),
-      fetchAiCache(book.id, 'book_description'),
-      fetchAiCache(book.id, 'author_bio'),
-    ])
+  const [
+    reviews,
+    highlights,
+    similar,
+    clubs,
+    aiDescription,
+    aiAuthorBio,
+    discussionGuide,
+  ] = await Promise.all([
+    fetchBookReviews(book.id, 5),
+    fetchBookHighlights(book.id, 3),
+    fetchSimilarBooks(book.id, 5),
+    fetchPublicClubsForBook(book.id, 3),
+    fetchAiCache(book.id, 'book_description'),
+    fetchAiCache(book.id, 'author_bio'),
+    fetchDiscussionGuide(book.id),
+  ])
 
   const description = aiDescription || book.description || null
   const authorBioExcerpt = aiAuthorBio
@@ -239,6 +249,11 @@ export default async function BookPage({
                 </p>
               </CollapsibleSection>
             )}
+            <DiscussionGuideSection
+              bookId={book.id}
+              bookSlug={book.slug}
+              initialQuestions={discussionGuide?.questions ?? null}
+            />
             <CollapsibleSection heading="Deep Dive">
               <DeepDivePreview bookId={book.id} />
             </CollapsibleSection>
