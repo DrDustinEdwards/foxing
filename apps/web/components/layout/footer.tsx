@@ -41,6 +41,14 @@ const COLUMNS: FooterColumn[] = [
     ],
   },
   {
+    heading: 'Using Foxing',
+    links: [
+      { href: '/features', label: 'What Foxing does' },
+      { href: '/guide', label: 'Web guide' },
+      { href: '/app-guide', label: 'App guide' },
+    ],
+  },
+  {
     heading: 'Legal',
     links: [
       { href: '/privacy', label: 'Privacy Policy' },
@@ -54,7 +62,7 @@ export function Footer() {
   return (
     <footer className="border-t border-border-subtle bg-bg-surface">
       <div className="mx-auto w-full max-w-page px-6 py-12 md:px-12">
-        <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(4,1fr)]">
+        <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(5,1fr)]">
           <div className="flex flex-col gap-2">
             <span className="font-fraunces text-xl text-brand-ui">
               <span aria-hidden="true">🦊 </span>

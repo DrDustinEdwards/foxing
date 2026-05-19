@@ -530,13 +530,13 @@ export const STATIC_PAGE_METADATA: Record<string, Metadata> = {
   '/pricing': {
     title: 'Plans',
     description:
-      'Foxing is free to read. Plus ($9.99/month) adds unlimited AI, book clubs, and full stats. 7-day free trial, no credit card.',
+      'Foxing is free to read. Plus ($12.99/month or $129.99/year) adds unlimited AI, book club creation, and more. 7-day free trial, no credit card.',
     alternates: { canonical: `${BASE_URL}/pricing` },
     openGraph: {
       type: 'website',
-      title: 'Foxing Plans: Free, Plus, and Patron',
+      title: 'Foxing Plans: Free and Plus',
       description:
-        'Foxing is free to read. Plus ($9.99/month) adds unlimited AI, book clubs, and full stats. 7-day free trial, no credit card.',
+        'Foxing is free to read. Plus ($12.99/month or $129.99/year) adds unlimited AI, book club creation, and more. 7-day free trial, no credit card.',
       url: `${BASE_URL}/pricing`,
       siteName: SITE_NAME,
     },
