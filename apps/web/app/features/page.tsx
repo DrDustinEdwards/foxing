@@ -570,6 +570,17 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
+            <Subgroup title="Club settings" meta="admins only">
+              <FeatureList
+                items={[
+                  'Rename the club, update description, visibility, and member settings',
+                  'Change the current book the club is reading',
+                  'Transfer ownership to another member',
+                  'Delete the club (requires typing the club name to confirm)',
+                ]}
+              />
+            </Subgroup>
+
             <Subgroup
               title="Bookstore and library clubs"
               meta="verified by Foxing"
@@ -601,6 +612,20 @@ export default async function FeaturesPage() {
                   'Individual quote pages (shareable link)',
                   'Passage of the Day on the home page (from community highlights, changes daily)',
                   'Dedicated passage page with share button and app deeplink',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Book discussions" tier="free">
+              <FeatureList
+                items={[
+                  'Public discussion threads on every book page',
+                  '11 thread types: General, Chapter, Prediction, First Impressions, Deep Dive, Hot Take, Quote, Character, Theme, Questions, Wrap-Up',
+                  'Threaded replies (one level deep)',
+                  '6 emoji reactions per post',
+                  'Spoiler tagging on any post',
+                  'Edit and delete your own posts',
+                  'Sign-in gate for new discussions (read-only for anonymous visitors)',
                 ]}
               />
             </Subgroup>
@@ -713,6 +738,20 @@ export default async function FeaturesPage() {
                 'Public or private profile (private shows nothing to non-followers)',
               ]}
             />
+
+            <Subgroup title="Badges and XP" tier="free">
+              <FeatureList
+                items={[
+                  'Earn badges for reading milestones, streaks, social actions, and club activity',
+                  '12 badge types across 5 categories: Reading, Social, Streaks, Clubs, Milestones',
+                  'Badges displayed on your public profile (top 8 with tooltip)',
+                  'Full badge page showing all earned and locked badges grouped by category',
+                  'XP points earned for every badge unlocked',
+                  'Reading level that grows with XP: Bookworm, Reader, Avid Reader, Bibliophile, Scholar',
+                  'XP progress bar on your home dashboard showing current level and next threshold',
+                ]}
+              />
+            </Subgroup>
           </Section>
 
           <Section
@@ -724,7 +763,7 @@ export default async function FeaturesPage() {
             <Subgroup title="Reading goals" tier="free">
               <FeatureList
                 items={[
-                  'Annual reading goal with progress bar and percentage',
+                  'Annual reading goal with progress bar and percentage, set and edited directly from the web',
                   'Reading streak tracking (current streak and longest streak ever)',
                   'Reading activity heatmap (last 52 weeks, GitHub-style)',
                   'Daily reading reminder (set your preferred time)',
@@ -845,6 +884,17 @@ export default async function FeaturesPage() {
                   'Account deletion (removes all personal data)',
                   'HTTPS everywhere with HSTS',
                   'Content Security Policy and X-Frame-Options headers',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Notifications" tier="free">
+              <FeatureList
+                items={[
+                  'Notification inbox for club events, announcements, and activity',
+                  'Unread count badge on the bell icon in the navigation',
+                  'Mark all notifications as read in one tap',
+                  'Notifications for club meetings, polls, announcements, and new members',
                 ]}
               />
             </Subgroup>
