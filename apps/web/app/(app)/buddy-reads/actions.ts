@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { checkAndAwardBadges } from '@/lib/badges'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -107,6 +108,7 @@ export async function createBuddyReadPost(
     has_spoiler: hasSpoiler,
   })
   if (error) return { ok: false, error: error.message }
+  await checkAndAwardBadges(userId)
   revalidatePath(`/buddy-reads/${buddyReadId}`)
   return { ok: true }
 }
@@ -159,6 +161,7 @@ export async function finishBuddyRead(
     .update({ is_active: false })
     .eq('id', buddyReadId)
   if (error) return { ok: false, error: error.message }
+  await checkAndAwardBadges(userId)
   revalidatePath('/buddy-reads')
   revalidatePath(`/buddy-reads/${buddyReadId}`)
   return { ok: true }

@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { checkAndAwardBadges } from '@/lib/badges'
 
 type StartResult =
   | { ok: true; sessionId: string }
@@ -95,6 +96,8 @@ export async function finishReadingSession(
     .eq('id', sessionId)
     .eq('user_id', userId)
   if (error) return { ok: false, error: error.message }
+
+  await checkAndAwardBadges(userId)
 
   if (bookSlug) revalidatePath(`/book/${bookSlug}`)
   revalidatePath('/stats')
