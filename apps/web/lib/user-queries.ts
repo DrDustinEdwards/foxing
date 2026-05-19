@@ -694,3 +694,23 @@ export async function fetchProfileBasics(userId: string): Promise<{
     username: string
   } | null
 }
+
+export async function fetchProgressProfile(userId: string): Promise<{
+  xp_points: number
+  reading_level: string
+} | null> {
+  const { data } = await sb()
+    .from('profiles')
+    .select('xp_points, reading_level')
+    .eq('id', userId)
+    .maybeSingle()
+  if (!data) return null
+  const row = data as {
+    xp_points: number | null
+    reading_level: string | null
+  }
+  return {
+    xp_points: row.xp_points ?? 0,
+    reading_level: row.reading_level ?? 'bookworm',
+  }
+}

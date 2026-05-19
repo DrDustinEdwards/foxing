@@ -10,8 +10,10 @@ import { getAuthedUserId } from '@/lib/nav-user'
 import {
   fetchCurrentlyReading,
   fetchProfileBasics,
+  fetchProgressProfile,
   fetchReadingStreak,
 } from '@/lib/user-queries'
+import { LEVEL_LABEL, levelForXp, nextTierForXp } from '@/lib/badges'
 import { appBookDeeplink } from '@/lib/foxing'
 
 export const dynamic = 'force-dynamic'
@@ -35,10 +37,11 @@ export default async function DashboardHome() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
 
-  const [profile, currentlyReading, streak] = await Promise.all([
+  const [profile, currentlyReading, streak, progress] = await Promise.all([
     fetchProfileBasics(userId),
     fetchCurrentlyReading(userId),
     fetchReadingStreak(userId),
+    fetchProgressProfile(userId),
   ])
 
   const greeting = `Good ${timeOfDay(new Date().getHours())}, ${
@@ -60,6 +63,8 @@ export default async function DashboardHome() {
       )}
 
       <StreakCard streak={streak} />
+
+      {progress && <XpProgressCard xp={progress.xp_points} />}
 
       {similar.length > 0 && (
         <section>
@@ -184,6 +189,40 @@ function StreakCard({
       <div className="flex gap-6 font-dm-mono text-xs text-text-tertiary">
         <span>longest {streak.longest_streak}</span>
         <span>finished {streak.total_books_finished}</span>
+      </div>
+    </section>
+  )
+}
+
+function XpProgressCard({ xp }: { xp: number }) {
+  const tier = levelForXp(xp)
+  const next = nextTierForXp(xp)
+  const tierLabel = LEVEL_LABEL[tier.level]
+  const percentage = next
+    ? Math.round(
+        ((xp - tier.threshold) / (next.threshold - tier.threshold)) * 100,
+      )
+    : 100
+  return (
+    <section className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-5">
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <p className="font-fraunces text-xl text-text-primary">
+            {tierLabel}
+          </p>
+          <p className="font-dm-mono text-xs text-text-tertiary">{xp} XP</p>
+        </div>
+        {next && (
+          <p className="font-dm-mono text-xs text-text-tertiary">
+            {next.threshold - xp} XP to {LEVEL_LABEL[next.level]}
+          </p>
+        )}
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-bg-sunken">
+        <div
+          className="h-1.5 rounded-full bg-brand-ui"
+          style={{ width: `${Math.max(0, Math.min(100, percentage))}%` }}
+        />
       </div>
     </section>
   )
