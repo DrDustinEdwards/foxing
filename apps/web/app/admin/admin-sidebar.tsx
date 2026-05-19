@@ -29,6 +29,7 @@ const NAV: NavItem[] = [
   { href: '/admin/book-of-month', label: 'Book of Month', icon: BookOpenIcon },
   { href: '/admin/celebrity-picks', label: 'Celebrity Picks', icon: UsersIcon },
   { href: '/admin/clubs', label: 'Clubs', icon: UsersThreeIcon },
+  { href: '/admin/bookstores', label: 'Bookstores', icon: BookOpenIcon },
   { href: '/admin/content', label: 'Content', icon: FlagIcon },
   { href: '/admin/notifications', label: 'Notifications', icon: BellIcon },
   { href: '/admin/analytics', label: 'Analytics', icon: ChartBarIcon },
