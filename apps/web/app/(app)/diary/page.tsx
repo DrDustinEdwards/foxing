@@ -18,7 +18,10 @@ export const metadata: Metadata = {
   title: 'Reading diary · Foxing',
 }
 
-const YEARS = [2024, 2025, 2026]
+function recentYears(): number[] {
+  const currentYear = new Date().getFullYear()
+  return [currentYear, currentYear - 1, currentYear - 2]
+}
 
 export default async function DiaryPage({
   searchParams,
@@ -28,7 +31,8 @@ export default async function DiaryPage({
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
 
-  const year = YEARS.find((y) => String(y) === searchParams.year) ?? null
+  const years = recentYears()
+  const year = years.find((y) => String(y) === searchParams.year) ?? null
   const view = searchParams.view === 'calendar' ? 'calendar' : 'list'
   const entries = await fetchDiaryEntries(userId, year ?? undefined)
 
@@ -46,7 +50,7 @@ export default async function DiaryPage({
           view={view}
           year={year}
         />
-        <YearTabs current={year} view={view} />
+        <YearTabs current={year} view={view} years={years} />
       </div>
 
       {entries.length === 0 ? (
@@ -110,9 +114,11 @@ function ViewToggle({
 function YearTabs({
   current,
   view,
+  years,
 }: {
   current: number | null
   view: 'list' | 'calendar'
+  years: number[]
 }) {
   function href(year: number | null): string {
     const q = new URLSearchParams()
@@ -134,7 +140,7 @@ function YearTabs({
       >
         All
       </Link>
-      {YEARS.map((y) => (
+      {years.map((y) => (
         <Link
           key={y}
           href={href(y)}
