@@ -558,6 +558,69 @@ export const STATIC_PAGE_METADATA: Record<string, Metadata> = {
     description: 'Search books, readers, and clubs on Foxing.',
     robots: { index: false, follow: true },
   },
+  '/features': {
+    title: 'What Foxing does',
+    description:
+      'Everything Foxing can do: 1,400+ free classic books, AI reading companion, book clubs, reading diary, vocabulary builder, and more.',
+    alternates: { canonical: `${BASE_URL}/features` },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: 'website',
+      title: 'What Foxing does',
+      description:
+        'Everything Foxing can do: 1,400+ free classic books, AI reading companion, book clubs, reading diary, vocabulary builder, and more.',
+      url: `${BASE_URL}/features`,
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: 'summary',
+      title: 'What Foxing does',
+      description:
+        'Everything Foxing can do: 1,400+ free classic books, AI reading companion, book clubs, reading diary, vocabulary builder, and more.',
+    },
+  },
+  '/guide': {
+    title: 'Using Foxing on the web',
+    description:
+      'How to use the Foxing web platform: your library, reading diary, stats, book clubs, vocabulary, and more.',
+    alternates: { canonical: `${BASE_URL}/guide` },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: 'website',
+      title: 'Using Foxing on the web',
+      description:
+        'How to use the Foxing web platform: your library, reading diary, stats, book clubs, vocabulary, and more.',
+      url: `${BASE_URL}/guide`,
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: 'summary',
+      title: 'Using Foxing on the web',
+      description:
+        'How to use the Foxing web platform: your library, reading diary, stats, book clubs, vocabulary, and more.',
+    },
+  },
+  '/app-guide': {
+    title: 'Using the Foxing app',
+    description:
+      'How to use the Foxing mobile app: reading, AI companion, highlights, tracking, book clubs, and settings.',
+    alternates: { canonical: `${BASE_URL}/app-guide` },
+    robots: { index: true, follow: true },
+    openGraph: {
+      type: 'website',
+      title: 'Using the Foxing app',
+      description:
+        'How to use the Foxing mobile app: reading, AI companion, highlights, tracking, book clubs, and settings.',
+      url: `${BASE_URL}/app-guide`,
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: 'summary',
+      title: 'Using the Foxing app',
+      description:
+        'How to use the Foxing mobile app: reading, AI companion, highlights, tracking, book clubs, and settings.',
+    },
+  },
 }
 
 // --- QUOTE METADATA ---
