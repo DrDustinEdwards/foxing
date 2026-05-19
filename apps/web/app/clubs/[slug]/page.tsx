@@ -11,6 +11,7 @@ import { WhereToRead } from '@/components/where-to-read'
 import { formatRelativeDate } from '@foxing/utils'
 import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
 import { fetchUpcomingMeetings } from '@/lib/club-meetings'
+import { fetchPollsForClub } from '@/lib/club-polls'
 import { fetchClubMembers, getClubRole, isClubMod } from '@/lib/club-membership'
 import {
   fetchClubPostsPreview,
@@ -24,6 +25,7 @@ import { buildClubMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AnnouncementsSection } from './announcements-section'
 import { MeetingsSection } from './meetings-section'
+import { PollsSection } from './polls-section'
 import { ModerationPanel } from './moderation-panel'
 import { PostAnnouncementForm } from './post-announcement-form'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
@@ -89,10 +91,11 @@ export default async function ClubPage({
   if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
     permanentRedirect(`/clubs/${club.slug}`)
   }
-  const [posts, announcements, meetings, role] = await Promise.all([
+  const [posts, announcements, meetings, polls, role] = await Promise.all([
     fetchClubPostsPreview(club.id, 3),
     fetchAnnouncementsForClub(club.id),
     fetchUpcomingMeetings(club.id, userId),
+    fetchPollsForClub(club.id, userId),
     getClubRole(club.id, userId),
   ])
   const canModerate = isClubMod(role)
@@ -146,6 +149,13 @@ export default async function ClubPage({
             isMember={isMember}
             defaultCity={club.bookstore_city}
             defaultState={club.bookstore_state}
+          />
+
+          <PollsSection
+            clubId={club.id}
+            polls={polls}
+            canModerate={canModerate}
+            isMember={isMember}
           />
 
           {club.current_book && bookPath && (
