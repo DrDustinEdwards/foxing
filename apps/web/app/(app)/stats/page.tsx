@@ -5,13 +5,22 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchAuthorAndFormatStats,
   fetchFinishedBooksForStats,
+  fetchMoodDistribution,
+  fetchReadingPace,
   fetchReadingStreak,
   fetchReadingTimeStats,
   fetchRecentSessions,
 } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
-import { GenreDonut, MonthlyBooksChart, type MonthlyBucket, type ThemeBucket } from './charts'
+import {
+  GenreDonut,
+  MonthlyBooksChart,
+  MoodBarChart,
+  ReadingPaceLine,
+  type MonthlyBucket,
+  type ThemeBucket,
+} from './charts'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,13 +90,15 @@ export default async function StatsPage({
     ? new Date(selectedYear + 1, 0, 1).toISOString()
     : undefined
 
-  const [finished, streak, timeStats, recentSessions, extra] =
+  const [finished, streak, timeStats, recentSessions, extra, moods, pace] =
     await Promise.all([
       fetchFinishedBooksForStats(userId, sinceISO, until),
       fetchReadingStreak(userId),
       fetchReadingTimeStats(userId),
       fetchRecentSessions(userId, 10),
       fetchAuthorAndFormatStats(userId),
+      fetchMoodDistribution(userId, sinceISO, until),
+      fetchReadingPace(userId, sinceISO, until),
     ])
 
   const monthly: MonthlyBucket[] = buildMonthlyBuckets(since, finished, selectedYear)
@@ -230,6 +241,42 @@ export default async function StatsPage({
           </div>
         </section>
       )}
+
+      <section className="mt-10">
+        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Mood distribution
+        </h2>
+        <div className="rounded-lg border border-border-subtle bg-bg-surface p-4">
+          {moods.length > 0 ? (
+            <MoodBarChart data={moods.slice(0, 6)} />
+          ) : (
+            <p className="font-source-serif-4 text-sm text-text-tertiary">
+              No mood tags yet. Add mood tags when logging books.
+            </p>
+          )}
+        </div>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Reading pace
+        </h2>
+        <div className="rounded-lg border border-border-subtle bg-bg-surface p-4">
+          {pace.sessionCount >= 3 ? (
+            <ReadingPaceLine
+              data={pace.points.map((p) => ({
+                month: p.month,
+                wpm: p.avg_wpm,
+              }))}
+            />
+          ) : (
+            <p className="font-source-serif-4 text-sm text-text-tertiary">
+              Complete reading sessions with page counts to see your reading
+              pace.
+            </p>
+          )}
+        </div>
+      </section>
 
       {formatTotal > 0 && (
         <section className="mt-10">
