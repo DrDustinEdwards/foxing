@@ -11,7 +11,9 @@ import {
   fetchUserBuddyReads,
   type BuddyRead,
 } from '@/lib/missing-pages-queries'
+import { fetchProfileBasics } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { PLUS_PRICE_MONTHLY_LABEL } from '@/lib/config'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +25,13 @@ export const metadata: Metadata = {
 export default async function BuddyReadsIndex() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
-  const buddyReads = await fetchUserBuddyReads(userId)
+  const [buddyReads, profile] = await Promise.all([
+    fetchUserBuddyReads(userId),
+    fetchProfileBasics(userId),
+  ])
+  const isPlus =
+    profile?.subscription_tier === 'plus' ||
+    profile?.subscription_tier === 'patron'
   const active = buddyReads.filter((br) => br.is_active)
   const completed = buddyReads.filter((br) => !br.is_active)
 
@@ -38,24 +46,45 @@ export default async function BuddyReadsIndex() {
             Read a classic with one other person.
           </p>
         </div>
-        <Link href="/people">
-          <Button variant="primary" size="sm">
-            Start a buddy read
-          </Button>
-        </Link>
+        {isPlus ? (
+          <Link href="/buddy-reads/invite">
+            <Button variant="primary" size="sm">
+              Start a buddy read
+            </Button>
+          </Link>
+        ) : (
+          <Link href="/pricing">
+            <Button variant="secondary" size="sm">
+              Upgrade to Plus
+            </Button>
+          </Link>
+        )}
       </header>
+
+      {!isPlus && (
+        <div className="mt-6 rounded-lg border border-border-subtle bg-brand-subtle p-4">
+          <p className="font-dm-sans text-sm text-brand-subtle-text">
+            Buddy reads are a Plus feature. {PLUS_PRICE_MONTHLY_LABEL}.{' '}
+            <Link href="/pricing" className="text-brand-text hover:underline">
+              See pricing.
+            </Link>
+          </p>
+        </div>
+      )}
 
       {buddyReads.length === 0 ? (
         <div className="mt-10">
           <EmptyState
-            heading="No buddy reads yet."
+            heading="No buddy reads yet. Invite a friend to read a book together."
             action={
-              <Link
-                href="/people"
-                className="font-dm-sans text-sm text-brand-text hover:underline"
-              >
-                Find a reading partner
-              </Link>
+              isPlus ? (
+                <Link
+                  href="/buddy-reads/invite"
+                  className="font-dm-sans text-sm text-brand-text hover:underline"
+                >
+                  Start a buddy read
+                </Link>
+              ) : null
             }
           />
         </div>
