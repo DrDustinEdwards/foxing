@@ -28,12 +28,18 @@ import {
 import { appBookDeeplink } from '@/lib/foxing'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { fetchBookDiscussions } from '@/lib/discussions'
+import {
+  fetchOwnChapterReactions,
+  fetchPublicChapterReactions,
+} from '@/lib/chapter-reactions'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ReadingTimerWidget } from '@/components/reading-timer-widget'
+import { ChapterReactionsSection } from './chapter-reactions-section'
 import { DiscussionGuideSection } from './discussion-guide-section'
 import { DiscussionsSection } from './discussions-section'
+import { PublicChapterReactions } from './public-chapter-reactions'
 
 export const revalidate = 3600
 
@@ -125,6 +131,13 @@ export default async function BookPage({
     fetchDiscussionGuide(book.id),
     fetchBookDiscussions(book.id),
     getAuthedUserId(),
+  ])
+
+  const [ownReactions, publicReactions] = await Promise.all([
+    viewerId
+      ? fetchOwnChapterReactions(viewerId, book.id)
+      : Promise.resolve([]),
+    fetchPublicChapterReactions(book.id, 20),
   ])
 
   const description = aiDescription || book.description || null
@@ -276,6 +289,14 @@ export default async function BookPage({
               discussions={discussions}
               canStart={Boolean(viewerId)}
             />
+            {viewerId && (
+              <ChapterReactionsSection
+                bookId={book.id}
+                bookSlug={book.slug}
+                reactions={ownReactions}
+              />
+            )}
+            <PublicChapterReactions reactions={publicReactions} />
             <CollapsibleSection heading="Deep Dive">
               <DeepDivePreview bookId={book.id} />
             </CollapsibleSection>

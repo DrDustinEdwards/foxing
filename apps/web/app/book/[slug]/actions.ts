@@ -26,6 +26,17 @@ const VALID_TYPES = new Set([
 ])
 
 const VALID_REACTIONS = new Set(['👍', '❤️', '😂', '😢', '🤔', '🔥'])
+const VALID_CHAPTER_EMOJIS = new Set([
+  '😭',
+  '😂',
+  '😱',
+  '😤',
+  '🥺',
+  '🤯',
+  '❤️',
+  '🙃',
+])
+const VALID_PRIVACY = new Set(['public', 'close_friends', 'private'])
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -241,5 +252,55 @@ export async function togglePostReaction(
   if (bookSlug && discussionId) {
     revalidatePath(`/book/${bookSlug}/discussions/${discussionId}`)
   }
+  return { ok: true }
+}
+
+// ─── Chapter reactions ────────────────────────────────────────────────────
+
+export async function addChapterReaction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const bookId = String(formData.get('book_id') ?? '').trim()
+  const bookSlug = String(formData.get('book_slug') ?? '').trim()
+  const chapterName = String(formData.get('chapter_name') ?? '').trim().slice(0, 80)
+  const emoji = String(formData.get('emoji') ?? '').trim()
+  const note = String(formData.get('note') ?? '').trim().slice(0, 500) || null
+  const privacyRaw = String(formData.get('privacy') ?? '').trim()
+  if (!bookId || !chapterName || !VALID_CHAPTER_EMOJIS.has(emoji)) {
+    return { ok: false, error: 'Chapter and emoji required.' }
+  }
+  const privacy = VALID_PRIVACY.has(privacyRaw) ? privacyRaw : 'public'
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = createClient()
+  const { error } = await sb.from('chapter_reactions').insert({
+    user_id: userId,
+    book_id: bookId,
+    chapter_name: chapterName,
+    emoji,
+    note,
+    privacy,
+  })
+  if (error) return { ok: false, error: error.message }
+  if (bookSlug) revalidatePath(`/book/${bookSlug}`)
+  return { ok: true }
+}
+
+export async function deleteChapterReaction(
+  formData: FormData,
+): Promise<ActionResult> {
+  const reactionId = String(formData.get('reaction_id') ?? '').trim()
+  const bookSlug = String(formData.get('book_slug') ?? '').trim()
+  if (!reactionId) return { ok: false, error: 'Missing id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = createClient()
+  const { error } = await sb
+    .from('chapter_reactions')
+    .delete()
+    .eq('id', reactionId)
+    .eq('user_id', userId)
+  if (error) return { ok: false, error: error.message }
+  if (bookSlug) revalidatePath(`/book/${bookSlug}`)
   return { ok: true }
 }
