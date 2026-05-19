@@ -384,6 +384,95 @@ export async function saveClubPost(
   return { ok: true }
 }
 
+const REPORT_REASONS = new Set([
+  'spam',
+  'harassment',
+  'spoilers',
+  'offensive',
+  'other',
+])
+
+export async function reportClubPost(
+  formData: FormData,
+): Promise<ActionResult> {
+  const postId = String(formData.get('post_id') ?? '').trim()
+  const reasonRaw = String(formData.get('reason') ?? '').trim()
+  if (!postId || !REPORT_REASONS.has(reasonRaw)) {
+    return { ok: false, error: 'Pick a reason.' }
+  }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('post_reports')
+    .upsert(
+      {
+        post_id: postId,
+        reporter_id: userId,
+        reason: reasonRaw,
+        post_type: 'club_post',
+      },
+      { onConflict: 'post_id,reporter_id', ignoreDuplicates: true },
+    )
+  if (error) return { ok: false, error: error.message }
+  return { ok: true }
+}
+
+export async function dismissReport(
+  formData: FormData,
+): Promise<ActionResult> {
+  const reportId = String(formData.get('report_id') ?? '').trim()
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!reportId || !clubId) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('post_reports')
+    .update({
+      status: 'dismissed',
+      reviewed_by: auth.actorId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq('id', reportId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function actionReport(
+  formData: FormData,
+): Promise<ActionResult> {
+  const reportId = String(formData.get('report_id') ?? '').trim()
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!reportId || !clubId) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  await admin
+    .from('post_reports')
+    .update({
+      status: 'actioned',
+      reviewed_by: auth.actorId,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq('id', reportId)
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
 export async function unsaveClubPost(
   formData: FormData,
 ): Promise<ActionResult> {
