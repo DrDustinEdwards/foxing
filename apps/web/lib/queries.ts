@@ -564,6 +564,15 @@ export interface PublicClub {
   current_book_id: string | null
   member_count: number
   visibility: string
+  club_type: 'reading' | 'bookstore' | null
+  is_verified: boolean | null
+  bookstore_address: string | null
+  bookstore_city: string | null
+  bookstore_state: string | null
+  bookstore_zip: string | null
+  bookstore_website: string | null
+  bookstore_phone: string | null
+  bookstore_hours: Record<string, string> | null
   current_book: {
     id: string
     slug: string | null
@@ -583,7 +592,7 @@ const CLUB_CURRENT_BOOK_COLS =
   'id, slug, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url' as const
 
 const CLUB_BASE_COLS =
-  `id, slug, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})` as const
+  `id, slug, name, description, cover_url, current_book_id, member_count, visibility, club_type, is_verified, bookstore_address, bookstore_city, bookstore_state, bookstore_zip, bookstore_website, bookstore_phone, bookstore_hours, current_book:current_book_id(${CLUB_CURRENT_BOOK_COLS})` as const
 
 export async function fetchPublicClubById(
   id: string,
