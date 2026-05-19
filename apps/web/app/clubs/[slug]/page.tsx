@@ -28,6 +28,7 @@ import { AnnouncementsSection } from './announcements-section'
 import { MeetingsSection } from './meetings-section'
 import { PollsSection } from './polls-section'
 import { ThreadDiscussionPanel } from './thread-discussion-panel'
+import { ClubSettingsPanel } from './club-settings-panel'
 import { ModerationPanel } from './moderation-panel'
 import { PostAnnouncementForm } from './post-announcement-form'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
@@ -107,6 +108,24 @@ export default async function ClubPage({
   const canModerate = isClubMod(role)
   const isMember = role !== null
   const members = canModerate ? await fetchClubMembers(club.id) : []
+  const adminClient = createAdminClient()
+  const { data: adminClubRow } =
+    role === 'admin'
+      ? await adminClient
+          .from('clubs')
+          .select(
+            'member_approval, max_members, reading_pace, chapters_per_week, genre_tags',
+          )
+          .eq('id', club.id)
+          .maybeSingle()
+      : { data: null }
+  const adminClubFields = (adminClubRow as {
+    member_approval: boolean | null
+    max_members: number | null
+    reading_pace: string | null
+    chapters_per_week: number | null
+    genre_tags: string[] | null
+  } | null) ?? null
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -261,6 +280,23 @@ export default async function ClubPage({
                 display_name: m.profile?.display_name ?? '',
                 avatar_url: m.profile?.avatar_url ?? null,
               }))}
+            />
+          )}
+
+          {role === 'admin' && (
+            <ClubSettingsPanel
+              club={{
+                id: club.id,
+                name: club.name,
+                description: club.description,
+                visibility: club.visibility,
+                member_approval: adminClubFields?.member_approval ?? null,
+                max_members: adminClubFields?.max_members ?? null,
+                reading_pace: adminClubFields?.reading_pace ?? null,
+                chapters_per_week: adminClubFields?.chapters_per_week ?? null,
+                genre_tags: adminClubFields?.genre_tags ?? null,
+                current_book_id: club.current_book_id,
+              }}
             />
           )}
 
