@@ -365,6 +365,43 @@ export async function inviteClubMember(
   return { ok: true }
 }
 
+export async function saveClubPost(
+  formData: FormData,
+): Promise<ActionResult> {
+  const postId = String(formData.get('post_id') ?? '').trim()
+  if (!postId) return { ok: false, error: 'Missing id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('saved_posts')
+    .upsert(
+      { user_id: userId, post_id: postId },
+      { onConflict: 'user_id,post_id', ignoreDuplicates: true },
+    )
+  if (error) return { ok: false, error: error.message }
+  revalidatePath('/saved-posts')
+  return { ok: true }
+}
+
+export async function unsaveClubPost(
+  formData: FormData,
+): Promise<ActionResult> {
+  const postId = String(formData.get('post_id') ?? '').trim()
+  if (!postId) return { ok: false, error: 'Missing id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('saved_posts')
+    .delete()
+    .eq('user_id', userId)
+    .eq('post_id', postId)
+  if (error) return { ok: false, error: error.message }
+  revalidatePath('/saved-posts')
+  return { ok: true }
+}
+
 export async function approveClubMember(
   formData: FormData,
 ): Promise<ActionResult> {

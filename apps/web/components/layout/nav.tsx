@@ -598,6 +598,7 @@ function AccountMenu({
     { href: '/vocabulary', label: 'Vocabulary' },
     { href: '/my-lists', label: 'My lists' },
     { href: '/buddy-reads', label: 'Buddy reads' },
+    { href: '/saved-posts', label: 'Saved posts' },
   ]
   const showPlusBadge = user.subscription_tier === 'free'
   return (
