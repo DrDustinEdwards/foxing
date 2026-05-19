@@ -12,6 +12,7 @@ import { formatRelativeDate } from '@foxing/utils'
 import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
 import { fetchUpcomingMeetings } from '@/lib/club-meetings'
 import { fetchPollsForClub } from '@/lib/club-polls'
+import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { fetchClubMembers, getClubRole, isClubMod } from '@/lib/club-membership'
 import {
   fetchClubPostsPreview,
@@ -26,6 +27,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { AnnouncementsSection } from './announcements-section'
 import { MeetingsSection } from './meetings-section'
 import { PollsSection } from './polls-section'
+import { ThreadDiscussionPanel } from './thread-discussion-panel'
 import { ModerationPanel } from './moderation-panel'
 import { PostAnnouncementForm } from './post-announcement-form'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
@@ -91,13 +93,17 @@ export default async function ClubPage({
   if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
     permanentRedirect(`/clubs/${club.slug}`)
   }
-  const [posts, announcements, meetings, polls, role] = await Promise.all([
-    fetchClubPostsPreview(club.id, 3),
-    fetchAnnouncementsForClub(club.id),
-    fetchUpcomingMeetings(club.id, userId),
-    fetchPollsForClub(club.id, userId),
-    getClubRole(club.id, userId),
-  ])
+  const [posts, announcements, meetings, polls, role, discussionGuide] =
+    await Promise.all([
+      fetchClubPostsPreview(club.id, 3),
+      fetchAnnouncementsForClub(club.id),
+      fetchUpcomingMeetings(club.id, userId),
+      fetchPollsForClub(club.id, userId),
+      getClubRole(club.id, userId),
+      club.current_book_id
+        ? fetchDiscussionGuide(club.current_book_id)
+        : Promise.resolve(null),
+    ])
   const canModerate = isClubMod(role)
   const isMember = role !== null
   const members = canModerate ? await fetchClubMembers(club.id) : []
@@ -157,6 +163,16 @@ export default async function ClubPage({
             canModerate={canModerate}
             isMember={isMember}
           />
+
+          {club.current_book && club.current_book_id && (
+            <ThreadDiscussionPanel
+              bookId={club.current_book_id}
+              bookSlug={club.current_book.slug}
+              bookTitle={club.current_book.title}
+              initialQuestions={discussionGuide?.questions ?? null}
+              canGenerate={canModerate}
+            />
+          )}
 
           {club.current_book && bookPath && (
             <section className="mt-8 flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
