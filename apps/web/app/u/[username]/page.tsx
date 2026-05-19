@@ -19,6 +19,8 @@ import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { profileJsonLd } from '@/lib/structured-data'
 import { buildProfileMetadata } from '@/lib/metadata'
 import { Badge } from '@/components/ui/badge'
+import { fetchUserBadges } from '@/lib/badges'
+import { BadgesSection } from './badges-section'
 import { FollowButton } from './follow-button'
 
 export const revalidate = 300
@@ -74,17 +76,19 @@ export default async function ProfilePage({
 
   const viewerId = await getAuthedUserId()
   const isOwnProfile = viewerId === profile.id
-  const [favorites, stats, reviews, isFollowing, taste] = await Promise.all([
-    fetchUserFavorites(profile.id),
-    fetchProfileStats(profile.id),
-    fetchProfileReviews(profile.id, 3),
-    viewerId && !isOwnProfile
-      ? fetchIsFollowing({ followerId: viewerId, followingId: profile.id })
-      : Promise.resolve(false),
-    viewerId && !isOwnProfile
-      ? fetchTasteCompatibility({ viewerId, profileId: profile.id })
-      : Promise.resolve(null),
-  ])
+  const [favorites, stats, reviews, isFollowing, taste, badges] =
+    await Promise.all([
+      fetchUserFavorites(profile.id),
+      fetchProfileStats(profile.id),
+      fetchProfileReviews(profile.id, 3),
+      viewerId && !isOwnProfile
+        ? fetchIsFollowing({ followerId: viewerId, followingId: profile.id })
+        : Promise.resolve(false),
+      viewerId && !isOwnProfile
+        ? fetchTasteCompatibility({ viewerId, profileId: profile.id })
+        : Promise.resolve(null),
+      fetchUserBadges(profile.id),
+    ])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -149,6 +153,8 @@ export default async function ProfilePage({
           </section>
 
           <StatsRow stats={stats} username={profile.username} />
+
+          <BadgesSection username={profile.username} badges={badges} />
 
           {reviews.length > 0 && (
             <section className="mt-12">

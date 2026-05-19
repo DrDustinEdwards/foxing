@@ -274,6 +274,46 @@ export async function checkAndAwardBadges(
   return { awarded }
 }
 
+export interface BadgeRow {
+  id: string
+  slug: string
+  name: string
+  description: string | null
+  icon: string | null
+  category: string | null
+}
+
+export interface EarnedBadge extends BadgeRow {
+  earned_at: string
+}
+
+export async function fetchUserBadges(
+  userId: string,
+): Promise<EarnedBadge[]> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('user_badges')
+    .select(
+      'earned_at, badges:badge_id(id, slug, name, description, icon, category)',
+    )
+    .eq('user_id', userId)
+    .order('earned_at', { ascending: false })
+  const rows =
+    (data as { earned_at: string; badges: BadgeRow | null }[] | null) ?? []
+  return rows
+    .filter((r) => r.badges)
+    .map((r) => ({ ...(r.badges as BadgeRow), earned_at: r.earned_at }))
+}
+
+export async function fetchAllBadges(): Promise<BadgeRow[]> {
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('badges')
+    .select('id, slug, name, description, icon, category')
+    .order('category', { ascending: true })
+  return (data as BadgeRow[] | null) ?? []
+}
+
 export async function updateReadingLevel(userId: string): Promise<void> {
   const admin = createAdminClient()
   const { data } = await admin
