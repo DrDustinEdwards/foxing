@@ -27,10 +27,13 @@ import {
 } from '@/lib/queries'
 import { appBookDeeplink } from '@/lib/foxing'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
+import { fetchBookDiscussions } from '@/lib/discussions'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ReadingTimerWidget } from '@/components/reading-timer-widget'
 import { DiscussionGuideSection } from './discussion-guide-section'
+import { DiscussionsSection } from './discussions-section'
 
 export const revalidate = 3600
 
@@ -110,6 +113,8 @@ export default async function BookPage({
     aiDescription,
     aiAuthorBio,
     discussionGuide,
+    discussions,
+    viewerId,
   ] = await Promise.all([
     fetchBookReviews(book.id, 5),
     fetchBookHighlights(book.id, 3),
@@ -118,6 +123,8 @@ export default async function BookPage({
     fetchAiCache(book.id, 'book_description'),
     fetchAiCache(book.id, 'author_bio'),
     fetchDiscussionGuide(book.id),
+    fetchBookDiscussions(book.id),
+    getAuthedUserId(),
   ])
 
   const description = aiDescription || book.description || null
@@ -262,6 +269,12 @@ export default async function BookPage({
               bookId={book.id}
               bookSlug={book.slug}
               initialQuestions={discussionGuide?.questions ?? null}
+            />
+            <DiscussionsSection
+              bookId={book.id}
+              bookSlug={book.slug}
+              discussions={discussions}
+              canStart={Boolean(viewerId)}
             />
             <CollapsibleSection heading="Deep Dive">
               <DeepDivePreview bookId={book.id} />
