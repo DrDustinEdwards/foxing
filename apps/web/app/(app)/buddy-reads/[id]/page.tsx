@@ -13,6 +13,12 @@ import {
 } from '@/lib/missing-pages-queries'
 import { BUDDY_READS_METADATA } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { PostForm } from './post-form'
+import {
+  DeletePostButton,
+  FinishBuddyReadButton,
+} from './post-actions-buttons'
+import { SpoilerContent } from './spoiler-content'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,7 +44,13 @@ export default async function BuddyReadPage({
         ← Buddy reads
       </Link>
       <BuddyReadHeader buddyRead={buddyRead} />
-      <PostList posts={posts} />
+      {buddyRead.is_active && (
+        <div className="mt-6 flex justify-end">
+          <FinishBuddyReadButton buddyReadId={buddyRead.id} />
+        </div>
+      )}
+      <PostList posts={posts} viewerId={userId} buddyReadId={buddyRead.id} />
+      {buddyRead.is_active && <PostForm buddyReadId={buddyRead.id} />}
     </PageWrapper>
   )
 }
@@ -110,7 +122,15 @@ function PersonChip({
   )
 }
 
-function PostList({ posts }: { posts: BuddyReadPost[] }) {
+function PostList({
+  posts,
+  viewerId,
+  buddyReadId,
+}: {
+  posts: BuddyReadPost[]
+  viewerId: string
+  buddyReadId: string
+}) {
   if (posts.length === 0) {
     return (
       <div className="mt-10 rounded-lg border border-border-subtle bg-bg-surface p-6 text-center">
@@ -133,23 +153,31 @@ function PostList({ posts }: { posts: BuddyReadPost[] }) {
             size="sm"
           />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex flex-wrap items-baseline gap-2">
-              <span className="font-dm-sans text-sm font-medium text-text-primary">
-                {p.author?.display_name ?? 'Reader'}
-              </span>
-              <time className="font-dm-mono text-[11px] text-text-tertiary">
-                {new Date(p.created_at).toLocaleString()}
-              </time>
-              {p.chapter && (
-                <Badge variant="neutral">
-                  {p.chapter}
-                </Badge>
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span className="font-dm-sans text-sm font-medium text-text-primary">
+                  {p.author?.display_name ?? 'Reader'}
+                </span>
+                <time className="font-dm-mono text-[11px] text-text-tertiary">
+                  {new Date(p.created_at).toLocaleString()}
+                </time>
+                {p.page_number && (
+                  <Badge variant="neutral">p. {p.page_number}</Badge>
+                )}
+                {p.chapter && <Badge variant="neutral">{p.chapter}</Badge>}
+                {p.has_spoiler && <Badge variant="warning">Spoiler</Badge>}
+              </div>
+              {p.author_id === viewerId && (
+                <DeletePostButton postId={p.id} buddyReadId={buddyReadId} />
               )}
-              {p.has_spoiler && <Badge variant="warning">Spoiler</Badge>}
             </div>
-            <p className="whitespace-pre-line font-source-serif-4 text-sm text-text-primary">
-              {p.content}
-            </p>
+            {p.has_spoiler ? (
+              <SpoilerContent>{p.content}</SpoilerContent>
+            ) : (
+              <p className="whitespace-pre-line font-source-serif-4 text-sm text-text-primary">
+                {p.content}
+              </p>
+            )}
           </div>
         </li>
       ))}
