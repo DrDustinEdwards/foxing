@@ -4,6 +4,11 @@ import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  PLUS_PRICE_COMBINED_LABEL,
+  PLUS_PRICE_MONTHLY_LABEL,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
@@ -32,8 +37,8 @@ export default async function FeaturesPage() {
               What Foxing does
             </h1>
             <p className="mt-4 font-source-serif-4 text-base text-text-secondary leading-[1.85]">
-              Everything on this page is available today. Free and Plus
-              ($12.99/month) features are labeled.
+              Everything on this page is available today. Free and Plus (
+              {PLUS_PRICE_MONTHLY_LABEL}) features are labeled.
             </p>
           </header>
 
@@ -337,8 +342,8 @@ export default async function FeaturesPage() {
 
           <aside className="mx-auto mt-20 max-w-prose rounded-lg bg-brand-subtle p-6 text-center">
             <p className="font-source-serif-4 text-base text-text-secondary leading-[1.7]">
-              Foxing is free to read. Plus ($12.99/month or $129.99/year) adds
-              unlimited AI, book club creation, and more. 7-day free trial, no
+              Foxing is free to read. Plus ({PLUS_PRICE_COMBINED_LABEL}) adds
+              unlimited AI, book club creation, and more. {PLUS_TRIAL_LABEL}, no
               credit card.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-3">

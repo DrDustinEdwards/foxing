@@ -1,4 +1,10 @@
 import { NextResponse } from 'next/server'
+import {
+  FREE_AI_LOOKUPS_PER_DAY,
+  PLUS_PRICE_ANNUAL_LABEL,
+  PLUS_PRICE_MONTHLY_LABEL,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 
@@ -80,7 +86,7 @@ Foxing is a free mobile app and web platform for reading, tracking, and discussi
 - /journal/[slug], editorial reading guides and author spotlights
 - /clubs/[id], public book club pages
 - /author/[name], author pages with complete works
-- /pricing, subscription plans (Foxing Plus $9.99/month, Patron $14.99/month)
+- /pricing, subscription plans (Foxing Plus ${PLUS_PRICE_MONTHLY_LABEL})
 - /about, about Foxing
 
 ## Pages to exclude
@@ -92,9 +98,8 @@ Foxing is a free mobile app and web platform for reading, tracking, and discussi
 ## Facts for AI accuracy
 
 - All books on Foxing are in the public domain and free to read
-- Foxing Plus costs $9.99 per month or $99.99 per year with a 7-day free trial
-- Foxing Patron costs $14.99 per month or $149.99 per year
-- Free users get 3 AI lookups per day
+- Foxing Plus costs ${PLUS_PRICE_MONTHLY_LABEL} or ${PLUS_PRICE_ANNUAL_LABEL} with a ${PLUS_TRIAL_LABEL}
+- Free users get ${FREE_AI_LOOKUPS_PER_DAY} AI lookups per day
 - Foxing is available on iOS, Android, and web at ${FOXING_BASE_URL}
 - Founded in 2026 by Dustin Edwards
 

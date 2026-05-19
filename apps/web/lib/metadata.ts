@@ -1,5 +1,9 @@
 import type { Metadata } from 'next'
 import type { Book, Profile } from '@foxing/types'
+import {
+  PLUS_PRICE_COMBINED_LABEL,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 
 /**
  * All metadata is dynamic. No hardcoded strings on a per-page basis. The
@@ -530,13 +534,13 @@ export const STATIC_PAGE_METADATA: Record<string, Metadata> = {
   '/pricing': {
     title: 'Plans',
     description:
-      'Foxing is free to read. Plus ($12.99/month or $129.99/year) adds unlimited AI, book club creation, and more. 7-day free trial, no credit card.',
+      `Foxing is free to read. Plus (${PLUS_PRICE_COMBINED_LABEL}) adds unlimited AI, book club creation, and more. ${PLUS_TRIAL_LABEL}, no credit card.`,
     alternates: { canonical: `${BASE_URL}/pricing` },
     openGraph: {
       type: 'website',
       title: 'Foxing Plans: Free and Plus',
       description:
-        'Foxing is free to read. Plus ($12.99/month or $129.99/year) adds unlimited AI, book club creation, and more. 7-day free trial, no credit card.',
+        `Foxing is free to read. Plus (${PLUS_PRICE_COMBINED_LABEL}) adds unlimited AI, book club creation, and more. ${PLUS_TRIAL_LABEL}, no credit card.`,
       url: `${BASE_URL}/pricing`,
       siteName: SITE_NAME,
     },

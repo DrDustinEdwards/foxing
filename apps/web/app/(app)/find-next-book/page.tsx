@@ -3,6 +3,10 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import {
+  PLUS_PRICE_MONTHLY_LABEL,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 import { fetchProfileBasics } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { FindNextBookWizard } from './wizard'
@@ -72,7 +76,7 @@ function PaywallPreview() {
             unlimited AI lookups.
           </p>
           <p className="font-dm-mono text-xs uppercase tracking-wide text-text-tertiary">
-            $9.99/month · 7-day free trial
+            {PLUS_PRICE_MONTHLY_LABEL} · {PLUS_TRIAL_LABEL}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link href="/pricing">

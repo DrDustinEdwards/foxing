@@ -1,6 +1,10 @@
 import { type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
+import {
+  FREE_AI_LOOKUPS_PER_DAY,
+  PLUS_TRIAL_LABEL,
+} from '@/lib/config'
 import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
@@ -84,8 +88,8 @@ export default async function AppGuidePage() {
               Word lookup: tap any word for its definition in context. Two
               sentences about what the word means in that sentence, in that
               book. You also get etymology, synonyms, and how the word appears
-              in other literature. Free users get 5 lookups per day. Plus is
-              unlimited.
+              in other literature. Free users get {FREE_AI_LOOKUPS_PER_DAY}{' '}
+              lookups per day. Plus is unlimited.
             </P>
             <P>
               Passage analysis: long press and drag to select text. A menu
@@ -236,7 +240,7 @@ export default async function AppGuidePage() {
             </P>
             <P>Goals: set your annual book target here.</P>
             <P>
-              Subscription: manage Plus here. Start the 7-day free trial,
+              Subscription: manage Plus here. Start the {PLUS_TRIAL_LABEL},
               upgrade, downgrade, or cancel. Billing is through the App Store
               (iOS) or Play Store (Android).
             </P>
