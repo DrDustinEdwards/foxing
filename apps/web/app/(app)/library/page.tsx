@@ -52,7 +52,7 @@ function compareEntries(
       return tb - ta
     }
     case 'rating':
-      return (b.rating ?? -1) - (a.rating ?? -1)
+      return (b.rating_half ?? b.rating ?? -1) - (a.rating_half ?? a.rating ?? -1)
     case 'date_added':
     default:
       return (
@@ -229,8 +229,9 @@ function LibraryCard({
         <p className="truncate font-dm-sans text-xs text-text-tertiary">
           {entry.book.author}
         </p>
-        {entry.status === 'finished' && typeof entry.rating === 'number' && (
-          <StarRating value={entry.rating} size="sm" readOnly />
+        {entry.status === 'finished' &&
+          typeof entry.rating_half === 'number' && (
+          <StarRating value={entry.rating_half / 2} size="sm" readOnly />
         )}
       </div>
     </Link>

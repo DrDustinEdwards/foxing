@@ -41,7 +41,7 @@ export async function generateMetadata({
     book_title: entry.book.title,
     book_author: entry.book.author,
     log_date: entry.log_date,
-    rating: entry.rating,
+    rating: entry.rating_half !== null ? entry.rating_half / 2 : null,
     review: entry.review,
     book_cover_url: entry.book.cover_url,
   })
@@ -93,10 +93,10 @@ export default async function UserDiaryEntryPage({
     datePublished: entry.log_date,
     url,
   }
-  if (typeof entry.rating === 'number') {
+  if (typeof entry.rating_half === 'number') {
     reviewJsonLd.reviewRating = {
       '@type': 'Rating',
-      ratingValue: entry.rating,
+      ratingValue: entry.rating_half / 2,
       bestRating: 5,
     }
   }
@@ -149,9 +149,9 @@ export default async function UserDiaryEntryPage({
                 <p className="font-dm-sans text-sm text-text-tertiary">
                   {entry.book.author}
                 </p>
-                {typeof entry.rating === 'number' && (
+                {typeof entry.rating_half === 'number' && (
                   <div className="mt-1">
-                    <StarRating value={entry.rating} size="md" readOnly />
+                    <StarRating value={entry.rating_half / 2} size="md" readOnly />
                   </div>
                 )}
               </div>

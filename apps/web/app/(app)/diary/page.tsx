@@ -199,8 +199,8 @@ function DiaryList({
             >
               {e.book.title}
             </Link>
-            {typeof e.rating === 'number' && (
-              <StarRating value={e.rating} size="sm" readOnly />
+            {typeof e.rating_half === 'number' && (
+              <StarRating value={e.rating_half / 2} size="sm" readOnly />
             )}
             {e.review && (
               <p className="line-clamp-2 font-source-serif-4 text-sm text-text-secondary">

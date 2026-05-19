@@ -23,6 +23,7 @@ export interface LibraryEntry {
   id: string
   status: LibraryStatus
   rating: number | null
+  rating_half: number | null
   progress_percentage: number | null
   started_at: string | null
   finished_at: string | null
@@ -46,7 +47,7 @@ export async function fetchLibrary(
   const { data } = await sb()
     .from('user_books')
     .select(
-      'id, status, rating, progress_percentage, started_at, finished_at, created_at, is_favorite, books:book_id(id, slug, title, author, cover_url, themes, word_count)',
+      'id, status, rating, rating_half, progress_percentage, started_at, finished_at, created_at, is_favorite, books:book_id(id, slug, title, author, cover_url, themes, word_count)',
     )
     .eq('user_id', userId)
     .eq('status', status)
@@ -62,6 +63,7 @@ export async function fetchLibrary(
         id: r.id,
         status: r.status,
         rating: r.rating,
+        rating_half: r.rating_half,
         progress_percentage: r.progress_percentage,
         started_at: r.started_at,
         finished_at: r.finished_at,
@@ -114,6 +116,7 @@ export async function fetchReadingStreak(
 export interface FinishedBookForStats {
   finished_at: string
   rating: number | null
+  rating_half: number | null
   word_count: number | null
   themes: string[] | null
 }
@@ -126,7 +129,7 @@ export async function fetchFinishedBooksForStats(
   let q = sb()
     .from('user_books')
     .select(
-      'finished_at, rating, books:book_id(word_count, themes)',
+      'finished_at, rating, rating_half, books:book_id(word_count, themes)',
     )
     .eq('user_id', userId)
     .eq('status', 'finished')
@@ -140,12 +143,14 @@ export async function fetchFinishedBooksForStats(
       const r = row as unknown as {
         finished_at: string | null
         rating: number | null
+        rating_half: number | null
         books: { word_count: number | null; themes: string[] | null } | null
       }
       if (!r.finished_at) return null
       return {
         finished_at: r.finished_at,
         rating: r.rating,
+        rating_half: r.rating_half,
         word_count: r.books?.word_count ?? null,
         themes: r.books?.themes ?? null,
       }
@@ -349,7 +354,7 @@ export async function fetchActiveChallenges(
 export interface DiaryEntry {
   id: string
   log_date: string
-  rating: number | null
+  rating_half: number | null
   review: string | null
   privacy: string
   book: {
@@ -368,7 +373,7 @@ export async function fetchDiaryEntries(
   let q = sb()
     .from('diary_entries')
     .select(
-      'id, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+      'id, log_date, rating_half, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
   if (year) {
@@ -387,7 +392,7 @@ export async function fetchDiaryEntries(
       return {
         id: r.id,
         log_date: r.log_date,
-        rating: r.rating,
+        rating_half: r.rating_half,
         review: r.review,
         privacy: r.privacy,
         book: r.books,

@@ -576,7 +576,7 @@ export interface PublicDiaryEntry {
   id: string
   slug: string | null
   log_date: string
-  rating: number | null
+  rating_half: number | null
   review: string | null
   book: {
     id: string
@@ -595,7 +595,7 @@ export async function fetchPublicDiary(
   let q = sb()
     .from('diary_entries')
     .select(
-      'id, slug, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+      'id, slug, log_date, rating_half, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', userId)
     .eq('privacy', 'public')
@@ -612,7 +612,7 @@ export async function fetchPublicDiary(
       id: r.id,
       slug: r.slug,
       log_date: r.log_date,
-      rating: r.rating,
+      rating_half: r.rating_half,
       review: r.review,
       book: r.books!,
     }))
@@ -630,7 +630,7 @@ export async function fetchPublicDiaryEntry(opts: {
   let { data, error } = await sb()
     .from('diary_entries')
     .select(
-      'id, slug, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+      'id, slug, log_date, rating_half, review, privacy, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('user_id', opts.userId)
     .eq('slug', opts.slugOrId)
@@ -640,7 +640,7 @@ export async function fetchPublicDiaryEntry(opts: {
     const fallback = await sb()
       .from('diary_entries')
       .select(
-        'id, slug, log_date, rating, review, privacy, books:book_id(id, slug, title, author, cover_url)',
+        'id, slug, log_date, rating_half, review, privacy, books:book_id(id, slug, title, author, cover_url)',
       )
       .eq('user_id', opts.userId)
       .eq('id', opts.slugOrId)
@@ -658,7 +658,7 @@ export async function fetchPublicDiaryEntry(opts: {
     id: r.id,
     slug: r.slug,
     log_date: r.log_date,
-    rating: r.rating,
+    rating_half: r.rating_half,
     review: r.review,
     book: r.books,
   }
