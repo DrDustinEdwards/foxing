@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchEventStates } from '@/lib/events'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 
 export const revalidate = 3600
@@ -65,6 +66,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${FOXING_BASE_URL}/journal`,
       lastModified: now,
       changeFrequency: 'weekly',
+      priority: 0.7,
+    },
+    {
+      url: `${FOXING_BASE_URL}/events`,
+      lastModified: now,
+      changeFrequency: 'daily',
       priority: 0.7,
     },
     {
@@ -276,6 +283,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })
   }
 
+  const eventStates = await fetchEventStates()
+  const eventStatePages: MetadataRoute.Sitemap = eventStates.map((s) => ({
+    url: `${FOXING_BASE_URL}/events/${s.toLowerCase()}`,
+    lastModified: now,
+    changeFrequency: 'daily',
+    priority: 0.6,
+  }))
+
   return [
     ...staticPages,
     ...bookPages,
@@ -286,5 +301,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...listPages,
     ...monthlyRoundupPages,
     ...celebrityPickPages,
+    ...eventStatePages,
   ]
 }
