@@ -29,17 +29,18 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
               Pick how you read.
             </h1>
             <p className="mx-auto mt-3 max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Free works on its own. Plus adds the AI that reads alongside
-              you. Patron is for people who want every angle on the book.
+              Free works on its own: 1,400+ classic books, library, diary,
+              stats, and a few AI lookups a day. Plus adds the AI that reads
+              alongside you, plus book club creation and more.
             </p>
             <p className="mt-4 font-dm-sans text-xs text-text-tertiary">
-              No credit card required. Cancel anytime.
+              7-day free trial. No credit card required. Cancel anytime.
             </p>
           </header>
 
           <PeriodToggle period={period} />
 
-          <section className="mt-8 grid gap-5 md:grid-cols-3">
+          <section className="mx-auto mt-8 grid max-w-3xl gap-5 md:grid-cols-2">
             <PricingCard
               name="Free"
               price="$0"
@@ -51,49 +52,46 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
                 '1,400+ classic books, free',
                 'Reader, highlights, vocabulary',
                 'Reading diary, stats, lists',
-                'Three AI lookups a day',
+                'Five AI word lookups a day',
+                'Join one book club',
               ]}
             />
             <PricingCard
               highlight
               name="Plus"
-              price={period === 'yearly' ? '$99.99' : '$9.99'}
+              price={period === 'yearly' ? '$129.99' : '$12.99'}
               cadence={period === 'yearly' ? 'per year' : 'per month'}
               cta="Start with Plus"
               ctaHref="/sign-up?plan=plus"
               variant="primary"
               features={[
                 'Everything in Free',
-                'Unlimited AI word lookups and passage analysis',
-                'Find Your Next Book',
-                'Custom reading themes',
-              ]}
-            />
-            <PricingCard
-              name="Patron"
-              price={period === 'yearly' ? '$149.99' : '$14.99'}
-              cadence={period === 'yearly' ? 'per year' : 'per month'}
-              cta="Start with Patron"
-              ctaHref="/sign-up?plan=patron"
-              variant="primary"
-              features={[
-                'Everything in Plus',
-                'Deep Dive analysis on every book',
-                'Early access to new features',
-                'Direct support to the people building Foxing',
+                'Unlimited AI word lookups, passage analysis, and Deep Dive',
+                'Create unlimited book clubs and passage comments',
+                'Buddy reads, quote cards, Year in Reading',
+                'Reading personality that updates continuously',
               ]}
             />
           </section>
 
-          <section className="mt-12 max-w-prose">
+          <p className="mt-8 text-center font-dm-sans text-sm">
+            <Link
+              href="/features"
+              className="text-brand-text hover:underline"
+            >
+              See the full feature list →
+            </Link>
+          </p>
+
+          <section className="mx-auto mt-12 max-w-prose">
             <h2 className="font-fraunces text-xl text-text-primary">
               How the AI cost gets paid
             </h2>
             <p className="mt-2 font-source-serif-4 text-base text-text-secondary">
-              Every AI call costs real money. Three lookups a day stays
-              free because that&apos;s what fits the budget. Plus and Patron
-              fees go directly to compute, hosting, and one person&apos;s
-              time. No ads, no data resale.
+              Every AI call costs real money. Five lookups a day stays free
+              because that&apos;s what fits the budget. Plus fees go directly
+              to compute, hosting, and one person&apos;s time. No ads, no data
+              resale.
             </p>
           </section>
         </PageWrapper>
@@ -127,7 +125,7 @@ function PeriodToggle({ period }: { period: 'monthly' | 'yearly' }) {
               : 'text-text-tertiary hover:text-text-primary',
           )}
         >
-          Yearly (2 months free)
+          Yearly (Save $26)
         </Link>
       </div>
     </div>
