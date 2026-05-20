@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
-import { FoxMark } from '@/components/ui/fox-mark'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/cn'
 
@@ -135,7 +134,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             href={user ? '/home' : '/'}
             className="flex items-center gap-2 font-fraunces text-xl text-brand-ui"
           >
-            <FoxMark size={28} />
+            <span aria-hidden="true">🦊</span>
             <span>Foxing</span>
           </Link>
         </div>

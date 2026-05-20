@@ -13,7 +13,6 @@ import {
   UsersIcon,
   UsersThreeIcon,
 } from '@/components/icons'
-import { FoxMark } from '@/components/ui/fox-mark'
 import { cn } from '@/lib/cn'
 
 interface NavItem {
@@ -57,7 +56,7 @@ export function AdminSidebar({ adminName }: Props) {
           href="/admin"
           className="inline-flex items-center gap-2 font-fraunces text-lg text-brand-ui"
         >
-          <FoxMark size={24} />
+          <span aria-hidden="true">🦊</span>
           Admin
         </Link>
         <button
@@ -134,7 +133,7 @@ export function AdminSidebar({ adminName }: Props) {
             href="/admin"
             className="inline-flex items-center gap-2 font-fraunces text-xl text-brand-ui"
           >
-            <FoxMark size={28} />
+            <span aria-hidden="true">🦊</span>
             Foxing
           </Link>
           <p className="mt-1 font-dm-mono text-[11px] uppercase tracking-wider text-[#A28269]">

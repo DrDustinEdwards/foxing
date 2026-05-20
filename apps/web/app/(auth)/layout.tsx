@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { type ReactNode } from 'react'
-import { FoxMark } from '@/components/ui/fox-mark'
 
 export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
@@ -10,7 +9,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
           href="/"
           className="inline-flex items-center gap-2 font-fraunces text-xl text-brand-ui"
         >
-          <FoxMark size={28} />
+          <span aria-hidden="true">🦊</span>
           Foxing
         </Link>
       </header>
