@@ -115,7 +115,7 @@ export default async function ClubPage({
     ? await adminClient
         .from('clubs')
         .select(
-          'member_approval, max_members, reading_pace, chapters_per_week, genre_tags',
+          'member_approval, max_members, reading_pace, chapters_per_week, genre_tags, discord_webhook_url',
         )
         .eq('id', club.id)
         .maybeSingle()
@@ -126,7 +126,26 @@ export default async function ClubPage({
     reading_pace: string | null
     chapters_per_week: number | null
     genre_tags: string[] | null
+    discord_webhook_url: string | null
   } | null) ?? null
+  const discordConnected = Boolean(
+    adminClubFields?.discord_webhook_url ?? null,
+  )
+  const { data: nonModDiscordRow } =
+    isMember && !canModerate
+      ? await adminClient
+          .from('clubs')
+          .select('discord_webhook_url')
+          .eq('id', club.id)
+          .maybeSingle()
+      : { data: null }
+  const memberSeesDiscordBadge =
+    isMember &&
+    (discordConnected ||
+      Boolean(
+        (nonModDiscordRow as { discord_webhook_url: string | null } | null)
+          ?.discord_webhook_url,
+      ))
   const showPending = canModerate && adminClubFields?.member_approval === true
   const { data: pendingRows } = showPending
     ? await adminClient
@@ -245,9 +264,16 @@ export default async function ClubPage({
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-3">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              {club.name}
-            </h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="font-fraunces text-[2rem] text-text-primary">
+                {club.name}
+              </h1>
+              {memberSeesDiscordBadge && (
+                <span className="rounded-full bg-brand-subtle px-2.5 py-1 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text">
+                  Connected to Discord
+                </span>
+              )}
+            </div>
             <p className="font-dm-sans text-sm text-text-tertiary">
               {club.member_count} members
             </p>
@@ -436,6 +462,8 @@ export default async function ClubPage({
                 chapters_per_week: adminClubFields?.chapters_per_week ?? null,
                 genre_tags: adminClubFields?.genre_tags ?? null,
                 current_book_id: club.current_book_id,
+                discord_webhook_url:
+                  adminClubFields?.discord_webhook_url ?? null,
               }}
             />
           )}

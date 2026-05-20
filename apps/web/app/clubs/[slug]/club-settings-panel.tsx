@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   deleteClub,
+  testClubDiscordWebhook,
   transferClubOwnership,
+  updateClubDiscordWebhook,
   updateClubSettings,
 } from './actions'
 
@@ -21,6 +23,7 @@ interface ClubData {
   chapters_per_week: number | null
   genre_tags: string[] | null
   current_book_id: string | null
+  discord_webhook_url: string | null
 }
 
 export function ClubSettingsPanel({ club }: { club: ClubData }) {
@@ -43,8 +46,157 @@ export function ClubSettingsPanel({ club }: { club: ClubData }) {
         </Button>
       </header>
       <GeneralForm club={club} />
+      <DiscordWebhookBlock
+        clubId={club.id}
+        webhookUrl={club.discord_webhook_url}
+      />
       <TransferOwnershipBlock clubId={club.id} />
       <DangerZone clubId={club.id} clubName={club.name} />
+    </section>
+  )
+}
+
+function maskWebhook(url: string): string {
+  const lastSlash = url.lastIndexOf('/')
+  if (lastSlash < 0) return url
+  return `${url.slice(0, lastSlash + 7)}...`
+}
+
+function DiscordWebhookBlock({
+  clubId,
+  webhookUrl,
+}: {
+  clubId: string
+  webhookUrl: string | null
+}) {
+  const router = useRouter()
+  const [value, setValue] = useState('')
+  const [pending, setPending] = useState<'save' | 'test' | 'clear' | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [info, setInfo] = useState<string | null>(null)
+  const configured = Boolean(webhookUrl)
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
+    setError(null)
+    setInfo(null)
+    if (!value.trim()) {
+      setError('Webhook URL is required.')
+      return
+    }
+    setPending('save')
+    const fd = new FormData()
+    fd.set('club_id', clubId)
+    fd.set('webhook_url', value.trim())
+    const res = await updateClubDiscordWebhook(fd)
+    setPending(null)
+    if (!res.ok) {
+      setError(res.error)
+      return
+    }
+    setValue('')
+    setInfo('Webhook configured ✓')
+    router.refresh()
+  }
+
+  async function handleClear() {
+    if (!confirm('Disconnect this club from Discord?')) return
+    setError(null)
+    setInfo(null)
+    setPending('clear')
+    const fd = new FormData()
+    fd.set('club_id', clubId)
+    fd.set('clear', 'true')
+    const res = await updateClubDiscordWebhook(fd)
+    setPending(null)
+    if (!res.ok) {
+      setError(res.error)
+      return
+    }
+    setInfo('Discord disconnected.')
+    router.refresh()
+  }
+
+  async function handleTest() {
+    setError(null)
+    setInfo(null)
+    setPending('test')
+    const fd = new FormData()
+    fd.set('club_id', clubId)
+    const res = await testClubDiscordWebhook(fd)
+    setPending(null)
+    if (!res.ok) {
+      setError(res.error)
+      return
+    }
+    setInfo('Test message sent.')
+  }
+
+  return (
+    <section className="flex flex-col gap-3 border-t border-border-subtle pt-5">
+      <header>
+        <h3 className="font-fraunces text-lg text-text-primary">
+          Discord notifications
+        </h3>
+        <p className="font-source-serif-4 text-sm text-text-secondary">
+          Send new meetings, polls, and announcements to a Discord channel.
+        </p>
+      </header>
+      {configured ? (
+        <div className="flex flex-col gap-3">
+          <p className="font-dm-mono text-xs text-text-tertiary">
+            {maskWebhook(webhookUrl!)}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              loading={pending === 'test'}
+              onClick={handleTest}
+            >
+              Send test
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              loading={pending === 'clear'}
+              onClick={handleClear}
+            >
+              Disconnect
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={handleSave} className="flex flex-col gap-2">
+          <Input
+            label="Webhook URL"
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            placeholder="https://discord.com/api/webhooks/..."
+          />
+          <div>
+            <Button
+              type="submit"
+              variant="primary"
+              size="sm"
+              loading={pending === 'save'}
+              disabled={!value.trim()}
+            >
+              Connect
+            </Button>
+          </div>
+        </form>
+      )}
+      {error && (
+        <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
+          {error}
+        </p>
+      )}
+      {info && (
+        <p className="font-dm-sans text-xs text-success">{info}</p>
+      )}
     </section>
   )
 }
