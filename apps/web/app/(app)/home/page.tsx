@@ -86,10 +86,10 @@ export default async function DashboardHome() {
         <p className="font-source-serif-4 text-base text-text-tertiary">
           Activity from people you follow shows up here once you have follows.{' '}
           <Link
-            href="/discover-readers"
+            href="/people/similar"
             className="text-brand-text hover:underline"
           >
-            Find readers
+            Find similar readers
           </Link>
         </p>
       </section>
