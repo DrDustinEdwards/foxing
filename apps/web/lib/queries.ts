@@ -716,6 +716,8 @@ export interface PublicQuote {
   text: string
   note: string | null
   created_at: string
+  like_count: number
+  liked_by_me: boolean
   book: { id: string; slug: string | null; title: string; author: string; cover_url: string | null } | null
   author: {
     username: string
@@ -727,6 +729,7 @@ export interface PublicQuote {
 export async function fetchPublicQuotes(
   page = 1,
   pageSize = 24,
+  userId?: string | null,
 ): Promise<{ items: PublicQuote[]; total: number }> {
   if (!hasEnv()) return { items: [], total: 0 }
   const sb = supabase()
@@ -734,30 +737,61 @@ export async function fetchPublicQuotes(
   const { data, count } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, like_count, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
       { count: 'exact' },
     )
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1)
-  return {
-    items: (data as unknown as PublicQuote[] | null) ?? [],
-    total: count ?? 0,
-  }
+  const rows = (data as unknown as Array<Omit<PublicQuote, 'liked_by_me'>> | null) ?? []
+  const ids = rows.map((r) => r.id)
+  const likedIds = await fetchLikedHighlightIds(userId ?? null, ids)
+  const items: PublicQuote[] = rows.map((r) => ({
+    ...r,
+    like_count: r.like_count ?? 0,
+    liked_by_me: likedIds.has(r.id),
+  }))
+  return { items, total: count ?? 0 }
 }
 
-export async function fetchQuoteById(id: string): Promise<PublicQuote | null> {
+export async function fetchQuoteById(
+  id: string,
+  userId?: string | null,
+): Promise<PublicQuote | null> {
   if (!hasEnv()) return null
   const sb = supabase()
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, like_count, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
     )
     .eq('id', id)
     .eq('is_public', true)
     .maybeSingle()
-  return (data as unknown as PublicQuote | null) ?? null
+  if (!data) return null
+  const row = data as unknown as Omit<PublicQuote, 'liked_by_me'>
+  const likedIds = await fetchLikedHighlightIds(userId ?? null, [row.id])
+  return {
+    ...row,
+    like_count: row.like_count ?? 0,
+    liked_by_me: likedIds.has(row.id),
+  }
+}
+
+async function fetchLikedHighlightIds(
+  userId: string | null,
+  highlightIds: string[],
+): Promise<Set<string>> {
+  if (!userId || highlightIds.length === 0) return new Set()
+  const sb = supabase()
+  const { data } = await sb
+    .from('highlight_likes')
+    .select('post_id')
+    .eq('user_id', userId)
+    .in('post_id', highlightIds)
+  return new Set(
+    ((data as { post_id: string }[] | null) ?? []).map((r) => r.post_id),
+  )
 }
 
 /**

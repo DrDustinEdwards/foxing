@@ -2,10 +2,11 @@ import Link from 'next/link'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { HighlightCard } from '@/components/highlight-card'
+import { LikeHighlightButton } from '@/components/ui/like-highlight-button'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicQuotes } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 300
@@ -17,9 +18,9 @@ export default async function QuotesPage({
 }: {
   searchParams: { page?: string }
 }) {
-  const navUser = await getNavUser()
+  const [navUser, userId] = await Promise.all([getNavUser(), getAuthedUserId()])
   const page = Math.max(1, Number(searchParams.page) || 1)
-  const { items, total } = await fetchPublicQuotes(page, 24)
+  const { items, total } = await fetchPublicQuotes(page, 24, userId)
   const totalPages = Math.max(1, Math.ceil(total / 24))
 
   return (
@@ -51,21 +52,30 @@ export default async function QuotesPage({
           ) : (
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((q) => (
-                <Link key={q.id} href={`/quotes/${q.id}`} className="block">
-                  <HighlightCard
-                    text={q.text}
-                    book={
-                      q.book
-                        ? {
-                            title: q.book.title,
-                            author: q.book.author,
-                            id: q.book.id,
-                          }
-                        : { title: '', author: '', id: '' }
-                    }
-                    author={q.author}
+                <div key={q.id} className="flex flex-col gap-2">
+                  <Link href={`/quotes/${q.id}`} className="block">
+                    <HighlightCard
+                      text={q.text}
+                      book={
+                        q.book
+                          ? {
+                              title: q.book.title,
+                              author: q.book.author,
+                              id: q.book.id,
+                            }
+                          : { title: '', author: '', id: '' }
+                      }
+                      author={q.author}
+                    />
+                  </Link>
+                  <LikeHighlightButton
+                    highlightId={q.id}
+                    initialLiked={q.liked_by_me}
+                    initialCount={q.like_count}
+                    userId={userId}
+                    className="px-1"
                   />
-                </Link>
+                </div>
               ))}
             </div>
           )}
