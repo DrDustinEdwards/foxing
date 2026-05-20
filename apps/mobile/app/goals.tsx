@@ -401,6 +401,48 @@ export default function GoalsScreen() {
     setSavingWeekly(false)
   }, [weeklyTarget, userId])
 
+  const [usingFreeze, setUsingFreeze] = useState(false)
+  const [freezeError, setFreezeError] = useState<string | null>(null)
+  const yesterdayISO = useMemo(() => {
+    const d = new Date()
+    d.setUTCDate(d.getUTCDate() - 1)
+    return d.toISOString().slice(0, 10)
+  }, [])
+  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), [])
+  const streakAtRisk =
+    (streak?.streak_freeze_credits ?? 0) > 0 &&
+    (streak?.current_streak ?? 0) > 0 &&
+    streak?.last_read_date === yesterdayISO
+
+  const useFreeze = useCallback(async () => {
+    if (!userId || !streak) return
+    setFreezeError(null)
+    setUsingFreeze(true)
+    const credits = streak.streak_freeze_credits ?? 0
+    if (credits <= 0) {
+      setFreezeError('No freeze credits available.')
+      setUsingFreeze(false)
+      return
+    }
+    const { error } = await supabase
+      .from('reading_streaks')
+      .update({
+        streak_freeze_credits: credits - 1,
+        last_read_date: todayISO,
+      })
+      .eq('user_id', userId)
+    setUsingFreeze(false)
+    if (error) {
+      setFreezeError(error.message)
+      return
+    }
+    setStreak({
+      ...streak,
+      streak_freeze_credits: credits - 1,
+      last_read_date: todayISO,
+    })
+  }, [streak, todayISO, userId])
+
   const removeWeekly = useCallback(async () => {
     if (!userId) return
     const { year: y, week } = isoWeekOf(new Date())
@@ -654,10 +696,72 @@ export default function GoalsScreen() {
               <Text
                 style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary, marginLeft: 6 }}
               >
-                {streak?.streak_freeze_credits ?? 0} streak protection
+                {streak?.streak_freeze_credits ?? 0} freeze credit
                 {(streak?.streak_freeze_credits ?? 0) === 1 ? '' : 's'} available
               </Text>
             </View>
+
+            {streakAtRisk ? (
+              <View style={{ marginTop: 12 }}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.body,
+                    fontSize: 13,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  Your streak is at risk. Use a freeze to protect it for today.
+                </Text>
+                <Pressable
+                  onPress={useFreeze}
+                  disabled={usingFreeze}
+                  accessibilityRole="button"
+                  accessibilityLabel="Use a freeze"
+                  style={{
+                    alignSelf: 'flex-start',
+                    marginTop: 8,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 999,
+                    backgroundColor: colors.brandUi,
+                    opacity: usingFreeze ? 0.7 : 1,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      color: colors.textOnBrand,
+                      fontSize: 13,
+                    }}
+                  >
+                    Use a freeze
+                  </Text>
+                </Pressable>
+                {freezeError ? (
+                  <Text
+                    style={{
+                      fontFamily: Fonts.ui,
+                      fontSize: 11,
+                      color: colors.error ?? colors.textTertiary,
+                      marginTop: 6,
+                    }}
+                  >
+                    {freezeError}
+                  </Text>
+                ) : null}
+              </View>
+            ) : (streak?.streak_freeze_credits ?? 0) === 0 ? (
+              <Text
+                style={{
+                  fontFamily: Fonts.ui,
+                  fontSize: 11,
+                  color: colors.textTertiary,
+                  marginTop: 6,
+                }}
+              >
+                Earn freeze credits by maintaining a 7-day streak.
+              </Text>
+            ) : null}
 
             {/* Heat map, 30 dots, last 30 days */}
             <View className="flex-row flex-wrap" style={{ marginTop: 14, gap: 4 }}>
