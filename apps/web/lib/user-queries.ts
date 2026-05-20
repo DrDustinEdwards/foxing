@@ -1,7 +1,61 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
-import type { UserHighlight } from '@/lib/user-queries-types'
-export { type UserHighlight } from '@/lib/user-queries-types'
+import type { MenuStats, UserHighlight } from '@/lib/user-queries-types'
+export {
+  type MenuStats,
+  type UserHighlight,
+} from '@/lib/user-queries-types'
+
+export async function fetchMenuStats(userId: string): Promise<MenuStats> {
+  const year = new Date().getFullYear()
+  const yearStart = `${year}-01-01T00:00:00.000Z`
+
+  const [streakData, booksCount, goalData, vocabData] = await Promise.all([
+    createClient()
+      .from('reading_streaks')
+      .select('current_streak, total_highlights, streak_freeze_credits')
+      .eq('user_id', userId)
+      .maybeSingle(),
+    createClient()
+      .from('user_books')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .eq('status', 'finished')
+      .gte('finished_at', yearStart),
+    createClient()
+      .from('reading_goals')
+      .select('target')
+      .eq('user_id', userId)
+      .eq('year', year)
+      .eq('period_type', 'annual')
+      .maybeSingle(),
+    createClient()
+      .from('vocabulary')
+      .select('mastered', { count: 'exact' })
+      .eq('user_id', userId),
+  ])
+
+  const streak = streakData.data as {
+    current_streak: number | null
+    total_highlights: number | null
+    streak_freeze_credits: number | null
+  } | null
+
+  const vocabRows = (vocabData.data as { mastered: boolean }[] | null) ?? []
+  const vocabTotal = vocabRows.length
+  const vocabUnmastered = vocabRows.filter((v) => !v.mastered).length
+
+  return {
+    booksThisYear: booksCount.count ?? 0,
+    currentStreak: streak?.current_streak ?? 0,
+    totalHighlights: streak?.total_highlights ?? 0,
+    goalTarget: (goalData.data as { target: number } | null)?.target ?? null,
+    goalProgress: booksCount.count ?? 0,
+    freezeCredits: streak?.streak_freeze_credits ?? 0,
+    vocabularyTotal: vocabTotal,
+    vocabularyUnmastered: vocabUnmastered,
+  }
+}
 
 /**
  * Per-user server fetchers. Each function assumes the caller has already

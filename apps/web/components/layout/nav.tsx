@@ -7,6 +7,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { cn } from '@/lib/cn'
+import type { MenuStats } from '@/lib/user-queries-types'
 
 interface NavUser {
   username: string
@@ -642,107 +643,389 @@ function AccountMenu({
   user: NavUser
   onClose: () => void
 }) {
-  const items = [
-    { href: '/library', label: 'My library' },
-    { href: '/diary', label: 'Reading diary' },
-    { href: '/stats', label: 'Stats' },
-    { href: '/goals', label: 'Goals' },
-    { href: '/vocabulary', label: 'Vocabulary' },
-    { href: '/my-lists', label: 'My lists' },
-    { href: '/buddy-reads', label: 'Buddy reads' },
-    { href: '/saved-posts', label: 'Saved posts' },
-    { href: '/commonplace', label: 'Commonplace book' },
-  ]
-  const showPlusBadge = user.subscription_tier === 'free'
+  const [stats, setStats] = useState<MenuStats | null>(null)
+  const isPlus = user.subscription_tier === 'plus'
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/menu-stats')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: MenuStats | null) => {
+        if (!cancelled && data) setStats(data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [user.username])
+
+  const goalSubLabel =
+    stats && stats.goalTarget !== null
+      ? `${stats.goalProgress} of ${stats.goalTarget} this year · ${stats.freezeCredits} freeze${stats.freezeCredits !== 1 ? 's' : ''} left`
+      : null
+
+  const vocabSubLabel = stats
+    ? stats.vocabularyUnmastered > 0
+      ? `${stats.vocabularyUnmastered} word${stats.vocabularyUnmastered !== 1 ? 's' : ''} to master`
+      : stats.vocabularyTotal > 0
+        ? `All ${stats.vocabularyTotal} words mastered`
+        : null
+    : null
+
   return (
     <div
       role="menu"
       className={cn(
-        'absolute right-0 top-12 z-50 w-60 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md',
+        'absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md',
       )}
     >
-      <div className="border-b border-border-subtle px-4 py-3">
-        <p className="font-dm-sans text-sm font-medium text-text-primary">
-          {user.display_name}
-        </p>
-        <p className="font-dm-mono text-xs text-text-tertiary">
-          @{user.username}
-        </p>
+      <div className="bg-bg-sunken px-4 py-3">
+        <div className="flex items-center gap-3">
+          <Avatar
+            src={user.avatar_url}
+            name={user.display_name}
+            size="md"
+          />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <p className="truncate font-dm-sans text-sm font-medium text-text-primary">
+              {user.display_name}
+              {isPlus ? (
+                <span className="ml-1 rounded-full bg-brand-subtle px-1.5 py-0.5 font-dm-mono text-[10px] text-brand-text">
+                  Plus
+                </span>
+              ) : (
+                <span className="ml-1 rounded-full border border-border-subtle px-1.5 py-0.5 font-dm-mono text-[10px] text-text-tertiary">
+                  Free
+                </span>
+              )}
+            </p>
+            <p className="truncate font-dm-mono text-xs text-text-tertiary">
+              @{user.username}
+            </p>
+          </div>
+        </div>
+        <div className="mt-3 grid grid-cols-3 overflow-hidden rounded-md border border-border-subtle bg-bg-surface">
+          <StatTile
+            value={stats?.booksThisYear ?? '-'}
+            label="books this year"
+          />
+          <StatTile
+            value={stats?.currentStreak ?? '-'}
+            label="day streak"
+            divider
+          />
+          <StatTile
+            value={stats?.totalHighlights ?? '-'}
+            label="highlights"
+            divider
+          />
+        </div>
       </div>
-      <ul className="flex flex-col py-1">
-        {items.map((item) => (
-          <li key={item.href}>
-            <Link
-              href={item.href}
-              role="menuitem"
-              className="block px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-              onClick={onClose}
-            >
-              {item.label}
-            </Link>
-          </li>
-        ))}
-        <li className="border-t border-border-subtle">
-          <Link
-            href="/find-next-book"
-            role="menuitem"
-            className="flex items-center justify-between gap-2 px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-            onClick={onClose}
-          >
-            <span>Find next book</span>
-            {showPlusBadge && (
-              <span className="rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text">
-                Plus
-              </span>
-            )}
-          </Link>
-        </li>
-        <li className="border-t border-border-subtle">
-          <Link
-            href={`/u/${user.username}`}
-            role="menuitem"
-            className="block px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-            onClick={onClose}
-          >
-            Profile
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/settings"
-            role="menuitem"
-            className="block px-4 py-2 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-            onClick={onClose}
-          >
-            Settings
-          </Link>
-        </li>
-        {user.is_admin && (
-          <li>
+
+      <div className="border-t border-border-subtle py-1">
+        <MenuItem
+          href="/stats"
+          icon={<BarChartIcon />}
+          label="Stats"
+          onClose={onClose}
+        />
+        <MenuItem
+          href="/goals"
+          icon={<TargetIcon />}
+          label="Goals"
+          subLabel={goalSubLabel}
+          onClose={onClose}
+        />
+        <MenuItem
+          href="/vocabulary"
+          icon={<BookMenuIcon />}
+          label="Vocabulary"
+          subLabel={vocabSubLabel}
+          onClose={onClose}
+        />
+        <MenuItem
+          href="/saved-posts"
+          icon={<StackIcon />}
+          label="Collections"
+          subLabel="Lists · buddy reads · saved · commonplace"
+          onClose={onClose}
+        />
+
+        <div className="my-1 border-t border-border-subtle" />
+
+        <Link
+          href="/find-next-book"
+          role="menuitem"
+          onClick={onClose}
+          className="flex items-center gap-3 px-4 py-2 text-text-secondary hover:bg-bg-hover"
+        >
+          <span className="text-text-secondary">
+            <WandIcon />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="font-dm-sans text-sm text-text-primary">
+              Find next book
+            </p>
+            {isPlus ? (
+              <p className="mt-0.5 font-dm-sans text-xs text-text-tertiary">
+                AI recommendations for you
+              </p>
+            ) : null}
+          </div>
+          {!isPlus ? (
+            <span className="ml-auto rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text">
+              Plus
+            </span>
+          ) : null}
+        </Link>
+
+        {user.is_admin ? (
+          <>
+            <div className="my-1 border-t border-border-subtle" />
             <Link
               href="/admin"
               role="menuitem"
-              className="flex items-center gap-2 px-4 py-2 font-dm-sans text-sm text-brand-ui hover:bg-bg-hover"
               onClick={onClose}
+              className="flex items-center gap-3 px-4 py-2 text-brand-text hover:bg-bg-hover"
             >
               <ShieldIcon />
-              Admin dashboard
+              <span className="font-dm-sans text-sm">Admin dashboard</span>
             </Link>
-          </li>
-        )}
-        <li className="border-t border-border-subtle">
-          <form action="/sign-out" method="post">
-            <button
-              type="submit"
-              role="menuitem"
-              className="block w-full px-4 py-2 text-left font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-            >
-              Sign out
-            </button>
-          </form>
-        </li>
-      </ul>
+          </>
+        ) : null}
+      </div>
+
+      <div className="grid grid-cols-3 border-t border-border-subtle">
+        <Link
+          href={`/u/${user.username}`}
+          role="menuitem"
+          onClick={onClose}
+          className="flex cursor-pointer flex-col items-center gap-1 px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover"
+        >
+          <PersonIcon />
+          Profile
+        </Link>
+        <Link
+          href="/settings"
+          role="menuitem"
+          onClick={onClose}
+          className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover"
+        >
+          <GearIcon />
+          Settings
+        </Link>
+        <form
+          action="/sign-out"
+          method="post"
+          className="contents"
+        >
+          <button
+            type="submit"
+            role="menuitem"
+            className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover hover:text-error"
+          >
+            <LogoutIcon />
+            Sign out
+          </button>
+        </form>
+      </div>
     </div>
+  )
+}
+
+function StatTile({
+  value,
+  label,
+  divider,
+}: {
+  value: number | string
+  label: string
+  divider?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center px-2 py-2.5 text-center',
+        divider ? 'border-l border-border-subtle' : '',
+      )}
+    >
+      <span className="font-fraunces text-lg leading-none text-text-primary">
+        {value}
+      </span>
+      <span className="mt-1 font-dm-mono text-[10px] uppercase tracking-wide text-text-tertiary">
+        {label}
+      </span>
+    </div>
+  )
+}
+
+function MenuItem({
+  href,
+  icon,
+  label,
+  subLabel,
+  onClose,
+}: {
+  href: string
+  icon: React.ReactNode
+  label: string
+  subLabel?: string | null
+  onClose: () => void
+}) {
+  return (
+    <Link
+      href={href}
+      role="menuitem"
+      onClick={onClose}
+      className="flex items-center gap-3 px-4 py-2 text-text-secondary hover:bg-bg-hover"
+    >
+      <span className="text-text-secondary">{icon}</span>
+      <div className="min-w-0 flex-1">
+        <p className="font-dm-sans text-sm text-text-primary">{label}</p>
+        {subLabel ? (
+          <p className="mt-0.5 font-dm-sans text-xs text-text-tertiary">
+            {subLabel}
+          </p>
+        ) : null}
+      </div>
+    </Link>
+  )
+}
+
+function BarChartIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <path d="M3 20v-5M8 20V10M13 20V4M18 20v-8" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+function TargetIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+function BookMenuIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  )
+}
+
+function StackIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+    </svg>
+  )
+}
+
+function WandIcon() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <path d="M15 4l5 5-11 11H4v-5L15 4z" />
+      <path d="M14 7l3 3" />
+    </svg>
+  )
+}
+
+function PersonIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  )
+}
+
+function GearIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+function LogoutIcon() {
+  return (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
   )
 }
 
