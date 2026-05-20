@@ -29,6 +29,7 @@ export interface LibraryEntry {
   finished_at: string | null
   created_at: string
   is_favorite: boolean
+  tags: string[]
   book: {
     id: string
     slug: string | null
@@ -53,9 +54,9 @@ export async function fetchLibrary(
     .eq('status', status)
     .order('created_at', { ascending: false })
   if (!data) return []
-  return data
+  const rows = data
     .map((row) => {
-      const r = row as unknown as Omit<LibraryEntry, 'book'> & {
+      const r = row as unknown as Omit<LibraryEntry, 'book' | 'tags'> & {
         books: LibraryEntry['book'] | null
       }
       if (!r.books) return null
@@ -69,10 +70,30 @@ export async function fetchLibrary(
         finished_at: r.finished_at,
         created_at: r.created_at,
         is_favorite: r.is_favorite,
+        tags: [] as string[],
         book: r.books,
       }
     })
     .filter((x): x is LibraryEntry => x !== null)
+
+  if (rows.length === 0) return rows
+  const bookIds = rows.map((r) => r.book.id)
+  const { data: tagRows } = await sb()
+    .from('user_book_tags')
+    .select('book_id, tag')
+    .eq('user_id', userId)
+    .in('book_id', bookIds)
+  const tagsByBook = new Map<string, string[]>()
+  for (const t of (tagRows as { book_id: string; tag: string }[] | null) ?? []) {
+    const list = tagsByBook.get(t.book_id) ?? []
+    list.push(t.tag)
+    tagsByBook.set(t.book_id, list)
+  }
+  for (const list of tagsByBook.values()) list.sort()
+  return rows.map((r) => ({
+    ...r,
+    tags: tagsByBook.get(r.book.id) ?? [],
+  }))
 }
 
 export async function fetchCurrentlyReading(

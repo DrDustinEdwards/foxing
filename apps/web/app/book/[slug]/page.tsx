@@ -34,6 +34,7 @@ import {
 } from '@/lib/chapter-reactions'
 import {
   fetchUserBookmarks,
+  fetchUserBookTags,
   userHasBookInLibrary,
 } from '@/lib/bookmarks'
 import { getAuthedUserId } from '@/lib/nav-user'
@@ -41,6 +42,7 @@ import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ReadingTimerWidget } from '@/components/reading-timer-widget'
 import { BookmarksSection } from './bookmarks-section'
+import { BookTagsRow } from './book-tags-row'
 import { ChapterReactionsSection } from './chapter-reactions-section'
 import { DiscussionGuideSection } from './discussion-guide-section'
 import { DiscussionsSection } from './discussions-section'
@@ -138,19 +140,27 @@ export default async function BookPage({
     getAuthedUserId(),
   ])
 
-  const [ownReactions, publicReactions, bookmarks, hasInLibrary] =
-    await Promise.all([
-      viewerId
-        ? fetchOwnChapterReactions(viewerId, book.id)
-        : Promise.resolve([]),
-      fetchPublicChapterReactions(book.id, 20),
-      viewerId
-        ? fetchUserBookmarks(viewerId, book.id)
-        : Promise.resolve([]),
-      viewerId
-        ? userHasBookInLibrary(viewerId, book.id)
-        : Promise.resolve(false),
-    ])
+  const [
+    ownReactions,
+    publicReactions,
+    bookmarks,
+    hasInLibrary,
+    ownTags,
+  ] = await Promise.all([
+    viewerId
+      ? fetchOwnChapterReactions(viewerId, book.id)
+      : Promise.resolve([]),
+    fetchPublicChapterReactions(book.id, 20),
+    viewerId
+      ? fetchUserBookmarks(viewerId, book.id)
+      : Promise.resolve([]),
+    viewerId
+      ? userHasBookInLibrary(viewerId, book.id)
+      : Promise.resolve(false),
+    viewerId
+      ? fetchUserBookTags(viewerId, book.id)
+      : Promise.resolve([]),
+  ])
 
   const description = aiDescription || book.description || null
   const authorBioExcerpt = aiAuthorBio
@@ -283,6 +293,15 @@ export default async function BookPage({
                 bookId={book.id}
                 bookSlug={book.slug}
               />
+            )}
+            {viewerId && hasInLibrary && (
+              <div className="mt-6 rounded-lg border border-border-subtle bg-bg-surface p-4">
+                <BookTagsRow
+                  bookId={book.id}
+                  bookSlug={book.slug}
+                  initialTags={ownTags}
+                />
+              </div>
             )}
             <ReviewsSection
               reviews={reviews}
