@@ -6,16 +6,21 @@ import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchActiveChallenges,
+  fetchBooksFinishedInRange,
   fetchBooksFinishedThisYear,
+  fetchMonthlyGoal,
   fetchReadingActivity,
   fetchReadingStreak,
   fetchUserGoal,
+  fetchWeeklyGoal,
 } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { appBookDeeplink } from '@/lib/foxing'
+import { currentMonthPeriod, currentWeekPeriod } from '@/lib/goal-periods'
 import { StreakHeatmap } from './streak-heatmap'
 import { ChallengeToggleButton } from './challenge-toggle-button'
 import { GoalSetter } from './goal-setter'
+import { PeriodGoalSetter } from './period-goal-setter'
 import { UseFreezeButton } from './use-freeze-button'
 
 export const dynamic = 'force-dynamic'
@@ -29,9 +34,25 @@ export default async function GoalsPage() {
   if (!userId) redirect('/sign-in')
 
   const year = new Date().getFullYear()
-  const [goal, finishedCount, streak, challenges, activity] = await Promise.all([
+  const monthPeriod = currentMonthPeriod()
+  const weekPeriod = currentWeekPeriod()
+  const [
+    goal,
+    monthlyGoal,
+    weeklyGoal,
+    finishedCount,
+    monthlyFinished,
+    weeklyFinished,
+    streak,
+    challenges,
+    activity,
+  ] = await Promise.all([
     fetchUserGoal(userId, year),
+    fetchMonthlyGoal(userId, monthPeriod.year, monthPeriod.month),
+    fetchWeeklyGoal(userId, weekPeriod.year, weekPeriod.week),
     fetchBooksFinishedThisYear(userId),
+    fetchBooksFinishedInRange(userId, monthPeriod.startISO, monthPeriod.endISO),
+    fetchBooksFinishedInRange(userId, weekPeriod.startISO, weekPeriod.endISO),
     fetchReadingStreak(userId),
     fetchActiveChallenges(userId),
     fetchReadingActivity(userId),
@@ -41,6 +62,16 @@ export default async function GoalsPage() {
   const pct =
     target > 0
       ? Math.min(100, Math.round((finishedCount / target) * 100))
+      : 0
+  const monthlyTarget = monthlyGoal?.target ?? null
+  const weeklyTarget = weeklyGoal?.target ?? null
+  const monthlyPct =
+    monthlyTarget && monthlyTarget > 0
+      ? Math.min(100, Math.round((monthlyFinished / monthlyTarget) * 100))
+      : 0
+  const weeklyPct =
+    weeklyTarget && weeklyTarget > 0
+      ? Math.min(100, Math.round((weeklyFinished / weeklyTarget) * 100))
       : 0
 
   return (
@@ -75,6 +106,76 @@ export default async function GoalsPage() {
         ) : (
           <GoalSetter currentTarget={null} year={year} />
         )}
+      </section>
+
+      <section className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="rounded-lg border border-border-subtle bg-bg-surface p-5">
+          <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            {monthPeriod.label} goal
+          </h2>
+          {monthlyTarget && monthlyTarget > 0 ? (
+            <div className="mt-2 flex flex-col gap-2">
+              <p className="font-fraunces text-xl text-text-primary">
+                {monthlyFinished}{' '}
+                <span className="font-dm-sans text-sm text-text-tertiary">
+                  of {monthlyTarget} books
+                </span>
+              </p>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-bg-sunken">
+                <div
+                  className="h-full rounded-full bg-brand-ui"
+                  style={{ width: `${monthlyPct}%` }}
+                />
+              </div>
+              <p className="font-dm-mono text-xs text-text-tertiary">
+                {monthlyPct}% there
+              </p>
+            </div>
+          ) : (
+            <p className="mt-2 font-source-serif-4 text-sm text-text-secondary">
+              Set a goal for this month.
+            </p>
+          )}
+          <PeriodGoalSetter
+            period="monthly"
+            currentTarget={monthlyTarget}
+            periodLabel={monthPeriod.label}
+          />
+        </div>
+
+        <div className="rounded-lg border border-border-subtle bg-bg-surface p-5">
+          <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            {weekPeriod.label} goal
+          </h2>
+          {weeklyTarget && weeklyTarget > 0 ? (
+            <div className="mt-2 flex flex-col gap-2">
+              <p className="font-fraunces text-xl text-text-primary">
+                {weeklyFinished}{' '}
+                <span className="font-dm-sans text-sm text-text-tertiary">
+                  of {weeklyTarget} books
+                </span>
+              </p>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-bg-sunken">
+                <div
+                  className="h-full rounded-full bg-brand-ui"
+                  style={{ width: `${weeklyPct}%` }}
+                />
+              </div>
+              <p className="font-dm-mono text-xs text-text-tertiary">
+                {weeklyPct}% there
+              </p>
+            </div>
+          ) : (
+            <p className="mt-2 font-source-serif-4 text-sm text-text-secondary">
+              Set a goal for this week.
+            </p>
+          )}
+          <PeriodGoalSetter
+            period="weekly"
+            currentTarget={weeklyTarget}
+            periodLabel={weekPeriod.label}
+          />
+        </div>
       </section>
 
       <section className="mt-8">
