@@ -6,6 +6,13 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getClubRole, isClubMod } from '@/lib/club-membership'
 import { getAuthedUserId } from '@/lib/nav-user'
+import {
+  FOXING_EMBED_COLOR,
+  getClubDiscordWebhook,
+  isValidDiscordWebhook,
+  postToDiscord,
+} from '@/lib/discord'
+import { FOXING_BASE_URL } from '@/lib/metadata'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -138,6 +145,7 @@ export async function createAnnouncement(
   const clubSlug = (club as { slug: string | null } | null)?.slug ?? null
 
   await notifyClubMembers(payload.club_id, data, clubSlug)
+  void postAnnouncementToDiscord(payload.club_id, data, clubSlug)
 
   revalidatePath('/events')
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
@@ -802,6 +810,15 @@ export async function createClubMeeting(
     },
     clubSlug,
   )
+  void postMeetingToDiscord(
+    clubId,
+    {
+      title: data.title,
+      meeting_date: data.meeting_date,
+      location_name: data.location_name,
+    },
+    clubSlug,
+  )
 
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
   return { ok: true }
@@ -1142,6 +1159,15 @@ export async function createClubPoll(
     )
   }
 
+  void postPollToDiscord(
+    clubId,
+    {
+      title: poll.title,
+      options: options.map((o) => o.label),
+    },
+    clubSlug,
+  )
+
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
   return { ok: true }
 }
@@ -1277,4 +1303,144 @@ export async function cancelClubMeeting(
   const clubSlug = (club as { slug: string | null } | null)?.slug
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
   return { ok: true }
+}
+
+// ─── Discord webhook ──────────────────────────────────────────────────────
+
+export async function updateClubDiscordWebhook(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const urlRaw = String(formData.get('webhook_url') ?? '').trim()
+  const clearFlag = formData.get('clear') === 'true'
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const role = await getClubRole(clubId, userId)
+  if (role !== 'admin') return { ok: false, error: 'Admin access required.' }
+
+  let next: string | null = null
+  if (!clearFlag) {
+    if (!urlRaw) return { ok: false, error: 'Webhook URL is required.' }
+    if (!isValidDiscordWebhook(urlRaw)) {
+      return {
+        ok: false,
+        error: 'URL must start with https://discord.com/api/webhooks/',
+      }
+    }
+    next = urlRaw
+  }
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('clubs')
+    .update({ discord_webhook_url: next })
+    .eq('id', clubId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function testClubDiscordWebhook(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const role = await getClubRole(clubId, userId)
+  if (role !== 'admin') return { ok: false, error: 'Admin access required.' }
+
+  const hook = await getClubDiscordWebhook(clubId)
+  if (!hook) return { ok: false, error: 'No webhook configured.' }
+  const ok = await postToDiscord(hook.url, '✅ Foxing is connected.')
+  if (!ok) return { ok: false, error: 'Discord rejected the test message.' }
+  return { ok: true }
+}
+
+async function postAnnouncementToDiscord(
+  clubId: string,
+  announcement: {
+    title: string
+    body: string | null
+    event_date: string | null
+    event_location: string | null
+  },
+  clubSlug: string | null,
+): Promise<void> {
+  const hook = await getClubDiscordWebhook(clubId)
+  if (!hook) return
+  const link = clubSlug ? `${FOXING_BASE_URL}/clubs/${clubSlug}` : undefined
+  const description = announcement.body
+    ? announcement.body.slice(0, 400)
+    : undefined
+  await postToDiscord(hook.url, '📣 New club announcement', [
+    {
+      title: announcement.title,
+      description,
+      url: link,
+      color: FOXING_EMBED_COLOR,
+      timestamp: new Date().toISOString(),
+    },
+  ])
+}
+
+async function postMeetingToDiscord(
+  clubId: string,
+  meeting: {
+    title: string
+    meeting_date: string
+    location_name: string | null
+  },
+  clubSlug: string | null,
+): Promise<void> {
+  const hook = await getClubDiscordWebhook(clubId)
+  if (!hook) return
+  const link = clubSlug ? `${FOXING_BASE_URL}/clubs/${clubSlug}` : undefined
+  const date = new Date(meeting.meeting_date)
+  const dateLabel = date.toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  })
+  await postToDiscord(hook.url, '📅 New meeting scheduled', [
+    {
+      title: meeting.title,
+      description: meeting.location_name ?? undefined,
+      url: link,
+      color: FOXING_EMBED_COLOR,
+      fields: [{ name: 'When', value: dateLabel }],
+      timestamp: new Date().toISOString(),
+    },
+  ])
+}
+
+async function postPollToDiscord(
+  clubId: string,
+  poll: { title: string; options: string[] },
+  clubSlug: string | null,
+): Promise<void> {
+  const hook = await getClubDiscordWebhook(clubId)
+  if (!hook) return
+  const link = clubSlug ? `${FOXING_BASE_URL}/clubs/${clubSlug}` : undefined
+  const optionsList = poll.options
+    .map((opt, i) => `${i + 1}. ${opt}`)
+    .join('\n')
+  await postToDiscord(hook.url, '🗳 New club poll', [
+    {
+      title: poll.title,
+      description: optionsList,
+      url: link,
+      color: FOXING_EMBED_COLOR,
+      timestamp: new Date().toISOString(),
+    },
+  ])
 }
