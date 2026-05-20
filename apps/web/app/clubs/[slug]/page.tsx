@@ -33,6 +33,7 @@ import { ModerationPanel } from './moderation-panel'
 import { PostAnnouncementForm } from './post-announcement-form'
 import { ScheduleSection } from './schedule-section'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
+import { WaitlistButton } from './waitlist-button'
 
 export const revalidate = 60
 
@@ -211,6 +212,31 @@ export default async function ClubPage({
       | Array<{ id: string; chapter_name: string; unlock_date: string }>
       | null) ?? []
 
+  const { data: capacityRow } = await adminClient
+    .from('clubs')
+    .select('max_members')
+    .eq('id', club.id)
+    .maybeSingle()
+  const maxMembers =
+    (capacityRow as { max_members: number | null } | null)?.max_members ?? null
+  const isFull =
+    maxMembers !== null && (club.member_count ?? 0) >= maxMembers
+  const { data: ownWaitlistRow } = userId
+    ? await adminClient
+        .from('club_waitlist')
+        .select('user_id')
+        .eq('club_id', club.id)
+        .eq('user_id', userId)
+        .maybeSingle()
+    : { data: null }
+  const isOnWaitlist = Boolean(ownWaitlistRow)
+  const { count: waitlistCount } = canModerate
+    ? await adminClient
+        .from('club_waitlist')
+        .select('user_id', { count: 'exact', head: true })
+        .eq('club_id', club.id)
+    : { count: 0 }
+
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -347,11 +373,28 @@ export default async function ClubPage({
           )}
 
           <section className="mt-10 flex flex-wrap items-center gap-3">
-            <Link href={appClubDeeplink(club.id)}>
-              <Button variant="primary" size="md">
-                Join this club
-              </Button>
-            </Link>
+            {isMember ? null : isFull ? (
+              userId ? (
+                <WaitlistButton clubId={club.id} onWaitlist={isOnWaitlist} />
+              ) : (
+                <Link href="/sign-in">
+                  <Button variant="primary" size="md">
+                    Sign in to join waitlist
+                  </Button>
+                </Link>
+              )
+            ) : (
+              <Link href={appClubDeeplink(club.id)}>
+                <Button variant="primary" size="md">
+                  Join this club
+                </Button>
+              </Link>
+            )}
+            {isFull && !isMember && (
+              <p className="font-dm-mono text-xs text-text-tertiary">
+                Club is full ({club.member_count} of {maxMembers}).
+              </p>
+            )}
             <Link href={appClubDeeplink(club.id)}>
               <Button variant="secondary" size="md">
                 See all discussions in the app
@@ -376,6 +419,7 @@ export default async function ClubPage({
               pending={pendingMembers}
               showPending={showPending}
               reports={reports}
+              waitlistCount={waitlistCount ?? 0}
             />
           )}
 

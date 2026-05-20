@@ -40,6 +40,7 @@ interface Props {
   pending?: PendingMemberView[]
   showPending?: boolean
   reports?: ReportView[]
+  waitlistCount?: number
 }
 
 export function ModerationPanel({
@@ -49,6 +50,7 @@ export function ModerationPanel({
   pending = [],
   showPending = false,
   reports = [],
+  waitlistCount = 0,
 }: Props) {
   const [open, setOpen] = useState(false)
   if (!open) {
@@ -71,6 +73,17 @@ export function ModerationPanel({
         <PendingMembersPanel clubId={clubId} pending={pending} />
       )}
       <ReportedPostsPanel clubId={clubId} reports={reports} />
+      {waitlistCount > 0 && (
+        <div className="flex flex-col gap-1">
+          <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            Waitlist
+          </h3>
+          <p className="font-source-serif-4 text-sm text-text-secondary">
+            {waitlistCount} on waitlist. Invite the next person when a member
+            leaves.
+          </p>
+        </div>
+      )}
       <MembersPanel clubId={clubId} isAdmin={isAdmin} members={members} />
     </section>
   )

@@ -446,6 +446,77 @@ export async function dismissReport(
   return { ok: true }
 }
 
+export async function joinWaitlist(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('member_count, max_members, slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const row = club as
+    | {
+        member_count: number | null
+        max_members: number | null
+        slug: string | null
+      }
+    | null
+  if (!row) return { ok: false, error: 'Club not found.' }
+  if (
+    row.max_members === null ||
+    (row.member_count ?? 0) < row.max_members
+  ) {
+    return { ok: false, error: 'Club is not full yet.' }
+  }
+  const { data: existing } = await admin
+    .from('club_members')
+    .select('user_id')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (existing) {
+    return { ok: false, error: 'You are already in this club.' }
+  }
+  const { error } = await admin
+    .from('club_waitlist')
+    .upsert(
+      { club_id: clubId, user_id: userId },
+      { onConflict: 'club_id,user_id', ignoreDuplicates: true },
+    )
+  if (error) return { ok: false, error: error.message }
+  if (row.slug) revalidatePath(`/clubs/${row.slug}`)
+  return { ok: true }
+}
+
+export async function leaveWaitlist(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_waitlist')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const slug = (club as { slug: string | null } | null)?.slug
+  if (slug) revalidatePath(`/clubs/${slug}`)
+  return { ok: true }
+}
+
 export async function createScheduleEntry(
   formData: FormData,
 ): Promise<ActionResult> {
