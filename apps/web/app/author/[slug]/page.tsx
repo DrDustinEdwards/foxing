@@ -15,6 +15,7 @@ import {
 import { getNavUser } from '@/lib/nav-user'
 import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { fetchVerifiedAuthorByName } from '@/lib/author-claims'
 
 export const revalidate = 86_400
 
@@ -82,8 +83,11 @@ export default async function AuthorPage({
   }
 
   const authorName = books[0].author
-  const highlights = await fetchHighlightsByAuthorSlug(params.slug, 3)
-  const aiBio = await fetchAiCache(books[0].id, 'author_bio')
+  const [highlights, aiBio, verifiedAuthor] = await Promise.all([
+    fetchHighlightsByAuthorSlug(params.slug, 3),
+    fetchAiCache(books[0].id, 'author_bio'),
+    fetchVerifiedAuthorByName(authorName),
+  ])
 
   // Themes the author works in, sampled from their books.
   const themeSet = new Set<string>()
@@ -116,9 +120,19 @@ export default async function AuthorPage({
       />
       <main className="flex-1">
         <PageWrapper className="py-12">
-          <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-            {authorName}
-          </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
+              {authorName}
+            </h1>
+            {verifiedAuthor && (
+              <a
+                href={`/u/${verifiedAuthor.username}`}
+                className="inline-flex items-center rounded-full bg-success-bg px-2.5 py-1 font-dm-mono text-[10px] uppercase tracking-wider text-success hover:underline"
+              >
+                Verified author
+              </a>
+            )}
+          </div>
           {aiBio && (
             <p className="mt-4 max-w-prose font-source-serif-4 text-base text-text-secondary">
               {aiBio}

@@ -129,9 +129,14 @@ export default async function ProfilePage({
                 size="lg"
               />
               <div className="flex flex-col gap-1">
-                <h1 className="font-fraunces text-[1.75rem] leading-none text-text-primary">
-                  {profile.display_name}
-                </h1>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="font-fraunces text-[1.75rem] leading-none text-text-primary">
+                    {profile.display_name}
+                  </h1>
+                  {profile.is_verified_author && (
+                    <Badge variant="success">Verified author</Badge>
+                  )}
+                </div>
                 <span className="font-dm-sans text-sm text-text-tertiary">
                   @{profile.username}
                 </span>

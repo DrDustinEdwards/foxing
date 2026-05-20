@@ -423,6 +423,7 @@ export interface PublicProfile {
   is_public: boolean
   progress_is_public: boolean | null
   subscription_tier: string | null
+  is_verified_author: boolean | null
 }
 
 export async function fetchProfileByUsername(
@@ -433,7 +434,7 @@ export async function fetchProfileByUsername(
   const { data } = await sb
     .from('profiles')
     .select(
-      'id, username, display_name, avatar_url, bio, reading_personality, is_public, progress_is_public, subscription_tier',
+      'id, username, display_name, avatar_url, bio, reading_personality, is_public, progress_is_public, subscription_tier, is_verified_author',
     )
     .eq('username', username)
     .maybeSingle()
