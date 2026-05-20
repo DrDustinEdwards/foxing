@@ -100,6 +100,11 @@ export function CreateMeetingForm({ clubId, defaultCity, defaultState }: Props) 
         name={meetingType === 'virtual' ? 'location_url' : 'location_address'}
         placeholder={locationPlaceholder}
       />
+      {(meetingType === 'virtual' || meetingType === 'hybrid') && (
+        <p className="-mt-1 font-dm-mono text-xs text-text-tertiary">
+          Leave blank to auto-generate a Google Meet link.
+        </p>
+      )}
       <Input
         label="City (optional)"
         name="event_city"
