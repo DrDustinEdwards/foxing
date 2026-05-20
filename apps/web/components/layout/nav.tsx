@@ -33,7 +33,7 @@ const PRIMARY_LINKS = [
     match: '/book-of-the-month',
   },
   { href: '/journal', label: 'Journal', match: '/journal' },
-  { href: '/people', label: 'Community', match: '/people' },
+  { href: '/people', label: 'People', match: '/people' },
 ] as const
 
 const BOOKS_MENU_BROWSE = [
