@@ -1,16 +1,13 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { StarRating } from '@/components/ui/star-rating'
 import { fetchLibrary, type LibraryStatus } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
+import { LibraryGrid } from './library-grid'
 
 export const dynamic = 'force-dynamic'
 
@@ -164,88 +161,28 @@ export default async function LibraryPage({
           />
         </div>
       ) : (
-        <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {items.map((entry) => (
-            <LibraryCard key={entry.id} entry={entry} />
-          ))}
+        <div className="mt-8">
+          <LibraryGrid
+            items={items.map((entry) => ({
+              id: entry.id,
+              status: entry.status,
+              progress_percentage: entry.progress_percentage,
+              rating_half: entry.rating_half,
+              rating: entry.rating,
+              finished_at: entry.finished_at,
+              created_at: entry.created_at,
+              tags: entry.tags,
+              book: {
+                id: entry.book.id,
+                slug: entry.book.slug,
+                title: entry.book.title,
+                author: entry.book.author,
+                cover_url: entry.book.cover_url,
+              },
+            }))}
+          />
         </div>
       )}
     </PageWrapper>
-  )
-}
-
-function LibraryCard({
-  entry,
-}: {
-  entry: Awaited<ReturnType<typeof fetchLibrary>>[number]
-}) {
-  const progress = Math.max(
-    0,
-    Math.min(100, Math.round(entry.progress_percentage ?? 0)),
-  )
-  return (
-    <Link
-      href={`/book/${entry.book.slug ?? entry.book.id}`}
-      className="group flex flex-col gap-2"
-    >
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">
-        {entry.book.cover_url ? (
-          <Image
-            src={entry.book.cover_url}
-            alt={entry.book.title}
-            fill
-            sizes="(max-width: 768px) 45vw, 18vw"
-            className="object-cover"
-          />
-        ) : (
-          <BookCoverPlaceholder
-            title={entry.book.title}
-            author={entry.book.author}
-          />
-        )}
-        {entry.status === 'reading' && progress > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-bg-sunken/70">
-            <div
-              className="h-full bg-brand-ui"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        )}
-        {entry.status === 'paused' && (
-          <Badge variant="warning" className="absolute right-2 top-2">
-            Paused
-          </Badge>
-        )}
-        {entry.status === 'abandoned' && (
-          <Badge variant="neutral" className="absolute right-2 top-2">
-            Set aside
-          </Badge>
-        )}
-      </div>
-      <div className="flex flex-col gap-0.5">
-        <p className="truncate font-fraunces text-sm text-text-primary">
-          {entry.book.title}
-        </p>
-        <p className="truncate font-dm-sans text-xs text-text-tertiary">
-          {entry.book.author}
-        </p>
-        {entry.status === 'finished' &&
-          typeof entry.rating_half === 'number' && (
-          <StarRating value={entry.rating_half / 2} size="sm" readOnly />
-        )}
-        {entry.tags.length > 0 && (
-          <ul className="mt-1 flex flex-wrap gap-1">
-            {entry.tags.slice(0, 4).map((t) => (
-              <li
-                key={t}
-                className="rounded-full bg-bg-sunken px-1.5 py-0.5 font-dm-mono text-[10px] text-text-tertiary"
-              >
-                {t}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </Link>
   )
 }
