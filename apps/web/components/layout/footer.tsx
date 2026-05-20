@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { FoxMark } from '@/components/ui/fox-mark'
 
 interface FooterLink {
   href: string
@@ -66,7 +65,7 @@ export function Footer() {
         <div className="grid gap-10 md:grid-cols-[1.2fr_repeat(5,1fr)]">
           <div className="flex flex-col gap-2">
             <span className="inline-flex items-center gap-2 font-fraunces text-xl text-brand-ui">
-              <FoxMark size={28} />
+              <span aria-hidden="true">🦊</span>
               Foxing
             </span>
             <span className="font-source-serif-4 italic text-text-tertiary">
