@@ -98,6 +98,11 @@ export default async function LibraryPage({
               Apply
             </Button>
           </form>
+          <Link href="/shelves">
+            <Button variant="secondary" size="sm">
+              My shelves
+            </Button>
+          </Link>
           <Link href="/library/import">
             <Button variant="secondary" size="sm">
               Import
