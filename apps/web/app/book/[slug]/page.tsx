@@ -37,6 +37,8 @@ import {
   fetchUserBookTags,
   userHasBookInLibrary,
 } from '@/lib/bookmarks'
+import { fetchUserShelvesForBook } from '@/lib/shelves'
+import { BookShelvesPicker } from '@/components/shelves/book-shelves-picker'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -146,6 +148,7 @@ export default async function BookPage({
     bookmarks,
     hasInLibrary,
     ownTags,
+    shelvesData,
   ] = await Promise.all([
     viewerId
       ? fetchOwnChapterReactions(viewerId, book.id)
@@ -160,6 +163,9 @@ export default async function BookPage({
     viewerId
       ? fetchUserBookTags(viewerId, book.id)
       : Promise.resolve([]),
+    viewerId
+      ? fetchUserShelvesForBook(viewerId, book.id)
+      : Promise.resolve({ shelves: [], membership: new Set<string>() }),
   ])
 
   const description = aiDescription || book.description || null
@@ -300,6 +306,19 @@ export default async function BookPage({
                   bookId={book.id}
                   bookSlug={book.slug}
                   initialTags={ownTags}
+                />
+              </div>
+            )}
+            {viewerId && (
+              <div className="mt-6 rounded-lg border border-border-subtle bg-bg-surface p-4">
+                <BookShelvesPicker
+                  bookId={book.id}
+                  shelves={shelvesData.shelves.map((s) => ({
+                    id: s.id,
+                    name: s.name,
+                    is_public: s.is_public,
+                  }))}
+                  initialMembership={[...shelvesData.membership]}
                 />
               </div>
             )}

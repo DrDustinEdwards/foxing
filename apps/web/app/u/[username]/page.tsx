@@ -21,6 +21,7 @@ import { buildProfileMetadata } from '@/lib/metadata'
 import { Badge } from '@/components/ui/badge'
 import { fetchUserBadges } from '@/lib/badges'
 import { fetchPublicCommonplace } from '@/lib/commonplace'
+import { fetchPublicShelvesForUser } from '@/lib/shelves'
 import { BadgesSection } from './badges-section'
 import { CommonplaceProfileSection } from './commonplace-section'
 import { FollowButton } from './follow-button'
@@ -86,6 +87,7 @@ export default async function ProfilePage({
     taste,
     badges,
     commonplace,
+    publicShelves,
   ] = await Promise.all([
     fetchUserFavorites(profile.id),
     fetchProfileStats(profile.id),
@@ -98,6 +100,7 @@ export default async function ProfilePage({
       : Promise.resolve(null),
     fetchUserBadges(profile.id),
     fetchPublicCommonplace(profile.id, 3),
+    fetchPublicShelvesForUser(profile.id),
   ])
 
   return (
@@ -178,6 +181,40 @@ export default async function ProfilePage({
             username={profile.username}
             entries={commonplace}
           />
+
+          {publicShelves.length > 0 && (
+            <section className="mt-12">
+              <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                Public shelves
+              </h2>
+              <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+                {publicShelves.map((s) => (
+                  <li
+                    key={s.id}
+                    className="rounded-lg border border-border-subtle bg-bg-surface p-4"
+                  >
+                    <Link
+                      href={`/u/${profile.username}/shelves/${s.id}`}
+                      className="flex flex-col gap-1"
+                    >
+                      <p className="font-fraunces text-base text-text-primary hover:text-brand-text">
+                        {s.name}
+                      </p>
+                      <p className="font-dm-mono text-xs text-text-tertiary">
+                        {s.book_count}{' '}
+                        {s.book_count === 1 ? 'book' : 'books'}
+                      </p>
+                      {s.description && (
+                        <p className="mt-1 line-clamp-2 font-source-serif-4 text-sm text-text-secondary">
+                          {s.description}
+                        </p>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {reviews.length > 0 && (
             <section className="mt-12">
