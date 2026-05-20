@@ -1324,6 +1324,59 @@ function generateMeetCode(): string {
   return `${seg(3)}-${seg(4)}-${seg(3)}`
 }
 
+export async function requestToJoinClub(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug, member_approval')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubRow = club as
+    | { slug: string | null; member_approval: boolean | null }
+    | null
+  if (!clubRow?.member_approval) {
+    return {
+      ok: false,
+      error: 'This club does not require approval. Join via the app instead.',
+    }
+  }
+  const { data: existing } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const status =
+    (existing as { status: string | null } | null)?.status ?? null
+  if (status === 'pending') {
+    return { ok: false, error: 'Your request is already pending.' }
+  }
+  if (status === 'active') {
+    return { ok: false, error: 'You are already a member.' }
+  }
+  if (status === 'banned') {
+    return { ok: false, error: 'You cannot join this club.' }
+  }
+  const { error } = await admin.from('club_members').upsert(
+    {
+      club_id: clubId,
+      user_id: userId,
+      role: 'member',
+      status: 'pending',
+    },
+    { onConflict: 'club_id,user_id' },
+  )
+  if (error) return { ok: false, error: error.message }
+  if (clubRow.slug) revalidatePath(`/clubs/${clubRow.slug}`)
+  return { ok: true }
+}
+
 // ─── Discord webhook ──────────────────────────────────────────────────────
 
 export async function updateClubDiscordWebhook(

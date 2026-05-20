@@ -13,7 +13,13 @@ import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
 import { fetchUpcomingMeetings } from '@/lib/club-meetings'
 import { fetchPollsForClub } from '@/lib/club-polls'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
-import { fetchClubMembers, getClubRole, isClubMod } from '@/lib/club-membership'
+import {
+  fetchClubMembers,
+  getClubMembershipStatus,
+  getClubRole,
+  isClubMod,
+} from '@/lib/club-membership'
+import { RequestJoinButton } from './request-join-button'
 import {
   fetchClubPostsPreview,
   fetchPublicClubById,
@@ -233,11 +239,14 @@ export default async function ClubPage({
 
   const { data: capacityRow } = await adminClient
     .from('clubs')
-    .select('max_members')
+    .select('max_members, member_approval')
     .eq('id', club.id)
     .maybeSingle()
-  const maxMembers =
-    (capacityRow as { max_members: number | null } | null)?.max_members ?? null
+  const capacity = capacityRow as
+    | { max_members: number | null; member_approval: boolean | null }
+    | null
+  const maxMembers = capacity?.max_members ?? null
+  const clubMemberApproval = Boolean(capacity?.member_approval)
   const isFull =
     maxMembers !== null && (club.member_count ?? 0) >= maxMembers
   const { data: ownWaitlistRow } = userId
@@ -249,6 +258,11 @@ export default async function ClubPage({
         .maybeSingle()
     : { data: null }
   const isOnWaitlist = Boolean(ownWaitlistRow)
+  const requiresApproval = !isMember && clubMemberApproval
+  const membershipStatus =
+    requiresApproval && userId
+      ? await getClubMembershipStatus(club.id, userId)
+      : null
   const { count: waitlistCount } = canModerate
     ? await adminClient
         .from('club_waitlist')
@@ -406,6 +420,19 @@ export default async function ClubPage({
                 <Link href="/sign-in">
                   <Button variant="primary" size="md">
                     Sign in to join waitlist
+                  </Button>
+                </Link>
+              )
+            ) : requiresApproval ? (
+              userId ? (
+                <RequestJoinButton
+                  clubId={club.id}
+                  alreadyPending={membershipStatus === 'pending'}
+                />
+              ) : (
+                <Link href={`/sign-in?next=/clubs/${params.slug}`}>
+                  <Button variant="primary" size="md">
+                    Sign in to request to join
                   </Button>
                 </Link>
               )
