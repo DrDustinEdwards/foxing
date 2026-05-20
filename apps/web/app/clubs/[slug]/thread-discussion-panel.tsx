@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import type { DiscussionQuestion } from '@/lib/discussion-guide'
+import type { DiscussionQuestion } from '@/lib/discussion-guide-types'
 import { generateDiscussionGuide } from '@/app/book/[slug]/actions'
 
 interface Props {

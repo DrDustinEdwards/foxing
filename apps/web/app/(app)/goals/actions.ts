@@ -50,7 +50,7 @@ export async function setReadingGoal(
   return { ok: true }
 }
 
-export async function useStreakFreeze(): Promise<ActionResult> {
+export async function consumeStreakFreeze(): Promise<ActionResult> {
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
   const sb = createClient()

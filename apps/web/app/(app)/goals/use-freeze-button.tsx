@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { useStreakFreeze } from './actions'
+import { consumeStreakFreeze } from './actions'
 
 export function UseFreezeButton() {
   const router = useRouter()
@@ -19,7 +19,7 @@ export function UseFreezeButton() {
         onClick={async () => {
           setError(null)
           setPending(true)
-          const res = await useStreakFreeze()
+          const res = await consumeStreakFreeze()
           setPending(false)
           if (!res.ok) {
             setError(res.error)

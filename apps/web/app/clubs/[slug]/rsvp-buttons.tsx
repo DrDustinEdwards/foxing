@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
 import { rsvpToMeeting } from './actions'
-import type { RsvpStatus } from '@/lib/club-meetings'
+import type { RsvpStatus } from '@/lib/club-meetings-types'
 
 const OPTIONS: Array<{ value: RsvpStatus; label: string }> = [
   { value: 'going', label: 'Going' },

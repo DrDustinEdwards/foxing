@@ -1,36 +1,16 @@
+import 'server-only'
 import { createClient } from '@/lib/supabase/server'
+import type {
+  RsvpStatus,
+  MeetingType,
+  ClubMeeting,
+} from '@/lib/club-meetings-types'
 
-export type RsvpStatus = 'going' | 'maybe' | 'not_going'
-export type MeetingType = 'in_person' | 'virtual' | 'hybrid'
-
-export interface ClubMeeting {
-  id: string
-  club_id: string
-  created_by: string
-  title: string
-  description: string | null
-  book_id: string | null
-  meeting_date: string
-  end_date: string | null
-  location_name: string | null
-  location_address: string | null
-  location_url: string | null
-  meeting_type: MeetingType
-  is_recurring: boolean
-  recurrence_rule: string | null
-  rsvp_limit: number | null
-  is_cancelled: boolean
-  created_at: string
-  book: {
-    id: string
-    slug: string | null
-    title: string
-    author: string
-    cover_url: string | null
-  } | null
-  rsvp_counts: { going: number; maybe: number; not_going: number }
-  user_rsvp: RsvpStatus | null
-}
+export {
+  type RsvpStatus,
+  type MeetingType,
+  type ClubMeeting,
+} from '@/lib/club-meetings-types'
 
 const MEETING_COLS =
   'id, club_id, created_by, title, description, book_id, meeting_date, end_date, location_name, location_address, location_url, meeting_type, is_recurring, recurrence_rule, rsvp_limit, is_cancelled, created_at, book:book_id(id, slug, title, author, cover_url)' as const
