@@ -321,7 +321,11 @@ export default function ClubDetailScreen() {
             }}
           />
         ) : tab === 'reading' ? (
-          <ReadingTab club={club} onOpenBook={(bookId) => router.push(`/book/${bookId}` as never)} />
+          <ReadingTab
+            club={club}
+            schedule={schedule}
+            onOpenBook={(bookId) => router.push(`/book/${bookId}` as never)}
+          />
         ) : tab === 'members' ? (
           <MembersTab
             members={members}
@@ -579,13 +583,24 @@ function DiscussionsTab({
 
 function ReadingTab({
   club,
+  schedule,
   onOpenBook,
 }: {
   club: ClubWithBook
+  schedule: ClubScheduleRow[]
   onOpenBook: (bookId: string) => void
 }) {
   const colors = useColors()
   const pace = PACE_OPTIONS.find((p) => p.id === club.pace)
+  const now = Date.now()
+  const scheduleSorted = useMemo(
+    () =>
+      [...schedule].sort(
+        (a, b) =>
+          new Date(a.unlock_date).getTime() - new Date(b.unlock_date).getTime(),
+      ),
+    [schedule],
+  )
   return (
     <View>
       {club.current_book ? (
@@ -678,6 +693,88 @@ function ReadingTab({
         <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
           {pace?.subtitle ?? ''}
         </Text>
+      </View>
+
+      <View
+        className="p-4 mt-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
+      >
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 12,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+          }}
+        >
+          Reading schedule
+        </Text>
+        {scheduleSorted.length === 0 ? (
+          <Text
+            style={{
+              fontFamily: Fonts.body,
+              fontSize: 13,
+              color: colors.textTertiary,
+              marginTop: 6,
+            }}
+          >
+            No schedule set yet.
+          </Text>
+        ) : (
+          <View style={{ marginTop: 8 }}>
+            {scheduleSorted.map((s) => {
+              const ts = new Date(s.unlock_date).getTime()
+              const isToday =
+                new Date(s.unlock_date).toDateString() ===
+                new Date().toDateString()
+              const status = isToday ? 'Today' : ts > now ? 'Upcoming' : 'Unlocked'
+              const statusColor =
+                status === 'Today'
+                  ? colors.brandText
+                  : status === 'Upcoming'
+                    ? colors.textTertiary
+                    : colors.info
+              return (
+                <View
+                  key={`${s.chapter_gate}-${s.unlock_date}`}
+                  className="flex-row items-center justify-between"
+                  style={{ paddingVertical: 8 }}
+                >
+                  <View style={{ flex: 1, paddingRight: 8 }}>
+                    <Text
+                      style={{
+                        fontFamily: Fonts.uiMedium,
+                        fontSize: 14,
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      {s.chapter_gate}
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: Fonts.ui,
+                        fontSize: 12,
+                        color: colors.textTertiary,
+                        marginTop: 2,
+                      }}
+                    >
+                      {new Date(s.unlock_date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      fontSize: 11,
+                      color: statusColor,
+                    }}
+                  >
+                    {status}
+                  </Text>
+                </View>
+              )
+            })}
+          </View>
+        )}
       </View>
     </View>
   )
