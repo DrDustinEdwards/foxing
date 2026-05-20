@@ -13,6 +13,7 @@ import { AppearanceSection } from './appearance-section'
 import { CloseFriendsSection } from './close-friends-section'
 import { VisibilitySection } from './visibility-section'
 import { AccountActionsSection } from './account-actions-section'
+import { PersonalitySection } from './personality-section'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -33,6 +34,7 @@ interface SettingsProfile {
   subscription_tier: string | null
   is_admin: boolean | null
   theme_preference: string | null
+  reading_personality: string | null
 }
 
 function asTheme(value: string | null | undefined): Theme | undefined {
@@ -49,7 +51,7 @@ export default async function SettingsPage() {
     sb
       .from('profiles')
       .select(
-        'id, username, display_name, avatar_url, bio, is_public, progress_is_public, subscription_tier, is_admin, theme_preference',
+        'id, username, display_name, avatar_url, bio, is_public, progress_is_public, subscription_tier, is_admin, theme_preference, reading_personality',
       )
       .eq('id', userId)
       .maybeSingle(),
@@ -118,6 +120,10 @@ export default async function SettingsPage() {
             progress_is_public: Boolean(profile.progress_is_public),
           }}
         />
+      </Section>
+
+      <Section heading="Reading personality">
+        <PersonalitySection initial={profile.reading_personality} />
       </Section>
 
       <Section heading="Appearance">

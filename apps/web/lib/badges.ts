@@ -238,6 +238,10 @@ export async function checkAndAwardBadges(
   await tryAward('first_book', async () => finishedCount >= 1)
   await tryAward('ten_books', async () => finishedCount >= 10)
   await tryAward('hundred_books', async () => finishedCount >= 100)
+  const { maybeRegeneratePersonality } = await import(
+    '@/lib/reading-personality'
+  )
+  maybeRegeneratePersonality(userId, finishedCount)
 
   const highlightCount = await countHighlights(admin, userId)
   await tryAward('first_highlight', async () => highlightCount >= 1)
