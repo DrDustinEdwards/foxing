@@ -40,6 +40,24 @@ export function isClubMod(role: ClubRole): boolean {
   return role === 'admin' || role === 'moderator'
 }
 
+export async function getClubMembershipStatus(
+  clubId: string,
+  userId: string | null,
+): Promise<'active' | 'pending' | 'banned' | 'muted' | null> {
+  if (!userId) return null
+  const sb = createClient()
+  const { data } = await sb
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const row = data as
+    | { status: 'active' | 'pending' | 'banned' | 'muted' | null }
+    | null
+  return row?.status ?? null
+}
+
 const MEMBER_COLS =
   'user_id, club_id, role, status, joined_at, banned_at, muted_until, ban_reason, profile:user_id(username, display_name, avatar_url)' as const
 
