@@ -42,6 +42,7 @@ import {
 } from '@/lib/book-ai'
 import { haptic } from '@/lib/haptics'
 import { FinishReviewSheet } from '@/components/book/finish-review-sheet'
+import { ChapterReactionsSection } from '@/components/book/chapter-reactions-section'
 
 interface BookRow {
   id: string
@@ -1252,6 +1253,17 @@ export default function BookDetail() {
             </View>
           </>
         ) : null}
+
+        <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+          <ChapterReactionsSection
+            bookId={book.id}
+            progressPercentage={userBook?.progress_percentage ?? null}
+            inLibrary={Boolean(
+              userBook?.status &&
+                ['reading', 'finished', 'paused'].includes(userBook.status),
+            )}
+          />
+        </View>
       </ScrollView>
 
       {/* Add to Library status menu */}
