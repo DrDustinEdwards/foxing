@@ -109,9 +109,11 @@ function MeetingCard({
           href={m.location_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="font-dm-sans text-sm text-brand-text hover:underline"
+          className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border-interactive bg-bg-surface px-3 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
-          Join link
+          {m.location_url.startsWith('https://meet.google.com')
+            ? 'Join on Google Meet'
+            : 'Join link'}
         </a>
       )}
       {m.book && (

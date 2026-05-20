@@ -767,6 +767,14 @@ export async function createClubMeeting(
   const isRecurring = formData.get('is_recurring') === 'on'
   const recurrenceRule = isRecurring ? get('recurrence_rule') || null : null
 
+  let locationUrl: string | null = get('location_url') || null
+  if (
+    !locationUrl &&
+    (meetingType === 'virtual' || meetingType === 'hybrid')
+  ) {
+    locationUrl = `https://meet.google.com/${generateMeetCode()}`
+  }
+
   const sb = createClient()
   const { data, error } = await sb
     .from('club_meetings')
@@ -780,7 +788,7 @@ export async function createClubMeeting(
       end_date: get('end_date') || null,
       location_name: get('location_name') || null,
       location_address: get('location_address') || null,
-      location_url: get('location_url') || null,
+      location_url: locationUrl,
       meeting_type: meetingType,
       is_recurring: isRecurring,
       recurrence_rule: recurrenceRule,
@@ -1303,6 +1311,17 @@ export async function cancelClubMeeting(
   const clubSlug = (club as { slug: string | null } | null)?.slug
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
   return { ok: true }
+}
+
+function generateMeetCode(): string {
+  const seg = (len: number) => {
+    const bytes = new Uint8Array(len)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (b) =>
+      'abcdefghijklmnopqrstuvwxyz'[b % 26],
+    ).join('')
+  }
+  return `${seg(3)}-${seg(4)}-${seg(3)}`
 }
 
 // ─── Discord webhook ──────────────────────────────────────────────────────
