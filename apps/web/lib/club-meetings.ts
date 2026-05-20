@@ -1,4 +1,3 @@
-import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 
 export type RsvpStatus = 'going' | 'maybe' | 'not_going'
