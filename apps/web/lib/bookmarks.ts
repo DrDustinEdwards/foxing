@@ -38,3 +38,17 @@ export async function userHasBookInLibrary(
     row && ['reading', 'finished', 'paused'].includes(row.status ?? ''),
   )
 }
+
+export async function fetchUserBookTags(
+  userId: string,
+  bookId: string,
+): Promise<string[]> {
+  const sb = createClient()
+  const { data } = await sb
+    .from('user_book_tags')
+    .select('tag')
+    .eq('user_id', userId)
+    .eq('book_id', bookId)
+    .order('tag', { ascending: true })
+  return ((data as { tag: string }[] | null) ?? []).map((r) => r.tag)
+}

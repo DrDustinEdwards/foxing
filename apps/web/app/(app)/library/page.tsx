@@ -233,6 +233,18 @@ function LibraryCard({
           typeof entry.rating_half === 'number' && (
           <StarRating value={entry.rating_half / 2} size="sm" readOnly />
         )}
+        {entry.tags.length > 0 && (
+          <ul className="mt-1 flex flex-wrap gap-1">
+            {entry.tags.slice(0, 4).map((t) => (
+              <li
+                key={t}
+                className="rounded-full bg-bg-sunken px-1.5 py-0.5 font-dm-mono text-[10px] text-text-tertiary"
+              >
+                {t}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
     </Link>
   )

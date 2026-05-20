@@ -255,6 +255,68 @@ export async function togglePostReaction(
   return { ok: true }
 }
 
+// ─── User book tags ───────────────────────────────────────────────────────
+
+function normalizeTag(raw: string): string | null {
+  const cleaned = raw
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-]/g, '')
+  if (cleaned.length === 0 || cleaned.length > 30) return null
+  return cleaned
+}
+
+export async function addBookTag(
+  formData: FormData,
+): Promise<ActionResult> {
+  const bookId = String(formData.get('book_id') ?? '').trim()
+  const bookSlug = String(formData.get('book_slug') ?? '').trim()
+  const tag = normalizeTag(String(formData.get('tag') ?? ''))
+  if (!bookId || !tag) return { ok: false, error: 'Pick a tag.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = createClient()
+  const { count } = await sb
+    .from('user_book_tags')
+    .select('tag', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('book_id', bookId)
+  if ((count ?? 0) >= 20) {
+    return { ok: false, error: 'Up to 20 tags per book.' }
+  }
+  const { error } = await sb.from('user_book_tags').upsert(
+    { user_id: userId, book_id: bookId, tag },
+    { onConflict: 'user_id,book_id,tag', ignoreDuplicates: true },
+  )
+  if (error) return { ok: false, error: error.message }
+  if (bookSlug) revalidatePath(`/book/${bookSlug}`)
+  revalidatePath('/library')
+  return { ok: true }
+}
+
+export async function removeBookTag(
+  formData: FormData,
+): Promise<ActionResult> {
+  const bookId = String(formData.get('book_id') ?? '').trim()
+  const bookSlug = String(formData.get('book_slug') ?? '').trim()
+  const tag = normalizeTag(String(formData.get('tag') ?? ''))
+  if (!bookId || !tag) return { ok: false, error: 'Missing fields.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = createClient()
+  const { error } = await sb
+    .from('user_book_tags')
+    .delete()
+    .eq('user_id', userId)
+    .eq('book_id', bookId)
+    .eq('tag', tag)
+  if (error) return { ok: false, error: error.message }
+  if (bookSlug) revalidatePath(`/book/${bookSlug}`)
+  revalidatePath('/library')
+  return { ok: true }
+}
+
 // ─── Bookmarks ────────────────────────────────────────────────────────────
 
 export async function deleteBookmark(
