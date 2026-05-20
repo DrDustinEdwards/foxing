@@ -1,4 +1,7 @@
+import 'server-only'
 import { createClient } from '@/lib/supabase/server'
+import type { UserHighlight } from '@/lib/user-queries-types'
+export { type UserHighlight } from '@/lib/user-queries-types'
 
 /**
  * Per-user server fetchers. Each function assumes the caller has already
@@ -393,23 +396,6 @@ export async function fetchFinishedBooksForStats(
       }
     })
     .filter((x): x is FinishedBookForStats => x !== null)
-}
-
-export interface UserHighlight {
-  id: string
-  text: string
-  note: string | null
-  color: string | null
-  chapter: string | null
-  is_public: boolean
-  created_at: string
-  book: {
-    id: string
-    slug: string | null
-    title: string
-    author: string
-    cover_url: string | null
-  }
 }
 
 export async function fetchUserHighlights(

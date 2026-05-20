@@ -1,29 +1,18 @@
+import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type {
+  ChapterReaction,
+  PublicChapterReaction,
+} from '@/lib/chapter-reactions-types'
 
-export type ReactionPrivacy = 'public' | 'close_friends' | 'private'
-
-export const REACTION_EMOJIS = ['😭', '😂', '😱', '😤', '🥺', '🤯', '❤️', '🙃'] as const
-export type ReactionEmoji = (typeof REACTION_EMOJIS)[number]
-
-export interface ChapterReaction {
-  id: string
-  user_id: string
-  book_id: string
-  chapter_name: string
-  emoji: string
-  note: string | null
-  privacy: ReactionPrivacy
-  created_at: string
-}
-
-export interface PublicChapterReaction extends ChapterReaction {
-  author: {
-    username: string
-    display_name: string
-    avatar_url: string | null
-  } | null
-}
+export {
+  REACTION_EMOJIS,
+  type ReactionPrivacy,
+  type ReactionEmoji,
+  type ChapterReaction,
+  type PublicChapterReaction,
+} from '@/lib/chapter-reactions-types'
 
 export async function fetchOwnChapterReactions(
   userId: string,

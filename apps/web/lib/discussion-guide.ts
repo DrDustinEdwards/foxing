@@ -1,18 +1,15 @@
+import 'server-only'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type {
+  DiscussionQuestion,
+  DiscussionGuide,
+} from '@/lib/discussion-guide-types'
 
-export interface DiscussionQuestion {
-  question: string
-  theme?: string
-}
-
-export interface DiscussionGuide {
-  id: string
-  book_id: string
-  questions: DiscussionQuestion[]
-  generated_at: string
-  model: string
-}
+export {
+  type DiscussionQuestion,
+  type DiscussionGuide,
+} from '@/lib/discussion-guide-types'
 
 export async function fetchDiscussionGuide(
   bookId: string,

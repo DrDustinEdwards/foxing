@@ -9,7 +9,7 @@ import {
   type ChapterReaction,
   type ReactionEmoji,
   type ReactionPrivacy,
-} from '@/lib/chapter-reactions'
+} from '@/lib/chapter-reactions-types'
 import {
   addChapterReaction,
   deleteChapterReaction,

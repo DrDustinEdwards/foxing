@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/cn'
 import { formatRelativeDate } from '@foxing/utils'
-import type { UserHighlight } from '@/lib/user-queries'
+import type { UserHighlight } from '@/lib/user-queries-types'
 
 interface Props {
   items: UserHighlight[]
