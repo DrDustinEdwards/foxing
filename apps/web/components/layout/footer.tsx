@@ -16,7 +16,6 @@ const COLUMNS: FooterColumn[] = [
     heading: 'Foxing',
     links: [
       { href: '/about', label: 'About' },
-      { href: '/journal', label: 'Journal' },
       { href: '/pricing', label: 'Pricing' },
       { href: '#download', label: 'Download the app' },
     ],
@@ -24,19 +23,18 @@ const COLUMNS: FooterColumn[] = [
   {
     heading: 'Read',
     links: [
-      { href: '/books', label: 'All Books' },
-      { href: '/book-clubs', label: 'Book Clubs' },
-      { href: '/book-of-the-month', label: 'Book of the Month' },
-      { href: '/awards', label: 'Award Winners' },
-      { href: '/challenges', label: 'Reading Challenges' },
+      { href: '/books', label: 'All books' },
+      { href: '/discover', label: 'Discover by mood' },
+      { href: '/awards', label: 'Award winners' },
+      { href: '/challenges', label: 'Reading challenges' },
     ],
   },
   {
     heading: 'Community',
     links: [
       { href: '/people', label: 'People' },
-      { href: '/clubs', label: 'Public Clubs' },
-      { href: '/lists', label: 'Reading Lists' },
+      { href: '/clubs', label: 'Public clubs' },
+      { href: '/lists', label: 'Reading lists' },
       { href: '/quotes', label: 'Quotes' },
     ],
   },
@@ -51,8 +49,8 @@ const COLUMNS: FooterColumn[] = [
   {
     heading: 'Legal',
     links: [
-      { href: '/privacy', label: 'Privacy Policy' },
-      { href: '/terms', label: 'Terms of Service' },
+      { href: '/privacy', label: 'Privacy policy' },
+      { href: '/terms', label: 'Terms of service' },
     ],
   },
 ]
