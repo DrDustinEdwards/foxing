@@ -12,10 +12,12 @@ import {
   fetchBooksByAuthorSlug,
   fetchHighlightsByAuthorSlug,
 } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchVerifiedAuthorByName } from '@/lib/author-claims'
+import { fetchAnsweredQuestions } from '@/lib/author-qa'
+import { AuthorQuestionsSection } from './author-questions-section'
 
 export const revalidate = 86_400
 
@@ -83,11 +85,26 @@ export default async function AuthorPage({
   }
 
   const authorName = books[0].author
-  const [highlights, aiBio, verifiedAuthor] = await Promise.all([
+  const [highlights, aiBio, verifiedAuthor, viewerId] = await Promise.all([
     fetchHighlightsByAuthorSlug(params.slug, 3),
     fetchAiCache(books[0].id, 'author_bio'),
     fetchVerifiedAuthorByName(authorName),
+    getAuthedUserId(),
   ])
+  const authorProfile = verifiedAuthor
+    ? await (async () => {
+        const admin = createAdminClient()
+        const { data } = await admin
+          .from('profiles')
+          .select('id')
+          .eq('username', verifiedAuthor.username)
+          .maybeSingle()
+        return (data as { id: string } | null) ?? null
+      })()
+    : null
+  const answeredQuestions = authorProfile
+    ? await fetchAnsweredQuestions(authorProfile.id, viewerId)
+    : []
 
   // Themes the author works in, sampled from their books.
   const themeSet = new Set<string>()
@@ -172,6 +189,14 @@ export default async function AuthorPage({
                 ))}
               </div>
             </section>
+          )}
+          {authorProfile && (
+            <AuthorQuestionsSection
+              authorUserId={authorProfile.id}
+              authorName={authorName}
+              initial={answeredQuestions}
+              canAsk={Boolean(viewerId) && viewerId !== authorProfile.id}
+            />
           )}
           <p className="mt-12 font-dm-sans text-sm text-text-tertiary">
             <Link href="/books" className="text-brand-text hover:underline">
