@@ -147,11 +147,19 @@ export default async function ProfilePage({
               </div>
             </div>
             {viewerId && !isOwnProfile && (
-              <FollowButton
-                targetUserId={profile.id}
-                username={profile.username}
-                initiallyFollowing={isFollowing}
-              />
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href={`/u/${profile.username}/compare`}
+                  className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+                >
+                  Compare stats
+                </Link>
+                <FollowButton
+                  targetUserId={profile.id}
+                  username={profile.username}
+                  initiallyFollowing={isFollowing}
+                />
+              </div>
             )}
           </header>
 
