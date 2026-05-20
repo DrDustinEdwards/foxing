@@ -475,9 +475,10 @@ export default async function ClubPage({
               </h2>
               <div className="flex flex-col gap-4">
                 {posts.map((p) => (
-                  <article
+                  <Link
                     key={p.id}
-                    className="rounded-lg border border-border-subtle bg-bg-surface p-4"
+                    href={`/clubs/${club.slug}/threads/${p.thread_id}`}
+                    className="block rounded-lg border border-border-subtle bg-bg-surface p-4 hover:bg-bg-hover"
                   >
                     <header className="flex items-center gap-2">
                       <Avatar
@@ -497,7 +498,7 @@ export default async function ClubPage({
                     <p className="mt-3 line-clamp-4 font-source-serif-4 text-base text-text-secondary">
                       {p.content}
                     </p>
-                  </article>
+                  </Link>
                 ))}
               </div>
             </section>

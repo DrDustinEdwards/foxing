@@ -639,6 +639,7 @@ export async function fetchPublicClubs(limit = 24): Promise<PublicClub[]> {
 
 export interface ClubPostPreview {
   id: string
+  thread_id: string
   content: string
   created_at: string
   author: {
@@ -666,7 +667,7 @@ export async function fetchClubPostsPreview(
   const { data } = await sb
     .from('club_posts')
     .select(
-      'id, content, created_at, profiles:author_id(username, display_name, avatar_url)',
+      'id, thread_id, content, created_at, profiles:author_id(username, display_name, avatar_url)',
     )
     .in('thread_id', threadIds)
     .order('created_at', { ascending: false })
@@ -675,6 +676,7 @@ export async function fetchClubPostsPreview(
   return data.map((row) => {
     const r = row as unknown as {
       id: string
+      thread_id: string
       content: string
       created_at: string
       profiles: {
@@ -685,6 +687,7 @@ export async function fetchClubPostsPreview(
     }
     return {
       id: r.id,
+      thread_id: r.thread_id,
       content: r.content,
       created_at: r.created_at,
       author: r.profiles,
