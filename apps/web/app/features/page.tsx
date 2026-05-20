@@ -522,7 +522,7 @@ export default async function FeaturesPage() {
                   'Member roles: admin, moderator, member',
                   'Member invites by username or email',
                   'Club description, cover image, and genre tags',
-                  'Club library: archive of all books the club has read',
+                  'Club library at /clubs/[slug]/library: every book the club has read together, in order',
                   'Request to join flow for approval-required clubs (request sent, pending admin approval)',
                 ]}
               />
@@ -701,7 +701,7 @@ export default async function FeaturesPage() {
               <FeatureList
                 items={[
                   "Public highlights appear on your profile and the book's page",
-                  'Other readers can like your highlights',
+                  'Other readers can like your highlights; like counts shown on every quote card',
                   'Community highlights feed at foxing.app/quotes',
                   'Individual quote pages (shareable link)',
                   'Passage of the Day on the home page (from community highlights, changes daily)',
@@ -840,7 +840,7 @@ export default async function FeaturesPage() {
                   'Editorial journal: reading guides, author spotlights, and thematic essays',
                   'RSS feed for the journal (subscribe in any reader)',
                   'Reading challenges: join a shared reading goal with the community',
-                  'Community reading lists: public lists from any reader, sortable by most liked',
+                  'Community reading lists: public lists from any reader, like a list to save it, sortable by most liked',
                 ]}
               />
             </Subgroup>
