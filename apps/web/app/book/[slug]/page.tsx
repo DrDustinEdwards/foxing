@@ -41,7 +41,6 @@ import { getAuthedUserId } from '@/lib/nav-user'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ReadingTimerWidget } from '@/components/reading-timer-widget'
-import { PhotoQuoteButton } from '@/components/commonplace/photo-quote-button'
 import { BookmarksSection } from './bookmarks-section'
 import { BookTagsRow } from './book-tags-row'
 import { ChapterReactionsSection } from './chapter-reactions-section'
@@ -301,18 +300,6 @@ export default async function BookPage({
                   bookId={book.id}
                   bookSlug={book.slug}
                   initialTags={ownTags}
-                />
-              </div>
-            )}
-            {viewerId && (
-              <div className="mt-6">
-                <PhotoQuoteButton
-                  initialBook={{
-                    id: book.id,
-                    title: book.title,
-                    author: book.author,
-                  }}
-                  label="Capture passage from photo"
                 />
               </div>
             )}
