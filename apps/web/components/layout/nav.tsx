@@ -27,14 +27,16 @@ interface NavProps {
 const PRIMARY_LINKS = [
   { href: '/books', label: 'Books', match: '/books' },
   { href: '/book-clubs', label: 'Book Clubs', match: '/book-clubs' },
-  {
-    href: '/book-of-the-month',
-    label: 'Book of the Month',
-    match: '/book-of-the-month',
-  },
   { href: '/journal', label: 'Journal', match: '/journal' },
   { href: '/people', label: 'People', match: '/people' },
 ] as const
+
+interface ActiveBOTM {
+  title: string
+  author: string
+  slug: string | null
+  curator_note: string | null
+}
 
 const BOOKS_MENU_BROWSE = [
   { href: '/books', label: 'All Books' },
@@ -97,7 +99,21 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [openMega, setOpenMega] = useState<'books' | 'book-clubs' | null>(null)
+  const [botm, setBotm] = useState<ActiveBOTM | null>(null)
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch('/api/botm/active')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: ActiveBOTM | null) => {
+        if (!cancelled && data) setBotm(data)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
   const accountRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -176,6 +192,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                 {hasMega && openMega === megaKey && (
                   <MegaMenu
                     kind={megaKey as 'books' | 'book-clubs'}
+                    botm={botm}
                     onLinkClick={() => setOpenMega(null)}
                   />
                 )}
@@ -314,9 +331,11 @@ function SecondaryAuthBar({ pathname }: { pathname: string }) {
 
 function MegaMenu({
   kind,
+  botm,
   onLinkClick,
 }: {
   kind: 'books' | 'book-clubs'
+  botm: ActiveBOTM | null
   onLinkClick: () => void
 }) {
   if (kind === 'books') {
@@ -365,8 +384,34 @@ function MegaMenu({
     )
   }
 
+  const monthYearLabel = new Date().toLocaleString('en-US', {
+    month: 'long',
+    year: 'numeric',
+  })
+
   return (
     <div className="absolute left-1/2 top-9 z-50 w-[440px] -translate-x-1/2 rounded-lg border border-border-subtle bg-bg-elevated p-5 shadow-lg">
+      {botm ? (
+        <div className="mb-3 rounded-md border border-border-subtle bg-bg-sunken p-3">
+          <p className="font-dm-mono text-[10px] uppercase tracking-wider text-brand-text">
+            Foxing pick · {monthYearLabel}
+          </p>
+          <p className="mt-1 font-fraunces text-sm text-text-primary">
+            {botm.title}
+          </p>
+          <p className="font-dm-sans text-xs text-text-tertiary">
+            {botm.author}
+          </p>
+          <Link
+            href="/book-of-the-month"
+            onClick={onLinkClick}
+            role="menuitem"
+            className="mt-2 inline-block font-dm-sans text-xs text-brand-text hover:underline"
+          >
+            See curator notes →
+          </Link>
+        </div>
+      ) : null}
       <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
         Featured clubs
       </p>
@@ -400,6 +445,14 @@ function MegaMenu({
           className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
           This month&apos;s picks →
+        </Link>
+        <Link
+          href="/book-of-the-month"
+          onClick={onLinkClick}
+          role="menuitem"
+          className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
+        >
+          All monthly picks
         </Link>
       </div>
     </div>
