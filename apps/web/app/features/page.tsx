@@ -49,7 +49,8 @@ export default async function FeaturesPage() {
             </h1>
             <p className="mt-4 font-source-serif-4 text-base text-text-secondary leading-[1.85]">
               Everything on this page is available today. Free and Plus (
-              {PLUS_PRICE_MONTHLY_LABEL}) features are labeled.
+              {PLUS_PRICE_MONTHLY_LABEL}) features are labeled. Sections marked
+              App only or Web only are limited to that surface.
             </p>
           </header>
 
@@ -69,6 +70,7 @@ export default async function FeaturesPage() {
             eyebrow="Read"
             heading="1,400+ classic books, free to read"
             tier="free"
+            platform="app"
           >
             <Prose>
               Every book on Foxing is from the public domain. Frankenstein,
@@ -104,6 +106,7 @@ export default async function FeaturesPage() {
             eyebrow="Formats"
             heading="Every major reading format"
             tier="free"
+            platform="app"
           >
             <FeatureList
               items={[
@@ -116,7 +119,7 @@ export default async function FeaturesPage() {
                 'HTML',
                 'RTF and DOCX',
                 'FictionBook (FB2)',
-                'Sideload personal files via the app (import from Files, Dropbox, or email attachment)',
+                'Sideload personal files via the app (import from Files, Dropbox, or email attachment) (app only)',
               ]}
             />
           </Section>
@@ -126,6 +129,7 @@ export default async function FeaturesPage() {
             eyebrow="Navigate"
             heading="Get anywhere in a book instantly"
             tier="free"
+            platform="app"
           >
             <FeatureList
               items={[
@@ -151,6 +155,7 @@ export default async function FeaturesPage() {
             eyebrow="Annotate"
             heading="Highlight everything, forget nothing"
             tier="free"
+            platform="app"
           >
             <Prose>
               Seven highlight colors. Notes on any passage. Everything
@@ -187,7 +192,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Annotation management" tier="free">
+            <Subgroup title="Annotation management" tier="free" platform="both">
               <FeatureList
                 items={[
                   'Annotation list: all highlights and notes in one scrollable view',
@@ -255,7 +260,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Reading timer" tier="free">
+            <Subgroup title="Reading timer" tier="free" platform="app">
               <FeatureList
                 items={[
                   'Start and stop a reading session from any book page',
@@ -357,6 +362,7 @@ export default async function FeaturesPage() {
             id="ai"
             eyebrow="AI Companion"
             heading="An AI that reads alongside you"
+            platform="app"
           >
             <Prose>
               Tap any word and Foxing explains it in context: the way that word
@@ -453,7 +459,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Discussion questions" tier="free">
+            <Subgroup title="Discussion questions" tier="free" platform="both">
               <FeatureList
                 items={[
                   '12 to 15 AI-generated discussion questions per book',
@@ -537,7 +543,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Inline passage comments" tier="plus">
+            <Subgroup title="Inline passage comments" tier="plus" platform="app">
               <FeatureList
                 items={[
                   'Leave a comment anchored to the exact position in the text',
@@ -640,7 +646,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Discord integration" tier="free">
+            <Subgroup title="Discord integration" tier="free" platform="web">
               <FeatureList
                 items={[
                   'Connect any club to a Discord channel via a webhook URL',
@@ -726,7 +732,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Buddy reads" tier="plus">
+            <Subgroup title="Buddy reads" tier="plus" platform="app">
               <FeatureList
                 items={[
                   'Read a book one-on-one with another reader',
@@ -891,7 +897,7 @@ export default async function FeaturesPage() {
                 'Public or private per entry',
                 'Filter to show only public or only private entries',
                 'Export all entries as formatted plain text (passage, book, author, note)',
-                'Photo-to-quote: take a photo of a physical book page, AI extracts the text and saves it as a commonplace entry (mobile and web)',
+                'Photo-to-quote: take a photo of a physical book page, AI extracts the text and saves it as a commonplace entry (mobile app)',
                 'Public entries visible on your profile and at /u/[username]/commonplace',
                 'Public entries appear as blockquotes in the style of the reading canvas',
               ]}
@@ -987,7 +993,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Sync and offline" tier="free">
+            <Subgroup title="Sync and offline" tier="free" platform="app">
               <FeatureList
                 items={[
                   'Reading position synced across all devices in real time',
@@ -999,7 +1005,7 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Accessibility" tier="free">
+            <Subgroup title="Accessibility" tier="free" platform="app">
               <FeatureList
                 items={[
                   'VoiceOver (iOS) and TalkBack (Android) full support',
@@ -1044,6 +1050,19 @@ export default async function FeaturesPage() {
                 ]}
               />
             </Subgroup>
+
+            <Subgroup title="Discord Activity" tier="free" platform="web">
+              <FeatureList
+                items={[
+                  'Launch Foxing inside any Discord voice or text channel as an embedded Activity',
+                  'Shared real-time club dashboard visible to everyone in the channel',
+                  'Vote on book selection polls without leaving Discord',
+                  'Run a group reading sprint with a shared countdown timer',
+                  'View AI discussion questions and chapter reactions mid-discussion',
+                  'Connect your Foxing account via Discord OAuth in one tap',
+                ]}
+              />
+            </Subgroup>
           </Section>
 
           <aside className="mx-auto mt-20 max-w-prose rounded-lg bg-brand-subtle p-6 text-center">
@@ -1072,15 +1091,25 @@ export default async function FeaturesPage() {
   )
 }
 
+type Platform = 'app' | 'web' | 'both'
+
 interface SectionProps {
   id: string
   eyebrow: string
   heading: string
   tier?: 'free' | 'plus'
+  platform?: Platform
   children: ReactNode
 }
 
-function Section({ id, eyebrow, heading, tier, children }: SectionProps) {
+function Section({
+  id,
+  eyebrow,
+  heading,
+  tier,
+  platform,
+  children,
+}: SectionProps) {
   return (
     <section
       id={id}
@@ -1094,6 +1123,7 @@ function Section({ id, eyebrow, heading, tier, children }: SectionProps) {
           {heading}
         </h2>
         {tier ? <TierBadge tier={tier} /> : null}
+        {platform ? <PlatformBadge platform={platform} /> : null}
       </div>
       {children}
     </section>
@@ -1103,31 +1133,37 @@ function Section({ id, eyebrow, heading, tier, children }: SectionProps) {
 interface SubgroupProps {
   title?: string
   tier?: 'free' | 'plus'
+  platform?: Platform
   meta?: string
   children: ReactNode
 }
 
-function Subgroup({ title, tier, meta, children }: SubgroupProps) {
-  if (!title && !tier && !meta) {
+function Subgroup({
+  title,
+  tier,
+  platform,
+  meta,
+  children,
+}: SubgroupProps) {
+  if (!title && !tier && !meta && !platform) {
     return <div className="mt-4">{children}</div>
   }
   return (
     <div className="mt-8">
-      {title || tier || meta ? (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          {title ? (
-            <h3 className="font-fraunces text-[1.125rem] text-text-primary">
-              {title}
-            </h3>
-          ) : null}
-          {tier ? <TierBadge tier={tier} /> : null}
-          {meta ? (
-            <span className="font-dm-sans text-xs text-text-tertiary">
-              {meta}
-            </span>
-          ) : null}
-        </div>
-      ) : null}
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        {title ? (
+          <h3 className="font-fraunces text-[1.125rem] text-text-primary">
+            {title}
+          </h3>
+        ) : null}
+        {tier ? <TierBadge tier={tier} /> : null}
+        {platform ? <PlatformBadge platform={platform} /> : null}
+        {meta ? (
+          <span className="font-dm-sans text-xs text-text-tertiary">
+            {meta}
+          </span>
+        ) : null}
+      </div>
       {children}
     </div>
   )
@@ -1136,6 +1172,15 @@ function Subgroup({ title, tier, meta, children }: SubgroupProps) {
 function TierBadge({ tier }: { tier: 'free' | 'plus' }) {
   if (tier === 'free') return <Badge variant="neutral">Free</Badge>
   return <Badge variant="brand">Plus</Badge>
+}
+
+function PlatformBadge({ platform }: { platform: Platform }) {
+  if (platform === 'both') return null
+  return (
+    <span className="inline-flex items-center rounded-full border border-border-default px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary">
+      {platform === 'app' ? 'App only' : 'Web only'}
+    </span>
+  )
 }
 
 function Prose({ children }: { children: ReactNode }) {
