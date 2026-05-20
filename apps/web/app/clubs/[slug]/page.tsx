@@ -31,6 +31,7 @@ import { ThreadDiscussionPanel } from './thread-discussion-panel'
 import { ClubSettingsPanel } from './club-settings-panel'
 import { ModerationPanel } from './moderation-panel'
 import { PostAnnouncementForm } from './post-announcement-form'
+import { ScheduleSection } from './schedule-section'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
 
 export const revalidate = 60
@@ -197,6 +198,19 @@ export default async function ClubPage({
       },
       reporter_name: r.reporter?.display_name ?? 'Reader',
     }))
+
+  const { data: scheduleRows } = isMember
+    ? await adminClient
+        .from('club_schedule')
+        .select('id, chapter_name, unlock_date')
+        .eq('club_id', club.id)
+        .order('unlock_date', { ascending: true })
+    : { data: null }
+  const scheduleEntries =
+    (scheduleRows as
+      | Array<{ id: string; chapter_name: string; unlock_date: string }>
+      | null) ?? []
+
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -253,6 +267,14 @@ export default async function ClubPage({
             canModerate={canModerate}
             isMember={isMember}
           />
+
+          {isMember && (
+            <ScheduleSection
+              clubId={club.id}
+              entries={scheduleEntries}
+              canManage={canModerate}
+            />
+          )}
 
           {club.current_book && club.current_book_id && (
             <ThreadDiscussionPanel

@@ -446,6 +446,59 @@ export async function dismissReport(
   return { ok: true }
 }
 
+export async function createScheduleEntry(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const chapterName = String(formData.get('chapter_name') ?? '').trim().slice(0, 120)
+  const unlockDate = String(formData.get('unlock_date') ?? '').trim()
+  if (!clubId || !chapterName || !unlockDate) {
+    return { ok: false, error: 'Chapter and unlock date required.' }
+  }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin.from('club_schedule').insert({
+    club_id: clubId,
+    chapter_name: chapterName,
+    unlock_date: unlockDate,
+  })
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function deleteScheduleEntry(
+  formData: FormData,
+): Promise<ActionResult> {
+  const scheduleId = String(formData.get('schedule_id') ?? '').trim()
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!scheduleId || !clubId) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_schedule')
+    .delete()
+    .eq('id', scheduleId)
+    .eq('club_id', clubId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
 export async function actionReport(
   formData: FormData,
 ): Promise<ActionResult> {
