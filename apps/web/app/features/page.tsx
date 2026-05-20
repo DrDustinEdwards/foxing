@@ -30,6 +30,7 @@ const NAV_ANCHORS = [
   { href: '#social', label: 'Social' },
   { href: '#discover', label: 'Discover' },
   { href: '#profile', label: 'Profile' },
+  { href: '#commonplace', label: 'Commonplace' },
   { href: '#organize', label: 'Organize' },
   { href: '#import', label: 'Import & Export' },
   { href: '#platform', label: 'Platform' },
@@ -133,7 +134,7 @@ export default async function FeaturesPage() {
                 'Jump to chapter, page number, or percentage',
                 'Go to previous or next chapter',
                 'Back navigation (return to where you jumped from)',
-                'Named bookmarks with quick-add',
+                'Named bookmarks with quick-add, view and delete bookmarks from the web on any book detail page',
                 'Bookmark notes',
                 'History of recently visited positions',
                 'Internal hyperlink navigation (footnotes, endnotes, cross-references)',
@@ -263,6 +264,32 @@ export default async function FeaturesPage() {
                   'Words per minute calculation when page count is provided',
                   'Session history on your stats page (date, duration, pages, WPM)',
                   'Active session auto-closes on app exit',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Chapter reactions" tier="free">
+              <FeatureList
+                items={[
+                  'React to any chapter with 8 emojis: 😭 😂 😱 😤 🥺 🤯 ❤️ 🙃',
+                  'Add an optional note to any reaction',
+                  'Privacy control per reaction: Public, Close friends only, or Private',
+                  'Community chapter reactions visible on every book page (aggregated by emoji)',
+                  'Delete your own reactions',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Custom shelves" tier="free">
+              <FeatureList
+                items={[
+                  'Create named shelves beyond the 5 presets: examples include "own physical copy", "lent to friend", "ARCs", "to reread"',
+                  'Up to 50 custom shelves per account',
+                  'Add any book to one or more custom shelves from the book page or library',
+                  'Public or private shelf toggle',
+                  'Public shelves visible on your profile at /u/[username]/shelves/[id]',
+                  'Custom tags on any book: lowercase labels like "favorite", "gift-idea", "challenging" (up to 20 tags per book)',
+                  'Tags appear as pills on library cards',
                 ]}
               />
             </Subgroup>
@@ -570,6 +597,38 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
+            <Subgroup title="Reading schedule" tier="free">
+              <FeatureList
+                items={[
+                  'Set chapter unlock dates for a structured reading pace',
+                  'Each entry: chapter name and unlock date',
+                  'Status chips: Upcoming, Today, Unlocked',
+                  'Mod-only controls to add and delete schedule entries',
+                  'Members see the full schedule view',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Club waitlist" tier="free">
+              <FeatureList
+                items={[
+                  'When a club reaches its member cap, a waitlist button replaces Join',
+                  'Members can leave the waitlist at any time',
+                  'Admins see the waitlist count in the moderation panel',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Reported posts" tier="free">
+              <FeatureList
+                items={[
+                  'Flag any post with a reason: Spam, Harassment, Spoilers without tag, Offensive content, Other',
+                  'Reports appear in the club moderation panel with pending count badge',
+                  'Moderators can dismiss, remove the post, or ban the author from the reports panel',
+                ]}
+              />
+            </Subgroup>
+
             <Subgroup title="Club settings" meta="admins only">
               <FeatureList
                 items={[
@@ -577,6 +636,18 @@ export default async function FeaturesPage() {
                   'Change the current book the club is reading',
                   'Transfer ownership to another member',
                   'Delete the club (requires typing the club name to confirm)',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Discord integration" tier="free">
+              <FeatureList
+                items={[
+                  'Connect any club to a Discord channel via a webhook URL',
+                  'Foxing posts to the Discord channel automatically when a meeting is scheduled, a poll is created, an announcement is pinned, or a member finishes the club book',
+                  'Configure and remove the webhook from club settings (admins only)',
+                  'Webhook URL is masked after saving',
+                  'Test button sends a confirmation message to the channel',
                 ]}
               />
             </Subgroup>
@@ -630,12 +701,58 @@ export default async function FeaturesPage() {
               />
             </Subgroup>
 
+            <Subgroup title="Community chapter reactions" tier="free">
+              <FeatureList
+                items={[
+                  'Chapter reactions from all public readers visible on every book page',
+                  'Reactions grouped by chapter and aggregated by emoji',
+                  'Spoiler protection: reactions from chapters ahead of your estimated position are blurred by default',
+                  'Reveal any blurred chapter with one tap',
+                  'Add your own reaction directly from the book page',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Commonplace book" tier="free">
+              <FeatureList
+                items={[
+                  'A personal anthology of your favorite passages',
+                  'Save any passage from any book with an optional note',
+                  'Public or private per entry',
+                  'Filter by public or private',
+                  'Export all entries as formatted plain text',
+                  'Public entries appear on your profile and at /u/[username]/commonplace',
+                ]}
+              />
+            </Subgroup>
+
             <Subgroup title="Buddy reads" tier="plus">
               <FeatureList
                 items={[
                   'Read a book one-on-one with another reader',
                   'Chapter and page-anchored posts (spoiler protection built in)',
                   'Invite any reader you follow',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Saved posts" tier="free">
+              <FeatureList
+                items={[
+                  'Save any club post for later',
+                  'View all saved posts at /saved-posts',
+                  'Posts show club name, thread title, and author',
+                  'Remove from saved at any time',
+                ]}
+              />
+            </Subgroup>
+
+            <Subgroup title="Close friends" tier="free">
+              <FeatureList
+                items={[
+                  'Manage a private list of close friends from settings',
+                  'Close-friends-only visibility option on chapter reactions and passage comments',
+                  'Only people you follow can be added as close friends',
                 ]}
               />
             </Subgroup>
@@ -724,7 +841,7 @@ export default async function FeaturesPage() {
           >
             <FeatureList
               items={[
-                'Public reading profile with a reading personality line (one sentence, generated from your history and updated as you read)',
+                'Public reading personality line (one sentence, auto-generated by AI from your reading history, updated after every 10 books finished)',
                 'Display name, username, bio, and avatar',
                 '5 favorite books on your profile (with dashed slots for unfilled positions)',
                 'Stats row: books read, highlights, following, followers',
@@ -736,6 +853,8 @@ export default async function FeaturesPage() {
                 'Taste compatibility score when another reader views your profile',
                 'Follow and be followed',
                 'Public or private profile (private shows nothing to non-followers)',
+                'Compare stats side-by-side with any public reader at /u/[username]/compare',
+                'Find readers with similar taste at /people/similar (matched by books in common and genre overlap)',
               ]}
             />
 
@@ -755,6 +874,31 @@ export default async function FeaturesPage() {
           </Section>
 
           <Section
+            id="commonplace"
+            eyebrow="Commonplace Book"
+            heading="Your personal anthology"
+            tier="free"
+          >
+            <Prose>
+              Save the passages that stay with you. Your commonplace book is a
+              curated collection of lines from everything you have read, with
+              notes and the book they came from.
+            </Prose>
+            <FeatureList
+              items={[
+                'Personal anthology page at /commonplace',
+                'Each entry shows the passage, book title and author, your note (if any), and date added',
+                'Public or private per entry',
+                'Filter to show only public or only private entries',
+                'Export all entries as formatted plain text (passage, book, author, note)',
+                'Photo-to-quote: take a photo of a physical book page, AI extracts the text and saves it as a commonplace entry (mobile and web)',
+                'Public entries visible on your profile and at /u/[username]/commonplace',
+                'Public entries appear as blockquotes in the style of the reading canvas',
+              ]}
+            />
+          </Section>
+
+          <Section
             id="organize"
             eyebrow="Organize"
             heading="Goals, streaks, and challenges"
@@ -764,6 +908,8 @@ export default async function FeaturesPage() {
               <FeatureList
                 items={[
                   'Annual reading goal with progress bar and percentage, set and edited directly from the web',
+                  'Monthly reading goal: set a target for the current month with live progress',
+                  'Weekly reading goal: set a target for the current week with live progress',
                   'Reading streak tracking (current streak and longest streak ever)',
                   'Reading activity heatmap (last 52 weeks, GitHub-style)',
                   'Daily reading reminder (set your preferred time)',
