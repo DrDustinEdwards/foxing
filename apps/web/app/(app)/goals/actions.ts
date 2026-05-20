@@ -107,6 +107,131 @@ export async function deleteReadingGoal(): Promise<ActionResult> {
     .delete()
     .eq('user_id', userId)
     .eq('year', year)
+    .eq('period_type', 'annual')
+  if (error) return { ok: false, error: error.message }
+  revalidatePath('/goals')
+  return { ok: true }
+}
+
+function parsePeriodTarget(formData: FormData, max: number): number | null {
+  const raw = Number(formData.get('target') ?? 0)
+  if (!Number.isInteger(raw) || raw < 1 || raw > max) return null
+  return raw
+}
+
+export async function setMonthlyGoal(formData: FormData): Promise<ActionResult> {
+  const target = parsePeriodTarget(formData, 50)
+  if (target === null) {
+    return { ok: false, error: 'Enter a number between 1 and 50.' }
+  }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const now = new Date()
+  const year = now.getUTCFullYear()
+  const month = now.getUTCMonth() + 1
+  const sb = createClient()
+  const { data: existing } = await sb
+    .from('reading_goals')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('month', month)
+    .eq('period_type', 'monthly')
+    .maybeSingle()
+  const row = existing as { id: string } | null
+  if (row) {
+    const { error } = await sb
+      .from('reading_goals')
+      .update({ target, type: 'books' })
+      .eq('id', row.id)
+    if (error) return { ok: false, error: error.message }
+  } else {
+    const { error } = await sb.from('reading_goals').insert({
+      user_id: userId,
+      year,
+      month,
+      period_type: 'monthly',
+      type: 'books',
+      target,
+    })
+    if (error) return { ok: false, error: error.message }
+  }
+  revalidatePath('/goals')
+  return { ok: true }
+}
+
+export async function deleteMonthlyGoal(): Promise<ActionResult> {
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const now = new Date()
+  const year = now.getUTCFullYear()
+  const month = now.getUTCMonth() + 1
+  const sb = createClient()
+  const { error } = await sb
+    .from('reading_goals')
+    .delete()
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('month', month)
+    .eq('period_type', 'monthly')
+  if (error) return { ok: false, error: error.message }
+  revalidatePath('/goals')
+  return { ok: true }
+}
+
+export async function setWeeklyGoal(formData: FormData): Promise<ActionResult> {
+  const target = parsePeriodTarget(formData, 14)
+  if (target === null) {
+    return { ok: false, error: 'Enter a number between 1 and 14.' }
+  }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const { isoWeekOf } = await import('@/lib/goal-periods')
+  const { year, week } = isoWeekOf(new Date())
+  const sb = createClient()
+  const { data: existing } = await sb
+    .from('reading_goals')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('week', week)
+    .eq('period_type', 'weekly')
+    .maybeSingle()
+  const row = existing as { id: string } | null
+  if (row) {
+    const { error } = await sb
+      .from('reading_goals')
+      .update({ target, type: 'books' })
+      .eq('id', row.id)
+    if (error) return { ok: false, error: error.message }
+  } else {
+    const { error } = await sb.from('reading_goals').insert({
+      user_id: userId,
+      year,
+      week,
+      period_type: 'weekly',
+      type: 'books',
+      target,
+    })
+    if (error) return { ok: false, error: error.message }
+  }
+  revalidatePath('/goals')
+  return { ok: true }
+}
+
+export async function deleteWeeklyGoal(): Promise<ActionResult> {
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const { isoWeekOf } = await import('@/lib/goal-periods')
+  const { year, week } = isoWeekOf(new Date())
+  const sb = createClient()
+  const { error } = await sb
+    .from('reading_goals')
+    .delete()
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('week', week)
+    .eq('period_type', 'weekly')
   if (error) return { ok: false, error: error.message }
   revalidatePath('/goals')
   return { ok: true }

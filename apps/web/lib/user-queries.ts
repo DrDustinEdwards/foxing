@@ -488,6 +488,39 @@ export async function fetchUserGoal(
     .select('id, type, target, year')
     .eq('user_id', userId)
     .eq('year', year)
+    .eq('period_type', 'annual')
+    .maybeSingle()
+  return (data as UserGoal | null) ?? null
+}
+
+export async function fetchMonthlyGoal(
+  userId: string,
+  year: number,
+  month: number,
+): Promise<UserGoal | null> {
+  const { data } = await sb()
+    .from('reading_goals')
+    .select('id, type, target, year')
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('month', month)
+    .eq('period_type', 'monthly')
+    .maybeSingle()
+  return (data as UserGoal | null) ?? null
+}
+
+export async function fetchWeeklyGoal(
+  userId: string,
+  year: number,
+  week: number,
+): Promise<UserGoal | null> {
+  const { data } = await sb()
+    .from('reading_goals')
+    .select('id, type, target, year')
+    .eq('user_id', userId)
+    .eq('year', year)
+    .eq('week', week)
+    .eq('period_type', 'weekly')
     .maybeSingle()
   return (data as UserGoal | null) ?? null
 }
@@ -503,6 +536,21 @@ export async function fetchBooksFinishedThisYear(
     .eq('user_id', userId)
     .eq('status', 'finished')
     .gte('finished_at', start)
+  return count ?? 0
+}
+
+export async function fetchBooksFinishedInRange(
+  userId: string,
+  startISO: string,
+  endISO: string,
+): Promise<number> {
+  const { count } = await sb()
+    .from('user_books')
+    .select('id', { count: 'exact', head: true })
+    .eq('user_id', userId)
+    .eq('status', 'finished')
+    .gte('finished_at', startISO)
+    .lt('finished_at', endISO)
   return count ?? 0
 }
 
