@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
+import { LikeListButton } from '@/components/ui/like-list-button'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
@@ -9,7 +10,7 @@ import { ShareButton } from '@/components/share-button'
 import { fetchProfileByUsername, isUuid } from '@/lib/queries'
 import { fetchPublicReadingList } from '@/lib/missing-pages-queries'
 import { buildReadingListMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
 
 export const revalidate = 300
@@ -45,9 +46,10 @@ export default async function UserListDetailPage({
 }: {
   params: { username: string; slug: string }
 }) {
-  const [navUser, profile] = await Promise.all([
+  const [navUser, profile, viewerId] = await Promise.all([
     getNavUser(),
     fetchProfileByUsername(params.username),
+    getAuthedUserId(),
   ])
   if (!profile) notFound()
   if (!profile.is_public) {
@@ -64,6 +66,7 @@ export default async function UserListDetailPage({
   const list = await fetchPublicReadingList({
     userId: profile.id,
     slugOrId: params.slug,
+    viewerId,
   })
   if (!list) notFound()
   if (isUuid(params.slug) && list.slug && list.slug !== params.slug) {
@@ -110,7 +113,13 @@ export default async function UserListDetailPage({
             <p className="font-dm-mono text-[11px] text-text-tertiary">
               A list by @{profile.username}
             </p>
-            <div className="mt-2">
+            <div className="mt-2 flex items-center gap-3">
+              <LikeListButton
+                listId={list.id}
+                initialLiked={list.liked_by_me}
+                initialCount={list.like_count}
+                userId={viewerId}
+              />
               <ShareButton url={url} text={list.title} />
             </div>
           </header>

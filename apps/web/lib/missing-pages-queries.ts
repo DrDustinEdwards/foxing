@@ -348,6 +348,7 @@ export async function fetchBooksForTheme(opts: {
 
 export interface PublicListRow {
   id: string
+  slug: string | null
   title: string
   description: string | null
   created_at: string
@@ -360,6 +361,7 @@ export interface PublicListRow {
   book_count: number
   covers: Array<string | null>
   like_count: number
+  liked_by_me: boolean
 }
 
 export type ListsSort = 'most_liked' | 'newest' | 'featured'
@@ -367,6 +369,7 @@ export type ListsSort = 'most_liked' | 'newest' | 'featured'
 export async function fetchPublicLists(opts: {
   sort?: ListsSort
   limit?: number
+  userId?: string | null
 }): Promise<PublicListRow[]> {
   if (!hasEnv()) return []
   const limit = opts.limit ?? 48
@@ -375,32 +378,42 @@ export async function fetchPublicLists(opts: {
   let q = sb()
     .from('reading_lists')
     .select(
-      'id, title, description, is_public, is_featured, created_at, profiles:user_id(username, display_name, avatar_url)',
+      'id, slug, title, description, is_public, is_featured, like_count, created_at, profiles:user_id(username, display_name, avatar_url)',
     )
     .eq('is_public', true)
 
   if (sort === 'featured') {
     q = q.eq('is_featured', true).order('created_at', { ascending: false })
+  } else if (sort === 'most_liked') {
+    q = q
+      .order('like_count', { ascending: false })
+      .order('created_at', { ascending: false })
   } else {
     q = q.order('created_at', { ascending: false })
   }
 
   const { data, error } = await q.limit(limit)
   if (error || !data) return []
-  return (data as unknown as Array<{
+  const rows = data as unknown as Array<{
     id: string
+    slug: string | null
     title: string
     description: string | null
     is_public: boolean
     is_featured: boolean
+    like_count: number | null
     created_at: string
     profiles: {
       username: string
       display_name: string
       avatar_url: string | null
     } | null
-  }>).map((r) => ({
+  }>
+  const ids = rows.map((r) => r.id)
+  const likedIds = await fetchLikedReadingListIds(opts.userId ?? null, ids)
+  return rows.map((r) => ({
     id: r.id,
+    slug: r.slug,
     title: r.title,
     description: r.description,
     created_at: r.created_at,
@@ -408,8 +421,26 @@ export async function fetchPublicLists(opts: {
     creator: r.profiles,
     book_count: 0,
     covers: [],
-    like_count: 0,
+    like_count: r.like_count ?? 0,
+    liked_by_me: likedIds.has(r.id),
   }))
+}
+
+async function fetchLikedReadingListIds(
+  userId: string | null,
+  listIds: string[],
+): Promise<Set<string>> {
+  if (!userId || listIds.length === 0) return new Set()
+  const { data } = await sb()
+    .from('reading_list_likes')
+    .select('reading_list_id')
+    .eq('user_id', userId)
+    .in('reading_list_id', listIds)
+  return new Set(
+    ((data as { reading_list_id: string }[] | null) ?? []).map(
+      (r) => r.reading_list_id,
+    ),
+  )
 }
 
 // --- PASSAGE OF THE DAY ---
@@ -672,6 +703,8 @@ export interface PublicReadingList {
   is_public: boolean
   is_featured: boolean
   created_at: string
+  like_count: number
+  liked_by_me: boolean
 }
 
 export async function fetchPublicReadingLists(
@@ -680,17 +713,24 @@ export async function fetchPublicReadingLists(
   if (!hasEnv()) return []
   const { data, error } = await sb()
     .from('reading_lists')
-    .select('id, slug, title, description, is_public, is_featured, created_at')
+    .select(
+      'id, slug, title, description, is_public, is_featured, like_count, created_at',
+    )
     .eq('user_id', userId)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
   if (error || !data) return []
-  return data as PublicReadingList[]
+  return (data as Array<Omit<PublicReadingList, 'liked_by_me'>>).map((r) => ({
+    ...r,
+    like_count: r.like_count ?? 0,
+    liked_by_me: false,
+  }))
 }
 
 export async function fetchPublicReadingList(opts: {
   userId: string
   slugOrId: string
+  viewerId?: string | null
 }): Promise<PublicReadingList | null> {
   if (!hasEnv()) return null
   const isUuid =
@@ -699,7 +739,9 @@ export async function fetchPublicReadingList(opts: {
     )
   let { data, error } = await sb()
     .from('reading_lists')
-    .select('id, slug, title, description, is_public, is_featured, created_at')
+    .select(
+      'id, slug, title, description, is_public, is_featured, like_count, created_at',
+    )
     .eq('user_id', opts.userId)
     .eq('slug', opts.slugOrId)
     .eq('is_public', true)
@@ -708,7 +750,7 @@ export async function fetchPublicReadingList(opts: {
     const fallback = await sb()
       .from('reading_lists')
       .select(
-        'id, slug, title, description, is_public, is_featured, created_at',
+        'id, slug, title, description, is_public, is_featured, like_count, created_at',
       )
       .eq('user_id', opts.userId)
       .eq('id', opts.slugOrId)
@@ -718,7 +760,13 @@ export async function fetchPublicReadingList(opts: {
     error = fallback.error
   }
   if (error || !data) return null
-  return data as PublicReadingList
+  const row = data as Omit<PublicReadingList, 'liked_by_me'>
+  const likedIds = await fetchLikedReadingListIds(opts.viewerId ?? null, [row.id])
+  return {
+    ...row,
+    like_count: row.like_count ?? 0,
+    liked_by_me: likedIds.has(row.id),
+  }
 }
 
 export interface PublicHighlightEntry {
