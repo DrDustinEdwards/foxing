@@ -343,8 +343,33 @@ export default function UserProfileScreen() {
               ) : null}
 
               {!isSelf ? (
-                <View style={{ marginTop: 14 }}>
+                <View style={{ marginTop: 14, flexDirection: 'row', gap: 8 }}>
                   <FollowButton targetUserId={profile.id} onChange={handleFollowChange} />
+                  <Pressable
+                    onPress={() =>
+                      router.push(`/compare/${profile.id}` as never)
+                    }
+                    accessibilityRole="button"
+                    accessibilityLabel="Compare stats"
+                    style={{
+                      paddingHorizontal: 14,
+                      paddingVertical: 8,
+                      borderRadius: 999,
+                      borderWidth: 1,
+                      borderColor: colors.borderInteractive,
+                      backgroundColor: colors.bgSurface,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: Fonts.uiMedium,
+                        color: colors.textPrimary,
+                        fontSize: 13,
+                      }}
+                    >
+                      Compare
+                    </Text>
+                  </Pressable>
                 </View>
               ) : null}
             </View>
