@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { StarRating } from '@/components/ui/star-rating'
+import { LibraryScanButton } from '@/components/library/library-scan-button'
 import { fetchLibrary, type LibraryStatus } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
@@ -101,6 +102,7 @@ export default async function LibraryPage({
               Apply
             </Button>
           </form>
+          <LibraryScanButton />
           <Link href="/library/import">
             <Button variant="secondary" size="sm">
               Import
