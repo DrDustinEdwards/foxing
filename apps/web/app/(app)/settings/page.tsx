@@ -7,12 +7,14 @@ import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import type { Theme } from '@/lib/theme'
+import { fetchOwnAuthorClaim } from '@/lib/author-claims'
 import { AccountSection } from './account-section'
 import { AccountCredentialsSection } from './account-credentials-section'
 import { AppearanceSection } from './appearance-section'
 import { CloseFriendsSection } from './close-friends-section'
 import { VisibilitySection } from './visibility-section'
 import { AccountActionsSection } from './account-actions-section'
+import { AuthorClaimSection } from './author-claim-section'
 import { PersonalitySection } from './personality-section'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -60,6 +62,7 @@ export default async function SettingsPage() {
   const profile = data as SettingsProfile | null
   if (!profile) redirect('/sign-in')
   const email = authData.user?.email ?? ''
+  const authorClaim = await fetchOwnAuthorClaim(userId)
 
   const tier = profile.subscription_tier ?? 'free'
 
@@ -124,6 +127,10 @@ export default async function SettingsPage() {
 
       <Section heading="Reading personality">
         <PersonalitySection initial={profile.reading_personality} />
+      </Section>
+
+      <Section heading="Are you an author?">
+        <AuthorClaimSection claim={authorClaim} />
       </Section>
 
       <Section heading="Appearance">
