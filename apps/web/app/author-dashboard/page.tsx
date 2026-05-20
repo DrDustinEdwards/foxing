@@ -4,7 +4,9 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchUnansweredQuestionsForAuthor } from '@/lib/author-qa'
+import { fetchGiveawaysByAuthor } from '@/lib/giveaways'
 import { AnswerForm } from './answer-form'
+import { CreateGiveawayForm } from './create-giveaway-form'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +28,10 @@ export default async function AuthorDashboardPage() {
     ?.is_verified_author) {
     redirect('/settings')
   }
-  const questions = await fetchUnansweredQuestionsForAuthor(userId)
+  const [questions, giveaways] = await Promise.all([
+    fetchUnansweredQuestionsForAuthor(userId),
+    fetchGiveawaysByAuthor(userId),
+  ])
 
   return (
     <PageWrapper className="py-10">
@@ -40,6 +45,36 @@ export default async function AuthorDashboardPage() {
       </header>
 
       <section className="mt-8">
+        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Giveaways ({giveaways.length})
+        </h2>
+        <CreateGiveawayForm />
+        {giveaways.length > 0 && (
+          <ul className="mt-3 flex flex-col gap-2">
+            {giveaways.slice(0, 5).map((g) => (
+              <li
+                key={g.id}
+                className="rounded-md border border-border-subtle bg-bg-surface p-3"
+              >
+                <a
+                  href={`/giveaways/${g.id}`}
+                  className="font-fraunces text-sm text-text-primary hover:text-brand-text"
+                >
+                  {g.title}
+                </a>
+                <p className="font-dm-mono text-xs text-text-tertiary">
+                  Ends {new Date(g.deadline).toLocaleString('en-US')}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="mt-10">
+        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          Unanswered questions ({questions.length})
+        </h2>
         {questions.length === 0 ? (
           <p className="font-source-serif-4 text-base text-text-tertiary">
             No questions waiting right now.

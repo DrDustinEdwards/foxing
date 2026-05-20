@@ -139,6 +139,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.7,
     },
     {
+      url: `${FOXING_BASE_URL}/giveaways`,
+      lastModified: now,
+      changeFrequency: 'daily',
+      priority: 0.7,
+    },
+    {
       url: `${FOXING_BASE_URL}/privacy`,
       lastModified: now,
       changeFrequency: 'yearly',
