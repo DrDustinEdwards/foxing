@@ -39,6 +39,25 @@ export async function userHasBookInLibrary(
   )
 }
 
+export interface UserBookStatus {
+  status: string | null
+  progress_percentage: number | null
+}
+
+export async function fetchUserBookStatus(
+  userId: string,
+  bookId: string,
+): Promise<UserBookStatus | null> {
+  const sb = createClient()
+  const { data } = await sb
+    .from('user_books')
+    .select('status, progress_percentage')
+    .eq('user_id', userId)
+    .eq('book_id', bookId)
+    .maybeSingle()
+  return (data as UserBookStatus | null) ?? null
+}
+
 export async function fetchUserBookTags(
   userId: string,
   bookId: string,

@@ -33,6 +33,7 @@ import {
   fetchPublicChapterReactions,
 } from '@/lib/chapter-reactions'
 import {
+  fetchUserBookStatus,
   fetchUserBookmarks,
   fetchUserBookTags,
   userHasBookInLibrary,
@@ -46,9 +47,9 @@ import { ReadingTimerWidget } from '@/components/reading-timer-widget'
 import { BookmarksSection } from './bookmarks-section'
 import { BookTagsRow } from './book-tags-row'
 import { ChapterReactionsSection } from './chapter-reactions-section'
+import { CommunityReactionsSection } from './community-reactions-section'
 import { DiscussionGuideSection } from './discussion-guide-section'
 import { DiscussionsSection } from './discussions-section'
-import { PublicChapterReactions } from './public-chapter-reactions'
 
 export const revalidate = 3600
 
@@ -149,11 +150,12 @@ export default async function BookPage({
     hasInLibrary,
     ownTags,
     shelvesData,
+    userBookStatus,
   ] = await Promise.all([
     viewerId
       ? fetchOwnChapterReactions(viewerId, book.id)
       : Promise.resolve([]),
-    fetchPublicChapterReactions(book.id, 20),
+    fetchPublicChapterReactions(book.id, 100),
     viewerId
       ? fetchUserBookmarks(viewerId, book.id)
       : Promise.resolve([]),
@@ -166,6 +168,9 @@ export default async function BookPage({
     viewerId
       ? fetchUserShelvesForBook(viewerId, book.id)
       : Promise.resolve({ shelves: [], membership: new Set<string>() }),
+    viewerId
+      ? fetchUserBookStatus(viewerId, book.id)
+      : Promise.resolve(null),
   ])
 
   const description = aiDescription || book.description || null
@@ -353,7 +358,18 @@ export default async function BookPage({
                 reactions={ownReactions}
               />
             )}
-            <PublicChapterReactions reactions={publicReactions} />
+            <CommunityReactionsSection
+              reactions={publicReactions.map((r) => ({
+                id: r.id,
+                chapter_name: r.chapter_name,
+                emoji: r.emoji,
+                note: r.note,
+                created_at: r.created_at,
+                author: r.author,
+              }))}
+              inLibrary={hasInLibrary}
+              progressPercentage={userBookStatus?.progress_percentage ?? null}
+            />
             <CollapsibleSection heading="Deep Dive">
               <DeepDivePreview bookId={book.id} />
             </CollapsibleSection>
