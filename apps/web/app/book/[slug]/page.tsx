@@ -32,10 +32,15 @@ import {
   fetchOwnChapterReactions,
   fetchPublicChapterReactions,
 } from '@/lib/chapter-reactions'
+import {
+  fetchUserBookmarks,
+  userHasBookInLibrary,
+} from '@/lib/bookmarks'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ReadingTimerWidget } from '@/components/reading-timer-widget'
+import { BookmarksSection } from './bookmarks-section'
 import { ChapterReactionsSection } from './chapter-reactions-section'
 import { DiscussionGuideSection } from './discussion-guide-section'
 import { DiscussionsSection } from './discussions-section'
@@ -133,12 +138,19 @@ export default async function BookPage({
     getAuthedUserId(),
   ])
 
-  const [ownReactions, publicReactions] = await Promise.all([
-    viewerId
-      ? fetchOwnChapterReactions(viewerId, book.id)
-      : Promise.resolve([]),
-    fetchPublicChapterReactions(book.id, 20),
-  ])
+  const [ownReactions, publicReactions, bookmarks, hasInLibrary] =
+    await Promise.all([
+      viewerId
+        ? fetchOwnChapterReactions(viewerId, book.id)
+        : Promise.resolve([]),
+      fetchPublicChapterReactions(book.id, 20),
+      viewerId
+        ? fetchUserBookmarks(viewerId, book.id)
+        : Promise.resolve([]),
+      viewerId
+        ? userHasBookInLibrary(viewerId, book.id)
+        : Promise.resolve(false),
+    ])
 
   const description = aiDescription || book.description || null
   const authorBioExcerpt = aiAuthorBio
@@ -263,6 +275,13 @@ export default async function BookPage({
                 bookSlug={book.slug}
                 bookTitle={book.title}
                 wordCount={book.word_count}
+              />
+            )}
+            {viewerId && hasInLibrary && (
+              <BookmarksSection
+                bookmarks={bookmarks}
+                bookId={book.id}
+                bookSlug={book.slug}
               />
             )}
             <ReviewsSection
