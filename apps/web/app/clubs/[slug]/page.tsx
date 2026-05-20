@@ -270,6 +270,11 @@ export default async function ClubPage({
         .eq('club_id', club.id)
     : { count: 0 }
 
+  const { count: clubBookCount } = await adminClient
+    .from('club_books')
+    .select('book_id', { count: 'exact', head: true })
+    .eq('club_id', club.id)
+
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
@@ -295,6 +300,14 @@ export default async function ClubPage({
               <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
                 {club.description}
               </p>
+            )}
+            {(clubBookCount ?? 0) > 0 && (
+              <Link
+                href={`/clubs/${club.slug ?? club.id}/library`}
+                className="font-dm-sans text-sm text-brand-text hover:underline"
+              >
+                View club library ({clubBookCount} books)
+              </Link>
             )}
           </header>
 

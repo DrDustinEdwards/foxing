@@ -707,6 +707,36 @@ export function buildClubMetadata(club: {
   }
 }
 
+export function buildClubLibraryMetadata(club: {
+  id: string
+  slug?: string | null
+  name: string
+  book_count: number
+}): Metadata {
+  const title = truncate(`${club.name} library`, TITLE_MAX)
+  const description = truncate(
+    `${club.book_count} ${
+      club.book_count === 1 ? 'book' : 'books'
+    } this club has read together on Foxing.`,
+    DESCRIPTION_MAX,
+  )
+  const url = `${BASE_URL}/clubs/${club.slug ?? club.id}/library`
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    robots: { index: false, follow: true },
+    openGraph: {
+      type: 'website',
+      title,
+      description,
+      url,
+      siteName: SITE_NAME,
+    },
+    twitter: { card: 'summary', title, description },
+  }
+}
+
 // --- CONSTANTS for callers that need them ---
 
 export const FOXING_BASE_URL = BASE_URL
