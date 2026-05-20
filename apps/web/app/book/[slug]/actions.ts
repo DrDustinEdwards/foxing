@@ -255,6 +255,27 @@ export async function togglePostReaction(
   return { ok: true }
 }
 
+// ─── Bookmarks ────────────────────────────────────────────────────────────
+
+export async function deleteBookmark(
+  formData: FormData,
+): Promise<ActionResult> {
+  const bookmarkId = String(formData.get('bookmark_id') ?? '').trim()
+  const bookSlug = String(formData.get('book_slug') ?? '').trim()
+  if (!bookmarkId) return { ok: false, error: 'Missing id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = createClient()
+  const { error } = await sb
+    .from('bookmarks')
+    .delete()
+    .eq('id', bookmarkId)
+    .eq('user_id', userId)
+  if (error) return { ok: false, error: error.message }
+  if (bookSlug) revalidatePath(`/book/${bookSlug}`)
+  return { ok: true }
+}
+
 // ─── Chapter reactions ────────────────────────────────────────────────────
 
 export async function addChapterReaction(
