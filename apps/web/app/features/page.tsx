@@ -990,6 +990,7 @@ export default async function FeaturesPage() {
                   'Shows matched count, inserted count, and unmatched titles after import',
                   'StoryGraph JSON import (mobile app)',
                   'Sideload personal EPUB files into your reading library',
+                  'Barcode scanner: point the camera at the back of a physical book to add it by ISBN (mobile app)',
                 ]}
               />
             </Subgroup>
