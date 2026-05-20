@@ -10,6 +10,29 @@ import { getAuthedUserId } from '@/lib/nav-user'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
+export async function addCommonplaceEntry(formData: FormData): Promise<ActionResult> {
+  const passage = String(formData.get('passage_text') ?? '').trim()
+  const bookId = String(formData.get('book_id') ?? '').trim() || null
+  const bookTitle = String(formData.get('book_title') ?? '').trim() || null
+  const note = String(formData.get('note') ?? '').trim() || null
+  const isPublic = formData.get('is_public') === 'on'
+  if (!passage) return { ok: false, error: 'Passage is required.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = createClient()
+  const { error } = await sb.from('commonplace_book').insert({
+    user_id: userId,
+    passage_text: passage.slice(0, 5000),
+    book_id: bookId,
+    book_title: bookTitle,
+    note,
+    is_public: isPublic,
+  })
+  if (error) return { ok: false, error: error.message }
+  revalidatePath('/commonplace')
+  return { ok: true }
+}
+
 export async function deleteCommonplaceEntry(
   formData: FormData,
 ): Promise<ActionResult> {
