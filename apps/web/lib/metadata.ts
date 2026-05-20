@@ -983,6 +983,58 @@ export const THEME_DEFINITIONS: Record<string, ThemeDefinition> = {
       'Books that take war seriously, its cost, its meaning, its aftermath.',
     searchTerms: ['war', 'battle', 'military'],
   },
+  adventurous: {
+    name: 'Adventurous',
+    description: 'Quests, voyages, and characters who keep moving.',
+    searchTerms: ['adventurous'],
+  },
+  dark: {
+    name: 'Dark',
+    description:
+      'Bleak settings, hard endings, and characters under pressure.',
+    searchTerms: ['dark'],
+  },
+  emotional: {
+    name: 'Emotional',
+    description: 'Books that work on grief, love, loss, and joy.',
+    searchTerms: ['emotional'],
+  },
+  funny: {
+    name: 'Funny',
+    description: 'Wit, absurdity, and timing. Books that earn the laugh.',
+    searchTerms: ['funny'],
+  },
+  hopeful: {
+    name: 'Hopeful',
+    description:
+      'Books that believe in something. A measure of light against the dark.',
+    searchTerms: ['hopeful'],
+  },
+  lighthearted: {
+    name: 'Lighthearted',
+    description: 'Easy company on the page. Warmth without weight.',
+    searchTerms: ['lighthearted'],
+  },
+  mysterious: {
+    name: 'Mysterious',
+    description: 'Secrets withheld and slowly revealed.',
+    searchTerms: ['mysterious'],
+  },
+  reflective: {
+    name: 'Reflective',
+    description: 'Inward-facing books. Long looks at one life, one question.',
+    searchTerms: ['reflective'],
+  },
+  romantic: {
+    name: 'Romantic',
+    description: 'Love as the central question, and what comes after.',
+    searchTerms: ['romantic'],
+  },
+  tense: {
+    name: 'Tense',
+    description: 'Pages that pull tight. You read faster than you mean to.',
+    searchTerms: ['tense'],
+  },
 }
 
 export function buildThemeMetadata(slug: string): Metadata {
