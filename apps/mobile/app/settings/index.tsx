@@ -738,6 +738,18 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Close friends">
+          <Text
+            style={{
+              fontFamily: Fonts.body,
+              fontSize: 13,
+              color: colors.textTertiary,
+              marginBottom: 8,
+              lineHeight: 18,
+            }}
+          >
+            Close friends can see your private passage comments and reactions
+            marked as close friends only.
+          </Text>
           <LinkRow
             label="Manage close friends"
             onPress={() => router.push('/close-friends' as never)}
