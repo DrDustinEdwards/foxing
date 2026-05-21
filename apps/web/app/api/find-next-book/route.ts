@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
+
+const DAILY_LIMIT = 5
 
 interface Body {
   mood?: string[]
@@ -31,6 +34,29 @@ export async function POST(request: NextRequest) {
       { status: 402 },
     )
   }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const admin = createAdminClient()
+  const { data: rateRow } = await admin
+    .from('ai_rate_limits')
+    .select('count')
+    .eq('user_id', user.id)
+    .eq('date', today)
+    .maybeSingle()
+  const currentCount =
+    (rateRow as { count: number | null } | null)?.count ?? 0
+  if (currentCount >= DAILY_LIMIT) {
+    return NextResponse.json(
+      { error: 'Daily AI limit reached', limit: DAILY_LIMIT },
+      { status: 429 },
+    )
+  }
+  await admin
+    .from('ai_rate_limits')
+    .upsert(
+      { user_id: user.id, date: today, count: currentCount + 1 },
+      { onConflict: 'user_id,date' },
+    )
 
   let body: Body
   try {
