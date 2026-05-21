@@ -16,7 +16,6 @@ import {
 } from '@/lib/metadata'
 
 export const revalidate = 86400
-export const experimental_ppr = true
 
 export function generateStaticParams() {
   return Object.keys(THEME_DEFINITIONS).map((theme) => ({ theme }))
