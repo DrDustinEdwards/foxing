@@ -18,7 +18,6 @@ import {
   todayISODate,
   type PassageOfDay,
 } from '@/lib/missing-pages-queries'
-import { appBookDeeplink } from '@/lib/foxing'
 import {
   FREE_AI_LOOKUPS_PER_DAY,
   PLUS_PRICE_MONTHLY_LABEL,
@@ -166,7 +165,7 @@ function Hero() {
           <p className="font-source-serif-4 text-[1.375rem] italic text-[#C4AE96]">
             reading, together.
           </p>
-          <p className="font-source-serif-4 text-base text-[#A28269]">
+          <p className="font-source-serif-4 text-base text-[#B5967A]">
             1,400+ classic books, free. An AI companion that reads with you.
             Book clubs, reading diary, and a community of serious readers.
           </p>
@@ -186,7 +185,7 @@ function Hero() {
               </Button>
             </Link>
           </div>
-          <p className="mt-1 font-dm-sans text-xs text-[#A28269]">
+          <p className="mt-1 font-dm-sans text-xs text-[#B5967A]">
             No ads. No algorithms selling you books.
           </p>
         </div>
@@ -302,7 +301,7 @@ function TodaysPick({
               {truncated}
             </p>
             <div>
-              <Link href={appBookDeeplink(book.id)}>
+              <Link href={`/book/${book.slug ?? book.id}`}>
                 <Button variant="primary" size="md">
                   Read free in the Foxing app
                 </Button>
@@ -422,12 +421,20 @@ function DownloadCta() {
         <h2 className="max-w-2xl font-fraunces text-[2.25rem] leading-tight text-white md:text-[2.5rem]">
           Read the classics. Finally understand them.
         </h2>
-        <p className="font-source-serif-4 text-base text-white/70">
+        <p className="font-source-serif-4 text-base text-white/90">
           Free to join. No credit card.
         </p>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
-          <StoreBadge label="App Store" sub="Download on the" href="#" />
-          <StoreBadge label="Google Play" sub="Get it on" href="#" />
+          <StoreBadge
+            label="App Store"
+            sub="Download on the"
+            href="https://apps.apple.com/app/foxing"
+          />
+          <StoreBadge
+            label="Google Play"
+            sub="Get it on"
+            href="https://play.google.com/store/apps/details?id=app.foxing"
+          />
         </div>
       </PageWrapper>
     </section>
@@ -444,8 +451,10 @@ function StoreBadge({
   href: string
 }) {
   return (
-    <Link
+    <a
       href={href}
+      target="_blank"
+      rel="noopener noreferrer"
       className="inline-flex h-12 items-center gap-3 rounded-lg border border-white/30 bg-black/30 px-5 hover:bg-black/50"
     >
       <span className="flex flex-col items-start leading-tight">
@@ -456,6 +465,6 @@ function StoreBadge({
           {label}
         </span>
       </span>
-    </Link>
+    </a>
   )
 }
