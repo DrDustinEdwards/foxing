@@ -3,12 +3,41 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyIndexNow } from '@/lib/indexnow'
+import { FOXING_BASE_URL } from '@/lib/metadata'
 import { requireAdminUserId } from '@/lib/nav-user'
 import {
   fetchBotmCandidates,
   generateCuratorNote,
   type BotmCandidate,
 } from '@/lib/botm-suggestions'
+
+async function bookSlugForId(
+  admin: ReturnType<typeof createAdminClient>,
+  bookId: string,
+): Promise<string | null> {
+  const { data } = await admin
+    .from('books')
+    .select('slug')
+    .eq('id', bookId)
+    .maybeSingle()
+  return (data as { slug: string | null } | null)?.slug ?? null
+}
+
+function botmUrls(payload: {
+  year: number
+  month: number
+  bookSlug: string | null
+}): string[] {
+  const urls = [
+    `${FOXING_BASE_URL}/book-of-the-month`,
+    `${FOXING_BASE_URL}/book-of-the-month/${payload.year}/${payload.month}`,
+  ]
+  if (payload.bookSlug) {
+    urls.push(`${FOXING_BASE_URL}/book/${payload.bookSlug}`)
+  }
+  return urls
+}
 
 export interface BotmSuggestion extends BotmCandidate {
   curator_note: string
@@ -77,6 +106,12 @@ export async function createPick(formData: FormData): Promise<void> {
   revalidatePath('/admin/book-of-month')
   revalidatePath('/book-of-the-month')
   revalidatePath(`/book-of-the-month/${payload.year}/${payload.month}`)
+  if (payload.is_published) {
+    const bookSlug = await bookSlugForId(admin, payload.book_id)
+    void notifyIndexNow(
+      botmUrls({ year: payload.year, month: payload.month, bookSlug }),
+    )
+  }
   redirect('/admin/book-of-month')
 }
 
@@ -102,6 +137,12 @@ export async function updatePick(formData: FormData): Promise<void> {
   revalidatePath('/admin/book-of-month')
   revalidatePath('/book-of-the-month')
   revalidatePath(`/book-of-the-month/${payload.year}/${payload.month}`)
+  if (payload.is_published) {
+    const bookSlug = await bookSlugForId(admin, payload.book_id)
+    void notifyIndexNow(
+      botmUrls({ year: payload.year, month: payload.month, bookSlug }),
+    )
+  }
 }
 
 export async function deletePick(formData: FormData): Promise<void> {

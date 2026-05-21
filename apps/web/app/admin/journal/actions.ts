@@ -3,6 +3,8 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { notifyIndexNow } from '@/lib/indexnow'
+import { FOXING_BASE_URL } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
 
 function slugify(s: string): string {
@@ -83,6 +85,12 @@ export async function saveJournalPost(formData: FormData): Promise<{
     revalidatePath(`/admin/journal/${input.id}`)
     revalidatePath('/admin/journal')
     revalidatePath(`/journal/${slug}`)
+    if (input.publish) {
+      void notifyIndexNow([
+        `${FOXING_BASE_URL}/journal/${slug}`,
+        `${FOXING_BASE_URL}/journal`,
+      ])
+    }
     return { ok: true, id: input.id }
   }
   const { data, error } = await admin
@@ -94,6 +102,12 @@ export async function saveJournalPost(formData: FormData): Promise<{
   const newId = (data as { id: string }).id
   revalidatePath('/admin/journal')
   revalidatePath(`/journal/${slug}`)
+  if (input.publish) {
+    void notifyIndexNow([
+      `${FOXING_BASE_URL}/journal/${slug}`,
+      `${FOXING_BASE_URL}/journal`,
+    ])
+  }
   return { ok: true, id: newId }
 }
 
