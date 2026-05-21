@@ -12,6 +12,7 @@ import { CaretLeft } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
+import { HeartButton } from '@/components/highlights/heart-button'
 
 interface HighlightRow {
   id: string
@@ -20,6 +21,8 @@ interface HighlightRow {
   color: string | null
   note: string | null
   chapter: string | null
+  like_count: number | null
+  user_id: string
   created_at: string
   book: { id: string; title: string; author: string } | null
 }
@@ -60,7 +63,9 @@ export default function HighlightsScreen() {
       }
       const { data } = await supabase
         .from('highlights')
-        .select('id, cfi, text, color, note, chapter, created_at, book:books(id, title, author)')
+        .select(
+          'id, cfi, text, color, note, chapter, like_count, user_id, created_at, book:books(id, title, author)',
+        )
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
       if (cancelled) return
@@ -143,19 +148,31 @@ export default function HighlightsScreen() {
                     “{h.note}”
                   </Text>
                 ) : null}
-                {h.book ? (
-                  <Text
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 11,
-                      color: colors.textTertiary,
-                      marginTop: 8,
-                    }}
-                    numberOfLines={1}
-                  >
-                    {h.book.title} · {h.book.author}
-                  </Text>
-                ) : null}
+                <View
+                  className="flex-row items-center justify-between"
+                  style={{ marginTop: 8 }}
+                >
+                  {h.book ? (
+                    <Text
+                      style={{
+                        flex: 1,
+                        fontFamily: Fonts.ui,
+                        fontSize: 11,
+                        color: colors.textTertiary,
+                      }}
+                      numberOfLines={1}
+                    >
+                      {h.book.title} · {h.book.author}
+                    </Text>
+                  ) : (
+                    <View style={{ flex: 1 }} />
+                  )}
+                  <HeartButton
+                    highlightId={h.id}
+                    initialCount={h.like_count ?? 0}
+                    ownerId={h.user_id}
+                  />
+                </View>
               </View>
             </Pressable>
           ))
