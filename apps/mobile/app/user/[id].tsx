@@ -58,6 +58,9 @@ export default function UserProfileScreen() {
   const [profile, setProfile] = useState<ProfileRow | null>(null)
   const [counts, setCounts] = useState<Counts>(ZERO_COUNTS)
   const [reading, setReading] = useState<CurrentlyReadingRow | null>(null)
+  const [badges, setBadges] = useState<Array<{ slug: string; name: string }>>(
+    [],
+  )
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
   const [viewerId, setViewerId] = useState<string | null>(null)
@@ -132,6 +135,26 @@ export default function UserProfileScreen() {
     })
     const row = (readingRes.data?.[0] as unknown) as CurrentlyReadingRow | undefined
     setReading(row ?? null)
+
+    const { data: badgeData } = await supabase
+      .from('user_badges')
+      .select('badge:badges(slug, name)')
+      .eq('user_id', id)
+      .order('earned_at', { ascending: false })
+      .limit(12)
+    const badgeRows = ((badgeData ?? []) as unknown) as Array<{
+      badge:
+        | { slug: string; name: string }
+        | Array<{ slug: string; name: string }>
+        | null
+    }>
+    setBadges(
+      badgeRows
+        .map((b) =>
+          Array.isArray(b.badge) ? b.badge[0] : b.badge,
+        )
+        .filter((b): b is { slug: string; name: string } => b !== null),
+    )
 
     // Normalize joined "book" relation on commonplace entries.
     const cpRaw = ((commonplaceRes.data ?? []) as Array<{
@@ -392,6 +415,50 @@ export default function UserProfileScreen() {
                 onPress={() => router.push(`/follows?userId=${profile.id}&tab=followers` as never)}
               />
             </View>
+
+            {badges.length > 0 ? (
+              <View style={{ marginBottom: 24 }}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.uiMedium,
+                    fontSize: 11,
+                    color: colors.textTertiary,
+                    textTransform: 'uppercase',
+                    letterSpacing: 0.6,
+                    marginBottom: 10,
+                  }}
+                >
+                  Badges
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={{ gap: 8 }}
+                >
+                  {badges.map((b) => (
+                    <View
+                      key={b.slug}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 6,
+                        borderRadius: 999,
+                        backgroundColor: colors.brandSubtle,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontFamily: Fonts.uiMedium,
+                          fontSize: 12,
+                          color: colors.brandSubtleText,
+                        }}
+                      >
+                        {b.name}
+                      </Text>
+                    </View>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
 
             {reading?.book ? (
               <View style={{ marginBottom: 24 }}>

@@ -79,6 +79,9 @@ export default function ProfileScreen() {
   const router = useRouter()
   const [profile, setProfile] = useState<EditableProfile | null>(null)
   const [stats, setStats] = useState<Stats>(EMPTY_STATS)
+  const [xpInfo, setXpInfo] = useState<{ xp: number; level: string } | null>(
+    null,
+  )
   const [currentlyReading, setCurrentlyReading] = useState<CurrentlyReading | null>(null)
   const [badges, setBadges] = useState<BadgeEntry[]>([])
   const [recentHighlights, setRecentHighlights] = useState<RecentHighlight[]>([])
@@ -122,7 +125,9 @@ export default function ProfileScreen() {
     ] = await Promise.all([
       supabase
         .from('profiles')
-        .select('id, display_name, username, avatar_url, bio, favorite_genres, reading_personality')
+        .select(
+          'id, display_name, username, avatar_url, bio, favorite_genres, reading_personality, xp_points, reading_level',
+        )
         .eq('id', uid)
         .single(),
       supabase
@@ -186,6 +191,14 @@ export default function ProfileScreen() {
       setError(profileRes.error.message)
     } else if (profileRes.data) {
       setProfile(profileRes.data as EditableProfile)
+      const xpRow = profileRes.data as {
+        xp_points?: number | null
+        reading_level?: string | null
+      }
+      setXpInfo({
+        xp: xpRow.xp_points ?? 0,
+        level: xpRow.reading_level ?? 'bookworm',
+      })
       const pers = (profileRes.data as { reading_personality?: string | null }).reading_personality
       setPersonality(pers ?? null)
     }
@@ -730,6 +743,8 @@ export default function ProfileScreen() {
               ))}
             </ScrollView>
 
+            {xpInfo ? <XpProgressCard xp={xpInfo.xp} /> : null}
+
             {/* Reading stats card */}
             <Section
               title="Reading Stats"
@@ -1067,4 +1082,98 @@ function deriveStreaks(timestamps: string[]): { current: number; longest: number
     }
   }
   return { current, longest }
+}
+
+const XP_TIERS: Array<{ threshold: number; label: string; key: string }> = [
+  { threshold: 0, label: 'Bookworm', key: 'bookworm' },
+  { threshold: 100, label: 'Reader', key: 'reader' },
+  { threshold: 300, label: 'Avid Reader', key: 'avid_reader' },
+  { threshold: 600, label: 'Bibliophile', key: 'bibliophile' },
+  { threshold: 1000, label: 'Scholar', key: 'scholar' },
+  { threshold: 2000, label: 'Master Scholar', key: 'master_scholar' },
+]
+
+function XpProgressCard({ xp }: { xp: number }) {
+  const colors = useColors()
+  let currentIdx = 0
+  for (let i = 0; i < XP_TIERS.length; i++) {
+    if (xp >= XP_TIERS[i].threshold) currentIdx = i
+  }
+  const current = XP_TIERS[currentIdx]
+  const next = XP_TIERS[currentIdx + 1] ?? null
+  const progressInLevel = xp - current.threshold
+  const neededInLevel = next ? next.threshold - current.threshold : 1
+  const pct = next
+    ? Math.max(0, Math.min(100, Math.round((progressInLevel / neededInLevel) * 100)))
+    : 100
+
+  return (
+    <View
+      className="rounded-2xl p-4 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
+      style={{ marginBottom: 16 }}
+    >
+      <View
+        className="flex-row items-center justify-between"
+        style={{ marginBottom: 6 }}
+      >
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 14,
+            color: colors.textPrimary,
+          }}
+        >
+          {current.label}
+        </Text>
+        <Text
+          style={{
+            fontFamily: Fonts.mono,
+            fontSize: 11,
+            color: colors.textTertiary,
+          }}
+        >
+          {xp} XP
+        </Text>
+      </View>
+      <View
+        style={{
+          height: 6,
+          borderRadius: 3,
+          backgroundColor: colors.bgSunken,
+          overflow: 'hidden',
+        }}
+      >
+        <View
+          style={{
+            height: 6,
+            width: `${pct}%`,
+            backgroundColor: colors.brandUi,
+          }}
+        />
+      </View>
+      {next ? (
+        <Text
+          style={{
+            fontFamily: Fonts.ui,
+            fontSize: 11,
+            color: colors.textTertiary,
+            marginTop: 6,
+          }}
+        >
+          {next.label} at {next.threshold} XP
+        </Text>
+      ) : (
+        <Text
+          style={{
+            fontFamily: Fonts.ui,
+            fontSize: 11,
+            color: colors.textTertiary,
+            marginTop: 6,
+          }}
+        >
+          Max level reached
+        </Text>
+      )}
+    </View>
+  )
 }
