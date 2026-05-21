@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminUserId } from '@/lib/nav-user'
 
 function parseJsonArray(raw: FormDataEntryValue | null): string[] | null {
   if (typeof raw !== 'string' || !raw) return null
@@ -21,6 +22,7 @@ function parseJsonArray(raw: FormDataEntryValue | null): string[] | null {
 const ALLOWED_PACING = ['slow', 'medium', 'fast'] as const
 
 export async function updateBook(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   if (!id) return { error: 'missing id' }
   const title = String(formData.get('title') ?? '').trim()
@@ -77,6 +79,7 @@ export async function updateBook(formData: FormData) {
 }
 
 export async function clearAiCache(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   if (!id) return { error: 'missing id' }
   const admin = createAdminClient()
