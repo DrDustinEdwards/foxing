@@ -62,6 +62,7 @@ export default async function VocabularyPage({
           name="q"
           defaultValue={searchParams.q ?? ''}
           placeholder="Filter words"
+          aria-label="Filter vocabulary"
           className="h-10 w-full max-w-xs rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-base text-text-primary placeholder:text-text-tertiary focus:outline-none"
           autoComplete="off"
         />

@@ -222,7 +222,8 @@ export default async function GoalsPage() {
         </h2>
         {challenges.length === 0 ? (
           <p className="font-source-serif-4 text-base text-text-tertiary">
-            No active challenges right now.
+            No active challenges right now. Check back soon for community
+            challenges.
           </p>
         ) : (
           <ul className="flex flex-col gap-3">
