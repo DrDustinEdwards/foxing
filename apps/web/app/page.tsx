@@ -458,7 +458,7 @@ function StoreBadge({
       className="inline-flex h-12 items-center gap-3 rounded-lg border border-white/30 bg-black/30 px-5 hover:bg-black/50"
     >
       <span className="flex flex-col items-start leading-tight">
-        <span className="font-dm-sans text-[10px] uppercase tracking-wider text-white/70">
+        <span className="font-dm-sans text-[10px] uppercase tracking-wider text-white/85">
           {sub}
         </span>
         <span className="font-dm-sans text-sm font-medium text-white">
