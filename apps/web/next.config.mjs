@@ -1,6 +1,8 @@
 // next.config.ts isn't supported on Next 14 (introduced in 15); use .mjs.
 /** @type {import('next').NextConfig} */
 
+import { withSentryConfig } from '@sentry/nextjs'
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
@@ -31,6 +33,10 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['recharts'],
+    // Partial Prerendering. Pages opt in via `export const experimental_ppr
+    // = true`. Allows the static shell to be CDN-cached while dynamic
+    // children (Nav auth slot) stream in.
+    ppr: 'incremental',
   },
   transpilePackages: ['@foxing/types', '@foxing/utils'],
   async headers() {
@@ -53,4 +59,11 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withSentryConfig(nextConfig, {
+  org: 'recova',
+  project: 'foxing-web',
+  silent: true,
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+  disableLogger: true,
+})
