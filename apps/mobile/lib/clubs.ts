@@ -669,8 +669,15 @@ export async function reportPost(postId: string, reason: string): Promise<boolea
   if (!user) return false
   const { error } = await supabase
     .from('post_reports')
-    .insert({ post_id: postId, user_id: user.id, reason })
+    .insert({
+      post_id: postId,
+      reporter_id: user.id,
+      reason,
+      post_type: 'club_post',
+    })
   if (error) {
+    // Duplicate report from same user is non-fatal.
+    if (error.code === '23505') return true
     console.warn('[clubs] reportPost failed:', error.message)
     return false
   }
