@@ -143,10 +143,41 @@ export default function ThreadScreen() {
           onPress: () => {
             Alert.alert('Report this post', 'Pick a reason.', [
               { text: 'Cancel', style: 'cancel' },
-              { text: 'Spam', onPress: () => reportPost(post.id, 'spam') },
-              { text: 'Offensive', onPress: () => reportPost(post.id, 'offensive') },
-              { text: 'Spoiler', onPress: () => reportPost(post.id, 'spoiler') },
-              { text: 'Other', onPress: () => reportPost(post.id, 'other') },
+              {
+                text: 'Spam',
+                onPress: async () => {
+                  const ok = await reportPost(post.id, 'spam')
+                  if (ok) Alert.alert('Report submitted')
+                },
+              },
+              {
+                text: 'Harassment',
+                onPress: async () => {
+                  const ok = await reportPost(post.id, 'harassment')
+                  if (ok) Alert.alert('Report submitted')
+                },
+              },
+              {
+                text: 'Spoilers without tag',
+                onPress: async () => {
+                  const ok = await reportPost(post.id, 'spoiler')
+                  if (ok) Alert.alert('Report submitted')
+                },
+              },
+              {
+                text: 'Offensive content',
+                onPress: async () => {
+                  const ok = await reportPost(post.id, 'offensive')
+                  if (ok) Alert.alert('Report submitted')
+                },
+              },
+              {
+                text: 'Other',
+                onPress: async () => {
+                  const ok = await reportPost(post.id, 'other')
+                  if (ok) Alert.alert('Report submitted')
+                },
+              },
             ])
           },
         },
