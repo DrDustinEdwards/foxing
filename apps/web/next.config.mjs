@@ -33,10 +33,6 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['recharts'],
-    // Partial Prerendering. Pages opt in via `export const experimental_ppr
-    // = true`. Allows the static shell to be CDN-cached while dynamic
-    // children (Nav auth slot) stream in.
-    ppr: 'incremental',
   },
   transpilePackages: ['@foxing/types', '@foxing/utils'],
   async headers() {
