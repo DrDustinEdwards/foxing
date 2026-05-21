@@ -34,6 +34,7 @@ const NAV: NavItem[] = [
   { href: '/admin/notifications', label: 'Notifications', icon: BellIcon },
   { href: '/admin/analytics', label: 'Analytics', icon: ChartBarIcon },
   { href: '/admin/journal', label: 'Journal', icon: PencilIcon },
+  { href: '/admin/404s', label: '404 log', icon: FlagIcon },
 ]
 
 interface Props {
