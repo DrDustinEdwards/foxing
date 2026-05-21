@@ -1,18 +1,16 @@
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const revalidate = 86_400
+export const dynamic = 'force-static'
 
 export const metadata = STATIC_PAGE_METADATA['/about']
 
-export default async function AboutPage() {
-  const navUser = await getNavUser()
+export default function AboutPage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <Nav user={null} />
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-14">
           <h1 className="font-fraunces text-[2.5rem] text-text-primary">

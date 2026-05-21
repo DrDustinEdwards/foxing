@@ -10,10 +10,9 @@ import {
   PLUS_PRICE_MONTHLY_LABEL,
   PLUS_TRIAL_LABEL,
 } from '@/lib/config'
-import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const revalidate = 86_400
+export const dynamic = 'force-static'
 
 export const metadata = STATIC_PAGE_METADATA['/features']
 
@@ -36,11 +35,10 @@ const NAV_ANCHORS = [
   { href: '#platform', label: 'Platform' },
 ]
 
-export default async function FeaturesPage() {
-  const navUser = await getNavUser()
+export default function FeaturesPage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <Nav user={null} />
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
           <header>
