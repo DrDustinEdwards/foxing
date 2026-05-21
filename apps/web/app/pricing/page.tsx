@@ -8,8 +8,6 @@ import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 import { PricingContent } from './pricing-content'
 
-export const experimental_ppr = true
-
 export const metadata = STATIC_PAGE_METADATA['/pricing']
 
 export default function PricingPage() {

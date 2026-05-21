@@ -8,8 +8,6 @@ import {
 } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const experimental_ppr = true
-
 export const metadata = STATIC_PAGE_METADATA['/app-guide']
 
 const NAV_ANCHORS = [

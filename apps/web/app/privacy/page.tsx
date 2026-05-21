@@ -5,8 +5,6 @@ import { NavWithSession } from '@/components/layout/nav-with-session'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const experimental_ppr = true
-
 export const metadata = STATIC_PAGE_METADATA['/privacy']
 
 export default function PrivacyPage() {

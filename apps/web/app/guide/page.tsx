@@ -4,8 +4,6 @@ import { Nav } from '@/components/layout/nav'
 import { NavWithSession } from '@/components/layout/nav-with-session'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const experimental_ppr = true
-
 export const metadata = STATIC_PAGE_METADATA['/guide']
 
 const NAV_ANCHORS = [
