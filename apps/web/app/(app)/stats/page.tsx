@@ -244,23 +244,27 @@ export default async function StatsPage({
 
       <section className="mt-10">
         <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-          Mood distribution
+          Reading moods
         </h2>
         <div className="rounded-lg border border-border-subtle bg-bg-surface p-4">
           {moods.length > 0 ? (
             <MoodBarChart data={moods.slice(0, 6)} />
           ) : (
             <p className="font-source-serif-4 text-sm text-text-tertiary">
-              No mood tags yet. Add mood tags when logging books.
+              No mood data yet. Tag your books with moods when logging to see
+              your patterns here.
             </p>
           )}
         </div>
       </section>
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-1 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
           Reading pace
         </h2>
+        <p className="mb-3 font-dm-sans text-xs text-text-tertiary">
+          Average words per minute by month
+        </p>
         <div className="rounded-lg border border-border-subtle bg-bg-surface p-4">
           {pace.sessionCount >= 3 ? (
             <ReadingPaceLine
@@ -271,8 +275,8 @@ export default async function StatsPage({
             />
           ) : (
             <p className="font-source-serif-4 text-sm text-text-tertiary">
-              Complete reading sessions with page counts to see your reading
-              pace.
+              Complete more reading sessions with page counts to see your pace
+              over time.
             </p>
           )}
         </div>
