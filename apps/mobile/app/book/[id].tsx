@@ -44,6 +44,7 @@ import { haptic } from '@/lib/haptics'
 import { FinishReviewSheet } from '@/components/book/finish-review-sheet'
 import { ChapterReactionsSection } from '@/components/book/chapter-reactions-section'
 import { BookDiscussionsSection } from '@/components/book/book-discussions-section'
+import { PassageCommentsSection } from '@/components/book/passage-comments-section'
 
 interface BookRow {
   id: string
@@ -1265,6 +1266,7 @@ export default function BookDetail() {
             )}
           />
           <BookDiscussionsSection bookId={book.id} bookSlug={null} />
+          <PassageCommentsSection bookId={book.id} />
         </View>
       </ScrollView>
 
