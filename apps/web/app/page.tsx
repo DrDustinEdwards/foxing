@@ -3,11 +3,10 @@ import Link from 'next/link'
 import { BookCard } from '@/components/book-card'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReviewCard } from '@/components/review-card'
 import { BookOpenIcon, ChatIcon, CompassIcon } from '@/components/icons'
-import { getNavUser } from '@/lib/nav-user'
 import {
   fetchCommunityReviews,
   fetchPopularThisWeek,
@@ -78,8 +77,7 @@ const FAQ_JSONLD = JSON.stringify({
 
 export default async function HomePage() {
   const today = todayISODate()
-  const [navUser, todaysPick, popular, passage, reviews] = await Promise.all([
-    getNavUser(),
+  const [todaysPick, popular, passage, reviews] = await Promise.all([
     fetchTodaysPick(),
     fetchPopularThisWeek(8),
     fetchPassageOfDay(today),
@@ -88,7 +86,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

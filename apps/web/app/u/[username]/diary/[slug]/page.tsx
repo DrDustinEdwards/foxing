@@ -4,7 +4,7 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
 import { ShareButton } from '@/components/share-button'
@@ -12,7 +12,6 @@ import { StarRating } from '@/components/ui/star-rating'
 import { fetchProfileByUsername, isUuid } from '@/lib/queries'
 import { fetchPublicDiaryEntry } from '@/lib/missing-pages-queries'
 import { buildDiaryEntryMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 
 export const revalidate = 300
@@ -52,15 +51,14 @@ export default async function UserDiaryEntryPage({
 }: {
   params: { username: string; slug: string }
 }) {
-  const [navUser, profile] = await Promise.all([
-    getNavUser(),
+  const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])
   if (!profile) notFound()
   if (!profile.is_public) {
     return (
       <div className="flex min-h-screen flex-col bg-bg-base">
-        <Nav user={navUser} />
+        <NavAuthClient />
         <main className="flex-1">
           <PrivateProfileNotice username={profile.username} />
         </main>
@@ -104,7 +102,7 @@ export default async function UserDiaryEntryPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

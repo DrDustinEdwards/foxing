@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchPublishedJournalPosts,
@@ -10,7 +10,6 @@ import {
   readingMinutes,
   type JournalPostSummary,
 } from '@/lib/journal'
-import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 3600
@@ -18,15 +17,14 @@ export const revalidate = 3600
 export const metadata = STATIC_PAGE_METADATA['/journal']
 
 export default async function JournalIndexPage() {
-  const [navUser, posts] = await Promise.all([
-    getNavUser(),
+  const [posts] = await Promise.all([
     fetchPublishedJournalPosts(24),
   ])
   const [hero, ...rest] = posts
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-12">
           <header className="max-w-prose">

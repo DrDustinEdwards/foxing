@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
 import { UserSubpageHeader } from '@/components/user-subpage-header'
@@ -12,7 +12,6 @@ import {
   fetchUserCounts,
 } from '@/lib/missing-pages-queries'
 import { buildUserListsMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 300
 
@@ -38,15 +37,14 @@ export default async function UserListsPage({
 }: {
   params: { username: string }
 }) {
-  const [navUser, profile] = await Promise.all([
-    getNavUser(),
+  const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])
   if (!profile) notFound()
   if (!profile.is_public) {
     return (
       <div className="flex min-h-screen flex-col bg-bg-base">
-        <Nav user={navUser} />
+        <NavAuthClient />
         <main className="flex-1">
           <PrivateProfileNotice username={profile.username} />
         </main>
@@ -58,7 +56,7 @@ export default async function UserListsPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <UserSubpageHeader

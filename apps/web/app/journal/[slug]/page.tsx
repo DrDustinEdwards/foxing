@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { Markdown } from '@/components/markdown'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchJournalPostBySlug,
@@ -13,7 +13,6 @@ import {
   readingMinutes,
   type JournalPostSummary,
 } from '@/lib/journal'
-import { getNavUser } from '@/lib/nav-user'
 import { buildJournalPostMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -61,8 +60,7 @@ export default async function JournalPostPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, post] = await Promise.all([
-    getNavUser(),
+  const [post] = await Promise.all([
     fetchJournalPostBySlug(params.slug),
   ])
   if (!post) notFound()
@@ -74,7 +72,7 @@ export default async function JournalPostPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

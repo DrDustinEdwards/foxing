@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchUpcomingEvents } from '@/lib/events'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { EventCard } from '../../event-card'
 
 export const revalidate = 3600
@@ -47,14 +46,13 @@ export default async function CityEventsPage({
 }) {
   const code = params.state.toUpperCase().slice(0, 2)
   const cityName = decodeURIComponent(params.city)
-  const [navUser, events] = await Promise.all([
-    getNavUser(),
+  const [events] = await Promise.all([
     fetchUpcomingEvents({ state: code, city: cityName }),
   ])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-12">
           <nav className="font-dm-sans text-sm">

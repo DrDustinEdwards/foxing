@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { formatRelativeDate } from '@foxing/utils'
 import {
@@ -11,7 +11,6 @@ import {
   fetchPublicClubBySlug,
   isUuid,
 } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { buildClubLibraryMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -106,8 +105,7 @@ export default async function ClubLibraryPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, club] = await Promise.all([
-    getNavUser(),
+  const [club] = await Promise.all([
     resolveClub(params.slug),
   ])
   if (!club) notFound()
@@ -118,7 +116,7 @@ export default async function ClubLibraryPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <Link

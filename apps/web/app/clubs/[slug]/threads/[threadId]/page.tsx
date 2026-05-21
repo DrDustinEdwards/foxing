@@ -3,10 +3,10 @@ import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicClubBySlug } from '@/lib/queries'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchClubThread } from '@/lib/club-threads'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { getClubRole, isClubMod } from '@/lib/club-membership'
@@ -32,8 +32,7 @@ export default async function ThreadPage({
 }: {
   params: { slug: string; threadId: string }
 }) {
-  const [navUser, viewerId, club] = await Promise.all([
-    getNavUser(),
+  const [viewerId, club] = await Promise.all([
     getAuthedUserId(),
     fetchPublicClubBySlug(params.slug),
   ])
@@ -62,7 +61,7 @@ export default async function ThreadPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <Link

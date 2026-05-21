@@ -3,7 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   type ExternalClub,
@@ -11,7 +11,6 @@ import {
   fetchCurrentMonthPicks,
   monthLabel,
 } from '@/lib/book-clubs'
-import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600
@@ -54,8 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BookClubsPage() {
-  const [navUser, clubs, currentMonthPicks] = await Promise.all([
-    getNavUser(),
+  const [clubs, currentMonthPicks] = await Promise.all([
     fetchActiveClubs(),
     fetchCurrentMonthPicks(),
   ])
@@ -89,7 +87,7 @@ export default async function BookClubsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

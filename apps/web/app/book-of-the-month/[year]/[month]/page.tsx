@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { ReviewCard } from '@/components/review-card'
 import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
 import {
@@ -14,7 +14,6 @@ import {
   monthName,
 } from '@/lib/botm'
 import { fetchBookReviews } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 86400
@@ -101,8 +100,7 @@ export default async function BookOfMonthDetailPage({
   if (!parsed) notFound()
   const { year, month } = parsed
 
-  const [navUser, picks] = await Promise.all([
-    getNavUser(),
+  const [picks] = await Promise.all([
     fetchPicksForMonthWithRatings(year, month),
   ])
   if (picks.length === 0) notFound()
@@ -145,7 +143,7 @@ export default async function BookOfMonthDetailPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

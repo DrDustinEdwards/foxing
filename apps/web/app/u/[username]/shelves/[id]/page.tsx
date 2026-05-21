@@ -3,11 +3,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchProfileByUsername } from '@/lib/queries'
 import { fetchPublicShelf } from '@/lib/shelves'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 300
 
@@ -31,8 +30,7 @@ export default async function PublicShelfPage({
 }: {
   params: { username: string; id: string }
 }) {
-  const [navUser, profile, shelf] = await Promise.all([
-    getNavUser(),
+  const [profile, shelf] = await Promise.all([
     fetchProfileByUsername(params.username),
     fetchPublicShelf(params.id),
   ])
@@ -42,7 +40,7 @@ export default async function PublicShelfPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-3">

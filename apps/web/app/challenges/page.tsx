@@ -2,22 +2,20 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchPublicChallenges,
   type ChallengeRow,
 } from '@/lib/missing-pages-queries'
 import { buildChallengesIndexMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 600
 
 export const metadata: Metadata = buildChallengesIndexMetadata()
 
 export default async function ChallengesPage() {
-  const [navUser, challenges] = await Promise.all([
-    getNavUser(),
+  const [challenges] = await Promise.all([
     fetchPublicChallenges(),
   ])
   const active = challenges.filter((c) => c.is_active)
@@ -25,7 +23,7 @@ export default async function ChallengesPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

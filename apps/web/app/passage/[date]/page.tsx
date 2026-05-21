@@ -4,12 +4,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ShareButton } from '@/components/share-button'
 import { fetchPassageOfDay } from '@/lib/missing-pages-queries'
 import { buildPassageMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 
 export const revalidate = 86400
@@ -43,8 +42,7 @@ export default async function PassagePage({
   params: { date: string }
 }) {
   if (!ISO_DATE.test(params.date)) notFound()
-  const [navUser, passage] = await Promise.all([
-    getNavUser(),
+  const [passage] = await Promise.all([
     fetchPassageOfDay(params.date),
   ])
   if (!passage) notFound()
@@ -58,7 +56,7 @@ export default async function PassagePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-16">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">

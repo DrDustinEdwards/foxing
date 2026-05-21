@@ -5,7 +5,7 @@ import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Button } from '@/components/ui/button'
 import { ClubCard } from '@/components/club-card'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { SearchBar } from '@/components/search-bar'
 import { CollapsibleSection } from '@/components/collapsible-section'
@@ -14,7 +14,6 @@ import {
   fetchPopularThisWeek,
   fetchTodaysPick,
 } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { ERAS, LENGTHS, MOODS, appBookDeeplink } from '@/lib/foxing'
 import { buildDiscoverMetadata } from '@/lib/metadata'
 
@@ -26,8 +25,7 @@ export async function generateMetadata() {
 }
 
 export default async function DiscoverPage() {
-  const [navUser, todaysPick, popular, clubs] = await Promise.all([
-    getNavUser(),
+  const [todaysPick, popular, clubs] = await Promise.all([
     fetchTodaysPick(),
     fetchPopularThisWeek(8),
     fetchActiveClubs(3),
@@ -35,7 +33,7 @@ export default async function DiscoverPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="flex flex-col gap-10 py-10">
           <SearchBar />

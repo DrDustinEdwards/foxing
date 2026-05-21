@@ -5,7 +5,7 @@ import { notFound, redirect } from 'next/navigation'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { fetchProfileByUsername } from '@/lib/queries'
@@ -32,9 +32,9 @@ export default async function ComparePage({
   const viewerId = await getAuthedUserId()
   if (!viewerId) redirect(`/sign-in?next=/u/${params.username}/compare`)
 
-  const [navUser, profile] = await Promise.all([
-    getNavUser(),
+  const [profile, navUser] = await Promise.all([
     fetchProfileByUsername(params.username),
+    getNavUser(),
   ])
   if (!profile || !profile.is_public) notFound()
   if (profile.id === viewerId) redirect(`/u/${params.username}`)
@@ -46,7 +46,7 @@ export default async function ComparePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

@@ -1,8 +1,9 @@
-import { Suspense, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
-import { NavWithSession } from '@/components/layout/nav-with-session'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
+
+export const dynamic = 'force-static'
 
 export const metadata = STATIC_PAGE_METADATA['/guide']
 
@@ -20,9 +21,7 @@ const NAV_ANCHORS = [
 export default function GuidePage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Suspense fallback={<Nav user={null} />}>
-        <NavWithSession />
-      </Suspense>
+      <NavAuthClient />
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
           <header>

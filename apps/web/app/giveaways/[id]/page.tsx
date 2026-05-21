@@ -4,10 +4,10 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchGiveawayById } from '@/lib/giveaways'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { EnterGiveawayButton } from './enter-button'
 
 export const dynamic = 'force-dynamic'
@@ -31,8 +31,7 @@ export default async function GiveawayDetailPage({
 }: {
   params: { id: string }
 }) {
-  const [navUser, viewerId] = await Promise.all([
-    getNavUser(),
+  const [viewerId] = await Promise.all([
     getAuthedUserId(),
   ])
   const giveaway = await fetchGiveawayById(params.id, viewerId)
@@ -44,7 +43,7 @@ export default async function GiveawayDetailPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <Link

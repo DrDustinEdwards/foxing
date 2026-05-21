@@ -5,12 +5,12 @@ import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Footer } from '@/components/layout/footer'
 import { LikeHighlightButton } from '@/components/ui/like-highlight-button'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ShareButton } from '@/components/share-button'
 import { formatRelativeDate } from '@foxing/utils'
 import { fetchQuoteById } from '@/lib/queries'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
 import { buildQuoteMetadata } from '@/lib/metadata'
 
@@ -37,8 +37,7 @@ export default async function QuotePage({
 }: {
   params: { id: string }
 }) {
-  const [navUser, userId] = await Promise.all([
-    getNavUser(),
+  const [userId] = await Promise.all([
     getAuthedUserId(),
   ])
   const quote = await fetchQuoteById(params.id, userId)
@@ -47,7 +46,7 @@ export default async function QuotePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-12">
           <figure className="rounded-xl border-l-[4px] border-brand-ui bg-bg-surface p-8 shadow-sm">

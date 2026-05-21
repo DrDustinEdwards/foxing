@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchUpcomingEvents } from '@/lib/events'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { EventCard } from '../../event-card'
 
@@ -49,15 +48,14 @@ export default async function AuthorEventsPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, name, events] = await Promise.all([
-    getNavUser(),
+  const [name, events] = await Promise.all([
     fetchAuthorName(params.slug),
     fetchUpcomingEvents({ authorSlug: params.slug }),
   ])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-12">
           <nav className="font-dm-sans text-sm">

@@ -1,11 +1,10 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchEventStates, fetchUpcomingEvents } from '@/lib/events'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { EventCard } from './event-card'
 
 export const revalidate = 3600
@@ -26,8 +25,7 @@ export const metadata: Metadata = {
 }
 
 export default async function EventsPage() {
-  const [navUser, events, states] = await Promise.all([
-    getNavUser(),
+  const [events, states] = await Promise.all([
     fetchUpcomingEvents(),
     fetchEventStates(),
   ])
@@ -66,7 +64,7 @@ export default async function EventsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

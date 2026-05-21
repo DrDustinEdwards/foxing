@@ -4,12 +4,11 @@ import { BookCard } from '@/components/book-card'
 import { ClubCard } from '@/components/club-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { SearchBar } from '@/components/search-bar'
 import { UserCard } from '@/components/user-card'
 import { searchAll } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
@@ -24,7 +23,6 @@ export default async function SearchPage({
 }: {
   searchParams: { q?: string; type?: Tab }
 }) {
-  const navUser = await getNavUser()
   const q = (searchParams.q ?? '').trim()
   const tab: Tab = searchParams.type ?? 'books'
   const results = q
@@ -33,7 +31,7 @@ export default async function SearchPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <SearchBar defaultValue={q} />

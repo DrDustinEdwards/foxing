@@ -5,7 +5,7 @@ import { formatRelativeDate } from '@foxing/utils'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchBookBySlug } from '@/lib/queries'
 import { fetchBookDiscussions } from '@/lib/discussions'
@@ -14,7 +14,7 @@ import {
   DISCUSSION_TYPE_CLASSES,
   type DiscussionType,
 } from '@/lib/discussion-types'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 import { CreateDiscussionForm } from '../create-discussion-form'
 
@@ -45,8 +45,7 @@ export default async function BookDiscussionsIndexPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, viewerId, book] = await Promise.all([
-    getNavUser(),
+  const [viewerId, book] = await Promise.all([
     getAuthedUserId(),
     fetchBookBySlug(params.slug),
   ])
@@ -56,7 +55,7 @@ export default async function BookDiscussionsIndexPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <Link

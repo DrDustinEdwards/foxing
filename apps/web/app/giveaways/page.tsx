@@ -3,10 +3,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchActiveGiveaways, type GiveawayKind } from '@/lib/giveaways'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 
 export const revalidate = 60
@@ -28,8 +28,7 @@ export default async function GiveawaysPage({
   searchParams: { kind?: string }
 }) {
   const filter = FILTERS.find((f) => f.id === searchParams.kind)?.id ?? 'all'
-  const [navUser, viewerId] = await Promise.all([
-    getNavUser(),
+  const [viewerId] = await Promise.all([
     getAuthedUserId(),
   ])
   const kindFilter = filter === 'all' ? undefined : (filter as GiveawayKind)
@@ -37,7 +36,7 @@ export default async function GiveawaysPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">
