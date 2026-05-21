@@ -2,8 +2,10 @@
 
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminUserId } from '@/lib/nav-user'
 
 export async function deleteClubPost(formData: FormData) {
+  await requireAdminUserId()
   const postId = String(formData.get('postId') ?? '')
   const clubId = String(formData.get('clubId') ?? '')
   if (!postId) return

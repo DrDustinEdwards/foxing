@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminUserId } from '@/lib/nav-user'
 import {
   fetchBotmCandidates,
   generateCuratorNote,
@@ -14,6 +15,7 @@ export interface BotmSuggestion extends BotmCandidate {
 }
 
 export async function runBotmSuggest(): Promise<BotmSuggestion[]> {
+  await requireAdminUserId()
   const candidates = await fetchBotmCandidates()
   return candidates.map((c) => ({ ...c, curator_note: generateCuratorNote(c) }))
 }
@@ -55,6 +57,7 @@ function parsePayload(formData: FormData): SavePayload {
 }
 
 export async function createPick(formData: FormData): Promise<void> {
+  await requireAdminUserId()
   const payload = parsePayload(formData)
   if (!payload.book_id || !payload.year || !payload.month) {
     throw new Error('book_id, year, and month are required')
@@ -78,6 +81,7 @@ export async function createPick(formData: FormData): Promise<void> {
 }
 
 export async function updatePick(formData: FormData): Promise<void> {
+  await requireAdminUserId()
   const payload = parsePayload(formData)
   if (!payload.id) throw new Error('id is required')
   const admin = createAdminClient()
@@ -101,6 +105,7 @@ export async function updatePick(formData: FormData): Promise<void> {
 }
 
 export async function deletePick(formData: FormData): Promise<void> {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '').trim()
   if (!id) throw new Error('id is required')
   const admin = createAdminClient()

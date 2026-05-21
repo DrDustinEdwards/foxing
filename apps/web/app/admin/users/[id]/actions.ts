@@ -3,10 +3,12 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminUserId } from '@/lib/nav-user'
 
 const ALLOWED_TIERS = ['free', 'plus', 'patron'] as const
 
 export async function updateUserTier(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   const tier = String(formData.get('tier') ?? '')
   if (!id || !(ALLOWED_TIERS as readonly string[]).includes(tier)) return
@@ -19,6 +21,7 @@ export async function updateUserTier(formData: FormData) {
 }
 
 export async function toggleUserAdmin(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   const next = formData.get('next') === 'true'
   if (!id) return
@@ -28,6 +31,7 @@ export async function toggleUserAdmin(formData: FormData) {
 }
 
 export async function toggleUserSuspended(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   const next = formData.get('next') === 'true'
   if (!id) return
@@ -43,6 +47,7 @@ export async function toggleUserSuspended(formData: FormData) {
 }
 
 export async function sendAdminNotification(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   const title = String(formData.get('title') ?? '').trim().slice(0, 120)
   const body = String(formData.get('body') ?? '').trim().slice(0, 500)
@@ -61,6 +66,7 @@ export async function sendAdminNotification(formData: FormData) {
 }
 
 export async function deleteUser(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const admin = createAdminClient()

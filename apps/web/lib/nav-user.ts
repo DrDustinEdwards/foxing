@@ -93,3 +93,23 @@ export async function getAuthedUserId(): Promise<string | null> {
   } = await sb.auth.getUser()
   return user?.id ?? null
 }
+
+/**
+ * Guard for admin-only server actions. Resolves the current user and
+ * confirms `profiles.is_admin` via the user-scoped client (RLS-safe).
+ * Throws on either failure so callers can stay one-liners. Returns the
+ * admin's user id for callers that need it.
+ */
+export async function requireAdminUserId(): Promise<string> {
+  const userId = await getAuthedUserId()
+  if (!userId) throw new Error('Unauthorized')
+  const sb = createClient()
+  const { data } = await sb
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', userId)
+    .maybeSingle()
+  const profile = data as { is_admin: boolean | null } | null
+  if (!profile?.is_admin) throw new Error('Forbidden')
+  return userId
+}
