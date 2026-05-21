@@ -21,9 +21,9 @@ export async function toggleHighlightLike(opts: {
 
   const { data: existing } = await sb
     .from('highlight_likes')
-    .select('post_id')
+    .select('highlight_id')
     .eq('user_id', user.id)
-    .eq('post_id', id)
+    .eq('highlight_id', id)
     .maybeSingle()
 
   const { data: countRow } = await sb
@@ -38,7 +38,7 @@ export async function toggleHighlightLike(opts: {
       .from('highlight_likes')
       .delete()
       .eq('user_id', user.id)
-      .eq('post_id', id)
+      .eq('highlight_id', id)
     if (delErr) return { ok: false, error: delErr.message }
     // trg_highlight_like_count on highlight_likes updates highlights.like_count.
     const next = Math.max(0, currentCount - 1)
@@ -48,7 +48,7 @@ export async function toggleHighlightLike(opts: {
   } else {
     const { error: insErr } = await sb
       .from('highlight_likes')
-      .insert({ user_id: user.id, post_id: id })
+      .insert({ user_id: user.id, highlight_id: id })
     if (insErr) return { ok: false, error: insErr.message }
     const next = currentCount + 1
     revalidatePath(`/quotes/${id}`)
