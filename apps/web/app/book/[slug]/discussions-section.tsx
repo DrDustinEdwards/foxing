@@ -32,6 +32,12 @@ export function DiscussionsSection({
               ? 'No discussions yet.'
               : `${discussions.length} discussion${discussions.length === 1 ? '' : 's'}`}
           </p>
+          <Link
+            href={`/book/${bookSlug ?? bookId}/discussions`}
+            className="mt-1 inline-block font-dm-sans text-xs text-brand-text hover:underline"
+          >
+            View all discussions →
+          </Link>
         </div>
         {canStart && (
           <CreateDiscussionForm bookId={bookId} bookSlug={bookSlug} />
