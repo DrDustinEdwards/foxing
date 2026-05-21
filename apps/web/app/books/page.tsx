@@ -140,8 +140,13 @@ export default async function BooksPage({
           ) : (
             <>
               <div className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4">
-                {items.map((b) => (
-                  <BookCard key={b.id} book={b} size="md" />
+                {items.map((b, i) => (
+                  <BookCard
+                    key={b.id}
+                    book={b}
+                    size="md"
+                    priority={i < 8}
+                  />
                 ))}
               </div>
               <Pagination
