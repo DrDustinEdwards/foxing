@@ -1,6 +1,14 @@
 import 'server-only'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { slugifySeriesName } from '@/lib/metadata'
+
+/**
+ * Public catalog reads (people, series, themes, awards, challenges,
+ * lists, passage of day, public user sub-pages, vocabulary export,
+ * year-in-reading, buddy reads). Uses the admin client so the page
+ * does NOT call cookies() and can be statically prerendered. Every
+ * user-scoped query filters by an explicit userId param.
+ */
 
 /**
  * Data fetchers backing the missing-pages routes (people, series, themes,
@@ -10,7 +18,7 @@ import { slugifySeriesName } from '@/lib/metadata'
  */
 
 function sb() {
-  return createClient()
+  return createAdminClient()
 }
 
 function hasEnv(): boolean {

@@ -1,6 +1,15 @@
 import 'server-only'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { dayOfYear } from '@/lib/foxing'
+
+/**
+ * All reads in this file are public catalog data: books, authors,
+ * public profiles, public reviews, public highlights, public clubs.
+ * We use the admin (service-role) client so the page does NOT call
+ * cookies() and can be statically prerendered. Every query that
+ * filters by user_id passes it explicitly; nothing here relies on
+ * auth.uid() from the session, so admin reads are equivalent.
+ */
 
 /**
  * Projection of `books` columns we surface on cards and listings.
@@ -57,7 +66,7 @@ export function isUuid(s: string): boolean {
 }
 
 function supabase() {
-  return createClient()
+  return createAdminClient()
 }
 
 function hasEnv(): boolean {

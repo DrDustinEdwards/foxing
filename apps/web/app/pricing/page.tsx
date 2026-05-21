@@ -1,19 +1,23 @@
 import Link from 'next/link'
+import { Suspense } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
+import { NavWithSession } from '@/components/layout/nav-with-session'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 import { PricingContent } from './pricing-content'
 
-export const dynamic = 'force-static'
+export const experimental_ppr = true
 
 export const metadata = STATIC_PAGE_METADATA['/pricing']
 
 export default function PricingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={null} />
+      <Suspense fallback={<Nav user={null} />}>
+        <NavWithSession />
+      </Suspense>
       <main className="flex-1">
         <PageWrapper className="py-12">
           <header className="text-center">

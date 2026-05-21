@@ -1,13 +1,14 @@
-import { type ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
+import { NavWithSession } from '@/components/layout/nav-with-session'
 import {
   FREE_AI_LOOKUPS_PER_DAY,
   PLUS_TRIAL_LABEL,
 } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const dynamic = 'force-static'
+export const experimental_ppr = true
 
 export const metadata = STATIC_PAGE_METADATA['/app-guide']
 
@@ -33,7 +34,9 @@ const HIGHLIGHT_COLORS: { name: string; use: string }[] = [
 export default function AppGuidePage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={null} />
+      <Suspense fallback={<Nav user={null} />}>
+        <NavWithSession />
+      </Suspense>
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
           <header>

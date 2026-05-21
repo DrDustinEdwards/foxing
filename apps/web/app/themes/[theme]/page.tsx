@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
+import { NavWithSession } from '@/components/layout/nav-with-session'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchBooksForTheme,
@@ -12,9 +14,9 @@ import {
   THEME_DEFINITIONS,
   buildThemeMetadata,
 } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 86400
+export const experimental_ppr = true
 
 export function generateStaticParams() {
   return Object.keys(THEME_DEFINITIONS).map((theme) => ({ theme }))
@@ -35,14 +37,16 @@ export default async function ThemePage({
 }) {
   const theme = THEME_DEFINITIONS[params.theme]
   if (!theme) notFound()
-  const [navUser, books] = await Promise.all([
-    getNavUser(),
-    fetchBooksForTheme({ searchTerms: theme.searchTerms, limit: 24 }),
-  ])
+  const books = await fetchBooksForTheme({
+    searchTerms: theme.searchTerms,
+    limit: 24,
+  })
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <Suspense fallback={<Nav user={null} />}>
+        <NavWithSession />
+      </Suspense>
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">
