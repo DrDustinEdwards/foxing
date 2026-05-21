@@ -8,6 +8,9 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicClubBySlug } from '@/lib/queries'
 import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { fetchClubThread } from '@/lib/club-threads'
+import { fetchDiscussionGuide } from '@/lib/discussion-guide'
+import { getClubRole, isClubMod } from '@/lib/club-membership'
+import { ThreadDiscussionPanel } from '../../thread-discussion-panel'
 import { ThreadPostActions } from './thread-post-actions'
 import { ReplyForm } from './reply-form'
 
@@ -40,6 +43,14 @@ export default async function ThreadPage({
   if (!data) notFound()
   const { thread, posts, savedSet } = data
 
+  const [discussionGuide, role] = await Promise.all([
+    club.current_book_id
+      ? fetchDiscussionGuide(club.current_book_id)
+      : Promise.resolve(null),
+    getClubRole(club.id, viewerId),
+  ])
+  const canGenerate = isClubMod(role)
+
   function formatTime(iso: string): string {
     return new Date(iso).toLocaleString('en-US', {
       month: 'short',
@@ -69,6 +80,16 @@ export default async function ThreadPage({
               {posts.length === 1 ? 'post' : 'posts'}
             </p>
           </header>
+
+          {club.current_book_id && club.current_book ? (
+            <ThreadDiscussionPanel
+              bookId={club.current_book_id}
+              bookSlug={club.current_book.slug}
+              bookTitle={club.current_book.title}
+              initialQuestions={discussionGuide?.questions ?? null}
+              canGenerate={canGenerate}
+            />
+          ) : null}
 
           <ul className="mt-6 flex flex-col gap-4">
             {posts.map((p) => (
