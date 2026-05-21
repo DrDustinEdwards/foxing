@@ -39,9 +39,9 @@ export async function toggleReadingListLike(opts: {
 
   const { data: existing } = await sb
     .from('reading_list_likes')
-    .select('reading_list_id')
+    .select('list_id')
     .eq('user_id', user.id)
-    .eq('reading_list_id', id)
+    .eq('list_id', id)
     .maybeSingle()
 
   if (existing) {
@@ -49,7 +49,7 @@ export async function toggleReadingListLike(opts: {
       .from('reading_list_likes')
       .delete()
       .eq('user_id', user.id)
-      .eq('reading_list_id', id)
+      .eq('list_id', id)
     if (delErr) return { ok: false, error: delErr.message }
     // trg_reading_list_like_count on reading_list_likes updates reading_lists.like_count.
     const next = Math.max(0, currentCount - 1)
@@ -61,7 +61,7 @@ export async function toggleReadingListLike(opts: {
   } else {
     const { error: insErr } = await sb
       .from('reading_list_likes')
-      .insert({ user_id: user.id, reading_list_id: id })
+      .insert({ user_id: user.id, list_id: id })
     if (insErr) return { ok: false, error: insErr.message }
     const next = currentCount + 1
     revalidatePath('/lists')

@@ -433,12 +433,12 @@ async function fetchLikedReadingListIds(
   if (!userId || listIds.length === 0) return new Set()
   const { data } = await sb()
     .from('reading_list_likes')
-    .select('reading_list_id')
+    .select('list_id')
     .eq('user_id', userId)
-    .in('reading_list_id', listIds)
+    .in('list_id', listIds)
   return new Set(
-    ((data as { reading_list_id: string }[] | null) ?? []).map(
-      (r) => r.reading_list_id,
+    ((data as { list_id: string }[] | null) ?? []).map(
+      (r) => r.list_id,
     ),
   )
 }
