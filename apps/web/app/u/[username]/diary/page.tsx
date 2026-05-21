@@ -19,7 +19,10 @@ import { cn } from '@/lib/cn'
 
 export const revalidate = 300
 
-const YEARS = [2024, 2025, 2026]
+function recentYears(): number[] {
+  const currentYear = new Date().getFullYear()
+  return [currentYear, currentYear - 1, currentYear - 2]
+}
 
 export async function generateMetadata({
   params,
@@ -61,7 +64,8 @@ export default async function UserDiaryPage({
       </div>
     )
   }
-  const year = YEARS.find((y) => String(y) === searchParams.year) ?? null
+  const years = recentYears()
+  const year = years.find((y) => String(y) === searchParams.year) ?? null
   const entries = await fetchPublicDiary(profile.id, year ?? undefined)
 
   return (
@@ -77,7 +81,7 @@ export default async function UserDiaryPage({
 
           <div className="mt-6 flex flex-wrap gap-1">
             <YearTab username={profile.username} year={null} current={year} />
-            {YEARS.map((y) => (
+            {years.map((y) => (
               <YearTab
                 key={y}
                 username={profile.username}

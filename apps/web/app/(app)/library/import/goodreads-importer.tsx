@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { importGoodreadsRows } from './actions'
@@ -90,11 +91,11 @@ export function GoodreadsImporter() {
           </details>
         )}
         <div className="flex gap-2">
-          <a href="/library">
+          <Link href="/library">
             <Button variant="primary" size="sm">
               Go to library
             </Button>
-          </a>
+          </Link>
           <Button
             variant="secondary"
             size="sm"
