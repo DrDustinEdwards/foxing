@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -29,11 +30,7 @@ export function Markdown({ source }: { source: string }) {
                 </a>
               )
             }
-            return (
-              <a href={href} {...rest}>
-                {children}
-              </a>
-            )
+            return <Link href={href ?? ''} {...rest}>{children}</Link>
           },
         }}
       >
