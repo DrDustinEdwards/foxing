@@ -28,6 +28,9 @@ const nextConfig = {
       { protocol: 'https', hostname: 'm.media-amazon.com' },
     ],
   },
+  experimental: {
+    optimizePackageImports: ['recharts'],
+  },
   transpilePackages: ['@foxing/types', '@foxing/utils'],
   async headers() {
     return [
