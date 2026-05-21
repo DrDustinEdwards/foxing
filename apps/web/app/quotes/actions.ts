@@ -40,8 +40,8 @@ export async function toggleHighlightLike(opts: {
       .eq('user_id', user.id)
       .eq('post_id', id)
     if (delErr) return { ok: false, error: delErr.message }
+    // trg_highlight_like_count on highlight_likes updates highlights.like_count.
     const next = Math.max(0, currentCount - 1)
-    await sb.from('highlights').update({ like_count: next }).eq('id', id)
     revalidatePath(`/quotes/${id}`)
     revalidatePath('/quotes')
     return { ok: true, liked: false, likeCount: next }
@@ -51,7 +51,6 @@ export async function toggleHighlightLike(opts: {
       .insert({ user_id: user.id, post_id: id })
     if (insErr) return { ok: false, error: insErr.message }
     const next = currentCount + 1
-    await sb.from('highlights').update({ like_count: next }).eq('id', id)
     revalidatePath(`/quotes/${id}`)
     revalidatePath('/quotes')
     return { ok: true, liked: true, likeCount: next }
