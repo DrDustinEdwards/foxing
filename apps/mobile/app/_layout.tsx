@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/react-native'
 import { useEffect, useState } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
@@ -31,6 +32,12 @@ import { rescheduleAll } from '@/lib/local-notifications'
 import { checkStreakRisk } from '@/lib/streaks'
 import { startOfflineWatch, stopOfflineWatch } from '@/lib/offline-queue'
 import '../global.css'
+
+Sentry.init({
+  dsn: 'https://220c70037742b3e00bbfc646fd0db591@o4511169644986368.ingest.us.sentry.io/4511428406280192',
+  tracesSampleRate: 0.1,
+  environment: __DEV__ ? 'development' : 'production',
+})
 
 const ONBOARDING_KEY = 'onboarding_complete'
 
@@ -74,7 +81,7 @@ async function handleAuthDeepLink(url: string) {
   }
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [splashTimeoutReached, setSplashTimeoutReached] = useState(false)
@@ -289,3 +296,5 @@ export default function RootLayout() {
     </GestureHandlerRootView>
   )
 }
+
+export default Sentry.wrap(RootLayout)
