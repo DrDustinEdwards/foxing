@@ -19,7 +19,8 @@ import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { profileJsonLd } from '@/lib/structured-data'
 import { buildProfileMetadata } from '@/lib/metadata'
 import { Badge } from '@/components/ui/badge'
-import { fetchUserBadges } from '@/lib/badges'
+import { fetchUserBadges, levelForXp, LEVEL_LABEL } from '@/lib/badges'
+import { fetchProgressProfile } from '@/lib/user-queries'
 import { fetchPublicCommonplace } from '@/lib/commonplace'
 import { fetchPublicShelvesForUser } from '@/lib/shelves'
 import { BadgesSection } from './badges-section'
@@ -103,6 +104,14 @@ export default async function ProfilePage({
     fetchPublicShelvesForUser(profile.id),
   ])
 
+  const progress = isOwnProfile ? await fetchProgressProfile(profile.id) : null
+  const ownLevel = progress
+    ? {
+        label: LEVEL_LABEL[levelForXp(progress.xp_points).level],
+        xp: progress.xp_points,
+      }
+    : null
+
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <Nav user={navUser} />
@@ -135,6 +144,14 @@ export default async function ProfilePage({
                   </h1>
                   {profile.is_verified_author && (
                     <Badge variant="success">Verified author</Badge>
+                  )}
+                  {ownLevel && (
+                    <span
+                      title={`${ownLevel.xp} XP`}
+                      className="inline-flex items-center rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text"
+                    >
+                      {ownLevel.label}
+                    </span>
                   )}
                 </div>
                 <span className="font-dm-sans text-sm text-text-tertiary">
