@@ -7,7 +7,7 @@ import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchAllBadges, fetchUserBadges, type BadgeRow, type EarnedBadge } from '@/lib/badges'
 import { fetchProfileByUsername } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 
 export const dynamic = 'force-dynamic'
@@ -41,25 +41,43 @@ export default async function UserBadgesPage({
 }: {
   params: { username: string }
 }) {
-  const [navUser, profile] = await Promise.all([
+  const [navUser, viewerId, profile] = await Promise.all([
     getNavUser(),
+    getAuthedUserId(),
     fetchProfileByUsername(params.username),
   ])
   if (!profile) notFound()
+  const isOwnProfile = viewerId === profile.id
 
   const [earned, all] = await Promise.all([
     fetchUserBadges(profile.id),
-    fetchAllBadges(),
+    isOwnProfile ? fetchAllBadges() : Promise.resolve([] as BadgeRow[]),
   ])
   const earnedBySlug = new Map<string, EarnedBadge>()
   for (const b of earned) earnedBySlug.set(b.slug, b)
 
   const grouped = new Map<string, BadgeRow[]>()
-  for (const b of all) {
-    const key = b.category ?? 'other'
-    const list = grouped.get(key) ?? []
-    list.push(b)
-    grouped.set(key, list)
+  if (isOwnProfile) {
+    for (const b of all) {
+      const key = b.category ?? 'other'
+      const list = grouped.get(key) ?? []
+      list.push(b)
+      grouped.set(key, list)
+    }
+  } else {
+    for (const b of earned) {
+      const key = b.category ?? 'other'
+      const list = grouped.get(key) ?? []
+      list.push({
+        id: b.id,
+        slug: b.slug,
+        name: b.name,
+        description: b.description,
+        icon: b.icon,
+        category: b.category,
+      })
+      grouped.set(key, list)
+    }
   }
 
   return (
@@ -77,7 +95,11 @@ export default async function UserBadgesPage({
             Badges
           </h1>
           <p className="mt-1 font-source-serif-4 text-base text-text-secondary">
-            {earned.length} of {all.length} earned.
+            {isOwnProfile
+              ? `${earned.length} of ${all.length} earned.`
+              : earned.length === 1
+                ? '1 badge earned.'
+                : `${earned.length} badges earned.`}
           </p>
 
           <div className="mt-8 flex flex-col gap-10">
@@ -103,7 +125,13 @@ export default async function UserBadgesPage({
                           aria-hidden="true"
                           className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-brand-subtle text-2xl"
                         >
-                          {b.icon ?? (isEarned ? '★' : '🔒')}
+                          {b.icon ? (
+                            <span>{b.icon}</span>
+                          ) : isEarned ? (
+                            <StarIcon />
+                          ) : (
+                            <LockIcon />
+                          )}
                         </span>
                         <div className="flex flex-col gap-1">
                           <p className="font-fraunces text-base text-text-primary">
@@ -118,11 +146,11 @@ export default async function UserBadgesPage({
                             <p className="font-dm-mono text-[11px] text-text-tertiary">
                               Earned {formatRelativeDate(e.earned_at)}
                             </p>
-                          ) : (
+                          ) : isOwnProfile ? (
                             <p className="font-dm-mono text-[11px] text-text-tertiary">
-                              Keep reading to unlock
+                              Not yet earned
                             </p>
-                          )}
+                          ) : null}
                         </div>
                       </li>
                     )
@@ -135,5 +163,36 @@ export default async function UserBadgesPage({
       </main>
       <Footer />
     </div>
+  )
+}
+
+function StarIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M12 2l2.9 6.9 7.1.6-5.4 4.7 1.6 6.8L12 17l-6.2 4 1.6-6.8L2 9.5l7.1-.6z" />
+    </svg>
+  )
+}
+
+function LockIcon() {
+  return (
+    <svg
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      aria-hidden="true"
+    >
+      <rect x="4" y="11" width="16" height="10" rx="2" />
+      <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+    </svg>
   )
 }
