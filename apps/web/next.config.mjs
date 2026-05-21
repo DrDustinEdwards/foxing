@@ -19,6 +19,7 @@ const securityHeaders = [
 
 const nextConfig = {
   images: {
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: 'https', hostname: 'ekjpsuewrkvqzbuteurc.supabase.co' },
       { protocol: 'https', hostname: 'standardebooks.org' },

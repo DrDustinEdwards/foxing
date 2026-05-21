@@ -5,10 +5,9 @@ import {
   FREE_AI_LOOKUPS_PER_DAY,
   PLUS_TRIAL_LABEL,
 } from '@/lib/config'
-import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
-export const revalidate = 86_400
+export const dynamic = 'force-static'
 
 export const metadata = STATIC_PAGE_METADATA['/app-guide']
 
@@ -31,11 +30,10 @@ const HIGHLIGHT_COLORS: { name: string; use: string }[] = [
   { name: 'Purple', use: 'passages you disagree with' },
 ]
 
-export default async function AppGuidePage() {
-  const navUser = await getNavUser()
+export default function AppGuidePage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <Nav user={null} />
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
           <header>
