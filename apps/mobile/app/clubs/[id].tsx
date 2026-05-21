@@ -53,6 +53,7 @@ import {
 } from '@/lib/clubs'
 import { DiscussionStarterSheet } from '@/components/clubs/discussion-starter-sheet'
 import { MeetingsPollsSection } from '@/components/clubs/meetings-polls-section'
+import { ClubLibrarySection } from '@/components/clubs/club-library-section'
 
 type Tab = 'discussions' | 'reading' | 'members' | 'about'
 
@@ -782,6 +783,7 @@ function ReadingTab({
       </View>
 
       <MeetingsPollsSection clubId={club.id} canModerate={canModerate} />
+      <ClubLibrarySection clubId={club.id} />
     </View>
   )
 }
