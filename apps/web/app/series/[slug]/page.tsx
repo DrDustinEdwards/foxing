@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchSeriesBySlug,
@@ -13,7 +13,6 @@ import {
   buildSeriesMetadata,
   slugifySeriesName,
 } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -72,8 +71,7 @@ export default async function SeriesDetailPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, series] = await Promise.all([
-    getNavUser(),
+  const [series] = await Promise.all([
     fetchSeriesBySlug(params.slug),
   ])
   if (!series) notFound()
@@ -100,7 +98,7 @@ export default async function SeriesDetailPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

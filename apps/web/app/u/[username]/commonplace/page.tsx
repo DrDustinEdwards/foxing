@@ -3,11 +3,10 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { formatRelativeDate } from '@foxing/utils'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicCommonplace } from '@/lib/commonplace'
 import { fetchProfileByUsername } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 
 export const dynamic = 'force-dynamic'
@@ -33,8 +32,7 @@ export default async function PublicCommonplacePage({
 }: {
   params: { username: string }
 }) {
-  const [navUser, profile] = await Promise.all([
-    getNavUser(),
+  const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])
   if (!profile) notFound()
@@ -44,7 +42,7 @@ export default async function PublicCommonplacePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <Link

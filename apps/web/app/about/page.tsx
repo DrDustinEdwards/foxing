@@ -1,18 +1,16 @@
-import { Suspense } from 'react'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
-import { NavWithSession } from '@/components/layout/nav-with-session'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
+
+export const dynamic = 'force-static'
 
 export const metadata = STATIC_PAGE_METADATA['/about']
 
 export default function AboutPage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Suspense fallback={<Nav user={null} />}>
-        <NavWithSession />
-      </Suspense>
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-14">
           <h1 className="font-fraunces text-[2.5rem] text-text-primary">

@@ -2,10 +2,9 @@ import Link from 'next/link'
 import { ClubCard } from '@/components/club-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicClubs } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 60
@@ -13,13 +12,12 @@ export const revalidate = 60
 export const metadata = STATIC_PAGE_METADATA['/clubs']
 
 export default async function ClubsIndexPage() {
-  const [navUser, clubs] = await Promise.all([
-    getNavUser(),
+  const [clubs] = await Promise.all([
     fetchPublicClubs(24),
   ])
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <h1 className="font-fraunces text-[2rem] text-text-primary">

@@ -3,14 +3,14 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { LikeListButton } from '@/components/ui/like-list-button'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
 import { ShareButton } from '@/components/share-button'
 import { fetchProfileByUsername, isUuid } from '@/lib/queries'
 import { fetchPublicReadingList } from '@/lib/missing-pages-queries'
 import { buildReadingListMetadata } from '@/lib/metadata'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
 
 export const revalidate = 300
@@ -46,8 +46,7 @@ export default async function UserListDetailPage({
 }: {
   params: { username: string; slug: string }
 }) {
-  const [navUser, profile, viewerId] = await Promise.all([
-    getNavUser(),
+  const [profile, viewerId] = await Promise.all([
     fetchProfileByUsername(params.username),
     getAuthedUserId(),
   ])
@@ -55,7 +54,7 @@ export default async function UserListDetailPage({
   if (!profile.is_public) {
     return (
       <div className="flex min-h-screen flex-col bg-bg-base">
-        <Nav user={navUser} />
+        <NavAuthClient />
         <main className="flex-1">
           <PrivateProfileNotice username={profile.username} />
         </main>
@@ -87,7 +86,7 @@ export default async function UserListDetailPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

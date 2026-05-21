@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   type Era,
@@ -12,7 +12,6 @@ import {
   fetchClubBySlug,
   monthLabel,
 } from '@/lib/book-clubs'
-import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -65,8 +64,7 @@ export default async function ExternalBookClubPage({
   const club = await fetchClubBySlug(params.slug)
   if (!club) notFound()
 
-  const [navUser, picks] = await Promise.all([
-    getNavUser(),
+  const [picks] = await Promise.all([
     fetchAllPicksForClub(club.id),
   ])
 
@@ -95,7 +93,7 @@ export default async function ExternalBookClubPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

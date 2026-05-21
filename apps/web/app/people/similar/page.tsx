@@ -4,9 +4,9 @@ import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchSimilarReaders } from '@/lib/similar-readers'
 
 export const dynamic = 'force-dynamic'
@@ -20,14 +20,13 @@ export const metadata: Metadata = {
 export default async function SimilarReadersPage() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in?next=/people/similar')
-  const [navUser, readers] = await Promise.all([
-    getNavUser(),
+  const [readers] = await Promise.all([
     fetchSimilarReaders(userId),
   ])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

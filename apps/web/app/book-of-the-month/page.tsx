@@ -4,11 +4,10 @@ import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
 import { fetchPublishedPicksWithRatings, monthName } from '@/lib/botm'
-import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600
@@ -65,8 +64,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BookOfMonthListPage() {
-  const [navUser, picks] = await Promise.all([
-    getNavUser(),
+  const [picks] = await Promise.all([
     fetchPublishedPicksWithRatings(),
   ])
 
@@ -109,7 +107,7 @@ export default async function BookOfMonthListPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

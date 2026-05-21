@@ -10,11 +10,10 @@ import { ClubCard } from '@/components/club-card'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import { Footer } from '@/components/layout/footer'
 import { HighlightCard } from '@/components/highlight-card'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReviewCard } from '@/components/review-card'
 import { WhereToRead } from '@/components/where-to-read'
-import { getNavUser } from '@/lib/nav-user'
 import {
   fetchAiCache,
   fetchBookById,
@@ -109,8 +108,7 @@ export default async function BookPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, book] = await Promise.all([
-    getNavUser(),
+  const [book] = await Promise.all([
     resolveBook(params.slug),
   ])
   if (!book) notFound()
@@ -267,7 +265,7 @@ export default async function BookPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
@@ -297,7 +295,7 @@ export default async function BookPage({
                 epub_url: book.epub_url,
               }}
             />
-            {navUser && (
+            {viewerId && (
               <ReadingTimerWidget
                 bookId={book.id}
                 bookSlug={book.slug}

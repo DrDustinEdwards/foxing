@@ -2,7 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   AWARD_CATEGORIES,
@@ -11,14 +11,12 @@ import {
   type AwardBookHit,
 } from '@/lib/missing-pages-queries'
 import { buildAwardsMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 86400
 
 export const metadata: Metadata = buildAwardsMetadata()
 
 export default async function AwardsPage() {
-  const navUser = await getNavUser()
   const sections = await Promise.all(
     AWARD_CATEGORIES.map(async (cat) => ({
       cat,
@@ -28,7 +26,7 @@ export default async function AwardsPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

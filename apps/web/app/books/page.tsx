@@ -2,14 +2,13 @@ import Link from 'next/link'
 import { BookCard } from '@/components/book-card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchBooksList } from '@/lib/queries'
-import { getNavUser } from '@/lib/nav-user'
 import { buildBooksListingMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 60
 
 interface BooksSearchParams {
   mood?: string
@@ -68,7 +67,6 @@ export default async function BooksPage({
 }: {
   searchParams: BooksSearchParams
 }) {
-  const navUser = await getNavUser()
   const page = Math.max(1, Number(searchParams.page) || 1)
   const search = searchParams.search ?? searchParams.q
   const { items, total } = await fetchBooksList({
@@ -94,7 +92,7 @@ export default async function BooksPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <h1 className="font-fraunces text-[2rem] text-text-primary">

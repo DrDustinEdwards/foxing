@@ -2,11 +2,10 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicPeople, type PeopleSort } from '@/lib/missing-pages-queries'
 import { buildPeopleMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 
 export const revalidate = 600
@@ -24,14 +23,13 @@ export default async function PeoplePage({
 }: {
   searchParams: { sort?: PeopleSort; q?: string }
 }) {
-  const navUser = await getNavUser()
   const sort = SORTS.find((s) => s.id === searchParams.sort)?.id ?? 'most_books'
   const search = searchParams.q?.trim() || undefined
   const people = await fetchPublicPeople({ sort, search, limit: 48 })
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-wrap items-start justify-between gap-3">
@@ -43,14 +41,12 @@ export default async function PeoplePage({
                 People reading classic literature on Foxing.
               </p>
             </div>
-            {navUser && (
-              <Link
-                href="/people/similar"
-                className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-              >
-                Find similar readers
-              </Link>
-            )}
+            <Link
+              href="/people/similar"
+              className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+            >
+              Find similar readers
+            </Link>
           </header>
 
           <form

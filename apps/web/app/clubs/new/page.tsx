@@ -1,9 +1,8 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 86_400
 
@@ -15,10 +14,9 @@ export const metadata: Metadata = {
 }
 
 export default async function NewClubPage() {
-  const navUser = await getNavUser()
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-20 text-center">
           <h1 className="font-fraunces text-[2rem] text-text-primary">

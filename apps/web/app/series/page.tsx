@@ -2,25 +2,23 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchSeriesIndex } from '@/lib/missing-pages-queries'
 import { buildSeriesIndexMetadata } from '@/lib/metadata'
-import { getNavUser } from '@/lib/nav-user'
 
 export const revalidate = 3600
 
 export const metadata: Metadata = buildSeriesIndexMetadata()
 
 export default async function SeriesIndexPage() {
-  const [navUser, series] = await Promise.all([
-    getNavUser(),
+  const [series] = await Promise.all([
     fetchSeriesIndex(),
   ])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

@@ -3,10 +3,10 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { HighlightCard } from '@/components/highlight-card'
 import { LikeHighlightButton } from '@/components/ui/like-highlight-button'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchPublicQuotes } from '@/lib/queries'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 300
@@ -18,14 +18,14 @@ export default async function QuotesPage({
 }: {
   searchParams: { page?: string }
 }) {
-  const [navUser, userId] = await Promise.all([getNavUser(), getAuthedUserId()])
+  const userId = await getAuthedUserId()
   const page = Math.max(1, Number(searchParams.page) || 1)
   const { items, total } = await fetchPublicQuotes(page, 24, userId)
   const totalPages = Math.max(1, Math.ceil(total / 24))
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <h1 className="font-fraunces text-[2rem] text-text-primary">

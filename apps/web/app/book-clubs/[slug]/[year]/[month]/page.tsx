@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   clubHasPickForMonth,
@@ -18,7 +18,6 @@ import {
   type MonthlyPicksRow,
 } from '@/lib/book-clubs'
 import { resolveAffiliateLinks } from '@/lib/affiliate'
-import { getNavUser } from '@/lib/nav-user'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600
@@ -124,8 +123,7 @@ export default async function ClubMonthlyPickPage({
   const { year, month } = parsed
   const monthName = monthLabel(month)
 
-  const [navUser, pick] = await Promise.all([
-    getNavUser(),
+  const [pick] = await Promise.all([
     fetchPickByClubSlugAndMonth(params.slug, year, month),
   ])
 
@@ -136,7 +134,7 @@ export default async function ClubMonthlyPickPage({
     const hasPrev = await clubHasPickForMonth(club.id, prev.year, prev.month)
     return (
       <div className="flex min-h-screen flex-col bg-bg-base">
-        <Nav user={navUser} />
+        <NavAuthClient />
         <main className="flex-1">
           <PageWrapper className="py-12">
             <nav
@@ -273,7 +271,7 @@ export default async function ClubMonthlyPickPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

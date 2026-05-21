@@ -3,11 +3,11 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { formatRelativeDate } from '@foxing/utils'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchAllBadges, fetchUserBadges, type BadgeRow, type EarnedBadge } from '@/lib/badges'
 import { fetchProfileByUsername } from '@/lib/queries'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 
 export const dynamic = 'force-dynamic'
@@ -41,8 +41,7 @@ export default async function UserBadgesPage({
 }: {
   params: { username: string }
 }) {
-  const [navUser, viewerId, profile] = await Promise.all([
-    getNavUser(),
+  const [viewerId, profile] = await Promise.all([
     getAuthedUserId(),
     fetchProfileByUsername(params.username),
   ])
@@ -82,7 +81,7 @@ export default async function UserBadgesPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <Link

@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReviewCard } from '@/components/review-card'
 import {
@@ -15,7 +15,7 @@ import {
   fetchTasteCompatibility,
   fetchUserFavorites,
 } from '@/lib/queries'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { profileJsonLd } from '@/lib/structured-data'
 import { buildProfileMetadata } from '@/lib/metadata'
 import { Badge } from '@/components/ui/badge'
@@ -53,8 +53,7 @@ export default async function ProfilePage({
 }: {
   params: { username: string }
 }) {
-  const [navUser, profile] = await Promise.all([
-    getNavUser(),
+  const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])
   if (!profile) notFound()
@@ -62,7 +61,7 @@ export default async function ProfilePage({
   if (!profile.is_public) {
     return (
       <div className="flex min-h-screen flex-col bg-bg-base">
-        <Nav user={navUser} />
+        <NavAuthClient />
         <main className="flex flex-1 items-center justify-center px-6">
           <div className="text-center">
             <h1 className="font-fraunces text-2xl text-text-primary">
@@ -114,7 +113,7 @@ export default async function ProfilePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger

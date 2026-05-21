@@ -1,11 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { Suspense } from 'react'
 import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
-import { NavWithSession } from '@/components/layout/nav-with-session'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchBooksForTheme,
@@ -14,6 +12,8 @@ import {
   THEME_DEFINITIONS,
   buildThemeMetadata,
 } from '@/lib/metadata'
+
+export const dynamic = 'force-static'
 
 export const revalidate = 86400
 
@@ -43,9 +43,7 @@ export default async function ThemePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Suspense fallback={<Nav user={null} />}>
-        <NavWithSession />
-      </Suspense>
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

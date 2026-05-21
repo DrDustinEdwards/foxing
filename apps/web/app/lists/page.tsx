@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { LikeListButton } from '@/components/ui/like-list-button'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchPublicLists,
@@ -10,7 +10,7 @@ import {
   type PublicListRow,
 } from '@/lib/missing-pages-queries'
 import { buildListsIndexMetadata } from '@/lib/metadata'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
 
 export const revalidate = 600
@@ -29,15 +29,14 @@ export default async function PublicListsPage({
   searchParams: { sort?: ListsSort }
 }) {
   const sort = SORTS.find((s) => s.id === searchParams.sort)?.id ?? 'most_liked'
-  const [navUser, userId] = await Promise.all([
-    getNavUser(),
+  const [userId] = await Promise.all([
     getAuthedUserId(),
   ])
   const lists = await fetchPublicLists({ sort, limit: 48, userId })
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">

@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Footer } from '@/components/layout/footer'
 import { HighlightCard } from '@/components/highlight-card'
-import { Nav } from '@/components/layout/nav'
+import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchAiCache,
@@ -12,7 +12,7 @@ import {
   fetchBooksByAuthorSlug,
   fetchHighlightsByAuthorSlug,
 } from '@/lib/queries'
-import { getAuthedUserId, getNavUser } from '@/lib/nav-user'
+import { getAuthedUserId } from '@/lib/nav-user'
 import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchVerifiedAuthorByName } from '@/lib/author-claims'
@@ -66,8 +66,7 @@ export default async function AuthorPage({
 }: {
   params: { slug: string }
 }) {
-  const [navUser, books] = await Promise.all([
-    getNavUser(),
+  const [books] = await Promise.all([
     fetchBooksByAuthorSlug(params.slug),
   ])
 
@@ -129,7 +128,7 @@ export default async function AuthorPage({
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <NavAuthClient />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
