@@ -22,6 +22,12 @@ interface BookCardProps {
   size?: Size
   showMood?: boolean
   showRating?: boolean
+  /**
+   * When true, the cover is loaded eagerly with fetchpriority=high so it
+   * counts toward LCP. Pass for above-the-fold cards only (first row or
+   * two on listing pages). Default false (lazy + low priority).
+   */
+  priority?: boolean
 }
 
 const sizeMap: Record<Size, { wrap: string; cover: { w: number; h: number; cls: string } }> = {
@@ -35,6 +41,7 @@ export function BookCard({
   size = 'md',
   showMood = true,
   showRating = true,
+  priority = false,
 }: BookCardProps) {
   const dims = sizeMap[size]
   const firstMood = book.themes?.[0]
@@ -59,6 +66,7 @@ export function BookCard({
             fill
             sizes={`${dims.cover.w}px`}
             className="object-cover"
+            priority={priority}
           />
         ) : (
           <BookCoverPlaceholder title={book.title} author={book.author} />
