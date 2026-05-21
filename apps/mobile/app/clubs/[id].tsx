@@ -52,6 +52,7 @@ import {
   leaveClub,
 } from '@/lib/clubs'
 import { DiscussionStarterSheet } from '@/components/clubs/discussion-starter-sheet'
+import { MeetingsPollsSection } from '@/components/clubs/meetings-polls-section'
 
 type Tab = 'discussions' | 'reading' | 'members' | 'about'
 
@@ -324,6 +325,7 @@ export default function ClubDetailScreen() {
           <ReadingTab
             club={club}
             schedule={schedule}
+            canModerate={role === 'owner'}
             onOpenBook={(bookId) => router.push(`/book/${bookId}` as never)}
           />
         ) : tab === 'members' ? (
@@ -584,10 +586,12 @@ function DiscussionsTab({
 function ReadingTab({
   club,
   schedule,
+  canModerate,
   onOpenBook,
 }: {
   club: ClubWithBook
   schedule: ClubScheduleRow[]
+  canModerate: boolean
   onOpenBook: (bookId: string) => void
 }) {
   const colors = useColors()
@@ -776,6 +780,8 @@ function ReadingTab({
           </View>
         )}
       </View>
+
+      <MeetingsPollsSection clubId={club.id} canModerate={canModerate} />
     </View>
   )
 }
