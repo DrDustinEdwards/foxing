@@ -1,6 +1,8 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Fraunces, Source_Serif_4, DM_Sans, DM_Mono } from 'next/font/google'
+import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/react'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 
 // Runs before any paint. Reads the stored preference from localStorage and
@@ -209,6 +211,8 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: WEBSITE_JSONLD }}
         />
         {children}
+        <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   )
