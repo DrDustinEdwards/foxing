@@ -51,8 +51,8 @@ export async function toggleReadingListLike(opts: {
       .eq('user_id', user.id)
       .eq('reading_list_id', id)
     if (delErr) return { ok: false, error: delErr.message }
+    // trg_reading_list_like_count on reading_list_likes updates reading_lists.like_count.
     const next = Math.max(0, currentCount - 1)
-    await sb.from('reading_lists').update({ like_count: next }).eq('id', id)
     revalidatePath('/lists')
     if (row.slug) {
       revalidatePath(`/u/[username]/lists/${row.slug}`, 'page')
@@ -64,7 +64,6 @@ export async function toggleReadingListLike(opts: {
       .insert({ user_id: user.id, reading_list_id: id })
     if (insErr) return { ok: false, error: insErr.message }
     const next = currentCount + 1
-    await sb.from('reading_lists').update({ like_count: next }).eq('id', id)
     revalidatePath('/lists')
     if (row.slug) {
       revalidatePath(`/u/[username]/lists/${row.slug}`, 'page')
