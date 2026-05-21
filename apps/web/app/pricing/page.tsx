@@ -1,33 +1,19 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
 import { Nav } from '@/components/layout/nav'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { getNavUser } from '@/lib/nav-user'
-import {
-  PLUS_ANNUAL_SAVINGS_LABEL,
-  PLUS_PRICE_ANNUAL,
-  PLUS_PRICE_MONTHLY,
-  PLUS_TRIAL_LABEL,
-} from '@/lib/config'
+import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
-import { cn } from '@/lib/cn'
+import { PricingContent } from './pricing-content'
 
-export const revalidate = 3600
+export const dynamic = 'force-static'
 
 export const metadata = STATIC_PAGE_METADATA['/pricing']
 
-interface PricingPageProps {
-  searchParams: { period?: 'monthly' | 'yearly' }
-}
-
-export default async function PricingPage({ searchParams }: PricingPageProps) {
-  const navUser = await getNavUser()
-  const period: 'monthly' | 'yearly' =
-    searchParams.period === 'yearly' ? 'yearly' : 'monthly'
+export default function PricingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
-      <Nav user={navUser} />
+      <Nav user={null} />
       <main className="flex-1">
         <PageWrapper className="py-12">
           <header className="text-center">
@@ -44,41 +30,7 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
             </p>
           </header>
 
-          <PeriodToggle period={period} />
-
-          <section className="mx-auto mt-8 grid max-w-3xl gap-5 md:grid-cols-2">
-            <PricingCard
-              name="Free"
-              price="$0"
-              cadence="forever"
-              cta="Join free"
-              ctaHref="/sign-up"
-              variant="ghost"
-              features={[
-                '1,400+ classic books, free',
-                'Reader, highlights, vocabulary',
-                'Reading diary, stats, lists',
-                'Five AI word lookups a day',
-                'Join one book club',
-              ]}
-            />
-            <PricingCard
-              highlight
-              name="Plus"
-              price={period === 'yearly' ? PLUS_PRICE_ANNUAL : PLUS_PRICE_MONTHLY}
-              cadence={period === 'yearly' ? 'per year' : 'per month'}
-              cta="Start with Plus"
-              ctaHref="/sign-up?plan=plus"
-              variant="primary"
-              features={[
-                'Everything in Free',
-                'Unlimited AI word lookups, passage analysis, and Deep Dive',
-                'Create unlimited book clubs and passage comments',
-                'Buddy reads, quote cards, Year in Reading',
-                'Reading personality that updates continuously',
-              ]}
-            />
-          </section>
+          <PricingContent />
 
           <p className="mt-8 text-center font-dm-sans text-sm">
             <Link
@@ -104,99 +56,5 @@ export default async function PricingPage({ searchParams }: PricingPageProps) {
       </main>
       <Footer />
     </div>
-  )
-}
-
-function PeriodToggle({ period }: { period: 'monthly' | 'yearly' }) {
-  return (
-    <div className="mt-8 flex justify-center">
-      <div className="inline-flex overflow-hidden rounded-full border border-border-subtle">
-        <Link
-          href="/pricing?period=monthly"
-          className={cn(
-            'px-4 py-1.5 font-dm-sans text-sm',
-            period === 'monthly'
-              ? 'bg-brand-subtle text-brand-subtle-text'
-              : 'text-text-tertiary hover:text-text-primary',
-          )}
-        >
-          Monthly
-        </Link>
-        <Link
-          href="/pricing?period=yearly"
-          className={cn(
-            'px-4 py-1.5 font-dm-sans text-sm',
-            period === 'yearly'
-              ? 'bg-brand-subtle text-brand-subtle-text'
-              : 'text-text-tertiary hover:text-text-primary',
-          )}
-        >
-          Yearly ({PLUS_ANNUAL_SAVINGS_LABEL})
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-interface PricingCardProps {
-  name: string
-  price: string
-  cadence: string
-  cta: string
-  ctaHref: string
-  features: string[]
-  variant: 'primary' | 'ghost'
-  highlight?: boolean
-}
-
-function PricingCard({
-  name,
-  price,
-  cadence,
-  cta,
-  ctaHref,
-  features,
-  variant,
-  highlight,
-}: PricingCardProps) {
-  return (
-    <article
-      className={cn(
-        'flex flex-col gap-5 rounded-xl border bg-bg-surface p-6',
-        highlight
-          ? 'border-brand-ui shadow-md'
-          : 'border-border-subtle shadow-sm',
-      )}
-    >
-      <header>
-        <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-          {name}
-        </p>
-        <p className="mt-2 font-fraunces text-[2rem] leading-none text-text-primary">
-          {price}
-        </p>
-        <p className="mt-1 font-dm-sans text-xs text-text-tertiary">
-          {cadence}
-        </p>
-      </header>
-      <ul className="flex flex-col gap-2">
-        {features.map((f) => (
-          <li
-            key={f}
-            className="flex items-start gap-2 font-source-serif-4 text-sm text-text-secondary"
-          >
-            <span aria-hidden="true" className="mt-1 text-brand-ui">
-              ✓
-            </span>
-            <span>{f}</span>
-          </li>
-        ))}
-      </ul>
-      <Link href={ctaHref}>
-        <Button variant={variant} size="md" fullWidth>
-          {cta}
-        </Button>
-      </Link>
-    </article>
   )
 }
