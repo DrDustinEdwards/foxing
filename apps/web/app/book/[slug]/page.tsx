@@ -231,6 +231,13 @@ export default async function BookPage({
           },
         }
       : {}),
+    potentialAction: {
+      '@type': 'ReadAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${FOXING_BASE_URL}/book/${bookPath}`,
+      },
+    },
   })
 
   const breadcrumbJsonLdStr = JSON.stringify({
