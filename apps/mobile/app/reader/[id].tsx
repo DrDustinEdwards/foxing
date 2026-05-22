@@ -574,12 +574,40 @@ export default function Reader() {
         setUserId(user.id)
         const { data: ub } = await supabase
           .from('user_books')
-          .select('progress_cfi, progress_percentage')
+          .select('status, progress_cfi, progress_percentage, started_at')
           .eq('user_id', user.id)
           .eq('book_id', bookData.id)
           .maybeSingle()
         if (ub?.progress_cfi) setInitialCfi(ub.progress_cfi)
         if (ub?.progress_percentage) setProgress(ub.progress_percentage)
+
+        // Land a row on the Reading shelf the moment the book is opened.
+        // Without this the shelf stayed empty until the user actually turned
+        // a page (saveProgress is gated on progress_cfi being non-null and
+        // the wrapper now suppresses the first locator emit). Only promote
+        // statuses that should advance: a missing row, a 'want_to_read'
+        // intent, or an 'abandoned' return both make sense; 'finished' and
+        // 'paused' stay where they are so opening a finished book to
+        // reference a passage doesn't bounce it back to Reading.
+        const shouldPromote =
+          !ub || ub.status === 'want_to_read' || ub.status === 'abandoned'
+        if (shouldPromote) {
+          const update: Record<string, unknown> = {
+            user_id: user.id,
+            book_id: bookData.id,
+            status: 'reading',
+          }
+          if (!ub?.started_at) update.started_at = new Date().toISOString()
+          const { error: shelfErr } = await supabase
+            .from('user_books')
+            .upsert(update, { onConflict: 'user_id,book_id' })
+          if (shelfErr) {
+            console.warn(
+              '[reader] shelf upsert failed:',
+              shelfErr.message,
+            )
+          }
+        }
 
         const { data: sess } = await supabase
           .from('reading_sessions')
