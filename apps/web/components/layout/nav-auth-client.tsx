@@ -1,63 +1,35 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Nav } from './nav'
-import { createClient } from '@/lib/supabase/client'
+import { useSession } from '@/components/providers/session-provider'
 
-interface NavUser {
-  username: string
-  display_name: string
-  avatar_url: string | null
-  is_admin: boolean
-  subscription_tier: 'free' | 'plus' | 'patron'
-}
-
-interface NavData {
-  user: NavUser | null
-  unread: number
-}
-
-// Reads the session from the browser Supabase client (localStorage) and
-// hydrates the nav with the signed-in state. The server-rendered HTML
-// always shows the signed-out nav so public pages can be fully cached
-// at the edge without ever calling cookies() on the server.
+// Reads the session and profile from the SessionProvider context so that
+// client-side navigation between pages does not re-trigger an async
+// session check. The server-rendered HTML always shows the signed-out
+// nav so public pages can be fully cached at the edge.
 export function NavAuthClient() {
-  const [data, setData] = useState<NavData>({ user: null, unread: 0 })
+  const { user, profile, isLoading } = useSession()
 
-  useEffect(() => {
-    let cancelled = false
-    const supabase = createClient()
+  if (isLoading || !user || !profile) {
+    return <Nav user={null} unreadNotifications={0} />
+  }
 
-    async function refresh() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      if (cancelled) return
-      if (!session) {
-        setData({ user: null, unread: 0 })
-        return
-      }
-      try {
-        const res = await fetch('/api/nav-user', { cache: 'no-store' })
-        if (!res.ok || cancelled) return
-        const payload = (await res.json()) as NavData
-        if (!cancelled) setData(payload)
-      } catch {
-        // Network error: keep the signed-out fallback.
-      }
-    }
+  const tier: 'free' | 'plus' | 'patron' =
+    profile.subscription_tier === 'plus' ||
+    profile.subscription_tier === 'patron'
+      ? profile.subscription_tier
+      : 'free'
 
-    void refresh()
-
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      void refresh()
-    })
-
-    return () => {
-      cancelled = true
-      sub.subscription.unsubscribe()
-    }
-  }, [])
-
-  return <Nav user={data.user} unreadNotifications={data.unread} />
+  return (
+    <Nav
+      user={{
+        username: profile.username,
+        display_name: profile.display_name ?? profile.username,
+        avatar_url: profile.avatar_url,
+        is_admin: profile.is_admin,
+        subscription_tier: tier,
+      }}
+      unreadNotifications={profile.unread_count}
+    />
+  )
 }
