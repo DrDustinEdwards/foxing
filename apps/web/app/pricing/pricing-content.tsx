@@ -66,18 +66,23 @@ function PeriodToggle({
       <div
         role="tablist"
         aria-label="Billing period"
-        className="inline-flex overflow-hidden rounded-full border border-border-subtle"
+        className="relative inline-flex overflow-hidden rounded-full border border-border-subtle bg-bg-sunken p-0.5"
       >
+        <span
+          aria-hidden="true"
+          className={cn(
+            'absolute inset-y-0.5 rounded-full bg-brand-subtle transition-all duration-200 ease-out',
+            period === 'monthly' ? 'left-0.5 right-1/2' : 'left-1/2 right-0.5',
+          )}
+        />
         <button
           type="button"
           role="tab"
           aria-selected={period === 'monthly'}
           onClick={() => onChange('monthly')}
           className={cn(
-            'px-4 py-1.5 font-dm-sans text-sm',
-            period === 'monthly'
-              ? 'bg-brand-subtle text-brand-subtle-text'
-              : 'text-text-tertiary hover:text-text-primary',
+            'relative z-10 px-4 py-1.5 font-dm-sans text-sm transition-colors duration-150',
+            period === 'monthly' ? 'text-brand-subtle-text' : 'text-text-tertiary hover:text-text-primary',
           )}
         >
           Monthly
@@ -88,10 +93,8 @@ function PeriodToggle({
           aria-selected={period === 'yearly'}
           onClick={() => onChange('yearly')}
           className={cn(
-            'px-4 py-1.5 font-dm-sans text-sm',
-            period === 'yearly'
-              ? 'bg-brand-subtle text-brand-subtle-text'
-              : 'text-text-tertiary hover:text-text-primary',
+            'relative z-10 px-4 py-1.5 font-dm-sans text-sm transition-colors duration-150',
+            period === 'yearly' ? 'text-brand-subtle-text' : 'text-text-tertiary hover:text-text-primary',
           )}
         >
           Yearly ({PLUS_ANNUAL_SAVINGS_LABEL})

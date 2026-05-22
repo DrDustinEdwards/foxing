@@ -65,7 +65,7 @@ export function BookCard({
             alt={`Cover of ${book.title}`}
             fill
             sizes={`${dims.cover.w}px`}
-            className="object-cover"
+            className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
             priority={priority}
           />
         ) : (
