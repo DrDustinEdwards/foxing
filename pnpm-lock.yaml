@@ -102,6 +102,9 @@ importers:
       expo-brightness:
         specifier: ~56.0.5
         version: 56.0.5(expo@56.0.3)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))
+      expo-build-properties:
+        specifier: ^56.0.12
+        version: 56.0.12(expo@56.0.3)
       expo-camera:
         specifier: ~56.0.7
         version: 56.0.7(@types/emscripten@1.41.5)(expo@56.0.3)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
@@ -174,6 +177,12 @@ importers:
       react-native-gesture-handler:
         specifier: ~2.31.1
         version: 2.31.2(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
+      react-native-nitro-modules:
+        specifier: ^0.35.7
+        version: 0.35.7(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
+      react-native-readium:
+        specifier: 5.0.0-rc.17
+        version: 5.0.0-rc.17(react-native-nitro-modules@0.35.7(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
       react-native-reanimated:
         specifier: 4.3.1
         version: 4.3.1(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
@@ -2191,6 +2200,21 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  '@readium/css@2.0.5':
+    resolution: {integrity: sha512-rQWeDFSS9UfRTFFdWIhlko0jtkL9dOfNTqFjgMumlguromsyHC9/lGmbWDde7deEeE5ns+yBOSGKixMU0wqZ4A==}
+
+  '@readium/navigator-html-injectables@2.4.2':
+    resolution: {integrity: sha512-C08vjzYek19VU9JnCvhTorO8xVsR8hcCzSCD0IondBYOtcRbBzu18Ezp3WQR47/a/9tQMGicOS9knmmll1fZuw==}
+    engines: {node: '>=18'}
+
+  '@readium/navigator@2.5.4':
+    resolution: {integrity: sha512-MV0US0k7JNMDf3fd//dj8I+EiU2xUg41p0O0h1V7FPp9/6cWuQFg+0QIsus1euDkNILpYrO7FFZ+QiS2/BTy7g==}
+    engines: {node: '>=18'}
+
+  '@readium/shared@2.2.0':
+    resolution: {integrity: sha512-nfrMlF0/rgFvv3FNOsUehKDKHRHv6FKvakpnIs4aeDZS5TujCNlwWbuSCogSTQwJe+GMplWR5/T9B+bb6SZetA==}
+    engines: {node: '>=18'}
 
   '@reduxjs/toolkit@2.12.0':
     resolution: {integrity: sha512-KiT+RzZbp6mQET+Mg+h2c97+9j1sNflUxQkIHI7Yuzf6Peu+OYpmkn6nbHWmLLWj+1ZODUJFwGZ7gx3L9R9EOw==}
@@ -4334,6 +4358,11 @@ packages:
       expo: '*'
       react-native: '*'
 
+  expo-build-properties@56.0.12:
+    resolution: {integrity: sha512-PXVaKohe4uK5do4c9rGfNzVylVadrT8VAvvN+40JmgW7xf5oBLNtksjgc38nIkNBBIofU7acysNcYJm1kkfPbQ==}
+    peerDependencies:
+      expo: '*'
+
   expo-camera@56.0.7:
     resolution: {integrity: sha512-c8z+UheidFintQyP9XLEDP43aK4PS/o9+TFLW0zEOjdqkYCBgoWq6Mw/Ps62kjBeftFY7xrp5ZLITbenNvbTaw==}
     peerDependencies:
@@ -6451,6 +6480,20 @@ packages:
       react: '*'
       react-native: '*'
 
+  react-native-nitro-modules@0.35.7:
+    resolution: {integrity: sha512-3EiU27EmnxTlD3pAXR2OBWeDg7+9tdjKrNQOPX08rFX5hJPNIT/h1i2PjvTUieOypCGTEi9nW/SNBtK3F+4HYg==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+
+  react-native-readium@5.0.0-rc.17:
+    resolution: {integrity: sha512-6C9vapDWSS87W6wTRS3VuAf7mwlQaFibWdOXOyO4sOtLlvjTanSEYB0FGP5tloEzxCt/pifYoCLYFgtAm5laUw==}
+    engines: {node: '>=20'}
+    peerDependencies:
+      react: '*'
+      react-native: '>=0.78.0'
+      react-native-nitro-modules: '*'
+
   react-native-reanimated@4.3.1:
     resolution: {integrity: sha512-KhGsS0YkCA+gusgyzlf9hnqzVPIR398KTpqXyqq/+yYJJPAvyEEPKcxlB0xtOOXSMrR2A9uRKVARVQhZwrOh+Q==}
     peerDependencies:
@@ -7142,6 +7185,10 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
+  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/9210d2dd6f0941833bf9de39659029a5e060e9c3:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/9210d2dd6f0941833bf9de39659029a5e060e9c3}
+    version: 1.0.0
+
   throat@5.0.0:
     resolution: {integrity: sha512-fcwX4mndzpLQKBS1DVYhGAcYaYt7vsHNIvQV+WXMvnow5cgjPphq5CaayLaGsjRdSCKZFNGt7/GYAuXaNOiYCA==}
 
@@ -7357,6 +7404,11 @@ packages:
     peerDependenciesMeta:
       '@types/react':
         optional: true
+
+  use-deep-compare@1.3.0:
+    resolution: {integrity: sha512-94iG+dEdEP/Sl3WWde+w9StIunlV8Dgj+vkt5wTwMoFQLaijiEZSXXy8KtcStpmEDtIptRJiNeD4ACTtVvnIKA==}
+    peerDependencies:
+      react: '>=16.8.0'
 
   use-latest-callback@0.2.6:
     resolution: {integrity: sha512-FvRG9i1HSo0wagmX63Vrm8SnlUU3LMM3WyZkQ76RnslpBrX694AdG4A0zQBx2B3ZifFA0yv/BaEHGBnEax5rZg==}
@@ -8501,7 +8553,7 @@ snapshots:
       getenv: 2.0.0
       glob: 13.0.6
       resolve-from: 5.0.0
-      semver: 7.5.4
+      semver: 7.8.0
       slugify: 1.6.9
       xcode: 3.0.1
       xml2js: 0.6.0
@@ -8916,7 +8968,7 @@ snapshots:
       ejs: 3.1.10
       fs-extra: 10.1.0
       http-call: 5.3.0
-      semver: 7.5.4
+      semver: 7.8.0
       tslib: 2.6.2
     transitivePeerDependencies:
       - '@swc/core'
@@ -9945,6 +9997,16 @@ snapshots:
       react-native: 0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3)
     optionalDependencies:
       '@types/react': 19.2.15
+
+  '@readium/css@2.0.5': {}
+
+  '@readium/navigator-html-injectables@2.4.2': {}
+
+  '@readium/navigator@2.5.4': {}
+
+  '@readium/shared@2.2.0':
+    dependencies:
+      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/9210d2dd6f0941833bf9de39659029a5e060e9c3
 
   '@reduxjs/toolkit@2.12.0(react-redux@9.3.0(@types/react@18.3.28)(react@18.3.1)(redux@5.0.1))(react@18.3.1)':
     dependencies:
@@ -12356,6 +12418,13 @@ snapshots:
     dependencies:
       expo: 56.0.3(@babel/core@7.29.0)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@56.0.11)(expo-router@56.2.5)(react-dom@18.3.1(react@19.2.3))(react-native-webview@13.16.1(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
       react-native: 0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3)
+
+  expo-build-properties@56.0.12(expo@56.0.3):
+    dependencies:
+      '@expo/schema-utils': 56.0.1
+      expo: 56.0.3(@babel/core@7.29.0)(@expo/dom-webview@56.0.5)(@expo/metro-runtime@56.0.11)(expo-router@56.2.5)(react-dom@18.3.1(react@19.2.3))(react-native-webview@13.16.1(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)
+      resolve-from: 5.0.0
+      semver: 7.8.0
 
   expo-camera@56.0.7(@types/emscripten@1.41.5)(expo@56.0.3)(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3):
     dependencies:
@@ -14854,6 +14923,22 @@ snapshots:
       react: 19.2.3
       react-native: 0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3)
 
+  react-native-nitro-modules@0.35.7(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+      react-native: 0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3)
+
+  react-native-readium@5.0.0-rc.17(react-native-nitro-modules@0.35.7(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3):
+    dependencies:
+      '@readium/css': 2.0.5
+      '@readium/navigator': 2.5.4
+      '@readium/navigator-html-injectables': 2.4.2
+      '@readium/shared': 2.2.0
+      react: 19.2.3
+      react-native: 0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3)
+      react-native-nitro-modules: 0.35.7(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3)
+      use-deep-compare: 1.3.0(react@19.2.3)
+
   react-native-reanimated@4.3.1(react-native-worklets@0.8.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3))(react-native@0.85.3(@babel/core@7.29.0)(@react-native/metro-config@0.85.3(@babel/core@7.29.0))(@types/react@19.2.15)(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
@@ -15714,6 +15799,8 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
+  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/9210d2dd6f0941833bf9de39659029a5e060e9c3: {}
+
   throat@5.0.0: {}
 
   tiny-invariant@1.3.3: {}
@@ -15957,6 +16044,11 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 19.2.15
+
+  use-deep-compare@1.3.0(react@19.2.3):
+    dependencies:
+      dequal: 2.0.3
+      react: 19.2.3
 
   use-latest-callback@0.2.6(react@19.2.3):
     dependencies:
