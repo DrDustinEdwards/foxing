@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react'
 import { View, ActivityIndicator, Text } from 'react-native'
+import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import {
   ReadiumView,
   type ReadiumViewRef,
@@ -139,6 +140,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       onError,
       onLocationChange,
       onChapterChange,
+      onWordTapped,
       onPassageSelected,
       onTap,
       onPassageCommentTapped,
@@ -214,9 +216,22 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         // floating pill positions at the bottom of the screen as a
         // fallback until we route a real selection rect through Nitro.
         const rect: ReaderRect = { x: 0, y: 0, width: 0, height: 0 }
+        // Route single-word selections to the AI word lookup flow with
+        // before+highlight+after as sentence context. Multi-word selections
+        // go to the passage flow (highlight / analyze / discuss).
+        const trimmed = text.trim()
+        const isSingleWord = trimmed.length > 0 && !/\s/.test(trimmed) && trimmed.length <= 50
+        if (isSingleWord && onWordTapped) {
+          const before = event.locator.text?.before ?? ''
+          const highlight = event.locator.text?.highlight ?? trimmed
+          const after = event.locator.text?.after ?? ''
+          const surroundingText = `${before}${highlight}${after}`.trim()
+          onWordTapped(trimmed, surroundingText, cfi, rect)
+          return
+        }
         onPassageSelected?.(text, cfi, rect)
       },
-      [onPassageSelected],
+      [onPassageSelected, onWordTapped],
     )
 
     const handleDecorationActivated = useCallback(
@@ -340,26 +355,41 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [],
     )
 
-    // TODO Phase 3.x: implement tap-to-toggle chrome. A Pressable overlay
-    // blocks Readium's swipe-to-page-turn; the right pattern is a custom
-    // PanResponder that fires onTap only when movement stays under the
-    // touch-slop threshold. Until then, the host's chrome button is the
-    // only way to bring chrome back once it's hidden.
-    void onTap
+    // Tap-to-hide chrome via react-native-gesture-handler. Configuring the
+    // gesture as a single-tap with a short max duration and a tight movement
+    // tolerance means RNGH only recognizes deliberate taps; swipes (which
+    // exceed the tolerance) and long-presses (which exceed the duration)
+    // fall through to Readium's own gesture handling, so page turn and
+    // text selection still work.
+    const tapGesture = useMemo(
+      () =>
+        Gesture.Tap()
+          .maxDuration(250)
+          .maxDistance(10)
+          .onEnd((_e, success) => {
+            if (success) onTap?.()
+          })
+          .runOnJS(true),
+      [onTap],
+    )
 
     return (
       <View style={{ flex: 1, backgroundColor: initialSettings.theme.background }}>
-        <ReadiumView
-          ref={viewRef}
-          file={{ url: epubUrl, initialLocation: initialLocator }}
-          preferences={preferences}
-          decorations={decorations}
-          onLocationChange={handleLocationChange}
-          onPublicationReady={handlePublicationReady}
-          onSelectionChange={handleSelectionChange}
-          onDecorationActivated={handleDecorationActivated}
-          style={{ flex: 1 }}
-        />
+        <GestureDetector gesture={tapGesture}>
+          <View style={{ flex: 1 }}>
+            <ReadiumView
+              ref={viewRef}
+              file={{ url: epubUrl, initialLocation: initialLocator }}
+              preferences={preferences}
+              decorations={decorations}
+              onLocationChange={handleLocationChange}
+              onPublicationReady={handlePublicationReady}
+              onSelectionChange={handleSelectionChange}
+              onDecorationActivated={handleDecorationActivated}
+              style={{ flex: 1 }}
+            />
+          </View>
+        </GestureDetector>
         <View
           pointerEvents="none"
           style={{
