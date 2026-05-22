@@ -52,6 +52,7 @@
     "expo-system-ui": "~56.0.5",
     "expo-updates": "~56.0.15",
     "expo-web-browser": "~56.0.5",
+    "jszip": "^3.10.1",
     "nativewind": "^4.2.3",
     "phosphor-react-native": "^3.0.6",
     "react": "19.2.3",
