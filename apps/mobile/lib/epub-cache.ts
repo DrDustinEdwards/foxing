@@ -95,7 +95,12 @@ export interface CachedEpub {
   cached: boolean // true if already on disk before this call
 }
 
-export async function ensureEpubLocallyCached(remoteUrl: string): Promise<CachedEpub> {
+// Downloads (if needed) and returns the file:// URI of the cached EPUB.
+// Used by ReadiumView which only accepts local file paths -- it cannot
+// open an HTTPS URL directly. Skips the Base64 read that
+// ensureEpubLocallyCached does, so this is the cheap path for callers
+// that don't need the raw bytes.
+export async function ensureEpubLocalUri(remoteUrl: string): Promise<string> {
   await ensureDir()
   await cleanupOrphans()
 
@@ -105,10 +110,6 @@ export async function ensureEpubLocallyCached(remoteUrl: string): Promise<Cached
   const info = await FileSystem.getInfoAsync(epub)
   let cached = info.exists
 
-  // Cache-bust: even when the .epub file is present, only trust it if
-  // the sidecar URL matches what we're asking for. Catches hash
-  // collisions and (more importantly) the case where a book row's
-  // epub_url changed in the database, the old cached file is now wrong.
   if (cached) {
     const sidecarUrl = await readSidecar(key)
     if (sidecarUrl !== remoteUrl) {
@@ -132,13 +133,16 @@ export async function ensureEpubLocallyCached(remoteUrl: string): Promise<Cached
     await writeSidecar(key, remoteUrl)
   }
 
-  const base64 = await FileSystem.readAsStringAsync(epub, {
+  console.log(`[epub-cache] ${cached ? 'hit' : 'miss'} ${epub}`)
+  return epub
+}
+
+export async function ensureEpubLocallyCached(remoteUrl: string): Promise<CachedEpub> {
+  const path = await ensureEpubLocalUri(remoteUrl)
+  const base64 = await FileSystem.readAsStringAsync(path, {
     encoding: FileSystem.EncodingType.Base64,
   })
-
   // base64 length × 3/4 ≈ original byte size.
   const bytes = Math.floor(base64.length * 0.75)
-  console.log(`[epub-cache] ${cached ? 'hit' : 'miss'} → ${(bytes / 1024).toFixed(0)} KB`)
-
-  return { base64, bytes, cached }
+  return { base64, bytes, cached: true }
 }

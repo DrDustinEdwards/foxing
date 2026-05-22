@@ -103,6 +103,12 @@ export async function updateStreak(userId: string): Promise<void> {
   }
   if (currentStreak > longestStreak) longestStreak = currentStreak
 
+  // reading_streaks has no updated_at column (the JSDoc above shows the
+  // schema we eventually intended, but it was never applied). Including
+  // it in the upsert produces "Could not find the updated_at column of
+  // reading_streaks in the schema cache" -- not a cache issue, the column
+  // genuinely doesn't exist. Add it back here only if a migration lands
+  // adding the column with a default of now().
   const { error } = await supabase
     .from('reading_streaks')
     .upsert(
@@ -115,7 +121,6 @@ export async function updateStreak(userId: string): Promise<void> {
         total_books_finished: finishedRes.count ?? 0,
         total_highlights: highlightsRes.count ?? 0,
         total_words_looked_up: vocabRes.count ?? 0,
-        updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id' },
     )
