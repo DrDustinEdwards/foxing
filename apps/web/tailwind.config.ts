@@ -103,6 +103,9 @@ const config: Config = {
         page: '1160px',
         prose: '720px',
       },
+      transitionDuration: {
+        '250': '250ms',
+      },
     },
   },
   plugins: [],
