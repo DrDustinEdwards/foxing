@@ -191,7 +191,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
         <div className="flex items-center gap-2">
           <Link
             href="/search"
-            className="hidden h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover md:inline-flex"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
             aria-label="Search"
           >
             <SearchIcon />
@@ -241,18 +241,26 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
               </div>
             </>
           ) : (
-            <div className="hidden items-center gap-2 md:flex">
-              <Link href="/sign-in">
-                <Button variant="ghost" size="sm">
-                  Sign in
-                </Button>
+            <>
+              <Link
+                href="/sign-in"
+                className="inline-flex items-center font-dm-sans text-sm text-text-secondary hover:text-text-primary md:hidden"
+              >
+                Sign in
               </Link>
-              <Link href="/sign-up">
-                <Button variant="primary" size="sm">
-                  Join free
-                </Button>
-              </Link>
-            </div>
+              <div className="hidden items-center gap-2 md:flex">
+                <Link href="/sign-in">
+                  <Button variant="ghost" size="sm">
+                    Sign in
+                  </Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button variant="primary" size="sm">
+                    Join free
+                  </Button>
+                </Link>
+              </div>
+            </>
           )}
 
           {!user && (
@@ -339,6 +347,9 @@ function SecondaryAuthBar({ pathname }: { pathname: string }) {
             </li>
           )
         })}
+        <li className="ml-auto flex shrink-0 items-center pl-4">
+          <MobileThemePicker compact />
+        </li>
       </ul>
     </div>
   )
@@ -587,7 +598,7 @@ function MobileDrawer({
   )
 }
 
-function MobileThemePicker() {
+function MobileThemePicker({ compact = false }: { compact?: boolean }) {
   const [isDark, setIsDark] = useState(false)
 
   useEffect(() => {
@@ -609,6 +620,32 @@ function MobileThemePicker() {
     })
     void import('@/app/(app)/settings/theme-actions').then((m) =>
       m.saveThemePreference(next),
+    )
+  }
+
+  if (compact) {
+    return (
+      <button
+        type="button"
+        role="switch"
+        aria-checked={isDark}
+        aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+        onClick={handleToggle}
+        className={cn(
+          'relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors',
+          isDark
+            ? 'bg-[var(--toggle-on)] hover:bg-[var(--toggle-on-hover)]'
+            : 'bg-border-default hover:bg-border-strong',
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            'inline-block h-5 w-5 transform rounded-full bg-bg-surface shadow-sm transition-transform',
+            isDark ? 'translate-x-[22px]' : 'translate-x-0.5',
+          )}
+        />
+      </button>
     )
   }
 
@@ -709,7 +746,7 @@ function AccountMenu({
     <div
       role="menu"
       className={cn(
-        'absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md',
+        'absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md max-h-[calc(100dvh-80px)] overflow-y-auto',
       )}
     >
       <div className="bg-bg-sunken px-4 py-3">
