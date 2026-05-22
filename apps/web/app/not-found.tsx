@@ -1,6 +1,5 @@
 import Link from 'next/link'
 import { Footer } from '@/components/layout/footer'
-import { Nav } from '@/components/layout/nav'
 import { NotFoundLogger } from '@/components/not-found-logger'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 
@@ -13,7 +12,17 @@ export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <NotFoundLogger />
-      <Nav user={null} />
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg-surface shadow-sm">
+        <div className="mx-auto flex h-14 w-full max-w-page items-center px-6">
+          <Link
+            href="/"
+            className="flex items-center gap-2 font-fraunces text-xl text-brand-ui"
+          >
+            <span aria-hidden="true">🦊</span>
+            <span>Foxing</span>
+          </Link>
+        </div>
+      </header>
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-16 text-center">
           <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
