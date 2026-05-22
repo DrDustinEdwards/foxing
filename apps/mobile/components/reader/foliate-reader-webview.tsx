@@ -56,7 +56,14 @@ export interface PassageCommentMarker {
 export interface ReaderRef {
   prev: () => void
   next: () => void
-  goTo: (cfi: string) => void
+  // Optional hint lets callers carry an excerpt + chapter name forward
+  // when the CFI is in a renderer-foreign format (e.g. legacy foliate
+  // epubcfi strings being navigated by the Readium renderer). The Foliate
+  // renderer ignores the hint and uses the CFI directly.
+  goTo: (
+    cfi: string,
+    hint?: { text?: string; chapter?: string },
+  ) => void
   applySettings: (settings: ReaderSettings) => void
   addHighlight: (cfi: string, color: HighlightColor) => void
   removeHighlight: (cfi: string) => void
@@ -287,6 +294,8 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
           webRef.current?.injectJavaScript(`window.foliateBridge.goNext(); true;`)
         },
         goTo: (cfi: string) => {
+          // Foliate ignores the hint param; goTo signature is widened for
+          // contract compatibility with the Readium wrapper.
           webRef.current?.injectJavaScript(
             `window.foliateBridge.goToCfi(${JSON.stringify(cfi)}); true;`,
           )
