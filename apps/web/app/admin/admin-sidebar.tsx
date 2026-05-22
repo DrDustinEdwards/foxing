@@ -10,6 +10,7 @@ import {
   FlagIcon,
   HouseIcon,
   PencilIcon,
+  PlugIcon,
   UsersIcon,
   UsersThreeIcon,
 } from '@/components/icons'
@@ -71,6 +72,7 @@ const SECTIONS: NavSection[] = [
       { href: '/admin/notifications', label: 'Notifications', icon: BellIcon },
       { href: '/admin/bookstores', label: 'Bookstores', icon: BookOpenIcon },
       { href: '/admin/content', label: 'Content', icon: FlagIcon },
+      { href: '/admin/mcp', label: 'MCP Servers', icon: PlugIcon },
     ],
   },
   {

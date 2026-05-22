@@ -164,3 +164,11 @@ export function PencilIcon({ size, className }: IconProps) {
     </svg>
   )
 }
+
+export function PlugIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M18 6L6 18M8 6l4-4 6 6-4 4M16 18l-4 4-6-6 4-4" />
+    </svg>
+  )
+}
