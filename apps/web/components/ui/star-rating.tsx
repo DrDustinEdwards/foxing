@@ -61,7 +61,15 @@ export function StarRating({
       {Array.from({ length: 5 }, (_, i) => {
         const position = i + 1
         return (
-          <div key={i} className="relative inline-flex">
+          <div
+            key={i}
+            className={cn(
+              'relative inline-flex transition-transform duration-100',
+              hover !== null && hover >= i + 0.5
+                ? 'scale-110'
+                : 'scale-100',
+            )}
+          >
             <button
               type="button"
               className="absolute inset-0 left-0 z-10 w-1/2"

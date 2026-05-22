@@ -142,8 +142,8 @@ function ColorChip({
       className={cn(
         'flex items-center gap-2 rounded-full border px-3 py-1 font-dm-sans text-xs transition-colors',
         active
-          ? 'border-border-interactive bg-brand-subtle text-brand-subtle-text'
-          : 'border-border-subtle bg-bg-surface text-text-tertiary hover:bg-bg-hover',
+          ? 'scale-110 border-border-interactive bg-brand-subtle text-brand-subtle-text ring-2 ring-current ring-offset-1'
+          : 'border-border-subtle bg-bg-surface text-text-tertiary transition-transform duration-150 hover:scale-105 hover:bg-bg-hover',
       )}
     >
       {color && (

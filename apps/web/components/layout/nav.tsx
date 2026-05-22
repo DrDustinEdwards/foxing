@@ -151,7 +151,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             return (
               <li
                 key={link.href}
-                className="relative"
+                className="group relative"
                 onMouseEnter={
                   hasMega
                     ? () => openMenu(megaKey as 'books' | 'book-clubs')
@@ -175,6 +175,12 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                   <span
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-x-3 -bottom-px h-0.5 rounded-full bg-brand-ui"
+                  />
+                )}
+                {!isActive && (
+                  <span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-3 -bottom-px h-0.5 origin-left scale-x-0 rounded-full bg-border-default transition-transform duration-200 group-hover:scale-x-100"
                   />
                 )}
                 {hasMega && openMega === megaKey && (

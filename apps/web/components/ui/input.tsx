@@ -38,11 +38,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
         className={cn(
           'h-11 rounded-md border bg-bg-surface px-3 text-base text-text-primary',
           'font-dm-sans placeholder:text-text-tertiary',
-          'transition-colors',
+          'transition-[border-color,box-shadow] duration-150',
           error
             ? 'border-[var(--error-border-interactive)]'
             : 'border-border-interactive',
-          'focus:outline-none',
+          'focus:outline-none focus:ring-2 focus:ring-border-focus/40 focus:border-border-focus',
           className,
         )}
         {...props}
