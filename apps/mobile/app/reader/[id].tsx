@@ -22,22 +22,13 @@ import { GoToSheet } from '@/components/reader/go-to-sheet'
 import { supabase } from '@/lib/supabase'
 import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  FoliateReaderWebView,
-  type PassageCommentMarker,
-  type ReaderRect,
-  type ReaderRef,
-  type ReaderSettings,
+import type {
+  PassageCommentMarker,
+  ReaderRect,
+  ReaderRef,
+  ReaderSettings,
 } from '@/components/reader/foliate-reader-webview'
 import { ReadiumReader } from '@/components/reader/readium-reader'
-
-// Phase 3 feature flag. EXPO_PUBLIC_USE_READIUM=1 swaps the Foliate WebView
-// renderer for the new ReadiumView wrapper. The two renderers expose the
-// same ReaderRef interface; the new path stubs overlay features (WordWise,
-// popular highlights, passage dots, bilingual, TTS chapter text) until
-// they're re-implemented as Readium DecorationGroups.
-const USE_READIUM = process.env.EXPO_PUBLIC_USE_READIUM === '1'
-const Renderer = USE_READIUM ? ReadiumReader : FoliateReaderWebView
 import { PassageCommentSheet } from '@/components/reader/passage-comment-sheet'
 import {
   listCommentsForBook,
@@ -1276,7 +1267,7 @@ export default function Reader() {
       style={{ backgroundColor: themeColors.background }}
       {...swipeResponder.panHandlers}
     >
-      <Renderer
+      <ReadiumReader
         ref={readerRef}
         epubUrl={book.epub_url}
         initialCfi={initialCfi ?? undefined}
