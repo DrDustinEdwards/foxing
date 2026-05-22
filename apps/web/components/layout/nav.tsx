@@ -516,7 +516,7 @@ function MegaMenu({
           role="menuitem"
           className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
-          All monthly picks
+          Our monthly picks
         </Link>
       </div>
     </div>
