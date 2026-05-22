@@ -156,7 +156,7 @@ Web build check before every push:
     The fox emoji in nav/footer/auth/admin is the only exception.
 
 11. No icon libraries on web — inline SVG only.
-    Mobile uses @phosphor-icons/react-native exclusively.
+    Mobile uses phosphor-react-native exclusively (NOT @phosphor-icons/react-native — that package does not exist on npm).
 
 12. Web tasks: do NOT touch apps/mobile/.
     Mobile tasks: do NOT touch apps/web/.
