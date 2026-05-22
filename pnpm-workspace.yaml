@@ -5,9 +5,9 @@ packages:
 # That subdep is legitimate, so allow exotic sub-deps for the workspace.
 blockExoticSubdeps: false
 allowBuilds:
-  '@sentry/cli': set this to true or false
-  dtrace-provider: set this to true or false
-  esbuild: set this to true or false
-  msgpackr-extract: set this to true or false
-  sharp: set this to true or false
-  unrs-resolver: set this to true or false
+  '@sentry/cli': true
+  dtrace-provider: true
+  esbuild: true
+  msgpackr-extract: true
+  sharp: true
+  unrs-resolver: true
