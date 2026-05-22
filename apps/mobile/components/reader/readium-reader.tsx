@@ -6,7 +6,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { View, ActivityIndicator, Text } from 'react-native'
+import { View, ActivityIndicator, Text, useWindowDimensions } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import {
   ReadiumView,
@@ -28,10 +28,11 @@ import type {
   PassageCommentMarker,
   ReaderRect,
 } from '@/components/reader/foliate-reader-webview'
+import { getChapterContent } from '@/lib/epub-content'
 
-// Phase 3 v1 of the Foliate -> Readium migration. Implements the same
-// ReaderRef contract so app/reader/[id].tsx can switch renderers without
-// changing the surrounding screen wiring.
+// Foliate -> Readium reader migration. Implements the same ReaderRef
+// contract so app/reader/[id].tsx can switch renderers without changing
+// the surrounding screen wiring.
 //
 // What works:
 //   - render an EPUB from a public Supabase Storage URL
@@ -39,26 +40,36 @@ import type {
 //   - applySettings -> Readium Preferences (theme, font size, line height,
 //     family, justification, page margins)
 //   - addHighlight / removeHighlight as DecorationGroup updates
-//   - text selection emits onPassageSelected; the host renders the floating
-//     pill the same way it does for Foliate
-//   - tap-anywhere toggle for chrome via a transparent overlay View placed
-//     above the renderer (Readium has no onTap event)
+//   - text selection: single-word -> onWordTapped with surrounding context,
+//     multi-word -> onPassageSelected; both route through the floating pill
+//   - tap-to-hide chrome via an RNGH Tap gesture with tight movement and
+//     duration thresholds so swipes / long-press pass through to Readium
 //   - location persistence with 1500ms debounce so we don't write to Supabase
-//     on every page swipe
+//     on every page swipe (also fixes the historical CFI oscillation bug)
+//   - getChapterText / getChapterParagraphs by parsing the EPUB in-process
+//     via lib/epub-content (jszip + OPF parser + HTML stripper)
+//   - getToc populated from Readium's onPublicationReady event
+//   - highlightSentence(index) paints a text-based Locator decoration; the
+//     Readium navigator matches the text against the rendered page
 //
-// What's stubbed (TODO Phase 3.x):
+// What's stubbed (Phase 3.x follow-up):
 //   - WordWise hints, popular-highlight inline labels, passage-comment dots,
 //     bilingual paragraph translations: all require DecorationGroup rebuilds
 //     with custom DecorationStyle.html
-//   - TTS auto-scroll, sentence highlighting, chapter-text extraction:
-//     Readium has no auto-scroll API; chapter text needs separate EPUB
-//     parsing (not exposed on ReadiumView)
-//   - Two-column spread: maps to preferences.spread = 'always' but layout
-//     depends on device width and Readium navigator support
-//   - Single-tap word lookup: Readium uses selection-based interaction. The
-//     host falls back to long-press selection until we add a selectionAction.
+//   - Auto-scroll: Readium has no native API, would need to be simulated
+//     with timed goForward calls + scroll-mode preferences
 
 const HIGHLIGHTS_GROUP = 'highlights'
+const TTS_SENTENCE_GROUP = 'tts-sentence'
+
+// Same regex the TtsBar uses to split chapter text into utterances. Keep
+// these two in sync so highlightSentence(index) lines up with the index
+// the bar reports.
+function splitSentences(chapterText: string): string[] {
+  const parts =
+    (chapterText ?? '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["')\]]*\s*/g) ?? []
+  return parts.map((s) => s.trim()).filter((s) => s.length > 0)
+}
 
 interface ReadiumReaderProps {
   epubUrl: string
@@ -147,11 +158,13 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     },
     ref,
   ) {
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions()
     const viewRef = useRef<ReadiumViewRef>(null)
     const [preferences, setPreferences] = useState<Preferences>(
       settingsToPreferences(initialSettings),
     )
     const [highlights, setHighlights] = useState<Decoration[]>([])
+    const [sentenceDecoration, setSentenceDecoration] = useState<Decoration | null>(null)
     // Default palette; host calls setHighlightColors with the design-token
     // values pulled from useColors() so light/dark match the rest of the UI.
     const highlightPaletteRef = useRef<Record<HighlightColor, string>>({
@@ -165,18 +178,24 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     })
     const lastSavedLocatorRef = useRef<string | null>(null)
     const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+    // Live position + TOC, populated by Readium events. The chapter-text
+    // and sentence-highlight bridges read these to know which spine item
+    // to parse and which sentence text to highlight.
+    const currentLocatorRef = useRef<Locator | null>(null)
+    const tocRef = useRef<Array<{ label: string; href: string; cfi: string | null }>>([])
+    const chapterSentencesRef = useRef<string[]>([])
 
     const initialLocator = useMemo(() => decodeLocator(initialCfi), [initialCfi])
 
-    const decorations: DecorationGroup[] = useMemo(
-      () => [
-        {
-          name: HIGHLIGHTS_GROUP,
-          decorations: highlights,
-        },
-      ],
-      [highlights],
-    )
+    const decorations: DecorationGroup[] = useMemo(() => {
+      const groups: DecorationGroup[] = [
+        { name: HIGHLIGHTS_GROUP, decorations: highlights },
+      ]
+      if (sentenceDecoration) {
+        groups.push({ name: TTS_SENTENCE_GROUP, decorations: [sentenceDecoration] })
+      }
+      return groups
+    }, [highlights, sentenceDecoration])
 
     const flushLocator = useCallback(
       (locator: Locator) => {
@@ -191,6 +210,11 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
 
     const handleLocationChange = useCallback(
       (locator: Locator) => {
+        currentLocatorRef.current = locator
+        // Chapter changed? Drop any stale sentence decoration so we don't
+        // paint a previous chapter's TTS highlight on the new page.
+        chapterSentencesRef.current = []
+        setSentenceDecoration(null)
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
         saveTimerRef.current = setTimeout(() => flushLocator(locator), 1500)
         if (locator.title) {
@@ -201,7 +225,14 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     )
 
     const handlePublicationReady = useCallback(
-      (_event: PublicationReadyEvent) => {
+      (event: PublicationReadyEvent) => {
+        tocRef.current = (event.tableOfContents ?? [])
+          .filter((link) => !!link.href)
+          .map((link) => ({
+            label: link.title ?? link.href,
+            href: link.href,
+            cfi: null,
+          }))
         onReady?.()
       },
       [onReady],
@@ -212,10 +243,18 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         const text = event.selectedText
         if (!text || !event.locator) return
         const cfi = encodeLocator(event.locator)
-        // Readium doesn't surface a screen rect for the selection. The
-        // floating pill positions at the bottom of the screen as a
-        // fallback until we route a real selection rect through Nitro.
-        const rect: ReaderRect = { x: 0, y: 0, width: 0, height: 0 }
+        // Readium doesn't surface a screen rect for the selection. Anchor
+        // the floating pill near screen-center so its layout clamp lands
+        // it in a visible position instead of pinned to the top-left corner.
+        // The FloatingPill component clamps left/right inside the safe
+        // horizontal range and prefers above the anchor; a midpoint y
+        // means it renders above the bottom safe area on most devices.
+        const rect: ReaderRect = {
+          x: screenWidth / 2,
+          y: screenHeight / 2,
+          width: 0,
+          height: 0,
+        }
         // Route single-word selections to the AI word lookup flow with
         // before+highlight+after as sentence context. Multi-word selections
         // go to the passage flow (highlight / analyze / discuss).
@@ -231,7 +270,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         }
         onPassageSelected?.(text, cfi, rect)
       },
-      [onPassageSelected, onWordTapped],
+      [onPassageSelected, onWordTapped, screenWidth, screenHeight],
     )
 
     const handleDecorationActivated = useCallback(
@@ -328,31 +367,51 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           }))
         },
         getChapterText: async () => {
-          // TODO Phase 3.x: parse EPUB OPF + spine HTML separately. Readium
-          // does not expose chapter plain text on the JS side.
-          return ''
+          const href = currentLocatorRef.current?.href
+          if (!href) return ''
+          const { text } = await getChapterContent(epubUrl, href)
+          chapterSentencesRef.current = splitSentences(text)
+          return text
         },
         getChapterParagraphs: async () => {
-          // TODO Phase 3.x: same as getChapterText, returning paragraph
-          // array for bilingual mode
-          return []
+          const href = currentLocatorRef.current?.href
+          if (!href) return []
+          const { paragraphs } = await getChapterContent(epubUrl, href)
+          return paragraphs
         },
-        getToc: async () => {
-          // TODO Phase 3.x: cache PublicationReadyEvent.tableOfContents on
-          // mount and return it here. For now returns empty so go-to-chapter
-          // navigation falls back to manual entry.
-          return []
-        },
-        highlightSentence: (_index: number | null) => {
-          // TODO Phase 3.x: paint a Decoration on the active sentence
-          // locator. Requires sentence-level locator construction.
+        getToc: async () => tocRef.current,
+        highlightSentence: (index: number | null) => {
+          if (index === null) {
+            setSentenceDecoration(null)
+            return
+          }
+          // Index is 1-based per the TtsBar contract; convert to 0-based.
+          const sentence = chapterSentencesRef.current[index - 1]
+          const currentLoc = currentLocatorRef.current
+          if (!sentence || !currentLoc) return
+          // Text-based locator: Readium matches `text.highlight` against the
+          // rendered page text. before/after windows would improve accuracy
+          // for duplicate sentences but the chapter parser doesn't surface
+          // them yet; this works well enough for unique-enough prose.
+          setSentenceDecoration({
+            id: `tts-${index}`,
+            locator: {
+              href: currentLoc.href,
+              type: currentLoc.type,
+              text: { highlight: sentence },
+            },
+            style: {
+              type: 'highlight',
+              tint: '#FFE082',
+            },
+          })
         },
         setBilingualContent: (_translations: string[]) => {
           // TODO Phase 3.x: per-paragraph DecorationStyle.html with italic
           // translation block
         },
       }),
-      [],
+      [epubUrl],
     )
 
     // Tap-to-hide chrome via react-native-gesture-handler. Configuring the
