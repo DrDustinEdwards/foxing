@@ -305,3 +305,10 @@ body {
   color: var(--text-primary);
   font-weight: 600;
 }
+
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}

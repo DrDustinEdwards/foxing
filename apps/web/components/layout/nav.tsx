@@ -69,20 +69,6 @@ const FEATURED_CLUBS = [
   { slug: 'dua-lipa', label: 'Dua Lipa' },
 ] as const
 
-const MOBILE_LINKS = [
-  { href: '/books', label: 'Books' },
-  { href: '/discover', label: 'By Mood' },
-  { href: '/series', label: 'Series' },
-  { href: '/awards', label: 'Award Winners' },
-  { href: '/challenges', label: 'Reading Challenges' },
-  { href: '/book-clubs', label: 'Celebrity Book Clubs' },
-  { href: '/book-of-the-month', label: 'Book of the Month' },
-  { href: '/clubs', label: 'Reading Clubs' },
-  { href: '/journal', label: 'Journal' },
-  { href: '/people', label: 'Community' },
-  { href: '/quotes', label: 'Quotes' },
-] as const
-
 function currentMonthPath(): string {
   const d = new Date()
   const y = d.getUTCFullYear()
@@ -269,23 +255,25 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => setMobileOpen((v) => !v)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover md:hidden"
-            aria-label="Toggle menu"
-            aria-expanded={mobileOpen}
-          >
-            <HamburgerIcon open={mobileOpen} />
-          </button>
+          {!user && (
+            <button
+              type="button"
+              onClick={() => setMobileOpen((v) => !v)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover md:hidden"
+              aria-label="Toggle menu"
+              aria-expanded={mobileOpen}
+            >
+              <HamburgerIcon open={mobileOpen} />
+            </button>
+          )}
         </div>
       </nav>
 
       {user && <SecondaryAuthBar pathname={pathname} />}
 
-      {mobileOpen && (
-        <MobileSheet
-          user={user}
+      {!user && (
+        <MobileDrawer
+          open={mobileOpen}
           pathname={pathname}
           onClose={() => setMobileOpen(false)}
         />
@@ -304,12 +292,12 @@ function SecondaryAuthBar({ pathname }: { pathname: string }) {
     { href: '/people', label: 'People' },
   ]
   return (
-    <div className="hidden border-t border-border-subtle bg-bg-sunken md:block">
-      <ul className="mx-auto flex h-10 w-full max-w-page items-center gap-1 px-6">
+    <div className="border-t border-border-subtle bg-bg-sunken md:block">
+      <ul className="mx-auto flex h-10 w-full max-w-page items-center gap-1 overflow-x-auto scrollbar-none px-6">
         {items.map((item) => {
           const isActive = isActivePath(pathname, item.href)
           return (
-            <li key={item.href}>
+            <li key={item.href} className="shrink-0">
               <Link
                 href={item.href}
                 aria-current={isActive ? 'page' : undefined}
@@ -460,83 +448,102 @@ function MegaMenu({
   )
 }
 
-function MobileSheet({
-  user,
+function MobileDrawer({
+  open,
   pathname,
   onClose,
 }: {
-  user: NavUser | null
+  open: boolean
   pathname: string
   onClose: () => void
 }) {
+  useEffect(() => {
+    document.body.style.overflow = open ? 'hidden' : ''
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [open])
+
+  const discoverLinks = [
+    { href: '/books', label: 'Books' },
+    { href: '/discover', label: 'By Mood' },
+    { href: '/awards', label: 'Award Winners' },
+    { href: '/challenges', label: 'Reading Challenges' },
+  ]
+
+  const communityLinks = [
+    { href: '/book-clubs', label: 'Book Clubs' },
+    { href: '/clubs', label: 'Reading Clubs' },
+    { href: '/people', label: 'People' },
+    { href: '/journal', label: 'Journal' },
+  ]
+
   return (
-    <div className="border-t border-border-subtle bg-bg-surface md:hidden">
-      <ul className="flex flex-col px-6 py-3">
-        {user && (
-          <li className="border-b border-border-subtle pb-2">
-            <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-              You
-            </p>
-            <div className="mt-2 flex flex-col gap-1">
-              <MobileLink
-                href="/home"
-                label="Home"
-                pathname={pathname}
-                onClose={onClose}
-              />
-              <MobileLink
-                href="/library"
-                label="My library"
-                pathname={pathname}
-                onClose={onClose}
-              />
-              <MobileLink
-                href="/diary"
-                label="Reading diary"
-                pathname={pathname}
-                onClose={onClose}
-              />
-              <MobileLink
-                href="/feed"
-                label="Feed"
-                pathname={pathname}
-                onClose={onClose}
-              />
-              <MobileLink
-                href="/clubs"
-                label="Reading clubs"
-                pathname={pathname}
-                onClose={onClose}
-              />
-            </div>
-          </li>
+    <>
+      {open && (
+        <div
+          aria-hidden="true"
+          onClick={onClose}
+          className="fixed inset-0 z-40 bg-black/40"
+        />
+      )}
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Menu"
+        className={cn(
+          'fixed inset-y-0 right-0 z-50 flex w-72 flex-col bg-bg-surface shadow-xl transition-transform duration-250 ease-out',
+          open ? 'translate-x-0' : 'translate-x-full',
         )}
-        {MOBILE_LINKS.map((link) => (
-          <li key={link.href}>
-            <MobileLink
-              href={link.href}
-              label={link.label}
-              pathname={pathname}
-              onClose={onClose}
-            />
-          </li>
-        ))}
-        <li>
-          <MobileLink
-            href="/search"
-            label="Search"
-            pathname={pathname}
-            onClose={onClose}
-          />
-        </li>
-        <li className="mt-3 border-t border-border-subtle pt-3">
-          <p className="mb-2 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-            Appearance
-          </p>
+      >
+        <div className="flex justify-end p-1">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close menu"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
+          >
+            <HamburgerIcon open={true} />
+          </button>
+        </div>
+
+        <p className="px-5 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
+          Discover
+        </p>
+        <ul>
+          {discoverLinks.map((link) => (
+            <li key={link.href}>
+              <DrawerLink
+                href={link.href}
+                label={link.label}
+                pathname={pathname}
+                onClose={onClose}
+              />
+            </li>
+          ))}
+        </ul>
+
+        <p className="px-5 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
+          Community
+        </p>
+        <ul>
+          {communityLinks.map((link) => (
+            <li key={link.href}>
+              <DrawerLink
+                href={link.href}
+                label={link.label}
+                pathname={pathname}
+                onClose={onClose}
+              />
+            </li>
+          ))}
+        </ul>
+
+        <div className="flex-1" />
+
+        <div className="flex flex-col gap-3 border-t border-border-subtle p-5">
           <MobileThemePicker />
-        </li>
-        {!user && (
-          <li className="mt-2 flex gap-2 border-t border-border-subtle pt-3">
+          <div className="flex gap-2">
             <Link href="/sign-in" className="flex-1" onClick={onClose}>
               <Button variant="ghost" size="md" fullWidth>
                 Sign in
@@ -547,10 +554,10 @@ function MobileSheet({
                 Join free
               </Button>
             </Link>
-          </li>
-        )}
-      </ul>
-    </div>
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }
 
@@ -607,7 +614,7 @@ function MobileThemePicker() {
   )
 }
 
-function MobileLink({
+function DrawerLink({
   href,
   label,
   pathname,
@@ -625,7 +632,7 @@ function MobileLink({
       onClick={onClose}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        'block rounded-md px-2 py-2 font-dm-sans text-base',
+        'block px-5 py-3 font-dm-sans text-base hover:bg-bg-hover',
         isActive
           ? 'bg-brand-subtle text-brand-subtle-text'
           : 'text-text-primary',
