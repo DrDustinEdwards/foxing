@@ -130,7 +130,8 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg-surface shadow-sm">
+    <>
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-bg-surface shadow-sm">
       <nav className="mx-auto flex h-14 w-full max-w-page items-center justify-between px-6">
         <div className="flex items-center gap-2">
           <Link
@@ -328,8 +329,6 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
           </ul>
         </div>
       )}
-      {user && <SecondaryAuthBar pathname={pathname} />}
-
       {!user && (
         <MobileDrawer
           open={mobileOpen}
@@ -338,6 +337,17 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
         />
       )}
     </header>
+      {user && (
+        <>
+          <div className="hidden border-b border-border-subtle bg-bg-sunken md:block">
+            <SecondaryAuthBar pathname={pathname} />
+          </div>
+          <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border-subtle bg-bg-surface md:hidden">
+            <SecondaryAuthBar pathname={pathname} />
+          </div>
+        </>
+      )}
+    </>
   )
 }
 

@@ -39,7 +39,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen flex-col bg-bg-base">
       <ThemeHydrator serverTheme={serverTheme} />
       <Nav user={user} unreadNotifications={unreadNotifications} />
-      <main className="flex-1">{children}</main>
+      <main className="flex-1 pb-10 md:pb-0">{children}</main>
       <Footer />
     </div>
   )
