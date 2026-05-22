@@ -197,7 +197,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             <SearchIcon />
           </Link>
 
-          <ThemeToggle className="hidden md:inline-flex" />
+          <ThemeToggle className="inline-flex" />
 
           {user ? (
             <>
@@ -372,9 +372,6 @@ function SecondaryAuthBar({ pathname }: { pathname: string }) {
             </li>
           )
         })}
-        <li className="ml-auto flex shrink-0 items-center pl-4">
-          <MobileThemePicker compact />
-        </li>
       </ul>
     </div>
   )
