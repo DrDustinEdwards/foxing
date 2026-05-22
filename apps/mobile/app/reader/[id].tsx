@@ -5,9 +5,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
   TextAa,
-  List as ListIcon,
+  DotsThree,
   BookmarkSimple,
-  BookOpen,
   X as XIcon,
 } from 'phosphor-react-native'
 import { Alert, TextInput as RNTextInput, Modal as RNModal } from 'react-native'
@@ -1438,44 +1437,52 @@ export default function Reader() {
           >
             <Pressable
               onPress={() => router.back()}
-              className="px-2 py-2 flex-row items-center"
+              hitSlop={8}
+              className="px-2 py-2"
               accessibilityRole="button"
               accessibilityLabel="Back to library"
             >
-              <CaretLeft color={colors.brandUi} size={20} />
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 16, color: colors.brandUi, marginLeft: 2 }}>
-                Back
-              </Text>
+              <CaretLeft color={colors.brandUi} size={22} />
             </Pressable>
-            <Text
-              numberOfLines={1}
-              style={{
-                fontFamily: Fonts.uiMedium, fontSize: 14,
-                color: colors.textPrimary, flex: 1, textAlign: 'center',
-              }}
-            >
-              {book.title}
-            </Text>
+            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}>
+              <Text
+                numberOfLines={1}
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  fontSize: 14,
+                  color: colors.textPrimary,
+                }}
+              >
+                {book.title}
+              </Text>
+              {currentChapter.title ? (
+                <Text
+                  numberOfLines={1}
+                  style={{
+                    fontFamily: Fonts.ui,
+                    fontSize: 11,
+                    color: colors.textTertiary,
+                    marginTop: 1,
+                  }}
+                >
+                  {currentChapter.title}
+                </Text>
+              ) : null}
+            </View>
             <View className="flex-row items-center">
               <Pressable
                 onPress={() => setShowSettings(true)}
                 className="px-2 py-2"
+                hitSlop={6}
                 accessibilityRole="button"
                 accessibilityLabel="Reading typography and layout"
               >
                 <TextAa color={colors.brandUi} size={22} />
               </Pressable>
               <Pressable
-                onPress={() => setMenuOpen(true)}
-                className="px-2 py-2"
-                accessibilityRole="button"
-                accessibilityLabel="Reader menu"
-              >
-                <ListIcon color={colors.brandUi} size={22} />
-              </Pressable>
-              <Pressable
                 onPress={onBookmarkTap}
                 className="px-2 py-2"
+                hitSlop={6}
                 accessibilityRole="button"
                 accessibilityLabel={isCurrentBookmarked ? 'Remove bookmark' : 'Add bookmark'}
               >
@@ -1490,10 +1497,11 @@ export default function Reader() {
         </SafeAreaView>
       ) : null}
 
-      {/* BOTTOM CHROME BAR, chapter · % · live reading rate. Spec calls
-          for "time remaining in chapter" but foliate doesn't surface
-          chapter word totals; we show live WPM so the indicator is
-          honest (improves once a few page-turn samples come in). */}
+      {/* BOTTOM CHROME BAR — Kindle-style: progress slider, chapter
+          position, settings icon. Auto-hides with the top bar.
+          The slider is visual-only for now (filled portion = progress
+          fraction). Drag-to-jump needs a Readium goTo with totalProgression
+          which is a separate piece of work. */}
       {chrome ? (
         <SafeAreaView
           edges={['bottom']}
@@ -1501,97 +1509,110 @@ export default function Reader() {
           className="absolute bottom-0 left-0 right-0"
         >
           <View
-            className="flex-row items-center"
             style={{
               backgroundColor: chromeBg,
               borderTopWidth: 1,
               borderTopColor: colors.borderSubtle,
               paddingHorizontal: isTablet ? 24 : 16,
-              paddingVertical: isTablet ? 16 : 12,
+              paddingTop: isTablet ? 14 : 10,
+              paddingBottom: isTablet ? 16 : 12,
             }}
           >
-            <Text
-              numberOfLines={1}
-              style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary, flex: 1 }}
-            >
-              {currentChapter.title || ''}
-            </Text>
-            {/* Σ, chapter summary shortcut (Story So Far). Always visible in
-                chrome per task.md Section 2f. */}
-            <Pressable
-              onPress={() => setSummaryOpen(true)}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Story so far"
-              style={{ paddingHorizontal: 6, paddingVertical: 4 }}
-            >
-              <BookOpen color={colors.brandUi} size={18} weight="regular" />
-            </Pressable>
-            <Text
+            <View
               style={{
-                fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary,
-                marginHorizontal: 12,
+                height: 4,
+                borderRadius: 2,
+                backgroundColor: colors.borderSubtle,
+                overflow: 'hidden',
               }}
+              accessibilityLabel={`Reading progress ${Math.round(progress * 100)} percent`}
             >
-              {Math.round(progress * 100)}%
-            </Text>
-            <Text
-              style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, minWidth: 70, textAlign: 'right' }}
-            >
-              {wpm ? `${wpm} wpm` : ''}
-            </Text>
-            {sleepTimer ? (
               <View
                 style={{
-                  marginLeft: 8,
-                  paddingHorizontal: 6,
-                  paddingVertical: 2,
-                  borderRadius: 4,
-                  backgroundColor: colors.bgSelected,
+                  height: '100%',
+                  width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
+                  backgroundColor: colors.brandUi,
                 }}
-                accessibilityLabel="Sleep timer active"
-              >
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 11,
-                    color: colors.brandText,
-                  }}
-                >
-                  {'\u{1F634} '}
-                  {sleepTimer.kind === 'end_of_chapter'
-                    ? 'EOC'
-                    : sleepRemainingMs != null
-                      ? formatRemaining(sleepRemainingMs)
-                      : sleepTimer.kind === 'minutes'
-                        ? `${sleepTimer.minutes}:00`
-                        : ''}
-                </Text>
-              </View>
-            ) : null}
-            {isPdf ? (
-              <View
+              />
+            </View>
+            <View
+              className="flex-row items-center"
+              style={{ marginTop: 8 }}
+            >
+              <Text
+                numberOfLines={1}
                 style={{
-                  marginLeft: 8,
-                  paddingHorizontal: 6,
-                  paddingVertical: 2,
-                  borderRadius: 4,
-                  backgroundColor: colors.bgSelected,
+                  flex: 1,
+                  fontFamily: Fonts.ui,
+                  fontSize: 12,
+                  color: colors.textSecondary,
                 }}
-                accessibilityLabel="PDF mode"
               >
-                <Text
+                {currentChapter.title
+                  ? `${currentChapter.title} · ${Math.round(progress * 100)}%`
+                  : `${Math.round(progress * 100)}%`}
+              </Text>
+              {sleepTimer ? (
+                <View
                   style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 9,
-                    color: colors.brandText,
-                    letterSpacing: 0.6,
+                    marginRight: 8,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.bgSelected,
                   }}
+                  accessibilityLabel="Sleep timer active"
                 >
-                  PDF
-                </Text>
-              </View>
-            ) : null}
+                  <Text
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      fontSize: 11,
+                      color: colors.brandText,
+                    }}
+                  >
+                    {sleepTimer.kind === 'end_of_chapter'
+                      ? 'EOC'
+                      : sleepRemainingMs != null
+                        ? formatRemaining(sleepRemainingMs)
+                        : sleepTimer.kind === 'minutes'
+                          ? `${sleepTimer.minutes}:00`
+                          : ''}
+                  </Text>
+                </View>
+              ) : null}
+              {isPdf ? (
+                <View
+                  style={{
+                    marginRight: 8,
+                    paddingHorizontal: 6,
+                    paddingVertical: 2,
+                    borderRadius: 4,
+                    backgroundColor: colors.bgSelected,
+                  }}
+                  accessibilityLabel="PDF mode"
+                >
+                  <Text
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      fontSize: 9,
+                      color: colors.brandText,
+                      letterSpacing: 0.6,
+                    }}
+                  >
+                    PDF
+                  </Text>
+                </View>
+              ) : null}
+              <Pressable
+                onPress={() => setMenuOpen(true)}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Reader menu"
+                style={{ paddingHorizontal: 6, paddingVertical: 4 }}
+              >
+                <DotsThree color={colors.brandUi} size={22} weight="bold" />
+              </Pressable>
+            </View>
             {presence.length > 0 ? (
               <Pressable
                 onPress={() => {
@@ -1600,7 +1621,7 @@ export default function Reader() {
                   }
                 }}
                 className="flex-row items-center"
-                style={{ marginLeft: 10 }}
+                style={{ marginTop: 8 }}
                 accessibilityLabel="Club members reading now"
               >
                 {presence.map((p, i) => {
