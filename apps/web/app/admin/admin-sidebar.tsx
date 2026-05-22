@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { Fragment, useState } from 'react'
 import {
   BellIcon,
   BookOpenIcon,
@@ -22,19 +22,49 @@ interface NavItem {
   exact?: boolean
 }
 
-const NAV: NavItem[] = [
-  { href: '/admin', label: 'Overview', icon: HouseIcon, exact: true },
-  { href: '/admin/users', label: 'Users', icon: UsersIcon },
-  { href: '/admin/books', label: 'Books', icon: BookOpenIcon },
-  { href: '/admin/book-of-month', label: 'Book of Month', icon: BookOpenIcon },
-  { href: '/admin/celebrity-picks', label: 'Celebrity Picks', icon: UsersIcon },
-  { href: '/admin/clubs', label: 'Clubs', icon: UsersThreeIcon },
-  { href: '/admin/bookstores', label: 'Bookstores', icon: BookOpenIcon },
-  { href: '/admin/content', label: 'Content', icon: FlagIcon },
-  { href: '/admin/notifications', label: 'Notifications', icon: BellIcon },
-  { href: '/admin/analytics', label: 'Analytics', icon: ChartBarIcon },
-  { href: '/admin/journal', label: 'Journal', icon: PencilIcon },
-  { href: '/admin/404s', label: '404 log', icon: FlagIcon },
+interface NavSection {
+  label: string | null
+  items: NavItem[]
+}
+
+const SECTIONS: NavSection[] = [
+  {
+    label: null,
+    items: [
+      { href: '/admin', label: 'Overview', icon: HouseIcon, exact: true },
+    ],
+  },
+  {
+    label: 'Catalog',
+    items: [
+      { href: '/admin/books', label: 'Books', icon: BookOpenIcon },
+      { href: '/admin/book-of-month', label: 'Book of Month', icon: BookOpenIcon },
+      { href: '/admin/celebrity-picks', label: 'Celebrity Picks', icon: UsersIcon },
+      { href: '/admin/journal', label: 'Journal', icon: PencilIcon },
+    ],
+  },
+  {
+    label: 'Community',
+    items: [
+      { href: '/admin/users', label: 'Users', icon: UsersIcon },
+      { href: '/admin/clubs', label: 'Clubs', icon: UsersThreeIcon },
+    ],
+  },
+  {
+    label: 'Operations',
+    items: [
+      { href: '/admin/notifications', label: 'Notifications', icon: BellIcon },
+      { href: '/admin/bookstores', label: 'Bookstores', icon: BookOpenIcon },
+      { href: '/admin/content', label: 'Content', icon: FlagIcon },
+    ],
+  },
+  {
+    label: 'Data',
+    items: [
+      { href: '/admin/analytics', label: 'Analytics', icon: ChartBarIcon },
+      { href: '/admin/404s', label: '404 log', icon: FlagIcon },
+    ],
+  },
 ]
 
 interface Props {
@@ -99,27 +129,39 @@ export function AdminSidebar({ adminName }: Props) {
           className="border-b border-[#3A2C22] bg-[#16100B] text-[#F5EDDE] md:hidden"
         >
           <ul className="flex flex-col px-2 py-2">
-            {NAV.map((item) => {
-              const Icon = item.icon
-              const isActive = active(item.href, item.exact)
-              return (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      'flex items-center gap-3 rounded px-3 py-2 font-dm-sans text-sm',
-                      isActive
-                        ? 'bg-[#2E1C0E] text-[#F5EDDE]'
-                        : 'text-[#C4AE96] hover:bg-[#261C13]',
-                    )}
+            {SECTIONS.map((section) => (
+              <Fragment key={section.label ?? 'top'}>
+                {section.label && (
+                  <li
+                    aria-hidden="true"
+                    className="px-3 pb-1 pt-4 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-[#A28269]"
                   >
-                    <Icon size={18} />
-                    {item.label}
-                  </Link>
-                </li>
-              )
-            })}
+                    {section.label}
+                  </li>
+                )}
+                {section.items.map((item) => {
+                  const Icon = item.icon
+                  const isActive = active(item.href, item.exact)
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={cn(
+                          'flex items-center gap-3 rounded px-3 py-1.5 font-dm-sans text-sm',
+                          isActive
+                            ? 'bg-[#2E1C0E] text-[#F5EDDE]'
+                            : 'text-[#C4AE96] hover:bg-[#261C13]',
+                        )}
+                      >
+                        <Icon size={18} />
+                        {item.label}
+                      </Link>
+                    </li>
+                  )
+                })}
+              </Fragment>
+            ))}
           </ul>
         </nav>
       )}
@@ -142,26 +184,38 @@ export function AdminSidebar({ adminName }: Props) {
           </p>
         </div>
         <ul className="flex-1 overflow-y-auto px-2 py-3">
-          {NAV.map((item) => {
-            const Icon = item.icon
-            const isActive = active(item.href, item.exact)
-            return (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className={cn(
-                    'mb-1 flex items-center gap-3 rounded-md border-l-2 px-3 py-2 font-dm-sans text-sm transition-colors',
-                    isActive
-                      ? 'border-brand-ui bg-[#2E1C0E] text-[#F5EDDE]'
-                      : 'border-transparent text-[#C4AE96] hover:bg-[#261C13] hover:text-[#F5EDDE]',
-                  )}
+          {SECTIONS.map((section) => (
+            <Fragment key={section.label ?? 'top'}>
+              {section.label && (
+                <li
+                  aria-hidden="true"
+                  className="px-3 pb-1 pt-4 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-[#A28269]"
                 >
-                  <Icon size={18} />
-                  {item.label}
-                </Link>
-              </li>
-            )
-          })}
+                  {section.label}
+                </li>
+              )}
+              {section.items.map((item) => {
+                const Icon = item.icon
+                const isActive = active(item.href, item.exact)
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      className={cn(
+                        'mb-1 flex items-center gap-3 rounded-md border-l-2 px-3 py-1.5 font-dm-sans text-sm transition-colors',
+                        isActive
+                          ? 'border-brand-ui bg-[#2E1C0E] text-[#F5EDDE]'
+                          : 'border-transparent text-[#C4AE96] hover:bg-[#261C13] hover:text-[#F5EDDE]',
+                      )}
+                    >
+                      <Icon size={18} />
+                      {item.label}
+                    </Link>
+                  </li>
+                )
+              })}
+            </Fragment>
+          ))}
         </ul>
         <div className="border-t border-[#3A2C22] px-5 py-3">
           <p className="font-dm-mono text-[11px] text-[#A28269]">
