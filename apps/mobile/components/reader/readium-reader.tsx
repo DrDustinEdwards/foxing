@@ -14,6 +14,7 @@ import {
   ReadiumView,
   type ReadiumViewRef,
   type Locator,
+  type Preferences,
   type DecorationGroup,
   type Decoration,
   type SelectionEvent,
@@ -96,14 +97,42 @@ interface ReadiumReaderProps {
   onPassageCommentTapped?: (cfi: string | null, passageText: string) => void
 }
 
-// Preferences mapping intentionally omitted for Phase 3.x v1. The Foliate
-// reader's settings use absolute pixel values (fontSize=18, lineHeight=1.5
-// as multiplier, etc.) but Readium's EpubPreferences treats fontSize as a
-// SCALE FACTOR (~0.5..2.5) and runs strict require() range checks in its
-// init block. Passing the Foliate values directly crashes the Kotlin
-// navigator at EpubPreferences.<init>(line 81): "Failed requirement".
-// Re-add preferences incrementally once each one's expected range is
-// confirmed against the Readium kotlin-toolkit source.
+// Preferences mapping is intentionally minimal. EpubPreferences's init
+// block enforces range constraints (the original Foliate values crashed
+// the navigator). Only two fields are wired so far:
+//
+//   theme     - mapped from Foliate's background color to the Readium
+//               enum ('light' | 'dark' | 'sepia').
+//   fontSize  - Readium treats fontSize as a SCALE FACTOR, not a pixel
+//               value. We derive it as Foliate's px / 16 (approx
+//               default body size) and clamp to a conservative range
+//               of 0.5..2.0 so the EpubPreferences init's require()
+//               never fires.
+//
+// Every other Foliate setting (lineHeight, paragraphSpacing, marginPx,
+// letterSpacing, justify, etc.) stays unset until we map each one
+// against a verified Readium range.
+
+const READIUM_BG_TO_THEME: Array<[RegExp, 'light' | 'dark' | 'sepia']> = [
+  [/^#0/i, 'dark'],
+  [/^#1/i, 'dark'],
+  [/e8|f4|f5/i, 'sepia'],
+]
+
+function deriveReadiumTheme(bg: string): 'light' | 'dark' | 'sepia' {
+  const lower = bg.toLowerCase()
+  for (const [pattern, value] of READIUM_BG_TO_THEME) {
+    if (pattern.test(lower)) return value
+  }
+  return 'light'
+}
+
+function settingsToReadiumPreferences(s: ReaderSettings): Preferences {
+  return {
+    theme: deriveReadiumTheme(s.theme.background),
+    fontSize: Math.max(0.5, Math.min(2.0, s.fontSize / 16)),
+  }
+}
 
 // CFI <-> Locator conversion. Readium uses its own Locator shape; we keep
 // the migration storage-compatible by stringifying the whole Locator and
@@ -148,6 +177,9 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     const viewRef = useRef<ReadiumViewRef>(null)
     const [highlights, setHighlights] = useState<Decoration[]>([])
     const [sentenceDecoration, setSentenceDecoration] = useState<Decoration | null>(null)
+    const [readiumPrefs, setReadiumPrefs] = useState<Preferences>(() =>
+      settingsToReadiumPreferences(initialSettings),
+    )
     // Local file URI for ReadiumView. Readium cannot open an HTTPS URL
     // directly -- the native side errors "File does not exist: https://..."
     // and silently leaves the publication in a loading state. We download
@@ -390,12 +422,13 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
             text: { highlight: excerpt.slice(0, 200) },
           })
         },
-        applySettings: (_s: ReaderSettings) => {
-          // TODO Phase 3.x: re-derive Readium Preferences with values that
-          // satisfy EpubPreferences's range constraints (fontSize as a
-          // 0.5..2.5 scale, lineHeight as 1.0..2.0 multiplier, etc.) and
-          // call viewRef.current to apply them. The Foliate-shaped
-          // ReaderSettings input uses pixel/em units that need translation.
+        applySettings: (s: ReaderSettings) => {
+          // Only theme + fontSize are wired so far. See
+          // settingsToReadiumPreferences for the mapping + clamp logic.
+          // Other Foliate settings (bold, lineHeight, marginPx, etc.)
+          // are silently ignored until each is mapped against a
+          // verified Readium range.
+          setReadiumPrefs(settingsToReadiumPreferences(s))
         },
         addHighlight: (cfi: string, color: HighlightColor) => {
           const locator = decodeLocator(cfi)
@@ -540,7 +573,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       () => (localUri ? { url: localUri, initialLocation: initialLocator } : null),
       [localUri, initialLocator],
     )
-    const preferencesProp = useMemo(() => ({}), [])
+    const preferencesProp = useMemo(() => readiumPrefs, [readiumPrefs])
     // Pass an empty selectionActions array so the OS text-selection menu
     // has no custom Foxing entries. Whether this also SUPPRESSES the
     // system popup or only EMPTIES our slot of it is a Readium native
