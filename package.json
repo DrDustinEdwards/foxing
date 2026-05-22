@@ -5,6 +5,12 @@
     "apps/*",
     "packages/*"
   ],
+  "pnpm": {
+    "overrides": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  },
   "scripts": {
     "dev:mobile": "pnpm --filter mobile start",
     "dev:web": "pnpm --filter web dev",
@@ -13,6 +19,8 @@
     "lint": "turbo lint"
   },
   "devDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
     "turbo": "latest",
     "typescript": "^5.0.0"
   }
