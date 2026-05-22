@@ -154,17 +154,45 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     // the EPUB up front and only mount ReadiumView once the local file is
     // ready.
     const [localUri, setLocalUri] = useState<string | null>(null)
+
+    // Host callbacks are passed as inline lambdas, so their identity
+    // changes on every parent render. Mirror them through refs so the
+    // download effect, gesture, and safety timeout can read the latest
+    // without depending on the callback as a useEffect/useCallback dep.
+    // Without this, every host re-render (e.g. setProgress on page turn)
+    // would cause the download effect to re-fire, reset localUri to null,
+    // unmount ReadiumView, then remount with `initialLocation: initialCfi`,
+    // which on a book with no saved position jumps back to chapter 1.
+    const onReadyRef = useRef(onReady)
+    const onErrorRef = useRef(onError)
+    const onLocationChangeRef = useRef(onLocationChange)
+    const onChapterChangeRef = useRef(onChapterChange)
+    const onWordTappedRef = useRef(onWordTapped)
+    const onPassageSelectedRef = useRef(onPassageSelected)
+    const onPassageCommentTappedRef = useRef(onPassageCommentTapped)
+    const onTapRef = useRef(onTap)
+    onReadyRef.current = onReady
+    onErrorRef.current = onError
+    onLocationChangeRef.current = onLocationChange
+    onChapterChangeRef.current = onChapterChange
+    onWordTappedRef.current = onWordTapped
+    onPassageSelectedRef.current = onPassageSelected
+    onPassageCommentTappedRef.current = onPassageCommentTapped
+    onTapRef.current = onTap
+
     // Single-shot onReady. handlePublicationReady is the canonical trigger;
     // handleLocationChange is a defensive fallback for Readium builds where
     // the publication-ready event fires before our JS callback is wired or
     // never reaches us. Either path flips this ref so the host's "Loading
-    // book…" overlay can come down.
+    // book…" overlay can come down. Never reset once true: the wrapper only
+    // initializes once per epubUrl, and resetting on host re-renders is what
+    // caused the "jumps to chapter 1" bug.
     const readyFiredRef = useRef(false)
     const fireReadyOnce = useCallback(() => {
       if (readyFiredRef.current) return
       readyFiredRef.current = true
-      onReady?.()
-    }, [onReady])
+      onReadyRef.current?.()
+    }, [])
     // Default palette; host calls setHighlightColors with the design-token
     // values pulled from useColors() so light/dark match the rest of the UI.
     const highlightPaletteRef = useRef<Record<HighlightColor, string>>({
@@ -197,34 +225,46 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       return groups
     }, [highlights, sentenceDecoration])
 
-    const flushLocator = useCallback(
-      (locator: Locator) => {
-        const serialized = encodeLocator(locator)
-        if (serialized === lastSavedLocatorRef.current) return
-        lastSavedLocatorRef.current = serialized
-        const progression = locator.locations?.progression ?? 0
-        onLocationChange?.(serialized, progression, undefined, locator.text?.highlight)
-      },
-      [onLocationChange],
-    )
+    const flushLocator = useCallback((locator: Locator) => {
+      const serialized = encodeLocator(locator)
+      if (serialized === lastSavedLocatorRef.current) return
+      lastSavedLocatorRef.current = serialized
+      const progression = locator.locations?.progression ?? 0
+      onLocationChangeRef.current?.(
+        serialized,
+        progression,
+        undefined,
+        locator.text?.highlight,
+      )
+    }, [])
+
+    // Suppress the very first onLocationChange after mount. Readium emits
+    // an initial relocate event when the publication renders -- if we let
+    // that fire the host's save, a fresh book with no saved CFI would
+    // overwrite Supabase with chapter 1 even if the user never turned a
+    // page. After the first event, every subsequent change is a real
+    // navigation.
+    const firstLocationChangeRef = useRef(true)
 
     const handleLocationChange = useCallback(
       (locator: Locator) => {
         currentLocatorRef.current = locator
-        // The first location-change event also indicates the publication
-        // rendered. Bubble ready in case onPublicationReady never reached us.
         fireReadyOnce()
         // Chapter changed? Drop any stale sentence decoration so we don't
         // paint a previous chapter's TTS highlight on the new page.
         chapterSentencesRef.current = []
         setSentenceDecoration(null)
+        if (locator.title) {
+          onChapterChangeRef.current?.({ title: locator.title, index: 0 })
+        }
+        if (firstLocationChangeRef.current) {
+          firstLocationChangeRef.current = false
+          return
+        }
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
         saveTimerRef.current = setTimeout(() => flushLocator(locator), 1500)
-        if (locator.title) {
-          onChapterChange?.({ title: locator.title, index: 0 })
-        }
       },
-      [flushLocator, onChapterChange, fireReadyOnce],
+      [flushLocator, fireReadyOnce],
     )
 
     const handlePublicationReady = useCallback(
@@ -243,10 +283,10 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
 
     // Download the EPUB to local cache on mount so ReadiumView can open it.
     // Cached by URL hash; second open of the same book is essentially free.
+    // Deps: epubUrl only. onError is read via ref so a host re-render that
+    // changes the inline lambda's identity doesn't re-trigger the effect.
     useEffect(() => {
       let cancelled = false
-      setLocalUri(null)
-      readyFiredRef.current = false
       ;(async () => {
         try {
           const uri = await ensureEpubLocalUri(epubUrl)
@@ -255,13 +295,13 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           if (cancelled) return
           const message = e instanceof Error ? e.message : 'EPUB download failed'
           console.warn('[readium-reader] local download failed:', message)
-          onError?.(message)
+          onErrorRef.current?.(message)
         }
       })()
       return () => {
         cancelled = true
       }
-    }, [epubUrl, onError])
+    }, [epubUrl])
 
     // Safety net: if neither onPublicationReady nor onLocationChange has
     // fired 10 seconds after the file is local, surface the canvas anyway.
@@ -284,46 +324,38 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         const text = event.selectedText
         if (!text || !event.locator) return
         const cfi = encodeLocator(event.locator)
-        // Readium doesn't surface a screen rect for the selection. Anchor
-        // the floating pill near screen-center so its layout clamp lands
-        // it in a visible position instead of pinned to the top-left corner.
-        // The FloatingPill component clamps left/right inside the safe
-        // horizontal range and prefers above the anchor; a midpoint y
-        // means it renders above the bottom safe area on most devices.
         const rect: ReaderRect = {
           x: screenWidth / 2,
           y: screenHeight / 2,
           width: 0,
           height: 0,
         }
-        // Route single-word selections to the AI word lookup flow with
-        // before+highlight+after as sentence context. Multi-word selections
-        // go to the passage flow (highlight / analyze / discuss).
         const trimmed = text.trim()
-        const isSingleWord = trimmed.length > 0 && !/\s/.test(trimmed) && trimmed.length <= 50
-        if (isSingleWord && onWordTapped) {
+        const isSingleWord =
+          trimmed.length > 0 && !/\s/.test(trimmed) && trimmed.length <= 50
+        if (isSingleWord && onWordTappedRef.current) {
           const before = event.locator.text?.before ?? ''
           const highlight = event.locator.text?.highlight ?? trimmed
           const after = event.locator.text?.after ?? ''
           const surroundingText = `${before}${highlight}${after}`.trim()
-          onWordTapped(trimmed, surroundingText, cfi, rect)
+          onWordTappedRef.current(trimmed, surroundingText, cfi, rect)
           return
         }
-        onPassageSelected?.(text, cfi, rect)
+        onPassageSelectedRef.current?.(text, cfi, rect)
       },
-      [onPassageSelected, onWordTapped, screenWidth, screenHeight],
+      [screenWidth, screenHeight],
     )
 
     const handleDecorationActivated = useCallback(
       (event: DecorationActivatedEvent) => {
         if (event.group === HIGHLIGHTS_GROUP) return
         const passageText = event.decoration.locator.text?.highlight ?? ''
-        onPassageCommentTapped?.(
+        onPassageCommentTappedRef.current?.(
           encodeLocator(event.decoration.locator),
           passageText,
         )
       },
-      [onPassageCommentTapped],
+      [],
     )
 
     useImperativeHandle(
@@ -459,23 +491,33 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [epubUrl],
     )
 
-    // Tap-to-hide chrome via react-native-gesture-handler. Configuring the
-    // gesture as a single-tap with a short max duration and a tight movement
-    // tolerance means RNGH only recognizes deliberate taps; swipes (which
-    // exceed the tolerance) and long-presses (which exceed the duration)
-    // fall through to Readium's own gesture handling, so page turn and
-    // text selection still work.
+    // Tap-to-hide chrome via react-native-gesture-handler. Single-tap with
+    // short max duration and tight movement tolerance so RNGH only catches
+    // deliberate taps; swipes and long-presses pass through to Readium.
+    // Reads onTap via ref so the gesture's identity stays stable across
+    // host re-renders (a new gesture identity per render would tear down
+    // and rebuild the gesture every page turn).
     const tapGesture = useMemo(
       () =>
         Gesture.Tap()
           .maxDuration(250)
           .maxDistance(10)
           .onEnd((_e, success) => {
-            if (success) onTap?.()
+            if (success) onTapRef.current?.()
           })
           .runOnJS(true),
-      [onTap],
+      [],
     )
+
+    // Stable references for ReadiumView props so the native side doesn't
+    // see a "new file" / "new preferences" on every host re-render and
+    // reload the publication (which would jump the reader to its
+    // initialLocation, i.e. chapter 1 when no progress is saved yet).
+    const file = useMemo(
+      () => (localUri ? { url: localUri, initialLocation: initialLocator } : null),
+      [localUri, initialLocator],
+    )
+    const preferencesProp = useMemo(() => ({}), [])
 
     // No internal loading overlay. The host renders "Loading book…" while
     // readerState === 'loading' (opaque background that covers our canvas);
@@ -483,7 +525,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     // forever, would hide Readium's content after the host transitions.
     // Until the EPUB is downloaded we render an empty View; the host
     // overlay covers it.
-    if (!localUri) {
+    if (!file) {
       return (
         <View
           style={{ flex: 1, backgroundColor: initialSettings.theme.background }}
@@ -497,8 +539,8 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           <View style={{ flex: 1 }}>
             <ReadiumView
               ref={viewRef}
-              file={{ url: localUri, initialLocation: initialLocator }}
-              preferences={{}}
+              file={file}
+              preferences={preferencesProp}
               decorations={decorations}
               onLocationChange={handleLocationChange}
               onPublicationReady={handlePublicationReady}
