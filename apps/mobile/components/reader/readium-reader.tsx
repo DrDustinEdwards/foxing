@@ -363,9 +363,32 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       () => ({
         prev: () => viewRef.current?.goBackward(),
         next: () => viewRef.current?.goForward(),
-        goTo: (cfi: string) => {
+        goTo: (cfi: string, hint?: { text?: string; chapter?: string }) => {
           const locator = decodeLocator(cfi)
-          if (locator) viewRef.current?.goTo(locator)
+          if (locator) {
+            viewRef.current?.goTo(locator)
+            return
+          }
+          // Migration path for legacy foliate epubcfi(...) values stored on
+          // highlights / bookmarks rows. Build a text-based Locator from
+          // the saved excerpt and (when known) the chapter href so Readium
+          // can search the publication for a match. Reliability scales
+          // with excerpt uniqueness; short or duplicate excerpts may land
+          // on the wrong instance.
+          const excerpt = hint?.text?.trim()
+          if (!excerpt) return
+          const chapterEntry = hint?.chapter
+            ? tocRef.current.find((t) => t.label === hint.chapter)
+            : undefined
+          const fallbackHref =
+            chapterEntry?.href ?? currentLocatorRef.current?.href
+          if (!fallbackHref) return
+          viewRef.current?.goTo({
+            href: fallbackHref,
+            type:
+              currentLocatorRef.current?.type ?? 'application/xhtml+xml',
+            text: { highlight: excerpt.slice(0, 200) },
+          })
         },
         applySettings: (_s: ReaderSettings) => {
           // TODO Phase 3.x: re-derive Readium Preferences with values that

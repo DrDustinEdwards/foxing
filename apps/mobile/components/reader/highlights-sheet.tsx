@@ -27,7 +27,9 @@ interface HighlightsSheetProps {
   bookTitle: string
   bookAuthor?: string
   bookId: string
-  onNavigate: (cfi: string) => void
+  // Excerpt + chapter give the Readium renderer a fallback path for
+  // legacy foliate epubcfi values that can't be decoded as Locator JSON.
+  onNavigate: (cfi: string, text: string, chapter: string | null) => void
   onClose: () => void
 }
 
@@ -205,7 +207,7 @@ export function HighlightsSheet({
                 <Pressable
                   key={h.id}
                   onPress={() => {
-                    onNavigate(h.cfi)
+                    onNavigate(h.cfi, h.text, h.chapter)
                     onClose()
                   }}
                   className="mb-3 rounded-2xl flex-row overflow-hidden border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
