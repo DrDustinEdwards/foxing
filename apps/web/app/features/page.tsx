@@ -947,7 +947,6 @@ export default function FeaturesPage() {
                   'Monthly reading goal: set a target for the current month with live progress',
                   'Weekly reading goal: set a target for the current week with live progress',
                   'Reading streak tracking (current streak and longest streak ever)',
-                  'Reading activity heatmap (last 52 weeks, GitHub-style)',
                   'Daily reading reminder (set your preferred time)',
                   'Streak freeze credits (protect a streak you would otherwise break)',
                 ]}
