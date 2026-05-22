@@ -16,7 +16,7 @@
 import JSZip from 'jszip'
 import * as FileSystem from 'expo-file-system/legacy'
 
-import { ensureEpubLocallyCached } from '@/lib/epub-cache'
+import { ensureEpubLocalUri } from '@/lib/epub-cache'
 
 interface SpineItem {
   href: string
@@ -122,12 +122,10 @@ async function openEpub(remoteUrl: string): Promise<OpenedEpub> {
   const cached = openCache.get(remoteUrl)
   if (cached) return cached
   const promise = (async (): Promise<OpenedEpub> => {
-    // Download into local cache (no-op on second call) and read the raw
-    // bytes for jszip. ensureEpubLocallyCached returns base64 plus byte
-    // count; we re-read the file as Base64 here to avoid keeping the
-    // mb-scale string in memory twice.
-    await ensureEpubLocallyCached(remoteUrl)
-    const path = await resolveLocalEpubPath(remoteUrl)
+    // Download to local cache if needed and read the raw bytes for jszip.
+    // ensureEpubLocalUri skips the redundant base64 round-trip that
+    // ensureEpubLocallyCached does.
+    const path = await ensureEpubLocalUri(remoteUrl)
     const buf = await readFileAsArrayBuffer(path)
     const zip = await JSZip.loadAsync(buf)
     const opfPath = await findOpfPath(zip)
@@ -142,27 +140,6 @@ async function openEpub(remoteUrl: string): Promise<OpenedEpub> {
   // If parsing fails, drop the cached promise so the next caller can retry.
   promise.catch(() => openCache.delete(remoteUrl))
   return promise
-}
-
-// The cache module hashes the URL into a stable filename; we don't export
-// that hash, so we have to mirror the layout here to reconstruct the path.
-// Keep these two in sync if epub-cache changes its naming scheme.
-function cacheKey(remoteUrl: string): string {
-  let a = 0x811c9dc5
-  let b = 0x84222325
-  for (let i = 0; i < remoteUrl.length; i++) {
-    const c = remoteUrl.charCodeAt(i)
-    a ^= c
-    a = Math.imul(a, 0x01000193)
-    b ^= c
-    b = Math.imul(b, 0x05f5e101)
-  }
-  const hex = (n: number) => (n >>> 0).toString(16).padStart(8, '0')
-  return `${hex(a)}${hex(b)}`
-}
-
-async function resolveLocalEpubPath(remoteUrl: string): Promise<string> {
-  return `${FileSystem.documentDirectory}epubs/${cacheKey(remoteUrl)}.epub`
 }
 
 // HTML to plain text. Drops <script> + <style> blocks entirely, then strips

@@ -1,12 +1,14 @@
 import {
   forwardRef,
   useCallback,
+  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
   useState,
 } from 'react'
-import { View, ActivityIndicator, Text, useWindowDimensions } from 'react-native'
+import { View, useWindowDimensions } from 'react-native'
+import { ensureEpubLocalUri } from '@/lib/epub-cache'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import {
   ReadiumView,
@@ -165,6 +167,23 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     )
     const [highlights, setHighlights] = useState<Decoration[]>([])
     const [sentenceDecoration, setSentenceDecoration] = useState<Decoration | null>(null)
+    // Local file URI for ReadiumView. Readium cannot open an HTTPS URL
+    // directly -- the native side errors "File does not exist: https://..."
+    // and silently leaves the publication in a loading state. We download
+    // the EPUB up front and only mount ReadiumView once the local file is
+    // ready.
+    const [localUri, setLocalUri] = useState<string | null>(null)
+    // Single-shot onReady. handlePublicationReady is the canonical trigger;
+    // handleLocationChange is a defensive fallback for Readium builds where
+    // the publication-ready event fires before our JS callback is wired or
+    // never reaches us. Either path flips this ref so the host's "Loading
+    // book…" overlay can come down.
+    const readyFiredRef = useRef(false)
+    const fireReadyOnce = useCallback(() => {
+      if (readyFiredRef.current) return
+      readyFiredRef.current = true
+      onReady?.()
+    }, [onReady])
     // Default palette; host calls setHighlightColors with the design-token
     // values pulled from useColors() so light/dark match the rest of the UI.
     const highlightPaletteRef = useRef<Record<HighlightColor, string>>({
@@ -211,6 +230,9 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     const handleLocationChange = useCallback(
       (locator: Locator) => {
         currentLocatorRef.current = locator
+        // The first location-change event also indicates the publication
+        // rendered. Bubble ready in case onPublicationReady never reached us.
+        fireReadyOnce()
         // Chapter changed? Drop any stale sentence decoration so we don't
         // paint a previous chapter's TTS highlight on the new page.
         chapterSentencesRef.current = []
@@ -221,7 +243,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           onChapterChange?.({ title: locator.title, index: 0 })
         }
       },
-      [flushLocator, onChapterChange],
+      [flushLocator, onChapterChange, fireReadyOnce],
     )
 
     const handlePublicationReady = useCallback(
@@ -233,10 +255,48 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
             href: link.href,
             cfi: null,
           }))
-        onReady?.()
+        fireReadyOnce()
       },
-      [onReady],
+      [fireReadyOnce],
     )
+
+    // Download the EPUB to local cache on mount so ReadiumView can open it.
+    // Cached by URL hash; second open of the same book is essentially free.
+    useEffect(() => {
+      let cancelled = false
+      setLocalUri(null)
+      readyFiredRef.current = false
+      ;(async () => {
+        try {
+          const uri = await ensureEpubLocalUri(epubUrl)
+          if (!cancelled) setLocalUri(uri)
+        } catch (e) {
+          if (cancelled) return
+          const message = e instanceof Error ? e.message : 'EPUB download failed'
+          console.warn('[readium-reader] local download failed:', message)
+          onError?.(message)
+        }
+      })()
+      return () => {
+        cancelled = true
+      }
+    }, [epubUrl, onError])
+
+    // Safety net: if neither onPublicationReady nor onLocationChange has
+    // fired 10 seconds after the file is local, surface the canvas anyway.
+    // The worst case is the host overlay coming down before Readium actually
+    // finishes its first paint, which still beats an indefinite "Loading
+    // book…" lock.
+    useEffect(() => {
+      if (!localUri) return
+      const t = setTimeout(() => {
+        if (!readyFiredRef.current) {
+          console.warn('[readium-reader] ready-event timeout; falling back')
+          fireReadyOnce()
+        }
+      }, 10_000)
+      return () => clearTimeout(t)
+    }, [fireReadyOnce, localUri])
 
     const handleSelectionChange = useCallback(
       (event: SelectionEvent) => {
@@ -432,13 +492,27 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [onTap],
     )
 
+    // No internal loading overlay. The host renders "Loading book…" while
+    // readerState === 'loading' (opaque background that covers our canvas);
+    // a second overlay here would either be redundant or, if it stayed on
+    // forever, would hide Readium's content after the host transitions.
+    // Until the EPUB is downloaded we render an empty View; the host
+    // overlay covers it.
+    if (!localUri) {
+      return (
+        <View
+          style={{ flex: 1, backgroundColor: initialSettings.theme.background }}
+        />
+      )
+    }
+
     return (
       <View style={{ flex: 1, backgroundColor: initialSettings.theme.background }}>
         <GestureDetector gesture={tapGesture}>
           <View style={{ flex: 1 }}>
             <ReadiumView
               ref={viewRef}
-              file={{ url: epubUrl, initialLocation: initialLocator }}
+              file={{ url: localUri, initialLocation: initialLocator }}
               preferences={preferences}
               decorations={decorations}
               onLocationChange={handleLocationChange}
@@ -449,23 +523,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
             />
           </View>
         </GestureDetector>
-        <View
-          pointerEvents="none"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <ActivityIndicator color={initialSettings.theme.text} />
-          <Text style={{ color: initialSettings.theme.text, marginTop: 8 }}>
-            Loading…
-          </Text>
-        </View>
       </View>
     )
   },
