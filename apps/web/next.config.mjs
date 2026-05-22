@@ -2,6 +2,9 @@
 /** @type {import('next').NextConfig} */
 
 import { withSentryConfig } from '@sentry/nextjs'
+import { createRequire } from 'node:module'
+
+const require = createRequire(import.meta.url)
 
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
@@ -36,6 +39,14 @@ const nextConfig = {
     instrumentationHook: true,
   },
   transpilePackages: ['@foxing/types', '@foxing/utils'],
+  webpack: (config) => {
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      react: require.resolve('react'),
+      'react-dom': require.resolve('react-dom'),
+    }
+    return config
+  },
   async headers() {
     return [
       {
