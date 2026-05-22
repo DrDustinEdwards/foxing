@@ -17,15 +17,14 @@ const config = getDefaultConfig(projectRoot)
 config.watchFolders = [workspaceRoot]
 
 // Tell Metro where to look for packages and in what order. App-local
-// modules first, then hoisted modules at the workspace root.
+// modules first, then hoisted modules at the workspace root. With
+// node-linker=hoisted (set in the root .npmrc), this is sufficient and
+// hierarchical lookup can stay on so deeply nested pnpm-virtual-store
+// imports can still find their peers in the hoisted tree.
 config.resolver.nodeModulesPaths = [
   path.resolve(projectRoot, 'node_modules'),
   path.resolve(workspaceRoot, 'node_modules'),
 ]
-
-// Force Metro to honor the explicit nodeModulesPaths list instead of
-// walking up the directory tree on its own.
-config.resolver.disableHierarchicalLookup = true
 
 // Treat the foliate WebView HTML harness as an asset so
 // expo-asset's Asset.fromModule(require('./reader.html')) resolves to
