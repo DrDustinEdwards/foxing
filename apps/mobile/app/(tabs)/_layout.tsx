@@ -25,7 +25,7 @@ export default function TabsLayout() {
         options={{
           title: 'Discover',
           tabBarAccessibilityLabel: 'Discover tab',
-          tabBarIcon: ({ color, size }) => <Compass color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Compass color={color as string} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -33,7 +33,7 @@ export default function TabsLayout() {
         options={{
           title: 'Library',
           tabBarAccessibilityLabel: 'Library tab',
-          tabBarIcon: ({ color, size }) => <Books color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Books color={color as string} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -41,7 +41,7 @@ export default function TabsLayout() {
         options={{
           title: 'Feed',
           tabBarAccessibilityLabel: 'Feed tab',
-          tabBarIcon: ({ color, size }) => <Newspaper color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <Newspaper color={color as string} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -49,7 +49,7 @@ export default function TabsLayout() {
         options={{
           title: 'Clubs',
           tabBarAccessibilityLabel: 'Clubs tab',
-          tabBarIcon: ({ color, size }) => <UsersThree color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <UsersThree color={color as string} size={size} />,
         }}
       />
       <Tabs.Screen
@@ -57,7 +57,7 @@ export default function TabsLayout() {
         options={{
           title: 'Profile',
           tabBarAccessibilityLabel: 'Profile tab',
-          tabBarIcon: ({ color, size }) => <UserCircle color={color} size={size} />,
+          tabBarIcon: ({ color, size }) => <UserCircle color={color as string} size={size} />,
         }}
       />
     </Tabs>

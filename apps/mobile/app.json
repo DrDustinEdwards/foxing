@@ -7,11 +7,6 @@
     "icon": "./assets/images/icon.png",
     "scheme": "foxing",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/images/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#1a1208"
-    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.foxing.app"
