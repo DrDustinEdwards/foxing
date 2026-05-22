@@ -541,6 +541,14 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [localUri, initialLocator],
     )
     const preferencesProp = useMemo(() => ({}), [])
+    // Pass an empty selectionActions array so the OS text-selection menu
+    // has no custom Foxing entries. Whether this also SUPPRESSES the
+    // system popup or only EMPTIES our slot of it is a Readium native
+    // behavior to verify on device. The floating pill we render on
+    // onSelectionChange is the intended primary surface regardless.
+    // If the system menu still appears alongside, we accept that and
+    // make sure the pill is the prominent one.
+    const selectionActions = useMemo<never[]>(() => [], [])
 
     // No internal loading overlay. The host renders "Loading book…" while
     // readerState === 'loading' (opaque background that covers our canvas);
@@ -565,6 +573,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
               file={file}
               preferences={preferencesProp}
               decorations={decorations}
+              selectionActions={selectionActions}
               onLocationChange={handleLocationChange}
               onPublicationReady={handlePublicationReady}
               onSelectionChange={handleSelectionChange}
