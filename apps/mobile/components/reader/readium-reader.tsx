@@ -14,7 +14,6 @@ import {
   ReadiumView,
   type ReadiumViewRef,
   type Locator,
-  type Preferences,
   type DecorationGroup,
   type Decoration,
   type SelectionEvent,
@@ -97,29 +96,14 @@ interface ReadiumReaderProps {
   onPassageCommentTapped?: (cfi: string | null, passageText: string) => void
 }
 
-function settingsToPreferences(s: ReaderSettings): Preferences {
-  const themeKey: 'light' | 'dark' | 'sepia' =
-    s.theme.background.toLowerCase() === '#000000'
-      ? 'dark'
-      : s.theme.background.toLowerCase().includes('e8') ||
-          s.theme.background.toLowerCase().includes('f5')
-        ? 'sepia'
-        : 'light'
-
-  return {
-    backgroundColor: s.theme.background,
-    textColor: s.theme.text,
-    fontSize: s.fontSize,
-    lineHeight: s.lineHeight,
-    fontWeight: s.bold ? 700 : 400,
-    paragraphSpacing: s.paragraphSpacing,
-    pageMargins: s.marginPx ? Math.max(0.5, s.marginPx / 32) : undefined,
-    textAlign: s.justify ? 'justify' : 'start',
-    letterSpacing: s.letterSpacingEm,
-    theme: themeKey,
-    publisherStyles: false,
-  }
-}
+// Preferences mapping intentionally omitted for Phase 3.x v1. The Foliate
+// reader's settings use absolute pixel values (fontSize=18, lineHeight=1.5
+// as multiplier, etc.) but Readium's EpubPreferences treats fontSize as a
+// SCALE FACTOR (~0.5..2.5) and runs strict require() range checks in its
+// init block. Passing the Foliate values directly crashes the Kotlin
+// navigator at EpubPreferences.<init>(line 81): "Failed requirement".
+// Re-add preferences incrementally once each one's expected range is
+// confirmed against the Readium kotlin-toolkit source.
 
 // CFI <-> Locator conversion. Readium uses its own Locator shape; we keep
 // the migration storage-compatible by stringifying the whole Locator and
@@ -162,9 +146,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
   ) {
     const { width: screenWidth, height: screenHeight } = useWindowDimensions()
     const viewRef = useRef<ReadiumViewRef>(null)
-    const [preferences, setPreferences] = useState<Preferences>(
-      settingsToPreferences(initialSettings),
-    )
     const [highlights, setHighlights] = useState<Decoration[]>([])
     const [sentenceDecoration, setSentenceDecoration] = useState<Decoration | null>(null)
     // Local file URI for ReadiumView. Readium cannot open an HTTPS URL
@@ -354,8 +335,12 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           const locator = decodeLocator(cfi)
           if (locator) viewRef.current?.goTo(locator)
         },
-        applySettings: (s: ReaderSettings) => {
-          setPreferences(settingsToPreferences(s))
+        applySettings: (_s: ReaderSettings) => {
+          // TODO Phase 3.x: re-derive Readium Preferences with values that
+          // satisfy EpubPreferences's range constraints (fontSize as a
+          // 0.5..2.5 scale, lineHeight as 1.0..2.0 multiplier, etc.) and
+          // call viewRef.current to apply them. The Foliate-shaped
+          // ReaderSettings input uses pixel/em units that need translation.
         },
         addHighlight: (cfi: string, color: HighlightColor) => {
           const locator = decodeLocator(cfi)
@@ -419,12 +404,12 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         stopAutoScroll: () => {
           // TODO Phase 3.x
         },
-        setColumns: (count: number) => {
-          setPreferences((prev) => ({
-            ...prev,
-            spread: count === 2 ? 'always' : 'never',
-            columnCount: count === 2 ? '2' : 'auto',
-          }))
+        setColumns: (_count: number) => {
+          // TODO Phase 3.x: re-enable once Preferences are wired (spread +
+          // columnCount). Both fields pass straight through enum parsers
+          // in NitroTypeConverters so they're safe to send, but the
+          // surrounding Preferences object needs the range-checked fields
+          // either valid or absent first.
         },
         getChapterText: async () => {
           const href = currentLocatorRef.current?.href
@@ -513,7 +498,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
             <ReadiumView
               ref={viewRef}
               file={{ url: localUri, initialLocation: initialLocator }}
-              preferences={preferences}
+              preferences={{}}
               decorations={decorations}
               onLocationChange={handleLocationChange}
               onPublicationReady={handlePublicationReady}
