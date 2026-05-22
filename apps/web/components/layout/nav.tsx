@@ -269,6 +269,32 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
         </div>
       </nav>
 
+      {!user && (
+        <div className="border-t border-border-subtle bg-bg-sunken md:hidden">
+          <ul className="mx-auto flex h-10 w-full max-w-page items-center gap-1 overflow-x-auto scrollbar-none px-6">
+            {PRIMARY_LINKS.map((link) => {
+              const isActive = isActivePath(pathname, link.match)
+              return (
+                <li key={link.href} className="shrink-0">
+                  <Link
+                    href={link.href}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'inline-flex h-7 items-center rounded-md px-3 font-dm-sans text-xs',
+                      isActive
+                        ? 'bg-brand-subtle text-brand-subtle-text'
+                        : 'text-text-tertiary hover:text-text-primary',
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
+
       {user && <SecondaryAuthBar pathname={pathname} />}
 
       {!user && (
