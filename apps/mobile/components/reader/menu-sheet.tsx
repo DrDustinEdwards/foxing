@@ -1,16 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { View, Text, Modal, Pressable, Share } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   BookOpen,
   Users,
   Books,
-  MagnifyingGlass,
   ImageSquare,
   Share as ShareIcon,
   Sparkle,
-  SpeakerHigh,
-  NavigationArrow,
   Moon,
   type Icon,
 } from 'phosphor-react-native'
@@ -32,16 +29,25 @@ export type MenuAction =
   | 'go-to'
   | 'sleep-timer'
 
+// The primary reading actions (Listen, Go To, Search, This Chapter)
+// moved to the top chrome bar. This sheet now surfaces the secondary
+// menu OR the chapter-features sub-grid, depending on initialView.
+export type MenuInitialView = 'secondary' | 'chapter-features'
+
 interface MenuSheetProps {
   visible: boolean
   bookTitle: string
   bookAuthor: string
   currentChapterTitle?: string
-  // Clubs the viewer is in that are reading this book. Bumps the "My
-  // Clubs Reading This" item into the secondary row when non-empty.
+  // Which content to render when the sheet opens. The top bar's Sparkle
+  // icon opens it directly to the chapter-features grid; the bottom
+  // bar's chevron-up opens it to the secondary menu list.
+  initialView?: MenuInitialView
+  // Clubs the viewer is in that are reading this book. Appends a "My
+  // Clubs Reading This" tile to the secondary list when non-empty.
   clubsReadingThis?: Array<{ club_id: string; name: string }>
   onAction: (action: MenuAction) => void
-  // Separate channel for chapter-feature picks (timeline/quiz/etc).
+  // Channel for chapter-feature picks (timeline/quiz/etc).
   onChapterFeature?: (kind: ChapterFeatureKind) => void
   onClose: () => void
 }
@@ -51,17 +57,6 @@ interface MenuItem {
   Icon: Icon
   label: string
 }
-
-// Kindle-style compact reader menu. Two rows of icon-and-label tiles, no
-// scrolling. Primary row is the four actions a reader reaches for most
-// often during a session; secondary row is everything else. Long-form
-// help text lives in the destination sheets, not here.
-const PRIMARY: MenuItem[] = [
-  { key: 'listen', Icon: SpeakerHigh, label: 'Listen' },
-  { key: 'go-to', Icon: NavigationArrow, label: 'Go To' },
-  { key: 'search', Icon: MagnifyingGlass, label: 'Search' },
-  { key: 'chapter-features', Icon: Sparkle, label: 'This Chapter' },
-]
 
 const SECONDARY: MenuItem[] = [
   { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far' },
@@ -77,13 +72,24 @@ export function MenuSheet({
   bookTitle,
   bookAuthor,
   currentChapterTitle,
+  initialView = 'secondary',
   clubsReadingThis,
   onAction,
   onChapterFeature,
   onClose,
 }: MenuSheetProps) {
   const colors = useColors()
-  const [showChapterSub, setShowChapterSub] = useState(false)
+  const [showChapterSub, setShowChapterSub] = useState(
+    initialView === 'chapter-features',
+  )
+  // Sync the sub-view with the initialView prop each time the sheet
+  // opens; otherwise re-opening via a different entry point would show
+  // the previous view's state.
+  useEffect(() => {
+    if (visible) {
+      setShowChapterSub(initialView === 'chapter-features')
+    }
+  }, [visible, initialView])
 
   async function handleShare() {
     try {
@@ -102,10 +108,6 @@ export function MenuSheet({
       onClose()
       return
     }
-    if (key === 'chapter-features') {
-      setShowChapterSub(true)
-      return
-    }
     onAction(key)
   }
 
@@ -114,9 +116,6 @@ export function MenuSheet({
     onClose()
   }
 
-  // Inject "My Clubs Reading This" at the end of the secondary row when
-  // the viewer belongs to a club reading this book. Keeps the primary
-  // row stable at four entries.
   const secondaryWithClubs: MenuItem[] = clubsReadingThis?.length
     ? [
         ...SECONDARY,
@@ -162,18 +161,17 @@ export function MenuSheet({
                   onChapterFeature?.(kind)
                   onClose()
                 }}
-                onBack={() => setShowChapterSub(false)}
+                // When the sub-grid was opened directly (initialView ===
+                // 'chapter-features'), the sheet has nothing to go back to;
+                // omit Back so dismissing means closing the sheet.
+                onBack={
+                  initialView === 'chapter-features'
+                    ? undefined
+                    : () => setShowChapterSub(false)
+                }
               />
             ) : (
               <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
-                <Row items={PRIMARY} onSelect={handleSelect} primary />
-                <View
-                  style={{
-                    height: 1,
-                    backgroundColor: colors.borderSubtle,
-                    marginVertical: 12,
-                  }}
-                />
                 <Row items={secondaryWithClubs} onSelect={handleSelect} />
               </View>
             )}
@@ -187,10 +185,9 @@ export function MenuSheet({
 interface RowProps {
   items: MenuItem[]
   onSelect: (key: MenuItem['key']) => void
-  primary?: boolean
 }
 
-function Row({ items, onSelect, primary }: RowProps) {
+function Row({ items, onSelect }: RowProps) {
   const colors = useColors()
   return (
     <View
@@ -207,9 +204,7 @@ function Row({ items, onSelect, primary }: RowProps) {
           accessibilityRole="button"
           accessibilityLabel={item.label}
           style={{
-            // Two rows of four-ish items. Width is fractional with a
-            // little breathing room so labels don't crowd.
-            width: primary ? '24%' : '30.5%',
+            width: '30.5%',
             alignItems: 'center',
             paddingVertical: 10,
             marginBottom: 4,
@@ -218,18 +213,18 @@ function Row({ items, onSelect, primary }: RowProps) {
         >
           <View
             style={{
-              width: primary ? 44 : 38,
-              height: primary ? 44 : 38,
+              width: 40,
+              height: 40,
               borderRadius: 14,
-              backgroundColor: primary ? colors.brandUi : colors.brandSubtle,
+              backgroundColor: colors.brandSubtle,
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: 6,
             }}
           >
             <item.Icon
-              color={primary ? colors.textOnBrand : colors.brandUi}
-              size={primary ? 22 : 18}
+              color={colors.brandUi}
+              size={20}
               weight="regular"
             />
           </View>
@@ -252,7 +247,10 @@ function Row({ items, onSelect, primary }: RowProps) {
 interface ChapterFeatureGridProps {
   currentChapterTitle?: string
   onPick: (kind: ChapterFeatureKind) => void
-  onBack: () => void
+  // Optional Back affordance. When the grid is opened directly from the
+  // top-bar Sparkle icon there's no "previous view" to return to, so the
+  // host passes undefined and we just hide the Back label.
+  onBack?: () => void
 }
 
 function ChapterFeatureGrid({
@@ -271,17 +269,21 @@ function ChapterFeatureGrid({
           paddingHorizontal: 4,
         }}
       >
-        <Pressable onPress={onBack} hitSlop={8}>
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 13,
-              color: colors.brandText,
-            }}
-          >
-            Back
-          </Text>
-        </Pressable>
+        <View style={{ width: 40 }}>
+          {onBack ? (
+            <Pressable onPress={onBack} hitSlop={8}>
+              <Text
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  fontSize: 13,
+                  color: colors.brandText,
+                }}
+              >
+                Back
+              </Text>
+            </Pressable>
+          ) : null}
+        </View>
         <Text
           numberOfLines={1}
           style={{

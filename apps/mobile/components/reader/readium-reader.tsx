@@ -356,9 +356,14 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         const text = event.selectedText
         if (!text || !event.locator) return
         const cfi = encodeLocator(event.locator)
+        // Bottom-anchored: the Android system selection bar pins to the
+        // top of the screen, our pill renders just above the bottom
+        // safe area so the two never overlap. anchor.y near the bottom
+        // makes FloatingPill's "above the anchor" branch land the pill
+        // ~134px from the bottom edge.
         const rect: ReaderRect = {
           x: screenWidth / 2,
-          y: screenHeight / 2,
+          y: screenHeight - 80,
           width: 0,
           height: 0,
         }
@@ -574,13 +579,18 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [localUri, initialLocator],
     )
     const preferencesProp = useMemo(() => readiumPrefs, [readiumPrefs])
-    // Pass an empty selectionActions array so the OS text-selection menu
-    // has no custom Foxing entries. Whether this also SUPPRESSES the
-    // system popup or only EMPTIES our slot of it is a Readium native
-    // behavior to verify on device. The floating pill we render on
-    // onSelectionChange is the intended primary surface regardless.
-    // If the system menu still appears alongside, we accept that and
-    // make sure the pill is the prominent one.
+    // CONFIRMED on device build #8: passing an empty selectionActions
+    // array does not suppress the Android system selection menu. The
+    // library's EpubReaderFragment only installs its custom ActionMode
+    // callback when selectionActions.isNotEmpty(); with an empty array
+    // it falls back to the WebView's default Copy / Translate / Select
+    // all / Share menu. The custom callback also unconditionally returns
+    // true from onCreateActionMode, so even installing it can't
+    // suppress the bar from JS. No JS prop exists for suppression.
+    //
+    // Accepting the dual surface per agreed plan: system menu pinned at
+    // the top of the screen by Android, Foxing pill bottom-anchored
+    // (handleSelectionChange below) so they never overlap.
     const selectionActions = useMemo<never[]>(() => [], [])
 
     // No internal loading overlay. The host renders "Loading book…" while
