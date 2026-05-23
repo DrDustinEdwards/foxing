@@ -75,11 +75,13 @@ export interface ReaderRef {
   // Push the set of club passage comments into the reader so it can paint
   // margin dots next to commented paragraphs. Empty list clears all dots.
   setPassageComments: (comments: PassageCommentMarker[], colorHex?: string) => void
-  // Push CFI+count pairs for popular highlights so the reader can render
-  // a small "N readers highlighted this" label under matching paragraphs.
-  // Empty list clears all labels.
+  // Push popular highlight markers. The legacy Foliate path used cfi to
+  // anchor an inline label; the Readium path uses the saved excerpt
+  // (text) to build a text-based Locator decoration. The shape is
+  // widened to accept both fields so a single call site works with
+  // either renderer.
   setPopularHighlights: (
-    list: Array<{ cfi: string; count: number }>,
+    list: Array<{ text?: string; cfi: string; count: number }>,
     colorHex?: string,
   ) => void
   // Phase D additions

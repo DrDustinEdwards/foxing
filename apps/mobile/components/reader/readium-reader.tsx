@@ -64,6 +64,16 @@ import { getChapterContent } from '@/lib/epub-content'
 const HIGHLIGHTS_GROUP = 'highlights'
 const TTS_SENTENCE_GROUP = 'tts-sentence'
 const PASSAGE_COMMENT_GROUP = 'passage-comment-markers'
+const POPULAR_HIGHLIGHTS_GROUP = 'popular-highlights'
+
+// Soften a 6-digit hex color to an 8-digit one with ~20% alpha so the
+// popular-highlight tint sits behind text instead of competing with
+// it. Pass-through for inputs we can't parse.
+function toSoftTint(hex: string): string {
+  if (/^#[0-9a-f]{6}$/i.test(hex)) return hex + '33'
+  if (/^#[0-9a-f]{8}$/i.test(hex)) return hex
+  return hex
+}
 
 // Same regex the TtsBar uses to split chapter text into utterances. Keep
 // these two in sync so highlightSentence(index) lines up with the index
@@ -189,6 +199,10 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     // we pass has to match where the rendered content lives.
     const [commentMarkers, setCommentMarkers] = useState<PassageCommentMarker[]>([])
     const [commentColor, setCommentColor] = useState<string>('#A33B20')
+    const [popularMarkers, setPopularMarkers] = useState<
+      Array<{ text?: string; cfi: string; count: number }>
+    >([])
+    const [popularColor, setPopularColor] = useState<string>('#9E9E9E')
     // Snapshot of the current Locator.href in state form so changes
     // trigger a render and the decoration memos rebuild. currentLocatorRef
     // stays the source of truth for non-render-driven reads (TTS, etc.).
@@ -288,10 +302,41 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         }))
     }, [commentMarkers, commentColor, currentHref])
 
+    // Popular-highlight decorations: soft 'highlight' tint over the
+    // shared passage text. Same text-based-locator mechanic as comment
+    // markers; same chapter-bound search caveat.
+    const popularHighlightDecorations: Decoration[] = useMemo(() => {
+      if (!currentHref || popularMarkers.length === 0) return []
+      const type = currentLocatorRef.current?.type ?? 'application/xhtml+xml'
+      const softTint = toSoftTint(popularColor)
+      return popularMarkers
+        .filter((m) => m.text && m.text.trim().length > 0)
+        .map((m, i) => ({
+          id: `ph-${i}-${m.text?.length ?? 0}`,
+          locator: {
+            href: currentHref,
+            type,
+            text: { highlight: (m.text ?? '').slice(0, 200) },
+          },
+          style: {
+            type: 'highlight',
+            tint: softTint,
+          },
+        }))
+    }, [popularMarkers, popularColor, currentHref])
+
     const decorations: DecorationGroup[] = useMemo(() => {
       const groups: DecorationGroup[] = [
         { name: HIGHLIGHTS_GROUP, decorations: highlights },
       ]
+      // Popular highlights underlay before comment markers so the comment
+      // underline reads on top of the soft tint when they overlap.
+      if (popularHighlightDecorations.length > 0) {
+        groups.push({
+          name: POPULAR_HIGHLIGHTS_GROUP,
+          decorations: popularHighlightDecorations,
+        })
+      }
       if (passageCommentDecorations.length > 0) {
         groups.push({
           name: PASSAGE_COMMENT_GROUP,
@@ -302,7 +347,12 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
         groups.push({ name: TTS_SENTENCE_GROUP, decorations: [sentenceDecoration] })
       }
       return groups
-    }, [highlights, passageCommentDecorations, sentenceDecoration])
+    }, [
+      highlights,
+      popularHighlightDecorations,
+      passageCommentDecorations,
+      sentenceDecoration,
+    ])
 
     const flushLocator = useCallback((locator: Locator) => {
       const serialized = encodeLocator(locator)
@@ -436,7 +486,10 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
 
     const handleDecorationActivated = useCallback(
       (event: DecorationActivatedEvent) => {
-        if (event.group === HIGHLIGHTS_GROUP) return
+        // The viewer's own highlights and the soft popular-highlight tints
+        // aren't tappable surfaces -- only comment markers route through
+        // to a sheet. Ignore activations from any other group.
+        if (event.group !== PASSAGE_COMMENT_GROUP) return
         const passageText = event.decoration.locator.text?.highlight ?? ''
         onPassageCommentTappedRef.current?.(
           encodeLocator(event.decoration.locator),
@@ -535,11 +588,11 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           if (colorHex) setCommentColor(colorHex)
         },
         setPopularHighlights: (
-          _list: Array<{ cfi: string; count: number }>,
-          _colorHex?: string,
+          list: Array<{ text?: string; cfi: string; count: number }>,
+          colorHex?: string,
         ) => {
-          // TODO Phase 3.x: render "N readers highlighted" labels as a
-          // DecorationGroup with DecorationStyle.html
+          setPopularMarkers(list)
+          if (colorHex) setPopularColor(colorHex)
         },
         startAutoScroll: (_wpm: number) => {
           // TODO Phase 3.x: simulate via timed goForward calls; Readium
