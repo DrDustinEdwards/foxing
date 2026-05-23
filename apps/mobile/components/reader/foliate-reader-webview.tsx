@@ -97,6 +97,12 @@ export interface ReaderRef {
   getChapterParagraphs: () => Promise<string[]>
   // Async bridge, returns chapter TOC items.
   getToc: () => Promise<Array<{ label: string; href: string; cfi: string | null }>>
+  // Navigate to a fraction of the publication (0..1). Readium's positions
+  // list (cached on the wrapper from onPublicationReady) is used to map
+  // the fraction to the closest concrete Locator. Foliate doesn't have
+  // an equivalent; the contract is widened for Readium and left unused
+  // on the Foliate path.
+  jumpToProgress: (fraction: number) => void
   // Visually mark a sentence (1-based index within the current chapter)
   // for the TTS readback. Pass null to clear.
   highlightSentence: (index: number | null) => void
@@ -407,6 +413,9 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
             pendingRequestsRef.current,
             `window.foliateBridge.getToc()`,
           ),
+        // Foliate doesn't surface a positions list; jumpToProgress is a
+        // no-op on this path. Contract widened for Readium parity.
+        jumpToProgress: () => {},
         highlightSentence: (index: number | null) => {
           webRef.current?.injectJavaScript(
             `if (typeof window.foliateBridge?.highlightSentence === 'function') {
