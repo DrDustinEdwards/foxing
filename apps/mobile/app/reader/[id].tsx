@@ -48,6 +48,8 @@ import {
   type MenuAction,
   type MenuInitialView,
 } from '@/components/reader/menu-sheet'
+import { ClubPanelSheet } from '@/components/reader/club-panel-sheet'
+import type { PassageComment } from '@/lib/passage-comments'
 import { SleepTimerSheet, type SleepTimerOption } from '@/components/reader/sleep-timer-sheet'
 import { ChapterReactionSheet } from '@/components/reader/chapter-reaction-sheet'
 import { privacyToBool, type PrivacyTier } from '@/components/privacy-selector'
@@ -255,6 +257,9 @@ export default function Reader() {
   // routes to the chapter-features sub-grid; the bottom-bar chevron-up
   // routes to the secondary actions list.
   const [menuInitialView, setMenuInitialView] = useState<MenuInitialView>('secondary')
+  // Club panel: half-height slide-up. Tapping the bottom-bar club chip
+  // opens it; reading continues underneath since the panel isn't a Modal.
+  const [clubPanelOpen, setClubPanelOpen] = useState(false)
   const [characterMapOpen, setCharacterMapOpen] = useState(false)
   const [highlightsOpen, setHighlightsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -1601,6 +1606,56 @@ export default function Reader() {
               className="flex-row items-center"
               style={{ marginTop: 8 }}
             >
+              {matchingClubs.length > 0 ? (
+                <Pressable
+                  onPress={() => setClubPanelOpen(true)}
+                  hitSlop={6}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${matchingClubs[0].name} club panel`}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 2,
+                    paddingHorizontal: 8,
+                    borderRadius: 999,
+                    backgroundColor: colors.bgSelected,
+                    marginRight: 8,
+                  }}
+                >
+                  <View
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 8,
+                      backgroundColor: colors.brandSubtle,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginRight: 4,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: Fonts.display,
+                        fontSize: 9,
+                        color: colors.brandSubtleText,
+                      }}
+                    >
+                      {(matchingClubs[0].name[0] ?? '?').toUpperCase()}
+                    </Text>
+                  </View>
+                  <Text
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      fontSize: 11,
+                      color: colors.brandText,
+                    }}
+                  >
+                    {presence.length > 0
+                      ? `${presence.length} reading`
+                      : 'Club'}
+                  </Text>
+                </Pressable>
+              ) : null}
               <Text
                 numberOfLines={1}
                 style={{
@@ -1884,6 +1939,21 @@ export default function Reader() {
         onChapterFeature={(kind) => setChapterFeature(kind)}
         onClose={() => setMenuOpen(false)}
       />
+
+      {matchingClubs.length > 0 ? (
+        <ClubPanelSheet
+          visible={clubPanelOpen}
+          club={matchingClubs[0]}
+          bookId={book.id}
+          bookTitle={book.title}
+          viewerClubIds={matchingClubs.map((c) => c.club_id)}
+          onOpenComment={(c: PassageComment) => {
+            setCommentSheet({ cfi: c.cfi, passageText: c.passage_text ?? '' })
+            setClubPanelOpen(false)
+          }}
+          onClose={() => setClubPanelOpen(false)}
+        />
+      ) : null}
 
       <ChapterFeatureSheet
         visible={chapterFeature !== null}
