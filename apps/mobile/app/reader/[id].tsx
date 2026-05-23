@@ -49,6 +49,7 @@ import {
   type MenuInitialView,
 } from '@/components/reader/menu-sheet'
 import { ClubPanelSheet } from '@/components/reader/club-panel-sheet'
+import { ProgressSlider } from '@/components/reader/progress-slider'
 import type { PassageComment } from '@/lib/passage-comments'
 import { SleepTimerSheet, type SleepTimerOption } from '@/components/reader/sleep-timer-sheet'
 import { ChapterReactionSheet } from '@/components/reader/chapter-reaction-sheet'
@@ -1585,23 +1586,12 @@ export default function Reader() {
               paddingBottom: isTablet ? 16 : 12,
             }}
           >
-            <View
-              style={{
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: colors.borderSubtle,
-                overflow: 'hidden',
+            <ProgressSlider
+              value={progress}
+              onSlidingComplete={(fraction) => {
+                readerRef.current?.jumpToProgress(fraction)
               }}
-              accessibilityLabel={`Reading progress ${Math.round(progress * 100)} percent`}
-            >
-              <View
-                style={{
-                  height: '100%',
-                  width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
-                  backgroundColor: colors.brandUi,
-                }}
-              />
-            </View>
+            />
             <View
               className="flex-row items-center"
               style={{ marginTop: 8 }}

@@ -271,6 +271,11 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     const currentLocatorRef = useRef<Locator | null>(null)
     const tocRef = useRef<Array<{ label: string; href: string; cfi: string | null }>>([])
     const chapterSentencesRef = useRef<string[]>([])
+    // Cached positions list from onPublicationReady. Each entry is a
+    // Locator with locations.totalProgression filled in across 0..1 of
+    // the publication; jumpToProgress(fraction) searches this list for
+    // the closest match.
+    const positionsRef = useRef<Locator[]>([])
 
     const initialLocator = useMemo(() => decodeLocator(initialCfi), [initialCfi])
 
@@ -409,6 +414,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
             href: link.href,
             cfi: null,
           }))
+        positionsRef.current = event.positions ?? []
         fireReadyOnce()
       },
       [fireReadyOnce],
@@ -622,6 +628,26 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           return paragraphs
         },
         getToc: async () => tocRef.current,
+        jumpToProgress: (fraction: number) => {
+          // Find the closest locator in the cached positions list by
+          // totalProgression. Positions arrive once via onPublicationReady;
+          // before then this is a no-op so a drag on a half-loaded book
+          // doesn't try to navigate to nothing.
+          const positions = positionsRef.current
+          if (positions.length === 0) return
+          const clamped = Math.max(0, Math.min(1, fraction))
+          let closest = positions[0]
+          let closestDiff = Infinity
+          for (const p of positions) {
+            const tp = p.locations?.totalProgression ?? 0
+            const diff = Math.abs(tp - clamped)
+            if (diff < closestDiff) {
+              closestDiff = diff
+              closest = p
+            }
+          }
+          viewRef.current?.goTo(closest)
+        },
         highlightSentence: (index: number | null) => {
           if (index === null) {
             setSentenceDecoration(null)
