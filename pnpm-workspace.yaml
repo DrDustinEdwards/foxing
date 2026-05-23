@@ -11,3 +11,10 @@ allowBuilds:
   msgpackr-extract: true
   sharp: true
   unrs-resolver: true
+# patch-package doesn't play nicely with pnpm symlinks on Windows
+# (Cannot read properties of undefined (reading 'dependencies') at
+# getPackageResolution). Use pnpm's native patchedDependencies instead.
+# The patch file lives at patches/<name>@<version>.patch and is applied
+# on every pnpm install.
+patchedDependencies:
+  react-native-readium@5.0.0-rc.17: patches/react-native-readium@5.0.0-rc.17.patch
