@@ -683,12 +683,10 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [epubUrl],
     )
 
-    // Tap-to-hide chrome via react-native-gesture-handler. Single-tap with
-    // short max duration and tight movement tolerance so RNGH only catches
-    // deliberate taps; swipes and long-presses pass through to Readium.
-    // Reads onTap via ref so the gesture's identity stays stable across
-    // host re-renders (a new gesture identity per render would tear down
-    // and rebuild the gesture every page turn).
+    // Tap-to-hide chrome. Single-tap, short max duration, tight movement
+    // tolerance so RNGH only catches deliberate taps; swipes and long-
+    // presses pass through to Readium. Reads onTap via ref so the
+    // gesture's identity stays stable across host re-renders.
     const tapGesture = useMemo(
       () =>
         Gesture.Tap()
@@ -699,6 +697,34 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           })
           .runOnJS(true),
       [],
+    )
+
+    // Word-selection threshold raiser. RNGH LongPress with minDuration
+    // 500ms, composed alongside tapGesture via Race so whichever fires
+    // first wins. Single-tap chrome toggle (<= 250 ms) still resolves
+    // through tapGesture; presses 250..499 ms now fail (no gesture
+    // activates). Once a press crosses 500 ms, this LongPress activates
+    // and lets the underlying Readium WebView's native selection
+    // handler take over -- matching the Kindle / iOS Books feel.
+    //
+    // Caveat: Android's native WebView long-press timer runs in parallel
+    // (~400 ms by default on most devices), so selection can still start
+    // before this gesture's threshold on devices that configure a
+    // shorter system long-press timeout. A definitive fix would require
+    // a deeper native patch to the WebView; this RNGH gesture is the
+    // JS-side layer of defense.
+    const longPressGesture = useMemo(
+      () =>
+        Gesture.LongPress()
+          .minDuration(500)
+          .maxDistance(10)
+          .runOnJS(true),
+      [],
+    )
+
+    const composedGesture = useMemo(
+      () => Gesture.Race(tapGesture, longPressGesture),
+      [tapGesture, longPressGesture],
     )
 
     // Stable references for ReadiumView props so the native side doesn't
@@ -741,7 +767,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
 
     return (
       <View style={{ flex: 1, backgroundColor: initialSettings.theme.background }}>
-        <GestureDetector gesture={tapGesture}>
+        <GestureDetector gesture={composedGesture}>
           <View style={{ flex: 1 }}>
             <ReadiumView
               ref={viewRef}
