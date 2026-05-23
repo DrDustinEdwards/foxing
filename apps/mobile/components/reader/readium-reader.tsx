@@ -63,6 +63,7 @@ import { getChapterContent } from '@/lib/epub-content'
 
 const HIGHLIGHTS_GROUP = 'highlights'
 const TTS_SENTENCE_GROUP = 'tts-sentence'
+const PASSAGE_COMMENT_GROUP = 'passage-comment-markers'
 
 // Same regex the TtsBar uses to split chapter text into utterances. Keep
 // these two in sync so highlightSentence(index) lines up with the index
@@ -180,6 +181,18 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     const [readiumPrefs, setReadiumPrefs] = useState<Preferences>(() =>
       settingsToReadiumPreferences(initialSettings),
     )
+    // Passage-comment markers, kept as a list of (passageText, cfi) so we
+    // can re-derive Decoration objects against the active chapter's href
+    // whenever the user navigates to a new chapter. The Kotlin
+    // navigator's text-based locator search only looks in the currently
+    // rendered chapter -- it doesn't try every spine item -- so the href
+    // we pass has to match where the rendered content lives.
+    const [commentMarkers, setCommentMarkers] = useState<PassageCommentMarker[]>([])
+    const [commentColor, setCommentColor] = useState<string>('#A33B20')
+    // Snapshot of the current Locator.href in state form so changes
+    // trigger a render and the decoration memos rebuild. currentLocatorRef
+    // stays the source of truth for non-render-driven reads (TTS, etc.).
+    const [currentHref, setCurrentHref] = useState<string | null>(null)
     // Local file URI for ReadiumView. Readium cannot open an HTTPS URL
     // directly -- the native side errors "File does not exist: https://..."
     // and silently leaves the publication in a loading state. We download
@@ -247,15 +260,49 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
 
     const initialLocator = useMemo(() => decodeLocator(initialCfi), [initialCfi])
 
+    // Passage-comment decorations: text-based Locator with the comment's
+    // passageText as text.highlight. Readium searches the rendered page
+    // for a match; if it's not there (e.g. the comment lives in a
+    // different chapter) the decoration silently doesn't paint. When the
+    // user navigates into the comment's chapter, currentHref updates,
+    // the memo recomputes, and the underline appears.
+    const passageCommentDecorations: Decoration[] = useMemo(() => {
+      if (!currentHref || commentMarkers.length === 0) return []
+      const type = currentLocatorRef.current?.type ?? 'application/xhtml+xml'
+      return commentMarkers
+        .filter((m) => m.passageText && m.passageText.trim().length > 0)
+        .map((m, i) => ({
+          // ID derived from a hash of the passage text + index keeps the
+          // ID stable across re-renders so Readium doesn't churn the
+          // decoration on every render.
+          id: `pc-${i}-${m.passageText.length}`,
+          locator: {
+            href: currentHref,
+            type,
+            text: { highlight: m.passageText.slice(0, 200) },
+          },
+          style: {
+            type: 'underline',
+            tint: commentColor,
+          },
+        }))
+    }, [commentMarkers, commentColor, currentHref])
+
     const decorations: DecorationGroup[] = useMemo(() => {
       const groups: DecorationGroup[] = [
         { name: HIGHLIGHTS_GROUP, decorations: highlights },
       ]
+      if (passageCommentDecorations.length > 0) {
+        groups.push({
+          name: PASSAGE_COMMENT_GROUP,
+          decorations: passageCommentDecorations,
+        })
+      }
       if (sentenceDecoration) {
         groups.push({ name: TTS_SENTENCE_GROUP, decorations: [sentenceDecoration] })
       }
       return groups
-    }, [highlights, sentenceDecoration])
+    }, [highlights, passageCommentDecorations, sentenceDecoration])
 
     const flushLocator = useCallback((locator: Locator) => {
       const serialized = encodeLocator(locator)
@@ -281,6 +328,10 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     const handleLocationChange = useCallback(
       (locator: Locator) => {
         currentLocatorRef.current = locator
+        // Mirror href into state so the passage-comment decoration memo
+        // refreshes on chapter changes. Same-href returns prev so a
+        // mid-chapter page turn doesn't re-render.
+        setCurrentHref((prev) => (prev === locator.href ? prev : locator.href))
         fireReadyOnce()
         // Chapter changed? Drop any stale sentence decoration so we don't
         // paint a previous chapter's TTS highlight on the new page.
@@ -477,11 +528,11 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
           // TODO Phase 3.x
         },
         setPassageComments: (
-          _comments: PassageCommentMarker[],
-          _colorHex?: string,
+          comments: PassageCommentMarker[],
+          colorHex?: string,
         ) => {
-          // TODO Phase 3.x: render dots as a DecorationGroup keyed off
-          // the comment locators with DecorationStyle.html for the dot SVG
+          setCommentMarkers(comments)
+          if (colorHex) setCommentColor(colorHex)
         },
         setPopularHighlights: (
           _list: Array<{ cfi: string; count: number }>,
