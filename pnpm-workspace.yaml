@@ -11,10 +11,8 @@ allowBuilds:
   msgpackr-extract: true
   sharp: true
   unrs-resolver: true
-# patch-package doesn't play nicely with pnpm symlinks on Windows
-# (Cannot read properties of undefined (reading 'dependencies') at
-# getPackageResolution). Use pnpm's native patchedDependencies instead.
-# The patch file lives at patches/<name>@<version>.patch and is applied
-# on every pnpm install.
-patchedDependencies:
-  react-native-readium@5.0.0-rc.17: patches/react-native-readium@5.0.0-rc.17.patch
+# react-native-readium's Android selection-menu suppression patch lives
+# in apps/mobile/scripts/patch-readium.mjs and runs from the mobile
+# package's postinstall. pnpm's patchedDependencies was the previous
+# approach but EAS Build fails frozen-lockfile installs with
+# ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when patchedDependencies is set.
