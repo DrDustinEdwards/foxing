@@ -17,6 +17,7 @@ import {
   type Preferences,
   type DecorationGroup,
   type Decoration,
+  type SelectionAction,
   type SelectionEvent,
   type PublicationReadyEvent,
   type DecorationActivatedEvent,
@@ -709,19 +710,20 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
       [localUri, initialLocator],
     )
     const preferencesProp = useMemo(() => readiumPrefs, [readiumPrefs])
-    // CONFIRMED on device build #8: passing an empty selectionActions
-    // array does not suppress the Android system selection menu. The
-    // library's EpubReaderFragment only installs its custom ActionMode
-    // callback when selectionActions.isNotEmpty(); with an empty array
-    // it falls back to the WebView's default Copy / Translate / Select
-    // all / Share menu. The custom callback also unconditionally returns
-    // true from onCreateActionMode, so even installing it can't
-    // suppress the bar from JS. No JS prop exists for suppression.
-    //
-    // Accepting the dual surface per agreed plan: system menu pinned at
-    // the top of the screen by Android, Foxing pill bottom-anchored
-    // (handleSelectionChange below) so they never overlap.
-    const selectionActions = useMemo<never[]>(() => [], [])
+    // Pass a non-empty selectionActions array so EpubReaderFragment
+    // installs its custom ActionMode.Callback instead of falling back to
+    // the WebView's default Copy / Translate / Select all / Share menu.
+    // Our patch in patches/react-native-readium+5.0.0-rc.17.patch makes
+    // that callback's onCreateActionMode return false so Android never
+    // shows the toolbar; the selection itself still happens and our
+    // onSelectionChange-driven floating pill is the user-facing surface.
+    // The Highlight action's onSelectionAction handler below is the
+    // defensive path in case Android shows the menu anyway on some
+    // device or future library version.
+    const selectionActions = useMemo<SelectionAction[]>(
+      () => [{ id: 'highlight', label: 'Highlight' }],
+      [],
+    )
 
     // No internal loading overlay. The host renders "Loading book…" while
     // readerState === 'loading' (opaque background that covers our canvas);
