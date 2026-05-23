@@ -4,9 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
+  CaretUp,
   TextAa,
-  DotsThree,
   BookmarkSimple,
+  SpeakerHigh,
+  NavigationArrow,
+  MagnifyingGlass,
+  Sparkle,
   X as XIcon,
 } from 'phosphor-react-native'
 import { Alert, TextInput as RNTextInput, Modal as RNModal } from 'react-native'
@@ -39,7 +43,11 @@ import { WordLookupSheet } from '@/components/reader/word-lookup-sheet'
 import { PassageAnalysisSheet } from '@/components/reader/passage-analysis-sheet'
 import { ChapterSummaryModal } from '@/components/reader/chapter-summary-modal'
 import { CompanionChat } from '@/components/reader/companion-chat'
-import { MenuSheet, type MenuAction } from '@/components/reader/menu-sheet'
+import {
+  MenuSheet,
+  type MenuAction,
+  type MenuInitialView,
+} from '@/components/reader/menu-sheet'
 import { SleepTimerSheet, type SleepTimerOption } from '@/components/reader/sleep-timer-sheet'
 import { ChapterReactionSheet } from '@/components/reader/chapter-reaction-sheet'
 import { privacyToBool, type PrivacyTier } from '@/components/privacy-selector'
@@ -243,6 +251,10 @@ export default function Reader() {
   const [chatOpen, setChatOpen] = useState(false)
   const [chatSeed, setChatSeed] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
+  // Which view the MenuSheet should open to. The top-bar Sparkle icon
+  // routes to the chapter-features sub-grid; the bottom-bar chevron-up
+  // routes to the secondary actions list.
+  const [menuInitialView, setMenuInitialView] = useState<MenuInitialView>('secondary')
   const [characterMapOpen, setCharacterMapOpen] = useState(false)
   const [highlightsOpen, setHighlightsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -1426,50 +1438,51 @@ export default function Reader() {
           className="absolute top-0 left-0 right-0"
         >
           <View
-            className="flex-row items-center justify-between"
             style={{
               backgroundColor: chromeBg,
               borderBottomWidth: 1,
               borderBottomColor: colors.borderSubtle,
               paddingHorizontal: isTablet ? 24 : 12,
-              paddingVertical: isTablet ? 12 : 8,
+              paddingTop: isTablet ? 10 : 6,
+              paddingBottom: isTablet ? 8 : 6,
             }}
           >
-            <Pressable
-              onPress={() => router.back()}
-              hitSlop={8}
-              className="px-2 py-2"
-              accessibilityRole="button"
-              accessibilityLabel="Back to library"
-            >
-              <CaretLeft color={colors.brandUi} size={22} />
-            </Pressable>
-            <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}>
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 14,
-                  color: colors.textPrimary,
-                }}
+            {/* Row 1: navigation + title + utility icons */}
+            <View className="flex-row items-center">
+              <Pressable
+                onPress={() => router.back()}
+                hitSlop={8}
+                className="px-2 py-2"
+                accessibilityRole="button"
+                accessibilityLabel="Back to library"
               >
-                {book.title}
-              </Text>
-              {currentChapter.title ? (
+                <CaretLeft color={colors.brandUi} size={22} />
+              </Pressable>
+              <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}>
                 <Text
                   numberOfLines={1}
                   style={{
-                    fontFamily: Fonts.ui,
-                    fontSize: 11,
-                    color: colors.textTertiary,
-                    marginTop: 1,
+                    fontFamily: Fonts.uiMedium,
+                    fontSize: 14,
+                    color: colors.textPrimary,
                   }}
                 >
-                  {currentChapter.title}
+                  {book.title}
                 </Text>
-              ) : null}
-            </View>
-            <View className="flex-row items-center">
+                {currentChapter.title ? (
+                  <Text
+                    numberOfLines={1}
+                    style={{
+                      fontFamily: Fonts.ui,
+                      fontSize: 11,
+                      color: colors.textTertiary,
+                      marginTop: 1,
+                    }}
+                  >
+                    {currentChapter.title}
+                  </Text>
+                ) : null}
+              </View>
               <Pressable
                 onPress={() => setShowSettings(true)}
                 className="px-2 py-2"
@@ -1491,6 +1504,55 @@ export default function Reader() {
                   size={22}
                   weight={isCurrentBookmarked ? 'fill' : 'regular'}
                 />
+              </Pressable>
+            </View>
+
+            {/* Row 2: primary actions. Listen, Go To, Search, This Chapter
+                live in chrome so the most-used reading flows are one tap
+                away. Secondary items still surface via the bottom-bar
+                chevron-up. */}
+            <View
+              className="flex-row items-center justify-around"
+              style={{ marginTop: 4, paddingTop: 4 }}
+            >
+              <Pressable
+                onPress={() => handleMenuAction('listen')}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel="Listen"
+                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+              >
+                <SpeakerHigh color={colors.brandUi} size={22} />
+              </Pressable>
+              <Pressable
+                onPress={() => handleMenuAction('go-to')}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel="Go to"
+                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+              >
+                <NavigationArrow color={colors.brandUi} size={22} />
+              </Pressable>
+              <Pressable
+                onPress={() => handleMenuAction('search')}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel="Search"
+                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+              >
+                <MagnifyingGlass color={colors.brandUi} size={22} />
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setMenuInitialView('chapter-features')
+                  setMenuOpen(true)
+                }}
+                hitSlop={6}
+                accessibilityRole="button"
+                accessibilityLabel="This chapter"
+                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+              >
+                <Sparkle color={colors.brandUi} size={22} />
               </Pressable>
             </View>
           </View>
@@ -1604,13 +1666,16 @@ export default function Reader() {
                 </View>
               ) : null}
               <Pressable
-                onPress={() => setMenuOpen(true)}
+                onPress={() => {
+                  setMenuInitialView('secondary')
+                  setMenuOpen(true)
+                }}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Reader menu"
+                accessibilityLabel="More actions"
                 style={{ paddingHorizontal: 6, paddingVertical: 4 }}
               >
-                <DotsThree color={colors.brandUi} size={22} weight="bold" />
+                <CaretUp color={colors.brandUi} size={20} weight="regular" />
               </Pressable>
             </View>
             {presence.length > 0 ? (
@@ -1813,6 +1878,7 @@ export default function Reader() {
         bookTitle={book.title}
         bookAuthor={book.author}
         currentChapterTitle={currentChapter.title}
+        initialView={menuInitialView}
         clubsReadingThis={matchingClubs}
         onAction={handleMenuAction}
         onChapterFeature={(kind) => setChapterFeature(kind)}
