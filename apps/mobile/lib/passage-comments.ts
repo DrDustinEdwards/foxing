@@ -1,41 +1,25 @@
-// Inline passage comments, club-scoped discussion threaded against a CFI.
+// Inline passage comments, club-scoped or public discussion threaded
+// against a CFI. Live schema (verified via Supabase MCP):
 //
-// SQL SCHEMA (apply via Supabase migrations before this code returns rows):
+//   passage_comments(id, club_id, book_id, author_id, cfi,
+//                    passage_text, comment, is_pinned, visibility,
+//                    spoiler_tagged, created_at)
 //
-//   create table passage_comments (
-//     id uuid primary key default gen_random_uuid(),
-//     book_id uuid not null references books(id) on delete cascade,
-//     club_id uuid not null references clubs(id) on delete cascade,
-//     user_id uuid not null references profiles(id),
-//     cfi text not null,
-//     passage_text text,
-//     body text not null,
-//     has_spoilers boolean not null default false,
-//     created_at timestamptz not null default now()
-//   );
-//   create index passage_comments_book_club on passage_comments(book_id, club_id);
-//   create index passage_comments_cfi on passage_comments(cfi);
+//   passage_comment_replies(id, comment_id, author_id, content,
+//                           created_at)
 //
-//   create table passage_comment_replies (
-//     id uuid primary key default gen_random_uuid(),
-//     comment_id uuid not null references passage_comments(id) on delete cascade,
-//     user_id uuid not null references profiles(id),
-//     body text not null,
-//     has_spoilers boolean not null default false,
-//     created_at timestamptz not null default now()
-//   );
+//   passage_comment_reactions(comment_id, user_id, emoji, created_at)
 //
-//   create table passage_comment_reactions (
-//     comment_id uuid not null references passage_comments(id) on delete cascade,
-//     user_id uuid not null references profiles(id) on delete cascade,
-//     emoji text not null,
-//     created_at timestamptz not null default now(),
-//     primary key (comment_id, user_id, emoji)
-//   );
+// Field naming on the TS types matches the DB columns directly so the
+// Supabase client's select() returns rows that satisfy our interfaces
+// without aliasing. The createComment / createReply input params keep
+// friendly camelCase names (the inserts remap to snake_case columns).
 
 import { supabase } from './supabase'
 import { createNotification } from './notifications'
 import { enqueue } from './offline-queue'
+
+export type CommentVisibility = 'public' | 'club'
 
 export interface CommentAuthor {
   id: string
@@ -53,9 +37,8 @@ export interface PassageCommentReaction {
 export interface PassageCommentReply {
   id: string
   comment_id: string
-  user_id: string
-  body: string
-  has_spoilers: boolean
+  author_id: string
+  content: string
   created_at: string
   author?: CommentAuthor | null
 }
@@ -63,30 +46,44 @@ export interface PassageCommentReply {
 export interface PassageComment {
   id: string
   book_id: string
-  club_id: string
-  user_id: string
+  club_id: string | null
+  author_id: string
   cfi: string
   passage_text: string | null
-  body: string
-  has_spoilers: boolean
+  comment: string
+  is_pinned: boolean
+  visibility: CommentVisibility
+  spoiler_tagged: boolean
   created_at: string
   author?: CommentAuthor | null
   replies?: PassageCommentReply[]
   reactions?: PassageCommentReaction[]
 }
 
-// ── Reader-side: list every comment for this book across the viewer's
-// matching clubs. Used to compute margin dots.
+// All comments visible to the viewer for this book:
+//   visibility = 'public', OR
+//   visibility = 'club' AND comment.club_id in the viewer's clubIds.
+// One query, returned set is then partitioned on the client.
 export async function listCommentsForBook(
   bookId: string,
   clubIds: string[],
 ): Promise<PassageComment[]> {
-  if (clubIds.length === 0) return []
+  // The PostgREST `or` filter expresses an OR across the two visibility
+  // arms. We always include the public arm; the club arm is only added
+  // when the viewer is in at least one matching club.
+  const orParts = ['visibility.eq.public']
+  if (clubIds.length > 0) {
+    const list = clubIds.map((id) => `"${id}"`).join(',')
+    orParts.push(`and(visibility.eq.club,club_id.in.(${list}))`)
+  }
+
   const { data, error } = await supabase
     .from('passage_comments')
-    .select('id, book_id, club_id, user_id, cfi, passage_text, body, has_spoilers, created_at')
+    .select(
+      'id, book_id, club_id, author_id, cfi, passage_text, comment, is_pinned, visibility, spoiler_tagged, created_at',
+    )
     .eq('book_id', bookId)
-    .in('club_id', clubIds)
+    .or(orParts.join(','))
     .order('created_at', { ascending: false })
   if (error) {
     console.warn('[passage-comments] listCommentsForBook failed:', error.message)
@@ -95,27 +92,31 @@ export async function listCommentsForBook(
   return ((data ?? []) as unknown) as PassageComment[]
 }
 
-// ── Sheet-side: list comments at a specific CFI with replies + reactions.
-// We use exact CFI match here; the reader-side margin-dot path already
-// resolved CFI → paragraph, so passing the comment's own cfi back round-trip
-// hits its own row.
+// All comments AT a specific CFI, with their replies + reactions joined.
+// Used by the bottom sheet that opens when the user taps a comment
+// marker. Same visibility OR clause as listCommentsForBook.
 export async function listCommentsAtCfi(input: {
   bookId: string
   clubIds: string[]
   cfi: string
 }): Promise<PassageComment[]> {
-  if (input.clubIds.length === 0) return []
   const { data: { user } } = await supabase.auth.getUser()
   const viewerId = user?.id ?? null
+
+  const orParts = ['visibility.eq.public']
+  if (input.clubIds.length > 0) {
+    const list = input.clubIds.map((id) => `"${id}"`).join(',')
+    orParts.push(`and(visibility.eq.club,club_id.in.(${list}))`)
+  }
 
   const { data, error } = await supabase
     .from('passage_comments')
     .select(
-      '*, author:profiles!user_id(id, display_name, username, avatar_url)',
+      '*, author:profiles!author_id(id, display_name, username, avatar_url)',
     )
     .eq('book_id', input.bookId)
-    .in('club_id', input.clubIds)
     .eq('cfi', input.cfi)
+    .or(orParts.join(','))
     .order('created_at', { ascending: true })
   if (error) {
     console.warn('[passage-comments] listCommentsAtCfi failed:', error.message)
@@ -128,7 +129,7 @@ export async function listCommentsAtCfi(input: {
   const [repliesRes, reactionsRes] = await Promise.all([
     supabase
       .from('passage_comment_replies')
-      .select('*, author:profiles!user_id(id, display_name, username, avatar_url)')
+      .select('*, author:profiles!author_id(id, display_name, username, avatar_url)')
       .in('comment_id', ids)
       .order('created_at', { ascending: true }),
     supabase
@@ -144,9 +145,14 @@ export async function listCommentsAtCfi(input: {
     repliesByComment.set(r.comment_id, list)
   }
 
-  const reactionsByComment = new Map<string, Map<string, { count: number; viewerReacted: boolean }>>()
+  const reactionsByComment = new Map<
+    string,
+    Map<string, { count: number; viewerReacted: boolean }>
+  >()
   for (const r of (reactionsRes.data ?? []) as Array<{
-    comment_id: string; user_id: string; emoji: string
+    comment_id: string
+    user_id: string
+    emoji: string
   }>) {
     if (!reactionsByComment.has(r.comment_id)) {
       reactionsByComment.set(r.comment_id, new Map())
@@ -161,40 +167,53 @@ export async function listCommentsAtCfi(input: {
   return comments.map((c) => ({
     ...c,
     replies: repliesByComment.get(c.id) ?? [],
-    reactions: Array.from(reactionsByComment.get(c.id)?.entries() ?? []).map(
-      ([emoji, v]) => ({ emoji, count: v.count, viewerReacted: v.viewerReacted }),
-    ),
+    reactions: Array.from(
+      reactionsByComment.get(c.id)?.entries() ?? [],
+    ).map(([emoji, v]) => ({
+      emoji,
+      count: v.count,
+      viewerReacted: v.viewerReacted,
+    })),
   }))
 }
 
 export async function createComment(input: {
   bookId: string
-  clubId: string
+  // Optional: required when visibility === 'club', omitted for public.
+  clubId?: string | null
   cfi: string
   passageText: string
-  body: string
-  hasSpoilers: boolean
+  comment: string
+  visibility: CommentVisibility
+  spoilerTagged: boolean
 }): Promise<PassageComment | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  if (input.visibility === 'club' && !input.clubId) {
+    console.warn('[passage-comments] createComment: club visibility requires clubId')
+    return null
+  }
   const insertPayload = {
     book_id: input.bookId,
-    club_id: input.clubId,
-    user_id: user.id,
+    club_id: input.visibility === 'club' ? input.clubId : null,
+    author_id: user.id,
     cfi: input.cfi,
     passage_text: input.passageText.slice(0, 600),
-    body: input.body,
-    has_spoilers: input.hasSpoilers,
+    comment: input.comment,
+    visibility: input.visibility,
+    spoiler_tagged: input.spoilerTagged,
   }
   const { data, error } = await supabase
     .from('passage_comments')
     .insert(insertPayload)
-    .select('*, author:profiles!user_id(id, display_name, username, avatar_url)')
+    .select(
+      '*, author:profiles!author_id(id, display_name, username, avatar_url)',
+    )
     .single()
   if (error) {
     console.warn('[passage-comments] createComment failed:', error.message)
-    // Queue for retry on reconnect, the comment won't show in the sheet
-    // immediately, but it'll land once we're back online.
+    // Best-effort offline retry; the comment won't surface in the sheet
+    // until we're back online.
     enqueue({ table: 'passage_comments', op: 'insert', data: insertPayload }).catch(() => {})
     return null
   }
@@ -203,8 +222,7 @@ export async function createComment(input: {
 
 export async function createReply(input: {
   commentId: string
-  body: string
-  hasSpoilers: boolean
+  content: string
 }): Promise<PassageCommentReply | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
@@ -212,25 +230,26 @@ export async function createReply(input: {
     .from('passage_comment_replies')
     .insert({
       comment_id: input.commentId,
-      user_id: user.id,
-      body: input.body,
-      has_spoilers: input.hasSpoilers,
+      author_id: user.id,
+      content: input.content,
     })
-    .select('*, author:profiles!user_id(id, display_name, username, avatar_url)')
+    .select(
+      '*, author:profiles!author_id(id, display_name, username, avatar_url)',
+    )
     .single()
   if (error) {
     console.warn('[passage-comments] createReply failed:', error.message)
     return null
   }
-  // Notify the commenter (skip if replying to your own comment).
+  // Notify the original commenter (skip if replying to your own comment).
   ;(async () => {
     const { data: parent } = await supabase
       .from('passage_comments')
-      .select('user_id, book_id, cfi')
+      .select('author_id, book_id, cfi')
       .eq('id', input.commentId)
       .maybeSingle()
-    const p = parent as { user_id: string; book_id: string; cfi: string } | null
-    if (!p || p.user_id === user.id) return
+    const p = parent as { author_id: string; book_id: string; cfi: string } | null
+    if (!p || p.author_id === user.id) return
     const { data: me } = await supabase
       .from('profiles')
       .select('display_name, username')
@@ -239,10 +258,10 @@ export async function createReply(input: {
     const me2 = me as { display_name: string | null; username: string | null } | null
     const name = me2?.display_name ?? me2?.username ?? 'Someone'
     await createNotification(
-      p.user_id,
+      p.author_id,
       'passage_reply',
       'New reply on your passage',
-      `${name}: ${input.body.slice(0, 120)}`,
+      `${name}: ${input.content.slice(0, 120)}`,
       { book_id: p.book_id, cfi: p.cfi, comment_id: input.commentId },
     )
   })().catch(() => {})
@@ -277,8 +296,8 @@ export async function toggleCommentReaction(
   return !error
 }
 
-// ── Reader-open: which of the viewer's clubs are currently reading this book.
-// Powers both the margin-dot fetch and the Club button visibility on the pill.
+// Which of the viewer's clubs are currently reading this book. Powers
+// the margin-marker fetch and the Club button on the floating pill.
 export async function listMatchingClubsForBook(
   viewerId: string,
   bookId: string,
@@ -291,9 +310,6 @@ export async function listMatchingClubsForBook(
     console.warn('[passage-comments] listMatchingClubsForBook failed:', error.message)
     return []
   }
-  // Supabase relation typing varies between client versions (single object
-  // vs array). Normalize through `unknown` and accept either shape so we
-  // don't fight the generated types here.
   const rows = ((data ?? []) as unknown) as Array<{
     club_id: string
     clubs:

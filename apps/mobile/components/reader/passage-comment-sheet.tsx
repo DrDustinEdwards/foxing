@@ -152,11 +152,12 @@ export function PassageCommentSheet({
   const send = useCallback(async () => {
     if (!body.trim() || posting || !cfi) return
     if (replyTo) {
+      // The live schema has no spoiler field on replies; hasSpoilers is
+      // ignored when replying. Top-level comments still carry the flag.
       setPosting(true)
       const reply = await createReply({
         commentId: replyTo.id,
-        body: body.trim(),
-        hasSpoilers,
+        content: body.trim(),
       })
       setPosting(false)
       if (reply) {
@@ -174,8 +175,9 @@ export function PassageCommentSheet({
       clubId: activeClubId,
       cfi,
       passageText,
-      body: body.trim(),
-      hasSpoilers,
+      comment: body.trim(),
+      visibility: 'club',
+      spoilerTagged: hasSpoilers,
     })
     setPosting(false)
     if (created) {
@@ -292,8 +294,6 @@ export function PassageCommentSheet({
                   onToggleReveal={() => toggleReveal(c.id)}
                   onReact={(emoji) => onReact(c.id, emoji)}
                   onReply={() => setReplyTo(c)}
-                  revealedReplies={revealed}
-                  onToggleReplyReveal={(rid) => toggleReveal(rid)}
                 />
               ))
             )}
@@ -408,22 +408,18 @@ function CommentCard({
   onToggleReveal,
   onReact,
   onReply,
-  revealedReplies,
-  onToggleReplyReveal,
 }: {
   comment: PassageComment
   revealed: boolean
   onToggleReveal: () => void
   onReact: (emoji: string) => void
   onReply: () => void
-  revealedReplies: Set<string>
-  onToggleReplyReveal: (rid: string) => void
 }) {
   const colors = useColors()
   const author = comment.author
   const name = author?.display_name ?? author?.username ?? 'Reader'
   const initial = (name || '?')[0]?.toUpperCase() ?? '?'
-  const hidden = comment.has_spoilers && !revealed
+  const hidden = comment.spoiler_tagged && !revealed
 
   return (
     <View
@@ -499,9 +495,9 @@ function CommentCard({
                 lineHeight: 21,
               }}
             >
-              {comment.body}
+              {comment.comment}
             </Text>
-            {comment.has_spoilers ? (
+            {comment.spoiler_tagged ? (
               <Pressable onPress={onToggleReveal} className="flex-row items-center gap-1 mt-2">
                 <Eye color={colors.textTertiary} size={11} />
                 <Text style={{ fontFamily: Fonts.ui, fontSize: 10, color: colors.textTertiary }}>
@@ -558,12 +554,7 @@ function CommentCard({
         {comment.replies && comment.replies.length > 0 ? (
           <View style={{ marginTop: 10, paddingLeft: 12, borderLeftWidth: 2, borderLeftColor: colors.borderSubtle }}>
             {comment.replies.map((r) => (
-              <ReplyRow
-                key={r.id}
-                reply={r}
-                revealed={revealedReplies.has(r.id)}
-                onToggleReveal={() => onToggleReplyReveal(r.id)}
-              />
+              <ReplyRow key={r.id} reply={r} />
             ))}
           </View>
         ) : null}
@@ -574,16 +565,13 @@ function CommentCard({
 
 function ReplyRow({
   reply,
-  revealed,
-  onToggleReveal,
 }: {
   reply: PassageCommentReply
-  revealed: boolean
-  onToggleReveal: () => void
 }) {
+  // Replies have no spoiler field in the live schema; render content
+  // directly.
   const colors = useColors()
   const name = reply.author?.display_name ?? reply.author?.username ?? 'Reader'
-  const hidden = reply.has_spoilers && !revealed
   return (
     <View style={{ marginBottom: 8 }}>
       <View className="flex-row items-center" style={{ marginBottom: 2 }}>
@@ -602,40 +590,16 @@ function ReplyRow({
           {relativeTime(reply.created_at)}
         </Text>
       </View>
-      {hidden ? (
-        <Pressable onPress={onToggleReveal}>
-          <View
-            style={{
-              paddingVertical: 8,
-              paddingHorizontal: 8,
-              borderRadius: 6,
-              backgroundColor: colors.bgSelected,
-              borderColor: colors.borderBrand,
-              borderWidth: 1,
-              borderStyle: 'dashed',
-              flexDirection: 'row',
-              alignItems: 'center',
-              gap: 6,
-            }}
-          >
-            <EyeSlash color={colors.brandText} size={12} weight="regular" />
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}>
-              Spoiler, tap to reveal
-            </Text>
-          </View>
-        </Pressable>
-      ) : (
-        <Text
-          style={{
-            fontFamily: Fonts.body,
-            fontSize: 13,
-            color: colors.textPrimary,
-            lineHeight: 19,
-          }}
-        >
-          {reply.body}
-        </Text>
-      )}
+      <Text
+        style={{
+          fontFamily: Fonts.body,
+          fontSize: 13,
+          color: colors.textPrimary,
+          lineHeight: 19,
+        }}
+      >
+        {reply.content}
+      </Text>
     </View>
   )
 }
