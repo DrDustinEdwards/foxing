@@ -1,26 +1,49 @@
-import Image from 'next/image'
 import Link from 'next/link'
+import type { Metadata } from 'next'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
-  fetchPublishedJournalPosts,
-  formatLongDate,
-  readingMinutes,
+  getJournalPosts,
+  JOURNAL_TAGS,
   type JournalPostSummary,
 } from '@/lib/journal'
-import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const revalidate = 3600
 
-export const metadata = STATIC_PAGE_METADATA['/journal']
+export const metadata: Metadata = {
+  title: 'Journal · Foxing',
+  description:
+    'Reading guides, author spotlights, and notes on the classics from the Foxing team.',
+  alternates: {
+    canonical: 'https://foxing.app/journal',
+    types: { 'application/rss+xml': 'https://foxing.app/feed.rss' },
+  },
+  openGraph: {
+    title: 'Foxing Journal',
+    description:
+      'Reading guides, author spotlights, and notes on the classics.',
+    url: 'https://foxing.app/journal',
+  },
+}
 
-export default async function JournalIndexPage() {
-  const [posts] = await Promise.all([
-    fetchPublishedJournalPosts(24),
-  ])
-  const [hero, ...rest] = posts
+const TAG_SLUGS = new Set<string>(JOURNAL_TAGS.map((t) => t.slug))
+
+export default async function JournalIndexPage({
+  searchParams,
+}: {
+  searchParams?: { tag?: string | string[] }
+}) {
+  const rawTag = Array.isArray(searchParams?.tag)
+    ? searchParams?.tag[0]
+    : searchParams?.tag
+  const activeTag = rawTag && TAG_SLUGS.has(rawTag) ? rawTag : null
+
+  const allPosts = await getJournalPosts()
+  const posts = activeTag
+    ? allPosts.filter((p) => p.tags.includes(activeTag))
+    : allPosts
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -44,19 +67,19 @@ export default async function JournalIndexPage() {
             </p>
           </header>
 
-          {posts.length === 0 ? (
+          {allPosts.length === 0 ? (
             <div className="mt-12">
               <EmptyState heading="No posts yet." />
             </div>
           ) : (
             <>
-              {hero && <HeroPost post={hero} />}
-              {rest.length > 0 && (
-                <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                  {rest.map((post) => (
-                    <PostCard key={post.id} post={post} />
-                  ))}
+              <TagPills active={activeTag} />
+              {posts.length === 0 ? (
+                <div className="mt-10">
+                  <EmptyState heading="No posts in this tag yet." />
                 </div>
+              ) : (
+                <PostList posts={posts} />
               )}
             </>
           )}
@@ -67,111 +90,60 @@ export default async function JournalIndexPage() {
   )
 }
 
-function HeroPost({ post }: { post: JournalPostSummary }) {
+function TagPills({ active }: { active: string | null }) {
+  const base =
+    'rounded-full px-3 py-1 font-dm-sans text-xs border transition-colors no-underline'
+  const activeCls = 'bg-brand-subtle text-brand-subtle-text border-brand-ui'
+  const inactiveCls =
+    'bg-bg-surface text-text-secondary border-border-subtle hover:border-border-default hover:text-text-primary'
   return (
-    <article className="mt-10 grid gap-6 rounded-xl border border-border-subtle bg-bg-surface p-5 md:grid-cols-[1fr_1fr] md:items-center md:gap-8 md:p-8">
+    <nav className="mt-8 flex flex-wrap gap-2">
       <Link
-        href={`/journal/${post.slug}`}
-        className="relative aspect-[16/10] overflow-hidden rounded-lg bg-bg-sunken"
+        href="/journal"
+        className={`${base} ${active === null ? activeCls : inactiveCls}`}
       >
-        {post.cover_image_url ? (
-          <Image
-            src={post.cover_image_url}
-            alt={post.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover"
-            priority
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-text-tertiary" />
-        )}
+        All
       </Link>
-      <div className="flex flex-col gap-3">
-        <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-          Latest
-        </p>
-        <h2 className="font-fraunces text-[2rem] leading-tight text-text-primary">
+      {JOURNAL_TAGS.map((t) => (
+        <Link
+          key={t.slug}
+          href={`/journal?tag=${t.slug}`}
+          className={`${base} ${active === t.slug ? activeCls : inactiveCls}`}
+        >
+          {t.label}
+        </Link>
+      ))}
+    </nav>
+  )
+}
+
+function PostList({ posts }: { posts: JournalPostSummary[] }) {
+  return (
+    <ul className="mt-10 flex flex-col divide-y divide-border-subtle">
+      {posts.map((post) => (
+        <li key={post.id}>
           <Link
             href={`/journal/${post.slug}`}
-            className="hover:text-brand-text"
+            className="group flex items-start justify-between gap-4 rounded-lg px-2 -mx-2 py-4 no-underline transition-colors hover:bg-bg-hover"
           >
-            {post.title}
+            <div className="min-w-0 flex-1">
+              <p className="font-fraunces text-base leading-snug text-text-primary line-clamp-1 transition-colors group-hover:text-brand-text">
+                {post.title}
+              </p>
+              {post.excerpt && (
+                <p className="mt-0.5 font-source-serif-4 text-sm text-text-secondary line-clamp-1">
+                  {post.excerpt}
+                </p>
+              )}
+            </div>
+            {post.tags.length > 0 && (
+              <span className="shrink-0 font-dm-mono text-[0.6875rem] text-text-tertiary">
+                {post.tags[0].replace(/-/g, ' ')}
+              </span>
+            )}
           </Link>
-        </h2>
-        {post.excerpt && (
-          <p className="font-source-serif-4 text-base text-text-secondary">
-            {post.excerpt}
-          </p>
-        )}
-        <PostMeta post={post} />
-      </div>
-    </article>
-  )
-}
-
-function PostCard({ post }: { post: JournalPostSummary }) {
-  return (
-    <article className="flex flex-col gap-3">
-      <Link
-        href={`/journal/${post.slug}`}
-        className="relative aspect-[16/10] overflow-hidden rounded-lg bg-bg-sunken"
-      >
-        {post.cover_image_url && (
-          <Image
-            src={post.cover_image_url}
-            alt={post.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover"
-          />
-        )}
-      </Link>
-      <h2 className="font-fraunces text-lg text-text-primary">
-        <Link
-          href={`/journal/${post.slug}`}
-          className="hover:text-brand-text"
-        >
-          {post.title}
-        </Link>
-      </h2>
-      {post.excerpt && (
-        <p className="line-clamp-3 font-source-serif-4 text-sm text-text-secondary">
-          {post.excerpt}
-        </p>
-      )}
-      <PostMeta post={post} short />
-    </article>
-  )
-}
-
-function PostMeta({
-  post,
-  short,
-}: {
-  post: JournalPostSummary
-  short?: boolean
-}) {
-  const date = formatLongDate(post.published_at ?? post.created_at)
-  // The reading time is computed off the excerpt when we don't have full
-  // content. It's a rough hint, not a promise.
-  const minutes = post.excerpt ? readingMinutes(post.excerpt) : null
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 font-dm-mono text-xs text-text-tertiary">
-      {date && <span>{date}</span>}
-      {!short && minutes && <span>{minutes} min read</span>}
-      {post.tags && post.tags.length > 0 && (
-        <span className="flex flex-wrap gap-1">
-          {post.tags.slice(0, 3).map((t) => (
-            <span
-              key={t}
-              className="rounded-full bg-brand-subtle px-2 py-0.5 text-[11px] font-medium text-brand-subtle-text"
-            >
-              {t}
-            </span>
-          ))}
-        </span>
-      )}
-    </div>
+        </li>
+      ))}
+    </ul>
   )
 }
