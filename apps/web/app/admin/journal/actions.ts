@@ -144,3 +144,66 @@ export async function deleteJournalPost(formData: FormData) {
   revalidatePath('/admin/journal')
   redirect('/admin/journal')
 }
+
+export async function duplicateJournalPost(formData: FormData) {
+  const id = String(formData.get('id') ?? '')
+  if (!id) return
+  const admin = createAdminClient()
+  const { data: src } = await admin
+    .from('journal_posts')
+    .select(
+      'title, slug, excerpt, cover_image_url, tags, content, og_title, og_description, canonical_url',
+    )
+    .eq('id', id)
+    .maybeSingle()
+  const source = src as {
+    title: string
+    slug: string
+    excerpt: string | null
+    cover_image_url: string | null
+    tags: string[] | null
+    content: string
+    og_title: string | null
+    og_description: string | null
+    canonical_url: string | null
+  } | null
+  if (!source) return
+
+  const authorId = await getAuthedUserId()
+  const baseSlug = `${source.slug}-copy`
+  let candidate = baseSlug
+  for (let i = 2; i < 100; i += 1) {
+    const { data: clash } = await admin
+      .from('journal_posts')
+      .select('id')
+      .eq('slug', candidate)
+      .maybeSingle()
+    if (!clash) break
+    candidate = `${baseSlug}-${i}`
+  }
+
+  const { data, error } = await admin
+    .from('journal_posts')
+    .insert({
+      title: `${source.title} (copy)`,
+      slug: candidate,
+      excerpt: source.excerpt,
+      cover_image_url: source.cover_image_url,
+      tags: source.tags,
+      content: source.content,
+      og_title: source.og_title,
+      og_description: source.og_description,
+      canonical_url: source.canonical_url,
+      is_published: false,
+      published_at: null,
+      featured: false,
+      author_id: authorId,
+      updated_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
+  if (error) return
+  const newId = (data as { id: string }).id
+  revalidatePath('/admin/journal')
+  redirect(`/admin/journal/${newId}`)
+}
