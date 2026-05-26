@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
+import { Card, CardMeta } from '@/components/ui/card'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
@@ -99,40 +100,40 @@ export default async function PeoplePage(
               No public readers match that yet.
             </p>
           ) : (
-            <ul className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
               {people.map((p) => (
-                <li key={p.id}>
-                  <Link
-                    href={`/u/${p.username}`}
-                    className="flex h-full flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Avatar
-                        src={p.avatar_url}
-                        name={p.display_name}
-                        size="md"
-                      />
-                      <div className="flex min-w-0 flex-1 flex-col">
-                        <span className="truncate font-dm-sans text-sm font-medium text-text-primary">
-                          {p.display_name}
-                        </span>
-                        <span className="truncate font-dm-sans text-xs text-text-tertiary">
-                          @{p.username}
-                        </span>
-                      </div>
+                <Card
+                  key={p.id}
+                  variant="entity"
+                  href={`/u/${p.username}`}
+                  className="p-4 gap-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <Avatar
+                      src={p.avatar_url}
+                      name={p.display_name}
+                      size="md"
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate font-dm-sans text-sm font-medium text-text-primary">
+                        {p.display_name}
+                      </span>
+                      <span className="truncate font-dm-sans text-xs text-text-tertiary">
+                        @{p.username}
+                      </span>
                     </div>
-                    {p.reading_personality && (
-                      <p className="line-clamp-2 font-source-serif-4 text-sm italic text-text-tertiary">
-                        {p.reading_personality}
-                      </p>
-                    )}
-                    <p className="font-dm-mono text-[11px] text-text-tertiary">
-                      {p.books_count} books · {p.highlight_count} highlights
+                  </div>
+                  {p.reading_personality && (
+                    <p className="line-clamp-2 font-source-serif-4 text-sm italic text-text-tertiary">
+                      {p.reading_personality}
                     </p>
-                  </Link>
-                </li>
+                  )}
+                  <CardMeta>
+                    {p.books_count} books · {p.highlight_count} highlights
+                  </CardMeta>
+                </Card>
               ))}
-            </ul>
+            </div>
           )}
         </PageWrapper>
       </main>
