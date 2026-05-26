@@ -6,11 +6,14 @@ import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReadingProgress } from '@/components/reading-progress'
 import {
-  estimateReadingTime,
   getAdjacentJournalPosts,
   getJournalPost,
   type JournalPost,
 } from '@/lib/journal'
+import {
+  estimateReadingTime,
+  JOURNAL_TAGS,
+} from '@/lib/journal-shared'
 import {
   extractH2Headings,
   renderJournalMarkdown,
@@ -89,7 +92,6 @@ export default async function JournalPostPage(
 
   const headings = extractH2Headings(post.content)
   const body = await renderJournalMarkdown(post.content)
-  const minutes = estimateReadingTime(post.content)
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -119,15 +121,21 @@ export default async function JournalPostPage(
               </p>
 
               <header className="flex flex-col gap-3 border-b border-border-subtle pb-6">
-                {post.tags.length > 0 && (
-                  <p className="flex flex-wrap gap-x-3 gap-y-1 font-dm-mono text-[0.6875rem] text-text-tertiary">
-                    {post.tags.map((t) => (
-                      <span key={t}>{t.replace(/-/g, ' ')}</span>
-                    ))}
-                  </p>
+                {post.tags[0] && (
+                  <TagPill slug={post.tags[0]} />
                 )}
                 <p className="font-dm-mono text-sm text-text-tertiary">
-                  {minutes} min read · Foxing
+                  {post.published_at
+                    ? new Date(post.published_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })
+                    : null}
+                  {post.published_at ? ' · ' : null}
+                  {post.reading_time_minutes ??
+                    estimateReadingTime(post.content)}{' '}
+                  min read
                 </p>
                 <h1 className="font-fraunces text-[2rem] leading-tight text-text-primary">
                   {post.title}
@@ -279,6 +287,22 @@ export default async function JournalPostPage(
       <Footer />
     </div>
   );
+}
+
+function TagPill({ slug }: { slug: string }) {
+  const label =
+    JOURNAL_TAGS.find((t) => t.slug === slug)?.label ??
+    slug
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  return (
+    <Link
+      href={`/journal/tag/${slug}`}
+      className="self-start rounded-full bg-brand-subtle px-3 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-brand-subtle-text no-underline transition-colors hover:bg-brand-ui hover:text-text-on-brand"
+    >
+      {label}
+    </Link>
+  )
 }
 
 function AuthorByline() {
