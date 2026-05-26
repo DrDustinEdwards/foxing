@@ -12,7 +12,7 @@ import {
 } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { estimateReadingTime, JOURNAL_TAGS } from '@/lib/journal'
+import { estimateReadingTime, JOURNAL_TAGS } from '@/lib/journal-shared'
 import { deleteJournalPost, saveJournalPost } from './actions'
 import {
   type SelectionState,
