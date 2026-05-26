@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "cd ../.. && pnpm install",
+  "installCommand": "cd ../.. && rm -rf node_modules apps/*/node_modules packages/*/node_modules && pnpm install --frozen-lockfile",
   "buildCommand": "cd ../.. && pnpm --filter web build",
   "crons": [
     {
