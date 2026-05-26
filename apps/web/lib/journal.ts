@@ -27,15 +27,16 @@ export const JOURNAL_TAGS = [
       'Where to start with a writer, and what to read once you are hooked.',
   },
   {
-    slug: 'classics-explained',
-    label: 'Classics Explained',
+    slug: 'book-analysis',
+    label: 'Book Analysis',
     description:
-      'Context, structure, and the parts everyone misses on a first read.',
+      'Close reads of specific books, with the structure and craft notes.',
   },
   {
-    slug: 'community',
-    label: 'Community',
-    description: 'Field notes from readers, clubs, and the Foxing team.',
+    slug: 'book-clubs',
+    label: 'Book Clubs',
+    description:
+      'Reading together: club mechanics, group reads, and what works.',
   },
 ] as const
 

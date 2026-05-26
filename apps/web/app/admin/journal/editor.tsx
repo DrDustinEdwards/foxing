@@ -12,7 +12,7 @@ import {
 } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { estimateReadingTime } from '@/lib/journal'
+import { estimateReadingTime, JOURNAL_TAGS } from '@/lib/journal'
 import { deleteJournalPost, saveJournalPost } from './actions'
 import {
   type SelectionState,
@@ -114,6 +114,9 @@ export function JournalEditor({ initial }: Props) {
     null,
   )
   const [previewHtml, setPreviewHtml] = useState('')
+  const [slugStatus, setSlugStatus] = useState<
+    'idle' | 'checking' | 'available' | 'taken'
+  >('idle')
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const pendingSelection = useRef<{ start: number; end: number } | null>(null)
@@ -334,7 +337,20 @@ export function JournalEditor({ initial }: Props) {
       }
     }
     setIsPublished(publish)
-    setMessage(publish ? 'Published.' : 'Saved as draft.')
+    if (publish) {
+      try {
+        await fetch('/api/admin/journal/revalidate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ slug }),
+        })
+      } catch {
+        // Non-fatal: ISR will pick changes up at the next revalidate tick.
+      }
+      setMessage('Saved. Cache cleared. Changes are live.')
+    } else {
+      setMessage('Saved as draft.')
+    }
     try {
       window.localStorage.removeItem(draftKey)
     } catch {
@@ -417,14 +433,37 @@ export function JournalEditor({ initial }: Props) {
         required
         placeholder="Post title"
       />
-      <Input
-        label="Slug"
-        value={slug}
-        onChange={(e) => {
-          setSlug(e.target.value)
+      <SlugField
+        slug={slug}
+        status={slugStatus}
+        onChange={(v) => {
+          setSlug(v)
           setSlugTouched(true)
+          setSlugStatus('idle')
         }}
-        hint={`/journal/${slug || '...'}`}
+        onBlur={async () => {
+          const trimmed = slug.trim()
+          if (!trimmed) {
+            setSlugStatus('idle')
+            return
+          }
+          setSlugStatus('checking')
+          try {
+            const params = new URLSearchParams({ slug: trimmed })
+            if (initial.id) params.set('exclude', initial.id)
+            const res = await fetch(
+              `/api/admin/journal/check-slug?${params.toString()}`,
+            )
+            if (!res.ok) {
+              setSlugStatus('idle')
+              return
+            }
+            const data = (await res.json()) as { available?: boolean }
+            setSlugStatus(data.available ? 'available' : 'taken')
+          } catch {
+            setSlugStatus('idle')
+          }
+        }}
       />
 
       <FieldTextarea
@@ -456,6 +495,15 @@ export function JournalEditor({ initial }: Props) {
         prose
         placeholder="Custom social description."
       />
+
+      <SeoPreview
+        slug={slug}
+        title={title}
+        excerpt={excerpt}
+        ogTitle={ogTitle}
+        ogDescription={ogDescription}
+      />
+
       <Input
         label="Canonical URL (optional)"
         value={canonicalUrl}
@@ -493,7 +541,7 @@ export function JournalEditor({ initial }: Props) {
         label="Tags (comma separated)"
         value={tags}
         onChange={(e) => setTags(e.target.value)}
-        placeholder="reading-guides, classics-explained"
+        placeholder="reading-guides, book-analysis"
       />
       <TagsPreview value={tags} />
 
@@ -757,18 +805,206 @@ function TagsPreview({ value }: { value: string }) {
     .split(',')
     .map((t) => t.trim())
     .filter(Boolean)
-  if (tags.length === 0) return null
+  const valid = new Set<string>(JOURNAL_TAGS.map((t) => t.slug))
+  const canonical = JOURNAL_TAGS.map((t) => t.slug).join(', ')
   return (
-    <div className="flex flex-wrap gap-2">
-      {tags.map((t) => (
-        <span
-          key={t}
-          className="rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[0.6875rem] text-brand-subtle-text"
-        >
-          {t}
-        </span>
-      ))}
+    <div className="flex flex-col gap-1">
+      {tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {tags.map((t) => {
+            const ok = valid.has(t)
+            return (
+              <span
+                key={t}
+                className={`rounded-full border px-2 py-0.5 font-dm-mono text-[0.6875rem] ${
+                  ok
+                    ? 'bg-brand-subtle text-brand-text border-brand-ui'
+                    : 'bg-error-bg text-error border-error'
+                }`}
+              >
+                {t}
+              </span>
+            )
+          })}
+        </div>
+      )}
+      <p className="font-dm-mono text-xs text-text-tertiary">
+        Valid tags: {canonical}
+      </p>
     </div>
+  )
+}
+
+function SlugField({
+  slug,
+  status,
+  onChange,
+  onBlur,
+}: {
+  slug: string
+  status: 'idle' | 'checking' | 'available' | 'taken'
+  onChange: (v: string) => void
+  onBlur: () => void
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor="slug"
+        className="font-dm-sans text-sm text-text-secondary"
+      >
+        Slug
+      </label>
+      <input
+        id="slug"
+        value={slug}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onBlur}
+        className="rounded-md border border-border-subtle bg-bg-surface px-3 py-2 font-dm-mono text-sm text-text-primary focus:border-brand-ui focus:outline-none"
+      />
+      <p className="font-dm-mono text-xs text-text-tertiary">
+        /journal/{slug || '...'}
+      </p>
+      {status === 'checking' && (
+        <p className="font-dm-mono text-xs text-text-tertiary">Checking...</p>
+      )}
+      {status === 'taken' && (
+        <p className="font-dm-mono text-xs text-error">
+          This slug is already in use.
+        </p>
+      )}
+      {status === 'available' && (
+        <p className="font-dm-mono text-xs text-success">Slug is available.</p>
+      )}
+    </div>
+  )
+}
+
+function SeoPreview({
+  slug,
+  title,
+  excerpt,
+  ogTitle,
+  ogDescription,
+}: {
+  slug: string
+  title: string
+  excerpt: string
+  ogTitle: string
+  ogDescription: string
+}) {
+  const [tab, setTab] = useState<'search' | 'social'>('search')
+  const effectiveTitle = ogTitle.trim() || title.trim() || 'Untitled'
+  const effectiveDesc = ogDescription.trim() || excerpt.trim() || ''
+  const titleOver = effectiveTitle.length > 60
+  const descOver = effectiveDesc.length > 160
+  const shownTitle = titleOver
+    ? `${effectiveTitle.slice(0, 60).trimEnd()}...`
+    : effectiveTitle
+  const shownDesc = descOver
+    ? `${effectiveDesc.slice(0, 160).trimEnd()}...`
+    : effectiveDesc
+
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="font-dm-sans text-sm text-text-secondary">SEO preview</p>
+        <div className="flex gap-1 rounded-md border border-border-subtle p-0.5">
+          {(['search', 'social'] as const).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => setTab(t)}
+              className={`rounded px-2 py-0.5 font-dm-sans text-xs ${
+                tab === t
+                  ? 'bg-brand-subtle text-brand-subtle-text'
+                  : 'text-text-tertiary hover:text-text-primary'
+              }`}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+      {tab === 'search' ? (
+        <div className="flex flex-col gap-1">
+          <p className="font-dm-mono text-xs text-text-tertiary">
+            foxing.app › journal › {slug || '...'}
+          </p>
+          <p className="font-fraunces text-base text-brand-text line-clamp-2">
+            <span className={titleOver ? 'text-error' : ''}>{shownTitle}</span>
+          </p>
+          <p className="font-source-serif-4 text-sm text-text-secondary line-clamp-2">
+            <span className={descOver ? 'text-error' : ''}>{shownDesc}</span>
+          </p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-md border border-border-subtle bg-brand-subtle">
+          <div className="aspect-[2/1] bg-bg-sunken" aria-hidden="true" />
+          <div className="flex flex-col gap-1 p-4">
+            <p className="font-dm-mono text-xs text-text-tertiary">foxing.app</p>
+            <p className="font-fraunces text-base text-text-primary line-clamp-2">
+              {shownTitle}
+            </p>
+            <p className="font-source-serif-4 text-sm text-text-secondary line-clamp-2">
+              {shownDesc}
+            </p>
+          </div>
+        </div>
+      )}
+      <p className="flex gap-3 font-dm-mono text-xs">
+        <span className={titleOver ? 'text-error' : 'text-text-tertiary'}>
+          Title: {effectiveTitle.length} / 60
+        </span>
+        <span className={descOver ? 'text-error' : 'text-text-tertiary'}>
+          Description: {effectiveDesc.length} / 160
+        </span>
+      </p>
+    </div>
+  )
+}
+
+function ShortcodePanel() {
+  const rows: Array<[string, string]> = [
+    ['## Heading', 'H2 section heading'],
+    ['### Heading', 'H3 subheading'],
+    ['**text**', 'Bold'],
+    ['_text_', 'Italic'],
+    ['`code`', 'Inline code'],
+    ['[text](url)', 'Link'],
+    ['> text', 'Blockquote'],
+    ['---', 'Horizontal rule'],
+    [':::tip / :::warning / :::note / :::danger', 'Callout block'],
+    [':::pullquote', 'Pull quote'],
+    [':::toggle[Header]', 'Collapsible section'],
+    ['::youtube[videoId]', 'YouTube embed'],
+    ['::bookmark[url]', 'Bookmark card'],
+    ['::postlink[slug]', 'Internal post link (or type @ in editor)'],
+    ['![alt](url)', 'Image (or use toolbar Image button)'],
+  ]
+  return (
+    <details className="rounded-md border border-border-subtle bg-bg-surface p-2">
+      <summary className="flex cursor-pointer items-center justify-between px-2 py-1 font-dm-sans text-xs text-text-secondary">
+        <span>Shortcodes</span>
+        <span aria-hidden="true" className="font-dm-mono text-xs">
+          +
+        </span>
+      </summary>
+      <table className="mt-2 w-full border-collapse text-left font-dm-sans text-xs">
+        <tbody>
+          {rows.map(([code, what]) => (
+            <tr
+              key={code}
+              className="border-t border-border-subtle align-top"
+            >
+              <td className="px-2 py-1 font-dm-mono text-xs text-text-primary">
+                {code}
+              </td>
+              <td className="px-2 py-1 text-text-tertiary">{what}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </details>
   )
 }
 
@@ -1040,6 +1276,7 @@ function BodyField({
         onImagePick={onImagePick}
         uploading={uploading}
       />
+      <ShortcodePanel />
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="relative">
           <textarea
