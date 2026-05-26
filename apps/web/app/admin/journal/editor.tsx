@@ -1,10 +1,27 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useMemo, useState } from 'react'
+import {
+  type ChangeEvent,
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { estimateReadingTime } from '@/lib/journal'
 import { deleteJournalPost, saveJournalPost } from './actions'
+import {
+  type SelectionState,
+  extractYouTubeId,
+  insertBlock,
+  prefixLines,
+  replaceSelection,
+  wrapSelection,
+} from './editor-actions'
 
 export interface JournalPostInitial {
   id: string | null
@@ -19,6 +36,14 @@ export interface JournalPostInitial {
   og_title: string
   og_description: string
   canonical_url: string
+  published_at: string | null
+  updated_at: string | null
+}
+
+interface LinkedPost {
+  id: string
+  slug: string
+  title: string
 }
 
 interface Props {
@@ -34,8 +59,36 @@ function slugify(s: string): string {
     .replace(/^-|-$/g, '')
 }
 
+function toDatetimeLocal(iso: string | null): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return ''
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+const DRAFT_PREFIX = 'journal-draft-'
+
+interface DraftSnapshot {
+  savedAt: number
+  title: string
+  slug: string
+  excerpt: string
+  cover_image_url: string
+  tags: string
+  content: string
+  featured: boolean
+  is_published: boolean
+  og_title: string
+  og_description: string
+  canonical_url: string
+  published_at: string
+}
+
 export function JournalEditor({ initial }: Props) {
   const router = useRouter()
+  const draftKey = `${DRAFT_PREFIX}${initial.id ?? 'new'}`
+
   const [title, setTitle] = useState(initial.title)
   const [slug, setSlug] = useState(initial.slug)
   const [slugTouched, setSlugTouched] = useState(initial.slug.length > 0)
@@ -44,18 +97,203 @@ export function JournalEditor({ initial }: Props) {
   const [tags, setTags] = useState(initial.tags.join(', '))
   const [content, setContent] = useState(initial.content)
   const [featured, setFeatured] = useState(initial.featured)
+  const [isPublished, setIsPublished] = useState(initial.is_published)
   const [ogTitle, setOgTitle] = useState(initial.og_title)
   const [ogDescription, setOgDescription] = useState(initial.og_description)
   const [canonicalUrl, setCanonicalUrl] = useState(initial.canonical_url)
+  const [publishedAt, setPublishedAt] = useState(
+    toDatetimeLocal(initial.published_at),
+  )
+  const [linkedPosts, setLinkedPosts] = useState<LinkedPost[]>([])
   const [pending, setPending] = useState<'draft' | 'publish' | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [draftAvailable, setDraftAvailable] = useState<DraftSnapshot | null>(
+    null,
+  )
+  const [previewHtml, setPreviewHtml] = useState('')
 
-  function handleTitle(e: React.ChangeEvent<HTMLInputElement>) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const pendingSelection = useRef<{ start: number; end: number } | null>(null)
+
+  // Load curated Further reading links for existing posts.
+  useEffect(() => {
+    if (!initial.id) return
+    let alive = true
+    fetch(`/api/admin/journal/posts/${initial.id}/links`)
+      .then((r) => (r.ok ? r.json() : { links: [] }))
+      .then((d: { links?: LinkedPost[] }) => {
+        if (alive) setLinkedPosts(d.links ?? [])
+      })
+      .catch(() => {
+        // Network errors here are non-fatal; admin can re-pick links.
+      })
+    return () => {
+      alive = false
+    }
+  }, [initial.id])
+
+  // Restore-from-draft detection. Only surface drafts saved after the
+  // server-side updated_at so a stale local snapshot does not overwrite
+  // newer remote edits.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const raw = window.localStorage.getItem(draftKey)
+    if (!raw) return
+    try {
+      const draft = JSON.parse(raw) as DraftSnapshot
+      const serverTs = initial.updated_at
+        ? new Date(initial.updated_at).getTime()
+        : 0
+      if (draft.savedAt > serverTs) {
+        setDraftAvailable(draft)
+      } else {
+        window.localStorage.removeItem(draftKey)
+      }
+    } catch {
+      window.localStorage.removeItem(draftKey)
+    }
+  }, [draftKey, initial.updated_at])
+
+  // 30s autosave to localStorage.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const timer = window.setInterval(() => {
+      const snapshot: DraftSnapshot = {
+        savedAt: Date.now(),
+        title,
+        slug,
+        excerpt,
+        cover_image_url: coverUrl,
+        tags,
+        content,
+        featured,
+        is_published: isPublished,
+        og_title: ogTitle,
+        og_description: ogDescription,
+        canonical_url: canonicalUrl,
+        published_at: publishedAt,
+      }
+      try {
+        window.localStorage.setItem(draftKey, JSON.stringify(snapshot))
+      } catch {
+        // Ignore quota / privacy errors. Autosave is best-effort.
+      }
+    }, 30_000)
+    return () => window.clearInterval(timer)
+  }, [
+    draftKey,
+    title,
+    slug,
+    excerpt,
+    coverUrl,
+    tags,
+    content,
+    featured,
+    isPublished,
+    ogTitle,
+    ogDescription,
+    canonicalUrl,
+    publishedAt,
+  ])
+
+  // Debounced live preview via server-rendered markdown.
+  useEffect(() => {
+    let alive = true
+    const handle = window.setTimeout(async () => {
+      try {
+        const res = await fetch('/api/admin/journal/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content }),
+        })
+        if (!res.ok) return
+        const data = (await res.json()) as { html?: string }
+        if (alive) setPreviewHtml(data.html ?? '')
+      } catch {
+        // Keep last preview on transient failure.
+      }
+    }, 400)
+    return () => {
+      alive = false
+      window.clearTimeout(handle)
+    }
+  }, [content])
+
+  // Apply pending textarea selection after a toolbar action settles.
+  useEffect(() => {
+    if (!pendingSelection.current || !textareaRef.current) return
+    const ta = textareaRef.current
+    const { start, end } = pendingSelection.current
+    ta.focus()
+    ta.setSelectionRange(start, end)
+    pendingSelection.current = null
+  }, [content])
+
+  function handleTitle(e: ChangeEvent<HTMLInputElement>) {
     const v = e.target.value
     setTitle(v)
     if (!slugTouched) setSlug(slugify(v))
+  }
+
+  const applyAction = useCallback(
+    (fn: (s: SelectionState) => SelectionState) => {
+      const ta = textareaRef.current
+      if (!ta) return
+      const next = fn({
+        value: content,
+        selectionStart: ta.selectionStart,
+        selectionEnd: ta.selectionEnd,
+      })
+      pendingSelection.current = {
+        start: next.selectionStart,
+        end: next.selectionEnd,
+      }
+      setContent(next.value)
+    },
+    [content],
+  )
+
+  async function uploadImage(file: File): Promise<string | null> {
+    const fd = new FormData()
+    fd.set('image', file)
+    setUploading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/journal/upload-image', {
+        method: 'POST',
+        body: fd,
+      })
+      const data = (await res.json()) as { url?: string; error?: string }
+      if (!res.ok || !data.url) {
+        setError(data.error ?? 'Upload failed.')
+        return null
+      }
+      return data.url
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  async function handleCoverPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const url = await uploadImage(file)
+    if (url) setCoverUrl(url)
+  }
+
+  async function handleBodyImagePick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    const url = await uploadImage(file)
+    if (!url) return
+    applyAction((s) =>
+      insertBlock(s, `![](${url})`, '![](\\)'.length - 1 + url.length),
+    )
   }
 
   async function save(publish: boolean) {
@@ -75,13 +313,34 @@ export function JournalEditor({ initial }: Props) {
     fd.set('og_title', ogTitle)
     fd.set('og_description', ogDescription)
     fd.set('canonical_url', canonicalUrl)
+    fd.set('published_at', publish ? publishedAt : '')
     const res = await saveJournalPost(fd)
     setPending(null)
     if (!res.ok) {
       setError(res.error ?? 'Save failed.')
       return
     }
+    if (res.id) {
+      // Persist curated Further reading links. Fire-and-await so a
+      // mid-save crash leaves both records consistent.
+      try {
+        await fetch(`/api/admin/journal/posts/${res.id}/links`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ targetIds: linkedPosts.map((p) => p.id) }),
+        })
+      } catch {
+        // Non-fatal: editor can be reopened to retry.
+      }
+    }
+    setIsPublished(publish)
     setMessage(publish ? 'Published.' : 'Saved as draft.')
+    try {
+      window.localStorage.removeItem(draftKey)
+    } catch {
+      // Ignore.
+    }
+    setDraftAvailable(null)
     if (!initial.id && res.id) {
       router.replace(`/admin/journal/${res.id}`)
     } else {
@@ -100,13 +359,57 @@ export function JournalEditor({ initial }: Props) {
     setDeleting(true)
     const fd = new FormData()
     fd.set('id', initial.id)
+    try {
+      window.localStorage.removeItem(draftKey)
+    } catch {
+      // Ignore.
+    }
     await deleteJournalPost(fd)
   }
 
-  const preview = useMemo(() => renderMarkdown(content), [content])
+  function restoreDraft() {
+    if (!draftAvailable) return
+    setTitle(draftAvailable.title)
+    setSlug(draftAvailable.slug)
+    setSlugTouched(true)
+    setExcerpt(draftAvailable.excerpt)
+    setCoverUrl(draftAvailable.cover_image_url)
+    setTags(draftAvailable.tags)
+    setContent(draftAvailable.content)
+    setFeatured(draftAvailable.featured)
+    setIsPublished(draftAvailable.is_published)
+    setOgTitle(draftAvailable.og_title)
+    setOgDescription(draftAvailable.og_description)
+    setCanonicalUrl(draftAvailable.canonical_url)
+    setPublishedAt(draftAvailable.published_at)
+    setDraftAvailable(null)
+  }
+
+  function discardDraft() {
+    try {
+      window.localStorage.removeItem(draftKey)
+    } catch {
+      // Ignore.
+    }
+    setDraftAvailable(null)
+  }
+
+  const words = useMemo(
+    () => content.trim().split(/\s+/).filter(Boolean).length,
+    [content],
+  )
+  const minutes = useMemo(() => estimateReadingTime(content), [content])
 
   return (
     <div className="flex flex-col gap-5">
+      {draftAvailable && (
+        <DraftBanner
+          savedAt={draftAvailable.savedAt}
+          onRestore={restoreDraft}
+          onDiscard={discardDraft}
+        />
+      )}
+
       <Input
         label="Title"
         value={title}
@@ -121,122 +424,104 @@ export function JournalEditor({ initial }: Props) {
           setSlug(e.target.value)
           setSlugTouched(true)
         }}
-        hint="Auto-generated from the title until you edit it."
+        hint={`/journal/${slug || '...'}`}
       />
-      <div className="flex flex-col gap-1.5">
-        <label
-          htmlFor="excerpt"
-          className="font-dm-sans text-sm text-text-secondary"
-        >
-          Excerpt
-        </label>
-        <textarea
-          id="excerpt"
-          value={excerpt}
-          onChange={(e) => setExcerpt(e.target.value)}
-          maxLength={200}
-          rows={3}
-          className="rounded-md border border-border-interactive bg-bg-surface px-3 py-2 font-source-serif-4 text-sm text-text-primary"
-          placeholder="Short summary shown on the journal index, 200 chars max."
-        />
-        <span className="font-dm-mono text-xs text-text-tertiary">
-          {excerpt.length} / 200
-        </span>
-      </div>
-      <div className="grid gap-4 md:grid-cols-[1fr_120px]">
-        <Input
-          label="Cover image URL"
-          value={coverUrl}
-          onChange={(e) => setCoverUrl(e.target.value)}
-          placeholder="https://..."
-        />
-        {coverUrl && (
-          <div className="flex items-end">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={coverUrl}
-              alt="Cover preview"
-              className="h-24 w-32 rounded border border-border-subtle object-cover"
-            />
-          </div>
-        )}
-      </div>
+
+      <FieldTextarea
+        id="excerpt"
+        label="Excerpt"
+        value={excerpt}
+        onChange={setExcerpt}
+        maxLength={200}
+        rows={3}
+        prose
+        placeholder="Short summary shown on the journal index."
+      />
+
+      <Input
+        label="OG title (falls back to title)"
+        value={ogTitle}
+        onChange={(e) => setOgTitle(e.target.value.slice(0, 160))}
+        maxLength={160}
+        hint={`${ogTitle.length} / 160`}
+        placeholder="Custom social title"
+      />
+      <FieldTextarea
+        id="og_description"
+        label="OG description (falls back to excerpt)"
+        value={ogDescription}
+        onChange={(v) => setOgDescription(v.slice(0, 160))}
+        maxLength={160}
+        rows={2}
+        prose
+        placeholder="Custom social description."
+      />
+      <Input
+        label="Canonical URL (optional)"
+        value={canonicalUrl}
+        onChange={(e) => setCanonicalUrl(e.target.value)}
+        placeholder="https://..."
+      />
+
+      <CoverField
+        url={coverUrl}
+        uploading={uploading}
+        onPick={handleCoverPick}
+        onRemove={() => setCoverUrl('')}
+        onUrlChange={setCoverUrl}
+      />
+
+      <BodyField
+        textareaRef={textareaRef}
+        content={content}
+        setContent={setContent}
+        previewHtml={previewHtml}
+        words={words}
+        minutes={minutes}
+        applyAction={applyAction}
+        onImagePick={handleBodyImagePick}
+        uploading={uploading}
+      />
+
+      <FurtherReadingPicker
+        selfId={initial.id}
+        linked={linkedPosts}
+        onChange={setLinkedPosts}
+      />
+
       <Input
         label="Tags (comma separated)"
         value={tags}
         onChange={(e) => setTags(e.target.value)}
-        placeholder="essays, classics, criticism"
+        placeholder="reading-guides, classics-explained"
       />
+      <TagsPreview value={tags} />
 
-      <details className="rounded-md border border-border-subtle bg-bg-surface p-4">
-        <summary className="cursor-pointer font-dm-sans text-sm text-text-secondary">
-          SEO and promotion
-        </summary>
-        <div className="mt-4 flex flex-col gap-4">
-          <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
+      <FeaturedToggle value={featured} onChange={setFeatured} />
+
+      <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
+        <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            checked={isPublished}
+            onChange={(e) => setIsPublished(e.target.checked)}
+          />
+          Published
+        </label>
+        {isPublished && (
+          <label className="flex flex-col gap-1.5 font-dm-sans text-sm text-text-secondary">
+            Published at
             <input
-              type="checkbox"
-              checked={featured}
-              onChange={(e) => setFeatured(e.target.checked)}
+              type="datetime-local"
+              value={publishedAt}
+              onChange={(e) => setPublishedAt(e.target.value)}
+              className="w-full max-w-xs rounded-md border border-border-subtle bg-bg-surface px-3 py-2 font-dm-mono text-sm text-text-primary focus:border-brand-ui focus:outline-none"
             />
-            Featured (promote on homepage strip)
+            <span className="font-dm-mono text-xs text-text-tertiary">
+              Leave blank to use the current time on publish.
+            </span>
           </label>
-          <Input
-            label="OG title (falls back to title)"
-            value={ogTitle}
-            onChange={(e) => setOgTitle(e.target.value)}
-            placeholder="Custom Open Graph title"
-          />
-          <div className="flex flex-col gap-1.5">
-            <label
-              htmlFor="og_description"
-              className="font-dm-sans text-sm text-text-secondary"
-            >
-              OG description (falls back to excerpt)
-            </label>
-            <textarea
-              id="og_description"
-              value={ogDescription}
-              onChange={(e) => setOgDescription(e.target.value)}
-              maxLength={300}
-              rows={2}
-              className="rounded-md border border-border-interactive bg-bg-surface px-3 py-2 font-source-serif-4 text-sm text-text-primary"
-              placeholder="Custom social/share description."
-            />
-          </div>
-          <Input
-            label="Canonical URL (optional)"
-            value={canonicalUrl}
-            onChange={(e) => setCanonicalUrl(e.target.value)}
-            placeholder="https://..."
-          />
-        </div>
-      </details>
-
-      <div className="grid gap-3 lg:grid-cols-2">
-        <div className="flex flex-col gap-1.5">
-          <label
-            htmlFor="content"
-            className="font-dm-sans text-sm text-text-secondary"
-          >
-            Content (markdown)
-          </label>
-          <textarea
-            id="content"
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={20}
-            className="rounded-md border border-border-interactive bg-bg-surface px-3 py-2 font-dm-mono text-sm text-text-primary"
-            placeholder="# Heading&#10;&#10;Your prose goes here."
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <p className="font-dm-sans text-sm text-text-secondary">Preview</p>
-          <div
-            className="prose-foxing min-h-[420px] rounded-md border border-border-subtle bg-bg-surface p-4"
-            dangerouslySetInnerHTML={{ __html: preview }}
-          />
-        </div>
+        )}
       </div>
 
       {error && (
@@ -282,104 +567,732 @@ export function JournalEditor({ initial }: Props) {
   )
 }
 
-/**
- * Minimal markdown renderer for the preview pane. Supports headings,
- * bold, italics, inline code, links, blockquotes, lists, and paragraphs.
- * Public journal pages can render markdown more fully later.
- */
-function renderMarkdown(src: string): string {
-  if (!src.trim()) {
-    return '<p class="text-text-tertiary">Nothing to preview yet.</p>'
+function DraftBanner({
+  savedAt,
+  onRestore,
+  onDiscard,
+}: {
+  savedAt: number
+  onRestore: () => void
+  onDiscard: () => void
+}) {
+  const when = new Date(savedAt).toLocaleString()
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-brand-ui bg-brand-subtle px-3 py-2 text-sm text-brand-subtle-text">
+      <span className="font-dm-sans">
+        Unsaved draft from {when} found in this browser.
+      </span>
+      <span className="flex gap-2">
+        <button
+          type="button"
+          onClick={onRestore}
+          className="font-dm-sans text-sm font-medium text-brand-text hover:underline"
+        >
+          Restore
+        </button>
+        <button
+          type="button"
+          onClick={onDiscard}
+          className="font-dm-sans text-sm text-text-tertiary hover:text-text-primary"
+        >
+          Discard
+        </button>
+      </span>
+    </div>
+  )
+}
+
+function FieldTextarea({
+  id,
+  label,
+  value,
+  onChange,
+  maxLength,
+  rows,
+  prose,
+  placeholder,
+}: {
+  id: string
+  label: string
+  value: string
+  onChange: (v: string) => void
+  maxLength?: number
+  rows: number
+  prose?: boolean
+  placeholder?: string
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label
+        htmlFor={id}
+        className="font-dm-sans text-sm text-text-secondary"
+      >
+        {label}
+      </label>
+      <textarea
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        maxLength={maxLength}
+        rows={rows}
+        placeholder={placeholder}
+        className={`rounded-md border border-border-subtle bg-bg-surface px-3 py-2 text-sm text-text-primary focus:border-brand-ui focus:outline-none ${
+          prose ? 'font-source-serif-4' : 'font-dm-mono'
+        }`}
+      />
+      {maxLength && (
+        <span className="font-dm-mono text-xs text-text-tertiary">
+          {value.length} / {maxLength}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function CoverField({
+  url,
+  uploading,
+  onPick,
+  onRemove,
+  onUrlChange,
+}: {
+  url: string
+  uploading: boolean
+  onPick: (e: ChangeEvent<HTMLInputElement>) => void
+  onRemove: () => void
+  onUrlChange: (v: string) => void
+}) {
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4">
+      <p className="font-dm-sans text-sm text-text-secondary">Cover image</p>
+      <div className="flex flex-wrap items-start gap-4">
+        {url ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
+            src={url}
+            alt="Cover preview"
+            className="h-32 w-48 rounded border border-border-subtle object-cover"
+          />
+        ) : (
+          <div className="flex h-32 w-48 items-center justify-center rounded border border-dashed border-border-subtle bg-bg-sunken font-dm-mono text-xs text-text-tertiary">
+            No cover yet
+          </div>
+        )}
+        <div className="flex flex-1 flex-col gap-2">
+          <label className="inline-flex w-fit cursor-pointer items-center gap-2 rounded-md border border-border-subtle bg-bg-base px-3 py-2 font-dm-sans text-sm text-text-primary hover:border-brand-ui">
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              className="hidden"
+              onChange={onPick}
+            />
+            {uploading ? 'Uploading...' : 'Upload image'}
+          </label>
+          <Input
+            label="Or paste a URL"
+            value={url}
+            onChange={(e) => onUrlChange(e.target.value)}
+            placeholder="https://..."
+          />
+          {url && (
+            <button
+              type="button"
+              onClick={onRemove}
+              className="self-start font-dm-sans text-xs text-text-tertiary hover:text-error"
+            >
+              Remove cover
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function FeaturedToggle({
+  value,
+  onChange,
+}: {
+  value: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!value)}
+      className={`flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left transition-colors ${
+        value
+          ? 'border-brand-ui bg-brand-subtle'
+          : 'border-border-subtle bg-bg-surface hover:border-brand-ui'
+      }`}
+    >
+      <span className="flex flex-col gap-0.5">
+        <span
+          className={`font-dm-sans text-sm font-medium ${value ? 'text-brand-subtle-text' : 'text-text-primary'}`}
+        >
+          Featured post
+        </span>
+        <span className="font-dm-sans text-xs text-text-tertiary">
+          Pin to the journal index hero and homepage strip.
+        </span>
+      </span>
+      <span
+        className={`flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${
+          value ? 'bg-brand-ui' : 'bg-border-default'
+        }`}
+        aria-hidden="true"
+      >
+        <span
+          className={`h-5 w-5 rounded-full bg-bg-surface transition-transform ${
+            value ? 'translate-x-5' : 'translate-x-0'
+          }`}
+        />
+      </span>
+    </button>
+  )
+}
+
+function TagsPreview({ value }: { value: string }) {
+  const tags = value
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+  if (tags.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-2">
+      {tags.map((t) => (
+        <span
+          key={t}
+          className="rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[0.6875rem] text-brand-subtle-text"
+        >
+          {t}
+        </span>
+      ))}
+    </div>
+  )
+}
+
+function FurtherReadingPicker({
+  selfId,
+  linked,
+  onChange,
+}: {
+  selfId: string | null
+  linked: LinkedPost[]
+  onChange: (next: LinkedPost[]) => void
+}) {
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<LinkedPost[]>([])
+  const [searching, setSearching] = useState(false)
+
+  useEffect(() => {
+    const q = query.trim()
+    if (!q) {
+      setResults([])
+      return
+    }
+    let alive = true
+    const handle = window.setTimeout(async () => {
+      setSearching(true)
+      try {
+        const res = await fetch(
+          `/api/admin/journal/posts/search?q=${encodeURIComponent(q)}`,
+        )
+        if (!res.ok) {
+          setResults([])
+          return
+        }
+        const data = (await res.json()) as { results?: LinkedPost[] }
+        if (alive) setResults(data.results ?? [])
+      } finally {
+        if (alive) setSearching(false)
+      }
+    }, 200)
+    return () => {
+      alive = false
+      window.clearTimeout(handle)
+    }
+  }, [query])
+
+  function add(p: LinkedPost) {
+    if (p.id === selfId) return
+    if (linked.some((x) => x.id === p.id)) return
+    onChange([...linked, p])
+    setQuery('')
+    setResults([])
   }
-  const escape = (s: string) =>
-    s
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
 
-  const lines = src.split('\n')
-  const out: string[] = []
-  let inList = false
-  let inQuote = false
-  let paragraph: string[] = []
-
-  function flushParagraph() {
-    if (paragraph.length === 0) return
-    const html = inlineFormat(paragraph.join(' '))
-    out.push(`<p>${html}</p>`)
-    paragraph = []
+  function remove(id: string) {
+    onChange(linked.filter((p) => p.id !== id))
   }
 
-  function inlineFormat(s: string): string {
-    let v = escape(s)
-    v = v.replace(/`([^`]+)`/g, '<code>$1</code>')
-    v = v.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-    v = v.replace(/\*([^*]+)\*/g, '<em>$1</em>')
-    v = v.replace(/_([^_]+)_/g, '<em>$1</em>')
-    v = v.replace(
-      /\[([^\]]+)\]\(([^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>',
+  function move(id: string, dir: -1 | 1) {
+    const idx = linked.findIndex((p) => p.id === id)
+    if (idx === -1) return
+    const next = idx + dir
+    if (next < 0 || next >= linked.length) return
+    const copy = linked.slice()
+    const [item] = copy.splice(idx, 1)
+    copy.splice(next, 0, item)
+    onChange(copy)
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4">
+      <p className="font-dm-sans text-sm text-text-secondary">
+        Further reading
+      </p>
+      <p className="font-dm-mono text-xs text-text-tertiary">
+        Curated links shown at the end of this article.
+      </p>
+      <div className="relative">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search posts by title..."
+          className="w-full rounded-md border border-border-subtle bg-bg-base px-3 py-2 font-dm-sans text-sm text-text-primary focus:border-brand-ui focus:outline-none"
+        />
+        {results.length > 0 && (
+          <ul className="absolute left-0 right-0 top-full z-20 mt-1 max-h-64 overflow-auto rounded-md border border-border-subtle bg-bg-surface shadow-lg">
+            {results.map((r) => (
+              <li key={r.id}>
+                <button
+                  type="button"
+                  onClick={() => add(r)}
+                  disabled={r.id === selfId || linked.some((x) => x.id === r.id)}
+                  className="flex w-full flex-col px-3 py-2 text-left font-dm-sans text-sm text-text-primary hover:bg-bg-hover disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span>{r.title}</span>
+                  <span className="font-dm-mono text-xs text-text-tertiary">
+                    /journal/{r.slug}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {searching && results.length === 0 && query.trim() && (
+          <p className="absolute left-0 top-full mt-1 font-dm-mono text-xs text-text-tertiary">
+            Searching...
+          </p>
+        )}
+      </div>
+      {linked.length > 0 && (
+        <ol className="flex flex-col gap-1">
+          {linked.map((p, i) => (
+            <li
+              key={p.id}
+              className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-bg-base px-3 py-2 font-dm-sans text-sm text-text-primary"
+            >
+              <span className="min-w-0 truncate">{p.title}</span>
+              <span className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => move(p.id, -1)}
+                  disabled={i === 0}
+                  className="px-2 font-dm-mono text-xs text-text-tertiary hover:text-text-primary disabled:opacity-30"
+                  aria-label="Move up"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(p.id, 1)}
+                  disabled={i === linked.length - 1}
+                  className="px-2 font-dm-mono text-xs text-text-tertiary hover:text-text-primary disabled:opacity-30"
+                  aria-label="Move down"
+                >
+                  ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => remove(p.id)}
+                  className="px-2 font-dm-mono text-xs text-text-tertiary hover:text-error"
+                  aria-label="Remove"
+                >
+                  ×
+                </button>
+              </span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  )
+}
+
+function BodyField({
+  textareaRef,
+  content,
+  setContent,
+  previewHtml,
+  words,
+  minutes,
+  applyAction,
+  onImagePick,
+  uploading,
+}: {
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>
+  content: string
+  setContent: (v: string) => void
+  previewHtml: string
+  words: number
+  minutes: number
+  applyAction: (fn: (s: SelectionState) => SelectionState) => void
+  onImagePick: (e: ChangeEvent<HTMLInputElement>) => void
+  uploading: boolean
+}) {
+  const [mention, setMention] = useState<{
+    query: string
+    start: number
+  } | null>(null)
+  const [mentionResults, setMentionResults] = useState<LinkedPost[]>([])
+  const [mentionLoading, setMentionLoading] = useState(false)
+
+  useEffect(() => {
+    if (!mention) {
+      setMentionResults([])
+      return
+    }
+    const q = mention.query.trim()
+    if (!q) {
+      setMentionResults([])
+      return
+    }
+    let alive = true
+    const handle = window.setTimeout(async () => {
+      setMentionLoading(true)
+      try {
+        const res = await fetch(
+          `/api/admin/journal/posts/search?q=${encodeURIComponent(q)}`,
+        )
+        if (!res.ok) return
+        const data = (await res.json()) as { results?: LinkedPost[] }
+        if (alive) setMentionResults(data.results ?? [])
+      } finally {
+        if (alive) setMentionLoading(false)
+      }
+    }, 200)
+    return () => {
+      alive = false
+      window.clearTimeout(handle)
+    }
+  }, [mention])
+
+  function detectMention(value: string, caret: number) {
+    const slice = value.slice(0, caret)
+    const at = slice.lastIndexOf('@')
+    if (at === -1) {
+      setMention(null)
+      return
+    }
+    const prevChar = at === 0 ? '\n' : slice[at - 1]
+    if (!/\s/.test(prevChar) && at !== 0) {
+      setMention(null)
+      return
+    }
+    const query = slice.slice(at + 1)
+    if (/\s/.test(query)) {
+      setMention(null)
+      return
+    }
+    setMention({ query, start: at })
+  }
+
+  function handleChange(e: ChangeEvent<HTMLTextAreaElement>) {
+    setContent(e.target.value)
+    detectMention(e.target.value, e.target.selectionStart)
+  }
+
+  function pickMention(p: LinkedPost) {
+    if (!mention || !textareaRef.current) return
+    const caret = textareaRef.current.selectionStart
+    const insertion = `::postlink[${p.slug}]`
+    const before = content.slice(0, mention.start)
+    const after = content.slice(caret)
+    const value = `${before}${insertion}${after}`
+    const cursor = before.length + insertion.length
+    setContent(value)
+    setMention(null)
+    requestAnimationFrame(() => {
+      const ta = textareaRef.current
+      if (!ta) return
+      ta.focus()
+      ta.setSelectionRange(cursor, cursor)
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-3">
+        <label
+          htmlFor="content"
+          className="font-dm-sans text-sm text-text-secondary"
+        >
+          Body (markdown)
+        </label>
+        <span className="font-dm-mono text-xs text-text-tertiary">
+          Words: {words} · ~{minutes} min read
+        </span>
+      </div>
+      <Toolbar
+        applyAction={applyAction}
+        onImagePick={onImagePick}
+        uploading={uploading}
+      />
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="relative">
+          <textarea
+            ref={textareaRef}
+            id="content"
+            value={content}
+            onChange={handleChange}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setMention(null)
+            }}
+            rows={24}
+            spellCheck
+            className="w-full rounded-md border border-border-subtle bg-bg-surface px-3 py-2 font-dm-mono text-sm text-text-primary focus:border-brand-ui focus:outline-none"
+            placeholder="# Heading&#10;&#10;Your prose goes here. Type @ to mention another post."
+          />
+          {mention && (mentionResults.length > 0 || mentionLoading) && (
+            <ul className="absolute left-3 right-3 top-full z-30 mt-1 max-h-64 overflow-auto rounded-md border border-border-subtle bg-bg-surface shadow-lg">
+              {mentionResults.map((r) => (
+                <li key={r.id}>
+                  <button
+                    type="button"
+                    onClick={() => pickMention(r)}
+                    className="flex w-full flex-col px-3 py-2 text-left font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+                  >
+                    <span>{r.title}</span>
+                    <span className="font-dm-mono text-xs text-text-tertiary">
+                      ::postlink[{r.slug}]
+                    </span>
+                  </button>
+                </li>
+              ))}
+              {mentionLoading && mentionResults.length === 0 && (
+                <li className="px-3 py-2 font-dm-mono text-xs text-text-tertiary">
+                  Searching...
+                </li>
+              )}
+            </ul>
+          )}
+        </div>
+        <div
+          className="journal-prose min-h-[420px] overflow-auto rounded-md border border-border-subtle bg-bg-surface p-4"
+          dangerouslySetInnerHTML={{
+            __html:
+              previewHtml ||
+              '<p class="text-text-tertiary">Nothing to preview yet.</p>',
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
+function Toolbar({
+  applyAction,
+  onImagePick,
+  uploading,
+}: {
+  applyAction: (fn: (s: SelectionState) => SelectionState) => void
+  onImagePick: (e: ChangeEvent<HTMLInputElement>) => void
+  uploading: boolean
+}) {
+  const [calloutOpen, setCalloutOpen] = useState(false)
+
+  function callout(kind: 'tip' | 'warning' | 'note' | 'danger') {
+    setCalloutOpen(false)
+    applyAction((s) =>
+      insertBlock(s, `:::${kind}\nBody text.\n:::`, `:::${kind}\n`.length),
     )
-    return v
   }
 
-  for (const rawLine of lines) {
-    const line = rawLine.trimEnd()
-    if (line === '') {
-      flushParagraph()
-      if (inList) {
-        out.push('</ul>')
-        inList = false
-      }
-      if (inQuote) {
-        out.push('</blockquote>')
-        inQuote = false
-      }
-      continue
-    }
-    const heading = /^(#{1,6})\s+(.*)$/.exec(line)
-    if (heading) {
-      flushParagraph()
-      if (inList) {
-        out.push('</ul>')
-        inList = false
-      }
-      const level = heading[1].length
-      out.push(`<h${level}>${inlineFormat(heading[2])}</h${level}>`)
-      continue
-    }
-    const bullet = /^[-*]\s+(.*)$/.exec(line)
-    if (bullet) {
-      flushParagraph()
-      if (!inList) {
-        out.push('<ul>')
-        inList = true
-      }
-      out.push(`<li>${inlineFormat(bullet[1])}</li>`)
-      continue
-    }
-    if (inList) {
-      out.push('</ul>')
-      inList = false
-    }
-    const quote = /^>\s?(.*)$/.exec(line)
-    if (quote) {
-      flushParagraph()
-      if (!inQuote) {
-        out.push('<blockquote>')
-        inQuote = true
-      }
-      out.push(`<p>${inlineFormat(quote[1])}</p>`)
-      continue
-    }
-    if (inQuote) {
-      out.push('</blockquote>')
-      inQuote = false
-    }
-    paragraph.push(line)
+  function pullQuote() {
+    applyAction((s) =>
+      insertBlock(s, `:::pullquote\nQuote text.\n:::`, ':::pullquote\n'.length),
+    )
   }
-  flushParagraph()
-  if (inList) out.push('</ul>')
-  if (inQuote) out.push('</blockquote>')
-  return out.join('\n')
+
+  function toggle() {
+    applyAction((s) =>
+      insertBlock(
+        s,
+        `:::toggle Title\nBody.\n:::`,
+        ':::toggle '.length,
+      ),
+    )
+  }
+
+  function bookmark() {
+    const url = window.prompt('Bookmark URL')
+    if (!url) return
+    applyAction((s) =>
+      insertBlock(s, `::bookmark[${url}]`, `::bookmark[`.length + url.length),
+    )
+  }
+
+  function youtube() {
+    const raw = window.prompt('YouTube URL or video ID')
+    if (!raw) return
+    const id = extractYouTubeId(raw)
+    if (!id) {
+      window.alert('Could not parse a YouTube id from that input.')
+      return
+    }
+    applyAction((s) =>
+      insertBlock(s, `::youtube[${id}]`, `::youtube[`.length + id.length),
+    )
+  }
+
+  function link() {
+    const href = window.prompt('Link URL') ?? ''
+    if (!href) return
+    applyAction((s) => wrapSelection(s, '[', `](${href})`, 'link text'))
+  }
+
+  function table() {
+    const block = [
+      '| Column A | Column B |',
+      '| --- | --- |',
+      '| Cell 1 | Cell 2 |',
+      '| Cell 3 | Cell 4 |',
+    ].join('\n')
+    applyAction((s) => insertBlock(s, block, block.length))
+  }
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 rounded-md border border-border-subtle bg-bg-surface p-1.5">
+      <TBtn
+        label="H2"
+        onClick={() =>
+          applyAction((s) => prefixLines(s, '## '))
+        }
+      />
+      <TBtn
+        label="H3"
+        onClick={() => applyAction((s) => prefixLines(s, '### '))}
+      />
+      <TSep />
+      <TBtn
+        label="B"
+        title="Bold"
+        bold
+        onClick={() =>
+          applyAction((s) => wrapSelection(s, '**', '**', 'bold text'))
+        }
+      />
+      <TBtn
+        label="I"
+        title="Italic"
+        italic
+        onClick={() =>
+          applyAction((s) => wrapSelection(s, '*', '*', 'italic text'))
+        }
+      />
+      <TBtn label="Link" title="Link" onClick={link} />
+      <TBtn
+        label="Code"
+        title="Inline code"
+        onClick={() =>
+          applyAction((s) => wrapSelection(s, '`', '`', 'code'))
+        }
+      />
+      <TBtn
+        label="```"
+        title="Code block"
+        onClick={() =>
+          applyAction((s) =>
+            insertBlock(s, '```\ncode\n```', '```\n'.length),
+          )
+        }
+      />
+      <TBtn
+        label="Quote"
+        onClick={() => applyAction((s) => prefixLines(s, '> '))}
+      />
+      <TSep />
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setCalloutOpen((v) => !v)}
+          className="rounded px-2 py-1 font-dm-sans text-xs text-text-primary hover:bg-bg-hover"
+        >
+          Callout ▾
+        </button>
+        {calloutOpen && (
+          <ul className="absolute left-0 top-full z-20 mt-1 min-w-[10rem] rounded-md border border-border-subtle bg-bg-surface shadow-lg">
+            {(['tip', 'warning', 'note', 'danger'] as const).map((k) => (
+              <li key={k}>
+                <button
+                  type="button"
+                  onClick={() => callout(k)}
+                  className="block w-full px-3 py-1.5 text-left font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+                >
+                  {k.charAt(0).toUpperCase() + k.slice(1)}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <TBtn label="Pull quote" onClick={pullQuote} />
+      <TBtn label="Toggle" onClick={toggle} />
+      <TSep />
+      <label className="cursor-pointer rounded px-2 py-1 font-dm-sans text-xs text-text-primary hover:bg-bg-hover">
+        <input
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/gif"
+          className="hidden"
+          onChange={onImagePick}
+        />
+        {uploading ? 'Uploading...' : 'Image'}
+      </label>
+      <TBtn label="YouTube" onClick={youtube} />
+      <TBtn label="Bookmark" onClick={bookmark} />
+      <TSep />
+      <TBtn label="Table" onClick={table} />
+      <TBtn
+        label="---"
+        title="Horizontal rule"
+        onClick={() => applyAction((s) => insertBlock(s, '---', 3))}
+      />
+    </div>
+  )
+}
+
+function TBtn({
+  label,
+  title,
+  bold,
+  italic,
+  onClick,
+}: {
+  label: ReactNode
+  title?: string
+  bold?: boolean
+  italic?: boolean
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className={`rounded px-2 py-1 font-dm-sans text-xs text-text-primary hover:bg-bg-hover ${bold ? 'font-bold' : ''} ${italic ? 'italic' : ''}`}
+    >
+      {label}
+    </button>
+  )
+}
+
+function TSep() {
+  return (
+    <span
+      aria-hidden="true"
+      className="mx-1 inline-block h-4 w-px bg-border-subtle"
+    />
+  )
 }

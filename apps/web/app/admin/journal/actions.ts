@@ -29,6 +29,7 @@ interface JournalInput {
   og_title: string
   og_description: string
   canonical_url: string
+  published_at: string
 }
 
 function parseInput(formData: FormData): JournalInput {
@@ -45,7 +46,15 @@ function parseInput(formData: FormData): JournalInput {
     og_title: String(formData.get('og_title') ?? '').trim(),
     og_description: String(formData.get('og_description') ?? '').trim(),
     canonical_url: String(formData.get('canonical_url') ?? '').trim(),
+    published_at: String(formData.get('published_at') ?? '').trim(),
   }
+}
+
+function parsePublishedAt(raw: string): string | null {
+  if (!raw) return null
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return null
+  return d.toISOString()
 }
 
 export async function saveJournalPost(formData: FormData): Promise<{
@@ -71,6 +80,10 @@ export async function saveJournalPost(formData: FormData): Promise<{
   const authorId = await getAuthedUserId()
   const admin = createAdminClient()
 
+  const customPublishedAt = parsePublishedAt(input.published_at)
+  const publishedAt = input.publish
+    ? (customPublishedAt ?? new Date().toISOString())
+    : null
   const payload = {
     title: input.title,
     slug,
@@ -79,7 +92,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
     tags,
     content: input.content,
     is_published: input.publish,
-    published_at: input.publish ? new Date().toISOString() : null,
+    published_at: publishedAt,
     author_id: authorId,
     updated_at: new Date().toISOString(),
     featured: input.featured,

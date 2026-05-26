@@ -35,6 +35,8 @@ export default function NewJournalPostPage() {
             og_title: '',
             og_description: '',
             canonical_url: '',
+            published_at: null,
+            updated_at: null,
           }}
         />
       </div>
