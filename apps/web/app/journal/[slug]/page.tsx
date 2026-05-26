@@ -211,7 +211,7 @@ export default async function JournalPostPage(
                   {prev ? (
                     <Link
                       href={`/journal/${prev.slug}`}
-                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 no-underline transition-colors hover:border-brand-ui"
+                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 no-underline transition-colors hover:border-border-interactive"
                     >
                       <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
                         ← Previous
@@ -226,7 +226,7 @@ export default async function JournalPostPage(
                   {next ? (
                     <Link
                       href={`/journal/${next.slug}`}
-                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 text-right no-underline transition-colors hover:border-brand-ui"
+                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 text-right no-underline transition-colors hover:border-border-interactive"
                     >
                       <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
                         Next →
