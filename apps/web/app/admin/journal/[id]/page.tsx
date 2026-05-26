@@ -46,14 +46,24 @@ export default async function EditJournalPostPage(
 
   return (
     <div className="p-6 md:p-10">
-      <p className="mb-4 font-dm-sans text-sm">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 font-dm-sans text-sm">
         <Link
           href="/admin/journal"
           className="text-brand-text hover:underline"
         >
           ← Journal
         </Link>
-      </p>
+        {post.is_published && (
+          <a
+            href={`/journal/${post.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-dm-mono text-xs text-text-tertiary hover:text-text-primary"
+          >
+            foxing.app/journal/{post.slug} ↗
+          </a>
+        )}
+      </div>
       <h1 className="font-fraunces text-[2rem] text-text-primary">
         {post.title}
       </h1>
