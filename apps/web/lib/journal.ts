@@ -1,67 +1,30 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
+import {
+  type JournalPost,
+  type JournalPostSummary,
+} from '@/lib/journal-shared'
 
 /**
  * Server-side journal fetchers. Reads journal_posts directly, filtered to
  * is_published=true. RLS already gates non-published rows for anonymous
  * visitors, but we filter explicitly to stay defensive.
+ *
+ * Shared constants, types, and pure formatters live in journal-shared.ts
+ * (no 'server-only' marker) so client components can use them without
+ * the build refusing to bundle this module. We re-export them here so
+ * existing server callers keep their import path.
  */
 
-export const JOURNAL_TAGS = [
-  {
-    slug: 'reading-guides',
-    label: 'Reading Guides',
-    description:
-      'Long-form guides for finishing the books most readers stall on.',
-  },
-  {
-    slug: 'book-picks',
-    label: 'Book Picks',
-    description:
-      'Curated lists pulled from what Foxing readers actually finish.',
-  },
-  {
-    slug: 'author-spotlights',
-    label: 'Author Spotlights',
-    description:
-      'Where to start with a writer, and what to read once you are hooked.',
-  },
-  {
-    slug: 'book-analysis',
-    label: 'Book Analysis',
-    description:
-      'Close reads of specific books, with the structure and craft notes.',
-  },
-  {
-    slug: 'book-clubs',
-    label: 'Book Clubs',
-    description:
-      'Reading together: club mechanics, group reads, and what works.',
-  },
-] as const
-
-export type JournalPost = {
-  id: string
-  slug: string
-  title: string
-  excerpt: string | null
-  content: string
-  cover_image_url: string | null
-  is_published: boolean
-  published_at: string | null
-  tags: string[]
-  featured: boolean
-  og_title: string | null
-  og_description: string | null
-  canonical_url: string | null
-  created_at: string
-  updated_at: string
-}
-
-export type JournalPostSummary = Omit<JournalPost, 'content'>
-
-// Backward-compatible alias for older imports.
-export type JournalPostFull = JournalPost
+export {
+  JOURNAL_TAGS,
+  estimateReadingTime,
+  readingMinutes,
+  formatLongDate,
+  type JournalPost,
+  type JournalPostSummary,
+  type JournalPostFull,
+} from '@/lib/journal-shared'
 
 const SUMMARY_COLS =
   'id, slug, title, excerpt, cover_image_url, is_published, published_at, tags, featured, og_title, og_description, canonical_url, created_at, updated_at'
@@ -76,14 +39,18 @@ function hasEnv(): boolean {
 }
 
 function normalizeSummary(row: Record<string, unknown>): JournalPostSummary {
-  return { ...(row as JournalPostSummary), tags: (row.tags as string[] | null) ?? [] }
+  return {
+    ...(row as JournalPostSummary),
+    tags: (row.tags as string[] | null) ?? [],
+  }
 }
 
 function normalizeFull(row: Record<string, unknown>): JournalPost {
-  return { ...(row as JournalPost), tags: (row.tags as string[] | null) ?? [] }
+  return {
+    ...(row as JournalPost),
+    tags: (row.tags as string[] | null) ?? [],
+  }
 }
-
-// New API per spec.
 
 export async function getJournalPosts(
   limit?: number,
@@ -97,7 +64,9 @@ export async function getJournalPosts(
     .order('published_at', { ascending: false, nullsFirst: false })
   const query = typeof limit === 'number' ? base.limit(limit) : base
   const { data } = await query
-  return ((data as Record<string, unknown>[] | null) ?? []).map(normalizeSummary)
+  return ((data as Record<string, unknown>[] | null) ?? []).map(
+    normalizeSummary,
+  )
 }
 
 export async function getFeaturedJournalPost(): Promise<JournalPostSummary | null> {
@@ -160,37 +129,16 @@ export async function getAdjacentJournalPosts(
     .limit(1)
     .maybeSingle()
   return {
-    prev: prevData ? normalizeSummary(prevData as Record<string, unknown>) : null,
-    next: nextData ? normalizeSummary(nextData as Record<string, unknown>) : null,
+    prev: prevData
+      ? normalizeSummary(prevData as Record<string, unknown>)
+      : null,
+    next: nextData
+      ? normalizeSummary(nextData as Record<string, unknown>)
+      : null,
   }
 }
 
-// Reading time helpers.
-
-export function estimateReadingTime(content: string): number {
-  const words = content.trim().split(/\s+/).filter(Boolean).length
-  return Math.max(1, Math.ceil(words / 200))
-}
-
-export function readingMinutes(content: string): number {
-  const words = content.trim().split(/\s+/).filter(Boolean).length
-  return Math.max(1, Math.round(words / 200))
-}
-
-export function formatLongDate(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('en-US', {
-    timeZone: 'UTC',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}
-
-// Legacy wrappers preserved for existing callers; they share the same shape
-// as the new API and will be removed once all callers migrate.
+// Legacy wrappers preserved for existing callers.
 
 export async function fetchPublishedJournalPosts(
   limit = 24,
@@ -229,5 +177,7 @@ export async function fetchRelatedPosts(
     .overlaps('tags', tags)
     .order('published_at', { ascending: false, nullsFirst: false })
     .limit(limit)
-  return ((data as Record<string, unknown>[] | null) ?? []).map(normalizeSummary)
+  return ((data as Record<string, unknown>[] | null) ?? []).map(
+    normalizeSummary,
+  )
 }
