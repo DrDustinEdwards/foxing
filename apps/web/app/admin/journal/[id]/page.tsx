@@ -19,6 +19,10 @@ interface JournalRow {
   tags: string[] | null
   content: string
   is_published: boolean
+  featured: boolean
+  og_title: string | null
+  og_description: string | null
+  canonical_url: string | null
 }
 
 export default async function EditJournalPostPage({
@@ -30,7 +34,7 @@ export default async function EditJournalPostPage({
   const { data } = await admin
     .from('journal_posts')
     .select(
-      'id, title, slug, excerpt, cover_image_url, tags, content, is_published',
+      'id, title, slug, excerpt, cover_image_url, tags, content, is_published, featured, og_title, og_description, canonical_url',
     )
     .eq('id', params.id)
     .maybeSingle()
@@ -64,6 +68,10 @@ export default async function EditJournalPostPage({
             tags: post.tags ?? [],
             content: post.content,
             is_published: post.is_published,
+            featured: post.featured,
+            og_title: post.og_title ?? '',
+            og_description: post.og_description ?? '',
+            canonical_url: post.canonical_url ?? '',
           }}
         />
       </div>

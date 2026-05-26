@@ -31,6 +31,10 @@ export default function NewJournalPostPage() {
             tags: [],
             content: '',
             is_published: false,
+            featured: false,
+            og_title: '',
+            og_description: '',
+            canonical_url: '',
           }}
         />
       </div>

@@ -25,6 +25,10 @@ interface JournalInput {
   tags: string
   content: string
   publish: boolean
+  featured: boolean
+  og_title: string
+  og_description: string
+  canonical_url: string
 }
 
 function parseInput(formData: FormData): JournalInput {
@@ -37,6 +41,10 @@ function parseInput(formData: FormData): JournalInput {
     tags: String(formData.get('tags') ?? '').trim(),
     content: String(formData.get('content') ?? ''),
     publish: formData.get('publish') === 'true',
+    featured: formData.get('featured') === 'true',
+    og_title: String(formData.get('og_title') ?? '').trim(),
+    og_description: String(formData.get('og_description') ?? '').trim(),
+    canonical_url: String(formData.get('canonical_url') ?? '').trim(),
   }
 }
 
@@ -74,6 +82,10 @@ export async function saveJournalPost(formData: FormData): Promise<{
     published_at: input.publish ? new Date().toISOString() : null,
     author_id: authorId,
     updated_at: new Date().toISOString(),
+    featured: input.featured,
+    og_title: input.og_title || null,
+    og_description: input.og_description || null,
+    canonical_url: input.canonical_url || null,
   }
 
   if (input.id) {
