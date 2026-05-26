@@ -374,3 +374,101 @@ body {
   padding: 0.1em 0.3em;
   border-radius: 3px;
 }
+
+/* Shortcode-rendered blocks emitted by renderJournalMarkdown. Lives
+   outside .journal-prose so the same styles work in the admin draft
+   preview and in the editor's live preview pane. */
+.journal-embed-youtube {
+  position: relative;
+  padding-bottom: 56.25%;
+  height: 0;
+  overflow: hidden;
+  margin: 1.5rem 0;
+  border-radius: 8px;
+}
+.journal-embed-youtube iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+.journal-bookmark {
+  display: block;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0;
+  text-decoration: none;
+  background: var(--bg-surface);
+  transition: border-color 150ms;
+}
+.journal-bookmark:hover { border-color: var(--brand-ui); }
+.journal-bookmark-domain {
+  display: block;
+  font-family: var(--font-dm-mono), monospace;
+  font-size: 0.6875rem;
+  color: var(--text-tertiary);
+  margin-bottom: 0.25rem;
+}
+.journal-bookmark-title {
+  display: block;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.journal-postlink {
+  color: var(--brand-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.journal-postlink:hover { color: var(--brand-hover); }
+.journal-callout {
+  border-left: 3px solid;
+  padding: 0.75rem 1rem;
+  margin: 1.5rem 0;
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9375rem;
+}
+.journal-callout p { margin-bottom: 0.5rem; }
+.journal-callout p:last-child { margin-bottom: 0; }
+.journal-callout-tip     { border-color: var(--brand-ui);       background: var(--brand-subtle); }
+.journal-callout-warning { border-color: #d97706;               background: #fffbeb; }
+.journal-callout-note    { border-color: var(--border-default); background: var(--bg-surface); }
+.journal-callout-danger  { border-color: var(--error);          background: var(--error-bg); }
+.journal-pullquote {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 1.25rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-primary);
+  border: none;
+  padding: 0 2rem;
+  margin: 2rem 0;
+  text-align: center;
+  font-style: italic;
+}
+.journal-toggle {
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  margin: 1.5rem 0;
+  padding: 0;
+  overflow: hidden;
+}
+.journal-toggle-summary {
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  list-style: none;
+  background: var(--bg-surface);
+}
+.journal-toggle-body {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+}
+.journal-toggle-body p { margin-bottom: 0.5rem; }
+.journal-toggle-body p:last-child { margin-bottom: 0; }

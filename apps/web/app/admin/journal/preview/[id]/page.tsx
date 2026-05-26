@@ -36,7 +36,7 @@ export default async function AdminJournalPreviewPage(props: {
   const tags = post.tags ?? []
 
   const headings = extractH2Headings(post.content)
-  const body = renderJournalMarkdown(post.content)
+  const body = await renderJournalMarkdown(post.content)
   const minutes = estimateReadingTime(post.content)
 
   return (

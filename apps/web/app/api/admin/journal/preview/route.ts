@@ -16,6 +16,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'invalid json' }, { status: 400 })
   }
   const content = typeof payload.content === 'string' ? payload.content : ''
-  const html = renderJournalMarkdown(content)
+  const html = await renderJournalMarkdown(content)
   return NextResponse.json({ html })
 }
