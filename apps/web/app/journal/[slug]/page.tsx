@@ -88,7 +88,7 @@ export default async function JournalPostPage(
     : { prev: null, next: null }
 
   const headings = extractH2Headings(post.content)
-  const body = renderJournalMarkdown(post.content)
+  const body = await renderJournalMarkdown(post.content)
   const minutes = estimateReadingTime(post.content)
 
   return (
