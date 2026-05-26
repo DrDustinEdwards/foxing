@@ -35,8 +35,9 @@ export async function GET(_request: NextRequest) {
         `      <link>${xmlEscape(url)}</link>`,
         `      <guid isPermaLink="true">${xmlEscape(url)}</guid>`,
         `      <pubDate>${pub}</pubDate>`,
+        `      <author>hello@foxing.app (Foxing)</author>`,
         `      <description>${xmlEscape(description)}</description>`,
-        ...(p.tags ?? []).map(
+        ...p.tags.map(
           (t) => `      <category>${xmlEscape(t)}</category>`,
         ),
         '    </item>',
