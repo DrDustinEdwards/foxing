@@ -18,7 +18,7 @@ export async function saveThemePreference(theme: string): Promise<void> {
   ) {
     return
   }
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

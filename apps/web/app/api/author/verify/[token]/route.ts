@@ -5,10 +5,8 @@ import { fetchClaimByToken } from '@/lib/author-claims'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: { token: string } },
-) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   if (!params.token) {
     return NextResponse.redirect(new URL('/settings?error=invalid_token', _request.url))
   }

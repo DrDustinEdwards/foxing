@@ -8,7 +8,7 @@ export async function toggleFollow(opts: {
   username: string
   isFollowing: boolean
 }) {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

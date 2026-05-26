@@ -14,7 +14,7 @@ interface SendInput {
 }
 
 async function getAdminId(): Promise<string | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

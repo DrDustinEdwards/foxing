@@ -22,11 +22,12 @@ function tagLabel(slug: string): string {
     .join(' ')
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { tag: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ tag: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const label = tagLabel(params.tag)
   const description = `Journal entries on ${label.toLowerCase()} from Foxing.`
   return {
@@ -43,11 +44,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function JournalTagPage({
-  params,
-}: {
-  params: { tag: string }
-}) {
+export default async function JournalTagPage(
+  props: {
+    params: Promise<{ tag: string }>
+  }
+) {
+  const params = await props.params;
   const label = tagLabel(params.tag)
   const all = await getJournalPosts()
   const posts = all.filter((p) => p.tags.includes(params.tag))
@@ -112,5 +114,5 @@ function TagPostCard({ post }: { post: JournalPostSummary }) {
         </p>
       )}
     </Link>
-  )
+  );
 }

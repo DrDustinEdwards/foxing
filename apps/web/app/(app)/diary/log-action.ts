@@ -12,7 +12,7 @@ interface LogEntryInput {
 }
 
 export async function logDiaryEntry(input: LogEntryInput) {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

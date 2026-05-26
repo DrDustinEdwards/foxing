@@ -130,7 +130,7 @@ export async function fetchPollsForClub(
   userId: string | null,
 ): Promise<ClubPoll[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data: polls } = await sb
     .from('club_polls')
     .select(POLL_COLS)

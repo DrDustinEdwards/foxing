@@ -48,11 +48,12 @@ interface FinishedBookRow {
   } | null
 }
 
-export default async function AdminUserDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function AdminUserDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('profiles')

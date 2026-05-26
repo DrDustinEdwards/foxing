@@ -87,7 +87,7 @@ export async function submitAuthorClaim(
     website = websiteRaw
   }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data: existing } = await sb
     .from('author_claims')
     .select('id, status')

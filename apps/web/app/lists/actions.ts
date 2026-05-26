@@ -13,7 +13,7 @@ export async function toggleReadingListLike(opts: {
   const id = opts.listId.trim()
   if (!id) return { ok: false, error: 'Missing list id.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

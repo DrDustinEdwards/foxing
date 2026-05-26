@@ -50,7 +50,7 @@ function hasEnv(): boolean {
 
 export async function fetchPublishedPicks(): Promise<BookOfMonthPick[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('book_of_the_month')
     .select(PICK_COLS)
@@ -67,7 +67,7 @@ export async function fetchPicksForMonth(
   month: number,
 ): Promise<BookOfMonthPick[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('book_of_the_month')
     .select(PICK_COLS)
@@ -85,7 +85,7 @@ async function attachRatings(
   if (picks.length === 0) return []
   if (!hasEnv())
     return picks.map((p) => ({ ...p, avg_rating: null, rating_count: 0 }))
-  const sb = createClient()
+  const sb = await createClient()
   const ids = picks.map((p) => p.book.id)
   const { data: ratings } = await sb
     .from('user_books')
@@ -131,7 +131,7 @@ export async function fetchAdjacentMonth(
   direction: 'prev' | 'next',
 ): Promise<{ year: number; month: number } | null> {
   if (!hasEnv()) return null
-  const sb = createClient()
+  const sb = await createClient()
   const q = sb
     .from('book_of_the_month')
     .select('year, month')

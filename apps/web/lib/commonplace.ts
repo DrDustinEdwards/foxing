@@ -26,7 +26,7 @@ const COLS =
 export async function fetchUserCommonplace(
   userId: string,
 ): Promise<CommonplaceEntry[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('commonplace_book')
     .select(COLS)

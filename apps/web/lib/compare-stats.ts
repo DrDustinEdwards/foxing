@@ -53,7 +53,7 @@ async function fetchUserStats(userId: string): Promise<{
   stats: UserCompareStats
   bookIds: Set<string>
 }> {
-  const sb = createClient()
+  const sb = await createClient()
   const [finishedRes, streakRes] = await Promise.all([
     sb
       .from('user_books')
@@ -125,7 +125,7 @@ export async function fetchCompareStats(
 
   let sharedBooks: BookSummary[] = []
   if (shared.length > 0) {
-    const sb = createClient()
+    const sb = await createClient()
     const { data } = await sb
       .from('books')
       .select('id, slug, title, author, cover_url')

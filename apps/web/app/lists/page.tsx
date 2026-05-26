@@ -23,11 +23,12 @@ const SORTS: Array<{ id: ListsSort; label: string }> = [
 
 export const metadata: Metadata = buildListsIndexMetadata()
 
-export default async function PublicListsPage({
-  searchParams,
-}: {
-  searchParams: { sort?: ListsSort }
-}) {
+export default async function PublicListsPage(
+  props: {
+    searchParams: Promise<{ sort?: ListsSort }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const sort = SORTS.find((s) => s.id === searchParams.sort)?.id ?? 'most_liked'
   const [userId] = await Promise.all([
     getAuthedUserId(),

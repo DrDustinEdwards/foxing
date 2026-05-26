@@ -13,7 +13,7 @@ export async function toggleHighlightLike(opts: {
   const id = opts.highlightId.trim()
   if (!id) return { ok: false, error: 'Missing highlight id.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

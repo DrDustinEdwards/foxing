@@ -21,11 +21,12 @@ async function fetchAuthorName(slug: string): Promise<string | null> {
   return (data as { author: string } | null)?.author ?? null
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const name = (await fetchAuthorName(params.slug)) ?? 'this author'
   return {
     title: `Upcoming events for ${name}`,
@@ -43,11 +44,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function AuthorEventsPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function AuthorEventsPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const [name, events] = await Promise.all([
     fetchAuthorName(params.slug),
     fetchUpcomingEvents({ authorSlug: params.slug }),

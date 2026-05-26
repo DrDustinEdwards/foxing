@@ -24,11 +24,12 @@ const TYPE_LABEL = new Map<DiscussionType, string>(
   DISCUSSION_TYPES.map((t) => [t.value, t.label]),
 )
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const book = await fetchBookBySlug(params.slug)
   if (!book) return { title: 'Discussions' }
   return {
@@ -40,11 +41,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function BookDiscussionsIndexPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function BookDiscussionsIndexPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const [viewerId, book] = await Promise.all([
     getAuthedUserId(),
     fetchBookBySlug(params.slug),

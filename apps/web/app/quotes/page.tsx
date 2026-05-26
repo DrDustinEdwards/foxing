@@ -13,11 +13,12 @@ export const revalidate = 300
 
 export const metadata = STATIC_PAGE_METADATA['/quotes']
 
-export default async function QuotesPage({
-  searchParams,
-}: {
-  searchParams: { page?: string }
-}) {
+export default async function QuotesPage(
+  props: {
+    searchParams: Promise<{ page?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const userId = await getAuthedUserId()
   const page = Math.max(1, Number(searchParams.page) || 1)
   const { items, total } = await fetchPublicQuotes(page, 24, userId)

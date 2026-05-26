@@ -5,10 +5,11 @@ export const metadata: Metadata = {
   title: 'Sign in to Foxing',
 }
 
-export default function SignInPage({
-  searchParams,
-}: {
-  searchParams: { next?: string }
-}) {
+export default async function SignInPage(
+  props: {
+    searchParams: Promise<{ next?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   return <SignInForm nextPath={searchParams.next ?? '/library'} />
 }

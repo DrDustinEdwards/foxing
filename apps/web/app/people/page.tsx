@@ -18,11 +18,12 @@ const SORTS: Array<{ id: PeopleSort; label: string }> = [
 
 export const metadata: Metadata = buildPeopleMetadata()
 
-export default async function PeoplePage({
-  searchParams,
-}: {
-  searchParams: { sort?: PeopleSort; q?: string }
-}) {
+export default async function PeoplePage(
+  props: {
+    searchParams: Promise<{ sort?: PeopleSort; q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const sort = SORTS.find((s) => s.id === searchParams.sort)?.id ?? 'most_books'
   const search = searchParams.q?.trim() || undefined
   const people = await fetchPublicPeople({ sort, search, limit: 48 })

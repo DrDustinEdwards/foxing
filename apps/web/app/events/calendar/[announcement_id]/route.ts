@@ -37,7 +37,7 @@ function escapeICalText(value: string): string {
     .replace(/\\/g, '\\\\')
     .replace(/;/g, '\\;')
     .replace(/,/g, '\\,')
-    .replace(/\r?\n/g, '\\n')
+    .replace(/\r?\n/g, '\\n');
 }
 
 // Lines longer than 75 octets must be folded per RFC 5545 §3.1.
@@ -53,8 +53,9 @@ function foldLine(line: string): string {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { announcement_id: string } },
+  props: { params: Promise<{ announcement_id: string }> }
 ) {
+  const params = await props.params;
   const admin = createAdminClient()
   const { data } = await admin
     .from('club_announcements')

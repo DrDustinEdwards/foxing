@@ -48,7 +48,7 @@ export default async function SettingsPage() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in?next=/settings')
 
-  const sb = createClient()
+  const sb = await createClient()
   const [{ data }, { data: authData }] = await Promise.all([
     sb
       .from('profiles')

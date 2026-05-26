@@ -53,7 +53,7 @@ type FeedEvent =
 export default async function FeedPage() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
-  const sb = createClient()
+  const sb = await createClient()
 
   const { data: follows } = await sb
     .from('follows')

@@ -23,11 +23,12 @@ function recentYears(): number[] {
   return [currentYear, currentYear - 1, currentYear - 2]
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const profile = await fetchProfileByUsername(params.username)
   if (!profile || !profile.is_public) {
     return { title: 'Profile not found', robots: { index: false, follow: true } }
@@ -40,13 +41,14 @@ export async function generateMetadata({
   })
 }
 
-export default async function UserDiaryPage({
-  params,
-  searchParams,
-}: {
-  params: { username: string }
-  searchParams: { year?: string }
-}) {
+export default async function UserDiaryPage(
+  props: {
+    params: Promise<{ username: string }>
+    searchParams: Promise<{ year?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])

@@ -22,11 +22,12 @@ export const metadata: Metadata = {
   description: 'Enter to win books from verified authors on Foxing.',
 }
 
-export default async function GiveawaysPage({
-  searchParams,
-}: {
-  searchParams: { kind?: string }
-}) {
+export default async function GiveawaysPage(
+  props: {
+    searchParams: Promise<{ kind?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const filter = FILTERS.find((f) => f.id === searchParams.kind)?.id ?? 'all'
   const [viewerId] = await Promise.all([
     getAuthedUserId(),

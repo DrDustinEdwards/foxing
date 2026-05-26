@@ -27,7 +27,7 @@ export async function fetchUpcomingMeetings(
   userId: string | null,
 ): Promise<ClubMeeting[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('club_meetings')
     .select(MEETING_COLS)

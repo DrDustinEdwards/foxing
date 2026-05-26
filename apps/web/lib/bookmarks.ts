@@ -12,7 +12,7 @@ export async function fetchUserBookmarks(
   userId: string,
   bookId: string,
 ): Promise<Bookmark[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('bookmarks')
     .select('id, cfi, name, created_at')
@@ -26,7 +26,7 @@ export async function userHasBookInLibrary(
   userId: string,
   bookId: string,
 ): Promise<boolean> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('user_books')
     .select('status')
@@ -48,7 +48,7 @@ export async function fetchUserBookStatus(
   userId: string,
   bookId: string,
 ): Promise<UserBookStatus | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('user_books')
     .select('status, progress_percentage')
@@ -62,7 +62,7 @@ export async function fetchUserBookTags(
   userId: string,
   bookId: string,
 ): Promise<string[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('user_book_tags')
     .select('tag')

@@ -25,7 +25,7 @@ export async function startReadingSession(
   if (!bookId) return { ok: false, error: 'Missing book id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data, error } = await sb
     .from('reading_sessions')
     .insert({
@@ -54,7 +54,7 @@ export async function finishReadingSession(
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data: existing } = await sb
     .from('reading_sessions')
     .select('id, started_at')

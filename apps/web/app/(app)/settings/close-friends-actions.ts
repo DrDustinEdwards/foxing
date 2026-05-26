@@ -17,7 +17,7 @@ export async function addCloseFriend(
   if (friendId === userId) {
     return { ok: false, error: 'You cannot add yourself.' }
   }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: follow } = await sb
     .from('follows')
     .select('follower_id')

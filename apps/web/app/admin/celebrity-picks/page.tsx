@@ -63,11 +63,12 @@ function parseTab(searchParams: SearchParams): { year: number; month: number } {
   }
 }
 
-export default async function AdminCelebrityPicksPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
+export default async function AdminCelebrityPicksPage(
+  props: {
+    searchParams: Promise<SearchParams>
+  }
+) {
+  const searchParams = await props.searchParams;
   const { year, month } = parseTab(searchParams)
   const admin = createAdminClient()
 

@@ -25,7 +25,7 @@ export async function getClubRole(
   userId: string | null,
 ): Promise<ClubRole> {
   if (!userId) return null
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('club_members')
     .select('role')
@@ -45,7 +45,7 @@ export async function getClubMembershipStatus(
   userId: string | null,
 ): Promise<'active' | 'pending' | 'banned' | 'muted' | null> {
   if (!userId) return null
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('club_members')
     .select('status')

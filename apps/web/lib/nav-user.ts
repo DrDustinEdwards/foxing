@@ -24,7 +24,7 @@ export async function getNavUser(): Promise<NavUser | null> {
   ) {
     return null
   }
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -67,7 +67,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
   ) {
     return 0
   }
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -87,7 +87,7 @@ export async function getAuthedUserId(): Promise<string | null> {
   ) {
     return null
   }
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -103,7 +103,7 @@ export async function getAuthedUserId(): Promise<string | null> {
 export async function requireAdminUserId(): Promise<string> {
   const userId = await getAuthedUserId()
   if (!userId) throw new Error('Unauthorized')
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('profiles')
     .select('is_admin')

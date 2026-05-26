@@ -28,7 +28,7 @@ export default async function NotificationsPage() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('notifications')
     .select('id, type, title, body, data, is_read, created_at')

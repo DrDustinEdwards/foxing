@@ -20,11 +20,12 @@ export const revalidate = 300
 
 const RATING_FILTERS = [0, 5, 4, 3] as const
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const profile = await fetchProfileByUsername(params.username)
   if (!profile || !profile.is_public) {
     return { title: 'Profile not found', robots: { index: false, follow: true } }
@@ -37,13 +38,14 @@ export async function generateMetadata({
   })
 }
 
-export default async function UserReviewsPage({
-  params,
-  searchParams,
-}: {
-  params: { username: string }
-  searchParams: { rating?: string }
-}) {
+export default async function UserReviewsPage(
+  props: {
+    params: Promise<{ username: string }>
+    searchParams: Promise<{ rating?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])

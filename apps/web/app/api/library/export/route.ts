@@ -13,7 +13,7 @@ function csvEscape(value: unknown): string {
 }
 
 export async function GET(_request: NextRequest) {
-  const supabase = createClient()
+  const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()

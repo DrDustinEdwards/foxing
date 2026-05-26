@@ -13,11 +13,12 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = VOCABULARY_METADATA
 
-export default async function VocabularyPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; book?: string }
-}) {
+export default async function VocabularyPage(
+  props: {
+    searchParams: Promise<{ q?: string; book?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
   const entries = await fetchVocabulary(userId)

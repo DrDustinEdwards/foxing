@@ -9,10 +9,8 @@ interface Body {
   pages_read?: number
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { sprintId: string } },
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ sprintId: string }> }) {
+  const params = await props.params;
   const token = bearerFromHeaders(request.headers)
   const session = token ? await verifySession(token) : null
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

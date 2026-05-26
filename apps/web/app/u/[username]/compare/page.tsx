@@ -13,22 +13,24 @@ import { fetchCompareStats, type UserCompareStats } from '@/lib/compare-stats'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   return {
     title: `Compare with @${params.username} · Foxing`,
     robots: { index: false, follow: false },
   }
 }
 
-export default async function ComparePage({
-  params,
-}: {
-  params: { username: string }
-}) {
+export default async function ComparePage(
+  props: {
+    params: Promise<{ username: string }>
+  }
+) {
+  const params = await props.params;
   const viewerId = await getAuthedUserId()
   if (!viewerId) redirect(`/sign-in?next=/u/${params.username}/compare`)
 

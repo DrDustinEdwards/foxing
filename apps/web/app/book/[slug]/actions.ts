@@ -83,7 +83,7 @@ export async function createDiscussion(formData: FormData): Promise<void> {
   const userId = await getAuthedUserId()
   if (!userId) throw new Error('Sign in to start a discussion.')
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data: discussion, error: discErr } = await sb
     .from('discussions')
     .insert({
@@ -129,7 +129,7 @@ export async function createDiscussionPost(
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in to reply.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb.from('discussion_posts').insert({
     discussion_id: discussionId,
     author_id: userId,
@@ -162,7 +162,7 @@ export async function updateDiscussionPost(
   if (!postId || !content) return { ok: false, error: 'Content required.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: post } = await sb
     .from('discussion_posts')
     .select('author_id')
@@ -193,7 +193,7 @@ export async function deleteDiscussionPost(
   if (!postId) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: post } = await sb
     .from('discussion_posts')
     .select('author_id')
@@ -276,7 +276,7 @@ export async function addBookTag(
   if (!bookId || !tag) return { ok: false, error: 'Pick a tag.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { count } = await sb
     .from('user_book_tags')
     .select('tag', { count: 'exact', head: true })
@@ -304,7 +304,7 @@ export async function removeBookTag(
   if (!bookId || !tag) return { ok: false, error: 'Missing fields.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('user_book_tags')
     .delete()
@@ -327,7 +327,7 @@ export async function deleteBookmark(
   if (!bookmarkId) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('bookmarks')
     .delete()
@@ -355,7 +355,7 @@ export async function addChapterReaction(
   const privacy = VALID_PRIVACY.has(privacyRaw) ? privacyRaw : 'public'
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb.from('chapter_reactions').insert({
     user_id: userId,
     book_id: bookId,
@@ -377,7 +377,7 @@ export async function deleteChapterReaction(
   if (!reactionId) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('chapter_reactions')
     .delete()

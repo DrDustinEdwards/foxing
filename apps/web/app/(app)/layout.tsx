@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { Theme } from '@/lib/theme'
 
 async function getServerTheme(userId: string): Promise<Theme | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('profiles')
     .select('theme_preference')

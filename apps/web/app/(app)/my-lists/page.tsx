@@ -24,11 +24,12 @@ const TABS = [
 ] as const
 type TabId = (typeof TABS)[number]['id']
 
-export default async function ListsPage({
-  searchParams,
-}: {
-  searchParams: { tab?: TabId }
-}) {
+export default async function ListsPage(
+  props: {
+    searchParams: Promise<{ tab?: TabId }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
   const tab: TabId = TABS.find((t) => t.id === searchParams.tab)?.id ?? 'mine'

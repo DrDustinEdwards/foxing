@@ -46,11 +46,12 @@ async function getBookCount(): Promise<number | undefined> {
   return count ?? undefined
 }
 
-export async function generateMetadata({
-  searchParams,
-}: {
-  searchParams: BooksSearchParams
-}) {
+export async function generateMetadata(
+  props: {
+    searchParams: Promise<BooksSearchParams>
+  }
+) {
+  const searchParams = await props.searchParams;
   const count = await getBookCount()
   return buildBooksListingMetadata({
     mood: searchParams.mood,
@@ -62,11 +63,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function BooksPage({
-  searchParams,
-}: {
-  searchParams: BooksSearchParams
-}) {
+export default async function BooksPage(
+  props: {
+    searchParams: Promise<BooksSearchParams>
+  }
+) {
+  const searchParams = await props.searchParams;
   const page = Math.max(1, Number(searchParams.page) || 1)
   const search = searchParams.search ?? searchParams.q
   const { items, total } = await fetchBooksList({

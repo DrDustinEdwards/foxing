@@ -23,11 +23,12 @@ function stateCode(raw: string): string {
   return raw.toUpperCase().slice(0, 2)
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { state: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ state: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const code = stateCode(params.state)
   return {
     title: `Literary events in ${code}, book signings and readings`,
@@ -45,11 +46,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function StateEventsPage({
-  params,
-}: {
-  params: { state: string }
-}) {
+export default async function StateEventsPage(
+  props: {
+    params: Promise<{ state: string }>
+  }
+) {
+  const params = await props.params;
   const code = stateCode(params.state)
   if (!/^[A-Z]{2}$/.test(code)) notFound()
 

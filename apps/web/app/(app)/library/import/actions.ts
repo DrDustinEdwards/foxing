@@ -30,7 +30,7 @@ function shelfToStatus(shelf: string): string {
 }
 
 export async function importGoodreadsRows(rows: GoodreadsRow[]) {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

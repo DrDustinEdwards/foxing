@@ -82,11 +82,12 @@ async function fetchClubLibrary(clubId: string): Promise<ClubLibraryRow[]> {
     }))
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const club = await resolveClub(params.slug)
   if (!club) {
     return { title: 'Club not found', robots: { index: false, follow: true } }
@@ -100,11 +101,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function ClubLibraryPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function ClubLibraryPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const [club] = await Promise.all([
     resolveClub(params.slug),
   ])

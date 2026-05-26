@@ -18,11 +18,12 @@ type Tab = 'books' | 'people' | 'clubs'
 
 export const metadata: Metadata = STATIC_PAGE_METADATA['/search']
 
-export default async function SearchPage({
-  searchParams,
-}: {
-  searchParams: { q?: string; type?: Tab }
-}) {
+export default async function SearchPage(
+  props: {
+    searchParams: Promise<{ q?: string; type?: Tab }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = (searchParams.q ?? '').trim()
   const tab: Tab = searchParams.type ?? 'books'
   const results = q

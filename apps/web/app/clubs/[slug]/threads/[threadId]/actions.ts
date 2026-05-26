@@ -19,7 +19,7 @@ export async function createClubPostReply(
   }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: thread } = await sb
     .from('club_threads')
     .select('club_id')
@@ -67,7 +67,7 @@ export async function updateClubPost(
   }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('club_posts')
     .update({
@@ -87,7 +87,7 @@ export async function unsaveOwnClubPost(
   if (!postId) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('saved_posts')
     .delete()

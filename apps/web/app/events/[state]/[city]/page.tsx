@@ -13,14 +13,15 @@ function titleCase(s: string): string {
   return s
     .split(/[\s-]+/)
     .map((w) => (w ? w[0].toUpperCase() + w.slice(1).toLowerCase() : ''))
-    .join(' ')
+    .join(' ');
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { state: string; city: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ state: string; city: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const state = params.state.toUpperCase().slice(0, 2)
   const city = titleCase(decodeURIComponent(params.city))
   return {
@@ -39,11 +40,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function CityEventsPage({
-  params,
-}: {
-  params: { state: string; city: string }
-}) {
+export default async function CityEventsPage(
+  props: {
+    params: Promise<{ state: string; city: string }>
+  }
+) {
+  const params = await props.params;
   const code = params.state.toUpperCase().slice(0, 2)
   const cityName = decodeURIComponent(params.city)
   const [events] = await Promise.all([

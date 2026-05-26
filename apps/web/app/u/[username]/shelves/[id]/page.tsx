@@ -10,11 +10,12 @@ import { fetchPublicShelf } from '@/lib/shelves'
 
 export const revalidate = 300
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string; id: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string; id: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const shelf = await fetchPublicShelf(params.id)
   if (!shelf) return { title: 'Shelf not found' }
   return {
@@ -25,11 +26,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function PublicShelfPage({
-  params,
-}: {
-  params: { username: string; id: string }
-}) {
+export default async function PublicShelfPage(
+  props: {
+    params: Promise<{ username: string; id: string }>
+  }
+) {
+  const params = await props.params;
   const [profile, shelf] = await Promise.all([
     fetchProfileByUsername(params.username),
     fetchPublicShelf(params.id),

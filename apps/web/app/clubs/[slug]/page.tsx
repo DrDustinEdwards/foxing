@@ -70,11 +70,12 @@ async function resolveClub(slugOrId: string) {
   return club
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const club = await resolveClub(params.slug)
   if (!club) return { title: 'Club not found' }
   return buildClubMetadata({
@@ -88,11 +89,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function ClubPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function ClubPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const [club, userId] = await Promise.all([
     resolveClub(params.slug),
     getAuthedUserId(),

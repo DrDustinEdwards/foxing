@@ -30,11 +30,12 @@ export const metadata: Metadata = {
 
 const TAG_SLUGS = new Set<string>(JOURNAL_TAGS.map((t) => t.slug))
 
-export default async function JournalIndexPage({
-  searchParams,
-}: {
-  searchParams?: { tag?: string | string[] }
-}) {
+export default async function JournalIndexPage(
+  props: {
+    searchParams?: Promise<{ tag?: string | string[] }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const rawTag = Array.isArray(searchParams?.tag)
     ? searchParams?.tag[0]
     : searchParams?.tag
@@ -145,5 +146,5 @@ function PostList({ posts }: { posts: JournalPostSummary[] }) {
         </li>
       ))}
     </ul>
-  )
+  );
 }

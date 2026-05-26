@@ -39,11 +39,12 @@ function parseParams(params: { year: string; month: string }) {
   return { year, month }
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { year: string; month: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ year: string; month: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) return { title: 'Book of the Month not found' }
   const picks = await fetchPicksForMonthWithRatings(parsed.year, parsed.month)
@@ -91,11 +92,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function BookOfMonthDetailPage({
-  params,
-}: {
-  params: { year: string; month: string }
-}) {
+export default async function BookOfMonthDetailPage(
+  props: {
+    params: Promise<{ year: string; month: string }>
+  }
+) {
+  const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) notFound()
   const { year, month } = parsed

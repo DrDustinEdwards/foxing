@@ -15,7 +15,7 @@ export async function fetchActiveBOTM(): Promise<ActiveBOTM | null> {
   ) {
     return null
   }
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('book_of_the_month')
     .select(

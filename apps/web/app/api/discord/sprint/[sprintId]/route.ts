@@ -5,10 +5,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { sprintId: string } },
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ sprintId: string }> }) {
+  const params = await props.params;
   const token = bearerFromHeaders(request.headers)
   const session = token ? await verifySession(token) : null
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

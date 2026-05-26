@@ -82,11 +82,12 @@ async function resolveBook(slugOrId: string) {
   return book
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const book = await resolveBook(params.slug)
   if (!book) return { title: 'Book not found' }
   const aiDesc = await fetchAiCache(book.id, 'book_description')
@@ -103,11 +104,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function BookPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function BookPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const [book] = await Promise.all([
     resolveBook(params.slug),
   ])

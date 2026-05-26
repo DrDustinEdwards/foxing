@@ -22,11 +22,12 @@ interface UserRow {
   is_admin: boolean
 }
 
-export default async function AdminUsersPage({
-  searchParams,
-}: {
-  searchParams: { q?: string }
-}) {
+export default async function AdminUsersPage(
+  props: {
+    searchParams: Promise<{ q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = (searchParams.q ?? '').trim()
   const admin = createAdminClient()
   let query = admin

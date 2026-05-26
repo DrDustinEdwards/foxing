@@ -47,7 +47,7 @@ function workDescription(work: OpenLibraryWork): string | null {
 }
 
 export async function POST(request: NextRequest) {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
