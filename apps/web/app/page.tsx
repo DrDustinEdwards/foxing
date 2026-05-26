@@ -18,6 +18,11 @@ import {
   type PassageOfDay,
 } from '@/lib/missing-pages-queries'
 import {
+  getFeaturedJournalPost,
+  getJournalPosts,
+  type JournalPostSummary,
+} from '@/lib/journal'
+import {
   FREE_AI_LOOKUPS_PER_DAY,
   PLUS_PRICE_MONTHLY_LABEL,
   PLUS_TRIAL_LABEL,
@@ -77,12 +82,24 @@ const FAQ_JSONLD = JSON.stringify({
 
 export default async function HomePage() {
   const today = todayISODate()
-  const [todaysPick, popular, passage, reviews] = await Promise.all([
-    fetchTodaysPick(),
-    fetchPopularThisWeek(8),
-    fetchPassageOfDay(today),
-    fetchCommunityReviews(3),
-  ])
+  const [todaysPick, popular, passage, reviews, journalPosts, featuredPost] =
+    await Promise.all([
+      fetchTodaysPick(),
+      fetchPopularThisWeek(8),
+      fetchPassageOfDay(today),
+      fetchCommunityReviews(3),
+      getJournalPosts(5),
+      getFeaturedJournalPost(),
+    ])
+
+  const journalCards: JournalPostSummary[] = featuredPost
+    ? [
+        featuredPost,
+        ...journalPosts
+          .filter((p) => p.slug !== featuredPost.slug)
+          .slice(0, 2),
+      ]
+    : journalPosts.slice(0, 3)
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -99,10 +116,49 @@ export default async function HomePage() {
         <PopularThisWeek books={popular} />
         {passage && <PassageOfDaySection passage={passage} />}
         {reviews.length > 0 && <CommunitySection reviews={reviews} />}
+        {journalCards.length > 0 && <JournalStrip cards={journalCards} />}
         <DownloadCta />
       </main>
       <Footer />
     </div>
+  )
+}
+
+function JournalStrip({ cards }: { cards: JournalPostSummary[] }) {
+  return (
+    <section className="bg-bg-base border-t border-border-subtle">
+      <div className="mx-auto w-full max-w-page px-6 py-14">
+        <div className="mb-6 flex items-center justify-between">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
+            From the Journal
+          </p>
+          <Link
+            href="/journal"
+            className="font-dm-mono text-[0.6875rem] text-text-tertiary hover:text-text-primary transition-colors"
+          >
+            All posts →
+          </Link>
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {cards.map((post) => (
+            <Link
+              key={post.slug}
+              href={`/journal/${post.slug}`}
+              className="group flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-5 hover:border-brand-ui transition-colors no-underline"
+            >
+              {post.tags[0] && (
+                <span className="font-dm-mono text-[0.625rem] text-text-tertiary">
+                  {post.tags[0].replace(/-/g, ' ')}
+                </span>
+              )}
+              <p className="font-fraunces text-base text-text-primary leading-snug line-clamp-2 group-hover:text-brand-text transition-colors">
+                {post.title}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
   )
 }
 
