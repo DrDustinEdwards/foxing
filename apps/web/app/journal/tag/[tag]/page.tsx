@@ -1,5 +1,11 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import {
+  Card,
+  CardBody,
+  CardLabel,
+  CardTitle,
+} from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
@@ -96,23 +102,18 @@ export default async function JournalTagPage(
 
 function TagPostCard({ post }: { post: JournalPostSummary }) {
   return (
-    <Link
+    <Card
+      variant="content"
       href={`/journal/${post.slug}`}
-      className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-5 no-underline transition-colors hover:border-brand-ui"
+      className="p-5 gap-2"
     >
       {post.tags[0] && (
-        <span className="font-dm-mono text-[0.6875rem] text-text-tertiary">
-          {post.tags[0].replace(/-/g, ' ')}
-        </span>
+        <CardLabel>{post.tags[0].replace(/-/g, ' ')}</CardLabel>
       )}
-      <p className="font-fraunces text-base leading-snug text-text-primary line-clamp-2">
-        {post.title}
-      </p>
+      <CardTitle className="line-clamp-2">{post.title}</CardTitle>
       {post.excerpt && (
-        <p className="flex-1 font-source-serif-4 text-sm text-text-secondary line-clamp-3">
-          {post.excerpt}
-        </p>
+        <CardBody className="flex-1 line-clamp-3">{post.excerpt}</CardBody>
       )}
-    </Link>
-  );
+    </Card>
+  )
 }
