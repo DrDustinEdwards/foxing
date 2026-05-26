@@ -9,7 +9,7 @@ type ActionResult = { ok: true } | { ok: false; error: string }
 export async function markAllRead(): Promise<ActionResult> {
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('notifications')
     .update({ is_read: true })

@@ -22,11 +22,12 @@ function truncateText(s: string, max: number): string {
   return `${s.slice(0, max - 3).trimEnd()}...`
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const club = await fetchClubBySlug(params.slug)
   if (!club) return { title: 'Book club not found' }
   const title = truncateText(`${club.name}, Complete List of Picks`, 70)
@@ -56,11 +57,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function ExternalBookClubPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function ExternalBookClubPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const club = await fetchClubBySlug(params.slug)
   if (!club) notFound()
 

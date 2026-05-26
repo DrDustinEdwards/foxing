@@ -21,7 +21,7 @@ const ROW_COLS =
 export async function fetchUserShelves(
   userId: string,
 ): Promise<CustomShelfWithCount[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('custom_shelves')
     .select(ROW_COLS)
@@ -49,7 +49,7 @@ export async function fetchUserShelvesForBook(
   shelves: CustomShelfWithCount[]
   membership: Set<string>
 }> {
-  const sb = createClient()
+  const sb = await createClient()
   const [shelvesRes, membershipRes] = await Promise.all([
     fetchUserShelves(userId),
     sb
@@ -69,7 +69,7 @@ export async function fetchShelfForOwner(
   userId: string,
   shelfId: string,
 ): Promise<CustomShelfWithBooks | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data: shelf } = await sb
     .from('custom_shelves')
     .select(ROW_COLS)
@@ -130,7 +130,7 @@ async function fetchShelfBooks(
   shelfId: string,
   usePublicClient = false,
 ): Promise<ShelfBook[]> {
-  const client = usePublicClient ? createAdminClient() : createClient()
+  const client = usePublicClient ? createAdminClient() : await createClient()
   const { data } = await client
     .from('custom_shelf_books')
     .select(

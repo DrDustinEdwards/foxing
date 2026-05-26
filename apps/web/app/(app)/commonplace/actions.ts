@@ -17,7 +17,7 @@ export async function deleteCommonplaceEntry(
   if (!id) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('commonplace_book')
     .delete()
@@ -35,7 +35,7 @@ export async function toggleCommonplacePrivacy(
   if (!id) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: row } = await sb
     .from('commonplace_book')
     .select('is_public')

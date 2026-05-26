@@ -15,11 +15,12 @@ import { siteOrigin } from '@/lib/foxing'
 
 export const revalidate = 300
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string; slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string; slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const profile = await fetchProfileByUsername(params.username)
   if (!profile || !profile.is_public) {
     return { title: 'List not found', robots: { index: false, follow: true } }
@@ -41,11 +42,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function UserListDetailPage({
-  params,
-}: {
-  params: { username: string; slug: string }
-}) {
+export default async function UserListDetailPage(
+  props: {
+    params: Promise<{ username: string; slug: string }>
+  }
+) {
+  const params = await props.params;
   const [profile, viewerId] = await Promise.all([
     fetchProfileByUsername(params.username),
     getAuthedUserId(),

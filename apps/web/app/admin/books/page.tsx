@@ -19,11 +19,12 @@ interface BookRow {
   word_count: number | null
 }
 
-export default async function AdminBooksPage({
-  searchParams,
-}: {
-  searchParams: { q?: string }
-}) {
+export default async function AdminBooksPage(
+  props: {
+    searchParams: Promise<{ q?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = (searchParams.q ?? '').trim()
   const admin = createAdminClient()
   let query = admin

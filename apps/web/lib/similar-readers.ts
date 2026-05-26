@@ -14,7 +14,7 @@ export async function fetchSimilarReaders(
   userId: string,
   limit = 24,
 ): Promise<SimilarReader[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data: myBooks } = await sb
     .from('user_books')
     .select('book_id')

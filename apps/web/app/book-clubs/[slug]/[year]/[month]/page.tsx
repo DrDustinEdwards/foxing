@@ -52,11 +52,12 @@ export async function generateStaticParams(): Promise<PageParams[]> {
   return fetchAllPickStaticParams()
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: PageParams
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<PageParams>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) {
     return { title: 'Pick not found', robots: { index: false, follow: true } }
@@ -113,11 +114,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function ClubMonthlyPickPage({
-  params,
-}: {
-  params: PageParams
-}) {
+export default async function ClubMonthlyPickPage(
+  props: {
+    params: Promise<PageParams>
+  }
+) {
+  const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) notFound()
   const { year, month } = parsed

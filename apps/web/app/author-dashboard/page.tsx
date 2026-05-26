@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 export default async function AuthorDashboardPage() {
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in?next=/author-dashboard')
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('profiles')
     .select('is_verified_author')

@@ -15,11 +15,12 @@ export const revalidate = 86400
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { date: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ date: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   if (!ISO_DATE.test(params.date)) {
     return { title: 'Passage not found', robots: { index: false, follow: true } }
   }
@@ -36,11 +37,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function PassagePage({
-  params,
-}: {
-  params: { date: string }
-}) {
+export default async function PassagePage(
+  props: {
+    params: Promise<{ date: string }>
+  }
+) {
+  const params = await props.params;
   if (!ISO_DATE.test(params.date)) notFound()
   const [passage] = await Promise.all([
     fetchPassageOfDay(params.date),

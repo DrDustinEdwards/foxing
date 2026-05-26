@@ -29,11 +29,12 @@ const MONTH_NAMES = [
   'December',
 ]
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { year: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ year: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const year = Number(params.year)
   if (!Number.isInteger(year) || year < MIN_YEAR || year > MAX_YEAR) {
     return { title: 'Year in reading', robots: { index: false, follow: false } }
@@ -41,11 +42,12 @@ export async function generateMetadata({
   return buildYearInReadingMetadata({ year })
 }
 
-export default async function YearInReadingPage({
-  params,
-}: {
-  params: { year: string }
-}) {
+export default async function YearInReadingPage(
+  props: {
+    params: Promise<{ year: string }>
+  }
+) {
+  const params = await props.params;
   const year = Number(params.year)
   if (!Number.isInteger(year) || year < MIN_YEAR || year > MAX_YEAR) {
     notFound()

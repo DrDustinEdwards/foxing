@@ -16,11 +16,12 @@ interface SearchParams {
   curator_note?: string
 }
 
-export default function AdminBookOfMonthNewPage({
-  searchParams,
-}: {
-  searchParams: SearchParams
-}) {
+export default async function AdminBookOfMonthNewPage(
+  props: {
+    searchParams: Promise<SearchParams>
+  }
+) {
+  const searchParams = await props.searchParams;
   const seeded =
     searchParams.book_id && searchParams.title && searchParams.author
       ? {

@@ -12,11 +12,12 @@ import { EnterGiveawayButton } from './enter-button'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ id: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const g = await fetchGiveawayById(params.id, null)
   if (!g) return { title: 'Giveaway not found' }
   return {
@@ -26,11 +27,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function GiveawayDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function GiveawayDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const [viewerId] = await Promise.all([
     getAuthedUserId(),
   ])

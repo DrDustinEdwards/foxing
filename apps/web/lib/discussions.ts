@@ -38,7 +38,7 @@ export async function fetchBookDiscussions(
   ) {
     return []
   }
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('discussions')
     .select(
@@ -82,7 +82,7 @@ export interface DiscussionDetail extends DiscussionSummary {
 export async function fetchDiscussion(
   discussionId: string,
 ): Promise<DiscussionDetail | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('discussions')
     .select(
@@ -118,7 +118,7 @@ export interface DiscussionPost {
 export async function fetchDiscussionPosts(
   discussionId: string,
 ): Promise<DiscussionPost[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('discussion_posts')
     .select(
@@ -140,7 +140,7 @@ export async function fetchReactionsForPosts(
   postIds: string[],
 ): Promise<Map<string, PostReactionCount[]>> {
   if (postIds.length === 0) return new Map()
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('post_reactions')
     .select('post_id, user_id, reaction')

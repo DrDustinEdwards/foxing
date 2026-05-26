@@ -44,11 +44,12 @@ export async function generateStaticParams() {
   return [...seen].map((slug) => ({ slug }))
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const books = await fetchBooksByAuthorSlug(params.slug)
   if (books.length === 0) {
     return { title: 'Author not found', robots: { index: false, follow: true } }
@@ -61,11 +62,12 @@ export async function generateMetadata({
   )
 }
 
-export default async function AuthorPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function AuthorPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const [books] = await Promise.all([
     fetchBooksByAuthorSlug(params.slug),
   ])

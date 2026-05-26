@@ -36,7 +36,7 @@ export async function createBuddyRead(formData: FormData): Promise<void> {
     throw new Error('Buddy reads are a Plus feature.')
   }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data, error } = await sb
     .from('buddy_reads')
     .insert({
@@ -59,7 +59,7 @@ async function assertBuddyMember(
   buddyReadId: string,
   userId: string,
 ): Promise<{ ok: true; clubId: string } | { ok: false; error: string }> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('buddy_reads')
     .select('id, user1_id, user2_id, is_active')
@@ -98,7 +98,7 @@ export async function createBuddyReadPost(
       ? Number(pageRaw)
       : null
 
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb.from('buddy_read_posts').insert({
     buddy_read_id: buddyReadId,
     author_id: userId,
@@ -121,7 +121,7 @@ export async function deleteBuddyReadPost(
   if (!postId || !buddyReadId) return { ok: false, error: 'Missing fields.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: post } = await sb
     .from('buddy_read_posts')
     .select('author_id')
@@ -145,7 +145,7 @@ export async function finishBuddyRead(
   if (!buddyReadId) return { ok: false, error: 'Missing id.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: row } = await sb
     .from('buddy_reads')
     .select('user1_id, user2_id')

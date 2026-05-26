@@ -23,11 +23,12 @@ function recentYears(): number[] {
   return [currentYear, currentYear - 1, currentYear - 2]
 }
 
-export default async function DiaryPage({
-  searchParams,
-}: {
-  searchParams: { year?: string; view?: 'list' | 'calendar' }
-}) {
+export default async function DiaryPage(
+  props: {
+    searchParams: Promise<{ year?: string; view?: 'list' | 'calendar' }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
 

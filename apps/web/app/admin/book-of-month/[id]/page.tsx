@@ -10,11 +10,12 @@ export const metadata: Metadata = {
   title: 'Edit Book of the Month pick',
 }
 
-export default async function AdminBookOfMonthEditPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function AdminBookOfMonthEditPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const pick = await fetchPickByIdForAdmin(params.id)
   if (!pick) notFound()
 

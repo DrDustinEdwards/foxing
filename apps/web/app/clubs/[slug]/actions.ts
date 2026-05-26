@@ -112,7 +112,7 @@ export async function createAnnouncement(
   const role = await getClubRole(payload.club_id, userId)
   if (!isClubMod(role)) return { ok: false, error: 'Moderator access required.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data, error } = await sb
     .from('club_announcements')
     .insert({
@@ -171,7 +171,7 @@ export async function removeAnnouncement(
   const role = await getClubRole(clubId, userId)
   if (!isClubMod(role)) return { ok: false, error: 'Moderator access required.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('club_announcements')
     .update({
@@ -775,7 +775,7 @@ export async function createClubMeeting(
     locationUrl = `https://meet.google.com/${generateMeetCode()}`
   }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data, error } = await sb
     .from('club_meetings')
     .insert({
@@ -843,7 +843,7 @@ export async function rsvpToMeeting(
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   // Confirm membership.
   const { data: meeting } = await sb
     .from('club_meetings')
@@ -1107,7 +1107,7 @@ export async function createClubPoll(
   const role = await getClubRole(clubId, userId)
   if (!isClubMod(role)) return { ok: false, error: 'Moderator access required.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data: poll, error } = await sb
     .from('club_polls')
     .insert({
@@ -1191,7 +1191,7 @@ export async function voteOnPoll(
   const role = await getClubRole(clubId, userId)
   if (!role) return { ok: false, error: 'Join the club to vote.' }
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data: poll } = await sb
     .from('club_polls')
     .select('id, poll_type, is_closed, closes_at')

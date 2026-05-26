@@ -23,7 +23,7 @@ async function fetchList(id: string): Promise<ListRow | null> {
   ) {
     return null
   }
-  const sb = createClient()
+  const sb = await createClient()
   const { data, error } = await sb
     .from('reading_lists')
     .select('id, title, description, is_public, user_id, created_at')
@@ -33,11 +33,12 @@ async function fetchList(id: string): Promise<ListRow | null> {
   return (data as ListRow | null) ?? null
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ id: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const list = await fetchList(params.id)
   if (!list) return { title: 'List not found · Foxing' }
   return {
@@ -47,11 +48,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function ListDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function ListDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const list = await fetchList(params.id)
   if (!list) notFound()
   return (

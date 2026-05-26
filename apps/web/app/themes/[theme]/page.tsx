@@ -21,19 +21,21 @@ export function generateStaticParams() {
   return Object.keys(THEME_DEFINITIONS).map((theme) => ({ theme }))
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { theme: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ theme: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   return buildThemeMetadata(params.theme)
 }
 
-export default async function ThemePage({
-  params,
-}: {
-  params: { theme: string }
-}) {
+export default async function ThemePage(
+  props: {
+    params: Promise<{ theme: string }>
+  }
+) {
+  const params = await props.params;
   const theme = THEME_DEFINITIONS[params.theme]
   if (!theme) notFound()
   const books = await fetchBooksForTheme({

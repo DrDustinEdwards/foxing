@@ -27,11 +27,12 @@ interface PostRow {
   club_threads: { title: string } | null
 }
 
-export default async function AdminClubPostsPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function AdminClubPostsPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const admin = createAdminClient()
   const { data: club } = await admin
     .from('clubs')

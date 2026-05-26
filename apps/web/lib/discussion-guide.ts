@@ -20,7 +20,7 @@ export async function fetchDiscussionGuide(
   ) {
     return null
   }
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('book_discussion_guides')
     .select('id, book_id, questions, generated_at, model')

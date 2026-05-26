@@ -33,7 +33,6 @@ const nextConfig = {
   },
   experimental: {
     optimizePackageImports: ['recharts'],
-    instrumentationHook: true,
   },
   transpilePackages: ['@foxing/types', '@foxing/utils'],
   async headers() {

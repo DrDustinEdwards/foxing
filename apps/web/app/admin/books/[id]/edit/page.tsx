@@ -31,11 +31,12 @@ interface BookRow {
   source: string | null
 }
 
-export default async function AdminBookEditPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function AdminBookEditPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const admin = createAdminClient()
   const { data } = await admin
     .from('books')

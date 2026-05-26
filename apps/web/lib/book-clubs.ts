@@ -70,7 +70,7 @@ function hasEnv(): boolean {
 
 export async function fetchActiveClubs(): Promise<ExternalClub[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('external_book_clubs')
     .select('*')
@@ -84,7 +84,7 @@ export async function fetchClubBySlug(
   slug: string,
 ): Promise<ExternalClub | null> {
   if (!hasEnv()) return null
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('external_book_clubs')
     .select('*')
@@ -109,7 +109,7 @@ async function attachRatings(
   if (rows.length === 0) return []
   if (!hasEnv())
     return rows.map((r) => ({ ...r, avg_rating: null, rating_count: 0 }))
-  const sb = createClient()
+  const sb = await createClient()
   const bookIds = rows.map((r) => r.book.id)
   const { data: ratings } = await sb
     .from('user_books')
@@ -139,7 +139,7 @@ export async function fetchRecentPicksByClub(
   limit = 3,
 ): Promise<ExternalPickWithBook[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('external_book_club_picks')
     .select(PICK_COLS)
@@ -157,7 +157,7 @@ export async function fetchAllPicksForClub(
   clubId: string,
 ): Promise<ExternalPickWithBook[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('external_book_club_picks')
     .select(PICK_COLS)
@@ -210,7 +210,7 @@ export async function fetchPicksForMonth(
   const monthNum =
     typeof month === 'number' ? month : Number.parseInt(month, 10)
   if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum)) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('external_book_club_picks')
     .select(PICK_COLS_WITH_QUOTE)
@@ -272,7 +272,7 @@ export async function fetchPickByClubSlugAndMonth(
   const monthNum =
     typeof month === 'number' ? month : Number.parseInt(month, 10)
   if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum)) return null
-  const sb = createClient()
+  const sb = await createClient()
   const { data: club } = await sb
     .from('external_book_clubs')
     .select('*')
@@ -323,7 +323,7 @@ export async function monthHasAnyPicks(
   month: number,
 ): Promise<boolean> {
   if (!hasEnv()) return false
-  const sb = createClient()
+  const sb = await createClient()
   const { count } = await sb
     .from('external_book_club_picks')
     .select('id', { count: 'exact', head: true })
@@ -339,7 +339,7 @@ export async function clubHasPickForMonth(
   month: number,
 ): Promise<boolean> {
   if (!hasEnv()) return false
-  const sb = createClient()
+  const sb = await createClient()
   const { count } = await sb
     .from('external_book_club_picks')
     .select('id', { count: 'exact', head: true })
@@ -362,7 +362,7 @@ export async function fetchAdjacentPicksForClub(
   const monthNum =
     typeof month === 'number' ? month : Number.parseInt(month, 10)
   if (!Number.isInteger(yearNum) || !Number.isInteger(monthNum)) return []
-  const sb = createClient()
+  const sb = await createClient()
   const sentinel = yearNum * 12 + monthNum
   const { data } = await sb
     .from('external_book_club_picks')
@@ -449,7 +449,7 @@ export function nextMonth(
 
 export async function fetchCurrentMonthPicks(): Promise<ExternalPickWithBook[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const now = new Date()
   const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1))
     .toISOString()

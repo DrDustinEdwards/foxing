@@ -12,7 +12,7 @@ const PROMPT =
   'Extract the readable text from this book page photograph. Return ONLY the extracted text, preserving paragraph breaks. If text is unclear or image is not a book page, return empty string.'
 
 export async function POST(request: NextRequest) {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

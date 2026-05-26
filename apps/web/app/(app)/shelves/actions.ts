@@ -22,7 +22,7 @@ export async function createShelf(formData: FormData): Promise<ActionResult> {
   if (!name) return { ok: false, error: 'Name is required.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data, error } = await sb
     .from('custom_shelves')
     .insert({
@@ -49,7 +49,7 @@ export async function updateShelf(formData: FormData): Promise<ActionResult> {
   if (!shelfId || !name) return { ok: false, error: 'Name is required.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('custom_shelves')
     .update({ name, description, is_public: isPublic })
@@ -67,7 +67,7 @@ export async function deleteShelf(formData: FormData): Promise<ActionResult> {
   if (!shelfId) return { ok: false, error: 'Missing shelf.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('custom_shelves')
     .delete()
@@ -88,7 +88,7 @@ export async function toggleBookOnShelf(
   if (!shelfId || !bookId) return { ok: false, error: 'Missing input.' }
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: shelf } = await sb
     .from('custom_shelves')
     .select('id')

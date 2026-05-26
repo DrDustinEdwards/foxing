@@ -25,11 +25,12 @@ import { SpoilerText } from './spoiler-text'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string; discussionId: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string; discussionId: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const discussion = await fetchDiscussion(params.discussionId)
   if (!discussion) return { title: 'Discussion not found' }
   return {
@@ -41,11 +42,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function DiscussionPage({
-  params,
-}: {
-  params: { slug: string; discussionId: string }
-}) {
+export default async function DiscussionPage(
+  props: {
+    params: Promise<{ slug: string; discussionId: string }>
+  }
+) {
+  const params = await props.params;
   const [viewerId, discussion] = await Promise.all([
     getAuthedUserId(),
     fetchDiscussion(params.discussionId),
@@ -188,7 +190,7 @@ export default async function DiscussionPage({
       </main>
       <Footer />
     </div>
-  )
+  );
 }
 
 function PostCard({

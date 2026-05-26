@@ -14,7 +14,7 @@ const COLS =
 export async function fetchOwnAuthorClaim(
   userId: string,
 ): Promise<AuthorClaim | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('author_claims')
     .select(COLS)

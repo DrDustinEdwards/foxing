@@ -16,22 +16,24 @@ import { ReplyForm } from './reply-form'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string; threadId: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string; threadId: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   return {
     title: `Thread · ${params.slug} · Foxing`,
     robots: { index: false, follow: false },
   }
 }
 
-export default async function ThreadPage({
-  params,
-}: {
-  params: { slug: string; threadId: string }
-}) {
+export default async function ThreadPage(
+  props: {
+    params: Promise<{ slug: string; threadId: string }>
+  }
+) {
+  const params = await props.params;
   const [viewerId, club] = await Promise.all([
     getAuthedUserId(),
     fetchPublicClubBySlug(params.slug),

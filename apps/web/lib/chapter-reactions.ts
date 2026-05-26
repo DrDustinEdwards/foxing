@@ -18,7 +18,7 @@ export async function fetchOwnChapterReactions(
   userId: string,
   bookId: string,
 ): Promise<ChapterReaction[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('chapter_reactions')
     .select('*')

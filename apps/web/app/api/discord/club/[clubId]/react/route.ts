@@ -22,10 +22,8 @@ const VALID_EMOJIS = new Set([
   '🙃',
 ])
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { clubId: string } },
-) {
+export async function POST(request: NextRequest, props: { params: Promise<{ clubId: string }> }) {
+  const params = await props.params;
   const token = bearerFromHeaders(request.headers)
   const session = token ? await verifySession(token) : null
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })

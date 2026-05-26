@@ -15,11 +15,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 }
 
-export default async function ShelfDetailPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function ShelfDetailPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const userId = await getAuthedUserId()
   if (!userId) redirect(`/sign-in?next=/shelves/${params.id}`)
   const shelf = await fetchShelfForOwner(userId, params.id)

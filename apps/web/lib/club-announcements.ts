@@ -49,7 +49,7 @@ export async function fetchAnnouncementsForClub(
   clubId: string,
 ): Promise<ClubAnnouncement[]> {
   if (!hasEnv()) return []
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('club_announcements')
     .select(ANNOUNCEMENT_COLS)

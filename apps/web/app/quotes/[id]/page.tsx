@@ -16,11 +16,12 @@ import { buildQuoteMetadata } from '@/lib/metadata'
 
 export const revalidate = 3600
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { id: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ id: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const quote = await fetchQuoteById(params.id)
   if (!quote || !quote.book) return { title: 'Passage not found' }
   return buildQuoteMetadata({
@@ -32,11 +33,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function QuotePage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function QuotePage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const [userId] = await Promise.all([
     getAuthedUserId(),
   ])

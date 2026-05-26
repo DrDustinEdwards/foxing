@@ -20,7 +20,7 @@ type ProfileUpdateResult =
 export async function updateProfile(
   formData: FormData,
 ): Promise<ProfileUpdateResult> {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -71,7 +71,7 @@ type UsernameUpdateResult =
 export async function updateUsername(
   formData: FormData,
 ): Promise<UsernameUpdateResult> {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -121,7 +121,7 @@ export async function updateUsername(
 export async function updateVisibility(
   formData: FormData,
 ): Promise<{ ok: boolean; error?: string }> {
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()
@@ -147,7 +147,7 @@ export async function deleteAccount(
   if (confirmation !== 'DELETE') {
     return { ok: false, error: 'Type DELETE to confirm.' }
   }
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

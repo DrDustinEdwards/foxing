@@ -28,11 +28,12 @@ const TABS: Array<{ id: string; label: string; status?: string }> = [
   { id: 'abandoned', label: 'Abandoned', status: 'abandoned' },
 ]
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const profile = await fetchProfileByUsername(params.username)
   if (!profile || !profile.is_public) {
     return { title: 'Profile not found', robots: { index: false, follow: true } }
@@ -45,13 +46,14 @@ export async function generateMetadata({
   })
 }
 
-export default async function UserLibraryPage({
-  params,
-  searchParams,
-}: {
-  params: { username: string }
-  searchParams: { status?: string }
-}) {
+export default async function UserLibraryPage(
+  props: {
+    params: Promise<{ username: string }>
+    searchParams: Promise<{ status?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
+  const params = await props.params;
   const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])

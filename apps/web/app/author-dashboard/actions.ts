@@ -31,7 +31,7 @@ export async function askAuthorQuestion(
       error: `You can ask up to ${MAX_PER_USER_PER_AUTHOR} questions per author.`,
     }
   }
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb.from('author_questions').insert({
     asker_id: userId,
     author_user_id: authorUserId,
@@ -113,7 +113,7 @@ export async function toggleQuestionUpvote(
   if (!userId) return { ok: false, error: 'Sign in required.' }
   const questionId = String(formData.get('question_id') ?? '').trim()
   if (!questionId) return { ok: false, error: 'Missing question.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: existing } = await sb
     .from('author_question_upvotes')
     .select('question_id')

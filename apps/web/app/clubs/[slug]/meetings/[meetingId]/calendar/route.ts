@@ -33,7 +33,7 @@ function escapeICalText(value: string): string {
     .replace(/\\/g, '\\\\')
     .replace(/;/g, '\\;')
     .replace(/,/g, '\\,')
-    .replace(/\r?\n/g, '\\n')
+    .replace(/\r?\n/g, '\\n');
 }
 
 function foldLine(line: string): string {
@@ -48,8 +48,9 @@ function foldLine(line: string): string {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { slug: string; meetingId: string } },
+  props: { params: Promise<{ slug: string; meetingId: string }> }
 ) {
+  const params = await props.params;
   const admin = createAdminClient()
   const { data } = await admin
     .from('club_meetings')

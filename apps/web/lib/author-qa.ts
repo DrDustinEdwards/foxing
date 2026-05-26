@@ -74,7 +74,7 @@ export async function fetchAnsweredQuestions(
 export async function fetchUnansweredQuestionsForAuthor(
   authorUserId: string,
 ): Promise<AuthorQuestionWithMeta[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('author_questions')
     .select(
@@ -117,7 +117,7 @@ export async function userQuestionCountForAuthor(
   userId: string,
   authorUserId: string,
 ): Promise<number> {
-  const sb = createClient()
+  const sb = await createClient()
   const { count } = await sb
     .from('author_questions')
     .select('id', { count: 'exact', head: true })

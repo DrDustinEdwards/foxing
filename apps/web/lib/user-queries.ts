@@ -10,26 +10,27 @@ export async function fetchMenuStats(userId: string): Promise<MenuStats> {
   const year = new Date().getFullYear()
   const yearStart = `${year}-01-01T00:00:00.000Z`
 
+  const sb = await createClient()
   const [streakData, booksCount, goalData, vocabData] = await Promise.all([
-    createClient()
+    sb
       .from('reading_streaks')
       .select('current_streak, total_highlights, streak_freeze_credits')
       .eq('user_id', userId)
       .maybeSingle(),
-    createClient()
+    sb
       .from('user_books')
       .select('id', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'finished')
       .gte('finished_at', yearStart),
-    createClient()
+    sb
       .from('reading_goals')
       .select('target')
       .eq('user_id', userId)
       .eq('year', year)
       .eq('period_type', 'annual')
       .maybeSingle(),
-    createClient()
+    sb
       .from('vocabulary')
       .select('mastered', { count: 'exact' })
       .eq('user_id', userId),
@@ -64,10 +65,6 @@ export async function fetchMenuStats(userId: string): Promise<MenuStats> {
  * from server components without redundant auth checks.
  */
 
-function sb() {
-  return createClient()
-}
-
 export type LibraryStatus =
   | 'reading'
   | 'want_to_read'
@@ -101,7 +98,7 @@ export async function fetchLibrary(
   userId: string,
   status: LibraryStatus,
 ): Promise<LibraryEntry[]> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('user_books')
     .select(
       'id, status, rating, rating_half, progress_percentage, started_at, finished_at, created_at, is_favorite, books:book_id(id, slug, title, author, cover_url, themes, word_count)',
@@ -134,7 +131,7 @@ export async function fetchLibrary(
 
   if (rows.length === 0) return rows
   const bookIds = rows.map((r) => r.book.id)
-  const { data: tagRows } = await sb()
+  const { data: tagRows } = await (await createClient())
     .from('user_book_tags')
     .select('book_id, tag')
     .eq('user_id', userId)
@@ -172,7 +169,7 @@ export interface ReadingStreak {
 export async function fetchReadingStreak(
   userId: string,
 ): Promise<ReadingStreak> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('reading_streaks')
     .select(
       'current_streak, longest_streak, last_read_date, total_books_finished, total_pages_read, total_highlights, streak_freeze_credits',
@@ -217,7 +214,7 @@ export async function fetchRecentSessions(
   userId: string,
   limit = 10,
 ): Promise<RecentReadingSession[]> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('reading_sessions')
     .select(
       'id, started_at, ended_at, pages_read, avg_wpm, books:book_id(id, slug, title, author)',
@@ -248,7 +245,7 @@ export interface ReadingTimeStats {
 export async function fetchReadingTimeStats(
   userId: string,
 ): Promise<ReadingTimeStats> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('reading_sessions')
     .select('started_at, ended_at, pages_read')
     .eq('user_id', userId)
@@ -280,7 +277,7 @@ export async function fetchMoodDistribution(
   since?: string,
   until?: string,
 ): Promise<MoodCount[]> {
-  let q = sb()
+  let q = (await createClient())
     .from('user_books')
     .select('mood_tags, finished_at')
     .eq('user_id', userId)
@@ -316,7 +313,7 @@ export async function fetchReadingPace(
   since?: string,
   until?: string,
 ): Promise<{ points: PacePoint[]; sessionCount: number }> {
-  let q = sb()
+  let q = (await createClient())
     .from('reading_sessions')
     .select('ended_at, avg_wpm')
     .eq('user_id', userId)
@@ -363,7 +360,7 @@ export interface AuthorAndFormatStats {
 export async function fetchAuthorAndFormatStats(
   userId: string,
 ): Promise<AuthorAndFormatStats> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('user_books')
     .select(
       'format_read, books:book_id(id, slug, title, author, word_count)',
@@ -420,7 +417,7 @@ export async function fetchFinishedBooksForStats(
   since?: string,
   until?: string,
 ): Promise<FinishedBookForStats[]> {
-  let q = sb()
+  let q = (await createClient())
     .from('user_books')
     .select(
       'finished_at, rating, rating_half, books:book_id(word_count, themes)',
@@ -455,7 +452,7 @@ export async function fetchFinishedBooksForStats(
 export async function fetchUserHighlights(
   userId: string,
 ): Promise<UserHighlight[]> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('highlights')
     .select(
       'id, text, note, color, chapter, is_public, created_at, books:book_id(id, slug, title, author, cover_url)',
@@ -497,13 +494,13 @@ export async function fetchReadingActivity(
   since.setDate(since.getDate() - weeks * 7)
   const sinceIso = since.toISOString()
   const [sessionsRes, finishedRes] = await Promise.all([
-    sb()
+    (await createClient())
       .from('reading_sessions')
       .select('started_at')
       .eq('user_id', userId)
       .gte('started_at', sinceIso)
       .limit(5000),
-    sb()
+    (await createClient())
       .from('user_books')
       .select('finished_at')
       .eq('user_id', userId)
@@ -537,7 +534,7 @@ export async function fetchUserGoal(
   userId: string,
   year: number,
 ): Promise<UserGoal | null> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('reading_goals')
     .select('id, type, target, year')
     .eq('user_id', userId)
@@ -552,7 +549,7 @@ export async function fetchMonthlyGoal(
   year: number,
   month: number,
 ): Promise<UserGoal | null> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('reading_goals')
     .select('id, type, target, year')
     .eq('user_id', userId)
@@ -568,7 +565,7 @@ export async function fetchWeeklyGoal(
   year: number,
   week: number,
 ): Promise<UserGoal | null> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('reading_goals')
     .select('id, type, target, year')
     .eq('user_id', userId)
@@ -584,7 +581,7 @@ export async function fetchBooksFinishedThisYear(
 ): Promise<number> {
   const year = new Date().getFullYear()
   const start = `${year}-01-01T00:00:00.000Z`
-  const { count } = await sb()
+  const { count } = await (await createClient())
     .from('user_books')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
@@ -598,7 +595,7 @@ export async function fetchBooksFinishedInRange(
   startISO: string,
   endISO: string,
 ): Promise<number> {
-  const { count } = await sb()
+  const { count } = await (await createClient())
     .from('user_books')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', userId)
@@ -626,7 +623,7 @@ export async function fetchActiveChallenges(
   userId: string,
 ): Promise<ChallengeWithProgress[]> {
   const today = new Date().toISOString().slice(0, 10)
-  const { data: challenges } = await sb()
+  const { data: challenges } = await (await createClient())
     .from('challenges')
     .select(
       'id, title, description, type, target, start_date, end_date, is_community, created_at',
@@ -637,7 +634,7 @@ export async function fetchActiveChallenges(
   if (!challenges) return []
   const ids = (challenges as { id: string }[]).map((c) => c.id)
   if (ids.length === 0) return []
-  const { data: joins } = await sb()
+  const { data: joins } = await (await createClient())
     .from('user_challenges')
     .select('challenge_id, progress, joined_at, completed_at')
     .eq('user_id', userId)
@@ -695,7 +692,7 @@ export async function fetchDiaryEntries(
   userId: string,
   year?: number,
 ): Promise<DiaryEntry[]> {
-  let q = sb()
+  let q = (await createClient())
     .from('diary_entries')
     .select(
       'id, log_date, rating_half, review, privacy, books:book_id(id, slug, title, author, cover_url)',
@@ -743,7 +740,7 @@ export interface UserList {
 }
 
 export async function fetchUserLists(userId: string): Promise<UserList[]> {
-  const { data, error } = await sb()
+  const { data, error } = await (await createClient())
     .from('reading_lists')
     .select('id, title, description, is_public, is_featured, created_at')
     .eq('user_id', userId)
@@ -767,7 +764,7 @@ export async function fetchUserLists(userId: string): Promise<UserList[]> {
 }
 
 export async function fetchFeaturedLists(): Promise<UserList[]> {
-  const { data, error } = await sb()
+  const { data, error } = await (await createClient())
     .from('reading_lists')
     .select('id, title, description, is_public, is_featured, created_at')
     .eq('is_public', true)
@@ -792,7 +789,7 @@ export async function fetchProfileBasics(userId: string): Promise<{
   subscription_tier: string | null
   username: string
 } | null> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('profiles')
     .select('display_name, subscription_tier, username')
     .eq('id', userId)
@@ -808,7 +805,7 @@ export async function fetchProgressProfile(userId: string): Promise<{
   xp_points: number
   reading_level: string
 } | null> {
-  const { data } = await sb()
+  const { data } = await (await createClient())
     .from('profiles')
     .select('xp_points, reading_level')
     .eq('id', userId)

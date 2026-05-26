@@ -135,7 +135,7 @@ export async function fetchEndedGiveawaysForAdmin(): Promise<GiveawayWithMeta[]>
 export async function fetchGiveawaysByAuthor(
   authorUserId: string,
 ): Promise<Giveaway[]> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('giveaways')
     .select(COLS)

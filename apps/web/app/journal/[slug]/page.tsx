@@ -35,11 +35,12 @@ export async function generateStaticParams() {
   }))
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { slug: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const post = await getJournalPost(params.slug)
   if (!post) return {}
   const description = post.og_description ?? post.excerpt ?? ''
@@ -61,11 +62,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function JournalPostPage({
-  params,
-}: {
-  params: { slug: string }
-}) {
+export default async function JournalPostPage(
+  props: {
+    params: Promise<{ slug: string }>
+  }
+) {
+  const params = await props.params;
   const post = await getJournalPost(params.slug)
   if (!post) notFound()
 
@@ -261,7 +263,7 @@ export default async function JournalPostPage({
       </main>
       <Footer />
     </div>
-  )
+  );
 }
 
 function articleJsonLd(post: JournalPost): string {

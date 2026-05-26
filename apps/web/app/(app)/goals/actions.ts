@@ -23,7 +23,7 @@ export async function setReadingGoal(
   if (!userId) return { ok: false, error: 'Sign in required.' }
   const year = new Date().getFullYear()
 
-  const sb = createClient()
+  const sb = await createClient()
   const { data: existing } = await sb
     .from('reading_goals')
     .select('id')
@@ -53,7 +53,7 @@ export async function setReadingGoal(
 export async function consumeStreakFreeze(): Promise<ActionResult> {
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data } = await sb
     .from('reading_streaks')
     .select('streak_freeze_credits, last_read_date, current_streak')
@@ -101,7 +101,7 @@ export async function deleteReadingGoal(): Promise<ActionResult> {
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
   const year = new Date().getFullYear()
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('reading_goals')
     .delete()
@@ -129,7 +129,7 @@ export async function setMonthlyGoal(formData: FormData): Promise<ActionResult> 
   const now = new Date()
   const year = now.getUTCFullYear()
   const month = now.getUTCMonth() + 1
-  const sb = createClient()
+  const sb = await createClient()
   const { data: existing } = await sb
     .from('reading_goals')
     .select('id')
@@ -166,7 +166,7 @@ export async function deleteMonthlyGoal(): Promise<ActionResult> {
   const now = new Date()
   const year = now.getUTCFullYear()
   const month = now.getUTCMonth() + 1
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('reading_goals')
     .delete()
@@ -188,7 +188,7 @@ export async function setWeeklyGoal(formData: FormData): Promise<ActionResult> {
   if (!userId) return { ok: false, error: 'Sign in required.' }
   const { isoWeekOf } = await import('@/lib/goal-periods')
   const { year, week } = isoWeekOf(new Date())
-  const sb = createClient()
+  const sb = await createClient()
   const { data: existing } = await sb
     .from('reading_goals')
     .select('id')
@@ -224,7 +224,7 @@ export async function deleteWeeklyGoal(): Promise<ActionResult> {
   if (!userId) return { ok: false, error: 'Sign in required.' }
   const { isoWeekOf } = await import('@/lib/goal-periods')
   const { year, week } = isoWeekOf(new Date())
-  const sb = createClient()
+  const sb = await createClient()
   const { error } = await sb
     .from('reading_goals')
     .delete()

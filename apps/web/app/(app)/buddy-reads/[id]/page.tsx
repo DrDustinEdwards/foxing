@@ -24,11 +24,12 @@ export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = BUDDY_READS_METADATA
 
-export default async function BuddyReadPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function BuddyReadPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
   const buddyRead = await fetchBuddyReadById(params.id, userId)

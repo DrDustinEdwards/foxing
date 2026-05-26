@@ -44,7 +44,7 @@ export async function createGiveaway(
 ): Promise<ActionResult> {
   const userId = await getAuthedUserId()
   if (!userId) return { ok: false, error: 'Sign in required.' }
-  const sb = createClient()
+  const sb = await createClient()
   const { data: me } = await sb
     .from('profiles')
     .select('is_verified_author')

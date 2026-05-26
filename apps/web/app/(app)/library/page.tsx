@@ -58,11 +58,12 @@ function compareEntries(
   }
 }
 
-export default async function LibraryPage({
-  searchParams,
-}: {
-  searchParams: { status?: LibraryStatus; sort?: SortKey }
-}) {
+export default async function LibraryPage(
+  props: {
+    searchParams: Promise<{ status?: LibraryStatus; sort?: SortKey }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
   const status = TABS.find((t) => t.id === searchParams.status)?.id ?? 'reading'

@@ -29,11 +29,12 @@ import { FollowButton } from './follow-button'
 
 export const revalidate = 300
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { username: string }
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<{ username: string }>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const profile = await fetchProfileByUsername(params.username)
   if (!profile) return { title: 'Profile not found' }
   if (!profile.is_public) {
@@ -48,11 +49,12 @@ export async function generateMetadata({
   })
 }
 
-export default async function ProfilePage({
-  params,
-}: {
-  params: { username: string }
-}) {
+export default async function ProfilePage(
+  props: {
+    params: Promise<{ username: string }>
+  }
+) {
+  const params = await props.params;
   const [profile] = await Promise.all([
     fetchProfileByUsername(params.username),
   ])

@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ results: [] satisfies Result[] })
   }
 
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

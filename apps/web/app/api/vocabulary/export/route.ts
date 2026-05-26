@@ -24,7 +24,7 @@ interface Row {
 
 export async function GET(request: NextRequest) {
   const format = request.nextUrl.searchParams.get('format') === 'anki' ? 'anki' : 'csv'
-  const sb = createClient()
+  const sb = await createClient()
   const {
     data: { user },
   } = await sb.auth.getUser()

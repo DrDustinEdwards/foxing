@@ -33,7 +33,7 @@ export async function fetchClubThread(
   posts: ClubThreadPost[]
   savedSet: Set<string>
 } | null> {
-  const sb = createClient()
+  const sb = await createClient()
   const { data: threadRow } = await sb
     .from('club_threads')
     .select('id, club_id, title, created_by, created_at')

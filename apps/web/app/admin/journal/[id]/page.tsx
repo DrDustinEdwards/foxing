@@ -25,11 +25,12 @@ interface JournalRow {
   canonical_url: string | null
 }
 
-export default async function EditJournalPostPage({
-  params,
-}: {
-  params: { id: string }
-}) {
+export default async function EditJournalPostPage(
+  props: {
+    params: Promise<{ id: string }>
+  }
+) {
+  const params = await props.params;
   const admin = createAdminClient()
   const { data } = await admin
     .from('journal_posts')

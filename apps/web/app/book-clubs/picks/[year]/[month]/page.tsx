@@ -58,11 +58,12 @@ export async function generateStaticParams(): Promise<PageParams[]> {
   return out
 }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: PageParams
-}): Promise<Metadata> {
+export async function generateMetadata(
+  props: {
+    params: Promise<PageParams>
+  }
+): Promise<Metadata> {
+  const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) {
     return { title: 'Picks not found', robots: { index: false, follow: true } }
@@ -95,11 +96,12 @@ export async function generateMetadata({
   }
 }
 
-export default async function MonthlyRoundupPage({
-  params,
-}: {
-  params: PageParams
-}) {
+export default async function MonthlyRoundupPage(
+  props: {
+    params: Promise<PageParams>
+  }
+) {
+  const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) notFound()
   const { year, month } = parsed

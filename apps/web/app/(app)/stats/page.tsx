@@ -65,11 +65,12 @@ function formatHoursMinutes(totalMinutes: number): string {
   return `${minutes}m`
 }
 
-export default async function StatsPage({
-  searchParams,
-}: {
-  searchParams: { year?: string }
-}) {
+export default async function StatsPage(
+  props: {
+    searchParams: Promise<{ year?: string }>
+  }
+) {
+  const searchParams = await props.searchParams;
   const userId = await getAuthedUserId()
   if (!userId) redirect('/sign-in')
 

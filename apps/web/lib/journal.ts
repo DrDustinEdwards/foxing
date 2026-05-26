@@ -43,10 +43,6 @@ const SUMMARY_COLS =
 
 const FULL_COLS = `${SUMMARY_COLS}, content`
 
-function sb() {
-  return createClient()
-}
-
 function hasEnv(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -68,7 +64,8 @@ export async function getJournalPosts(
   limit?: number,
 ): Promise<JournalPostSummary[]> {
   if (!hasEnv()) return []
-  const base = sb()
+  const supabase = await createClient()
+  const base = supabase
     .from('journal_posts')
     .select(SUMMARY_COLS)
     .eq('is_published', true)
@@ -80,7 +77,8 @@ export async function getJournalPosts(
 
 export async function getFeaturedJournalPost(): Promise<JournalPostSummary | null> {
   if (!hasEnv()) return null
-  const { data } = await sb()
+  const supabase = await createClient()
+  const { data } = await supabase
     .from('journal_posts')
     .select(SUMMARY_COLS)
     .eq('is_published', true)
@@ -94,7 +92,8 @@ export async function getFeaturedJournalPost(): Promise<JournalPostSummary | nul
 
 export async function getJournalPost(slug: string): Promise<JournalPost | null> {
   if (!hasEnv()) return null
-  const { data } = await sb()
+  const supabase = await createClient()
+  const { data } = await supabase
     .from('journal_posts')
     .select(FULL_COLS)
     .eq('slug', slug)
@@ -112,7 +111,7 @@ export async function getAdjacentJournalPosts(
   next: JournalPostSummary | null
 }> {
   if (!hasEnv()) return { prev: null, next: null }
-  const supabase = sb()
+  const supabase = await createClient()
   const { data: prevData } = await supabase
     .from('journal_posts')
     .select(SUMMARY_COLS)
@@ -182,7 +181,8 @@ export async function fetchJournalPostBySlug(
 
 export async function fetchAllJournalSlugs(): Promise<string[]> {
   if (!hasEnv()) return []
-  const { data } = await sb()
+  const supabase = await createClient()
+  const { data } = await supabase
     .from('journal_posts')
     .select('slug')
     .eq('is_published', true)
@@ -195,7 +195,8 @@ export async function fetchRelatedPosts(
   limit = 3,
 ): Promise<JournalPostSummary[]> {
   if (!hasEnv() || tags.length === 0) return []
-  const { data } = await sb()
+  const supabase = await createClient()
+  const { data } = await supabase
     .from('journal_posts')
     .select(SUMMARY_COLS)
     .eq('is_published', true)
