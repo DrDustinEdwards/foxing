@@ -5,6 +5,9 @@ import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
+  estimateReadingTime,
+  getFeaturedJournalPost,
+  getJournalPost,
   getJournalPosts,
   JOURNAL_TAGS,
   type JournalPostSummary,
@@ -28,123 +31,320 @@ export const metadata: Metadata = {
   },
 }
 
-const TAG_SLUGS = new Set<string>(JOURNAL_TAGS.map((t) => t.slug))
+export default async function JournalIndexPage() {
+  const [allPosts, featuredSummary] = await Promise.all([
+    getJournalPosts(),
+    getFeaturedJournalPost(),
+  ])
 
-export default async function JournalIndexPage(
-  props: {
-    searchParams?: Promise<{ tag?: string | string[] }>
-  }
-) {
-  const searchParams = await props.searchParams;
-  const rawTag = Array.isArray(searchParams?.tag)
-    ? searchParams?.tag[0]
-    : searchParams?.tag
-  const activeTag = rawTag && TAG_SLUGS.has(rawTag) ? rawTag : null
+  // Need the full body for the featured post so we can compute reading time.
+  const featured = featuredSummary
+    ? await getJournalPost(featuredSummary.slug)
+    : null
 
-  const allPosts = await getJournalPosts()
-  const posts = activeTag
-    ? allPosts.filter((p) => p.tags.includes(activeTag))
+  const remaining = featured
+    ? allPosts.filter((p) => p.slug !== featured.slug)
     : allPosts
+  const latest = remaining.slice(0, 4)
 
+  if (allPosts.length === 0) {
+    return (
+      <PageShell>
+        <JournalHeader />
+        <div className="mt-12">
+          <EmptyState heading="No posts yet." />
+        </div>
+      </PageShell>
+    )
+  }
+
+  return (
+    <PageShell>
+      <JournalHeader />
+      {featured && <FeaturedHero post={featured} />}
+      {JOURNAL_TAGS.map((tag) => {
+        const posts = remaining
+          .filter((p) => p.tags.includes(tag.slug))
+          .slice(0, 4)
+        if (posts.length === 0) return null
+        return <CategorySection key={tag.slug} tag={tag} posts={posts} />
+      })}
+      {latest.length > 0 && <LatestSection posts={latest} />}
+    </PageShell>
+  )
+}
+
+function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <NavAuthClient />
       <main className="flex-1">
-        <PageWrapper className="py-12">
-          <header className="max-w-prose">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              Journal
-            </h1>
-            <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-              Notes on the books, the reading habit, and what holds up.
-            </p>
-            <p className="mt-2 font-dm-sans text-xs text-text-tertiary">
-              <Link
-                href="/feed.rss"
-                className="text-brand-text hover:underline"
-              >
-                RSS feed
-              </Link>
-            </p>
-          </header>
-
-          {allPosts.length === 0 ? (
-            <div className="mt-12">
-              <EmptyState heading="No posts yet." />
-            </div>
-          ) : (
-            <>
-              <TagPills active={activeTag} />
-              {posts.length === 0 ? (
-                <div className="mt-10">
-                  <EmptyState heading="No posts in this tag yet." />
-                </div>
-              ) : (
-                <PostList posts={posts} />
-              )}
-            </>
-          )}
-        </PageWrapper>
+        <PageWrapper className="py-12">{children}</PageWrapper>
       </main>
       <Footer />
     </div>
   )
 }
 
-function TagPills({ active }: { active: string | null }) {
-  const base =
-    'rounded-full px-3 py-1 font-dm-sans text-xs border transition-colors no-underline'
-  const activeCls = 'bg-brand-subtle text-brand-subtle-text border-brand-ui'
-  const inactiveCls =
-    'bg-bg-surface text-text-secondary border-border-subtle hover:border-border-default hover:text-text-primary'
+function JournalHeader() {
   return (
-    <nav className="mt-8 flex flex-wrap gap-2">
-      <Link
-        href="/journal"
-        className={`${base} ${active === null ? activeCls : inactiveCls}`}
-      >
-        All
-      </Link>
-      {JOURNAL_TAGS.map((t) => (
+    <header className="flex flex-col gap-3">
+      <div className="max-w-prose">
+        <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
+          Journal
+        </h1>
+        <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
+          Notes on the books, the reading habit, and what holds up.
+        </p>
+      </div>
+      <p className="flex flex-wrap gap-x-4 gap-y-1 font-dm-sans text-xs text-text-tertiary">
         <Link
-          key={t.slug}
-          href={`/journal?tag=${t.slug}`}
-          className={`${base} ${active === t.slug ? activeCls : inactiveCls}`}
+          href="/journal/archive"
+          className="text-brand-text hover:underline"
         >
-          {t.label}
+          All articles →
         </Link>
-      ))}
-    </nav>
+        <Link href="/feed.rss" className="text-brand-text hover:underline">
+          RSS feed
+        </Link>
+      </p>
+    </header>
   )
 }
 
-function PostList({ posts }: { posts: JournalPostSummary[] }) {
+function FeaturedHero({
+  post,
+}: {
+  post: Awaited<ReturnType<typeof getJournalPost>>
+}) {
+  if (!post) return null
+  const minutes = estimateReadingTime(post.content)
+  const primaryTag = post.tags[0]
+  const tagLabel = primaryTag
+    ? (JOURNAL_TAGS.find((t) => t.slug === primaryTag)?.label ??
+      primaryTag.replace(/-/g, ' '))
+    : null
+
   return (
-    <ul className="mt-10 flex flex-col divide-y divide-border-subtle">
-      {posts.map((post) => (
-        <li key={post.id}>
+    <section className="mt-10 grid gap-8 rounded-xl border border-border-subtle bg-bg-surface p-6 md:grid-cols-[1.2fr_1fr] md:items-center md:gap-12 md:p-10">
+      <div className="flex flex-col gap-4">
+        {tagLabel && (
+          <span className="self-start rounded-full bg-brand-subtle px-3 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-brand-subtle-text">
+            {tagLabel}
+          </span>
+        )}
+        <h2 className="font-fraunces text-[2rem] leading-tight text-text-primary md:text-[2.25rem]">
           <Link
             href={`/journal/${post.slug}`}
-            className="group flex items-start justify-between gap-4 rounded-lg px-2 -mx-2 py-4 no-underline transition-colors hover:bg-bg-hover"
+            className="no-underline hover:text-brand-text"
           >
-            <div className="min-w-0 flex-1">
-              <p className="font-fraunces text-base leading-snug text-text-primary line-clamp-1 transition-colors group-hover:text-brand-text">
-                {post.title}
-              </p>
-              {post.excerpt && (
-                <p className="mt-0.5 font-source-serif-4 text-sm text-text-secondary line-clamp-1">
-                  {post.excerpt}
-                </p>
-              )}
-            </div>
-            {post.tags.length > 0 && (
-              <span className="shrink-0 font-dm-mono text-[0.6875rem] text-text-tertiary">
-                {post.tags[0].replace(/-/g, ' ')}
-              </span>
-            )}
+            {post.title}
           </Link>
-        </li>
+        </h2>
+        {post.excerpt && (
+          <p className="font-source-serif-4 text-base leading-relaxed text-text-secondary line-clamp-3">
+            {post.excerpt}
+          </p>
+        )}
+        <p className="font-dm-mono text-xs text-text-tertiary">
+          {minutes} min read
+        </p>
+        <div>
+          <Link
+            href={`/journal/${post.slug}`}
+            className="inline-flex items-center rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm text-text-on-brand no-underline transition-colors hover:bg-brand-hover"
+          >
+            Read the article →
+          </Link>
+        </div>
+      </div>
+      <FeaturedIllustration />
+    </section>
+  )
+}
+
+function FeaturedIllustration() {
+  return (
+    <div className="flex aspect-[5/4] w-full items-center justify-center">
+      <svg
+        viewBox="0 0 320 256"
+        xmlns="http://www.w3.org/2000/svg"
+        className="h-full w-full"
+        aria-hidden="true"
+        role="presentation"
+      >
+        <defs>
+          <linearGradient id="fox-glow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#F5A623" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#D4622E" stopOpacity="0.85" />
+          </linearGradient>
+        </defs>
+        <circle cx="232" cy="76" r="48" fill="url(#fox-glow)" opacity="0.55" />
+        <rect
+          x="36"
+          y="56"
+          width="200"
+          height="148"
+          rx="10"
+          fill="#FAE0D6"
+          stroke="#D4622E"
+          strokeWidth="2"
+        />
+        <rect
+          x="56"
+          y="76"
+          width="200"
+          height="148"
+          rx="10"
+          fill="#FFFFFF"
+          stroke="#8A3610"
+          strokeWidth="2"
+        />
+        <line
+          x1="80"
+          y1="108"
+          x2="220"
+          y2="108"
+          stroke="#D4622E"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+        <line
+          x1="80"
+          y1="132"
+          x2="200"
+          y2="132"
+          stroke="#815E41"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.5"
+        />
+        <line
+          x1="80"
+          y1="152"
+          x2="216"
+          y2="152"
+          stroke="#815E41"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.5"
+        />
+        <line
+          x1="80"
+          y1="172"
+          x2="188"
+          y2="172"
+          stroke="#815E41"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.5"
+        />
+        <line
+          x1="80"
+          y1="192"
+          x2="208"
+          y2="192"
+          stroke="#815E41"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.5"
+        />
+      </svg>
+    </div>
+  )
+}
+
+function CategorySection({
+  tag,
+  posts,
+}: {
+  tag: (typeof JOURNAL_TAGS)[number]
+  posts: JournalPostSummary[]
+}) {
+  return (
+    <section className="mt-16">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-brand-text">
+            {tag.label}
+          </p>
+          <p className="font-source-serif-4 text-sm text-text-secondary">
+            {tag.description}
+          </p>
+        </div>
+        <Link
+          href={`/journal/tag/${tag.slug}`}
+          className="shrink-0 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-text-tertiary no-underline transition-colors hover:text-text-primary"
+        >
+          See all →
+        </Link>
+      </div>
+      <PostCardGrid posts={posts} />
+    </section>
+  )
+}
+
+function LatestSection({ posts }: { posts: JournalPostSummary[] }) {
+  return (
+    <section className="mt-16">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-brand-text">
+          Latest
+        </p>
+        <Link
+          href="/journal/archive"
+          className="shrink-0 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-text-tertiary no-underline transition-colors hover:text-text-primary"
+        >
+          All articles →
+        </Link>
+      </div>
+      <PostCardGrid posts={posts} />
+    </section>
+  )
+}
+
+function PostCardGrid({ posts }: { posts: JournalPostSummary[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      {posts.map((post) => (
+        <PostCard key={post.id} post={post} />
       ))}
-    </ul>
-  );
+    </div>
+  )
+}
+
+function PostCard({ post }: { post: JournalPostSummary }) {
+  const primaryTag = post.tags[0]
+  const tagLabel = primaryTag
+    ? (JOURNAL_TAGS.find((t) => t.slug === primaryTag)?.label ??
+      primaryTag.replace(/-/g, ' '))
+    : null
+  // No content on summaries, so reading time is approximated from the excerpt.
+  // It is a rough hint and we hide it when missing.
+  const minutes = post.excerpt ? estimateReadingTime(post.excerpt) : null
+  return (
+    <Link
+      href={`/journal/${post.slug}`}
+      className="group flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-5 no-underline transition-colors hover:border-brand-ui"
+    >
+      {tagLabel && (
+        <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+          {tagLabel}
+        </span>
+      )}
+      <p className="font-fraunces text-base leading-snug text-text-primary line-clamp-2 transition-colors group-hover:text-brand-text">
+        {post.title}
+      </p>
+      {post.excerpt && (
+        <p className="flex-1 font-source-serif-4 text-sm text-text-secondary line-clamp-3">
+          {post.excerpt}
+        </p>
+      )}
+      {minutes && (
+        <p className="mt-1 font-dm-mono text-[0.6875rem] text-text-tertiary">
+          {minutes} min read
+        </p>
+      )}
+    </Link>
+  )
 }

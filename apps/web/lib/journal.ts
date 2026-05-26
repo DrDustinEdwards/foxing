@@ -8,11 +8,35 @@ import { createClient } from '@/lib/supabase/server'
  */
 
 export const JOURNAL_TAGS = [
-  { slug: 'reading-guides', label: 'Reading Guides' },
-  { slug: 'book-picks', label: 'Book Picks' },
-  { slug: 'author-spotlights', label: 'Author Spotlights' },
-  { slug: 'classics-explained', label: 'Classics Explained' },
-  { slug: 'community', label: 'Community' },
+  {
+    slug: 'reading-guides',
+    label: 'Reading Guides',
+    description:
+      'Long-form guides for finishing the books most readers stall on.',
+  },
+  {
+    slug: 'book-picks',
+    label: 'Book Picks',
+    description:
+      'Curated lists pulled from what Foxing readers actually finish.',
+  },
+  {
+    slug: 'author-spotlights',
+    label: 'Author Spotlights',
+    description:
+      'Where to start with a writer, and what to read once you are hooked.',
+  },
+  {
+    slug: 'classics-explained',
+    label: 'Classics Explained',
+    description:
+      'Context, structure, and the parts everyone misses on a first read.',
+  },
+  {
+    slug: 'community',
+    label: 'Community',
+    description: 'Field notes from readers, clubs, and the Foxing team.',
+  },
 ] as const
 
 export type JournalPost = {

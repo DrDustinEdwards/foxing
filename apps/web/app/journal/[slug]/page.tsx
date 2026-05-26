@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { ReadingProgress } from '@/components/reading-progress'
 import {
   estimateReadingTime,
   getAdjacentJournalPosts,
@@ -43,21 +44,32 @@ export async function generateMetadata(
   const params = await props.params;
   const post = await getJournalPost(params.slug)
   if (!post) return {}
+  const ogTitle = post.og_title ?? post.title
   const description = post.og_description ?? post.excerpt ?? ''
+  const ogImage = `https://foxing.app/og?type=journal&title=${encodeURIComponent(
+    ogTitle,
+  )}&excerpt=${encodeURIComponent(description)}`
   return {
-    title: `${post.og_title ?? post.title} · Foxing Journal`,
+    title: `${ogTitle} · Foxing Journal`,
     description,
     alternates: {
       canonical:
         post.canonical_url ?? `https://foxing.app/journal/${post.slug}`,
     },
     openGraph: {
-      title: post.og_title ?? post.title,
+      title: ogTitle,
       description,
       url: `https://foxing.app/journal/${post.slug}`,
       type: 'article',
       publishedTime: post.published_at ?? undefined,
       modifiedTime: post.updated_at,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: post.title }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: ogTitle,
+      description,
+      images: [ogImage],
     },
   }
 }
@@ -82,6 +94,7 @@ export default async function JournalPostPage(
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <NavAuthClient />
+      <ReadingProgress />
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
@@ -183,6 +196,8 @@ export default async function JournalPostPage(
                 </section>
               )}
 
+              <AuthorByline />
+
               {(prev || next) && (
                 <nav className="mt-6 grid gap-3 sm:grid-cols-2">
                   {prev ? (
@@ -264,6 +279,50 @@ export default async function JournalPostPage(
       <Footer />
     </div>
   );
+}
+
+function AuthorByline() {
+  return (
+    <section className="mt-8 flex items-center gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4">
+      <svg
+        width="44"
+        height="44"
+        viewBox="0 0 44 44"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+        role="presentation"
+        className="shrink-0"
+      >
+        <defs>
+          <linearGradient id="byline-mark" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#F5A623" />
+            <stop offset="100%" stopColor="#D4622E" />
+          </linearGradient>
+        </defs>
+        <circle cx="22" cy="22" r="22" fill="url(#byline-mark)" />
+        <text
+          x="22"
+          y="29"
+          textAnchor="middle"
+          fontFamily="Georgia, serif"
+          fontSize="22"
+          fontWeight="600"
+          fill="#FFFFFF"
+        >
+          F
+        </text>
+      </svg>
+      <div className="flex min-w-0 flex-col">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-text-tertiary">
+          Published by
+        </p>
+        <p className="font-fraunces text-base text-text-primary">Foxing</p>
+        <p className="font-source-serif-4 text-sm text-text-secondary">
+          Reading 1,400+ classic books, together.
+        </p>
+      </div>
+    </section>
+  )
 }
 
 function articleJsonLd(post: JournalPost): string {
