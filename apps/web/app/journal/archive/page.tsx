@@ -4,11 +4,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import {
-  getJournalPosts,
-  JOURNAL_TAGS,
-  type JournalPostSummary,
-} from '@/lib/journal'
+import { getJournalPosts } from '@/lib/journal'
+import { JOURNAL_TAGS, type JournalPostSummary } from '@/lib/journal-shared'
 
 export const revalidate = 3600
 
@@ -24,8 +21,24 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function JournalArchivePage() {
-  const posts = await getJournalPosts()
+const TAG_SLUGS = new Set<string>(JOURNAL_TAGS.map((t) => t.slug))
+
+export default async function JournalArchivePage(props: {
+  searchParams: Promise<{ tag?: string }>
+}) {
+  const searchParams = await props.searchParams
+  const rawTag = searchParams.tag
+  const activeTag = rawTag && TAG_SLUGS.has(rawTag) ? rawTag : null
+  const activeLabel = activeTag
+    ? (JOURNAL_TAGS.find((t) => t.slug === activeTag)?.label ?? activeTag)
+    : null
+
+  const all = await getJournalPosts()
+  const posts = activeTag
+    ? all.filter((p) => p.tags.includes(activeTag))
+    : all
+  const count = posts.length
+  const countLabel = count === 1 ? 'article' : 'articles'
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -45,20 +58,57 @@ export default async function JournalArchivePage() {
               All articles
             </h1>
             <p className="font-dm-mono text-sm text-text-tertiary">
-              {posts.length} {posts.length === 1 ? 'article' : 'articles'}
+              {count} {countLabel}
+              {activeLabel ? ` in ${activeLabel}` : ''}
             </p>
           </header>
-          {posts.length === 0 ? (
+          {all.length === 0 ? (
             <div className="mt-12">
               <EmptyState heading="No posts yet." />
             </div>
           ) : (
-            <ArchiveList posts={posts} />
+            <>
+              <TagPills active={activeTag} />
+              {posts.length === 0 ? (
+                <div className="mt-10">
+                  <EmptyState heading="No posts in this tag yet." />
+                </div>
+              ) : (
+                <ArchiveList posts={posts} />
+              )}
+            </>
           )}
         </PageWrapper>
       </main>
       <Footer />
     </div>
+  )
+}
+
+function TagPills({ active }: { active: string | null }) {
+  const base =
+    'rounded-full px-3 py-1 font-dm-mono text-xs border transition-colors no-underline'
+  const activeCls = 'bg-brand-subtle text-brand-subtle-text border-brand-ui'
+  const inactiveCls =
+    'bg-bg-surface text-text-secondary border-border-subtle hover:border-border-default hover:text-text-primary'
+  return (
+    <nav className="mt-8 flex flex-wrap gap-2">
+      <Link
+        href="/journal/archive"
+        className={`${base} ${active === null ? activeCls : inactiveCls}`}
+      >
+        All
+      </Link>
+      {JOURNAL_TAGS.map((t) => (
+        <Link
+          key={t.slug}
+          href={`/journal/archive?tag=${t.slug}`}
+          className={`${base} ${active === t.slug ? activeCls : inactiveCls}`}
+        >
+          {t.label}
+        </Link>
+      ))}
+    </nav>
   )
 }
 
