@@ -15,6 +15,10 @@ export interface JournalPostInitial {
   tags: string[]
   content: string
   is_published: boolean
+  featured: boolean
+  og_title: string
+  og_description: string
+  canonical_url: string
 }
 
 interface Props {
@@ -39,6 +43,10 @@ export function JournalEditor({ initial }: Props) {
   const [coverUrl, setCoverUrl] = useState(initial.cover_image_url)
   const [tags, setTags] = useState(initial.tags.join(', '))
   const [content, setContent] = useState(initial.content)
+  const [featured, setFeatured] = useState(initial.featured)
+  const [ogTitle, setOgTitle] = useState(initial.og_title)
+  const [ogDescription, setOgDescription] = useState(initial.og_description)
+  const [canonicalUrl, setCanonicalUrl] = useState(initial.canonical_url)
   const [pending, setPending] = useState<'draft' | 'publish' | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
@@ -63,6 +71,10 @@ export function JournalEditor({ initial }: Props) {
     fd.set('tags', tags)
     fd.set('content', content)
     fd.set('publish', publish ? 'true' : 'false')
+    fd.set('featured', featured ? 'true' : 'false')
+    fd.set('og_title', ogTitle)
+    fd.set('og_description', ogDescription)
+    fd.set('canonical_url', canonicalUrl)
     const res = await saveJournalPost(fd)
     setPending(null)
     if (!res.ok) {
@@ -155,6 +167,51 @@ export function JournalEditor({ initial }: Props) {
         onChange={(e) => setTags(e.target.value)}
         placeholder="essays, classics, criticism"
       />
+
+      <details className="rounded-md border border-border-subtle bg-bg-surface p-4">
+        <summary className="cursor-pointer font-dm-sans text-sm text-text-secondary">
+          SEO and promotion
+        </summary>
+        <div className="mt-4 flex flex-col gap-4">
+          <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
+            <input
+              type="checkbox"
+              checked={featured}
+              onChange={(e) => setFeatured(e.target.checked)}
+            />
+            Featured (promote on homepage strip)
+          </label>
+          <Input
+            label="OG title (falls back to title)"
+            value={ogTitle}
+            onChange={(e) => setOgTitle(e.target.value)}
+            placeholder="Custom Open Graph title"
+          />
+          <div className="flex flex-col gap-1.5">
+            <label
+              htmlFor="og_description"
+              className="font-dm-sans text-sm text-text-secondary"
+            >
+              OG description (falls back to excerpt)
+            </label>
+            <textarea
+              id="og_description"
+              value={ogDescription}
+              onChange={(e) => setOgDescription(e.target.value)}
+              maxLength={300}
+              rows={2}
+              className="rounded-md border border-border-interactive bg-bg-surface px-3 py-2 font-source-serif-4 text-sm text-text-primary"
+              placeholder="Custom social/share description."
+            />
+          </div>
+          <Input
+            label="Canonical URL (optional)"
+            value={canonicalUrl}
+            onChange={(e) => setCanonicalUrl(e.target.value)}
+            placeholder="https://..."
+          />
+        </div>
+      </details>
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="flex flex-col gap-1.5">
