@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
+import { DuplicateButton } from './DuplicateButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -88,12 +89,23 @@ export default async function AdminJournalListPage() {
                     {formatRelativeDate(p.published_at ?? p.created_at)}
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <Link
-                      href={`/admin/journal/${p.id}`}
-                      className="font-dm-sans text-sm text-brand-text hover:underline"
-                    >
-                      Edit
-                    </Link>
+                    <span className="inline-flex items-center gap-3">
+                      <Link
+                        href={`/admin/journal/preview/${p.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-dm-sans text-sm text-text-tertiary hover:text-text-primary"
+                      >
+                        Preview
+                      </Link>
+                      <DuplicateButton id={p.id} title={p.title} />
+                      <Link
+                        href={`/admin/journal/${p.id}`}
+                        className="font-dm-sans text-sm text-brand-text hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    </span>
                   </td>
                 </tr>
               ))}
