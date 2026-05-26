@@ -17,7 +17,7 @@ import {
   todayISODate,
   type PassageOfDay,
 } from '@/lib/missing-pages-queries'
-import { Card, CardLabel, CardTitle } from '@/components/ui/card'
+import { Card, CardLabel, CardMeta, CardTitle } from '@/components/ui/card'
 import {
   getFeaturedJournalPost,
   getJournalPosts,
@@ -141,19 +141,25 @@ function JournalStrip({ cards }: { cards: JournalPostSummary[] }) {
           </Link>
         </div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {cards.map((post) => (
-            <Card
-              key={post.slug}
-              variant="content"
-              href={`/journal/${post.slug}`}
-              className="p-5 gap-2"
-            >
-              {post.tags[0] && (
-                <CardLabel>{post.tags[0].replace(/-/g, ' ')}</CardLabel>
-              )}
-              <CardTitle className="line-clamp-2">{post.title}</CardTitle>
-            </Card>
-          ))}
+          {cards.map((post) => {
+            const minutes = post.reading_time_minutes ?? null
+            return (
+              <Card
+                key={post.slug}
+                variant="content"
+                href={`/journal/${post.slug}`}
+                className="p-5 gap-2"
+              >
+                {post.tags[0] && (
+                  <CardLabel>{post.tags[0].replace(/-/g, ' ')}</CardLabel>
+                )}
+                <CardTitle className="line-clamp-2">{post.title}</CardTitle>
+                {minutes && minutes > 0 && (
+                  <CardMeta className="mt-1">{minutes} min read</CardMeta>
+                )}
+              </Card>
+            )
+          })}
         </div>
       </div>
     </section>

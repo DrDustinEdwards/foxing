@@ -326,9 +326,7 @@ function PostCard({ post }: { post: JournalPostSummary }) {
     ? (JOURNAL_TAGS.find((t) => t.slug === primaryTag)?.label ??
       primaryTag.replace(/-/g, ' '))
     : null
-  // Reading time is approximated from the excerpt since summaries omit
-  // content. It is a rough hint; hidden when no excerpt is available.
-  const minutes = post.excerpt ? estimateReadingTime(post.excerpt) : null
+  const minutes = post.reading_time_minutes ?? null
   return (
     <Card
       variant="content"
@@ -340,7 +338,9 @@ function PostCard({ post }: { post: JournalPostSummary }) {
       {post.excerpt && (
         <CardBody className="flex-1 line-clamp-3">{post.excerpt}</CardBody>
       )}
-      {minutes && <CardMeta className="mt-1">{minutes} min read</CardMeta>}
+      {minutes && minutes > 0 && (
+        <CardMeta className="mt-1">{minutes} min read</CardMeta>
+      )}
     </Card>
   )
 }

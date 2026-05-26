@@ -55,6 +55,7 @@ export type JournalPost = {
   og_title: string | null
   og_description: string | null
   canonical_url: string | null
+  reading_time_minutes: number | null
   created_at: string
   updated_at: string
 }
