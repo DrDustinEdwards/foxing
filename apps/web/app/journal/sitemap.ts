@@ -1,16 +1,25 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { FOXING_BASE_URL } from '@/lib/metadata'
+import { JOURNAL_TAGS } from '@/lib/journal'
 
 export const revalidate = 3_600
 export const dynamic = 'force-static'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const now = new Date()
+  const tagEntries: MetadataRoute.Sitemap = JOURNAL_TAGS.map((t) => ({
+    url: `${FOXING_BASE_URL}/journal/tag/${t.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.6,
+  }))
+
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
     !process.env.SUPABASE_SERVICE_ROLE_KEY
   ) {
-    return []
+    return tagEntries
   }
   try {
     const supabase = createAdminClient()
@@ -24,8 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         updated_at: string | null
         published_at: string | null
       }> | null) ?? []
-    const now = new Date()
-    return rows.map((p) => ({
+    const postEntries: MetadataRoute.Sitemap = rows.map((p) => ({
       url: `${FOXING_BASE_URL}/journal/${p.slug}`,
       lastModified: p.updated_at
         ? new Date(p.updated_at)
@@ -35,7 +43,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly',
       priority: 0.7,
     }))
+    return [...postEntries, ...tagEntries]
   } catch {
-    return []
+    return tagEntries
   }
 }
