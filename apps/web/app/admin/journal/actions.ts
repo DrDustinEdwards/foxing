@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyIndexNow } from '@/lib/indexnow'
+import { readingMinutes } from '@/lib/journal-shared'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
 
@@ -84,6 +85,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
   const publishedAt = input.publish
     ? (customPublishedAt ?? new Date().toISOString())
     : null
+  const reading_time_minutes = readingMinutes(input.content)
   const payload = {
     title: input.title,
     slug,
@@ -99,6 +101,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
     og_title: input.og_title || null,
     og_description: input.og_description || null,
     canonical_url: input.canonical_url || null,
+    reading_time_minutes,
   }
 
   if (input.id) {
@@ -199,6 +202,7 @@ export async function duplicateJournalPost(formData: FormData) {
       featured: false,
       author_id: authorId,
       updated_at: new Date().toISOString(),
+      reading_time_minutes: readingMinutes(source.content),
     })
     .select('id')
     .single()

@@ -4,6 +4,7 @@ import {
   Card,
   CardBody,
   CardLabel,
+  CardMeta,
   CardTitle,
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -101,6 +102,7 @@ export default async function JournalTagPage(
 }
 
 function TagPostCard({ post }: { post: JournalPostSummary }) {
+  const minutes = post.reading_time_minutes ?? null
   return (
     <Card
       variant="content"
@@ -113,6 +115,9 @@ function TagPostCard({ post }: { post: JournalPostSummary }) {
       <CardTitle className="line-clamp-2">{post.title}</CardTitle>
       {post.excerpt && (
         <CardBody className="flex-1 line-clamp-3">{post.excerpt}</CardBody>
+      )}
+      {minutes && minutes > 0 && (
+        <CardMeta className="mt-1">{minutes} min read</CardMeta>
       )}
     </Card>
   )

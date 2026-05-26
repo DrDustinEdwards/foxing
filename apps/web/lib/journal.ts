@@ -27,7 +27,7 @@ export {
 } from '@/lib/journal-shared'
 
 const SUMMARY_COLS =
-  'id, slug, title, excerpt, cover_image_url, is_published, published_at, tags, featured, og_title, og_description, canonical_url, created_at, updated_at'
+  'id, slug, title, excerpt, cover_image_url, is_published, published_at, tags, featured, og_title, og_description, canonical_url, reading_time_minutes, created_at, updated_at'
 
 const FULL_COLS = `${SUMMARY_COLS}, content`
 
