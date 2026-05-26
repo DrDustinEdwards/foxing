@@ -1,5 +1,12 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import {
+  Card,
+  CardBody,
+  CardLabel,
+  CardMeta,
+  CardTitle,
+} from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
@@ -319,32 +326,21 @@ function PostCard({ post }: { post: JournalPostSummary }) {
     ? (JOURNAL_TAGS.find((t) => t.slug === primaryTag)?.label ??
       primaryTag.replace(/-/g, ' '))
     : null
-  // No content on summaries, so reading time is approximated from the excerpt.
-  // It is a rough hint and we hide it when missing.
+  // Reading time is approximated from the excerpt since summaries omit
+  // content. It is a rough hint; hidden when no excerpt is available.
   const minutes = post.excerpt ? estimateReadingTime(post.excerpt) : null
   return (
-    <Link
+    <Card
+      variant="content"
       href={`/journal/${post.slug}`}
-      className="group flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-5 no-underline transition-colors hover:border-brand-ui"
+      className="p-5 gap-2"
     >
-      {tagLabel && (
-        <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
-          {tagLabel}
-        </span>
-      )}
-      <p className="font-fraunces text-base leading-snug text-text-primary line-clamp-2 transition-colors group-hover:text-brand-text">
-        {post.title}
-      </p>
+      {tagLabel && <CardLabel>{tagLabel}</CardLabel>}
+      <CardTitle className="line-clamp-2">{post.title}</CardTitle>
       {post.excerpt && (
-        <p className="flex-1 font-source-serif-4 text-sm text-text-secondary line-clamp-3">
-          {post.excerpt}
-        </p>
+        <CardBody className="flex-1 line-clamp-3">{post.excerpt}</CardBody>
       )}
-      {minutes && (
-        <p className="mt-1 font-dm-mono text-[0.6875rem] text-text-tertiary">
-          {minutes} min read
-        </p>
-      )}
-    </Link>
+      {minutes && <CardMeta className="mt-1">{minutes} min read</CardMeta>}
+    </Card>
   )
 }
