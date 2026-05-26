@@ -1,26 +1,23 @@
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
-import { Markdown } from '@/components/markdown'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
-  fetchJournalPostBySlug,
-  fetchRelatedPosts,
-  formatLongDate,
-  readingMinutes,
-  type JournalPostSummary,
+  estimateReadingTime,
+  getAdjacentJournalPosts,
+  getJournalPost,
+  type JournalPost,
 } from '@/lib/journal'
-import { buildJournalPostMetadata, FOXING_BASE_URL } from '@/lib/metadata'
+import {
+  extractH2Headings,
+  renderJournalMarkdown,
+} from '@/lib/journal-markdown'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
 
-// Build-time only. Uses the admin client because the server client calls
-// next/headers cookies(), which fails outside a request scope. Published
-// journal posts are public, so service-role reads here are safe.
 export async function generateStaticParams() {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -43,16 +40,25 @@ export async function generateMetadata({
 }: {
   params: { slug: string }
 }): Promise<Metadata> {
-  const post = await fetchJournalPostBySlug(params.slug)
-  if (!post) return { title: 'Post not found' }
-  return buildJournalPostMetadata({
-    title: post.title,
-    slug: post.slug,
-    excerpt: post.excerpt,
-    cover_image_url: post.cover_image_url,
-    published_at: post.published_at,
-    tags: post.tags,
-  })
+  const post = await getJournalPost(params.slug)
+  if (!post) return {}
+  const description = post.og_description ?? post.excerpt ?? ''
+  return {
+    title: `${post.og_title ?? post.title} · Foxing Journal`,
+    description,
+    alternates: {
+      canonical:
+        post.canonical_url ?? `https://foxing.app/journal/${post.slug}`,
+    },
+    openGraph: {
+      title: post.og_title ?? post.title,
+      description,
+      url: `https://foxing.app/journal/${post.slug}`,
+      type: 'article',
+      publishedTime: post.published_at ?? undefined,
+      modifiedTime: post.updated_at,
+    },
+  }
 }
 
 export default async function JournalPostPage({
@@ -60,15 +66,16 @@ export default async function JournalPostPage({
 }: {
   params: { slug: string }
 }) {
-  const [post] = await Promise.all([
-    fetchJournalPostBySlug(params.slug),
-  ])
+  const post = await getJournalPost(params.slug)
   if (!post) notFound()
 
-  const related = await fetchRelatedPosts(post.slug, post.tags ?? [], 3)
-  const minutes = readingMinutes(post.content)
-  const dateLabel = formatLongDate(post.published_at ?? post.created_at)
-  const jsonLd = articleJsonLd(post)
+  const { prev, next } = post.published_at
+    ? await getAdjacentJournalPosts(post.published_at, post.id)
+    : { prev: null, next: null }
+
+  const headings = extractH2Headings(post.content)
+  const body = renderJournalMarkdown(post.content)
+  const minutes = estimateReadingTime(post.content)
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -76,154 +83,238 @@ export default async function JournalPostPage({
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: jsonLd }}
+        dangerouslySetInnerHTML={{ __html: articleJsonLd(post) }}
+      />
+      <script
+        type="application/ld+json"
+        // eslint-disable-next-line react/no-danger
+        dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(post) }}
       />
       <main className="flex-1">
-        {post.cover_image_url && (
-          <div className="relative h-[50vh] min-h-[300px] w-full overflow-hidden bg-bg-sunken">
-            <Image
-              src={post.cover_image_url}
-              alt=""
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div
-              aria-hidden="true"
-              className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[var(--bg-base)]"
-            />
-          </div>
-        )}
+        <PageWrapper className="py-10 md:py-14">
+          <div className="grid gap-10 lg:grid-cols-[minmax(0,680px)_minmax(0,1fr)]">
+            <article className="min-w-0">
+              <p className="mb-6">
+                <Link
+                  href="/journal"
+                  className="font-dm-sans text-sm text-text-tertiary no-underline hover:text-text-primary"
+                >
+                  ← Journal
+                </Link>
+              </p>
 
-        <PageWrapper className="max-w-prose py-10 md:py-14">
-          <header className="flex flex-col gap-3">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary md:text-[3rem]">
-              {post.title}
-            </h1>
-            <p className="flex flex-wrap gap-x-3 gap-y-1 font-dm-sans text-sm text-text-tertiary">
-              {dateLabel && <span>{dateLabel}</span>}
-              <span>{minutes} min read</span>
-              {post.tags && post.tags.length > 0 && (
-                <span className="flex flex-wrap gap-1">
-                  {post.tags.slice(0, 4).map((t) => (
-                    <span
-                      key={t}
-                      className="rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[11px] font-medium text-brand-subtle-text"
-                    >
-                      {t}
-                    </span>
-                  ))}
-                </span>
+              <header className="flex flex-col gap-3 border-b border-border-subtle pb-6">
+                {post.tags.length > 0 && (
+                  <p className="flex flex-wrap gap-x-3 gap-y-1 font-dm-mono text-[0.6875rem] text-text-tertiary">
+                    {post.tags.map((t) => (
+                      <span key={t}>{t.replace(/-/g, ' ')}</span>
+                    ))}
+                  </p>
+                )}
+                <p className="font-dm-mono text-sm text-text-tertiary">
+                  {minutes} min read · Foxing
+                </p>
+                <h1 className="font-fraunces text-[2rem] leading-tight text-text-primary">
+                  {post.title}
+                </h1>
+                {post.excerpt && (
+                  <p className="font-source-serif-4 text-[1.0625rem] leading-relaxed text-text-secondary">
+                    {post.excerpt}
+                  </p>
+                )}
+              </header>
+
+              {headings.length > 1 && (
+                <details className="mt-6 rounded-lg border border-border-subtle bg-bg-surface px-4 py-3 lg:hidden">
+                  <summary className="flex cursor-pointer items-center justify-between font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+                    <span>Contents</span>
+                    <span aria-hidden="true">+</span>
+                  </summary>
+                  <ol className="mt-3 flex flex-col gap-2 font-source-serif-4 text-sm text-text-secondary">
+                    {headings.map((h) => (
+                      <li key={h.id}>
+                        <a
+                          href={`#${h.id}`}
+                          className="no-underline hover:text-brand-text"
+                        >
+                          {h.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
               )}
-            </p>
-          </header>
 
-          <article className="mt-8 text-[18px] leading-[1.85]">
-            <Markdown source={post.content} />
-          </article>
+              <div
+                className="journal-prose mt-8"
+                // eslint-disable-next-line react/no-danger
+                dangerouslySetInnerHTML={{ __html: body }}
+              />
 
-          <div className="mt-12 border-t border-border-subtle pt-6">
-            <Link
-              href="/journal"
-              className="font-dm-sans text-sm text-brand-text hover:underline"
-            >
-              ← All posts
-            </Link>
+              {(prev || next) && (
+                <section className="mt-12 border-t border-border-subtle pt-6">
+                  <p className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.12em] text-text-tertiary">
+                    Further reading
+                  </p>
+                  <ul className="flex flex-col gap-2">
+                    {prev && (
+                      <li>
+                        <Link
+                          href={`/journal/${prev.slug}`}
+                          className="font-source-serif-4 text-base text-text-primary no-underline hover:text-brand-text"
+                        >
+                          {prev.title}
+                        </Link>
+                      </li>
+                    )}
+                    {next && (
+                      <li>
+                        <Link
+                          href={`/journal/${next.slug}`}
+                          className="font-source-serif-4 text-base text-text-primary no-underline hover:text-brand-text"
+                        >
+                          {next.title}
+                        </Link>
+                      </li>
+                    )}
+                  </ul>
+                </section>
+              )}
+
+              {(prev || next) && (
+                <nav className="mt-6 grid gap-3 sm:grid-cols-2">
+                  {prev ? (
+                    <Link
+                      href={`/journal/${prev.slug}`}
+                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 no-underline transition-colors hover:border-brand-ui"
+                    >
+                      <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+                        ← Previous
+                      </span>
+                      <span className="font-fraunces text-base text-text-primary">
+                        {prev.title}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                  {next ? (
+                    <Link
+                      href={`/journal/${next.slug}`}
+                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 text-right no-underline transition-colors hover:border-brand-ui"
+                    >
+                      <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+                        Next →
+                      </span>
+                      <span className="font-fraunces text-base text-text-primary">
+                        {next.title}
+                      </span>
+                    </Link>
+                  ) : (
+                    <span />
+                  )}
+                </nav>
+              )}
+
+              <section className="mt-12 flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-6">
+                <h2 className="font-fraunces text-[1.375rem] text-text-primary">
+                  Start reading.
+                </h2>
+                <p className="font-source-serif-4 text-sm text-text-secondary">
+                  1,400+ classic books, free. An AI companion that reads with
+                  you.
+                </p>
+                <div>
+                  <Link
+                    href="/sign-up"
+                    className="inline-flex items-center rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm text-text-on-brand no-underline hover:bg-brand-hover"
+                  >
+                    Join free →
+                  </Link>
+                </div>
+              </section>
+            </article>
+
+            {headings.length > 1 && (
+              <aside className="hidden lg:block">
+                <div className="sticky top-8 flex flex-col gap-3">
+                  <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+                    Contents
+                  </p>
+                  <ol className="flex flex-col gap-2 font-source-serif-4 text-sm text-text-secondary">
+                    {headings.map((h) => (
+                      <li key={h.id}>
+                        <a
+                          href={`#${h.id}`}
+                          className="no-underline transition-colors hover:text-brand-text"
+                        >
+                          {h.text}
+                        </a>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </aside>
+            )}
           </div>
         </PageWrapper>
-
-        {related.length > 0 && (
-          <section className="bg-bg-surface">
-            <PageWrapper className="py-12">
-              <h2 className="mb-6 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-                More from the journal
-              </h2>
-              <div className="grid gap-6 md:grid-cols-3">
-                {related.map((r) => (
-                  <RelatedCard key={r.id} post={r} />
-                ))}
-              </div>
-            </PageWrapper>
-          </section>
-        )}
       </main>
       <Footer />
     </div>
   )
 }
 
-function RelatedCard({ post }: { post: JournalPostSummary }) {
-  return (
-    <Link
-      href={`/journal/${post.slug}`}
-      className="flex flex-col gap-2 transition-transform hover:-translate-y-0.5"
-    >
-      <div className="relative aspect-[16/10] overflow-hidden rounded-lg bg-bg-sunken">
-        {post.cover_image_url && (
-          <Image
-            src={post.cover_image_url}
-            alt={post.title}
-            fill
-            sizes="(max-width: 768px) 100vw, 33vw"
-            className="object-cover"
-          />
-        )}
-      </div>
-      <h3 className="font-fraunces text-base text-text-primary">
-        {post.title}
-      </h3>
-      {post.excerpt && (
-        <p className="line-clamp-2 font-source-serif-4 text-sm text-text-secondary">
-          {post.excerpt}
-        </p>
-      )}
-    </Link>
-  )
-}
-
-function articleJsonLd(post: {
-  title: string
-  slug: string
-  excerpt: string | null
-  cover_image_url: string | null
-  published_at: string | null
-  updated_at: string
-  tags: string[] | null
-}): string {
+function articleJsonLd(post: JournalPost): string {
   const data = {
     '@context': 'https://schema.org',
     '@type': 'Article',
-    '@id': `${FOXING_BASE_URL}/journal/${post.slug}`,
     headline: post.title,
-    description: post.excerpt ?? undefined,
-    image: post.cover_image_url ?? undefined,
-    datePublished: post.published_at ?? undefined,
-    dateModified: post.updated_at ?? post.published_at ?? undefined,
-    keywords: post.tags?.join(', '),
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': `${FOXING_BASE_URL}/journal/${post.slug}`,
-    },
+    description: post.og_description ?? post.excerpt ?? '',
+    url: `https://foxing.app/journal/${post.slug}`,
+    datePublished: post.published_at,
+    dateModified: post.updated_at,
     author: {
       '@type': 'Organization',
       name: 'Foxing',
-      url: FOXING_BASE_URL,
-    },
-    isPartOf: {
-      '@type': 'Blog',
-      name: 'Foxing Journal',
-      url: `${FOXING_BASE_URL}/journal`,
+      url: 'https://foxing.app',
     },
     publisher: {
       '@type': 'Organization',
       name: 'Foxing',
+      url: 'https://foxing.app',
       logo: {
         '@type': 'ImageObject',
-        url: `${FOXING_BASE_URL}/icon.png`,
+        url: 'https://foxing.app/icon.png',
       },
-      url: FOXING_BASE_URL,
     },
+  }
+  return JSON.stringify(data)
+}
+
+function breadcrumbJsonLd(post: JournalPost): string {
+  const data = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://foxing.app',
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Journal',
+        item: 'https://foxing.app/journal',
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: post.title,
+        item: `https://foxing.app/journal/${post.slug}`,
+      },
+    ],
   }
   return JSON.stringify(data)
 }
