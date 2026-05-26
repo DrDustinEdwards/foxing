@@ -1,10 +1,12 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { Card, CardBody, CardTitle } from '@/components/ui/card'
 import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { cn } from '@/lib/cn'
 import {
   type ExternalClub,
   fetchActiveClubs,
@@ -204,11 +206,10 @@ function ClubCard({
   archived?: boolean
 }) {
   return (
-    <Link
+    <Card
+      variant="content"
       href={`/book-clubs/${club.slug}`}
-      className={`group block rounded-lg border border-border-subtle bg-bg-surface p-5 hover:border-border-interactive ${
-        archived ? 'opacity-75' : ''
-      }`}
+      className={cn('p-5 gap-3', archived && 'opacity-75')}
     >
       <div className="flex items-start gap-4">
         {club.logo_url ? (
@@ -231,11 +232,9 @@ function ClubCard({
         )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="font-fraunces text-lg text-text-primary group-hover:text-brand-text">
-              {club.name}
-            </p>
+            <CardTitle>{club.name}</CardTitle>
             {archived && (
-              <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+              <span className="rounded-sm border border-border-subtle px-1.5 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
                 Archived
               </span>
             )}
@@ -246,13 +245,11 @@ function ClubCard({
             </p>
           )}
           {club.description && (
-            <p className="mt-2 line-clamp-2 font-source-serif-4 text-sm text-text-secondary">
-              {club.description}
-            </p>
+            <CardBody className="mt-2 line-clamp-2">{club.description}</CardBody>
           )}
         </div>
       </div>
-    </Link>
+    </Card>
   )
 }
 

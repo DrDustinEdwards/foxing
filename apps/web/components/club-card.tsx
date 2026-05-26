@@ -1,6 +1,5 @@
 import Image from 'next/image'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import { Card, CardMeta } from '@/components/ui/card'
 import type { Book, Club } from '@/types/database'
 
 interface ClubCardProps {
@@ -17,10 +16,14 @@ export function ClubCard({
   readingNow,
 }: ClubCardProps) {
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
-      <Link href={`/clubs/${club.slug ?? club.id}`} className="font-fraunces text-base text-text-primary hover:text-brand-text">
+    <Card
+      variant="entity"
+      href={`/clubs/${club.slug ?? club.id}`}
+      className="p-4 gap-3"
+    >
+      <span className="font-fraunces text-base text-text-primary">
         {club.name}
-      </Link>
+      </span>
       {currentBook && (
         <div className="flex items-center gap-3">
           <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded bg-bg-sunken">
@@ -44,15 +47,10 @@ export function ClubCard({
           </div>
         </div>
       )}
-      <div className="flex items-center justify-between">
-        <span className="font-dm-sans text-xs text-text-tertiary">
-          {memberCount ?? 0} members
-          {typeof readingNow === 'number' ? ` · ${readingNow} reading now` : ''}
-        </span>
-        <Link href={`/clubs/${club.slug ?? club.id}`}>
-          <Button variant="secondary" size="sm">Join</Button>
-        </Link>
-      </div>
-    </article>
+      <CardMeta>
+        {memberCount ?? 0} members
+        {typeof readingNow === 'number' ? ` · ${readingNow} reading now` : ''}
+      </CardMeta>
+    </Card>
   )
 }
