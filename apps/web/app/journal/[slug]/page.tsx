@@ -6,8 +6,8 @@ import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ReadingProgress } from '@/components/reading-progress'
 import {
-  getAdjacentJournalPosts,
-  getJournalPost,
+  getAdjacentJournalPostsStatic,
+  getJournalPostStatic,
   type JournalPost,
 } from '@/lib/journal'
 import {
@@ -45,7 +45,7 @@ export async function generateMetadata(
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const post = await getJournalPost(params.slug)
+  const post = await getJournalPostStatic(params.slug)
   if (!post) return {}
   const ogTitle = post.og_title ?? post.title
   const description = post.og_description ?? post.excerpt ?? ''
@@ -83,11 +83,11 @@ export default async function JournalPostPage(
   }
 ) {
   const params = await props.params;
-  const post = await getJournalPost(params.slug)
+  const post = await getJournalPostStatic(params.slug)
   if (!post) notFound()
 
   const { prev, next } = post.published_at
-    ? await getAdjacentJournalPosts(post.published_at, post.id)
+    ? await getAdjacentJournalPostsStatic(post.published_at, post.id)
     : { prev: null, next: null }
 
   const headings = extractH2Headings(post.content)

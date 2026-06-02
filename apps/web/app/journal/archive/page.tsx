@@ -4,7 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { getJournalPosts } from '@/lib/journal'
+import { getJournalPostsStatic } from '@/lib/journal'
 import { JOURNAL_TAGS, type JournalPostSummary } from '@/lib/journal-shared'
 
 export const revalidate = 3600
@@ -33,7 +33,7 @@ export default async function JournalArchivePage(props: {
     ? (JOURNAL_TAGS.find((t) => t.slug === activeTag)?.label ?? activeTag)
     : null
 
-  const all = await getJournalPosts()
+  const all = await getJournalPostsStatic()
   const posts = activeTag
     ? all.filter((p) => p.tags.includes(activeTag))
     : all

@@ -13,9 +13,9 @@ import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   estimateReadingTime,
-  getFeaturedJournalPost,
-  getJournalPost,
-  getJournalPosts,
+  getFeaturedJournalPostStatic,
+  getJournalPostStatic,
+  getJournalPostsStatic,
   JOURNAL_TAGS,
   type JournalPostSummary,
 } from '@/lib/journal'
@@ -40,13 +40,13 @@ export const metadata: Metadata = {
 
 export default async function JournalIndexPage() {
   const [allPosts, featuredSummary] = await Promise.all([
-    getJournalPosts(),
-    getFeaturedJournalPost(),
+    getJournalPostsStatic(),
+    getFeaturedJournalPostStatic(),
   ])
 
   // Need the full body for the featured post so we can compute reading time.
   const featured = featuredSummary
-    ? await getJournalPost(featuredSummary.slug)
+    ? await getJournalPostStatic(featuredSummary.slug)
     : null
 
   const remaining = featured
@@ -122,7 +122,7 @@ function JournalHeader() {
 function FeaturedHero({
   post,
 }: {
-  post: Awaited<ReturnType<typeof getJournalPost>>
+  post: Awaited<ReturnType<typeof getJournalPostStatic>>
 }) {
   if (!post) return null
   const minutes = estimateReadingTime(post.content)

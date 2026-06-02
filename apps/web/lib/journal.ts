@@ -1,5 +1,6 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import {
   type JournalPost,
   type JournalPostSummary,
@@ -35,6 +36,13 @@ function hasEnv(): boolean {
   return Boolean(
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  )
+}
+
+function hasAdminEnv(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
   )
 }
 
@@ -106,6 +114,97 @@ export async function getAdjacentJournalPosts(
 }> {
   if (!hasEnv()) return { prev: null, next: null }
   const supabase = await createClient()
+  const { data: prevData } = await supabase
+    .from('journal_posts')
+    .select(SUMMARY_COLS)
+    .eq('is_published', true)
+    .or(
+      `published_at.lt.${publishedAt},and(published_at.eq.${publishedAt},id.lt.${id})`,
+    )
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .order('id', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  const { data: nextData } = await supabase
+    .from('journal_posts')
+    .select(SUMMARY_COLS)
+    .eq('is_published', true)
+    .or(
+      `published_at.gt.${publishedAt},and(published_at.eq.${publishedAt},id.gt.${id})`,
+    )
+    .order('published_at', { ascending: true, nullsFirst: false })
+    .order('id', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  return {
+    prev: prevData
+      ? normalizeSummary(prevData as Record<string, unknown>)
+      : null,
+    next: nextData
+      ? normalizeSummary(nextData as Record<string, unknown>)
+      : null,
+  }
+}
+
+// Static variants: use the service-role admin client so they don't read
+// cookies. Pages that call these can remain statically rendered.
+
+export async function getJournalPostsStatic(
+  limit?: number,
+): Promise<JournalPostSummary[]> {
+  if (!hasAdminEnv()) return []
+  const supabase = createAdminClient()
+  const base = supabase
+    .from('journal_posts')
+    .select(SUMMARY_COLS)
+    .eq('is_published', true)
+    .order('published_at', { ascending: false, nullsFirst: false })
+  const query = typeof limit === 'number' ? base.limit(limit) : base
+  const { data } = await query
+  return ((data as Record<string, unknown>[] | null) ?? []).map(
+    normalizeSummary,
+  )
+}
+
+export async function getFeaturedJournalPostStatic(): Promise<JournalPostSummary | null> {
+  if (!hasAdminEnv()) return null
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('journal_posts')
+    .select(SUMMARY_COLS)
+    .eq('is_published', true)
+    .eq('featured', true)
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle()
+  if (!data) return null
+  return normalizeSummary(data as Record<string, unknown>)
+}
+
+export async function getJournalPostStatic(
+  slug: string,
+): Promise<JournalPost | null> {
+  if (!hasAdminEnv()) return null
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('journal_posts')
+    .select(FULL_COLS)
+    .eq('slug', slug)
+    .eq('is_published', true)
+    .maybeSingle()
+  if (!data) return null
+  return normalizeFull(data as Record<string, unknown>)
+}
+
+export async function getAdjacentJournalPostsStatic(
+  publishedAt: string,
+  id: string,
+): Promise<{
+  prev: JournalPostSummary | null
+  next: JournalPostSummary | null
+}> {
+  if (!hasAdminEnv()) return { prev: null, next: null }
+  const supabase = createAdminClient()
   const { data: prevData } = await supabase
     .from('journal_posts')
     .select(SUMMARY_COLS)

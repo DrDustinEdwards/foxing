@@ -12,7 +12,7 @@ import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
-  getJournalPosts,
+  getJournalPostsStatic,
   JOURNAL_TAGS,
   type JournalPostSummary,
 } from '@/lib/journal'
@@ -58,7 +58,7 @@ export default async function JournalTagPage(
 ) {
   const params = await props.params;
   const label = tagLabel(params.tag)
-  const all = await getJournalPosts()
+  const all = await getJournalPostsStatic()
   const posts = all.filter((p) => p.tags.includes(params.tag))
 
   return (
