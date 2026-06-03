@@ -181,6 +181,21 @@ export async function getFeaturedJournalPostStatic(): Promise<JournalPostSummary
   return normalizeSummary(data as Record<string, unknown>)
 }
 
+export async function getFeaturedJournalPostFullStatic(): Promise<JournalPost | null> {
+  if (!hasAdminEnv()) return null
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('journal_posts')
+    .select(FULL_COLS)
+    .eq('is_published', true)
+    .eq('featured', true)
+    .order('published_at', { ascending: false, nullsFirst: false })
+    .limit(1)
+    .maybeSingle()
+  if (!data) return null
+  return normalizeFull(data as Record<string, unknown>)
+}
+
 export async function getJournalPostStatic(
   slug: string,
 ): Promise<JournalPost | null> {

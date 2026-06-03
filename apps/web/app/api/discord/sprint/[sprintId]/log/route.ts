@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { bearerFromHeaders, verifySession } from '@/lib/discord-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { assertActiveClubMember } from '@/lib/club-membership'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -36,18 +37,8 @@ export async function POST(request: NextRequest, props: { params: Promise<{ spri
   if (!clubId) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 })
   }
-  const { data: memberRow } = await admin
-    .from('club_members')
-    .select('status')
-    .eq('club_id', clubId)
-    .eq('user_id', session.userId)
-    .maybeSingle()
-  if (
-    !memberRow ||
-    (memberRow as { status: string | null }).status !== 'active'
-  ) {
-    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
-  }
+  const denied = await assertActiveClubMember(admin, clubId, session.userId)
+  if (denied) return denied
 
   const { error } = await admin
     .from('discord_sprint_participants')

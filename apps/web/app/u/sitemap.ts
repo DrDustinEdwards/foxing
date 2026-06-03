@@ -34,7 +34,7 @@ export default async function sitemap(
       .order('id')
       .range(id * 50000, id * 50000 + 49999)
     return (data ?? []).map((p) => ({
-      url: `${FOXING_BASE_URL}/u/${p.username}`,
+      url: `${FOXING_BASE_URL}/u/${encodeURIComponent(p.username as string)}`,
       lastModified: p.updated_at ?? p.created_at,
       changeFrequency: 'weekly',
       priority: 0.5,
