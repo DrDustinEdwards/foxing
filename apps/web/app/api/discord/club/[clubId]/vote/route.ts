@@ -27,6 +27,18 @@ export async function POST(request: NextRequest, props: { params: Promise<{ club
   }
 
   const admin = createAdminClient()
+  const { data: memberRow } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', params.clubId)
+    .eq('user_id', session.userId)
+    .maybeSingle()
+  if (
+    !memberRow ||
+    (memberRow as { status: string | null }).status !== 'active'
+  ) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
   const { data: poll } = await admin
     .from('club_polls')
     .select('id, club_id, closed_at')
@@ -42,19 +54,22 @@ export async function POST(request: NextRequest, props: { params: Promise<{ club
     return NextResponse.json({ error: 'closed' }, { status: 400 })
   }
 
+  const { data: optionRows } = await admin
+    .from('club_poll_options')
+    .select('id')
+    .eq('poll_id', body.poll_id)
+  const optionIds = (
+    (optionRows as { id: string }[] | null) ?? []
+  ).map((r) => r.id)
+  if (!optionIds.includes(body.option_id)) {
+    return NextResponse.json({ error: 'invalid_option' }, { status: 400 })
+  }
+
   await admin
     .from('club_poll_votes')
     .delete()
     .eq('user_id', session.userId)
-    .in(
-      'option_id',
-      (
-        await admin
-          .from('club_poll_options')
-          .select('id')
-          .eq('poll_id', body.poll_id)
-      ).data?.map((r: { id: string }) => r.id) ?? [],
-    )
+    .in('option_id', optionIds)
 
   const { error } = await admin.from('club_poll_votes').insert({
     user_id: session.userId,

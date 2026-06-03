@@ -41,6 +41,18 @@ export async function POST(request: NextRequest, props: { params: Promise<{ club
   }
 
   const admin = createAdminClient()
+  const { data: memberRow } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', params.clubId)
+    .eq('user_id', session.userId)
+    .maybeSingle()
+  if (
+    !memberRow ||
+    (memberRow as { status: string | null }).status !== 'active'
+  ) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
   const { data: club } = await admin
     .from('clubs')
     .select('current_book_id')
