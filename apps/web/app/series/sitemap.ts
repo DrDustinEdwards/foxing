@@ -14,8 +14,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .not('series_name', 'is', null)
       .neq('series_name', '')
     const names = [...new Set((data ?? []).map((r) => r.series_name as string))]
+    const now = new Date()
     return names.map((name) => ({
       url: `${FOXING_BASE_URL}/series/${slugifySeriesName(name)}`,
+      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.6,
     }))

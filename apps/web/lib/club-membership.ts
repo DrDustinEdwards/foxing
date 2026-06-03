@@ -1,4 +1,6 @@
 import 'server-only'
+import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -56,6 +58,24 @@ export async function getClubMembershipStatus(
     | { status: 'active' | 'pending' | 'banned' | 'muted' | null }
     | null
   return row?.status ?? null
+}
+
+export async function assertActiveClubMember(
+  admin: SupabaseClient,
+  clubId: string,
+  userId: string,
+): Promise<NextResponse | null> {
+  const { data } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const row = data as { status: string | null } | null
+  if (row?.status !== 'active') {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+  return null
 }
 
 const MEMBER_COLS =

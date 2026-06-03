@@ -13,8 +13,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('author_slug')
       .not('author_slug', 'is', null)
     const slugs = [...new Set((data ?? []).map((r) => r.author_slug as string))]
+    const now = new Date()
     return slugs.map((slug) => ({
       url: `${FOXING_BASE_URL}/author/${slug}`,
+      lastModified: now,
       changeFrequency: 'monthly',
       priority: 0.7,
     }))
