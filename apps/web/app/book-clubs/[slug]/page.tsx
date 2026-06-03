@@ -15,7 +15,23 @@ import {
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 86400
+
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return []
+  }
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('external_book_clubs')
+    .select('slug')
+  return ((data as { slug: string | null }[] | null) ?? [])
+    .filter((r): r is { slug: string } => Boolean(r.slug))
+    .map((r) => ({ slug: r.slug }))
+}
 
 function truncateText(s: string, max: number): string {
   if (s.length <= max) return s

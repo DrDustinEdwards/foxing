@@ -15,8 +15,38 @@ import {
 } from '@/lib/botm'
 import { fetchBookReviews } from '@/lib/queries'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86400
+
+interface PageParams {
+  year: string
+  month: string
+}
+
+export async function generateStaticParams(): Promise<PageParams[]> {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return []
+  }
+  const admin = createAdminClient()
+  const { data } = await admin
+    .from('book_of_the_month')
+    .select('year, month')
+    .eq('is_published', true)
+  const seen = new Set<string>()
+  const out: PageParams[] = []
+  for (const row of (data as { year: number | null; month: number | null }[] | null) ?? []) {
+    if (!row.year || !row.month) continue
+    const key = `${row.year}-${row.month}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push({ year: String(row.year), month: String(row.month) })
+  }
+  return out
+}
 
 function truncateText(s: string, max: number): string {
   if (s.length <= max) return s
