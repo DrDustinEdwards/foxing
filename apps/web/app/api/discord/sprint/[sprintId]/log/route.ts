@@ -27,6 +27,28 @@ export async function POST(request: NextRequest, props: { params: Promise<{ spri
   }
 
   const admin = createAdminClient()
+  const { data: sprintRow } = await admin
+    .from('discord_sprints')
+    .select('club_id')
+    .eq('id', params.sprintId)
+    .maybeSingle()
+  const clubId = (sprintRow as { club_id: string } | null)?.club_id
+  if (!clubId) {
+    return NextResponse.json({ error: 'not_found' }, { status: 404 })
+  }
+  const { data: memberRow } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', session.userId)
+    .maybeSingle()
+  if (
+    !memberRow ||
+    (memberRow as { status: string | null }).status !== 'active'
+  ) {
+    return NextResponse.json({ error: 'forbidden' }, { status: 403 })
+  }
+
   const { error } = await admin
     .from('discord_sprint_participants')
     .upsert(
