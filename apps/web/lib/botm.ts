@@ -1,6 +1,10 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+
+// All reads in this file are public catalog data: published Book of
+// the Month picks and aggregate ratings. Uses the admin (service-role)
+// client so pages that consume these functions never trigger cookies()
+// and can be statically prerendered. Mirrors the pattern in lib/queries.ts.
 
 export interface BookOfMonthRow {
   id: string
@@ -50,7 +54,7 @@ function hasEnv(): boolean {
 
 export async function fetchPublishedPicks(): Promise<BookOfMonthPick[]> {
   if (!hasEnv()) return []
-  const sb = await createClient()
+  const sb = createAdminClient()
   const { data } = await sb
     .from('book_of_the_month')
     .select(PICK_COLS)
@@ -67,7 +71,7 @@ export async function fetchPicksForMonth(
   month: number,
 ): Promise<BookOfMonthPick[]> {
   if (!hasEnv()) return []
-  const sb = await createClient()
+  const sb = createAdminClient()
   const { data } = await sb
     .from('book_of_the_month')
     .select(PICK_COLS)
@@ -85,7 +89,7 @@ async function attachRatings(
   if (picks.length === 0) return []
   if (!hasEnv())
     return picks.map((p) => ({ ...p, avg_rating: null, rating_count: 0 }))
-  const sb = await createClient()
+  const sb = createAdminClient()
   const ids = picks.map((p) => p.book.id)
   const { data: ratings } = await sb
     .from('user_books')
@@ -131,7 +135,7 @@ export async function fetchAdjacentMonth(
   direction: 'prev' | 'next',
 ): Promise<{ year: number; month: number } | null> {
   if (!hasEnv()) return null
-  const sb = await createClient()
+  const sb = createAdminClient()
   const q = sb
     .from('book_of_the_month')
     .select('year, month')
