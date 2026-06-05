@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { uploadToR2 } from '@/lib/r2'
 import { requireAdminUserId } from '@/lib/nav-user'
 
-const BUCKET = 'journal-images'
 const MAX_BYTES = 5 * 1024 * 1024
 const MIME_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
@@ -37,13 +36,11 @@ export async function POST(request: NextRequest) {
 
   const buffer = Buffer.from(await file.arrayBuffer())
   const filename = `journal-${Date.now()}.${ext}`
-  const admin = createAdminClient()
-  const { error } = await admin.storage
-    .from(BUCKET)
-    .upload(filename, buffer, { contentType: file.type, upsert: false })
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  try {
+    const url = await uploadToR2('journalImages', filename, buffer, file.type)
+    return NextResponse.json({ url })
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'upload failed'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
-  const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${filename}`
-  return NextResponse.json({ url })
 }
