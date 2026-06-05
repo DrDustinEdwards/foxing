@@ -82,9 +82,12 @@ export async function saveJournalPost(formData: FormData): Promise<{
   const admin = createAdminClient()
 
   const customPublishedAt = parsePublishedAt(input.published_at)
+  // When publishing, default the timestamp to now. When saving a draft,
+  // keep any user-set publishedAt so the scheduled-publish cron can pick
+  // it up later.
   const publishedAt = input.publish
     ? (customPublishedAt ?? new Date().toISOString())
-    : null
+    : customPublishedAt
   const reading_time_minutes = readingMinutes(input.content)
   const payload = {
     title: input.title,

@@ -316,7 +316,7 @@ export function JournalEditor({ initial }: Props) {
     fd.set('og_title', ogTitle)
     fd.set('og_description', ogDescription)
     fd.set('canonical_url', canonicalUrl)
-    fd.set('published_at', publish ? publishedAt : '')
+    fd.set('published_at', publishedAt)
     const res = await saveJournalPost(fd)
     setPending(null)
     if (!res.ok) {
@@ -556,7 +556,19 @@ export function JournalEditor({ initial }: Props) {
           />
           Published
         </label>
-        {isPublished && (
+        {!isPublished && publishedAt && new Date(publishedAt) > new Date() ? (
+          <span className="font-dm-mono text-xs text-brand-text">
+            Scheduled for{' '}
+            {new Date(publishedAt).toLocaleDateString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        ) : null}
+        {(isPublished || publishedAt) && (
           <label className="flex flex-col gap-1.5 font-dm-sans text-sm text-text-secondary">
             Published at
             <input
@@ -566,7 +578,9 @@ export function JournalEditor({ initial }: Props) {
               className="w-full max-w-xs rounded-md border border-border-subtle bg-bg-surface px-3 py-2 font-dm-mono text-sm text-text-primary focus:border-brand-ui focus:outline-none"
             />
             <span className="font-dm-mono text-xs text-text-tertiary">
-              Leave blank to use the current time on publish.
+              {isPublished
+                ? 'Leave blank to use the current time on publish.'
+                : 'Set a future date to schedule auto-publish.'}
             </span>
           </label>
         )}

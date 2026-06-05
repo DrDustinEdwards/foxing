@@ -10,6 +10,10 @@
     {
       "path": "/api/cron/celebrity-picks",
       "schedule": "0 9 12 * *"
+    },
+    {
+      "path": "/api/cron/publish-scheduled-journal",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
