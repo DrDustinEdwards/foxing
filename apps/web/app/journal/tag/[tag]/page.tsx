@@ -17,8 +17,33 @@ import {
   type JournalPostSummary,
 } from '@/lib/journal'
 import { ArrowLeftIcon } from '@/components/journal/Icons'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 3600
+export const dynamic = 'force-static'
+
+export async function generateStaticParams() {
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return JOURNAL_TAGS.map((t) => ({ tag: t.slug }))
+  }
+  const tags = new Set<string>(JOURNAL_TAGS.map((t) => t.slug))
+  try {
+    const supabase = createAdminClient()
+    const { data } = await supabase
+      .from('journal_posts')
+      .select('tags')
+      .eq('is_published', true)
+    for (const row of (data as { tags: string[] | null }[] | null) ?? []) {
+      for (const t of row.tags ?? []) tags.add(t)
+    }
+  } catch {
+    // Fall through with canonical tags only.
+  }
+  return [...tags].map((tag) => ({ tag }))
+}
 
 function tagLabel(slug: string): string {
   const canonical = JOURNAL_TAGS.find((t) => t.slug === slug)
