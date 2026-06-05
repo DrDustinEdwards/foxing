@@ -24,6 +24,10 @@ const nextConfig = {
     minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: 'https', hostname: 'ekjpsuewrkvqzbuteurc.supabase.co' },
+      { protocol: 'https', hostname: 'covers.foxing.app' },
+      { protocol: 'https', hostname: 'epubs.foxing.app' },
+      { protocol: 'https', hostname: 'avatars.foxing.app' },
+      { protocol: 'https', hostname: 'journal.foxing.app' },
       { protocol: 'https', hostname: 'standardebooks.org' },
       { protocol: 'https', hostname: 'covers.openlibrary.org' },
       { protocol: 'https', hostname: 'images-na.ssl-images-amazon.com' },
