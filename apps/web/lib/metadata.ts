@@ -506,7 +506,7 @@ export const STATIC_PAGE_METADATA: Record<string, Metadata> = {
       'Reading guides, author spotlights, and data from the Foxing community.',
     alternates: {
       canonical: `${BASE_URL}/journal`,
-      types: { 'application/rss+xml': `${BASE_URL}/feed.rss` },
+      types: { 'application/rss+xml': `${BASE_URL}/journal/rss.xml` },
     },
     openGraph: {
       type: 'website',
