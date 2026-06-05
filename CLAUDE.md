@@ -100,6 +100,13 @@ Supabase project: ekjpsuewrkvqzbuteurc
 Web deploy: Vercel (auto-deploys on push to main)
 Domain: foxing.app
 
+Storage: Cloudflare R2 (all new uploads go here, not Supabase)
+  foxing-covers         covers for books and book clubs
+  foxing-epubs          epub files for the reader
+  foxing-avatars        user avatar images
+  foxing-journal-images journal article inline images
+  R2 helper: lib/r2.ts -- use uploadToR2() for all new uploads
+
 ---
 
 ## COMMANDS
