@@ -19,6 +19,7 @@ import {
   renderJournalMarkdown,
 } from '@/lib/journal-markdown'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { ArrowLeftIcon, ArrowRightIcon } from '@/components/journal/Icons'
 
 export const revalidate = 3600
 
@@ -114,9 +115,10 @@ export default async function JournalPostPage(
               <p className="mb-6">
                 <Link
                   href="/journal"
-                  className="font-dm-sans text-sm text-text-tertiary no-underline hover:text-text-primary"
+                  className="group inline-flex items-center gap-1.5 font-dm-sans text-sm text-text-tertiary no-underline hover:text-text-primary transition-colors"
                 >
-                  ← Journal
+                  <ArrowLeftIcon className="transition-transform group-hover:-translate-x-0.5" />
+                  Journal
                 </Link>
               </p>
 
@@ -184,9 +186,10 @@ export default async function JournalPostPage(
                       <li>
                         <Link
                           href={`/journal/${prev.slug}`}
-                          className="font-source-serif-4 text-base text-text-primary no-underline hover:text-brand-text"
+                          className="group inline-flex items-center gap-1.5 font-source-serif-4 text-base text-text-primary no-underline hover:text-brand-text transition-colors"
                         >
                           {prev.title}
+                          <ArrowRightIcon className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                         </Link>
                       </li>
                     )}
@@ -194,9 +197,10 @@ export default async function JournalPostPage(
                       <li>
                         <Link
                           href={`/journal/${next.slug}`}
-                          className="font-source-serif-4 text-base text-text-primary no-underline hover:text-brand-text"
+                          className="group inline-flex items-center gap-1.5 font-source-serif-4 text-base text-text-primary no-underline hover:text-brand-text transition-colors"
                         >
                           {next.title}
+                          <ArrowRightIcon className="opacity-0 transition-all group-hover:translate-x-0.5 group-hover:opacity-100" />
                         </Link>
                       </li>
                     )}
@@ -211,10 +215,11 @@ export default async function JournalPostPage(
                   {prev ? (
                     <Link
                       href={`/journal/${prev.slug}`}
-                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 no-underline transition-colors hover:border-border-interactive"
+                      className="group flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 no-underline transition-colors hover:border-border-interactive"
                     >
-                      <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
-                        ← Previous
+                      <span className="inline-flex items-center gap-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+                        <ArrowLeftIcon className="transition-transform group-hover:-translate-x-0.5" />
+                        Previous
                       </span>
                       <span className="font-fraunces text-base text-text-primary">
                         {prev.title}
@@ -226,10 +231,11 @@ export default async function JournalPostPage(
                   {next ? (
                     <Link
                       href={`/journal/${next.slug}`}
-                      className="flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 text-right no-underline transition-colors hover:border-border-interactive"
+                      className="group flex flex-col gap-1 rounded-lg border border-border-subtle bg-bg-surface p-4 text-right no-underline transition-colors hover:border-border-interactive"
                     >
-                      <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
-                        Next →
+                      <span className="inline-flex items-center justify-end gap-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+                        Next
+                        <ArrowRightIcon className="transition-transform group-hover:translate-x-0.5" />
                       </span>
                       <span className="font-fraunces text-base text-text-primary">
                         {next.title}
