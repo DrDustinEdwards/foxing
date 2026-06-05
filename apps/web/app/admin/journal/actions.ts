@@ -23,6 +23,7 @@ interface JournalInput {
   slug: string
   excerpt: string
   cover_image_url: string
+  cover_image_alt: string
   tags: string
   content: string
   publish: boolean
@@ -40,6 +41,7 @@ function parseInput(formData: FormData): JournalInput {
     slug: String(formData.get('slug') ?? '').trim(),
     excerpt: String(formData.get('excerpt') ?? '').trim(),
     cover_image_url: String(formData.get('cover_image_url') ?? '').trim(),
+    cover_image_alt: String(formData.get('cover_image_alt') ?? '').trim(),
     tags: String(formData.get('tags') ?? '').trim(),
     content: String(formData.get('content') ?? ''),
     publish: formData.get('publish') === 'true',
@@ -94,6 +96,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
     slug,
     excerpt: input.excerpt || null,
     cover_image_url: input.cover_image_url || null,
+    cover_image_alt: input.cover_image_alt || null,
     tags,
     content: input.content,
     is_published: input.publish,

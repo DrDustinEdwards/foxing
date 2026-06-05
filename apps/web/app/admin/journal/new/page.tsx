@@ -28,6 +28,7 @@ export default function NewJournalPostPage() {
             slug: '',
             excerpt: '',
             cover_image_url: '',
+            cover_image_alt: '',
             tags: [],
             content: '',
             is_published: false,
