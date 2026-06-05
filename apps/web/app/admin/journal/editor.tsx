@@ -118,6 +118,7 @@ export function JournalEditor({ initial }: Props) {
   const [slugStatus, setSlugStatus] = useState<
     'idle' | 'checking' | 'available' | 'taken'
   >('idle')
+  const [showFullPreview, setShowFullPreview] = useState(false)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const pendingSelection = useRef<{ start: number; end: number } | null>(null)
@@ -530,6 +531,7 @@ export function JournalEditor({ initial }: Props) {
         applyAction={applyAction}
         onImagePick={handleBodyImagePick}
         uploading={uploading}
+        onShowFullPreview={() => setShowFullPreview(true)}
       />
 
       <FurtherReadingPicker
@@ -640,6 +642,38 @@ export function JournalEditor({ initial }: Props) {
             }}
           />
         </details>
+      )}
+
+      {showFullPreview && (
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-bg-base"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowFullPreview(false)
+          }}
+        >
+          <div className="mx-auto max-w-[680px] px-6 py-16">
+            <button
+              type="button"
+              onClick={() => setShowFullPreview(false)}
+              className="mb-8 cursor-pointer font-dm-mono text-sm text-text-tertiary hover:text-text-primary"
+            >
+              Close preview
+            </button>
+            <h1 className="mb-4 font-fraunces text-[2rem] leading-tight text-text-primary">
+              {title}
+            </h1>
+            {excerpt && (
+              <p className="mb-8 border-b border-border-subtle pb-8 font-source-serif-4 text-[1.0625rem] leading-relaxed text-text-secondary">
+                {excerpt}
+              </p>
+            )}
+            <div
+              className="journal-prose"
+              // eslint-disable-next-line react/no-danger
+              dangerouslySetInnerHTML={{ __html: previewHtml }}
+            />
+          </div>
+        </div>
       )}
     </div>
   )
@@ -1203,6 +1237,7 @@ function BodyField({
   applyAction,
   onImagePick,
   uploading,
+  onShowFullPreview,
 }: {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>
   content: string
@@ -1213,6 +1248,7 @@ function BodyField({
   applyAction: (fn: (s: SelectionState) => SelectionState) => void
   onImagePick: (e: ChangeEvent<HTMLInputElement>) => void
   uploading: boolean
+  onShowFullPreview: () => void
 }) {
   const [mention, setMention] = useState<{
     query: string
@@ -1303,8 +1339,17 @@ function BodyField({
         >
           Body (markdown)
         </label>
-        <span className="font-dm-mono text-xs text-text-tertiary">
-          Words: {words} · ~{minutes} min read
+        <span className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={onShowFullPreview}
+            className="cursor-pointer font-dm-mono text-xs text-text-tertiary transition-colors hover:text-text-primary"
+          >
+            Full preview
+          </button>
+          <span className="font-dm-mono text-xs text-text-tertiary">
+            Words: {words} · ~{minutes} min read
+          </span>
         </span>
       </div>
       <Toolbar
