@@ -19,10 +19,10 @@ export const R2_BUCKETS = {
 } as const
 
 export const R2_PUBLIC_URLS = {
-  covers: 'https://pub-d196a43c0eb646b492c40d4f5e588943.r2.dev',
-  epubs: 'https://pub-c44d42294a474222a1627ab8644565cb.r2.dev',
-  avatars: 'https://pub-632e7267e83d4335b27c6425f95e6e6d.r2.dev',
-  journalImages: 'https://pub-c53c4e2f4743416db3244c097f4fac88.r2.dev',
+  covers: 'https://covers.foxing.app',
+  epubs: 'https://epubs.foxing.app',
+  avatars: 'https://avatars.foxing.app',
+  journalImages: 'https://journal.foxing.app',
 } as const
 
 export async function uploadToR2(
