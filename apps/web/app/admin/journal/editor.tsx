@@ -1020,6 +1020,8 @@ function FurtherReadingPicker({
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<LinkedPost[]>([])
   const [searching, setSearching] = useState(false)
+  const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null)
 
   useEffect(() => {
     const q = query.trim()
@@ -1060,17 +1062,6 @@ function FurtherReadingPicker({
 
   function remove(id: string) {
     onChange(linked.filter((p) => p.id !== id))
-  }
-
-  function move(id: string, dir: -1 | 1) {
-    const idx = linked.findIndex((p) => p.id === id)
-    if (idx === -1) return
-    const next = idx + dir
-    if (next < 0 || next >= linked.length) return
-    const copy = linked.slice()
-    const [item] = copy.splice(idx, 1)
-    copy.splice(next, 0, item)
-    onChange(copy)
   }
 
   return (
@@ -1118,37 +1109,52 @@ function FurtherReadingPicker({
           {linked.map((p, i) => (
             <li
               key={p.id}
-              className="flex items-center justify-between gap-2 rounded-md border border-border-subtle bg-bg-base px-3 py-2 font-dm-sans text-sm text-text-primary"
+              draggable
+              onDragStart={() => setDragIndex(i)}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragOverIndex(i)
+              }}
+              onDrop={() => {
+                if (dragIndex === null || dragIndex === i) {
+                  setDragIndex(null)
+                  setDragOverIndex(null)
+                  return
+                }
+                const copy = linked.slice()
+                const [moved] = copy.splice(dragIndex, 1)
+                copy.splice(i, 0, moved)
+                onChange(copy)
+                setDragIndex(null)
+                setDragOverIndex(null)
+              }}
+              onDragEnd={() => {
+                setDragIndex(null)
+                setDragOverIndex(null)
+              }}
+              className={`flex cursor-grab items-center justify-between gap-2 rounded-md border bg-bg-base px-3 py-2 font-dm-sans text-sm text-text-primary transition-colors active:cursor-grabbing ${
+                dragOverIndex === i
+                  ? 'border-brand-ui bg-brand-subtle'
+                  : 'border-border-subtle'
+              }`}
             >
-              <span className="min-w-0 truncate">{p.title}</span>
-              <span className="flex shrink-0 items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => move(p.id, -1)}
-                  disabled={i === 0}
-                  className="px-2 font-dm-mono text-xs text-text-tertiary hover:text-text-primary disabled:opacity-30"
-                  aria-label="Move up"
+              <span className="flex min-w-0 items-center gap-2">
+                <span
+                  aria-hidden="true"
+                  className="select-none font-dm-mono text-text-tertiary"
                 >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => move(p.id, 1)}
-                  disabled={i === linked.length - 1}
-                  className="px-2 font-dm-mono text-xs text-text-tertiary hover:text-text-primary disabled:opacity-30"
-                  aria-label="Move down"
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(p.id)}
-                  className="px-2 font-dm-mono text-xs text-text-tertiary hover:text-error"
-                  aria-label="Remove"
-                >
-                  ×
-                </button>
+                  ⠿
+                </span>
+                <span className="min-w-0 truncate">{p.title}</span>
               </span>
+              <button
+                type="button"
+                onClick={() => remove(p.id)}
+                className="shrink-0 px-2 font-dm-mono text-xs text-text-tertiary hover:text-error"
+                aria-label="Remove"
+              >
+                ×
+              </button>
             </li>
           ))}
         </ol>
