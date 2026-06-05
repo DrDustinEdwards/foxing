@@ -30,6 +30,7 @@ export interface JournalPostInitial {
   slug: string
   excerpt: string
   cover_image_url: string
+  cover_image_alt: string
   tags: string[]
   content: string
   is_published: boolean
@@ -95,6 +96,7 @@ export function JournalEditor({ initial }: Props) {
   const [slugTouched, setSlugTouched] = useState(initial.slug.length > 0)
   const [excerpt, setExcerpt] = useState(initial.excerpt)
   const [coverUrl, setCoverUrl] = useState(initial.cover_image_url)
+  const [coverImageAlt, setCoverImageAlt] = useState(initial.cover_image_alt)
   const [tags, setTags] = useState(initial.tags.join(', '))
   const [content, setContent] = useState(initial.content)
   const [featured, setFeatured] = useState(initial.featured)
@@ -311,6 +313,7 @@ export function JournalEditor({ initial }: Props) {
     fd.set('slug', slug)
     fd.set('excerpt', excerpt)
     fd.set('cover_image_url', coverUrl)
+    fd.set('cover_image_alt', coverImageAlt)
     fd.set('tags', tags)
     fd.set('content', content)
     fd.set('publish', publish ? 'true' : 'false')
@@ -519,6 +522,8 @@ export function JournalEditor({ initial }: Props) {
         onPick={handleCoverPick}
         onRemove={() => setCoverUrl('')}
         onUrlChange={setCoverUrl}
+        alt={coverImageAlt}
+        onAltChange={setCoverImageAlt}
       />
 
       <BodyField
@@ -767,12 +772,16 @@ function CoverField({
   onPick,
   onRemove,
   onUrlChange,
+  alt,
+  onAltChange,
 }: {
   url: string
   uploading: boolean
   onPick: (e: ChangeEvent<HTMLInputElement>) => void
   onRemove: () => void
   onUrlChange: (v: string) => void
+  alt: string
+  onAltChange: (v: string) => void
 }) {
   return (
     <div className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4">
@@ -817,6 +826,12 @@ function CoverField({
           )}
         </div>
       </div>
+      <Input
+        label="Cover alt text (for screen readers and SEO)"
+        value={alt}
+        onChange={(e) => onAltChange(e.target.value)}
+        placeholder="Describe the cover image in one sentence."
+      />
     </div>
   )
 }
