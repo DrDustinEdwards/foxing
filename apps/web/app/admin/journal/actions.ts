@@ -113,6 +113,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
       .update(payload)
       .eq('id', input.id)
     if (error) return { ok: false, error: error.message }
+    void snapshotVersion(input.id, payload.title, payload.content, payload.excerpt)
     revalidatePath(`/admin/journal/${input.id}`)
     revalidatePath('/admin/journal')
     revalidatePath(`/journal/${slug}`)
@@ -131,6 +132,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
     .single()
   if (error) return { ok: false, error: error.message }
   const newId = (data as { id: string }).id
+  void snapshotVersion(newId, payload.title, payload.content, payload.excerpt)
   revalidatePath('/admin/journal')
   revalidatePath(`/journal/${slug}`)
   if (input.publish) {
@@ -140,6 +142,27 @@ export async function saveJournalPost(formData: FormData): Promise<{
     ])
   }
   return { ok: true, id: newId }
+}
+
+// Persist a snapshot for the version-history feature. Wrapped so any
+// failure here cannot 500 an otherwise successful save.
+async function snapshotVersion(
+  postId: string,
+  title: string,
+  content: string,
+  excerpt: string | null,
+): Promise<void> {
+  try {
+    const admin = createAdminClient()
+    await admin.from('journal_post_versions').insert({
+      post_id: postId,
+      title,
+      content,
+      excerpt: excerpt ?? '',
+    })
+  } catch {
+    // Non-fatal.
+  }
 }
 
 export async function deleteJournalPost(formData: FormData) {

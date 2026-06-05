@@ -12,6 +12,7 @@ import {
 } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { VersionHistory } from '@/components/journal/VersionHistory'
 import { estimateReadingTime, JOURNAL_TAGS } from '@/lib/journal-shared'
 import { deleteJournalPost, saveJournalPost } from './actions'
 import {
@@ -625,6 +626,21 @@ export function JournalEditor({ initial }: Props) {
           </Button>
         )}
       </div>
+
+      {initial.id && (
+        <details className="rounded-md border border-border-subtle bg-bg-surface p-3">
+          <summary className="cursor-pointer font-dm-mono text-[0.6875rem] uppercase tracking-[0.06em] text-text-tertiary">
+            Version history
+          </summary>
+          <VersionHistory
+            postId={initial.id}
+            onRestore={(restoredContent, restoredTitle) => {
+              setContent(restoredContent)
+              setTitle(restoredTitle)
+            }}
+          />
+        </details>
+      )}
     </div>
   )
 }
