@@ -27,7 +27,7 @@ export const metadata: Metadata = {
     'Reading guides, author spotlights, and notes on the classics from the Foxing team.',
   alternates: {
     canonical: 'https://foxing.app/journal',
-    types: { 'application/rss+xml': 'https://foxing.app/feed.rss' },
+    types: { 'application/rss+xml': 'https://foxing.app/journal/rss.xml' },
   },
   openGraph: {
     title: 'Foxing Journal',
@@ -105,7 +105,10 @@ function JournalHeader() {
         >
           All articles →
         </Link>
-        <Link href="/feed.rss" className="text-brand-text hover:underline">
+        <Link
+          href="/journal/rss.xml"
+          className="text-brand-text hover:underline"
+        >
           RSS feed
         </Link>
       </p>

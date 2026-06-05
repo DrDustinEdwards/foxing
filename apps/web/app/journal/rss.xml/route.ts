@@ -1,8 +1,9 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { fetchPublishedJournalPosts } from '@/lib/journal'
-import { siteOrigin } from '@/lib/foxing'
+import { NextResponse } from 'next/server'
+import { getJournalPostsStatic } from '@/lib/journal'
+import { FOXING_BASE_URL } from '@/lib/metadata'
 
 export const revalidate = 3600
+export const dynamic = 'force-static'
 
 function xmlEscape(s: string): string {
   return s
@@ -20,24 +21,21 @@ function rfc2822(iso: string | null): string {
   return d.toUTCString()
 }
 
-export async function GET(_request: NextRequest) {
-  const origin = siteOrigin()
-  const posts = await fetchPublishedJournalPosts(50)
+export async function GET() {
+  const posts = await getJournalPostsStatic(50)
 
   const items = posts
-    .map((p) => {
-      const url = `${origin}/journal/${p.slug}`
-      const pub = rfc2822(p.published_at ?? p.created_at)
-      const description = p.excerpt ?? ''
+    .map((post) => {
+      const url = `${FOXING_BASE_URL}/journal/${post.slug}`
       return [
         '    <item>',
-        `      <title>${xmlEscape(p.title)}</title>`,
+        `      <title>${xmlEscape(post.title)}</title>`,
         `      <link>${xmlEscape(url)}</link>`,
         `      <guid isPermaLink="true">${xmlEscape(url)}</guid>`,
-        `      <pubDate>${pub}</pubDate>`,
+        `      <pubDate>${rfc2822(post.published_at)}</pubDate>`,
         `      <author>hello@foxing.app (Foxing)</author>`,
-        `      <description>${xmlEscape(description)}</description>`,
-        ...p.tags.map(
+        `      <description>${xmlEscape(post.excerpt ?? '')}</description>`,
+        ...post.tags.map(
           (t) => `      <category>${xmlEscape(t)}</category>`,
         ),
         '    </item>',
@@ -46,7 +44,7 @@ export async function GET(_request: NextRequest) {
     .join('\n')
 
   const lastBuild = posts[0]
-    ? rfc2822(posts[0].published_at ?? posts[0].created_at)
+    ? rfc2822(posts[0].published_at)
     : new Date().toUTCString()
 
   const xml = [
@@ -54,11 +52,11 @@ export async function GET(_request: NextRequest) {
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">',
     '  <channel>',
     `    <title>Foxing Journal</title>`,
-    `    <link>${xmlEscape(`${origin}/journal`)}</link>`,
-    `    <description>Essays on classic books, reading habits, and the craft of literature.</description>`,
+    `    <link>${xmlEscape(`${FOXING_BASE_URL}/journal`)}</link>`,
+    `    <description>Reading guides, book picks, author spotlights, and literary analysis from Foxing.</description>`,
     `    <language>en-us</language>`,
     `    <lastBuildDate>${lastBuild}</lastBuildDate>`,
-    `    <atom:link href="${xmlEscape(`${origin}/feed.rss`)}" rel="self" type="application/rss+xml" />`,
+    `    <atom:link href="${xmlEscape(`${FOXING_BASE_URL}/journal/rss.xml`)}" rel="self" type="application/rss+xml" />`,
     items,
     '  </channel>',
     '</rss>',

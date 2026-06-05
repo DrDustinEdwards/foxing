@@ -116,7 +116,7 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: FOXING_BASE_URL,
-    types: { 'application/rss+xml': `${FOXING_BASE_URL}/feed.rss` },
+    types: { 'application/rss+xml': `${FOXING_BASE_URL}/journal/rss.xml` },
   },
 }
 
