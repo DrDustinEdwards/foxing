@@ -20,6 +20,7 @@ import {
 } from '@/lib/journal-markdown'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { ArrowLeftIcon, ArrowRightIcon } from '@/components/journal/Icons'
+import { ShareBar } from '@/components/journal/ShareBar'
 
 export const revalidate = 3600
 
@@ -148,6 +149,11 @@ export default async function JournalPostPage(
                   </p>
                 )}
               </header>
+
+              <ShareBar
+                title={post.title}
+                url={`https://foxing.app/journal/${post.slug}`}
+              />
 
               {headings.length > 1 && (
                 <details className="mt-6 rounded-lg border border-border-subtle bg-bg-surface px-4 py-3 lg:hidden">
