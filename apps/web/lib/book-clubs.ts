@@ -431,26 +431,6 @@ export async function fetchAllPickStaticParams(): Promise<PickStaticParam[]> {
   return out
 }
 
-export function pickMonthLabel(year: number, month: number): string {
-  return `${monthLabel(month)} ${year}`
-}
-
-export function previousMonth(
-  year: number,
-  month: number,
-): { year: number; month: number } {
-  if (month === 1) return { year: year - 1, month: 12 }
-  return { year, month: month - 1 }
-}
-
-export function nextMonth(
-  year: number,
-  month: number,
-): { year: number; month: number } {
-  if (month === 12) return { year: year + 1, month: 1 }
-  return { year, month: month + 1 }
-}
-
 export async function fetchCurrentMonthPicks(): Promise<ExternalPickWithBook[]> {
   if (!hasEnv()) return []
   const sb = createAdminClient()
@@ -487,6 +467,3 @@ export async function fetchAllPicksForAdmin(): Promise<ExternalPickWithBook[]> {
   return rows.map((r) => ({ ...r, avg_rating: null, rating_count: 0 }))
 }
 
-export function monthLabel(month: number): string {
-  return new Date(2000, month - 1, 1).toLocaleString('en-US', { month: 'long' })
-}

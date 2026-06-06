@@ -11,8 +11,8 @@ import { WhereToRead } from '@/components/where-to-read'
 import {
   fetchAdjacentMonth,
   fetchPicksForMonthWithRatings,
-  monthName,
 } from '@/lib/botm'
+import { monthName } from '@/lib/month'
 import { fetchBookReviews } from '@/lib/queries'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'

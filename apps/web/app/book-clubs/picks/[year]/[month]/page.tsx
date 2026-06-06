@@ -9,12 +9,14 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchPicksForMonth,
   monthHasAnyPicks,
-  monthLabel,
+  type MonthlyPicksRow,
+} from '@/lib/book-clubs'
+import {
+  monthName as monthLabel,
   nextMonth,
   pickMonthLabel,
   previousMonth,
-  type MonthlyPicksRow,
-} from '@/lib/book-clubs'
+} from '@/lib/month'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600

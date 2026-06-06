@@ -1,4 +1,4 @@
-import Image from 'next/image'
+﻿import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -12,11 +12,9 @@ import {
   fetchAllPickStaticParams,
   fetchClubBySlug,
   fetchPickByClubSlugAndMonth,
-  monthLabel,
-  nextMonth,
-  previousMonth,
   type MonthlyPicksRow,
 } from '@/lib/book-clubs'
+import { monthName, nextMonth, previousMonth } from '@/lib/month'
 import { resolveAffiliateLinks } from '@/lib/affiliate'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
@@ -72,22 +70,22 @@ export async function generateMetadata(
         robots: { index: false, follow: true },
       }
     }
-    const title = `${club.name} pick for ${monthLabel(month)} ${year}`
+    const title = `${club.name} pick for ${monthName(month)} ${year}`
     return {
       title,
-      description: `No ${club.name} pick announced yet for ${monthLabel(month)} ${year}.`,
+      description: `No ${club.name} pick announced yet for ${monthName(month)} ${year}.`,
       robots: { index: false, follow: true },
     }
   }
-  const monthName = monthLabel(month)
-  const title = `${pick.club_full.name} Book Club Pick for ${monthName} ${year}: ${pick.book.title}`
+  const monthLabel = monthName(month)
+  const title = `${pick.club_full.name} Book Club Pick for ${monthLabel} ${year}: ${pick.book.title}`
   const curatorOpener =
     pick.club_full.curator ?? pick.club_full.short_name ?? pick.club_full.name
   const quoteSnippet = pick.curator_quote
     ? ` ${pick.curator_quote.slice(0, 120)}`
     : ''
   const description =
-    `${curatorOpener} chose ${pick.book.title} by ${pick.book.author} as the ${pick.club_full.name} pick for ${monthName} ${year}.${quoteSnippet}`.replace(
+    `${curatorOpener} chose ${pick.book.title} by ${pick.book.author} as the ${pick.club_full.name} pick for ${monthLabel} ${year}.${quoteSnippet}`.replace(
       /\s+/g,
       ' ',
     )
@@ -123,7 +121,7 @@ export default async function ClubMonthlyPickPage(
   const parsed = parseParams(params)
   if (!parsed) notFound()
   const { year, month } = parsed
-  const monthName = monthLabel(month)
+  const monthLabel = monthName(month)
 
   const [pick] = await Promise.all([
     fetchPickByClubSlugAndMonth(params.slug, year, month),
@@ -149,20 +147,20 @@ export default async function ClubMonthlyPickPage(
               >
                 Book Clubs
               </Link>
-              <span aria-hidden="true"> · </span>
+              <span aria-hidden="true"> Â· </span>
               <Link
                 href={`/book-clubs/${club.slug}`}
                 className="hover:text-text-primary"
               >
                 {club.name}
               </Link>
-              <span aria-hidden="true"> · </span>
+              <span aria-hidden="true"> Â· </span>
               <span className="text-text-secondary">
-                {monthName} {year}
+                {monthLabel} {year}
               </span>
             </nav>
             <h1 className="mt-4 font-fraunces text-[2rem] text-text-primary">
-              No {club.name} pick announced yet for {monthName} {year}.
+              No {club.name} pick announced yet for {monthLabel} {year}.
             </h1>
             <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
               Foxing auto-publishes new picks shortly after they appear. Check
@@ -173,7 +171,7 @@ export default async function ClubMonthlyPickPage(
                 href={`/book-clubs/${club.slug}/${prev.year}/${formatMonth(prev.month)}`}
                 className="mt-6 inline-block font-dm-sans text-sm text-brand-text hover:underline"
               >
-                ← {monthLabel(prev.month)} {prev.year} pick
+                â† {monthName(prev.month)} {prev.year} pick
               </Link>
             )}
           </PageWrapper>
@@ -240,7 +238,7 @@ export default async function ClubMonthlyPickPage(
       {
         '@type': 'ListItem',
         position: 3,
-        name: `${monthName} ${year}`,
+        name: `${monthLabel} ${year}`,
         item: `${FOXING_BASE_URL}/book-clubs/${pick.club_full.slug}/${year}/${formatMonth(month)}`,
       },
     ],
@@ -252,7 +250,7 @@ export default async function ClubMonthlyPickPage(
     mainEntity: [
       {
         '@type': 'Question',
-        name: `What is ${pick.club_full.name}'s book club pick for ${monthName} ${year}?`,
+        name: `What is ${pick.club_full.name}'s book club pick for ${monthLabel} ${year}?`,
         acceptedAnswer: {
           '@type': 'Answer',
           text: pick.curator_quote
@@ -262,10 +260,10 @@ export default async function ClubMonthlyPickPage(
       },
       {
         '@type': 'Question',
-        name: `Who picked ${pick.book.title} for ${monthName} ${year}?`,
+        name: `Who picked ${pick.book.title} for ${monthLabel} ${year}?`,
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `${pick.club_full.curator ?? pick.club_full.short_name ?? pick.club_full.name} chose ${pick.book.title} as the ${pick.club_full.name} pick for ${monthName} ${year}.`,
+          text: `${pick.club_full.curator ?? pick.club_full.short_name ?? pick.club_full.name} chose ${pick.book.title} as the ${pick.club_full.name} pick for ${monthLabel} ${year}.`,
         },
       },
     ],
@@ -301,21 +299,21 @@ export default async function ClubMonthlyPickPage(
             >
               Book Clubs
             </Link>
-            <span aria-hidden="true"> · </span>
+            <span aria-hidden="true"> Â· </span>
             <Link
               href={`/book-clubs/${pick.club_full.slug}`}
               className="hover:text-text-primary"
             >
               {pick.club_full.name}
             </Link>
-            <span aria-hidden="true"> · </span>
+            <span aria-hidden="true"> Â· </span>
             <span className="text-text-secondary">
-              {monthName} {year}
+              {monthLabel} {year}
             </span>
           </nav>
 
           <h1 className="mt-4 font-fraunces text-[2rem] leading-tight text-text-primary md:text-[2.5rem]">
-            {pick.club_full.name} Pick for {monthName} {year}
+            {pick.club_full.name} Pick for {monthLabel} {year}
           </h1>
 
           <section className="mt-8 grid gap-6 md:grid-cols-[200px_1fr]">
@@ -428,7 +426,7 @@ export default async function ClubMonthlyPickPage(
                     href={`/book-clubs/${pick.club_full.slug}/${prev.year}/${formatMonth(prev.month)}`}
                     className="text-brand-text hover:underline"
                   >
-                    ← {monthLabel(prev.month)} {prev.year}
+                    â† {monthName(prev.month)} {prev.year}
                   </Link>
                 )}
                 {adjacent.length > 0 && (
@@ -440,7 +438,7 @@ export default async function ClubMonthlyPickPage(
                           className="hover:text-text-primary"
                         >
                           {other.pick_year && other.pick_month
-                            ? `${monthLabel(other.pick_month)} ${other.pick_year}: ${other.book.title}`
+                            ? `${monthName(other.pick_month)} ${other.pick_year}: ${other.book.title}`
                             : other.book.title}
                         </Link>
                       </li>
@@ -452,7 +450,7 @@ export default async function ClubMonthlyPickPage(
                     href={`/book-clubs/${pick.club_full.slug}/${next.year}/${formatMonth(next.month)}`}
                     className="text-brand-text hover:underline"
                   >
-                    {monthLabel(next.month)} {next.year} →
+                    {monthName(next.month)} {next.year} â†’
                   </Link>
                 )}
               </nav>

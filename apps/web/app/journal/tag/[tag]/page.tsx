@@ -8,9 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Footer } from '@/components/layout/footer'
-import { NavAuthClient } from '@/components/layout/nav-auth-client'
-import { PageWrapper } from '@/components/layout/page-wrapper'
+import { JournalPageShell } from '@/components/journal/JournalPageShell'
 import {
   getJournalPostsStatic,
   JOURNAL_TAGS,
@@ -88,11 +86,8 @@ export default async function JournalTagPage(
   const posts = all.filter((p) => p.tags.includes(params.tag))
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg-base">
-      <NavAuthClient />
-      <main className="flex-1">
-        <PageWrapper className="py-12">
-          <p className="mb-6">
+    <JournalPageShell>
+      <p className="mb-6">
             <Link
               href="/journal"
               className="group inline-flex items-center gap-1.5 font-dm-sans text-sm text-text-tertiary no-underline hover:text-text-primary transition-colors"
@@ -121,10 +116,7 @@ export default async function JournalTagPage(
               ))}
             </div>
           )}
-        </PageWrapper>
-      </main>
-      <Footer />
-    </div>
+    </JournalPageShell>
   )
 }
 
