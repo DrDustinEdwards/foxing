@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { ShareIcon } from '@/components/icons'
+import { useTimedFlag } from '@/hooks/use-timed-flag'
 
 interface ShareButtonProps {
   url: string
@@ -10,7 +10,7 @@ interface ShareButtonProps {
 }
 
 export function ShareButton({ url, text }: ShareButtonProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, triggerCopied] = useTimedFlag()
 
   async function handleClick() {
     if (typeof navigator !== 'undefined' && 'share' in navigator) {
@@ -23,8 +23,7 @@ export function ShareButton({ url, text }: ShareButtonProps) {
     }
     try {
       await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      triggerCopied()
     } catch {
       // ignore
     }

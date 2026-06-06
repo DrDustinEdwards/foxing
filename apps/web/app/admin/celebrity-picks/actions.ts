@@ -17,6 +17,23 @@ interface CreatePayload {
   is_published: boolean
 }
 
+async function assertAdmin(): Promise<
+  { ok: true; userId: string } | { ok: false; error: string }
+> {
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: profile } = await admin
+    .from('profiles')
+    .select('is_admin')
+    .eq('id', userId)
+    .maybeSingle()
+  if (!(profile as { is_admin: boolean | null } | null)?.is_admin) {
+    return { ok: false, error: 'Admin access required.' }
+  }
+  return { ok: true, userId }
+}
+
 function parseCreate(formData: FormData): CreatePayload {
   const club_id = String(formData.get('club_id') ?? '').trim()
   const book_id = String(formData.get('book_id') ?? '').trim()
@@ -342,17 +359,9 @@ export async function triggerClubBackfill(
   const slug = clubSlug.trim()
   if (!slug) return { ok: false, error: 'Club slug required.' }
 
-  const userId = await getAuthedUserId()
-  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const auth = await assertAdmin()
+  if (!auth.ok) return auth
   const admin = createAdminClient()
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', userId)
-    .maybeSingle()
-  if (!(profile as { is_admin: boolean | null } | null)?.is_admin) {
-    return { ok: false, error: 'Admin access required.' }
-  }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -444,17 +453,8 @@ interface RunNowResult {
  * Edge Function is what actually scrapes, calls Claude, and writes picks.
  */
 export async function triggerCelebrityPicksCron(): Promise<RunNowResult> {
-  const userId = await getAuthedUserId()
-  if (!userId) return { ok: false, error: 'Sign in required.' }
-  const admin = createAdminClient()
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('is_admin')
-    .eq('id', userId)
-    .maybeSingle()
-  if (!(profile as { is_admin: boolean | null } | null)?.is_admin) {
-    return { ok: false, error: 'Admin access required.' }
-  }
+  const auth = await assertAdmin()
+  if (!auth.ok) return auth
 
   const secret = process.env.CRON_SECRET
   if (!secret) {

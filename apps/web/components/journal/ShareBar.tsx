@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
 import { CheckIcon, LinkIcon } from '@/components/journal/Icons'
+import { useTimedFlag } from '@/hooks/use-timed-flag'
 
 interface ShareBarProps {
   title: string
@@ -9,12 +9,11 @@ interface ShareBarProps {
 }
 
 export function ShareBar({ title, url }: ShareBarProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, triggerCopied] = useTimedFlag()
 
   function copyLink() {
     navigator.clipboard.writeText(url).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      triggerCopied()
     })
   }
 
