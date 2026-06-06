@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -6,6 +6,20 @@ import { useEffect, useRef, useState } from 'react'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
+import {
+  BarChartIcon,
+  BellIcon,
+  BookMenuIcon,
+  GearIcon,
+  HamburgerIcon,
+  LogoutIcon,
+  PersonIcon,
+  SearchIcon,
+  ShieldIcon,
+  StackIcon,
+  TargetIcon,
+  WandIcon,
+} from '@/components/icons'
 import { cn } from '@/lib/cn'
 import type { MenuStats } from '@/lib/user-queries-types'
 
@@ -138,7 +152,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             href={user ? '/home' : '/'}
             className="flex items-center gap-2 font-fraunces text-xl text-brand-ui"
           >
-            <span aria-hidden="true">🦊</span>
+            <span aria-hidden="true">ðŸ¦Š</span>
             <span>Foxing</span>
           </Link>
         </div>
@@ -201,7 +215,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
             aria-label="Search"
           >
-            <SearchIcon />
+            <SearchIcon size={18} />
           </Link>
 
           <ThemeToggle className="inline-flex" />
@@ -217,7 +231,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                 }
                 className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
               >
-                <BellIcon />
+                <BellIcon size={18} />
                 {unreadNotifications > 0 && (
                   <span
                     aria-hidden="true"
@@ -278,7 +292,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
               aria-label="Toggle menu"
               aria-expanded={mobileOpen}
             >
-              <HamburgerIcon open={mobileOpen} />
+              <HamburgerIcon size={20} open={mobileOpen} />
             </button>
           )}
         </div>
@@ -458,7 +472,7 @@ function MegaMenu({
       {botm ? (
         <div className="mb-3 rounded-md border border-border-subtle bg-bg-sunken p-3">
           <p className="font-dm-mono text-[10px] uppercase tracking-wider text-brand-text">
-            Foxing pick · {monthYearLabel}
+            Foxing pick Â· {monthYearLabel}
           </p>
           <p className="mt-1 font-fraunces text-sm text-text-primary">
             {botm.title}
@@ -472,7 +486,7 @@ function MegaMenu({
             role="menuitem"
             className="mt-2 inline-block font-dm-sans text-xs text-brand-text hover:underline"
           >
-            See curator notes →
+            See curator notes â†’
           </Link>
         </div>
       ) : null}
@@ -500,7 +514,7 @@ function MegaMenu({
           role="menuitem"
           className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
-          View all 30 clubs →
+          View all 30 clubs â†’
         </Link>
         <Link
           href={currentMonthPath()}
@@ -508,7 +522,7 @@ function MegaMenu({
           role="menuitem"
           className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
-          This month&apos;s picks →
+          This month&apos;s picks â†’
         </Link>
         <Link
           href="/book-of-the-month"
@@ -578,7 +592,7 @@ function MobileDrawer({
             aria-label="Close menu"
             className="inline-flex h-10 w-10 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
           >
-            <HamburgerIcon open={true} />
+            <HamburgerIcon size={20} open={true} />
           </button>
         </div>
 
@@ -769,7 +783,7 @@ function AccountMenu({
 
   const goalSubLabel =
     stats && stats.goalTarget !== null
-      ? `${stats.goalProgress} of ${stats.goalTarget} this year · ${stats.freezeCredits} freeze${stats.freezeCredits !== 1 ? 's' : ''} left`
+      ? `${stats.goalProgress} of ${stats.goalTarget} this year Â· ${stats.freezeCredits} freeze${stats.freezeCredits !== 1 ? 's' : ''} left`
       : null
 
   const vocabSubLabel = stats
@@ -833,29 +847,29 @@ function AccountMenu({
       <div className="border-t border-border-subtle py-1">
         <MenuItem
           href="/stats"
-          icon={<BarChartIcon />}
+          icon={<BarChartIcon size={16} />}
           label="Stats"
           onClose={onClose}
         />
         <MenuItem
           href="/goals"
-          icon={<TargetIcon />}
+          icon={<TargetIcon size={16} />}
           label="Goals"
           subLabel={goalSubLabel}
           onClose={onClose}
         />
         <MenuItem
           href="/vocabulary"
-          icon={<BookMenuIcon />}
+          icon={<BookMenuIcon size={16} />}
           label="Vocabulary"
           subLabel={vocabSubLabel}
           onClose={onClose}
         />
         <MenuItem
           href="/saved-posts"
-          icon={<StackIcon />}
+          icon={<StackIcon size={16} />}
           label="Collections"
-          subLabel="Lists · buddy reads · saved · commonplace"
+          subLabel="Lists Â· buddy reads Â· saved Â· commonplace"
           onClose={onClose}
         />
 
@@ -868,7 +882,7 @@ function AccountMenu({
           className="flex items-center gap-3 px-4 py-2 text-text-secondary hover:bg-bg-hover"
         >
           <span className="text-text-secondary">
-            <WandIcon />
+            <WandIcon size={16} />
           </span>
           <div className="min-w-0 flex-1">
             <p className="font-dm-sans text-sm text-text-primary">
@@ -896,7 +910,7 @@ function AccountMenu({
               onClick={onClose}
               className="flex items-center gap-3 px-4 py-2 text-brand-text hover:bg-bg-hover"
             >
-              <ShieldIcon />
+              <ShieldIcon size={14} />
               <span className="font-dm-sans text-sm">Admin dashboard</span>
             </Link>
           </>
@@ -910,7 +924,7 @@ function AccountMenu({
           onClick={onClose}
           className="flex cursor-pointer flex-col items-center gap-1 px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover"
         >
-          <PersonIcon />
+          <PersonIcon size={15} />
           Profile
         </Link>
         <Link
@@ -919,7 +933,7 @@ function AccountMenu({
           onClick={onClose}
           className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover"
         >
-          <GearIcon />
+          <GearIcon size={15} />
           Settings
         </Link>
         <form
@@ -932,7 +946,7 @@ function AccountMenu({
             role="menuitem"
             className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover hover:text-error"
           >
-            <LogoutIcon />
+            <LogoutIcon size={15} />
             Sign out
           </button>
         </form>
@@ -1000,224 +1014,3 @@ function MenuItem({
   )
 }
 
-function BarChartIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <path d="M3 20v-5M8 20V10M13 20V4M18 20v-8" strokeLinecap="round" />
-    </svg>
-  )
-}
-
-function TargetIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="12" r="4" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  )
-}
-
-function BookMenuIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-    </svg>
-  )
-}
-
-function StackIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
-    </svg>
-  )
-}
-
-function WandIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <path d="M15 4l5 5-11 11H4v-5L15 4z" />
-      <path d="M14 7l3 3" />
-    </svg>
-  )
-}
-
-function PersonIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="8" r="4" />
-      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  )
-}
-
-function GearIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-    </svg>
-  )
-}
-
-function LogoutIcon() {
-  return (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      aria-hidden="true"
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" y1="12" x2="9" y2="12" />
-    </svg>
-  )
-}
-
-function ShieldIcon() {
-  return (
-    <svg
-      width="14"
-      height="14"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.75"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  )
-}
-
-function BellIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </svg>
-  )
-}
-
-function SearchIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <circle cx="11" cy="11" r="7" />
-      <line x1="21" y1="21" x2="16.65" y2="16.65" />
-    </svg>
-  )
-}
-
-function HamburgerIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {open ? (
-        <>
-          <line x1="18" y1="6" x2="6" y2="18" />
-          <line x1="6" y1="6" x2="18" y2="18" />
-        </>
-      ) : (
-        <>
-          <line x1="3" y1="6" x2="21" y2="6" />
-          <line x1="3" y1="12" x2="21" y2="12" />
-          <line x1="3" y1="18" x2="21" y2="18" />
-        </>
-      )}
-    </svg>
-  )
-}
