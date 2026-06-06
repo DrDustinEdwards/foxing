@@ -85,6 +85,8 @@ export async function createCelebrityPick(formData: FormData): Promise<void> {
 }
 
 export async function deleteCelebrityPick(formData: FormData): Promise<void> {
+  const auth = await assertAdmin()
+  if (!auth.ok) throw new Error(auth.error)
   const id = String(formData.get('id') ?? '').trim()
   if (!id) throw new Error('id is required')
   const admin = createAdminClient()
