@@ -124,8 +124,12 @@ export default async function JournalPostPage(
               </p>
 
               <header className="flex flex-col gap-3 border-b border-border-subtle pb-6">
-                {post.tags[0] && (
-                  <TagPill slug={post.tags[0]} />
+                {post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((slug) => (
+                      <TagPill key={slug} slug={slug} />
+                    ))}
+                  </div>
                 )}
                 <p className="font-dm-mono text-sm text-text-tertiary">
                   {post.show_published_at && post.published_at ? (
