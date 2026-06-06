@@ -1,4 +1,4 @@
-import Image from 'next/image'
+﻿import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Card, CardBody, CardTitle } from '@/components/ui/card'
@@ -11,8 +11,8 @@ import {
   type ExternalClub,
   fetchActiveClubs,
   fetchCurrentMonthPicks,
-  monthLabel,
 } from '@/lib/book-clubs'
+import { monthName } from '@/lib/month'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600
@@ -25,7 +25,7 @@ function truncateText(s: string, max: number): string {
 export async function generateMetadata(): Promise<Metadata> {
   const picks = await fetchCurrentMonthPicks()
   const now = new Date()
-  const month = monthLabel(now.getUTCMonth() + 1)
+  const month = monthName(now.getUTCMonth() + 1)
   const year = now.getUTCFullYear()
   const title = 'Celebrity Book Club Picks, Oprah, Reese, Jenna and more'
   const lead = picks
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
         `${month} ${year}: ${lead}. Every major book club pick with community ratings.`,
         160,
       )
-    : 'Every major book club’s picks, rated by Foxing readers. Oprah, Reese, Jenna, GMA, and more.'
+    : 'Every major book clubâ€™s picks, rated by Foxing readers. Oprah, Reese, Jenna, GMA, and more.'
   const url = `${FOXING_BASE_URL}/book-clubs`
   return {
     title: truncateText(title, 70),
@@ -71,7 +71,7 @@ export default async function BookClubsPage() {
   const archivedClubs = clubs.filter((c) => c.is_active === false)
 
   const now = new Date()
-  const month = monthLabel(now.getUTCMonth() + 1)
+  const month = monthName(now.getUTCMonth() + 1)
 
   const breadcrumbJsonLd = JSON.stringify({
     '@context': 'https://schema.org',

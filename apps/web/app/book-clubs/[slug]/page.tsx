@@ -1,4 +1,4 @@
-import Image from 'next/image'
+﻿import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -10,8 +10,8 @@ import {
   type ExternalPickWithBook,
   fetchAllPicksForClub,
   fetchClubBySlug,
-  monthLabel,
 } from '@/lib/book-clubs'
+import { monthName } from '@/lib/month'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
@@ -124,7 +124,7 @@ export default async function ExternalBookClubPage(
               href="/book-clubs"
               className="text-brand-text hover:underline"
             >
-              ← All celebrity picks
+              â† All celebrity picks
             </Link>
           </nav>
 
@@ -260,7 +260,7 @@ function EraSection({
     <section>
       <h2 className="font-fraunces text-2xl text-text-primary">{era.label}</h2>
       <p className="mt-1 font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
-        {yearRange} · {picks.length} {picks.length === 1 ? 'pick' : 'picks'}
+        {yearRange} Â· {picks.length} {picks.length === 1 ? 'pick' : 'picks'}
       </p>
       <p className="mt-3 max-w-prose font-source-serif-4 text-base text-text-secondary">
         {era.description}
@@ -295,7 +295,7 @@ function PickTable({
             ? `/book-clubs/${clubSlug}/${pick.pick_year}/${String(pick.pick_month).padStart(2, '0')}`
             : null
         const monthString = pick.pick_month
-          ? `${monthLabel(pick.pick_month)} ${year}`
+          ? `${monthName(pick.pick_month)} ${year}`
           : String(year)
         const innerRow = (
           <div className="grid grid-cols-[3.5rem_2.75rem_1fr] items-center gap-3 py-3 sm:grid-cols-[5.5rem_2.75rem_1fr_auto]">
@@ -439,7 +439,7 @@ function ClubStatsBar({ stats }: { stats: ClubStats }) {
   }
   if (stats.mostRecent) {
     parts.push(
-      `Most recent: ${monthLabel(stats.mostRecent.month)} ${stats.mostRecent.year}`,
+      `Most recent: ${monthName(stats.mostRecent.month)} ${stats.mostRecent.year}`,
     )
   }
   if (stats.topTheme) {
@@ -450,7 +450,7 @@ function ClubStatsBar({ stats }: { stats: ClubStats }) {
   }
   return (
     <p className="mt-10 font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
-      {parts.join(' · ')}
+      {parts.join(' Â· ')}
     </p>
   )
 }

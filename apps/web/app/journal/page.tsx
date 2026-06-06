@@ -8,9 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Footer } from '@/components/layout/footer'
-import { NavAuthClient } from '@/components/layout/nav-auth-client'
-import { PageWrapper } from '@/components/layout/page-wrapper'
+import { JournalPageShell } from '@/components/journal/JournalPageShell'
 import {
   estimateReadingTime,
   getFeaturedJournalPostFullStatic,
@@ -50,17 +48,17 @@ export default async function JournalIndexPage() {
 
   if (allPosts.length === 0) {
     return (
-      <PageShell>
+      <JournalPageShell>
         <JournalHeader />
         <div className="mt-12">
           <EmptyState heading="No posts yet." />
         </div>
-      </PageShell>
+      </JournalPageShell>
     )
   }
 
   return (
-    <PageShell>
+    <JournalPageShell>
       <JournalHeader />
       {featured && <FeaturedHero post={featured} />}
       {JOURNAL_TAGS.map((tag) => {
@@ -71,19 +69,7 @@ export default async function JournalIndexPage() {
         return <CategorySection key={tag.slug} tag={tag} posts={posts} />
       })}
       {latest.length > 0 && <LatestSection posts={latest} />}
-    </PageShell>
-  )
-}
-
-function PageShell({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-screen flex-col bg-bg-base">
-      <NavAuthClient />
-      <main className="flex-1">
-        <PageWrapper className="py-12">{children}</PageWrapper>
-      </main>
-      <Footer />
-    </div>
+    </JournalPageShell>
   )
 }
 

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { fetchPickByIdForAdmin, monthName } from '@/lib/botm'
+import { fetchPickByIdForAdmin } from '@/lib/botm'
+import { monthName } from '@/lib/month'
 import { PickForm } from '../pick-form'
 
 export const dynamic = 'force-dynamic'

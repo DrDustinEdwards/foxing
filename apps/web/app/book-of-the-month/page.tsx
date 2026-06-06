@@ -7,7 +7,8 @@ import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
-import { fetchPublishedPicksWithRatings, monthName } from '@/lib/botm'
+import { fetchPublishedPicksWithRatings } from '@/lib/botm'
+import { monthName } from '@/lib/month'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 
 export const revalidate = 3600
