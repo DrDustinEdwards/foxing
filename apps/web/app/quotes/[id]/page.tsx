@@ -4,15 +4,14 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Footer } from '@/components/layout/footer'
-import { LikeHighlightButton } from '@/components/ui/like-highlight-button'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ShareButton } from '@/components/share-button'
 import { formatRelativeDate } from '@foxing/utils'
 import { fetchQuoteById } from '@/lib/queries'
-import { getAuthedUserId } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
 import { buildQuoteMetadata } from '@/lib/metadata'
+import { QuoteLikeButton } from './quote-like-button'
 
 export const revalidate = 3600
 
@@ -39,10 +38,7 @@ export default async function QuotePage(
   }
 ) {
   const params = await props.params;
-  const [userId] = await Promise.all([
-    getAuthedUserId(),
-  ])
-  const quote = await fetchQuoteById(params.id, userId)
+  const quote = await fetchQuoteById(params.id)
   if (!quote) notFound()
   const shareUrl = `${siteOrigin()}/quotes/${quote.id}`
 
@@ -110,11 +106,9 @@ export default async function QuotePage(
               <span />
             )}
             <div className="flex items-center gap-3">
-              <LikeHighlightButton
-                highlightId={quote.id}
-                initialLiked={quote.liked_by_me}
+              <QuoteLikeButton
+                quoteId={quote.id}
                 initialCount={quote.like_count}
-                userId={userId}
               />
               <span className="font-dm-mono text-xs text-text-tertiary">
                 {formatRelativeDate(quote.created_at)}
