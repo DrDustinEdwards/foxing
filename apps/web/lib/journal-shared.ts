@@ -48,8 +48,11 @@ export type JournalPost = {
   excerpt: string | null
   content: string
   cover_image_url: string | null
+  cover_image_alt: string | null
   is_published: boolean
   published_at: string | null
+  show_published_at: boolean
+  show_updated_at: boolean
   tags: string[]
   featured: boolean
   og_title: string | null

@@ -38,6 +38,8 @@ export default function NewJournalPostPage() {
             canonical_url: '',
             published_at: null,
             updated_at: null,
+            show_published_at: true,
+            show_updated_at: false,
           }}
         />
       </div>
