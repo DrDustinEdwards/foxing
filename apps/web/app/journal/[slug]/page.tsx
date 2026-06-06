@@ -128,14 +128,32 @@ export default async function JournalPostPage(
                   <TagPill slug={post.tags[0]} />
                 )}
                 <p className="font-dm-mono text-sm text-text-tertiary">
-                  {post.published_at
-                    ? new Date(post.published_at).toLocaleDateString('en-US', {
+                  {post.show_published_at && post.published_at ? (
+                    <>
+                      {new Date(post.published_at).toLocaleDateString('en-US', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
-                      })
-                    : null}
-                  {post.published_at ? ' · ' : null}
+                      })}
+                      {' · '}
+                    </>
+                  ) : null}
+                  {post.show_updated_at &&
+                  post.published_at &&
+                  post.updated_at &&
+                  new Date(post.updated_at).getTime() -
+                    new Date(post.published_at).getTime() >
+                    24 * 60 * 60 * 1000 ? (
+                    <>
+                      Updated{' '}
+                      {new Date(post.updated_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                      {' · '}
+                    </>
+                  ) : null}
                   {post.reading_time_minutes ??
                     estimateReadingTime(post.content)}{' '}
                   min read

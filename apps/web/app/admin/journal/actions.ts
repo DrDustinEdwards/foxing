@@ -32,6 +32,8 @@ interface JournalInput {
   og_description: string
   canonical_url: string
   published_at: string
+  show_published_at: boolean
+  show_updated_at: boolean
 }
 
 function parseInput(formData: FormData): JournalInput {
@@ -50,6 +52,8 @@ function parseInput(formData: FormData): JournalInput {
     og_description: String(formData.get('og_description') ?? '').trim(),
     canonical_url: String(formData.get('canonical_url') ?? '').trim(),
     published_at: String(formData.get('published_at') ?? '').trim(),
+    show_published_at: formData.get('show_published_at') === 'true',
+    show_updated_at: formData.get('show_updated_at') === 'true',
   }
 }
 
@@ -108,6 +112,8 @@ export async function saveJournalPost(formData: FormData): Promise<{
     og_description: input.og_description || null,
     canonical_url: input.canonical_url || null,
     reading_time_minutes,
+    show_published_at: input.show_published_at,
+    show_updated_at: input.show_updated_at,
   }
 
   if (input.id) {

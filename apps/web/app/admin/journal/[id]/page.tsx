@@ -26,6 +26,8 @@ interface JournalRow {
   canonical_url: string | null
   published_at: string | null
   updated_at: string | null
+  show_published_at: boolean | null
+  show_updated_at: boolean | null
 }
 
 export default async function EditJournalPostPage(
@@ -38,7 +40,7 @@ export default async function EditJournalPostPage(
   const { data } = await admin
     .from('journal_posts')
     .select(
-      'id, title, slug, excerpt, cover_image_url, cover_image_alt, tags, content, is_published, featured, og_title, og_description, canonical_url, published_at, updated_at',
+      'id, title, slug, excerpt, cover_image_url, cover_image_alt, tags, content, is_published, featured, og_title, og_description, canonical_url, published_at, updated_at, show_published_at, show_updated_at',
     )
     .eq('id', params.id)
     .maybeSingle()
@@ -89,6 +91,8 @@ export default async function EditJournalPostPage(
             canonical_url: post.canonical_url ?? '',
             published_at: post.published_at,
             updated_at: post.updated_at,
+            show_published_at: post.show_published_at ?? true,
+            show_updated_at: post.show_updated_at ?? false,
           }}
         />
       </div>

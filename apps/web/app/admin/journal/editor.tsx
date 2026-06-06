@@ -40,6 +40,8 @@ export interface JournalPostInitial {
   canonical_url: string
   published_at: string | null
   updated_at: string | null
+  show_published_at: boolean
+  show_updated_at: boolean
 }
 
 interface LinkedPost {
@@ -106,6 +108,12 @@ export function JournalEditor({ initial }: Props) {
   const [canonicalUrl, setCanonicalUrl] = useState(initial.canonical_url)
   const [publishedAt, setPublishedAt] = useState(
     toDatetimeLocal(initial.published_at),
+  )
+  const [showPublishedAt, setShowPublishedAt] = useState(
+    initial.show_published_at ?? true,
+  )
+  const [showUpdatedAt, setShowUpdatedAt] = useState(
+    initial.show_updated_at ?? false,
   )
   const [linkedPosts, setLinkedPosts] = useState<LinkedPost[]>([])
   const [pending, setPending] = useState<'draft' | 'publish' | null>(null)
@@ -322,6 +330,8 @@ export function JournalEditor({ initial }: Props) {
     fd.set('og_description', ogDescription)
     fd.set('canonical_url', canonicalUrl)
     fd.set('published_at', publishedAt)
+    fd.set('show_published_at', showPublishedAt ? 'true' : 'false')
+    fd.set('show_updated_at', showUpdatedAt ? 'true' : 'false')
     const res = await saveJournalPost(fd)
     setPending(null)
     if (!res.ok) {
@@ -591,6 +601,26 @@ export function JournalEditor({ initial }: Props) {
                 : 'Set a future date to schedule auto-publish.'}
             </span>
           </label>
+        )}
+        {isPublished && (
+          <>
+            <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
+              <input
+                type="checkbox"
+                checked={showPublishedAt}
+                onChange={(e) => setShowPublishedAt(e.target.checked)}
+              />
+              Show published date on the post
+            </label>
+            <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
+              <input
+                type="checkbox"
+                checked={showUpdatedAt}
+                onChange={(e) => setShowUpdatedAt(e.target.checked)}
+              />
+              Show &ldquo;Updated [date]&rdquo; when content has changed
+            </label>
+          </>
         )}
       </div>
 
