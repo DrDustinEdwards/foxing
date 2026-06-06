@@ -9,10 +9,8 @@ import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
   fetchSeriesBySlug,
 } from '@/lib/missing-pages-queries'
-import {
-  buildSeriesMetadata,
-  slugifySeriesName,
-} from '@/lib/metadata'
+import { buildSeriesMetadata } from '@/lib/metadata'
+import { slugifySeriesName } from '@/lib/slug'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
 import { createAdminClient } from '@/lib/supabase/admin'
 

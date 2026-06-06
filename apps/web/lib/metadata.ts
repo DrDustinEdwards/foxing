@@ -4,6 +4,7 @@ import {
   PLUS_PRICE_COMBINED_LABEL,
   PLUS_TRIAL_LABEL,
 } from '@/lib/config'
+import { truncate } from '@/lib/strings'
 
 /**
  * All metadata is dynamic. No hardcoded strings on a per-page basis. The
@@ -21,11 +22,6 @@ const DEFAULT_OG_IMAGE = `${BASE_URL}/og`
 
 const TITLE_MAX = 70
 const DESCRIPTION_MAX = 160
-
-function truncate(s: string, max: number): string {
-  if (s.length <= max) return s
-  return `${s.slice(0, max - 3).trimEnd()}...`
-}
 
 // --- BOOK METADATA ---
 
@@ -769,15 +765,6 @@ function formatHumanDate(isoDate: string): string {
     year: 'numeric',
     timeZone: 'UTC',
   })
-}
-
-export function slugifySeriesName(name: string): string {
-  return name
-    .toLowerCase()
-    .trim()
-    .replace(/'/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
 }
 
 // --- /people ---
