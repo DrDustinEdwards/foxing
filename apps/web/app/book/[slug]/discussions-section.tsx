@@ -1,25 +1,22 @@
+'use client'
+
 import Link from 'next/link'
 import { formatRelativeDate } from '@foxing/utils'
 import { Avatar } from '@/components/ui/avatar'
-import {
-  DISCUSSION_TYPE_CLASSES,
-  type DiscussionSummary,
-} from '@/lib/discussions'
+import { DISCUSSION_TYPE_CLASSES } from '@/lib/discussion-types'
+import type { DiscussionSummary } from '@/lib/discussions'
+import { useSession } from '@/components/providers/session-provider'
 import { CreateDiscussionForm } from './create-discussion-form'
 
 interface Props {
   bookId: string
   bookSlug: string | null
   discussions: DiscussionSummary[]
-  canStart: boolean
 }
 
-export function DiscussionsSection({
-  bookId,
-  bookSlug,
-  discussions,
-  canStart,
-}: Props) {
+export function DiscussionsSection({ bookId, bookSlug, discussions }: Props) {
+  const { user } = useSession()
+  const canStart = Boolean(user)
   return (
     <section className="mt-10 border-t border-border-subtle pt-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
