@@ -3,7 +3,9 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { AuthCard } from '@/components/ui/auth-card'
 import { Button } from '@/components/ui/button'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
 
@@ -87,20 +89,20 @@ export function ResetPasswordForm() {
 
   if (status.kind === 'verifying') {
     return (
-      <div className="flex flex-col gap-4 rounded-xl border border-border-subtle bg-bg-surface p-6 shadow-sm">
+      <AuthCard gap={4}>
         <h1 className="font-fraunces text-2xl text-text-primary">
           Verifying reset link...
         </h1>
         <p className="font-source-serif-4 text-sm text-text-secondary">
           One moment.
         </p>
-      </div>
+      </AuthCard>
     )
   }
 
   if (status.kind === 'invalid') {
     return (
-      <div className="flex flex-col gap-4 rounded-xl border border-border-subtle bg-bg-surface p-6 shadow-sm">
+      <AuthCard gap={4}>
         <h1 className="font-fraunces text-2xl text-text-primary">
           Reset link expired
         </h1>
@@ -113,12 +115,12 @@ export function ResetPasswordForm() {
         >
           Request a new link
         </Link>
-      </div>
+      </AuthCard>
     )
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-xl border border-border-subtle bg-bg-surface p-6 shadow-sm">
+    <AuthCard>
       <h1 className="font-fraunces text-2xl text-text-primary">
         Set a new password
       </h1>
@@ -140,15 +142,11 @@ export function ResetPasswordForm() {
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
         />
-        {error && (
-          <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
-            {error}
-          </p>
-        )}
+        <ErrorMessage message={error} />
         <Button type="submit" variant="primary" fullWidth loading={saving}>
           Save new password
         </Button>
       </form>
-    </div>
+    </AuthCard>
   )
 }

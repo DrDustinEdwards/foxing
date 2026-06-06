@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/supabase/client'
+import { validateUsernameFormat } from '@/lib/username'
 import { updateUsername } from './actions'
-
-const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
 
 interface Props {
   email: string
@@ -167,11 +167,7 @@ function ChangeEmailForm({
         onChange={(e) => setNewEmail(e.target.value)}
         required
       />
-      {error && (
-        <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
-          {error}
-        </p>
-      )}
+      <ErrorMessage message={error} />
       <div className="flex items-center gap-2">
         <Button type="submit" variant="primary" size="sm" loading={saving}>
           Save
@@ -192,23 +188,6 @@ type UsernameState =
   | { kind: 'available' }
   | { kind: 'taken' }
   | { kind: 'error' }
-
-function validateUsernameFormat(
-  raw: string,
-): { ok: true } | { ok: false; reason: string } {
-  if (raw.length < 3)
-    return { ok: false, reason: 'Username must be at least 3 characters.' }
-  if (raw.length > 30)
-    return { ok: false, reason: 'Username must be 30 characters or fewer.' }
-  if (!USERNAME_RE.test(raw)) {
-    return {
-      ok: false,
-      reason:
-        'Use letters, numbers, underscores, or hyphens. Cannot start or end with _ or -.',
-    }
-  }
-  return { ok: true }
-}
 
 function ChangeUsernameForm({
   currentUsername,
@@ -307,11 +286,7 @@ function ChangeUsernameForm({
         required
       />
       <UsernameStatus state={state} />
-      {error && (
-        <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
-          {error}
-        </p>
-      )}
+      <ErrorMessage message={error} />
       <div className="flex items-center gap-2">
         <Button
           type="submit"
@@ -450,11 +425,7 @@ function ChangePasswordForm({ onDone }: { onDone: () => void }) {
         onChange={(e) => setConfirmPw(e.target.value)}
         required
       />
-      {error && (
-        <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
-          {error}
-        </p>
-      )}
+      <ErrorMessage message={error} />
       {done && (
         <p className="font-dm-sans text-sm text-success">Password updated.</p>
       )}
