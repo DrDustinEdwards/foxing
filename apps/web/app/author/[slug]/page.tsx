@@ -12,7 +12,6 @@ import {
   fetchBooksByAuthorSlug,
   fetchHighlightsByAuthorSlug,
 } from '@/lib/queries'
-import { getAuthedUserId } from '@/lib/nav-user'
 import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchVerifiedAuthorByName } from '@/lib/author-claims'
@@ -86,11 +85,10 @@ export default async function AuthorPage(
   }
 
   const authorName = books[0].author
-  const [highlights, aiBio, verifiedAuthor, viewerId] = await Promise.all([
+  const [highlights, aiBio, verifiedAuthor] = await Promise.all([
     fetchHighlightsByAuthorSlug(params.slug, 3),
     fetchAiCache(books[0].id, 'author_bio'),
     fetchVerifiedAuthorByName(authorName),
-    getAuthedUserId(),
   ])
   const authorProfile = verifiedAuthor
     ? await (async () => {
@@ -104,7 +102,7 @@ export default async function AuthorPage(
       })()
     : null
   const answeredQuestions = authorProfile
-    ? await fetchAnsweredQuestions(authorProfile.id, viewerId)
+    ? await fetchAnsweredQuestions(authorProfile.id, null)
     : []
 
   // Themes the author works in, sampled from their books.
@@ -196,7 +194,6 @@ export default async function AuthorPage(
               authorUserId={authorProfile.id}
               authorName={authorName}
               initial={answeredQuestions}
-              canAsk={Boolean(viewerId) && viewerId !== authorProfile.id}
             />
           )}
           <p className="mt-12 font-dm-sans text-sm text-text-tertiary">

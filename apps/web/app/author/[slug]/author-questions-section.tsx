@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { useSession } from '@/components/providers/session-provider'
 import {
   askAuthorQuestion,
   toggleQuestionUpvote,
@@ -15,21 +16,46 @@ interface Props {
   authorUserId: string
   authorName: string
   initial: AuthorQuestionWithMeta[]
-  canAsk: boolean
 }
 
 export function AuthorQuestionsSection({
   authorUserId,
   authorName,
   initial,
-  canAsk,
 }: Props) {
   const router = useRouter()
+  const { user, isLoading } = useSession()
   const [questions, setQuestions] = useState(initial)
+  const [viewerId, setViewerId] = useState<string | null>(null)
   const [text, setText] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitted, setSubmitted] = useState(false)
+
+  useEffect(() => {
+    if (isLoading) return
+    if (!user) {
+      setViewerId(null)
+      return
+    }
+    let cancelled = false
+    fetch(`/api/me/author/${authorUserId}`, { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return
+        setViewerId(data.viewerId ?? null)
+        const upvoted = new Set<string>(data.upvotedQuestionIds ?? [])
+        setQuestions((prev) =>
+          prev.map((q) => ({ ...q, viewer_upvoted: upvoted.has(q.id) })),
+        )
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [authorUserId, user, isLoading])
+
+  const canAsk = Boolean(viewerId) && viewerId !== authorUserId
 
   async function handleAsk(e: React.FormEvent) {
     e.preventDefault()
