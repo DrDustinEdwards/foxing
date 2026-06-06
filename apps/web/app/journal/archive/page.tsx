@@ -6,6 +6,7 @@ import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { getJournalPostsStatic } from '@/lib/journal'
 import { JOURNAL_TAGS, type JournalPostSummary } from '@/lib/journal-shared'
+import { ArrowLeftIcon } from '@/components/journal/Icons'
 
 export const revalidate = 3600
 
@@ -48,9 +49,10 @@ export default async function JournalArchivePage(props: {
           <p className="mb-6">
             <Link
               href="/journal"
-              className="font-dm-sans text-sm text-text-tertiary no-underline hover:text-text-primary"
+              className="group inline-flex items-center gap-1.5 font-dm-sans text-sm text-text-tertiary no-underline hover:text-text-primary transition-colors"
             >
-              ← Journal
+              <ArrowLeftIcon className="transition-transform group-hover:-translate-x-0.5" />
+              Journal
             </Link>
           </p>
           <header className="flex flex-col gap-2">
