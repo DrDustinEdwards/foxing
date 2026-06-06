@@ -172,3 +172,107 @@ export function PlugIcon({ size, className }: IconProps) {
     </svg>
   )
 }
+
+export function BarChartIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M3 20v-5M8 20V10M13 20V4M18 20v-8" />
+    </svg>
+  )
+}
+
+export function TargetIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <circle cx="12" cy="12" r="9" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+export function BookMenuIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    </svg>
+  )
+}
+
+export function StackIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5M2 12l10 5 10-5" />
+    </svg>
+  )
+}
+
+export function WandIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M15 4l5 5-11 11H4v-5L15 4z" />
+      <path d="M14 7l3 3" />
+    </svg>
+  )
+}
+
+export function PersonIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+    </svg>
+  )
+}
+
+export function GearIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  )
+}
+
+export function LogoutIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  )
+}
+
+export function ShieldIcon({ size, className }: IconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  )
+}
+
+interface HamburgerIconProps extends IconProps {
+  open: boolean
+}
+
+export function HamburgerIcon({ size, className, open }: HamburgerIconProps) {
+  return (
+    <svg {...baseProps(size, className)}>
+      {open ? (
+        <>
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </>
+      ) : (
+        <>
+          <line x1="3" y1="6" x2="21" y2="6" />
+          <line x1="3" y1="12" x2="21" y2="12" />
+          <line x1="3" y1="18" x2="21" y2="18" />
+        </>
+      )}
+    </svg>
+  )
+}
