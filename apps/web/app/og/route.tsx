@@ -1,4 +1,4 @@
-﻿/* eslint-disable @next/next/no-img-element --
+/* eslint-disable @next/next/no-img-element --
  * next/og's ImageResponse uses Satori, which cannot render <Image /> from
  * next/image. Raw <img> tags are the correct and only option inside this
  * file. Suppress the rule globally for this route.
@@ -212,7 +212,7 @@ function FoxingMark({ tint = AUBURN }: { tint?: string }) {
         fontSize: 36,
       }}
     >
-      <span style={{ fontSize: 48 }}>ðŸ¦Š</span>
+      <span style={{ fontSize: 48 }}>🦊</span>
       <span style={{ color: tint, fontFamily: 'serif', fontWeight: 600 }}>
         Foxing
       </span>
@@ -843,7 +843,7 @@ function listOG(data: {
               fontFamily: 'serif',
             }}
           >
-            {data.creator && `by ${clamp(data.creator, 40)} Â· `}
+            {data.creator && `by ${clamp(data.creator, 40)} \u00B7 `}
             {data.count && `${data.count} books`}
           </div>
         </div>
@@ -1000,7 +1000,7 @@ function quoteOG(data: {
             lineHeight: 1,
           }}
         >
-          â€œ
+          &ldquo;
         </div>
         <div
           style={{

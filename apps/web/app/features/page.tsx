@@ -1,4 +1,4 @@
-﻿import Link from 'next/link'
+import Link from 'next/link'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import {
@@ -278,7 +278,7 @@ export default function FeaturesPage() {
             <Subgroup title="Chapter reactions" tier="free">
               <FeatureList
                 items={[
-                  'React to any chapter with 8 emojis: ðŸ˜­ ðŸ˜‚ ðŸ˜± ðŸ˜¤ ðŸ¥º ðŸ¤¯ â¤ï¸ ðŸ™ƒ',
+                  'React to any chapter with 8 emojis',
                   'Add an optional note to any reaction',
                   'Privacy control per reaction: Public, Close friends only, or Private',
                   'Community chapter reactions visible on every book page (aggregated by emoji)',
