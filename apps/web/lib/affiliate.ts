@@ -24,7 +24,7 @@ export function amazonUrl(
     : `https://www.amazon.com/dp/${id}`
 }
 
-export function amazonSearchUrl(title: string, author: string): string {
+function amazonSearchUrl(title: string, author: string): string {
   const tag = process.env.NEXT_PUBLIC_AMAZON_AFFILIATE_TAG
   const params = new URLSearchParams({
     k: `${title} ${author}`,
@@ -49,17 +49,17 @@ export function bookshopUrl(
   return fallbackUrl ?? null
 }
 
-export function bookshopSearchUrl(title: string, author: string): string {
+function bookshopSearchUrl(title: string, author: string): string {
   const q = encodeURIComponent(`${title} ${author}`.trim())
   return `https://bookshop.org/search?keywords=${q}`
 }
 
-export function worldcatBookUrl(title: string, author: string): string {
+function worldcatBookUrl(title: string, author: string): string {
   const q = encodeURIComponent(`${title} ${author}`.trim())
   return `https://www.worldcat.org/search?q=${q}`
 }
 
-export function ebookSearchUrl(title: string, author: string): string {
+function ebookSearchUrl(title: string, author: string): string {
   const q = encodeURIComponent(`${title} ${author} kindle kobo apple books`)
   return `https://www.google.com/search?q=${q}`
 }

@@ -1,8 +1,8 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState } from 'react'
-import { createBrowserClient } from '@supabase/ssr'
 import type { User } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/client'
 
 type Profile = {
   username: string
@@ -47,10 +47,7 @@ export function SessionProvider({
 
   useEffect(() => {
     let cancelled = false
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = createClient()
 
     async function fetchProfile(): Promise<Profile | null> {
       try {
