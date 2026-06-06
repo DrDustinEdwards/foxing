@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { VersionHistory } from '@/components/journal/VersionHistory'
 import { estimateReadingTime, JOURNAL_TAGS } from '@/lib/journal-shared'
+import { slugify } from '@/lib/slug'
 import { deleteJournalPost, saveJournalPost } from './actions'
 import {
   type SelectionState,
@@ -52,15 +53,6 @@ interface LinkedPost {
 
 interface Props {
   initial: JournalPostInitial
-}
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
 }
 
 function toDatetimeLocal(iso: string | null): string {

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { FOXING_BASE_URL, slugifySeriesName } from '@/lib/metadata'
+import { FOXING_BASE_URL } from '@/lib/metadata'
+import { slugifySeriesName } from '@/lib/slug'
 
 export const revalidate = 604800
 export const dynamic = 'force-static'

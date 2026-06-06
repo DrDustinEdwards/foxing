@@ -72,20 +72,3 @@ export function estimateReadingTime(content: string): number {
   const words = content.trim().split(/\s+/).filter(Boolean).length
   return Math.max(1, Math.ceil(words / 200))
 }
-
-export function readingMinutes(content: string): number {
-  const words = content.trim().split(/\s+/).filter(Boolean).length
-  return Math.max(1, Math.round(words / 200))
-}
-
-export function formatLongDate(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return ''
-  return d.toLocaleDateString('en-US', {
-    timeZone: 'UTC',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  })
-}

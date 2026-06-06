@@ -20,8 +20,6 @@ import {
 export {
   JOURNAL_TAGS,
   estimateReadingTime,
-  readingMinutes,
-  formatLongDate,
   type JournalPost,
   type JournalPostSummary,
   type JournalPostFull,

@@ -1,6 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { slugifySeriesName } from '@/lib/metadata'
+import { slugifySeriesName } from '@/lib/slug'
 
 /**
  * Public catalog reads (people, series, themes, awards, challenges,

@@ -4,18 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyIndexNow } from '@/lib/indexnow'
-import { readingMinutes } from '@/lib/journal-shared'
+import { estimateReadingTime } from '@/lib/journal-shared'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
-
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
+import { slugify } from '@/lib/slug'
 
 interface JournalInput {
   id: string | null
@@ -94,7 +86,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
   const publishedAt = input.publish
     ? (customPublishedAt ?? new Date().toISOString())
     : customPublishedAt
-  const reading_time_minutes = readingMinutes(input.content)
+  const reading_time_minutes = estimateReadingTime(input.content)
   const payload = {
     title: input.title,
     slug,
@@ -237,7 +229,7 @@ export async function duplicateJournalPost(formData: FormData) {
       featured: false,
       author_id: authorId,
       updated_at: new Date().toISOString(),
-      reading_time_minutes: readingMinutes(source.content),
+      reading_time_minutes: estimateReadingTime(source.content),
     })
     .select('id')
     .single()
