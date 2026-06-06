@@ -1,10 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { USERNAME_RE } from '@/lib/username'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
 
 export async function GET(request: NextRequest) {
   const raw = (request.nextUrl.searchParams.get('username') ?? '').trim().toLowerCase()

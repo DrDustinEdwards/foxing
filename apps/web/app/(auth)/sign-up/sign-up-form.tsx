@@ -3,11 +3,13 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
+import { AuthCard } from '@/components/ui/auth-card'
 import { Button } from '@/components/ui/button'
+import { ErrorMessage } from '@/components/ui/error-message'
 import { Input } from '@/components/ui/input'
+import { OAuthButtons } from '@/components/ui/oauth-buttons'
 import { createClient } from '@/lib/supabase/client'
-
-const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
+import { validateUsernameFormat } from '@/lib/username'
 
 type UsernameState =
   | { kind: 'idle' }
@@ -16,19 +18,6 @@ type UsernameState =
   | { kind: 'available' }
   | { kind: 'taken' }
   | { kind: 'error' }
-
-function validateUsernameFormat(raw: string): { ok: true } | { ok: false; reason: string } {
-  if (raw.length < 3) return { ok: false, reason: 'Username must be at least 3 characters.' }
-  if (raw.length > 30) return { ok: false, reason: 'Username must be 30 characters or fewer.' }
-  if (!USERNAME_RE.test(raw)) {
-    return {
-      ok: false,
-      reason:
-        'Use letters, numbers, underscores, or hyphens. Cannot start or end with _ or -.',
-    }
-  }
-  return { ok: true }
-}
 
 export function SignUpForm() {
   const router = useRouter()
@@ -140,7 +129,7 @@ export function SignUpForm() {
   }
 
   return (
-    <div className="flex flex-col gap-6 rounded-xl border border-border-subtle bg-bg-surface p-6 shadow-sm">
+    <AuthCard>
       <h1 className="font-fraunces text-2xl text-text-primary">Create your account</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -191,11 +180,7 @@ export function SignUpForm() {
             {showPassword ? 'Hide password' : 'Show password'}
           </button>
         </div>
-        {error && (
-          <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
-            {error}
-          </p>
-        )}
+        <ErrorMessage message={error} />
         <Button
           type="submit"
           variant="primary"
@@ -209,22 +194,7 @@ export function SignUpForm() {
 
       <Divider />
 
-      <div className="flex flex-col gap-2">
-        <button
-          type="button"
-          onClick={() => handleOAuth('apple')}
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#000000] font-dm-sans text-sm font-medium text-white hover:opacity-90"
-        >
-          Continue with Apple
-        </button>
-        <button
-          type="button"
-          onClick={() => handleOAuth('google')}
-          className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md border border-border-interactive bg-bg-surface font-dm-sans text-sm font-medium text-text-primary hover:bg-bg-hover"
-        >
-          Continue with Google
-        </button>
-      </div>
+      <OAuthButtons onSelect={handleOAuth} />
 
       <p className="text-center font-dm-sans text-sm text-text-tertiary">
         Already have an account?{' '}
@@ -232,7 +202,7 @@ export function SignUpForm() {
           Sign in
         </Link>
       </p>
-    </div>
+    </AuthCard>
   )
 }
 
