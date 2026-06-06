@@ -1,7 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { ConfirmActionButton } from '@/components/ui/confirm-action-button'
 import { deleteBookmark } from './actions'
 
 export function BookmarkDeleteButton({
@@ -11,25 +10,16 @@ export function BookmarkDeleteButton({
   bookmarkId: string
   bookSlug: string | null
 }) {
-  const router = useRouter()
-  const [pending, setPending] = useState(false)
+  const fields: Record<string, string> = { bookmark_id: bookmarkId }
+  if (bookSlug) fields.book_slug = bookSlug
   return (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={async () => {
-        if (!confirm('Delete this bookmark?')) return
-        setPending(true)
-        const fd = new FormData()
-        fd.set('bookmark_id', bookmarkId)
-        if (bookSlug) fd.set('book_slug', bookSlug)
-        await deleteBookmark(fd)
-        setPending(false)
-        router.refresh()
-      }}
+    <ConfirmActionButton
+      action={deleteBookmark}
+      fields={fields}
+      confirmText="Delete this bookmark?"
+      label="Delete"
+      pendingLabel="Removing..."
       className="font-dm-mono text-xs text-text-tertiary hover:text-error disabled:opacity-50"
-    >
-      {pending ? 'Removing...' : 'Delete'}
-    </button>
+    />
   )
 }

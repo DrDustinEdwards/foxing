@@ -1,7 +1,6 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { ConfirmActionButton } from '@/components/ui/confirm-action-button'
 import { cancelClubMeeting } from './actions'
 
 export function CancelMeetingButton({
@@ -11,25 +10,14 @@ export function CancelMeetingButton({
   meetingId: string
   clubId: string
 }) {
-  const router = useRouter()
-  const [pending, setPending] = useState(false)
   return (
-    <button
-      type="button"
-      disabled={pending}
-      onClick={async () => {
-        if (!confirm('Cancel this meeting?')) return
-        setPending(true)
-        const fd = new FormData()
-        fd.set('meeting_id', meetingId)
-        fd.set('club_id', clubId)
-        await cancelClubMeeting(fd)
-        setPending(false)
-        router.refresh()
-      }}
+    <ConfirmActionButton
+      action={cancelClubMeeting}
+      fields={{ meeting_id: meetingId, club_id: clubId }}
+      confirmText="Cancel this meeting?"
+      label="Cancel meeting"
+      pendingLabel="Cancelling..."
       className="text-text-tertiary hover:text-error disabled:opacity-50"
-    >
-      {pending ? 'Cancelling...' : 'Cancel meeting'}
-    </button>
+    />
   )
 }
