@@ -1,4 +1,4 @@
-﻿import Image from 'next/image'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -147,14 +147,14 @@ export default async function ClubMonthlyPickPage(
               >
                 Book Clubs
               </Link>
-              <span aria-hidden="true"> Â· </span>
+              <span aria-hidden="true"> &middot; </span>
               <Link
                 href={`/book-clubs/${club.slug}`}
                 className="hover:text-text-primary"
               >
                 {club.name}
               </Link>
-              <span aria-hidden="true"> Â· </span>
+              <span aria-hidden="true"> &middot; </span>
               <span className="text-text-secondary">
                 {monthLabel} {year}
               </span>
@@ -171,7 +171,7 @@ export default async function ClubMonthlyPickPage(
                 href={`/book-clubs/${club.slug}/${prev.year}/${formatMonth(prev.month)}`}
                 className="mt-6 inline-block font-dm-sans text-sm text-brand-text hover:underline"
               >
-                â† {monthName(prev.month)} {prev.year} pick
+                &larr; {monthName(prev.month)} {prev.year} pick
               </Link>
             )}
           </PageWrapper>
@@ -299,14 +299,14 @@ export default async function ClubMonthlyPickPage(
             >
               Book Clubs
             </Link>
-            <span aria-hidden="true"> Â· </span>
+            <span aria-hidden="true"> &middot; </span>
             <Link
               href={`/book-clubs/${pick.club_full.slug}`}
               className="hover:text-text-primary"
             >
               {pick.club_full.name}
             </Link>
-            <span aria-hidden="true"> Â· </span>
+            <span aria-hidden="true"> &middot; </span>
             <span className="text-text-secondary">
               {monthLabel} {year}
             </span>
@@ -426,7 +426,7 @@ export default async function ClubMonthlyPickPage(
                     href={`/book-clubs/${pick.club_full.slug}/${prev.year}/${formatMonth(prev.month)}`}
                     className="text-brand-text hover:underline"
                   >
-                    â† {monthName(prev.month)} {prev.year}
+                    &larr; {monthName(prev.month)} {prev.year}
                   </Link>
                 )}
                 {adjacent.length > 0 && (
@@ -450,7 +450,7 @@ export default async function ClubMonthlyPickPage(
                     href={`/book-clubs/${pick.club_full.slug}/${next.year}/${formatMonth(next.month)}`}
                     className="text-brand-text hover:underline"
                   >
-                    {monthName(next.month)} {next.year} â†’
+                    {monthName(next.month)} {next.year} &rarr;
                   </Link>
                 )}
               </nav>

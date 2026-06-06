@@ -1,4 +1,4 @@
-﻿import Image from 'next/image'
+import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Card, CardBody, CardTitle } from '@/components/ui/card'
@@ -37,7 +37,7 @@ export async function generateMetadata(): Promise<Metadata> {
         `${month} ${year}: ${lead}. Every major book club pick with community ratings.`,
         160,
       )
-    : 'Every major book clubâ€™s picks, rated by Foxing readers. Oprah, Reese, Jenna, GMA, and more.'
+    : 'Every major book club\u2019s picks, rated by Foxing readers. Oprah, Reese, Jenna, GMA, and more.'
   const url = `${FOXING_BASE_URL}/book-clubs`
   return {
     title: truncateText(title, 70),

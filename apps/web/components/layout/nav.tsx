@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -152,7 +152,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             href={user ? '/home' : '/'}
             className="flex items-center gap-2 font-fraunces text-xl text-brand-ui"
           >
-            <span aria-hidden="true">ðŸ¦Š</span>
+            <span aria-hidden="true">🦊</span>
             <span>Foxing</span>
           </Link>
         </div>
@@ -472,7 +472,7 @@ function MegaMenu({
       {botm ? (
         <div className="mb-3 rounded-md border border-border-subtle bg-bg-sunken p-3">
           <p className="font-dm-mono text-[10px] uppercase tracking-wider text-brand-text">
-            Foxing pick Â· {monthYearLabel}
+            Foxing pick &middot; {monthYearLabel}
           </p>
           <p className="mt-1 font-fraunces text-sm text-text-primary">
             {botm.title}
@@ -486,7 +486,7 @@ function MegaMenu({
             role="menuitem"
             className="mt-2 inline-block font-dm-sans text-xs text-brand-text hover:underline"
           >
-            See curator notes â†’
+            See curator notes &rarr;
           </Link>
         </div>
       ) : null}
@@ -514,7 +514,7 @@ function MegaMenu({
           role="menuitem"
           className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
-          View all 30 clubs â†’
+          View all 30 clubs &rarr;
         </Link>
         <Link
           href={currentMonthPath()}
@@ -522,7 +522,7 @@ function MegaMenu({
           role="menuitem"
           className="block rounded-md px-2 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
         >
-          This month&apos;s picks â†’
+          This month&apos;s picks &rarr;
         </Link>
         <Link
           href="/book-of-the-month"
@@ -783,7 +783,7 @@ function AccountMenu({
 
   const goalSubLabel =
     stats && stats.goalTarget !== null
-      ? `${stats.goalProgress} of ${stats.goalTarget} this year Â· ${stats.freezeCredits} freeze${stats.freezeCredits !== 1 ? 's' : ''} left`
+      ? `${stats.goalProgress} of ${stats.goalTarget} this year \u00B7 ${stats.freezeCredits} freeze${stats.freezeCredits !== 1 ? 's' : ''} left`
       : null
 
   const vocabSubLabel = stats
@@ -869,7 +869,7 @@ function AccountMenu({
           href="/saved-posts"
           icon={<StackIcon size={16} />}
           label="Collections"
-          subLabel="Lists Â· buddy reads Â· saved Â· commonplace"
+          subLabel={"Lists \u00B7 buddy reads \u00B7 saved \u00B7 commonplace"}
           onClose={onClose}
         />
 

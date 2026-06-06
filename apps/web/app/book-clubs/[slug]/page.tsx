@@ -1,4 +1,4 @@
-﻿import Image from 'next/image'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -124,7 +124,7 @@ export default async function ExternalBookClubPage(
               href="/book-clubs"
               className="text-brand-text hover:underline"
             >
-              â† All celebrity picks
+              &larr; All celebrity picks
             </Link>
           </nav>
 
@@ -260,7 +260,7 @@ function EraSection({
     <section>
       <h2 className="font-fraunces text-2xl text-text-primary">{era.label}</h2>
       <p className="mt-1 font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
-        {yearRange} Â· {picks.length} {picks.length === 1 ? 'pick' : 'picks'}
+        {yearRange} &middot; {picks.length} {picks.length === 1 ? 'pick' : 'picks'}
       </p>
       <p className="mt-3 max-w-prose font-source-serif-4 text-base text-text-secondary">
         {era.description}
@@ -450,7 +450,7 @@ function ClubStatsBar({ stats }: { stats: ClubStats }) {
   }
   return (
     <p className="mt-10 font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
-      {parts.join(' Â· ')}
+      {parts.join(' \u00B7 ')}
     </p>
   )
 }
