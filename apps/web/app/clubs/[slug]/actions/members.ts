@@ -1,0 +1,542 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getClubRole } from '@/lib/club-membership'
+import { getAuthedUserId } from '@/lib/nav-user'
+import { type ActionResult, assertMod } from './_shared'
+
+interface MemberActionInput {
+  club_id: string
+  user_id: string
+}
+
+function parseMemberAction(formData: FormData): MemberActionInput {
+  return {
+    club_id: String(formData.get('club_id') ?? '').trim(),
+    user_id: String(formData.get('user_id') ?? '').trim(),
+  }
+}
+
+interface ClubSettingsPayload {
+  name: string
+  description: string | null
+  visibility: 'public' | 'private' | 'secret'
+  member_approval: boolean
+  max_members: number | null
+  reading_pace: 'relaxed' | 'moderate' | 'intensive' | 'custom'
+  chapters_per_week: number | null
+  genre_tags: string[]
+  current_book_id: string | null
+}
+
+function parseClubSettings(formData: FormData): ClubSettingsPayload {
+  const get = (k: string) => String(formData.get(k) ?? '').trim()
+  const visibilityRaw = get('visibility')
+  const visibility: ClubSettingsPayload['visibility'] = (
+    ['public', 'private', 'secret'] as const
+  ).includes(visibilityRaw as 'public' | 'private' | 'secret')
+    ? (visibilityRaw as 'public' | 'private' | 'secret')
+    : 'public'
+  const paceRaw = get('reading_pace')
+  const reading_pace: ClubSettingsPayload['reading_pace'] = (
+    ['relaxed', 'moderate', 'intensive', 'custom'] as const
+  ).includes(paceRaw as 'relaxed' | 'moderate' | 'intensive' | 'custom')
+    ? (paceRaw as 'relaxed' | 'moderate' | 'intensive' | 'custom')
+    : 'moderate'
+  const maxRaw = get('max_members')
+  const cpwRaw = get('chapters_per_week')
+  const tagsRaw = get('genre_tags')
+  return {
+    name: get('name').slice(0, 80),
+    description: get('description').slice(0, 500) || null,
+    visibility,
+    member_approval: formData.get('member_approval') === 'on',
+    max_members: maxRaw ? Number(maxRaw) || null : null,
+    reading_pace,
+    chapters_per_week:
+      reading_pace === 'custom' && cpwRaw ? Number(cpwRaw) || null : null,
+    genre_tags: tagsRaw
+      ? tagsRaw
+          .split(',')
+          .map((t) => t.trim().toLowerCase())
+          .filter(Boolean)
+          .slice(0, 12)
+      : [],
+    current_book_id: get('current_book_id') || null,
+  }
+}
+
+export async function muteClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  const durationHours = Number(formData.get('duration_hours') ?? 24)
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const until =
+    durationHours <= 0
+      ? new Date('9999-12-31T00:00:00Z').toISOString()
+      : new Date(Date.now() + durationHours * 3600 * 1000).toISOString()
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .update({ muted_until: until, muted_by: auth.actorId, status: 'muted' })
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function banClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  const reason = String(formData.get('reason') ?? '').trim().slice(0, 500) || null
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .update({
+      banned_at: new Date().toISOString(),
+      banned_by: auth.actorId,
+      ban_reason: reason,
+      status: 'banned',
+    })
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function removeClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .delete()
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function changeClubMemberRole(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  const newRole = String(formData.get('role') ?? '').trim()
+  if (
+    !club_id ||
+    !user_id ||
+    !['admin', 'moderator', 'member'].includes(newRole)
+  ) {
+    return { ok: false, error: 'Invalid role.' }
+  }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  if (auth.role !== 'admin') {
+    return { ok: false, error: 'Only club admins can change roles.' }
+  }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .update({ role: newRole })
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function inviteClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const identifier = String(formData.get('identifier') ?? '').trim()
+  if (!clubId || !identifier) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const isEmail = identifier.includes('@')
+  let invitedUserId: string | null = null
+  if (!isEmail) {
+    const { data: profile } = await admin
+      .from('profiles')
+      .select('id')
+      .eq('username', identifier.toLowerCase())
+      .maybeSingle()
+    if (!profile) {
+      return { ok: false, error: 'No member found with that username.' }
+    }
+    invitedUserId = (profile as { id: string }).id
+  }
+  const { error } = await admin.from('club_invites').insert({
+    club_id: clubId,
+    invited_by: auth.actorId,
+    invited_user_id: invitedUserId,
+    email: isEmail ? identifier.toLowerCase() : null,
+  })
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function joinWaitlist(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('member_count, max_members, slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const row = club as
+    | {
+        member_count: number | null
+        max_members: number | null
+        slug: string | null
+      }
+    | null
+  if (!row) return { ok: false, error: 'Club not found.' }
+  if (
+    row.max_members === null ||
+    (row.member_count ?? 0) < row.max_members
+  ) {
+    return { ok: false, error: 'Club is not full yet.' }
+  }
+  const { data: existing } = await admin
+    .from('club_members')
+    .select('user_id')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  if (existing) {
+    return { ok: false, error: 'You are already in this club.' }
+  }
+  const { error } = await admin
+    .from('club_waitlist')
+    .upsert(
+      { club_id: clubId, user_id: userId },
+      { onConflict: 'club_id,user_id', ignoreDuplicates: true },
+    )
+  if (error) return { ok: false, error: error.message }
+  if (row.slug) revalidatePath(`/clubs/${row.slug}`)
+  return { ok: true }
+}
+
+export async function leaveWaitlist(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_waitlist')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const slug = (club as { slug: string | null } | null)?.slug
+  if (slug) revalidatePath(`/clubs/${slug}`)
+  return { ok: true }
+}
+
+export async function approveClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .update({ status: 'active', joined_at: new Date().toISOString() })
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+    .eq('status', 'pending')
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function declineClubMember(
+  formData: FormData,
+): Promise<ActionResult> {
+  const { club_id, user_id } = parseMemberAction(formData)
+  if (!club_id || !user_id) return { ok: false, error: 'Missing fields.' }
+  const auth = await assertMod(club_id)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_members')
+    .delete()
+    .eq('club_id', club_id)
+    .eq('user_id', user_id)
+    .eq('status', 'pending')
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', club_id)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
+export async function updateClubSettings(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const role = await getClubRole(clubId, userId)
+  if (role !== 'admin') return { ok: false, error: 'Admin access required.' }
+
+  const payload = parseClubSettings(formData)
+  if (!payload.name) return { ok: false, error: 'Club name is required.' }
+
+  const admin = createAdminClient()
+  const { data: prior } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const priorSlug = (prior as { slug: string | null } | null)?.slug
+
+  const { error } = await admin
+    .from('clubs')
+    .update({
+      name: payload.name,
+      description: payload.description,
+      visibility: payload.visibility,
+      member_approval: payload.member_approval,
+      max_members: payload.max_members,
+      reading_pace: payload.reading_pace,
+      chapters_per_week: payload.chapters_per_week,
+      genre_tags: payload.genre_tags,
+      current_book_id: payload.current_book_id,
+    })
+    .eq('id', clubId)
+  if (error) return { ok: false, error: error.message }
+
+  const { data: after } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const newSlug = (after as { slug: string | null } | null)?.slug
+  revalidatePath('/clubs')
+  if (priorSlug) revalidatePath(`/clubs/${priorSlug}`)
+  if (newSlug && newSlug !== priorSlug) revalidatePath(`/clubs/${newSlug}`)
+  return { ok: true }
+}
+
+export async function transferClubOwnership(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const username = String(formData.get('username') ?? '').trim().toLowerCase()
+  const confirm = formData.get('confirm') === 'on'
+  if (!clubId || !username) return { ok: false, error: 'Missing fields.' }
+  if (!confirm) return { ok: false, error: 'Confirm by checking the box.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const role = await getClubRole(clubId, userId)
+  if (role !== 'admin') return { ok: false, error: 'Admin access required.' }
+
+  const admin = createAdminClient()
+  const { data: target } = await admin
+    .from('profiles')
+    .select('id')
+    .eq('username', username)
+    .maybeSingle()
+  const targetId = (target as { id: string } | null)?.id
+  if (!targetId) {
+    return { ok: false, error: 'No member found with that username.' }
+  }
+  if (targetId === userId) {
+    return { ok: false, error: 'You already own this club.' }
+  }
+  const { data: targetMember } = await admin
+    .from('club_members')
+    .select('user_id, status')
+    .eq('club_id', clubId)
+    .eq('user_id', targetId)
+    .maybeSingle()
+  const member = targetMember as { user_id: string; status: string | null } | null
+  if (!member || member.status !== 'active') {
+    return { ok: false, error: 'That user is not an active member.' }
+  }
+
+  const { error: demote } = await admin
+    .from('club_members')
+    .update({ role: 'member' })
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+  if (demote) return { ok: false, error: demote.message }
+  const { error: promote } = await admin
+    .from('club_members')
+    .update({ role: 'admin' })
+    .eq('club_id', clubId)
+    .eq('user_id', targetId)
+  if (promote) return { ok: false, error: promote.message }
+  const { error: club } = await admin
+    .from('clubs')
+    .update({ creator_id: targetId })
+    .eq('id', clubId)
+  if (club) return { ok: false, error: club.message }
+
+  const { data: clubRow } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const slug = (clubRow as { slug: string | null } | null)?.slug
+  if (slug) revalidatePath(`/clubs/${slug}`)
+  return { ok: true }
+}
+
+export async function deleteClub(formData: FormData): Promise<void> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const confirmName = String(formData.get('confirm_name') ?? '').trim()
+  if (!clubId) throw new Error('Missing club id.')
+  const userId = await getAuthedUserId()
+  if (!userId) throw new Error('Sign in required.')
+  const role = await getClubRole(clubId, userId)
+  if (role !== 'admin') throw new Error('Admin access required.')
+
+  const admin = createAdminClient()
+  const { data: clubRow } = await admin
+    .from('clubs')
+    .select('name, slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const club = clubRow as { name: string; slug: string | null } | null
+  if (!club) throw new Error('Club not found.')
+  if (club.name.toLowerCase() !== confirmName.toLowerCase()) {
+    throw new Error('Confirmation name does not match.')
+  }
+
+  const { error } = await admin.from('clubs').delete().eq('id', clubId)
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/clubs')
+  if (club.slug) revalidatePath(`/clubs/${club.slug}`)
+  redirect('/clubs')
+}
+
+export async function requestToJoinClub(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug, member_approval')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubRow = club as
+    | { slug: string | null; member_approval: boolean | null }
+    | null
+  if (!clubRow?.member_approval) {
+    return {
+      ok: false,
+      error: 'This club does not require approval. Join via the app instead.',
+    }
+  }
+  const { data: existing } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const status =
+    (existing as { status: string | null } | null)?.status ?? null
+  if (status === 'pending') {
+    return { ok: false, error: 'Your request is already pending.' }
+  }
+  if (status === 'active') {
+    return { ok: false, error: 'You are already a member.' }
+  }
+  if (status === 'banned') {
+    return { ok: false, error: 'You cannot join this club.' }
+  }
+  const { error } = await admin.from('club_members').upsert(
+    {
+      club_id: clubId,
+      user_id: userId,
+      role: 'member',
+      status: 'pending',
+    },
+    { onConflict: 'club_id,user_id' },
+  )
+  if (error) return { ok: false, error: error.message }
+  if (clubRow.slug) revalidatePath(`/clubs/${clubRow.slug}`)
+  return { ok: true }
+}
