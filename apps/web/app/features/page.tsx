@@ -1,8 +1,12 @@
-import Link from 'next/link'
-import { type ReactNode } from 'react'
+﻿import Link from 'next/link'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
-import { Badge } from '@/components/ui/badge'
+import {
+  FeatureList,
+  Prose,
+  Section,
+  Subgroup,
+} from '@/components/features/feature-section'
 import { Button } from '@/components/ui/button'
 import {
   FREE_AI_LOOKUPS_PER_DAY,
@@ -274,7 +278,7 @@ export default function FeaturesPage() {
             <Subgroup title="Chapter reactions" tier="free">
               <FeatureList
                 items={[
-                  'React to any chapter with 8 emojis: 😭 😂 😱 😤 🥺 🤯 ❤️ 🙃',
+                  'React to any chapter with 8 emojis: ðŸ˜­ ðŸ˜‚ ðŸ˜± ðŸ˜¤ ðŸ¥º ðŸ¤¯ â¤ï¸ ðŸ™ƒ',
                   'Add an optional note to any reaction',
                   'Privacy control per reaction: Public, Close friends only, or Private',
                   'Community chapter reactions visible on every book page (aggregated by emoji)',
@@ -1118,120 +1122,5 @@ export default function FeaturesPage() {
       </main>
       <Footer />
     </div>
-  )
-}
-
-type Platform = 'app' | 'web' | 'both'
-
-interface SectionProps {
-  id: string
-  eyebrow: string
-  heading: string
-  tier?: 'free' | 'plus'
-  platform?: Platform
-  children: ReactNode
-}
-
-function Section({
-  id,
-  eyebrow,
-  heading,
-  tier,
-  platform,
-  children,
-}: SectionProps) {
-  return (
-    <section
-      id={id}
-      className="mt-16 border-t border-border-subtle pt-12 first-of-type:mt-0 first-of-type:border-t-0 first-of-type:pt-0"
-    >
-      <p className="mb-2 font-dm-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
-        {eyebrow}
-      </p>
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <h2 className="font-fraunces text-[1.625rem] text-text-primary">
-          {heading}
-        </h2>
-        {tier ? <TierBadge tier={tier} /> : null}
-        {platform ? <PlatformBadge platform={platform} /> : null}
-      </div>
-      {children}
-    </section>
-  )
-}
-
-interface SubgroupProps {
-  title?: string
-  tier?: 'free' | 'plus'
-  platform?: Platform
-  meta?: string
-  children: ReactNode
-}
-
-function Subgroup({
-  title,
-  tier,
-  platform,
-  meta,
-  children,
-}: SubgroupProps) {
-  if (!title && !tier && !meta && !platform) {
-    return <div className="mt-4">{children}</div>
-  }
-  return (
-    <div className="mt-8">
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        {title ? (
-          <h3 className="font-fraunces text-[1.125rem] text-text-primary">
-            {title}
-          </h3>
-        ) : null}
-        {tier ? <TierBadge tier={tier} /> : null}
-        {platform ? <PlatformBadge platform={platform} /> : null}
-        {meta ? (
-          <span className="font-dm-sans text-xs text-text-tertiary">
-            {meta}
-          </span>
-        ) : null}
-      </div>
-      {children}
-    </div>
-  )
-}
-
-function TierBadge({ tier }: { tier: 'free' | 'plus' }) {
-  if (tier === 'free') return <Badge variant="neutral">Free</Badge>
-  return <Badge variant="brand">Plus</Badge>
-}
-
-function PlatformBadge({ platform }: { platform: Platform }) {
-  if (platform === 'both') return null
-  return (
-    <span className="inline-flex items-center rounded-full border border-border-default px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary">
-      {platform === 'app' ? 'App only' : 'Web only'}
-    </span>
-  )
-}
-
-function Prose({ children }: { children: ReactNode }) {
-  return (
-    <p className="font-source-serif-4 text-base text-text-secondary leading-[1.85]">
-      {children}
-    </p>
-  )
-}
-
-function FeatureList({ items }: { items: string[] }) {
-  return (
-    <ul className="mt-4 flex flex-col gap-2">
-      {items.map((item) => (
-        <li
-          key={item}
-          className="font-dm-sans text-[0.9375rem] text-text-secondary"
-        >
-          {item}
-        </li>
-      ))}
-    </ul>
   )
 }

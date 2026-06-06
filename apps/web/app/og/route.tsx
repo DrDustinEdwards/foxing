@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element --
+﻿/* eslint-disable @next/next/no-img-element --
  * next/og's ImageResponse uses Satori, which cannot render <Image /> from
  * next/image. Raw <img> tags are the correct and only option inside this
  * file. Suppress the rule globally for this route.
@@ -9,8 +9,8 @@ import { createAdminClient } from '@/lib/supabase/admin'
 
 export const runtime = 'edge'
 
-const WIDTH = 1200
-const HEIGHT = 630
+const OG_WIDTH = 1200
+const OG_HEIGHT = 630
 
 const CREAM = '#FAF6EE'
 const CHARCOAL = '#16100B'
@@ -212,7 +212,7 @@ function FoxingMark({ tint = AUBURN }: { tint?: string }) {
         fontSize: 36,
       }}
     >
-      <span style={{ fontSize: 48 }}>🦊</span>
+      <span style={{ fontSize: 48 }}>ðŸ¦Š</span>
       <span style={{ color: tint, fontFamily: 'serif', fontWeight: 600 }}>
         Foxing
       </span>
@@ -260,7 +260,7 @@ function defaultOG() {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -343,7 +343,7 @@ function bookOG(book: BookData) {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -450,7 +450,7 @@ function profileOG(profile: ProfileData) {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -470,7 +470,7 @@ function journalOG(post: JournalData) {
           <div
             style={{
               width: 480,
-              height: HEIGHT,
+              height: OG_HEIGHT,
               display: 'flex',
               overflow: 'hidden',
             }}
@@ -478,7 +478,7 @@ function journalOG(post: JournalData) {
             <img
               src={post.cover_image_url}
               width={480}
-              height={HEIGHT}
+              height={OG_HEIGHT}
               style={{ objectFit: 'cover' }}
               alt=""
             />
@@ -541,7 +541,7 @@ function journalOG(post: JournalData) {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -566,7 +566,7 @@ function bookOfMonthOG(data: {
         <div
           style={{
             width: 420,
-            height: HEIGHT,
+            height: OG_HEIGHT,
             display: 'flex',
             background: '#2A1A0E',
             overflow: 'hidden',
@@ -576,7 +576,7 @@ function bookOfMonthOG(data: {
             <img
               src={data.cover_url}
               width={420}
-              height={HEIGHT}
+              height={OG_HEIGHT}
               style={{ objectFit: 'cover' }}
               alt=""
             />
@@ -644,7 +644,7 @@ function bookOfMonthOG(data: {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -738,9 +738,9 @@ function diaryOG(data: {
                   color: AUBURN,
                 }}
               >
-                {'★'.repeat(Math.round(stars))}
+                {'â˜…'.repeat(Math.round(stars))}
                 <span style={{ color: '#D6C3A3' }}>
-                  {'★'.repeat(Math.max(0, 5 - Math.round(stars)))}
+                  {'â˜…'.repeat(Math.max(0, 5 - Math.round(stars)))}
                 </span>
               </div>
             )}
@@ -757,7 +757,7 @@ function diaryOG(data: {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -805,7 +805,7 @@ function listOG(data: {
                 <img
                   src={url}
                   width={400}
-                  height={HEIGHT}
+                  height={OG_HEIGHT}
                   style={{ objectFit: 'cover', width: '100%', height: '100%' }}
                   alt=""
                 />
@@ -843,7 +843,7 @@ function listOG(data: {
               fontFamily: 'serif',
             }}
           >
-            {data.creator && `by ${clamp(data.creator, 40)} · `}
+            {data.creator && `by ${clamp(data.creator, 40)} Â· `}
             {data.count && `${data.count} books`}
           </div>
         </div>
@@ -858,7 +858,7 @@ function listOG(data: {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -969,7 +969,7 @@ function clubOG(data: {
         )}
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
@@ -1000,7 +1000,7 @@ function quoteOG(data: {
             lineHeight: 1,
           }}
         >
-          “
+          â€œ
         </div>
         <div
           style={{
@@ -1048,7 +1048,7 @@ function quoteOG(data: {
         </div>
       </div>
     ),
-    { width: WIDTH, height: HEIGHT },
+    { width: OG_WIDTH, height: OG_HEIGHT },
   )
 }
 
