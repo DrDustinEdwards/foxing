@@ -27,26 +27,18 @@ import {
 import { appBookDeeplink } from '@/lib/foxing'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { fetchBookDiscussions } from '@/lib/discussions'
-import {
-  fetchOwnChapterReactions,
-  fetchPublicChapterReactions,
-} from '@/lib/chapter-reactions'
-import {
-  fetchUserBookStatus,
-  fetchUserBookmarks,
-  fetchUserBookTags,
-  userHasBookInLibrary,
-} from '@/lib/bookmarks'
-import { fetchUserShelvesForBook } from '@/lib/shelves'
-import { BookShelvesPicker } from '@/components/shelves/book-shelves-picker'
-import { getAuthedUserId } from '@/lib/nav-user'
+import { fetchPublicChapterReactions } from '@/lib/chapter-reactions'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { ReadingTimerWidget } from '@/components/reading-timer-widget'
-import { BookmarksSection } from './bookmarks-section'
-import { BookTagsRow } from './book-tags-row'
-import { ChapterReactionsSection } from './chapter-reactions-section'
-import { CommunityReactionsSection } from './community-reactions-section'
+import {
+  CommunityReactionsWithViewer,
+  MeBookProvider,
+  PersonalizedBookmarks,
+  PersonalizedBookShelvesBox,
+  PersonalizedBookTagsBox,
+  PersonalizedChapterReactions,
+  PersonalizedReadingTimer,
+} from './me-book-context'
 import { DiscussionGuideSection } from './discussion-guide-section'
 import { DiscussionsSection } from './discussions-section'
 
@@ -130,7 +122,7 @@ export default async function BookPage(
     aiAuthorBio,
     discussionGuide,
     discussions,
-    viewerId,
+    publicReactions,
   ] = await Promise.all([
     fetchBookReviews(book.id, 5),
     fetchBookHighlights(book.id, 3),
@@ -140,37 +132,7 @@ export default async function BookPage(
     fetchAiCache(book.id, 'author_bio'),
     fetchDiscussionGuide(book.id),
     fetchBookDiscussions(book.id),
-    getAuthedUserId(),
-  ])
-
-  const [
-    ownReactions,
-    publicReactions,
-    bookmarks,
-    hasInLibrary,
-    ownTags,
-    shelvesData,
-    userBookStatus,
-  ] = await Promise.all([
-    viewerId
-      ? fetchOwnChapterReactions(viewerId, book.id)
-      : Promise.resolve([]),
     fetchPublicChapterReactions(book.id, 100),
-    viewerId
-      ? fetchUserBookmarks(viewerId, book.id)
-      : Promise.resolve([]),
-    viewerId
-      ? userHasBookInLibrary(viewerId, book.id)
-      : Promise.resolve(false),
-    viewerId
-      ? fetchUserBookTags(viewerId, book.id)
-      : Promise.resolve([]),
-    viewerId
-      ? fetchUserShelvesForBook(viewerId, book.id)
-      : Promise.resolve({ shelves: [], membership: new Set<string>() }),
-    viewerId
-      ? fetchUserBookStatus(viewerId, book.id)
-      : Promise.resolve(null),
   ])
 
   const description = aiDescription || book.description || null
@@ -280,115 +242,79 @@ export default async function BookPage(
       />
       <main className="flex-1">
         <BookHero book={book} />
+        <MeBookProvider bookId={book.id}>
         <PageWrapper className="grid gap-10 py-10 md:grid-cols-[1fr_320px] md:py-12">
-          <div className="flex flex-col">
-            <BookHeader book={book} />
-            <ActionBar bookId={book.id} hasEpub={Boolean(book.epub_url)} />
-            <WhereToRead
-              book={{
-                id: book.id,
-                title: book.title,
-                author: book.author,
-                isbn: book.isbn,
-                isbn13: book.isbn13,
-                amazon_url: book.amazon_url,
-                bookshop_url: book.bookshop_url,
-                source_type: book.source_type,
-                epub_url: book.epub_url,
-              }}
-            />
-            {viewerId && (
-              <ReadingTimerWidget
+            <div className="flex flex-col">
+              <BookHeader book={book} />
+              <ActionBar bookId={book.id} hasEpub={Boolean(book.epub_url)} />
+              <WhereToRead
+                book={{
+                  id: book.id,
+                  title: book.title,
+                  author: book.author,
+                  isbn: book.isbn,
+                  isbn13: book.isbn13,
+                  amazon_url: book.amazon_url,
+                  bookshop_url: book.bookshop_url,
+                  source_type: book.source_type,
+                  epub_url: book.epub_url,
+                }}
+              />
+              <PersonalizedReadingTimer
                 bookId={book.id}
                 bookSlug={book.slug}
                 bookTitle={book.title}
                 wordCount={book.word_count}
               />
-            )}
-            {viewerId && hasInLibrary && (
-              <BookmarksSection
-                bookmarks={bookmarks}
+              <PersonalizedBookmarks bookId={book.id} bookSlug={book.slug} />
+              <PersonalizedBookTagsBox
                 bookId={book.id}
                 bookSlug={book.slug}
               />
-            )}
-            {viewerId && hasInLibrary && (
-              <div className="mt-6 rounded-lg border border-border-subtle bg-bg-surface p-4">
-                <BookTagsRow
-                  bookId={book.id}
-                  bookSlug={book.slug}
-                  initialTags={ownTags}
-                />
-              </div>
-            )}
-            {viewerId && (
-              <div className="mt-6 rounded-lg border border-border-subtle bg-bg-surface p-4">
-                <BookShelvesPicker
-                  bookId={book.id}
-                  shelves={shelvesData.shelves.map((s) => ({
-                    id: s.id,
-                    name: s.name,
-                    is_public: s.is_public,
-                  }))}
-                  initialMembership={[...shelvesData.membership]}
-                />
-              </div>
-            )}
-            <ReviewsSection
-              reviews={reviews}
-              total={book.rating_count}
-              bookId={book.id}
-            />
-            {highlights.length > 0 && <HighlightsSection highlights={highlights} />}
-            {description && (
-              <CollapsibleSection heading="About this book">
-                <p className="font-source-serif-4 text-base text-text-secondary">
-                  {description}
-                </p>
+              <PersonalizedBookShelvesBox bookId={book.id} />
+              <ReviewsSection
+                reviews={reviews}
+                total={book.rating_count}
+                bookId={book.id}
+              />
+              {highlights.length > 0 && (
+                <HighlightsSection highlights={highlights} />
+              )}
+              {description && (
+                <CollapsibleSection heading="About this book">
+                  <p className="font-source-serif-4 text-base text-text-secondary">
+                    {description}
+                  </p>
+                </CollapsibleSection>
+              )}
+              <DiscussionGuideSection
+                bookId={book.id}
+                bookSlug={book.slug}
+                initialQuestions={discussionGuide?.questions ?? null}
+              />
+              <DiscussionsSection
+                bookId={book.id}
+                bookSlug={book.slug}
+                discussions={discussions}
+              />
+              <PersonalizedChapterReactions
+                bookId={book.id}
+                bookSlug={book.slug}
+              />
+              <CommunityReactionsWithViewer reactions={publicReactions} />
+              <CollapsibleSection heading="Deep Dive">
+                <DeepDivePreview bookId={book.id} />
               </CollapsibleSection>
-            )}
-            <DiscussionGuideSection
-              bookId={book.id}
-              bookSlug={book.slug}
-              initialQuestions={discussionGuide?.questions ?? null}
+              {clubs.length > 0 && <ClubsSection clubs={clubs} />}
+            </div>
+            <Sidebar
+              similar={similar}
+              authorName={book.author}
+              authorSlug={book.author_slug}
+              authorBio={authorBioExcerpt}
             />
-            <DiscussionsSection
-              bookId={book.id}
-              bookSlug={book.slug}
-              discussions={discussions}
-              canStart={Boolean(viewerId)}
-            />
-            {viewerId && (
-              <ChapterReactionsSection
-                bookId={book.id}
-                bookSlug={book.slug}
-                reactions={ownReactions}
-              />
-            )}
-            <CommunityReactionsSection
-              reactions={publicReactions.map((r) => ({
-                id: r.id,
-                chapter_name: r.chapter_name,
-                emoji: r.emoji,
-                note: r.note,
-                created_at: r.created_at,
-                author: r.author,
-              }))}
-              inLibrary={hasInLibrary}
-              progressPercentage={userBookStatus?.progress_percentage ?? null}
-            />
-            <CollapsibleSection heading="Deep Dive">
-              <DeepDivePreview bookId={book.id} />
-            </CollapsibleSection>
-            {clubs.length > 0 && <ClubsSection clubs={clubs} />}
-          </div>
-          <Sidebar
-            similar={similar}
-            authorName={book.author}
-            authorSlug={book.author_slug}
-            authorBio={authorBioExcerpt}
-          />
         </PageWrapper>
+        </MeBookProvider>
       </main>
       <Footer />
     </div>
