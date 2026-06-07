@@ -67,7 +67,7 @@
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
     },
-    "runtimeVersion": "1.0.2",
+    "runtimeVersion": { "policy": "fingerprint" },
     "extra": {
       "router": {},
       "eas": {
