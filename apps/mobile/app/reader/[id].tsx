@@ -215,6 +215,15 @@ export default function Reader() {
   const isTablet = windowWidth >= 768
   const readerRef = useRef<ReaderRef>(null)
   const sessionIdRef = useRef<string | null>(null)
+  // userId captured into a ref so the unmount cleanup can flush writes
+  // without calling supabase.auth.getUser() (a network call that
+  // unreliably resolves during teardown / backgrounding).
+  const userIdRef = useRef<string | null>(null)
+  // One-shot per reader instance: updateStreak is idempotent within a
+  // calendar day, but we still gate it locally so we don't pay the
+  // 4-parallel-counts + upsert + checkAndAwardBadges fan-out on every
+  // chapter transition.
+  const streakFiredRef = useRef<boolean>(false)
   const positionRef = useRef<{ cfi: string | null; percentage: number }>({
     cfi: null,
     percentage: 0,
@@ -235,6 +244,10 @@ export default function Reader() {
 
   const [prefs, setPrefs] = useState<ReaderPrefs>(DEFAULT_PREFS)
   const [userId, setUserId] = useState<string | null>(null)
+  // Mirror userId into a ref so the unmount cleanup, the 30s ticker,
+  // and the chapter-change callback always read the latest without
+  // re-binding on every render.
+  userIdRef.current = userId
   const [showSettings, setShowSettings] = useState(false)
 
   const [currentChapter, setCurrentChapter] = useState({ title: '', index: 0 })
@@ -650,10 +663,17 @@ export default function Reader() {
   // The interval + cleanup both call through saveProgressRef so they always
   // see the latest closure (book/userId). Without this they'd capture the
   // first render's saveProgress, which returns early because book is null.
+  // pingSession bumps reading_sessions.ended_at every tick so the unmount
+  // path is a final flush, not the only write path. Previously the unmount
+  // ended_at update raced the JS-bridge teardown and ~45% of sessions on
+  // production had null ended_at.
   useEffect(() => {
     const t = setInterval(() => {
       saveProgressRef.current().catch((e) =>
         console.warn('[reader] interval save failed:', e instanceof Error ? e.message : e),
+      )
+      pingSession().catch((e) =>
+        console.warn('[reader] interval ping failed:', e instanceof Error ? e.message : e),
       )
     }, 30000)
     return () => {
@@ -662,7 +682,9 @@ export default function Reader() {
       saveProgressRef.current().catch((e) =>
         console.warn('[reader] unmount save failed:', e instanceof Error ? e.message : e),
       )
-      endSession()
+      pingSession().catch((e) =>
+        console.warn('[reader] unmount ping failed:', e instanceof Error ? e.message : e),
+      )
     }
   }, [])
 
@@ -817,22 +839,17 @@ export default function Reader() {
   // started in the mount effect always invokes the freshest closure.
   saveProgressRef.current = saveProgress
 
-  async function endSession() {
+  // Single-write ended_at refresh. Called every 30s by the interval and
+  // one final time on unmount; previously this was an end-of-life write
+  // that raced the JS-bridge teardown and dropped ~45% of session
+  // close-outs. Reads sessionIdRef directly (always current), so the
+  // closure captured by the mount-effect's interval/cleanup is safe.
+  async function pingSession() {
     if (!sessionIdRef.current) return
     await supabase
       .from('reading_sessions')
       .update({ ended_at: new Date().toISOString() })
       .eq('id', sessionIdRef.current)
-    // Streak refresh on every unmount, idempotent within a calendar day.
-    // Also fans out to checkAndAwardBadges internally for streak-based unlocks.
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      try {
-        await updateStreak(user.id)
-      } catch (e) {
-        console.warn('[reader] updateStreak failed:', e instanceof Error ? e.message : e)
-      }
-    }
   }
 
   function onLocation(cfi: string, percentage: number, pageWordCount?: number, pageText?: string) {
@@ -1347,6 +1364,22 @@ export default function Reader() {
           setCurrentChapter({ title: c.title, index: 0 })
           // Append to TOC sample for AI semantic-search if this chapter is new.
           setChapterList((prev) => (prev.includes(c.title) ? prev : [...prev, c.title]))
+          // Streak refresh. Moved off the unmount cleanup, which previously
+          // raced the JS-bridge teardown via supabase.auth.getUser() and
+          // landed zero rows in reading_streaks on production. Idempotent
+          // within a calendar day, but we gate locally so we don't pay
+          // the 4-parallel-counts + upsert + badge-check fan-out on every
+          // chapter callback (readium emits onChapterChange on most page
+          // turns, not just real transitions). Re-allow on failure so a
+          // transient error doesn't permanently skip the day's streak.
+          const uid = userIdRef.current
+          if (uid && !streakFiredRef.current) {
+            streakFiredRef.current = true
+            updateStreak(uid).catch((e) => {
+              console.warn('[reader] updateStreak failed:', e instanceof Error ? e.message : e)
+              streakFiredRef.current = false
+            })
+          }
         }}
         onWordTapped={(word, surroundingText, cfi, rect: ReaderRect) => {
           // PDF mode: foliate's word boundaries are unreliable, so suppress
