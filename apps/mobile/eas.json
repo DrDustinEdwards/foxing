@@ -9,6 +9,9 @@
       "distribution": "internal",
       "environment": "development",
       "channel": "development",
+      "env": {
+        "EXPO_NO_DOCTOR": "1"
+      },
       "android": {
         "buildType": "apk"
       }
