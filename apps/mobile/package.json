@@ -7,8 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build": "eas build",
-    "update": "eas update",
+    "build": "pnpm dlx eas-cli@18.12.3 build",
+    "update": "pnpm dlx eas-cli@18.12.3 update",
     "postinstall": "node scripts/patch-readium.mjs"
   },
   "dependencies": {
@@ -73,7 +73,6 @@
   "devDependencies": {
     "@types/node": "^20.19.41",
     "@types/react": "~19.2.14",
-    "eas-cli": "^18.12.3",
     "fast-xml-parser": "^5.8.0",
     "tsx": "^4.22.0",
     "typescript": "~6.0.3"
