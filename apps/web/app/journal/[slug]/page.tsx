@@ -15,6 +15,7 @@ import {
   JOURNAL_TAGS,
 } from '@/lib/journal-shared'
 import {
+  extractFaqPairs,
   extractH2Headings,
   renderJournalMarkdown,
 } from '@/lib/journal-markdown'
@@ -93,6 +94,7 @@ export default async function JournalPostPage(
     : { prev: null, next: null }
 
   const headings = extractH2Headings(post.content)
+  const faqPairs = extractFaqPairs(post.content)
   const body = await renderJournalMarkdown(post.content)
 
   return (
@@ -109,6 +111,13 @@ export default async function JournalPostPage(
         // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: breadcrumbJsonLd(post) }}
       />
+      {faqPairs.length > 0 && (
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: faqJsonLd(faqPairs) }}
+        />
+      )}
       <main className="flex-1">
         <PageWrapper className="py-10 md:py-14">
           <div className="grid gap-10 lg:grid-cols-[minmax(0,680px)_minmax(0,1fr)]">
@@ -408,6 +417,20 @@ function articleJsonLd(post: JournalPost): string {
     },
   }
   return JSON.stringify(data)
+}
+
+function faqJsonLd(
+  pairs: Array<{ question: string; answer: string }>,
+): string {
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: pairs.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
+  })
 }
 
 function breadcrumbJsonLd(post: JournalPost): string {
