@@ -472,3 +472,60 @@ body {
 }
 .journal-toggle-body p { margin-bottom: 0.5rem; }
 .journal-toggle-body p:last-child { margin-bottom: 0; }
+
+/* GFM tables in journal articles */
+.journal-prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.9375rem;
+}
+.journal-prose th,
+.journal-prose td {
+  border: 1px solid var(--border-subtle);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}
+.journal-prose th {
+  background: var(--bg-sunken);
+  color: var(--text-primary);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-weight: 600;
+}
+.journal-prose tbody tr:nth-child(even) td {
+  background: var(--bg-surface);
+}
+
+/* Pullquote inner paragraph (renderInner wraps content in <p>) */
+.journal-pullquote p {
+  margin: 0;
+}
+
+/* FAQ blocks */
+.journal-faq {
+  margin: 1.5rem 0;
+  border-top: 1px solid var(--border-subtle);
+}
+.journal-faq-list {
+  margin: 0;
+}
+.journal-faq-item {
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 1rem 0;
+}
+.journal-faq-question {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.375rem;
+}
+.journal-faq-answer {
+  color: var(--text-secondary);
+}
+.journal-faq-answer p {
+  margin: 0 0 0.5rem;
+}
+.journal-faq-answer p:last-child {
+  margin-bottom: 0;
+}
