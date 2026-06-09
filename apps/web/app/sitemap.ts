@@ -10,6 +10,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: FOXING_BASE_URL, lastModified: now, changeFrequency: 'daily', priority: 1.0 },
     { url: `${FOXING_BASE_URL}/books`, lastModified: now, changeFrequency: 'daily', priority: 0.9 },
+    { url: `${FOXING_BASE_URL}/discover`, lastModified: now, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${FOXING_BASE_URL}/series`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${FOXING_BASE_URL}/lists`, lastModified: now, changeFrequency: 'weekly', priority: 0.7 },
     { url: `${FOXING_BASE_URL}/book-clubs`, lastModified: now, changeFrequency: 'weekly', priority: 0.9 },
     { url: `${FOXING_BASE_URL}/journal`, lastModified: now, changeFrequency: 'weekly', priority: 0.8 },
     { url: `${FOXING_BASE_URL}/book-of-the-month`, lastModified: now, changeFrequency: 'monthly', priority: 0.8 },

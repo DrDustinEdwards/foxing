@@ -50,7 +50,7 @@ export default function robots(): MetadataRoute.Robots {
       { userAgent: 'CCBot', allow: '/' },
     ],
     sitemap: [
-      `${FOXING_BASE_URL}/sitemap.xml`,
+      `${FOXING_BASE_URL}/sitemap-index.xml`,
       `${FOXING_BASE_URL}/llms.txt`,
     ],
     host: FOXING_BASE_URL,
