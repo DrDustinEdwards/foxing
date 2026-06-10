@@ -1,6 +1,6 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import { truncate } from '@foxing/utils'
+import { Card } from '@/components/ui/card'
 import type { Book, ReadingList } from '@/types/database'
 
 interface ListCardProps {
@@ -20,10 +20,7 @@ export function ListCard({
 }: ListCardProps) {
   const [primary, ...secondary] = covers.slice(0, 3)
   return (
-    <Link
-      href={`/my-lists/${list.id}`}
-      className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
-    >
+    <Card variant="entity" href={`/my-lists/${list.id}`} className="gap-3 p-4">
       <div className="grid h-32 grid-cols-3 gap-1 overflow-hidden rounded">
         <div className="relative col-span-2 row-span-2 bg-bg-sunken">
           {primary?.cover_url && (
@@ -66,6 +63,6 @@ export function ListCard({
           {bookCount} books · {likeCount} likes
         </p>
       </div>
-    </Link>
+    </Card>
   )
 }

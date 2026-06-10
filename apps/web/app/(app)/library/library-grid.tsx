@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useMemo, useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
+import { BookCover } from '@/components/ui/book-cover'
 import { StarRating } from '@/components/ui/star-rating'
 import { cn } from '@/lib/cn'
 
@@ -110,7 +111,7 @@ function LibraryCard({
         href={`/book/${entry.book.slug ?? entry.book.id}`}
         className="flex flex-col gap-2"
       >
-        <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">
+        <BookCover>
           {entry.book.cover_url ? (
             <Image
               src={entry.book.cover_url}
@@ -143,7 +144,7 @@ function LibraryCard({
               Set aside
             </Badge>
           )}
-        </div>
+        </BookCover>
         <div className="flex flex-col gap-0.5">
           <p className="truncate font-fraunces text-sm text-text-primary">
             {entry.book.title}

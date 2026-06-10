@@ -1,10 +1,10 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { PrivateProfileNotice } from '@/components/private-profile-notice'
+import { Card } from '@/components/ui/card'
 import { UserSubpageHeader } from '@/components/user-subpage-header'
 import { fetchProfileByUsername } from '@/lib/queries'
 import {
@@ -75,9 +75,10 @@ export default async function UserListsPage(
             <ul className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {lists.map((l) => (
                 <li key={l.id}>
-                  <Link
+                  <Card
+                    variant="entity"
                     href={`/u/${profile.username}/lists/${l.slug ?? l.id}`}
-                    className="flex h-full flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
+                    className="gap-2 p-4"
                   >
                     <h2 className="font-fraunces text-base text-text-primary">
                       {l.title}
@@ -94,7 +95,7 @@ export default async function UserListsPage(
                         year: 'numeric',
                       })}
                     </p>
-                  </Link>
+                  </Card>
                 </li>
               ))}
             </ul>

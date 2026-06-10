@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
+import { BookCover } from '@/components/ui/book-cover'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
@@ -124,7 +125,7 @@ export default async function UserLibraryPage(
                     href={`/book/${entry.book.slug ?? entry.book.id}`}
                     className="group flex flex-col gap-2"
                   >
-                    <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">
+                    <BookCover>
                       {entry.book.cover_url && (
                         <Image
                           src={entry.book.cover_url}
@@ -144,7 +145,7 @@ export default async function UserLibraryPage(
                           Set aside
                         </Badge>
                       )}
-                    </div>
+                    </BookCover>
                     <div className="flex flex-col gap-0.5">
                       <p className="truncate font-fraunces text-sm text-text-primary">
                         {entry.book.title}

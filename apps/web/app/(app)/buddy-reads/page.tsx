@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
@@ -133,58 +134,57 @@ function BuddyReadCard({
   const partner = br.user1_id === viewerId ? br.user2 : br.user1
   return (
     <li>
-      <Link
-        href={`/buddy-reads/${br.id}`}
-        className="flex gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
-      >
-        {br.book && (
-          <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded bg-bg-sunken">
-            {br.book.cover_url && (
-              <Image
-                src={br.book.cover_url}
-                alt={br.book.title}
-                fill
-                sizes="64px"
-                className="object-cover"
-              />
-            )}
-          </div>
-        )}
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="truncate font-fraunces text-base text-text-primary">
-            {br.book?.title ?? 'Buddy read'}
-          </p>
-          {br.book?.author && (
-            <p className="font-dm-sans text-xs text-text-tertiary">
-              {br.book.author}
-            </p>
-          )}
-          {partner && (
-            <div className="mt-1 flex items-center gap-2">
-              <Avatar
-                src={partner.avatar_url}
-                name={partner.display_name}
-                size="sm"
-              />
-              <span className="font-dm-sans text-sm text-text-secondary">
-                with {partner.display_name}
-              </span>
+      <Card variant="entity" href={`/buddy-reads/${br.id}`} className="p-4">
+        <div className="flex gap-4">
+          {br.book && (
+            <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded bg-bg-sunken">
+              {br.book.cover_url && (
+                <Image
+                  src={br.book.cover_url}
+                  alt={br.book.title}
+                  fill
+                  sizes="64px"
+                  className="object-cover"
+                />
+              )}
             </div>
           )}
-          {br.started_at && (
-            <p className="font-dm-mono text-[11px] text-text-tertiary">
-              Started {new Date(br.started_at).toLocaleDateString()}
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <p className="truncate font-fraunces text-base text-text-primary">
+              {br.book?.title ?? 'Buddy read'}
             </p>
-          )}
+            {br.book?.author && (
+              <p className="font-dm-sans text-xs text-text-tertiary">
+                {br.book.author}
+              </p>
+            )}
+            {partner && (
+              <div className="mt-1 flex items-center gap-2">
+                <Avatar
+                  src={partner.avatar_url}
+                  name={partner.display_name}
+                  size="sm"
+                />
+                <span className="font-dm-sans text-sm text-text-secondary">
+                  with {partner.display_name}
+                </span>
+              </div>
+            )}
+            {br.started_at && (
+              <p className="font-dm-mono text-[11px] text-text-tertiary">
+                Started {new Date(br.started_at).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          <div className="self-center">
+            {br.is_active ? (
+              <Badge variant="success">Active</Badge>
+            ) : (
+              <Badge variant="neutral">Done</Badge>
+            )}
+          </div>
         </div>
-        <div className="self-center">
-          {br.is_active ? (
-            <Badge variant="success">Active</Badge>
-          ) : (
-            <Badge variant="neutral">Done</Badge>
-          )}
-        </div>
-      </Link>
+      </Card>
     </li>
   )
 }

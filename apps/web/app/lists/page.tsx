@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
+import { Card } from '@/components/ui/card'
 import { LikeListButton } from '@/components/ui/like-list-button'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
@@ -105,10 +106,7 @@ function PublicListCard({ list }: { list: PublicListRow }) {
     ? `/u/${list.creator.username}/lists/${list.id}`
     : `/lists`
   return (
-    <Link
-      href={href}
-      className="flex h-full flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
-    >
+    <Card variant="entity" href={href} className="gap-3 p-4">
       <h2 className="font-fraunces text-base text-text-primary">{list.title}</h2>
       {list.description && (
         <p className="line-clamp-3 font-source-serif-4 text-sm text-text-secondary">
@@ -120,6 +118,6 @@ function PublicListCard({ list }: { list: PublicListRow }) {
         {list.book_count} books
         {list.like_count > 0 && ` · ${list.like_count} likes`}
       </p>
-    </Link>
+    </Card>
   )
 }
