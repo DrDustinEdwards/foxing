@@ -164,8 +164,9 @@ export default function ScanScreen() {
               right: '10%',
               height: 120,
               borderWidth: 2,
-              borderColor: 'rgba(255,255,255,0.7)',
+              borderColor: colors.textOnDark,
               borderRadius: 12,
+              opacity: 0.7,
             }}
           />
           <Text
@@ -175,7 +176,7 @@ export default function ScanScreen() {
               left: 16,
               right: 16,
               textAlign: 'center',
-              color: 'white',
+              color: colors.textOnDark,
               fontFamily: Fonts.uiMedium,
               fontSize: 13,
               opacity: 0.85,

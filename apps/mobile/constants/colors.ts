@@ -97,6 +97,10 @@ interface ColorTokens {
   presenceOnline: string
   presenceAway: string
   overlay: string
+  // Scrims over imagery: fixed warm-black glass, identical in both schemes
+  // (mirrors the web --scrim-* tokens).
+  scrimLight: string
+  scrimDark: string
 
   // Shadows
   shadowSm: string
@@ -191,6 +195,8 @@ export const Colors: { light: ColorTokens; dark: ColorTokens } = {
     presenceOnline: '#1F7A4A',
     presenceAway: '#8A5B0F',
     overlay: 'rgba(22,16,11,0.5)',
+    scrimLight: 'rgba(22,16,11,0.45)',
+    scrimDark: 'rgba(22,16,11,0.65)',
 
     shadowSm: 'rgba(22,16,11,0.07)',
     shadowMd: 'rgba(22,16,11,0.09)',
@@ -282,6 +288,8 @@ export const Colors: { light: ColorTokens; dark: ColorTokens } = {
     presenceOnline: '#4CAF7D',
     presenceAway: '#F5B840',
     overlay: 'rgba(0,0,0,0.7)',
+    scrimLight: 'rgba(22,16,11,0.45)',
+    scrimDark: 'rgba(22,16,11,0.65)',
 
     shadowSm: 'rgba(0,0,0,0.4)',
     shadowMd: 'rgba(0,0,0,0.5)',
