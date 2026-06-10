@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { fetchSimilarBooks } from '@/lib/queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import {
@@ -68,9 +69,9 @@ export default async function DashboardHome() {
 
       {similar.length > 0 && (
         <section>
-          <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <SectionEyebrow as="h2" className="mb-4">
             Recommended for you
-          </h2>
+          </SectionEyebrow>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             {similar.map((b) => (
               <BookCard key={b.id} book={b} size="md" showRating={false} />
@@ -80,9 +81,9 @@ export default async function DashboardHome() {
       )}
 
       <section>
-        <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <SectionEyebrow as="h2" className="mb-4">
           Recent activity
-        </h2>
+        </SectionEyebrow>
         <p className="font-source-serif-4 text-base text-text-tertiary">
           Activity from people you follow shows up here once you have follows.{' '}
           <Link
@@ -124,9 +125,7 @@ function CurrentlyReadingCard({
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <div>
-          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-            Currently reading
-          </p>
+          <SectionEyebrow>Currently reading</SectionEyebrow>
           <Link
             href={`/book/${entry.book.slug ?? entry.book.id}`}
             className="mt-1 block font-fraunces text-xl text-text-primary hover:text-brand-text"

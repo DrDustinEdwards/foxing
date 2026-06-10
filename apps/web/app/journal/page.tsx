@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
+import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { JournalPageShell } from '@/components/journal/JournalPageShell'
 import {
   estimateReadingTime,
@@ -462,9 +463,7 @@ function CategorySection({
     <section className="mt-16">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-brand-text">
-            {tag.label}
-          </p>
+          <SectionEyebrow>{tag.label}</SectionEyebrow>
           <p className="font-source-serif-4 text-sm text-text-secondary">
             {tag.description}
           </p>
@@ -485,9 +484,7 @@ function LatestSection({ posts }: { posts: JournalPostSummary[] }) {
   return (
     <section className="mt-16">
       <div className="mb-5 flex items-end justify-between gap-4">
-        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-brand-text">
-          Latest
-        </p>
+        <SectionEyebrow>Latest</SectionEyebrow>
         <Link
           href="/journal/archive"
           className="shrink-0 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-text-tertiary no-underline transition-colors hover:text-text-primary"

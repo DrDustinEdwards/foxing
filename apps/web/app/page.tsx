@@ -18,6 +18,7 @@ import {
   type PassageOfDay,
 } from '@/lib/missing-pages-queries'
 import { Card, CardLabel, CardMeta, CardTitle } from '@/components/ui/card'
+import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import {
   getFeaturedJournalPost,
   getJournalPosts,
@@ -130,9 +131,7 @@ function JournalStrip({ cards }: { cards: JournalPostSummary[] }) {
     <section className="bg-bg-base border-t border-border-subtle">
       <div className="mx-auto w-full max-w-page px-6 py-14">
         <div className="mb-6 flex items-center justify-between">
-          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-            From the Journal
-          </p>
+          <SectionEyebrow>From the Journal</SectionEyebrow>
           <Link
             href="/journal"
             className="font-dm-mono text-[0.6875rem] text-text-tertiary hover:text-text-primary transition-colors"
@@ -170,9 +169,7 @@ function PassageOfDaySection({ passage }: { passage: PassageOfDay }) {
   return (
     <section className="bg-[var(--bg-surface)]">
       <PageWrapper className="py-16 md:py-20">
-        <p className="mb-6 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-          Passage of the day
-        </p>
+        <SectionEyebrow className="mb-6">Passage of the day</SectionEyebrow>
         <figure className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
           <blockquote className="font-source-serif-4 text-[17px] italic leading-relaxed text-text-primary">
             &ldquo;{passage.text}&rdquo;
@@ -321,9 +318,7 @@ function TodaysPick({
   return (
     <section className="bg-[var(--bg-surface)]">
       <PageWrapper className="py-16 md:py-20">
-        <p className="mb-6 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-          Today&apos;s Pick
-        </p>
+        <SectionEyebrow className="mb-6">Today&apos;s Pick</SectionEyebrow>
         <div className="grid gap-8 md:grid-cols-[200px_1fr] md:items-start">
           <Link
             href={`/book/${book.slug ?? book.id}`}
@@ -385,9 +380,7 @@ function PopularThisWeek({
     <section className="bg-[var(--bg-base)]">
       <PageWrapper className="py-16 md:py-20">
         <div className="mb-6 flex items-end justify-between">
-          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-            Popular this week
-          </p>
+          <SectionEyebrow>Popular this week</SectionEyebrow>
           <Link
             href="/books"
             className="font-dm-sans text-sm text-brand-text hover:underline"
@@ -415,9 +408,7 @@ function CommunitySection({
   return (
     <section className="bg-[var(--bg-surface)]">
       <PageWrapper className="py-16 md:py-20">
-        <p className="mb-6 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-          What readers are saying
-        </p>
+        <SectionEyebrow className="mb-6">What readers are saying</SectionEyebrow>
         <div className="grid gap-5 md:grid-cols-3">
           {reviews.map((r) => (
             <div key={r.id} className="flex flex-col gap-3">
