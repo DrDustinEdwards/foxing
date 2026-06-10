@@ -18,7 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       .select('slug, updated_at, created_at')
       .not('slug', 'is', null)
       .order('id')
-      .limit(50000)
+      .range(0, 49999)
     return (data ?? []).map((b) => ({
       url: `${FOXING_BASE_URL}/book/${b.slug}`,
       lastModified: b.updated_at ?? b.created_at,
