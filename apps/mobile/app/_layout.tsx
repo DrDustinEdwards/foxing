@@ -186,7 +186,7 @@ function RootLayout() {
         await createNotification(
           userId,
           'year_in_reading',
-          `Your ${year} in Reading is ready 📚`,
+          `Your ${year} in Reading is ready`,
           `You read ${finished} book${finished === 1 ? '' : 's'} this year. See your full recap.`,
           { screen: '/year-in-reading', year, finished },
         )
