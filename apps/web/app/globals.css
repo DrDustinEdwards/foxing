@@ -434,7 +434,7 @@ body {
 .journal-callout p { margin-bottom: 0.5rem; }
 .journal-callout p:last-child { margin-bottom: 0; }
 .journal-callout-tip     { border-color: var(--brand-ui);       background: var(--brand-subtle); }
-.journal-callout-warning { border-color: #d97706;               background: #fffbeb; }
+.journal-callout-warning { border-color: var(--warning);        background: var(--warning-bg); }
 .journal-callout-note    { border-color: var(--border-default); background: var(--bg-surface); }
 .journal-callout-danger  { border-color: var(--error);          background: var(--error-bg); }
 .journal-pullquote {
