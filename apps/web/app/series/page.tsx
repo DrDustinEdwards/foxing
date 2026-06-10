@@ -1,9 +1,9 @@
 import Image from 'next/image'
-import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { Card } from '@/components/ui/card'
 import { fetchSeriesIndex } from '@/lib/missing-pages-queries'
 import { buildSeriesIndexMetadata } from '@/lib/metadata'
 
@@ -38,9 +38,10 @@ export default async function SeriesIndexPage() {
             <ul className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {series.map((s) => (
                 <li key={s.slug}>
-                  <Link
+                  <Card
+                    variant="entity"
                     href={`/series/${s.slug}`}
-                    className="flex h-full flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
+                    className="gap-3 p-4"
                   >
                     <SeriesCovers covers={s.covers} title={s.name} />
                     <div className="flex flex-col gap-1">
@@ -51,7 +52,7 @@ export default async function SeriesIndexPage() {
                         {s.book_count} {s.book_count === 1 ? 'book' : 'books'}
                       </p>
                     </div>
-                  </Link>
+                  </Card>
                 </li>
               ))}
             </ul>

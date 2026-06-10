@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { BookCover } from '@/components/ui/book-cover'
 import {
   AWARD_CATEGORIES,
   fetchAwardWinners,
@@ -89,7 +90,7 @@ function AwardSection({
                 href={`/book/${b.slug ?? b.id}`}
                 className="group flex flex-col gap-2"
               >
-                <div className="relative aspect-[2/3] w-full overflow-hidden rounded-md bg-bg-sunken shadow-sm transition-shadow group-hover:shadow-md">
+                <BookCover>
                   {b.cover_url && (
                     <Image
                       src={b.cover_url}
@@ -99,7 +100,7 @@ function AwardSection({
                       className="object-cover"
                     />
                   )}
-                </div>
+                </BookCover>
                 <div className="flex flex-col">
                   <p className="truncate font-fraunces text-sm text-text-primary">
                     {b.title}

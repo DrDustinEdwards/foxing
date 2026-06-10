@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import {
@@ -108,10 +109,7 @@ export default async function ListsPage(
 
 function ListSummaryCard({ list }: { list: UserList }) {
   return (
-    <Link
-      href={`/my-lists/${list.id}`}
-      className="flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4 transition-shadow hover:shadow-md"
-    >
+    <Card variant="entity" href={`/my-lists/${list.id}`} className="gap-2 p-4">
       <h2 className="font-fraunces text-base text-text-primary">{list.title}</h2>
       {list.description && (
         <p className="line-clamp-2 font-dm-sans text-sm text-text-secondary">
@@ -121,6 +119,6 @@ function ListSummaryCard({ list }: { list: UserList }) {
       <p className="font-dm-mono text-xs text-text-tertiary">
         {list.book_count} books{list.is_public ? ' · public' : ' · private'}
       </p>
-    </Link>
+    </Card>
   )
 }
