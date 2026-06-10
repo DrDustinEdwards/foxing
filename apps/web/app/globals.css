@@ -13,9 +13,6 @@
   --bg-hover: #E5D8BF;
   --bg-selected: #FAE0D6;
   --bg-disabled: #EDE6DC;
-  --bg-reading: #FEFCF8;
-  --bg-reading-sepia: #F5EDDA;
-  --bg-reading-oled: #000000;
 
   --text-primary: #16100B;
   --text-secondary: #3E3028;
@@ -72,15 +69,6 @@
   --skeleton-shimmer: #F5EFE6;
   --tooltip-bg: #261E17;
   --tooltip-text: #F5EDDE;
-  --comment-bg: #EEF3F8;
-  --comment-border: #D5E4F2;
-  --spoiler-bg: #3E3028;
-  --spoiler-text: #3E3028;
-  --drag-target: #FAE0D6;
-  --drag-border: #D4622E;
-  --lookup-glow: #FAC455;
-  --presence-online: #1F7A4A;
-  --presence-away: #8A5B0F;
   --overlay: rgba(22,16,11,0.5);
 
   --shadow-sm: 0 1px 3px rgba(22,16,11,.07), 0 1px 2px rgba(22,16,11,.05);
@@ -96,9 +84,6 @@
   --bg-hover: #261C13;
   --bg-selected: #3A2418;
   --bg-disabled: #1E1810;
-  --bg-reading: #1A1410;
-  --bg-reading-sepia: #1E190E;
-  --bg-reading-oled: #000000;
 
   --text-primary: #F5EDDE;
   --text-secondary: #C4AE96;
@@ -155,15 +140,6 @@
   --skeleton-shimmer: #3A2C22;
   --tooltip-bg: #F5EDDE;
   --tooltip-text: #16100B;
-  --comment-bg: #0C1420;
-  --comment-border: #1A3050;
-  --spoiler-bg: #C4AE96;
-  --spoiler-text: #C4AE96;
-  --drag-target: #3A2418;
-  --drag-border: #E07840;
-  --lookup-glow: #3A2C00;
-  --presence-online: #4CAF7D;
-  --presence-away: #F5B840;
   --overlay: rgba(0,0,0,0.7);
 
   --shadow-sm: 0 1px 3px rgba(0,0,0,.4),  0 1px 2px rgba(0,0,0,.3);
