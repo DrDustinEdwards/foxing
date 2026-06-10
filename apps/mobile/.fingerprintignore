@@ -1,0 +1,21 @@
+# Build-time tooling pulled in by ./plugins/with-desugaring's require of
+# expo/config-plugins. Versions are captured by the lockfile; hashing their
+# internals diverges between local and EAS fingerprint computations.
+# (Known issue: expo monorepo + local config plugin, cf. expoConfigPlugins diffs.)
+**/node_modules/@expo/config-plugins/**/*
+**/node_modules/@expo/config/**/*
+**/node_modules/@expo/image-utils/**/*
+**/node_modules/@expo/json-file/**/*
+**/node_modules/@expo/require-utils/**/*
+**/node_modules/@expo/schema-utils/**/*
+**/node_modules/ansi-styles/**/*
+**/node_modules/chalk/**/*
+**/node_modules/expo/config-plugins.js
+**/node_modules/expo/config/**/*
+**/node_modules/jimp-compact/**/*
+**/node_modules/json5/**/*
+**/node_modules/parse-png/**/*
+**/node_modules/pngjs/**/*
+**/node_modules/sax/**/*
+**/node_modules/xml2js/**/*
+**/node_modules/xmlbuilder/**/*
