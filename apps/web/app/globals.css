@@ -83,22 +83,6 @@
   --presence-away: #8A5B0F;
   --overlay: rgba(22,16,11,0.5);
 
-  --section-cream: #FAF6EE;
-  --section-auburn: #D4622E;
-  --section-deep-auburn: #8A3610;
-  --section-charcoal: #16100B;
-  --section-amber: #F5A623;
-  --section-sage: #2B6443;
-
-  --gradient-hero: linear-gradient(135deg, #D4622E, #8A3610);
-  --gradient-warm: linear-gradient(135deg, #F5A623, #D4622E);
-  --gradient-dark: linear-gradient(135deg, #16100B, #261E17);
-  --gradient-subtle: linear-gradient(180deg, #FAF6EE, #F2EAD8);
-
-  --scrim-light: rgba(22,16,11,0.45);
-  --scrim-dark: rgba(22,16,11,0.65);
-  --scrim-auburn: rgba(180,74,28,0.55);
-
   --shadow-sm: 0 1px 3px rgba(22,16,11,.07), 0 1px 2px rgba(22,16,11,.05);
   --shadow-md: 0 4px 12px rgba(22,16,11,.09), 0 2px 4px rgba(22,16,11,.06);
   --shadow-lg: 0 16px 32px rgba(22,16,11,.11), 0 4px 8px rgba(22,16,11,.07);
@@ -189,6 +173,42 @@
 
 :root {
   color-scheme: light dark;
+
+  /* Mode-invariant marketing surfaces: fixed brand hues that render
+     identically in light and dark, including inside data-mode wrappers. */
+  --section-cream: #FAF6EE;
+  --section-auburn: #D4622E;
+  --section-deep-auburn: #8A3610;
+  --section-charcoal: #16100B;
+  --section-amber: #F5A623;
+  --section-sage: #2B6443;
+
+  --gradient-hero: linear-gradient(135deg, #D4622E, #8A3610);
+  --gradient-warm: linear-gradient(135deg, #F5A623, #D4622E);
+  --gradient-dark: linear-gradient(135deg, #16100B, #261E17);
+  --gradient-subtle: linear-gradient(180deg, #FAF6EE, #F2EAD8);
+
+  --scrim-light: rgba(22,16,11,0.45);
+  --scrim-dark: rgba(22,16,11,0.65);
+  --scrim-auburn: rgba(180,74,28,0.55);
+}
+
+/* Composite fades for pinned-dark panels; alpha on tokens via color-mix. */
+.home-hero-fade {
+  background-image: linear-gradient(
+    to left,
+    color-mix(in srgb, var(--bg-selected) 40%, transparent),
+    color-mix(in srgb, var(--bg-base) 80%, transparent),
+    var(--bg-base)
+  );
+}
+.book-hero-scrim {
+  background-image: linear-gradient(
+    to bottom,
+    transparent,
+    var(--scrim-dark),
+    var(--bg-base)
+  );
 }
 
 html {

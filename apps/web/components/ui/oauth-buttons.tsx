@@ -10,7 +10,7 @@ export function OAuthButtons({ onSelect, disabled }: OAuthButtonsProps) {
         type="button"
         disabled={disabled}
         onClick={() => onSelect('apple')}
-        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-[#000000] font-dm-sans text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+        className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-md bg-text-primary font-dm-sans text-sm font-medium text-bg-base hover:bg-text-secondary disabled:opacity-50"
       >
         Continue with Apple
       </button>

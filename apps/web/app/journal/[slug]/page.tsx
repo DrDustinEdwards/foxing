@@ -362,8 +362,8 @@ function AuthorByline() {
       >
         <defs>
           <linearGradient id="byline-mark" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#F5A623" />
-            <stop offset="100%" stopColor="#D4622E" />
+            <stop offset="0%" stopColor="var(--brand-secondary)" />
+            <stop offset="100%" stopColor="var(--brand-ui)" />
           </linearGradient>
         </defs>
         <circle cx="22" cy="22" r="22" fill="url(#byline-mark)" />
@@ -374,7 +374,7 @@ function AuthorByline() {
           fontFamily="Georgia, serif"
           fontSize="22"
           fontWeight="600"
-          fill="#FFFFFF"
+          fill="var(--text-on-brand)"
         >
           F
         </text>

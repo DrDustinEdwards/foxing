@@ -209,21 +209,21 @@ function Hero() {
   return (
     <section
       data-mode="dark"
-      className="relative isolate overflow-hidden bg-[#16100B] text-[var(--text-on-dark)]"
+      className="relative isolate overflow-hidden bg-bg-base text-[var(--text-on-dark)]"
     >
       <div
         aria-hidden="true"
-        className="absolute inset-y-0 right-0 hidden w-1/2 bg-gradient-to-l from-[#3A2418]/40 via-[#16100B]/80 to-[#16100B] md:block"
+        className="home-hero-fade absolute inset-y-0 right-0 hidden w-1/2 md:block"
       />
       <PageWrapper className="relative z-10 grid gap-10 py-20 md:grid-cols-2 md:py-28">
         <div className="flex max-w-[35rem] flex-col gap-5">
-          <h1 className="font-fraunces text-[3.5rem] leading-none text-[#D4622E] md:text-[4rem]">
+          <h1 className="font-fraunces text-[3.5rem] leading-none text-brand-ui md:text-[4rem]">
             Foxing
           </h1>
-          <p className="font-source-serif-4 text-[1.375rem] italic text-[#C4AE96]">
+          <p className="font-source-serif-4 text-[1.375rem] italic text-text-secondary">
             reading, together.
           </p>
-          <p className="font-source-serif-4 text-base text-[#B5967A]">
+          <p className="font-source-serif-4 text-base text-text-tertiary">
             1,400+ classic books, free. An AI companion that reads with you.
             Book clubs, reading diary, and a community of serious readers.
           </p>
@@ -237,13 +237,13 @@ function Hero() {
               <Button
                 size="lg"
                 variant="ghost"
-                className="border border-[#3A2C22] text-white hover:bg-[#1F1710]"
+                className="border border-border-default text-text-on-dark hover:bg-bg-surface"
               >
                 Join free on web
               </Button>
             </Link>
           </div>
-          <p className="mt-1 font-dm-sans text-xs text-[#B5967A]">
+          <p className="mt-1 font-dm-sans text-xs text-text-tertiary">
             No ads. No algorithms selling you books.
           </p>
         </div>
@@ -473,13 +473,13 @@ function DownloadCta() {
     <section
       id="download"
       data-mode="dark"
-      className="bg-[linear-gradient(180deg,#8A3610_0%,#16100B_100%)] text-white"
+      className="bg-[image:var(--gradient-dark)] text-text-on-dark"
     >
       <PageWrapper className="flex flex-col items-center gap-5 py-20 text-center md:py-24">
-        <h2 className="max-w-2xl font-fraunces text-[2.25rem] leading-tight text-white md:text-[2.5rem]">
+        <h2 className="max-w-2xl font-fraunces text-[2.25rem] leading-tight text-text-on-dark md:text-[2.5rem]">
           Read the classics. Finally understand them.
         </h2>
-        <p className="font-source-serif-4 text-base text-white/90">
+        <p className="font-source-serif-4 text-base text-text-secondary">
           Free to join. No credit card.
         </p>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-3">
@@ -516,10 +516,10 @@ function StoreBadge({
       className="inline-flex h-12 items-center gap-3 rounded-lg border border-white/30 bg-black/30 px-5 hover:bg-black/50"
     >
       <span className="flex flex-col items-start leading-tight">
-        <span className="font-dm-sans text-[10px] uppercase tracking-wider text-white/85">
+        <span className="font-dm-sans text-[10px] uppercase tracking-wider text-text-secondary">
           {sub}
         </span>
-        <span className="font-dm-sans text-sm font-medium text-white">
+        <span className="font-dm-sans text-sm font-medium text-text-on-dark">
           {label}
         </span>
       </span>

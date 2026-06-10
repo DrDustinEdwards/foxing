@@ -155,7 +155,7 @@ function FeaturedHero({
 
 function FeaturedIllustration({ tag }: { tag?: string }) {
   return (
-    <div className="flex aspect-[5/4] w-full items-center justify-center">
+    <div className="flex aspect-[5/4] w-full items-center justify-center rounded-xl bg-[var(--section-cream)]">
       <svg
         viewBox="0 0 320 256"
         xmlns="http://www.w3.org/2000/svg"
