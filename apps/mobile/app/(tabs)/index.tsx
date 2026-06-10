@@ -675,12 +675,12 @@ function SupaBookMini({ book, onPress }: { book: SupaBook; onPress: () => void }
               paddingHorizontal: 4,
               paddingVertical: 1,
               borderRadius: 3,
-              backgroundColor: 'rgba(0,0,0,0.65)',
+              backgroundColor: colors.scrimDark,
             }}
             accessibilityLabel="PDF format"
           >
             <Text
-              style={{ fontFamily: Fonts.uiMedium, fontSize: 8, color: '#fff', letterSpacing: 0.6 }}
+              style={{ fontFamily: Fonts.uiMedium, fontSize: 8, color: colors.textOnDark, letterSpacing: 0.6 }}
             >
               PDF
             </Text>

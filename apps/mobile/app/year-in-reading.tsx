@@ -24,7 +24,7 @@ import {
   Clock,
 } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
-import { useColors } from '@/constants/colors'
+import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
 interface Stats {
@@ -40,6 +40,9 @@ interface Stats {
 }
 
 const SLIDE_COUNT = 7
+
+// Pinned-dark experience: dark-scheme tokens regardless of the system scheme.
+const C = Colors.dark
 
 export default function YearInReadingScreen() {
   const colors = useColors()
@@ -87,14 +90,14 @@ export default function YearInReadingScreen() {
 
   if (loading || !stats) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center" style={{ backgroundColor: '#16100B' }}>
-        <ActivityIndicator color="#D4622E" />
+      <SafeAreaView className="flex-1 items-center justify-center" style={{ backgroundColor: C.bgBase }}>
+        <ActivityIndicator color={C.brandUi} />
       </SafeAreaView>
     )
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#16100B' }}>
+    <View style={{ flex: 1, backgroundColor: C.bgBase }}>
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <View
           style={{
@@ -106,7 +109,7 @@ export default function YearInReadingScreen() {
           }}
         >
           <Pressable onPress={() => router.back()} hitSlop={10} style={{ padding: 6 }}>
-            <XIcon color="#F5EDDE" size={20} />
+            <XIcon color={C.textPrimary} size={20} />
           </Pressable>
           <View style={{ flexDirection: 'row', gap: 4 }}>
             {Array.from({ length: SLIDE_COUNT }).map((_, i) => (
@@ -116,13 +119,13 @@ export default function YearInReadingScreen() {
                   width: 18,
                   height: 3,
                   borderRadius: 2,
-                  backgroundColor: i === index ? '#D4622E' : 'rgba(245,237,222,0.18)',
+                  backgroundColor: i === index ? C.brandUi : 'rgba(245,237,222,0.18)',
                 }}
               />
             ))}
           </View>
           <Pressable onPress={share} hitSlop={10} style={{ padding: 6 }}>
-            <ShareIcon color="#F5EDDE" size={20} />
+            <ShareIcon color={C.textPrimary} size={20} />
           </Pressable>
         </View>
 
@@ -149,8 +152,8 @@ export default function YearInReadingScreen() {
             <Text style={styles.heroNumber}>{stats.totalPages.toLocaleString()}</Text>
             <Text style={styles.heroLabel}>pages read</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 18, gap: 6 }}>
-              <Clock color="#D4622E" size={16} />
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: '#C4AE96' }}>
+              <Clock color={C.brandUi} size={16} />
+              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: C.textSecondary }}>
                 about {stats.estimatedHours} hour{stats.estimatedHours === 1 ? '' : 's'}
               </Text>
             </View>
@@ -165,8 +168,8 @@ export default function YearInReadingScreen() {
               <Text style={styles.heroTitle}></Text>
             )}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12, gap: 6 }}>
-              <Books color="#D4622E" size={16} />
-              <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: '#C4AE96' }}>
+              <Books color={C.brandUi} size={16} />
+              <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: C.textSecondary }}>
                 {stats.topGenre
                   ? 'where you spent most of your reading'
                   : 'add subjects to your books to see your top genre'}
@@ -179,7 +182,7 @@ export default function YearInReadingScreen() {
             <Text style={styles.kicker}>LONGEST STREAK</Text>
             <View style={{ flexDirection: 'row', alignItems: 'baseline', gap: 8 }}>
               <Text style={styles.heroNumber}>{stats.longestStreak}</Text>
-              <Flame color="#D4622E" size={28} weight="fill" />
+              <Flame color={C.brandUi} size={28} weight="fill" />
             </View>
             <Text style={styles.heroLabel}>day{stats.longestStreak === 1 ? '' : 's'} in a row</Text>
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 24, justifyContent: 'center', maxWidth: 280 }}>
@@ -193,14 +196,14 @@ export default function YearInReadingScreen() {
                       width: 14,
                       height: 14,
                       borderRadius: 3,
-                      backgroundColor: filled ? '#D4622E' : 'rgba(245,237,222,0.10)',
+                      backgroundColor: filled ? C.brandUi : 'rgba(245,237,222,0.10)',
                       opacity: filled ? 0.4 + intensity * 0.6 : 1,
                     }}
                   />
                 )
               })}
             </View>
-            <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: '#7A6553', marginTop: 8 }}>
+            <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: C.textTertiary, marginTop: 8 }}>
               Last 30 days
             </Text>
           </Slide>
@@ -214,7 +217,7 @@ export default function YearInReadingScreen() {
                   {stats.mostHighlightedBook.title}
                 </Text>
                 <Text
-                  style={{ fontFamily: Fonts.ui, fontSize: 14, color: '#C4AE96', marginTop: 6 }}
+                  style={{ fontFamily: Fonts.ui, fontSize: 14, color: C.textSecondary, marginTop: 6 }}
                   numberOfLines={1}
                 >
                   {stats.mostHighlightedBook.author}
@@ -227,8 +230,8 @@ export default function YearInReadingScreen() {
                     gap: 6,
                   }}
                 >
-                  <Highlighter color="#D4622E" size={16} />
-                  <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: '#C4AE96' }}>
+                  <Highlighter color={C.brandUi} size={16} />
+                  <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: C.textSecondary }}>
                     {stats.mostHighlightedBook.count} highlights
                   </Text>
                 </View>
@@ -247,7 +250,7 @@ export default function YearInReadingScreen() {
                   fontFamily: Fonts.bodyItalic,
                   fontSize: 18,
                   lineHeight: 27,
-                  color: '#F5EDDE',
+                  color: C.textPrimary,
                   textAlign: 'center',
                   paddingHorizontal: 12,
                 }}
@@ -260,7 +263,7 @@ export default function YearInReadingScreen() {
                 style={{
                   fontFamily: Fonts.body,
                   fontSize: 14,
-                  color: '#C4AE96',
+                  color: C.textSecondary,
                   textAlign: 'center',
                   paddingHorizontal: 24,
                 }}
@@ -272,12 +275,12 @@ export default function YearInReadingScreen() {
 
           {/* Slide 7, outro */}
           <Slide width={width}>
-            <Sparkle color="#D4622E" size={24} weight="regular" />
+            <Sparkle color={C.brandUi} size={24} weight="regular" />
             <Text
               style={{
                 fontFamily: Fonts.display,
                 fontSize: 56,
-                color: '#D4622E',
+                color: C.brandUi,
                 letterSpacing: -1,
                 marginTop: 16,
               }}
@@ -288,7 +291,7 @@ export default function YearInReadingScreen() {
               style={{
                 fontFamily: Fonts.bodyItalic,
                 fontSize: 18,
-                color: '#F5EDDE',
+                color: C.textPrimary,
                 marginTop: 12,
                 textAlign: 'center',
               }}
@@ -304,12 +307,12 @@ export default function YearInReadingScreen() {
                 paddingHorizontal: 22,
                 paddingVertical: 12,
                 borderRadius: 999,
-                backgroundColor: '#D4622E',
+                backgroundColor: C.brandUi,
                 marginTop: 36,
               }}
             >
-              <ShareIcon color="#FFFFFF" size={16} weight="regular" />
-              <Text style={{ fontFamily: Fonts.uiMedium, color: '#FFFFFF', fontSize: 14 }}>
+              <ShareIcon color={C.textOnBrand} size={16} weight="regular" />
+              <Text style={{ fontFamily: Fonts.uiMedium, color: C.textOnBrand, fontSize: 14 }}>
                 Share your {year}
               </Text>
             </Pressable>
@@ -346,26 +349,26 @@ const styles = {
   kicker: {
     fontFamily: Fonts.uiMedium,
     fontSize: 11,
-    color: '#7A6553',
+    color: C.textTertiary,
     letterSpacing: 1.4,
     marginBottom: 18,
   } as const,
   heroNumber: {
     fontFamily: Fonts.displayBold,
     fontSize: 96,
-    color: '#F5EDDE',
+    color: C.textPrimary,
     lineHeight: 100,
   } as const,
   heroLabel: {
     fontFamily: Fonts.ui,
     fontSize: 16,
-    color: '#C4AE96',
+    color: C.textSecondary,
     marginTop: 4,
   } as const,
   heroTitle: {
     fontFamily: Fonts.displayBold,
     fontSize: 32,
-    color: '#F5EDDE',
+    color: C.textPrimary,
     textAlign: 'center' as const,
     lineHeight: 38,
   } as const,

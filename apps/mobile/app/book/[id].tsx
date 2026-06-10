@@ -548,12 +548,12 @@ export default function BookDetail() {
                 width: 36,
                 height: 36,
                 borderRadius: 18,
-                backgroundColor: 'rgba(0,0,0,0.35)',
+                backgroundColor: colors.scrimLight,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <CaretLeft color="#fff" size={18} />
+              <CaretLeft color={colors.textOnDark} size={18} />
             </Pressable>
             <Pressable
               onPress={() => setShareMenuOpen(true)}
@@ -564,12 +564,12 @@ export default function BookDetail() {
                 width: 36,
                 height: 36,
                 borderRadius: 18,
-                backgroundColor: 'rgba(0,0,0,0.35)',
+                backgroundColor: colors.scrimLight,
                 alignItems: 'center',
                 justifyContent: 'center',
               }}
             >
-              <ShareNetwork color="#fff" size={18} />
+              <ShareNetwork color={colors.textOnDark} size={18} />
             </Pressable>
           </View>
           {/* Cover thumbnail centered over the bottom of the hero */}
@@ -2009,7 +2009,7 @@ function PauseNoteModal({
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel}>
       <Pressable
         className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+        style={{ backgroundColor: colors.overlay }}
         onPress={onCancel}
       >
         <Pressable

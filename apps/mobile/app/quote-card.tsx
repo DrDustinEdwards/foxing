@@ -55,6 +55,8 @@ interface TemplateDef {
   borderColor?: string
 }
 
+// Sanctioned hardcoded palette: share-card templates are fixed artwork that
+// must render identically in both color schemes. Do not tokenize.
 const TEMPLATES: Record<TemplateId, TemplateDef> = {
   minimal: { id: 'minimal', label: 'Minimal', background: '#FAF6EE', bodyColor: '#16100B', metaColor: '#815E41', wordmarkColor: '#B04A1C' },
   ornate: { id: 'ornate', label: 'Ornate', background: '#B04A1C', bodyColor: '#FFFFFF', metaColor: '#FAE0D6', wordmarkColor: '#FAE0D6', borderColor: '#FAE0D6' },

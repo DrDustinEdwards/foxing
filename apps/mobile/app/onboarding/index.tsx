@@ -13,7 +13,7 @@ import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Check, CaretLeft, CaretRight, BookOpen } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
-import { useColors } from '@/constants/colors'
+import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
 // Onboarding key, _layout reads this on launch and routes here if missing.
@@ -207,15 +207,18 @@ function isValidGoal(value: string): boolean {
 
 // ── Welcome ──────────────────────────────────────────────────────────────
 
+// Pinned-dark brand splash: dark-scheme tokens regardless of the system scheme.
+const C = Colors.dark
+
 function Welcome({ onStart }: { onStart: () => void }) {
   return (
-    <View style={{ flex: 1, backgroundColor: '#16100B' }}>
+    <View style={{ flex: 1, backgroundColor: C.bgBase }}>
       <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
         <Text
           style={{
             fontFamily: Fonts.display,
             fontSize: 56,
-            color: '#D4622E',
+            color: C.brandUi,
             marginBottom: 12,
             letterSpacing: -1,
           }}
@@ -226,7 +229,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
           style={{
             fontFamily: Fonts.bodyItalic,
             fontSize: 18,
-            color: '#F5EDDE',
+            color: C.textPrimary,
             marginBottom: 48,
             textAlign: 'center',
           }}
@@ -238,13 +241,13 @@ function Welcome({ onStart }: { onStart: () => void }) {
           accessibilityRole="button"
           accessibilityLabel="Start"
           style={{
-            backgroundColor: '#D4622E',
+            backgroundColor: C.brandUi,
             paddingHorizontal: 28,
             paddingVertical: 14,
             borderRadius: 999,
           }}
         >
-          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: '#FFFFFF' }}>
+          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: C.textOnBrand }}>
             Start
           </Text>
         </Pressable>

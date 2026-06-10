@@ -255,7 +255,7 @@ export function HighlightsSheet({
       >
         <Pressable
           className="flex-1 items-center justify-center px-8"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          style={{ backgroundColor: colors.overlay }}
           onPress={() => setFormatPickerOpen(false)}
         >
           <Pressable

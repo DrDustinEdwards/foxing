@@ -1212,12 +1212,12 @@ function LibraryRow({
               paddingHorizontal: 4,
               paddingVertical: 1,
               borderRadius: 3,
-              backgroundColor: 'rgba(0,0,0,0.65)',
+              backgroundColor: colors.scrimDark,
             }}
             accessibilityLabel="PDF format"
           >
             <Text
-              style={{ fontFamily: Fonts.uiMedium, fontSize: 8, color: '#fff', letterSpacing: 0.6 }}
+              style={{ fontFamily: Fonts.uiMedium, fontSize: 8, color: colors.textOnDark, letterSpacing: 0.6 }}
             >
               PDF
             </Text>
@@ -1228,13 +1228,13 @@ function LibraryRow({
             style={{
               position: 'absolute',
               inset: 0 as never,
-              backgroundColor: 'rgba(0,0,0,0.45)',
+              backgroundColor: colors.scrimLight,
               alignItems: 'center',
               justifyContent: 'center',
             }}
             accessibilityLabel="Paused"
           >
-            <Pause color="#fff" size={20} weight="fill" />
+            <Pause color={colors.textOnDark} size={20} weight="fill" />
           </View>
         ) : null}
       </View>
