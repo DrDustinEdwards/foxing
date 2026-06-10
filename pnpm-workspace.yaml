@@ -1,6 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+nodeLinker: hoisted
 # Readium pulls @edrlab/thorium-locales via a git URL from @readium/shared.
 # That subdep is legitimate, so allow exotic sub-deps for the workspace.
 blockExoticSubdeps: false
