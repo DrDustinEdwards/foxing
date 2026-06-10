@@ -138,7 +138,8 @@ Web build check before every push:
    Env vars live in Vercel only.
 
 9. No emoji in UI, copy, badges, or code.
-   The fox emoji in nav/footer/auth/admin is the only exception.
+   Two exceptions: the fox emoji in nav/footer/auth/admin, and emoji
+   inside the reactions feature (reactions are user content, not chrome).
 
 10. No icon libraries on web -- inline SVG only.
     Mobile uses `phosphor-react-native` exclusively (NOT
@@ -166,6 +167,13 @@ Web build check before every push:
 
 16. Never name Claude / Anthropic / GPT / "LLM" in user-facing copy.
     Always say "AI". Exception: internal admin-only pages.
+
+17. Wood-engraving illustration zone: the illustration palette is allowed
+    only in standalone illustration assets (journal category art,
+    marketing/OG art, future empty-state art), never in interactive
+    components. Illustration hexes stay hardcoded by design, but every
+    illustration must sit on a cream panel token (--section-cream) so it
+    reads correctly in dark mode.
 
 ---
 
