@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { StarRating } from '@/components/ui/star-rating'
 import { ClubCard } from '@/components/club-card'
 import { CollapsibleSection } from '@/components/collapsible-section'
@@ -587,9 +588,9 @@ function Sidebar({
     <aside className="flex flex-col gap-8">
       {similar.length > 0 && (
         <section>
-          <h3 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <SectionEyebrow as="h3" className="mb-3">
             Readers also liked
-          </h3>
+          </SectionEyebrow>
           <div className="grid grid-cols-2 gap-3">
             {similar.map((b) => (
               <BookCard
@@ -604,9 +605,9 @@ function Sidebar({
         </section>
       )}
       <section>
-        <h3 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <SectionEyebrow as="h3" className="mb-3">
           About the author
-        </h3>
+        </SectionEyebrow>
         <p className="font-fraunces text-base text-text-primary">
           <Link
             href={authorHref}

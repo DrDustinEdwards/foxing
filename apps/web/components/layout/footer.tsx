@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 
 interface FooterLink {
   href: string
@@ -72,9 +73,7 @@ export function Footer() {
           </div>
           {COLUMNS.map((column) => (
             <nav key={column.heading} aria-label={column.heading}>
-              <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
-                {column.heading}
-              </p>
+              <SectionEyebrow className="mb-3">{column.heading}</SectionEyebrow>
               <ul className="flex flex-col gap-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
