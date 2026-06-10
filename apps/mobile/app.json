@@ -56,7 +56,8 @@
           }
         }
       ],
-      "./plugins/with-desugaring"
+      "./plugins/with-desugaring",
+      "expo-asset"
     ],
     "experiments": {
       "typedRoutes": true
@@ -67,7 +68,9 @@
       "checkAutomatically": "ON_LOAD",
       "fallbackToCacheTimeout": 0
     },
-    "runtimeVersion": { "policy": "fingerprint" },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "extra": {
       "router": {},
       "eas": {

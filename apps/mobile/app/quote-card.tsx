@@ -12,7 +12,7 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import ViewShot, { captureRef } from 'react-native-view-shot'
+import ViewShot, { captureRef, type ViewShotRef } from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
 import {
   CaretLeft,
@@ -95,7 +95,7 @@ export default function QuoteCardScreen() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
-  const viewShotRef = useRef<ViewShot | null>(null)
+  const viewShotRef = useRef<ViewShotRef | null>(null)
 
   // Snapshot the live preview to a PNG file. ViewShot returns a file://
   // URI we can hand to MediaLibrary / Share.
@@ -262,7 +262,7 @@ export default function QuoteCardScreen() {
               collapsable={false} because Android RN may otherwise flatten
               it and the screenshot would miss it. */}
           <ViewShot
-            ref={viewShotRef as unknown as React.RefObject<ViewShot>}
+            ref={viewShotRef as unknown as React.RefObject<ViewShotRef>}
             options={{ format: 'png', quality: 0.95 }}
           >
           <View collapsable={false}>
