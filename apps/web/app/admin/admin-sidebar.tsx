@@ -146,7 +146,10 @@ export function AdminSidebar({ adminName }: Props) {
   return (
     <>
       {/* Mobile top bar */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-[#3A2C22] bg-[#16100B] px-4 text-[#F5EDDE] md:hidden">
+      <header
+        data-mode="dark"
+        className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border-default bg-bg-base px-4 text-text-primary md:hidden"
+      >
         <Link
           href="/admin"
           className="inline-flex items-center gap-2 font-fraunces text-lg text-brand-ui"
@@ -159,7 +162,7 @@ export function AdminSidebar({ adminName }: Props) {
           onClick={() => setMobileOpen((v) => !v)}
           aria-expanded={mobileOpen}
           aria-label="Toggle admin menu"
-          className="rounded-md p-2 hover:bg-[#261C13]"
+          className="rounded-md p-2 hover:bg-bg-hover"
         >
           <svg
             width="20"
@@ -190,7 +193,8 @@ export function AdminSidebar({ adminName }: Props) {
       {mobileOpen && (
         <nav
           aria-label="Admin (mobile)"
-          className="border-b border-[#3A2C22] bg-[#16100B] text-[#F5EDDE] md:hidden"
+          data-mode="dark"
+          className="border-b border-border-default bg-bg-base text-text-primary md:hidden"
         >
           <ul className="flex flex-col px-2 py-2">
             {SECTIONS.map((section) => (
@@ -198,7 +202,7 @@ export function AdminSidebar({ adminName }: Props) {
                 {section.label && (
                   <li
                     aria-hidden="true"
-                    className="px-3 pb-1 pt-4 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-[#A28269]"
+                    className="px-3 pb-1 pt-4 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary"
                   >
                     {section.label}
                   </li>
@@ -214,8 +218,8 @@ export function AdminSidebar({ adminName }: Props) {
                         className={cn(
                           'flex items-center gap-3 rounded px-3 py-1.5 font-dm-sans text-sm',
                           isActive
-                            ? 'bg-[#2E1C0E] text-[#F5EDDE]'
-                            : 'text-[#C4AE96] hover:bg-[#261C13]',
+                            ? 'bg-brand-subtle text-text-primary'
+                            : 'text-text-secondary hover:bg-bg-hover',
                         )}
                       >
                         <Icon size={18} />
@@ -233,9 +237,10 @@ export function AdminSidebar({ adminName }: Props) {
       {/* Desktop rail */}
       <aside
         aria-label="Admin"
-        className="fixed bottom-0 left-0 top-0 z-30 hidden w-14 flex-col border-r border-[#3A2C22] bg-[#16100B] text-[#F5EDDE] md:flex"
+        data-mode="dark"
+        className="fixed bottom-0 left-0 top-0 z-30 hidden w-14 flex-col border-r border-border-default bg-bg-base text-text-primary md:flex"
       >
-        <div className="flex justify-center border-b border-[#3A2C22] py-4">
+        <div className="flex justify-center border-b border-border-default py-4">
           <Link
             href="/admin"
             aria-label="Admin home"
@@ -253,14 +258,14 @@ export function AdminSidebar({ adminName }: Props) {
             const railClass = cn(
               'mx-1 flex h-10 w-10 items-center justify-center self-center rounded-md border-l-2 transition-colors',
               isGroupActive
-                ? 'border-brand-ui bg-[#2E1C0E] text-brand-ui'
-                : 'border-transparent text-[#C4AE96] hover:bg-[#261C13] hover:text-[#F5EDDE]',
+                ? 'border-brand-ui bg-brand-subtle text-brand-ui'
+                : 'border-transparent text-text-secondary hover:bg-bg-hover hover:text-text-primary',
             )
             const tooltip =
               openGroup === section.key ? null : (
                 <span
                   role="tooltip"
-                  className="absolute left-14 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded bg-[#261E17] px-2 py-1 text-xs text-[#F5EDDE] group-hover:block"
+                  className="absolute left-14 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded bg-[var(--tooltip-bg)] px-2 py-1 text-xs text-[var(--tooltip-text)] group-hover:block"
                 >
                   {section.railName}
                 </span>
@@ -311,17 +316,17 @@ export function AdminSidebar({ adminName }: Props) {
           })}
         </nav>
 
-        <div className="flex justify-center border-t border-[#3A2C22] py-3">
+        <div className="flex justify-center border-t border-border-default py-3">
           <Link
             href="/home"
             aria-label="Back to app"
-            className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#261E17] font-dm-sans text-xs text-[#F5EDDE] hover:bg-[#3A2C22]"
+            className="group relative inline-flex h-10 w-10 items-center justify-center rounded-full bg-bg-hover font-dm-sans text-xs text-text-primary hover:bg-bg-selected"
             title={adminName}
           >
             {initials(adminName)}
             <span
               role="tooltip"
-              className="absolute left-14 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded bg-[#261E17] px-2 py-1 text-xs text-[#F5EDDE] group-hover:block"
+              className="absolute left-14 top-1/2 z-50 hidden -translate-y-1/2 whitespace-nowrap rounded bg-[var(--tooltip-bg)] px-2 py-1 text-xs text-[var(--tooltip-text)] group-hover:block"
             >
               Back to app
             </span>
@@ -333,11 +338,12 @@ export function AdminSidebar({ adminName }: Props) {
       {openSection && openSection.key !== 'overview' && (
         <div
           aria-label={openSection.railName}
-          className="fixed bottom-0 left-14 top-0 z-40 hidden w-48 border-r border-[#3A2C22] bg-[#1F1710] text-[#F5EDDE] shadow-xl md:block"
+          data-mode="dark"
+          className="fixed bottom-0 left-14 top-0 z-40 hidden w-48 border-r border-border-default bg-bg-surface text-text-primary shadow-xl md:block"
           onMouseEnter={() => openFlyout(openSection.key)}
           onMouseLeave={scheduleFlyoutClose}
         >
-          <p className="px-4 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-[#A28269]">
+          <p className="px-4 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
             {openSection.railName}
           </p>
           <ul>
@@ -352,8 +358,8 @@ export function AdminSidebar({ adminName }: Props) {
                     className={cn(
                       'flex items-center gap-3 px-4 py-2 font-dm-sans text-sm transition-colors',
                       isActive
-                        ? 'bg-[#2E1C0E] text-[#F5EDDE]'
-                        : 'text-[#C4AE96] hover:bg-[#261C13] hover:text-[#F5EDDE]',
+                        ? 'bg-brand-subtle text-text-primary'
+                        : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
                     )}
                   >
                     <Icon size={16} />

@@ -327,7 +327,10 @@ function BookHero({
   book: Awaited<ReturnType<typeof fetchBookById>> & object
 }) {
   return (
-    <section className="relative h-[40vh] min-h-[280px] w-full overflow-hidden bg-[#16100B]">
+    <section
+      data-mode="dark"
+      className="relative h-[40vh] min-h-[280px] w-full overflow-hidden bg-bg-base"
+    >
       {book.cover_url && (
         <Image
           src={book.cover_url}
@@ -340,10 +343,10 @@ function BookHero({
       )}
       <div
         aria-hidden="true"
-        className="absolute inset-0 bg-gradient-to-b from-transparent via-[#16100B]/40 to-[#16100B]"
+        className="book-hero-scrim absolute inset-0"
       />
       <PageWrapper className="relative z-10 flex h-full items-end pb-8">
-        <h1 className="font-fraunces text-[2.25rem] leading-tight text-white md:text-[2.5rem]">
+        <h1 className="font-fraunces text-[2.25rem] leading-tight text-text-on-dark md:text-[2.5rem]">
           {book.title}
         </h1>
       </PageWrapper>

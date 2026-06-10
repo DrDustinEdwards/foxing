@@ -78,7 +78,7 @@ export default async function YearInReadingPage(
   }
 
   return (
-    <div className="bg-[#16100B] text-white">
+    <div data-mode="dark" className="bg-bg-base text-text-on-dark">
       <PageWrapper className="py-16 md:py-24">
         <header className="flex flex-col gap-2 text-center">
           <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-white/60">
