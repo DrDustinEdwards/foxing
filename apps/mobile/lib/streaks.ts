@@ -13,7 +13,8 @@
 //     total_books_finished integer not null default 0,
 //     total_highlights integer not null default 0,
 //     total_words_looked_up integer not null default 0,
-//     updated_at timestamptz not null default now()
+//     updated_at timestamptz not null  -- live column has NO default;
+//                                      -- every writer must set it
 //   );
 //
 //   -- badges expected slugs: first_book, ten_books, hundred_books,
@@ -103,12 +104,10 @@ export async function updateStreak(userId: string): Promise<void> {
   }
   if (currentStreak > longestStreak) longestStreak = currentStreak
 
-  // reading_streaks has no updated_at column (the JSDoc above shows the
-  // schema we eventually intended, but it was never applied). Including
-  // it in the upsert produces "Could not find the updated_at column of
-  // reading_streaks in the schema cache" -- not a cache issue, the column
-  // genuinely doesn't exist. Add it back here only if a migration lands
-  // adding the column with a default of now().
+  // updated_at exists on the live table as NOT NULL with no default, so
+  // the upsert must supply it explicitly. Omitting it (as a prior fix did,
+  // believing the column didn't exist) violates the constraint and the row
+  // never lands.
   const { error } = await supabase
     .from('reading_streaks')
     .upsert(
@@ -121,10 +120,13 @@ export async function updateStreak(userId: string): Promise<void> {
         total_books_finished: finishedRes.count ?? 0,
         total_highlights: highlightsRes.count ?? 0,
         total_words_looked_up: vocabRes.count ?? 0,
+        updated_at: new Date().toISOString(),
       },
       { onConflict: 'user_id' },
     )
-  if (error) console.warn('[streaks] updateStreak upsert failed:', error.message)
+  if (error) {
+    throw new Error(`reading_streaks upsert failed: ${error.message}`)
+  }
 
   // First-streak notification prompt. The moment a user lands on a 1-day
   // streak we ask once for push permission so the daily-reminder + streak-

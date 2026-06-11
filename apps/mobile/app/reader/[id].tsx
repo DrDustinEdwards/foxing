@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { View, Text, Pressable, ActivityIndicator, PanResponder, Image, useWindowDimensions } from 'react-native'
+import { View, Text, Pressable, ActivityIndicator, AppState, PanResponder, Image, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
@@ -219,11 +219,11 @@ export default function Reader() {
   // without calling supabase.auth.getUser() (a network call that
   // unreliably resolves during teardown / backgrounding).
   const userIdRef = useRef<string | null>(null)
-  // One-shot per reader instance: updateStreak is idempotent within a
-  // calendar day, but we still gate it locally so we don't pay the
-  // 4-parallel-counts + upsert + checkAndAwardBadges fan-out on every
-  // chapter transition.
-  const streakFiredRef = useRef<boolean>(false)
+  // UTC date (YYYY-MM-DD) the daily streak update last succeeded on, so
+  // pingSession only pays the 4-parallel-counts + upsert + badge fan-out
+  // once per day. Mirrored to AsyncStorage so re-opens the same day skip
+  // it too; left unset on failure so the next ping retries.
+  const streakDateRef = useRef<string | null>(null)
   const positionRef = useRef<{ cfi: string | null; percentage: number }>({
     cfi: null,
     percentage: 0,
@@ -318,6 +318,9 @@ export default function Reader() {
   const lastLocationTimeRef = useRef<number>(Date.now())
   const lastPageWordsRef = useRef<number>(0)
   const wpmSamplesRef = useRef<number[]>([])
+  // Page navigations this session, written to reading_sessions.pages_read
+  // by the heartbeat. Seeded from the row when resuming an open session.
+  const pagesReadRef = useRef<number>(0)
   const [wpm, setWpm] = useState<number | null>(null)
   // Chapter list for the AI semantic search action, populated from
   // foliate's TOC if we can pull it; otherwise just the current chapter.
@@ -639,16 +642,46 @@ export default function Reader() {
           }
         }
 
-        const { data: sess } = await supabase
+        // Resume a dangling open session for this user+book instead of
+        // stacking a new row per mount (remounts from app restarts, OTA
+        // reloads, and quick close/reopen were creating duplicates).
+        // ended_at null + started_at within 30 minutes is the same
+        // definition of "active" the club-presence query uses. A cleanly
+        // heartbeated session has ended_at set, so a fresh open after one
+        // correctly starts a new row.
+        const since = new Date(Date.now() - 30 * 60 * 1000).toISOString()
+        const { data: open, error: openErr } = await supabase
           .from('reading_sessions')
-          .insert({
-            user_id: user.id,
-            book_id: bookData.id,
-            started_at: new Date().toISOString(),
-          })
-          .select('id')
-          .single()
-        if (sess) sessionIdRef.current = sess.id
+          .select('id, pages_read')
+          .eq('user_id', user.id)
+          .eq('book_id', bookData.id)
+          .is('ended_at', null)
+          .gte('started_at', since)
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+        if (openErr) {
+          console.warn('[reader] open-session lookup failed:', openErr.message)
+        }
+        const openSess = open as { id: string; pages_read: number | null } | null
+        if (openSess) {
+          sessionIdRef.current = openSess.id
+          pagesReadRef.current = openSess.pages_read ?? 0
+        } else {
+          const { data: sess, error: sessErr } = await supabase
+            .from('reading_sessions')
+            .insert({
+              user_id: user.id,
+              book_id: bookData.id,
+              started_at: new Date().toISOString(),
+            })
+            .select('id')
+            .single()
+          if (sessErr) {
+            console.warn('[reader] session insert failed:', sessErr.message)
+          }
+          if (sess) sessionIdRef.current = sess.id
+        }
       }
       // Load reader prefs (per user; falls back to anon key if signed out).
       const loaded = await loadPrefs(user?.id ?? null)
@@ -686,6 +719,24 @@ export default function Reader() {
         console.warn('[reader] unmount ping failed:', e instanceof Error ? e.message : e),
       )
     }
+  }, [])
+
+  // Flush progress + heartbeat when the app leaves the foreground. JS
+  // timers pause in the background and the unmount cleanup never runs on
+  // app-switch, screen lock, app kill, or an OTA reload, so without this
+  // a session that ends by backgrounding keeps a stale ended_at forever.
+  // Best-effort: the transition usually lets in-flight requests finish.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') return
+      saveProgressRef.current().catch((e) =>
+        console.warn('[reader] background save failed:', e instanceof Error ? e.message : e),
+      )
+      pingSession().catch((e) =>
+        console.warn('[reader] background ping failed:', e instanceof Error ? e.message : e),
+      )
+    })
+    return () => sub.remove()
   }, [])
 
   // Auto-hide chrome 3s after it appears (same duration as the on-open peek
@@ -839,22 +890,73 @@ export default function Reader() {
   // started in the mount effect always invokes the freshest closure.
   saveProgressRef.current = saveProgress
 
-  // Single-write ended_at refresh. Called every 30s by the interval and
-  // one final time on unmount; previously this was an end-of-life write
-  // that raced the JS-bridge teardown and dropped ~45% of session
-  // close-outs. Reads sessionIdRef directly (always current), so the
+  // Rolling heartbeat. Called every 30s by the interval, on app
+  // background, and one final time on unmount; previously this was an
+  // end-of-life write that raced the JS-bridge teardown and dropped ~45%
+  // of session close-outs. Reads refs only (always current), so the
   // closure captured by the mount-effect's interval/cleanup is safe.
+  // Throws on failure: supabase-js returns { error } instead of throwing,
+  // and an RLS-filtered update "succeeds" with 0 rows, so both cases are
+  // checked explicitly and surfaced to the callers' catch handlers.
   async function pingSession() {
     if (!sessionIdRef.current) return
-    await supabase
+    const samples = wpmSamplesRef.current
+    const patch: Record<string, unknown> = {
+      ended_at: new Date().toISOString(),
+      pages_read: pagesReadRef.current,
+    }
+    if (samples.length > 0) {
+      patch.avg_wpm = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length)
+      patch.last_wpm = Math.round(samples[samples.length - 1])
+    }
+    const { data, error } = await supabase
       .from('reading_sessions')
-      .update({ ended_at: new Date().toISOString() })
+      .update(patch)
       .eq('id', sessionIdRef.current)
+      .select('id')
+    if (error) {
+      throw new Error(`session heartbeat failed: ${error.message}`)
+    }
+    if (!data || data.length === 0) {
+      throw new Error('session heartbeat updated 0 rows (RLS rejection or stale session id)')
+    }
+    // A successful heartbeat is the ground truth that reading happened
+    // today; the old chapter-change trigger never fired for publications
+    // whose locators lack titles. Failures are logged but don't fail the
+    // heartbeat itself, and the gate stays unset so the next ping retries.
+    await maybeFireDailyStreak().catch((e) => {
+      console.warn(
+        '[reader] daily streak update failed:',
+        e instanceof Error ? e.message : e,
+      )
+    })
+  }
+
+  // First-successful-ping-of-the-day streak trigger. Uses the same UTC
+  // date math as updateStreak. The AsyncStorage gate spans reader
+  // remounts; the ref spares the storage read on every subsequent ping.
+  async function maybeFireDailyStreak() {
+    const uid = userIdRef.current
+    if (!uid) return
+    const today = new Date().toISOString().slice(0, 10)
+    if (streakDateRef.current === today) return
+    const gateKey = `foxing.streak-fired.${uid}`
+    const stored = await AsyncStorage.getItem(gateKey).catch(() => null)
+    if (stored === today) {
+      streakDateRef.current = today
+      return
+    }
+    await updateStreak(uid)
+    streakDateRef.current = today
+    AsyncStorage.setItem(gateKey, today).catch(() => {})
   }
 
   function onLocation(cfi: string, percentage: number, pageWordCount?: number, pageText?: string) {
     positionRef.current = { cfi, percentage }
     setProgress(percentage)
+    // The wrapper suppresses the initial relocate and debounces bursts, so
+    // every call here is a real navigation the heartbeat can count.
+    pagesReadRef.current += 1
 
     // Position history, append (collapsing consecutive same-CFI). Debounced
     // save so a burst of page turns doesn't hammer AsyncStorage.
@@ -1364,22 +1466,6 @@ export default function Reader() {
           setCurrentChapter({ title: c.title, index: 0 })
           // Append to TOC sample for AI semantic-search if this chapter is new.
           setChapterList((prev) => (prev.includes(c.title) ? prev : [...prev, c.title]))
-          // Streak refresh. Moved off the unmount cleanup, which previously
-          // raced the JS-bridge teardown via supabase.auth.getUser() and
-          // landed zero rows in reading_streaks on production. Idempotent
-          // within a calendar day, but we gate locally so we don't pay
-          // the 4-parallel-counts + upsert + badge-check fan-out on every
-          // chapter callback (readium emits onChapterChange on most page
-          // turns, not just real transitions). Re-allow on failure so a
-          // transient error doesn't permanently skip the day's streak.
-          const uid = userIdRef.current
-          if (uid && !streakFiredRef.current) {
-            streakFiredRef.current = true
-            updateStreak(uid).catch((e) => {
-              console.warn('[reader] updateStreak failed:', e instanceof Error ? e.message : e)
-              streakFiredRef.current = false
-            })
-          }
         }}
         onWordTapped={(word, surroundingText, cfi, rect: ReaderRect) => {
           // PDF mode: foliate's word boundaries are unreliable, so suppress
