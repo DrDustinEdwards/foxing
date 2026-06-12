@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
+import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { ShareButton } from '@/components/share-button'
 import { fetchYearStats } from '@/lib/missing-pages-queries'
@@ -81,10 +82,8 @@ export default async function YearInReadingPage(
     <div data-mode="dark" className="bg-bg-base text-text-on-dark">
       <PageWrapper className="py-16 md:py-24">
         <header className="flex flex-col gap-2 text-center">
-          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-white/60">
-            Your year in reading
-          </p>
-          <h1 className="font-fraunces text-[3rem] leading-none text-white md:text-[4rem]">
+          <SectionEyebrow>Your year in reading</SectionEyebrow>
+          <h1 className="font-fraunces text-[3rem] leading-none text-text-primary md:text-[4rem]">
             {year}
           </h1>
         </header>
@@ -131,14 +130,12 @@ export default async function YearInReadingPage(
         )}
 
         {stats.most_active_month && (
-          <div className="mt-10 rounded-lg border border-white/10 bg-white/5 p-6 text-center">
-            <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-white/60">
-              Most active month
-            </p>
-            <p className="mt-2 font-fraunces text-2xl text-white">
+          <div className="mt-10 rounded-lg border border-border-subtle bg-bg-surface p-6 text-center">
+            <SectionEyebrow>Most active month</SectionEyebrow>
+            <p className="mt-2 font-fraunces text-2xl text-text-primary">
               {MONTH_NAMES[stats.most_active_month.month]}
             </p>
-            <p className="mt-1 font-source-serif-4 text-sm text-white/70">
+            <p className="mt-1 font-source-serif-4 text-sm text-text-secondary">
               {stats.most_active_month.count} books finished
             </p>
           </div>
@@ -146,9 +143,7 @@ export default async function YearInReadingPage(
 
         {stats.finished_books.length > 0 && (
           <section className="mt-12">
-            <p className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-white/60">
-              What you read
-            </p>
+            <SectionEyebrow className="mb-4">What you read</SectionEyebrow>
             <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
               {stats.finished_books.map((b) => (
                 <li key={b.book_id}>
@@ -163,7 +158,7 @@ export default async function YearInReadingPage(
                           className="object-cover"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center bg-white/10 p-2 text-center font-fraunces text-xs text-white/70">
+                        <div className="flex h-full items-center justify-center bg-bg-elevated p-2 text-center font-fraunces text-xs text-text-secondary">
                           {b.title}
                         </div>
                       )}
@@ -190,11 +185,9 @@ export default async function YearInReadingPage(
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-      <p className="font-fraunces text-3xl text-white">{value}</p>
-      <p className="mt-1 font-dm-sans text-xs uppercase tracking-wide text-white/60">
-        {label}
-      </p>
+    <div className="rounded-lg border border-border-subtle bg-bg-surface p-5">
+      <p className="font-fraunces text-3xl text-text-primary">{value}</p>
+      <SectionEyebrow className="mt-1">{label}</SectionEyebrow>
     </div>
   )
 }
@@ -209,12 +202,10 @@ function DetailCard({
   sub: string
 }) {
   return (
-    <div className="rounded-lg border border-white/10 bg-white/5 p-5">
-      <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-white/60">
-        {label}
-      </p>
-      <p className="mt-2 font-fraunces text-lg text-white">{heading}</p>
-      <p className="mt-1 font-source-serif-4 text-sm text-white/70">{sub}</p>
+    <div className="rounded-lg border border-border-subtle bg-bg-surface p-5">
+      <SectionEyebrow>{label}</SectionEyebrow>
+      <p className="mt-2 font-fraunces text-lg text-text-primary">{heading}</p>
+      <p className="mt-1 font-source-serif-4 text-sm text-text-secondary">{sub}</p>
     </div>
   )
 }
