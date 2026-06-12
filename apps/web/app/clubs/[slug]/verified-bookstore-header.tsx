@@ -94,13 +94,7 @@ export function VerifiedBookstoreHeader({ club }: { club: PublicClub }) {
 
 function VerifiedBadge() {
   return (
-    <span
-      className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 font-dm-mono text-[11px] uppercase tracking-wider"
-      style={{
-        backgroundColor: 'var(--brand-ui)',
-        color: 'var(--text-on-brand)',
-      }}
-    >
+    <span className="inline-flex items-center gap-1.5 rounded-md bg-brand-ui px-2 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-on-brand">
       <FoxIcon />
       Verified Bookstore
     </span>
