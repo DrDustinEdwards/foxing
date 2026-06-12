@@ -22,7 +22,7 @@ export default async function FindNextBookPage() {
   if (!userId) redirect('/sign-in')
   const profile = await fetchProfileBasics(userId)
   const tier = profile?.subscription_tier
-  const isUnlocked = tier === 'plus' || tier === 'patron'
+  const isUnlocked = tier === 'plus'
 
   return (
     <PageWrapper className="max-w-prose py-10">

@@ -28,7 +28,7 @@ interface NavUser {
   display_name: string
   avatar_url: string | null
   is_admin: boolean
-  subscription_tier: 'free' | 'plus' | 'patron'
+  subscription_tier: 'free' | 'plus'
 }
 
 interface NavProps {

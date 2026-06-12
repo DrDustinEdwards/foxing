@@ -5,7 +5,7 @@ import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminUserId } from '@/lib/nav-user'
 
-const ALLOWED_TIERS = ['free', 'plus', 'patron'] as const
+const ALLOWED_TIERS = ['free', 'plus'] as const
 
 export async function updateUserTier(formData: FormData) {
   await requireAdminUserId()

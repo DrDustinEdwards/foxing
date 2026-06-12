@@ -55,7 +55,7 @@ export default async function AdminOverviewPage() {
     admin
       .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .in('subscription_tier', ['plus', 'patron']),
+      .eq('subscription_tier', 'plus'),
     admin
       .from('user_books')
       .select('id', { count: 'exact', head: true })
@@ -136,10 +136,7 @@ export default async function AdminOverviewPage() {
       <section className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
         <StatCard label="Total users" value={totalUsers.toLocaleString()} />
         <StatCard label="New in 24h" value={newToday.toLocaleString()} />
-        <StatCard
-          label="Plus + Patron"
-          value={activeSubs.toLocaleString()}
-        />
+        <StatCard label="Plus" value={activeSubs.toLocaleString()} />
         <StatCard
           label="Finished this week"
           value={finishedThisWeek.toLocaleString()}

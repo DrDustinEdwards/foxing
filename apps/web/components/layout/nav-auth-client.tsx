@@ -14,11 +14,8 @@ export function NavAuthClient() {
     return <Nav user={null} unreadNotifications={0} />
   }
 
-  const tier: 'free' | 'plus' | 'patron' =
-    profile.subscription_tier === 'plus' ||
-    profile.subscription_tier === 'patron'
-      ? profile.subscription_tier
-      : 'free'
+  const tier: 'free' | 'plus' =
+    profile.subscription_tier === 'plus' ? 'plus' : 'free'
 
   return (
     <Nav

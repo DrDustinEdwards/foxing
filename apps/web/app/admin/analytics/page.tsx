@@ -63,7 +63,7 @@ export default async function AdminAnalyticsPage() {
     admin
       .from('profiles')
       .select('id', { count: 'exact', head: true })
-      .in('subscription_tier', ['plus', 'patron']),
+      .eq('subscription_tier', 'plus'),
     admin.from('books').select('id', { count: 'exact', head: true }),
     admin
       .from('user_books')

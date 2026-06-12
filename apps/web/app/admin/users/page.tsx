@@ -98,11 +98,7 @@ export default async function AdminUsersPage(
                 <td className="px-4 py-3">
                   <Badge
                     variant={
-                      u.subscription_tier === 'patron'
-                        ? 'success'
-                        : u.subscription_tier === 'plus'
-                          ? 'brand'
-                          : 'neutral'
+                      u.subscription_tier === 'plus' ? 'brand' : 'neutral'
                     }
                   >
                     {u.subscription_tier ?? 'free'}

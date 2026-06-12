@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
   const tier = (profile as { subscription_tier: string | null } | null)
     ?.subscription_tier
-  if (tier !== 'plus' && tier !== 'patron') {
+  if (tier !== 'plus') {
     return NextResponse.json(
       { error: 'subscription_required' },
       { status: 402 },

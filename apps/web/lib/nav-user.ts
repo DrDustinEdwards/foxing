@@ -6,7 +6,7 @@ export interface NavUser {
   display_name: string
   avatar_url: string | null
   is_admin: boolean
-  subscription_tier: 'free' | 'plus' | 'patron'
+  subscription_tier: 'free' | 'plus'
 }
 
 /**
@@ -43,9 +43,7 @@ export async function getNavUser(): Promise<NavUser | null> {
     subscription_tier: string | null
   }
   const tier: NavUser['subscription_tier'] =
-    row.subscription_tier === 'plus' || row.subscription_tier === 'patron'
-      ? row.subscription_tier
-      : 'free'
+    row.subscription_tier === 'plus' ? 'plus' : 'free'
   return {
     username: row.username,
     display_name: row.display_name,
