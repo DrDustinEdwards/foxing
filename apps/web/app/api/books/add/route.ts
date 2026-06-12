@@ -119,11 +119,24 @@ export async function POST(request: NextRequest) {
   const isbn13 = isbnClean && isbnClean.length === 13 ? isbnClean : null
   const isbn10 = isbnClean && isbnClean.length === 10 ? isbnClean : null
 
+  // books.slug is NOT NULL with no default and no trigger; supply it here in
+  // the catalog's title-authorlast convention or the insert fails.
+  const titleSlug = title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, '')
+    .replace(/\s+/g, '-')
+    .slice(0, 60)
+  const authorLast = (author.split(' ').pop() ?? 'unknown')
+    .toLowerCase()
+    .replace(/[^a-z]/g, '')
+  const slug = `${titleSlug}-${authorLast}-${Date.now().toString(36).slice(-4)}`
+
   const { data: inserted, error } = await admin
     .from('books')
     .insert({
       title,
       author,
+      slug,
       description,
       cover_url,
       source: 'community',

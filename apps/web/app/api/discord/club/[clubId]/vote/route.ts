@@ -63,6 +63,7 @@ export async function POST(request: NextRequest, props: { params: Promise<{ club
     .in('option_id', optionIds)
 
   const { error } = await admin.from('club_poll_votes').insert({
+    poll_id: body.poll_id,
     user_id: session.userId,
     option_id: body.option_id,
   })
