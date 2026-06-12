@@ -56,6 +56,8 @@ function parseCreate(formData: FormData): CreatePayload {
 }
 
 export async function createCelebrityPick(formData: FormData): Promise<void> {
+  const auth = await assertAdmin()
+  if (!auth.ok) throw new Error(auth.error)
   const payload = parseCreate(formData)
   if (
     !payload.club_id ||
@@ -108,10 +110,12 @@ interface PickEditResult {
 export async function updateCelebrityPick(
   formData: FormData,
 ): Promise<PickEditResult> {
+  const auth = await assertAdmin()
+  if (!auth.ok) return { ok: false, error: auth.error }
   const pickId = String(formData.get('pick_id') ?? '').trim()
   if (!pickId) return { ok: false, error: 'pick_id is required' }
 
-  const editorId = await getAuthedUserId()
+  const editorId = auth.userId
   const admin = createAdminClient()
 
   // Pull existing pick + book so we can compare and audit each field.
@@ -252,6 +256,8 @@ interface ManualPickResult {
 export async function addManualCelebrityPick(
   formData: FormData,
 ): Promise<ManualPickResult> {
+  const auth = await assertAdmin()
+  if (!auth.ok) return { ok: false, error: auth.error }
   const clubId = String(formData.get('club_id') ?? '').trim()
   const title = String(formData.get('book_title') ?? '').trim()
   const author = String(formData.get('book_author') ?? '').trim()
@@ -265,7 +271,7 @@ export async function addManualCelebrityPick(
     return { ok: false, error: 'club, title, author, month, and year are required' }
   }
 
-  const editorId = await getAuthedUserId()
+  const editorId = auth.userId
   const admin = createAdminClient()
 
   // Try to find a matching book first; otherwise create a community book.

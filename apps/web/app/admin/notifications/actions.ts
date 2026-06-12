@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireAdminUserId } from '@/lib/nav-user'
 
 export type BroadcastTarget = 'all' | 'free' | 'plus' | 'patron' | 'user'
 
@@ -13,19 +13,12 @@ interface SendInput {
   username?: string
 }
 
-async function getAdminId(): Promise<string | null> {
-  const sb = await createClient()
-  const {
-    data: { user },
-  } = await sb.auth.getUser()
-  return user?.id ?? null
-}
-
 export async function sendBroadcast(input: SendInput): Promise<{
   ok: boolean
   sent?: number
   error?: string
 }> {
+  const adminId = await requireAdminUserId()
   const title = input.title.trim()
   const body = input.body.trim()
   if (!title || !body) return { ok: false, error: 'Title and body required.' }
@@ -84,7 +77,7 @@ export async function sendBroadcast(input: SendInput): Promise<{
     target_type: input.target,
     target_value: input.target === 'user' ? (input.username ?? null) : null,
     recipient_count: sent,
-    sent_by: await getAdminId(),
+    sent_by: adminId,
   })
 
   revalidatePath('/admin/notifications')
