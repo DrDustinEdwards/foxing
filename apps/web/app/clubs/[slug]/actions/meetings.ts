@@ -249,6 +249,7 @@ export async function cancelClubMeeting(
       cancelled_at: new Date().toISOString(),
     })
     .eq('id', meetingId)
+    .eq('club_id', clubId)
   if (error) return { ok: false, error: error.message }
   const { data: club } = await admin
     .from('clubs')
