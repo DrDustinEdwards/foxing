@@ -102,7 +102,7 @@ export function CreateMeetingForm({ clubId, defaultCity, defaultState }: Props) 
       />
       {(meetingType === 'virtual' || meetingType === 'hybrid') && (
         <p className="-mt-1 font-dm-mono text-xs text-text-tertiary">
-          Leave blank to auto-generate a Google Meet link.
+          Paste a Zoom, Meet, or other video call link.
         </p>
       )}
       <Input
