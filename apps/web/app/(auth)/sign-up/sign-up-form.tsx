@@ -28,6 +28,7 @@ export function SignUpForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [agreed, setAgreed] = useState(false)
   const [usernameState, setUsernameState] = useState<UsernameState>({ kind: 'idle' })
 
   const normalizedUsername = username.trim().toLowerCase()
@@ -70,6 +71,10 @@ export function SignUpForm() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    if (!agreed) {
+      setError('Confirm your age and agreement to the terms to continue.')
+      return
+    }
     if (password.length < 8) {
       setError('Password must be at least 8 characters.')
       return
@@ -114,6 +119,10 @@ export function SignUpForm() {
 
   async function handleOAuth(provider: 'google' | 'apple') {
     setError(null)
+    if (!agreed) {
+      setError('Confirm your age and agreement to the terms to continue.')
+      return
+    }
     setLoading(true)
     const supabase = createClient()
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -180,13 +189,36 @@ export function SignUpForm() {
             {showPassword ? 'Hide password' : 'Show password'}
           </button>
         </div>
+        <label className="flex items-start gap-2 font-dm-sans text-sm text-text-secondary">
+          <input
+            type="checkbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-border-interactive accent-toggle-on"
+          />
+          <span>
+            I am at least 13 years old and agree to the{' '}
+            <Link href="/terms" className="text-brand-text hover:underline">
+              terms of service
+            </Link>{' '}
+            and{' '}
+            <Link href="/privacy" className="text-brand-text hover:underline">
+              privacy policy
+            </Link>
+            .
+          </span>
+        </label>
         <ErrorMessage message={error} />
         <Button
           type="submit"
           variant="primary"
           fullWidth
           loading={loading}
-          disabled={usernameState.kind === 'taken' || usernameState.kind === 'checking'}
+          disabled={
+            !agreed ||
+            usernameState.kind === 'taken' ||
+            usernameState.kind === 'checking'
+          }
         >
           Create account
         </Button>
