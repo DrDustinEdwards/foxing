@@ -17,10 +17,10 @@ type Action =
 
 // Edge Function failure codes the client cares about. These map 1:1 to
 // the `error` field the Edge Function returns alongside HTTP status codes
-// (429 RATE_LIMITED, 403 PATRON_REQUIRED, 401 UNAUTHENTICATED).
+// (429 RATE_LIMITED, 403 PLUS_REQUIRED, 401 UNAUTHENTICATED).
 export type AiCompanionErrorCode =
   | 'RATE_LIMITED'
-  | 'PATRON_REQUIRED'
+  | 'PLUS_REQUIRED'
   | 'UNAUTHENTICATED'
 
 export class AiCompanionError extends Error {
@@ -34,7 +34,7 @@ export class AiCompanionError extends Error {
 
 const KNOWN_ERROR_CODES: AiCompanionErrorCode[] = [
   'RATE_LIMITED',
-  'PATRON_REQUIRED',
+  'PLUS_REQUIRED',
   'UNAUTHENTICATED',
 ]
 
@@ -44,10 +44,10 @@ const KNOWN_ERROR_CODES: AiCompanionErrorCode[] = [
 export function friendlyAiError(e: unknown): string {
   if (e instanceof AiCompanionError) {
     if (e.code === 'RATE_LIMITED') {
-      return "You've used your 3 free AI lookups for today.\nUpgrade to Foxing Plus for unlimited AI, foxing.app"
+      return "You've used your 5 free AI lookups for today.\nUpgrade to Foxing Plus for unlimited AI, foxing.app"
     }
-    if (e.code === 'PATRON_REQUIRED') {
-      return 'Deep Dive requires Foxing Patron.\nUpgrade at foxing.app to unlock.'
+    if (e.code === 'PLUS_REQUIRED') {
+      return 'Deep Dive requires Foxing Plus.\nUpgrade at foxing.app to unlock.'
     }
     if (e.code === 'UNAUTHENTICATED') {
       return 'Sign in to use AI features.'
