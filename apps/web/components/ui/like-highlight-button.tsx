@@ -61,7 +61,7 @@ export function LikeHighlightButton({
       className={cn(
         'inline-flex items-center gap-1 font-dm-sans text-xs transition-colors',
         liked
-          ? 'text-brand-ui'
+          ? 'text-brand-text'
           : 'text-text-tertiary hover:text-text-primary',
         className,
       )}

@@ -235,7 +235,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                 {unreadNotifications > 0 && (
                   <span
                     aria-hidden="true"
-                    className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-ui px-1 font-dm-mono text-[0.625rem] font-medium text-text-on-brand"
+                    className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-ui px-1 font-dm-mono text-[0.625rem] font-medium text-text-on-amber"
                   >
                     {unreadNotifications > 99 ? '99+' : unreadNotifications}
                   </span>
@@ -552,6 +552,15 @@ function MobileDrawer({
       document.body.style.overflow = ''
     }
   }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open, onClose])
 
   const discoverLinks = [
     { href: '/books', label: 'Books' },

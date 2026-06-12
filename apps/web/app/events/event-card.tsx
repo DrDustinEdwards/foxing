@@ -14,7 +14,7 @@ export function EventCard({ event }: { event: PublicEvent }) {
           {formatEventDateTime(event.event_date)}
         </span>
         {event.club?.is_verified && event.club.club_type === 'bookstore' && (
-          <span className="inline-flex items-center gap-1 rounded-md bg-brand-ui px-2 py-1 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-on-brand">
+          <span className="inline-flex items-center gap-1 rounded-md bg-brand-ui px-2 py-1 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-on-amber">
             Verified
           </span>
         )}
