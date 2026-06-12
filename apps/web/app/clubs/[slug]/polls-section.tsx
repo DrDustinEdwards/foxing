@@ -220,7 +220,7 @@ function ResultRow({
             <span className="font-dm-sans text-sm text-text-primary">
               {o.label}
               {isWinner && (
-                <span className="ml-2 rounded-md bg-brand-ui px-1.5 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-on-brand">
+                <span className="ml-2 rounded-md bg-brand-ui px-1.5 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-on-amber">
                   Winner
                 </span>
               )}
