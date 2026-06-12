@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { BookSearchAdd } from '@/components/book-search-add'
 import { Button } from '@/components/ui/button'
 import { StarRating } from '@/components/ui/star-rating'
@@ -26,6 +26,15 @@ export function LogEntryDialog() {
   )
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+
+  useEffect(() => {
+    if (!open) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [open])
 
   function reset() {
     setBook(null)
