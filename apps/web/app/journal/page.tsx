@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { SectionEyebrow } from '@/components/ui/section-eyebrow'
+import { TagPill } from '@/components/ui/tag-pill'
 import { JournalPageShell } from '@/components/journal/JournalPageShell'
 import {
   estimateReadingTime,
@@ -120,9 +121,7 @@ function FeaturedHero({
     <section className="mt-10 grid gap-8 rounded-xl border border-border-subtle bg-bg-surface p-6 md:grid-cols-[1.2fr_1fr] md:items-center md:gap-12 md:p-10">
       <div className="flex flex-col gap-4">
         {tagLabel && (
-          <span className="self-start rounded-full bg-brand-subtle px-3 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-brand-subtle-text">
-            {tagLabel}
-          </span>
+          <TagPill>{tagLabel}</TagPill>
         )}
         <h2 className="font-fraunces text-[2rem] leading-tight text-text-primary md:text-[2.25rem]">
           <Link

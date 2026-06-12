@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { TagPill as UITagPill } from '@/components/ui/tag-pill'
 import { ReadingProgress } from '@/components/reading-progress'
 import {
   getAdjacentJournalPostsStatic,
@@ -338,14 +339,7 @@ function TagPill({ slug }: { slug: string }) {
     slug
       .replace(/-/g, ' ')
       .replace(/\b\w/g, (c) => c.toUpperCase())
-  return (
-    <Link
-      href={`/journal/tag/${slug}`}
-      className="self-start rounded-full bg-brand-subtle px-3 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.08em] text-brand-subtle-text no-underline transition-colors hover:bg-brand-ui hover:text-text-on-brand"
-    >
-      {label}
-    </Link>
-  )
+  return <UITagPill href={`/journal/tag/${slug}`}>{label}</UITagPill>
 }
 
 function AuthorByline() {
