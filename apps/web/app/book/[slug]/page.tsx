@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { StarRating } from '@/components/ui/star-rating'
+import { TagPill } from '@/components/ui/tag-pill'
 import { ClubCard } from '@/components/club-card'
 import { CollapsibleSection } from '@/components/collapsible-section'
 import { Footer } from '@/components/layout/footer'
@@ -401,13 +402,9 @@ function BookHeader({
       {book.themes && book.themes.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
           {book.themes.slice(0, 6).map((tag) => (
-            <Link
-              key={tag}
-              href={`/books?mood=${encodeURIComponent(tag)}`}
-              className="rounded-full bg-brand-subtle px-2.5 py-0.5 font-dm-sans text-xs text-brand-subtle-text hover:bg-bg-hover"
-            >
+            <TagPill key={tag} href={`/books?mood=${encodeURIComponent(tag)}`}>
               {tag}
-            </Link>
+            </TagPill>
           ))}
         </div>
       )}
