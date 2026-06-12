@@ -65,6 +65,7 @@ export function PostEditDeleteButtons({
     return (
       <div className="flex w-full flex-col gap-2">
         <textarea
+          aria-label="Edit post"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           maxLength={5000}

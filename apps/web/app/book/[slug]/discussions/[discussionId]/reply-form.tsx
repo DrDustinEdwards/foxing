@@ -69,6 +69,7 @@ export function ReplyForm({
       className="mt-3 flex flex-col gap-2 rounded-md border border-border-subtle bg-bg-surface p-3"
     >
       <textarea
+        aria-label="Reply"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         maxLength={5000}

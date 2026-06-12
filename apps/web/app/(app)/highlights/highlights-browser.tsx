@@ -66,6 +66,7 @@ export function HighlightsBrowser({ items }: Props) {
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
         <div className="flex-1">
           <Input
+            aria-label="Search highlights"
             placeholder="Search highlights, books, notes"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
