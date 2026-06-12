@@ -83,17 +83,6 @@ async function postMeetingToDiscord(
   ])
 }
 
-function generateMeetCode(): string {
-  const seg = (len: number) => {
-    const bytes = new Uint8Array(len)
-    crypto.getRandomValues(bytes)
-    return Array.from(bytes, (b) =>
-      'abcdefghijklmnopqrstuvwxyz'[b % 26],
-    ).join('')
-  }
-  return `${seg(3)}-${seg(4)}-${seg(3)}`
-}
-
 export async function createClubMeeting(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -118,13 +107,7 @@ export async function createClubMeeting(
   const isRecurring = formData.get('is_recurring') === 'on'
   const recurrenceRule = isRecurring ? get('recurrence_rule') || null : null
 
-  let locationUrl: string | null = get('location_url') || null
-  if (
-    !locationUrl &&
-    (meetingType === 'virtual' || meetingType === 'hybrid')
-  ) {
-    locationUrl = `https://meet.google.com/${generateMeetCode()}`
-  }
+  const locationUrl: string | null = get('location_url') || null
 
   const sb = await createClient()
   const { data, error } = await sb
