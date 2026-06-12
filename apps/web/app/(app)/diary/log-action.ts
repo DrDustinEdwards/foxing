@@ -36,7 +36,7 @@ export async function logDiaryEntry(input: LogEntryInput) {
     book_id: input.book_id,
     log_date: input.log_date,
     rating_half: ratingHalf,
-    review: input.review?.trim() || null,
+    review: input.review?.trim().slice(0, 5000) || null,
     privacy,
   })
   if (error) return { ok: false as const, error: error.message }

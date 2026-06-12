@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'invalid_json' }, { status: 400 })
   }
 
-  const title = body.title?.trim()
-  const author = body.author?.trim()
+  const title = body.title?.trim().slice(0, 300)
+  const author = body.author?.trim().slice(0, 200)
   if (!title || !author) {
     return NextResponse.json(
       { error: 'title_and_author_required' },
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       isbn: isbn10 ?? isbnClean,
       isbn13,
       publication_year,
-      publisher: body.publisher ?? null,
+      publisher: body.publisher?.trim().slice(0, 200) ?? null,
       added_by: user.id,
     })
     .select('id')

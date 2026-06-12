@@ -141,6 +141,22 @@ export async function removeClubPost(
   const auth = await assertMod(clubId)
   if (!auth.ok) return auth
   const admin = createAdminClient()
+  // Confirm the post's thread belongs to this club before a mod of this club
+  // can remove it (club_posts carries no club_id of its own).
+  const { data: postRow } = await admin
+    .from('club_posts')
+    .select('thread_id')
+    .eq('id', postId)
+    .maybeSingle()
+  const threadId = (postRow as { thread_id: string | null } | null)?.thread_id
+  if (!threadId) return { ok: false, error: 'Post not found.' }
+  const { data: threadRow } = await admin
+    .from('club_threads')
+    .select('club_id')
+    .eq('id', threadId)
+    .maybeSingle()
+  const postClubId = (threadRow as { club_id: string | null } | null)?.club_id
+  if (postClubId !== clubId) return { ok: false, error: 'Post not in this club.' }
   const { error } = await admin
     .from('club_posts')
     .update({

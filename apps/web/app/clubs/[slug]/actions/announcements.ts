@@ -204,6 +204,7 @@ export async function removeAnnouncement(
       removed_by: userId,
     })
     .eq('id', id)
+    .eq('club_id', clubId)
   if (error) return { ok: false, error: error.message }
 
   const admin = createAdminClient()
