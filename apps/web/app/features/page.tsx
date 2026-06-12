@@ -993,7 +993,7 @@ export default function FeaturesPage() {
                   'TTS auto-advance (reads continuously through chapters) (app)',
                   'Sleep timer for text to speech (app)',
                   'Low-vision layout preset: larger type, bold text, generous spacing (app)',
-                  'WCAG 2.2 AA contrast throughout, AAA on body text (web)',
+                  'WCAG 2.2 AAA contrast on body text; AA on links, labels, and badges (web)',
                   'Keyboard navigation with visible focus rings throughout (web)',
                   'Reduced motion, increased contrast, and forced colors respected on the web (system preferences)',
                 ]}
