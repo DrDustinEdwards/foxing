@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyIndexNow } from '@/lib/indexnow'
 import { estimateReadingTime } from '@/lib/journal-shared'
 import { FOXING_BASE_URL } from '@/lib/metadata'
-import { getAuthedUserId } from '@/lib/nav-user'
+import { requireAdminUserId } from '@/lib/nav-user'
 import { slugify } from '@/lib/slug'
 
 interface JournalInput {
@@ -61,6 +61,7 @@ export async function saveJournalPost(formData: FormData): Promise<{
   id?: string
   error?: string
 }> {
+  const authorId = await requireAdminUserId()
   const input = parseInput(formData)
   if (!input.title) return { ok: false, error: 'Title required.' }
   if (!input.content.trim()) return { ok: false, error: 'Content required.' }
@@ -76,7 +77,6 @@ export async function saveJournalPost(formData: FormData): Promise<{
           .filter(Boolean)
       : null
 
-  const authorId = await getAuthedUserId()
   const admin = createAdminClient()
 
   const customPublishedAt = parsePublishedAt(input.published_at)
@@ -167,6 +167,7 @@ async function snapshotVersion(
 }
 
 export async function deleteJournalPost(formData: FormData) {
+  await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const admin = createAdminClient()
@@ -176,6 +177,7 @@ export async function deleteJournalPost(formData: FormData) {
 }
 
 export async function duplicateJournalPost(formData: FormData) {
+  const authorId = await requireAdminUserId()
   const id = String(formData.get('id') ?? '')
   if (!id) return
   const admin = createAdminClient()
@@ -199,7 +201,6 @@ export async function duplicateJournalPost(formData: FormData) {
   } | null
   if (!source) return
 
-  const authorId = await getAuthedUserId()
   const baseSlug = `${source.slug}-copy`
   let candidate = baseSlug
   for (let i = 2; i < 100; i += 1) {

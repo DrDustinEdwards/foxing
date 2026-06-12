@@ -1,16 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-
-async function getAdminId(): Promise<string | null> {
-  const sb = await createClient()
-  const {
-    data: { user },
-  } = await sb.auth.getUser()
-  return user?.id ?? null
-}
+import { requireAdminUserId } from '@/lib/nav-user'
 
 const POST_TABLES: Record<string, string> = {
   club_post: 'club_posts',
@@ -21,6 +13,7 @@ const POST_TABLES: Record<string, string> = {
 }
 
 export async function dismissReport(formData: FormData) {
+  const adminId = await requireAdminUserId()
   const reportId = String(formData.get('reportId') ?? '')
   if (!reportId) return
   const admin = createAdminClient()
@@ -29,13 +22,14 @@ export async function dismissReport(formData: FormData) {
     .update({
       status: 'dismissed',
       reviewed_at: new Date().toISOString(),
-      reviewed_by: await getAdminId(),
+      reviewed_by: adminId,
     })
     .eq('id', reportId)
   revalidatePath('/admin/content')
 }
 
 export async function deletePostFromReport(formData: FormData) {
+  const adminId = await requireAdminUserId()
   const reportId = String(formData.get('reportId') ?? '')
   const postId = String(formData.get('postId') ?? '')
   const postType = String(formData.get('postType') ?? 'club_post')
@@ -48,13 +42,14 @@ export async function deletePostFromReport(formData: FormData) {
     .update({
       status: 'actioned',
       reviewed_at: new Date().toISOString(),
-      reviewed_by: await getAdminId(),
+      reviewed_by: adminId,
     })
     .eq('id', reportId)
   revalidatePath('/admin/content')
 }
 
 export async function warnUser(formData: FormData) {
+  const adminId = await requireAdminUserId()
   const reportId = String(formData.get('reportId') ?? '')
   const authorId = String(formData.get('authorId') ?? '')
   const reason = String(formData.get('reason') ?? '')
@@ -73,7 +68,7 @@ export async function warnUser(formData: FormData) {
     .update({
       status: 'actioned',
       reviewed_at: new Date().toISOString(),
-      reviewed_by: await getAdminId(),
+      reviewed_by: adminId,
     })
     .eq('id', reportId)
   revalidatePath('/admin/content')
