@@ -20,11 +20,11 @@ const corsHeaders = {
 };
 
 // ─── Rate limiting + subscription gates (task.md Section 6) ──────────────
-// Free users get FREE_DAILY_LIMIT metered AI calls per UTC day. Deep Dive
-// is Patron-only. Server-side counting + enforcement, client checks alone
-// can't protect API spend during a viral moment.
-
-const FREE_DAILY_LIMIT = 3;
+// Free users get FREE_DAILY_LIMIT metered AI calls per UTC day; matches
+// monetization.md ("5 AI word lookups per day"). Deep Dive is Plus-only.
+// Server-side counting + enforcement; client checks alone can't protect API
+// spend during a viral moment.
+const FREE_DAILY_LIMIT = 5;
 
 // Actions whose cost we throttle on the free tier. Names match the action
 // strings the request handler dispatches on (not the client lib export
@@ -37,9 +37,9 @@ const METERED_ACTIONS = new Set<string>([
   "language_difficulty",
 ]);
 
-// Deep Dive is a single action with a `kind` payload; gated entirely to
-// Patron. Free + Plus users get 403 PATRON_REQUIRED so the client can show
-// an upgrade prompt instead of charging us for the call.
+// Deep Dive is a single action with a `kind` payload; gated to Plus. Free
+// users get 403 PLUS_REQUIRED so the client can show an upgrade prompt
+// instead of charging us for the call.
 const DEEP_DIVE_ACTION = "deep_dive";
 
 interface RateLimitOutcome {
@@ -63,7 +63,7 @@ function getAdminClient() {
 async function getSubscriptionTier(
   admin: ReturnType<typeof createClient>,
   userId: string,
-): Promise<"free" | "plus" | "patron"> {
+): Promise<"free" | "plus"> {
   try {
     const { data } = await admin
       .from("profiles")
@@ -71,7 +71,7 @@ async function getSubscriptionTier(
       .eq("id", userId)
       .maybeSingle();
     const tier = (data as { subscription_tier?: string } | null)?.subscription_tier;
-    if (tier === "plus" || tier === "patron") return tier;
+    if (tier === "plus") return "plus";
   } catch (e) {
     console.warn("[ai-companion] subscription lookup failed:", e);
   }
@@ -161,7 +161,7 @@ async function enforceLimitsAndGate(
     return {};
   }
 
-  // Anonymous calls aren't permitted for any metered/patron action.
+  // Anonymous calls aren't permitted for any metered/Plus-gated action.
   if (!userId && (METERED_ACTIONS.has(action) || action === DEEP_DIVE_ACTION)) {
     return {
       response: new Response(
@@ -179,12 +179,12 @@ async function enforceLimitsAndGate(
 
   if (action === DEEP_DIVE_ACTION) {
     const tier = await getSubscriptionTier(admin, userId!);
-    if (tier !== "patron") {
+    if (tier !== "plus") {
       return {
         response: new Response(
           JSON.stringify({
-            error: "PATRON_REQUIRED",
-            message: "Deep Dive requires Foxing Patron.",
+            error: "PLUS_REQUIRED",
+            message: "Deep Dive requires Foxing Plus.",
           }),
           {
             status: 403,
@@ -193,15 +193,15 @@ async function enforceLimitsAndGate(
         ),
       };
     }
-    // Patrons hit the API path unlimited; no rate-limit counter for them.
+    // Plus subscribers hit the API path unlimited; no rate-limit counter.
     return {};
   }
 
   if (!METERED_ACTIONS.has(action)) return {};
 
-  // Free tier check. Plus + Patron skip the counter entirely.
+  // Free tier check. Plus skips the counter entirely.
   const tier = await getSubscriptionTier(admin, userId!);
-  if (tier === "plus" || tier === "patron") return {};
+  if (tier === "plus") return {};
 
   // Date in UTC YYYY-MM-DD to match the table's primary key.
   const today = new Date().toISOString().split("T")[0];
