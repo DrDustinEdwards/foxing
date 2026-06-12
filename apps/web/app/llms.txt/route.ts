@@ -210,7 +210,7 @@ export async function GET() {
 
 > A reading platform for public domain classic books with an AI companion, book clubs, and a community of serious readers.
 
-Foxing is a free mobile app and web platform for reading, tracking, and discussing classic literature. The catalog contains ${bookCountText} public domain books from Standard Ebooks and Project Gutenberg, all free to read. The platform includes an AI companion powered by Claude that helps readers understand vocabulary, passages, and literary context without spoilers.
+Foxing is a free mobile app and web platform for reading, tracking, and discussing classic literature. The catalog contains ${bookCountText} public domain books from Standard Ebooks and Project Gutenberg, all free to read. The platform includes an AI companion that helps readers understand vocabulary, passages, and literary context without spoilers.
 
 ## What Foxing contains
 

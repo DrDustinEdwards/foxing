@@ -22,7 +22,6 @@ export const metadata = STATIC_PAGE_METADATA['/features']
 
 const NAV_ANCHORS = [
   { href: '#read', label: 'Read' },
-  { href: '#formats', label: 'Formats' },
   { href: '#navigate', label: 'Navigate' },
   { href: '#annotate', label: 'Annotate' },
   { href: '#track', label: 'Track' },
@@ -82,46 +81,17 @@ export default function FeaturesPage() {
             </Prose>
             <FeatureList
               items={[
-                'Read on iOS, Android, and web: same library, same position, everywhere',
-                'Paginated reading mode with page-turn animations',
-                'Continuous scroll mode',
-                'Dual-page layout on tablet and landscape',
+                'Read in the iOS and Android app; your library, progress, highlights, and notes sync to the web',
+                'EPUB 2 and EPUB 3, including fixed-layout books',
+                'Paginated reading mode',
                 'Four reading canvas themes: Default (warm white), Sepia (parchment), Dark (warm near-black), OLED Black (true black for battery saving)',
                 'Font size adjustment',
-                'Line height, letter spacing, and margin width controls',
-                'Justified, left-aligned, or right-aligned text',
                 'Full-screen reading mode (hides all interface chrome)',
                 'Reading progress saved automatically and synced across devices',
                 'Reading position restored on every open',
                 'Keep screen awake while reading',
-                'Battery and time display while reading',
-                'Reading progress bar at top or bottom',
-                'Estimated time remaining (per chapter and whole book)',
+                'Reading progress bar with percent display',
                 'Chapter name and book title display while reading',
-                'Reading lock mode (prevents accidental taps mid-session)',
-              ]}
-            />
-          </Section>
-
-          <Section
-            id="formats"
-            eyebrow="Formats"
-            heading="Every major reading format"
-            tier="free"
-            platform="app"
-          >
-            <FeatureList
-              items={[
-                'EPUB 2 and EPUB 3',
-                'EPUB fixed layout',
-                'PDF',
-                'MOBI and AZW3',
-                'CBZ and CBR (comics)',
-                'TXT and Markdown',
-                'HTML',
-                'RTF and DOCX',
-                'FictionBook (FB2)',
-                'Sideload personal files via the app (import from Files, Dropbox, or email attachment) (app only)',
               ]}
             />
           </Section>
@@ -136,18 +106,13 @@ export default function FeaturesPage() {
             <FeatureList
               items={[
                 'Table of contents with nested chapter structure',
-                'Search within a book (full-text search with highlighted results and context previews)',
-                'Jump to chapter, page number, or percentage',
+                'Jump to any chapter or percentage',
                 'Go to previous or next chapter',
                 'Back navigation (return to where you jumped from)',
                 'Named bookmarks with quick-add, view and delete bookmarks from the web on any book detail page',
-                'Bookmark notes',
                 'History of recently visited positions',
-                'Internal hyperlink navigation (footnotes, endnotes, cross-references)',
-                'Go to footnote and return',
                 'Swipe gesture navigation',
-                'Volume button page turn',
-                'Tap zones (left tap back, right tap forward, customizable)',
+                'AI search: describe a scene in plain English and the companion points you to the chapters that likely match',
               ]}
             />
           </Section>
@@ -160,8 +125,8 @@ export default function FeaturesPage() {
             platform="app"
           >
             <Prose>
-              Seven highlight colors. Notes on any passage. Everything
-              searchable and exportable.
+              Seven highlight colors with a meaning system. Everything synced
+              and exportable.
             </Prose>
 
             <Subgroup title="Highlight colors" tier="free">
@@ -182,14 +147,9 @@ export default function FeaturesPage() {
               <FeatureList
                 items={[
                   'Long press to begin a selection',
-                  'Double tap to select a word',
-                  'Triple tap to select a sentence or paragraph',
                   'Drag handles to extend a selection',
-                  'Highlight with or without a note',
-                  'Strikethrough and underline annotations',
-                  'Circle and box annotations (PDF)',
-                  'Sticky margin notes',
-                  'Free-draw annotation (PDF)',
+                  'Tap a single word for an instant AI lookup',
+                  'Highlight any selection in one of the seven colors straight from the selection menu',
                 ]}
               />
             </Subgroup>
@@ -198,12 +158,8 @@ export default function FeaturesPage() {
               <FeatureList
                 items={[
                   'Annotation list: all highlights and notes in one scrollable view',
-                  'Filter annotations by color, chapter, or date',
-                  'Sort by position, date added, or color',
-                  'Search within your annotations',
-                  'Edit any note after creation',
+                  'Filter annotations by color',
                   'Export annotations as TXT, CSV, or Markdown',
-                  'Share any annotation directly',
                   'Annotation sync across all your devices',
                 ]}
               />
@@ -244,7 +200,6 @@ export default function FeaturesPage() {
                   'Mood tags: dark, lighthearted, emotional, tense, hopeful, funny, mysterious, adventurous, reflective, romantic',
                   'Pacing tags: fast, medium, slow',
                   'Format read: ebook, physical, audiobook',
-                  'Re-read tracking (multiple read-throughs per book)',
                   'Mark as favorite',
                 ]}
               />
@@ -262,7 +217,7 @@ export default function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Reading timer" tier="free" platform="both">
+            <Subgroup title="Reading timer" tier="free" platform="web">
               <FeatureList
                 items={[
                   'Start and stop a reading session from any book page',
@@ -270,7 +225,7 @@ export default function FeaturesPage() {
                   'Pages-read input on session end',
                   'Words per minute calculation when page count is provided',
                   'Session history on your stats page (date, duration, pages, WPM)',
-                  'Active session auto-closes on app exit',
+                  'In the app, sessions are tracked automatically while you read',
                 ]}
               />
             </Subgroup>
@@ -533,16 +488,12 @@ export default function FeaturesPage() {
             <Subgroup title="Discussion threads" tier="free">
               <FeatureList
                 items={[
-                  '11 thread types: General, Chapter, Prediction, First Impressions, Deep Dive, Hot Take, Quote, Character, Theme, Questions, Wrap-Up',
-                  'Chapter-gated threads (locked until the scheduled unlock date)',
                   'Nested replies on every post',
-                  'Rich text formatting (bold, italic, block quote)',
                   'Spoiler tagging and blur on any post',
                   'Like and save individual posts',
                   'Report a post',
-                  'AI-generated discussion starter questions per chapter',
-                  'AI discussion summary (catch up on what was discussed while you were away)',
-                  'Full thread reading view at /clubs/[slug]/threads/[id] with inline save, report, and reply on every post (web)',
+                  "AI-generated discussion questions for the club's current book",
+                  'Full thread reading view with inline save, report, and reply on every post (web)',
                 ]}
               />
             </Subgroup>
@@ -573,8 +524,7 @@ export default function FeaturesPage() {
                   'Optional attendance limit',
                   'Download a calendar file (.ics) for any meeting',
                   'Recurring meetings: weekly, biweekly, or monthly',
-                  'Virtual and hybrid meetings auto-generate a Google Meet link when no video URL is provided',
-                  'Mod controls to edit or cancel meetings',
+                  'Mod controls to cancel meetings',
                   'Club members notified when a meeting is scheduled',
                 ]}
               />
@@ -751,7 +701,7 @@ export default function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Buddy reads" tier="plus" platform="app">
+            <Subgroup title="Buddy reads" tier="plus" platform="web">
               <FeatureList
                 items={[
                   'Read a book one-on-one with another reader',
@@ -812,7 +762,6 @@ export default function FeaturesPage() {
                   'Browse by theme: revenge, identity, survival, coming of age, and more',
                   'Browse by genre, era, country of origin, and series',
                   'Browse award winners: Nobel Prize, Pulitzer, Booker Prize, National Book Award, Hugo Award',
-                  'Browse by reading difficulty',
                   'Search by title, author, or keyword',
                   'Community ratings on every book (weighted by number of ratings)',
                   'Content warnings on books that have them',
@@ -853,7 +802,7 @@ export default function FeaturesPage() {
                   'Verified authors run free book giveaways on Foxing',
                   'Browse active giveaways at /giveaways (digital and physical)',
                   'Enter any giveaway with one tap (authenticated users only)',
-                  'Winners selected randomly when the giveaway closes',
+                  'Winners drawn at random after the giveaway closes',
                   'Notified via the notifications inbox when you win',
                   'Verified authors create giveaways from their author dashboard',
                 ]}
@@ -902,7 +851,7 @@ export default function FeaturesPage() {
               <FeatureList
                 items={[
                   'Earn badges for reading milestones, streaks, social actions, and club activity',
-                  '12 badge types across 5 categories: Reading, Social, Streaks, Clubs, Milestones',
+                  'Badges across 5 categories: Reading, Social, Streaks, Clubs, Milestones',
                   'Badges displayed on your public profile (top 8 with tooltip)',
                   'Full badge page showing all earned and locked badges grouped by category',
                   'XP points earned for every badge unlocked',
@@ -951,7 +900,7 @@ export default function FeaturesPage() {
                   'Monthly reading goal: set a target for the current month with live progress',
                   'Weekly reading goal: set a target for the current week with live progress',
                   'Reading streak tracking (current streak and longest streak ever)',
-                  'Daily reading reminder (set your preferred time)',
+                  'Daily reading reminder at your preferred time (app)',
                   'Streak freeze credits (protect a streak you would otherwise break)',
                 ]}
               />
@@ -990,8 +939,6 @@ export default function FeaturesPage() {
                   'Goodreads CSV import: upload your Goodreads export, preview before anything is saved, matches by title and author, copies ratings, reviews, shelves, and finish dates',
                   'Shows matched count, inserted count, and unmatched titles after import',
                   'StoryGraph JSON import (mobile app)',
-                  'Sideload personal EPUB files into your reading library',
-                  'Barcode scanner: point the camera at the back of a physical book to add it by ISBN (mobile app)',
                 ]}
               />
             </Subgroup>
@@ -1020,9 +967,8 @@ export default function FeaturesPage() {
                 items={[
                   'iOS app (iPhone and iPad)',
                   'Android app',
-                  'Web app at foxing.app (full reading and social features)',
+                  'Web app at foxing.app: your library, diary, stats, goals, clubs, and discussions',
                   'Tablet-optimized layout',
-                  'macOS desktop app (via web)',
                 ]}
               />
             </Subgroup>
@@ -1034,27 +980,21 @@ export default function FeaturesPage() {
                   'Annotations synced across all devices',
                   'Offline reading (books downloaded for reading without a connection)',
                   'Offline annotation sync (syncs when back online)',
-                  'Background sync',
+                  'Progress saved automatically when the app goes to the background',
                 ]}
               />
             </Subgroup>
 
-            <Subgroup title="Accessibility" tier="free" platform="app">
+            <Subgroup title="Accessibility" tier="free">
               <FeatureList
                 items={[
-                  'VoiceOver (iOS) and TalkBack (Android) full support',
-                  'Text to speech with voice selection, speed control, and pitch control',
-                  'TTS auto-advance (reads continuously through chapters)',
-                  'Sleep timer for text to speech',
-                  'OpenDyslexic font option',
-                  'Dyslexia-friendly layout preset (wider spacing, shorter lines, wider margins)',
-                  'High contrast mode',
-                  'Reduced motion mode (respects system preference)',
-                  'Large text mode (respects system Dynamic Type)',
-                  'Color blindness accommodations',
-                  'Right-to-left language support (Arabic, Hebrew)',
-                  'WCAG 2.2 AA contrast throughout, AAA on body text',
-                  'Keyboard navigation with visible focus rings throughout',
+                  'Text to speech with speed control (app)',
+                  'TTS auto-advance (reads continuously through chapters) (app)',
+                  'Sleep timer for text to speech (app)',
+                  'Low-vision layout preset: larger type, bold text, generous spacing (app)',
+                  'WCAG 2.2 AA contrast throughout, AAA on body text (web)',
+                  'Keyboard navigation with visible focus rings throughout (web)',
+                  'Reduced motion, increased contrast, and forced colors respected on the web (system preferences)',
                 ]}
               />
             </Subgroup>
@@ -1064,12 +1004,10 @@ export default function FeaturesPage() {
                 items={[
                   'Private profile option (nothing visible to non-followers)',
                   'Private reviews, notes, and diary entries',
-                  'Granular notification controls (opt out per category)',
-                  'Quiet hours setting for notifications',
-                  'Full data export (everything Foxing stores about you)',
+                  'Export your library, highlights, and vocabulary at any time (CSV and Anki)',
                   'Account deletion (removes all personal data)',
                   'HTTPS everywhere with HSTS',
-                  'Content Security Policy and X-Frame-Options headers',
+                  'Strict security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)',
                 ]}
               />
             </Subgroup>
@@ -1085,18 +1023,6 @@ export default function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Discord Activity" tier="free" platform="web">
-              <FeatureList
-                items={[
-                  'Launch Foxing inside any Discord voice or text channel as an embedded Activity',
-                  'Shared real-time club dashboard visible to everyone in the channel',
-                  'Vote on book selection polls without leaving Discord',
-                  'Run a group reading sprint with a shared countdown timer',
-                  'View AI discussion questions and chapter reactions mid-discussion',
-                  'Connect your Foxing account via Discord OAuth in one tap',
-                ]}
-              />
-            </Subgroup>
           </Section>
 
           <aside className="mx-auto mt-20 max-w-prose rounded-lg bg-brand-subtle p-6 text-center">
