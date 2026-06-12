@@ -130,6 +130,17 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
     return () => document.removeEventListener('pointerdown', onPointerDown)
   }, [])
 
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        setOpenMega(null)
+      }
+    }
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [])
+
   function openMenu(key: 'books' | 'book-clubs') {
     if (closeTimer.current) {
       clearTimeout(closeTimer.current)
