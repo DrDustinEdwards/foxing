@@ -104,7 +104,9 @@ function MeetingCard({
           {[m.location_name, m.location_address].filter(Boolean).join(' · ')}
         </p>
       )}
-      {m.location_url && m.meeting_type !== 'in_person' && (
+      {m.location_url &&
+        /^https?:\/\//i.test(m.location_url) &&
+        m.meeting_type !== 'in_person' && (
         <a
           href={m.location_url}
           target="_blank"
