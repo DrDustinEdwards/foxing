@@ -10,15 +10,13 @@ interface Props {
 }
 
 export function AccountActionsSection({ username }: Props) {
-  const [exportNote, setExportNote] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmText, setConfirmText] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function handleExport() {
-    setExportNote('Coming soon. We will email a JSON archive of your data.')
-    setTimeout(() => setExportNote(null), 4000)
+    window.location.assign('/api/account/export')
   }
 
   async function handleDelete(e: React.FormEvent) {
@@ -44,9 +42,9 @@ export function AccountActionsSection({ username }: Props) {
         <Button variant="secondary" size="md" onClick={handleExport}>
           Export my data
         </Button>
-        {exportNote && (
-          <p className="font-dm-sans text-xs text-text-tertiary">{exportNote}</p>
-        )}
+        <p className="font-dm-sans text-xs text-text-tertiary">
+          Downloads a JSON archive of your account data.
+        </p>
       </div>
 
       <div className="rounded-md border border-[var(--error-border-interactive)] bg-error-bg p-4">

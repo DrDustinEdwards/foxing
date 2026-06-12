@@ -950,6 +950,7 @@ export default function FeaturesPage() {
                   'Export your vocabulary list as CSV',
                   'Export your vocabulary as an Anki flashcard deck (.txt, tab-separated)',
                   'Export annotations as TXT, CSV, or Markdown',
+                  'Full account export: one JSON archive of your profile, library, diary, highlights, vocabulary, lists, clubs, and reading history, from settings',
                   'Download .ics calendar files for any club meeting or bookstore event',
                 ]}
               />
@@ -1004,7 +1005,7 @@ export default function FeaturesPage() {
                 items={[
                   'Private profile option (nothing visible to non-followers)',
                   'Private reviews, notes, and diary entries',
-                  'Export your library, highlights, and vocabulary at any time (CSV and Anki)',
+                  'Export your library, highlights, and vocabulary at any time (CSV and Anki), or your whole account as a JSON archive',
                   'Account deletion (removes all personal data)',
                   'HTTPS everywhere with HSTS',
                   'Strict security headers (X-Frame-Options, X-Content-Type-Options, Referrer-Policy)',
