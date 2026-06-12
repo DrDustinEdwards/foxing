@@ -46,6 +46,7 @@ export function AnswerForm({ questionId }: { questionId: string }) {
   return (
     <form onSubmit={handlePublish} className="flex flex-col gap-2">
       <textarea
+        aria-label="Your answer"
         value={answer}
         onChange={(e) => setAnswer(e.target.value)}
         rows={3}
