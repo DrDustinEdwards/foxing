@@ -12,6 +12,7 @@ import {
 import { buildSeriesMetadata } from '@/lib/metadata'
 import { slugifySeriesName } from '@/lib/slug'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
+import { safeJsonLd } from '@/lib/structured-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86400
@@ -102,7 +103,7 @@ export default async function SeriesDetailPage(
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }}
       />
       <main className="flex-1">
         <PageWrapper className="py-10">

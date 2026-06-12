@@ -30,6 +30,7 @@ import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { fetchBookDiscussions } from '@/lib/discussions'
 import { fetchPublicChapterReactions } from '@/lib/chapter-reactions'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
+import { safeJsonLd } from '@/lib/structured-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
   CommunityReactionsWithViewer,
@@ -145,7 +146,7 @@ export default async function BookPage(
 
   const bookPath = book.slug ?? book.id
   const authorPath = book.author_slug ?? encodeURIComponent(book.author)
-  const bookJsonLdStr = JSON.stringify({
+  const bookJsonLdStr = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'Book',
     '@id': `${FOXING_BASE_URL}/book/${bookPath}`,
@@ -203,7 +204,7 @@ export default async function BookPage(
     },
   })
 
-  const breadcrumbJsonLdStr = JSON.stringify({
+  const breadcrumbJsonLdStr = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
