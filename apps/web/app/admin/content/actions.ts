@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminUserId } from '@/lib/nav-user'
+import { reportWriteError } from '@/lib/db-write'
 
 const POST_TABLES: Record<string, string> = {
   club_post: 'club_posts',
@@ -17,7 +18,7 @@ export async function dismissReport(formData: FormData) {
   const reportId = String(formData.get('reportId') ?? '')
   if (!reportId) return
   const admin = createAdminClient()
-  await admin
+  const { error } = await admin
     .from('post_reports')
     .update({
       status: 'dismissed',
@@ -25,6 +26,7 @@ export async function dismissReport(formData: FormData) {
       reviewed_by: adminId,
     })
     .eq('id', reportId)
+  reportWriteError(error, { op: 'dismissReport', table: 'post_reports' })
   revalidatePath('/admin/content')
 }
 
@@ -36,8 +38,15 @@ export async function deletePostFromReport(formData: FormData) {
   if (!reportId || !postId) return
   const table = POST_TABLES[postType] ?? 'club_posts'
   const admin = createAdminClient()
-  await admin.from(table).delete().eq('id', postId)
-  await admin
+  const { error: deleteError } = await admin
+    .from(table)
+    .delete()
+    .eq('id', postId)
+  // If the post delete failed, do NOT mark the report actioned: surface and stop.
+  if (reportWriteError(deleteError, { op: 'deletePostFromReport', table })) {
+    return
+  }
+  const { error: reportError } = await admin
     .from('post_reports')
     .update({
       status: 'actioned',
@@ -45,6 +54,7 @@ export async function deletePostFromReport(formData: FormData) {
       reviewed_by: adminId,
     })
     .eq('id', reportId)
+  reportWriteError(reportError, { op: 'deletePostFromReport.markActioned', table: 'post_reports' })
   revalidatePath('/admin/content')
 }
 
@@ -55,7 +65,7 @@ export async function warnUser(formData: FormData) {
   const reason = String(formData.get('reason') ?? '')
   if (!reportId || !authorId) return
   const admin = createAdminClient()
-  await admin.from('notifications').insert({
+  const { error: notifyError } = await admin.from('notifications').insert({
     user_id: authorId,
     type: 'moderation_warning',
     title: 'A moderator reviewed one of your posts',
@@ -63,7 +73,8 @@ export async function warnUser(formData: FormData) {
       ? `Reason given: ${reason}`
       : 'A post you wrote was flagged. Please review the community rules.',
   })
-  await admin
+  reportWriteError(notifyError, { op: 'warnUser.notify', table: 'notifications' })
+  const { error: reportErr } = await admin
     .from('post_reports')
     .update({
       status: 'actioned',
@@ -71,5 +82,6 @@ export async function warnUser(formData: FormData) {
       reviewed_by: adminId,
     })
     .eq('id', reportId)
+  reportWriteError(reportErr, { op: 'warnUser.markActioned', table: 'post_reports' })
   revalidatePath('/admin/content')
 }
