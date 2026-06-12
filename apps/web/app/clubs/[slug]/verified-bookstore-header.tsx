@@ -34,7 +34,7 @@ export function VerifiedBookstoreHeader({ club }: { club: PublicClub }) {
       <dl className="grid grid-cols-1 gap-2 font-dm-sans text-sm text-text-secondary sm:grid-cols-2">
         {address && (
           <div>
-            <dt className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+            <dt className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
               Address
             </dt>
             <dd>{address}</dd>
@@ -42,7 +42,7 @@ export function VerifiedBookstoreHeader({ club }: { club: PublicClub }) {
         )}
         {club.bookstore_phone && (
           <div>
-            <dt className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+            <dt className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
               Phone
             </dt>
             <dd>
@@ -57,7 +57,7 @@ export function VerifiedBookstoreHeader({ club }: { club: PublicClub }) {
         )}
         {club.bookstore_website && (
           <div>
-            <dt className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+            <dt className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
               Website
             </dt>
             <dd>

@@ -92,10 +92,10 @@ export function Footer() {
       </div>
       <div className="border-t border-border-subtle">
         <div className="mx-auto flex max-w-page flex-col gap-1 px-6 py-4 md:flex-row md:items-center md:justify-between md:px-12">
-          <p className="font-dm-mono text-[11px] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
             © {year} Foxing · Built for readers
           </p>
-          <p className="font-dm-mono text-[11px] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
             No ads. No algorithms selling you books.
           </p>
         </div>

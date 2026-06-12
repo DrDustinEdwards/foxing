@@ -12,7 +12,7 @@ export function CommonplaceProfileSection({ username, entries }: Props) {
   return (
     <section className="mt-10">
       <div className="flex items-end justify-between">
-        <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Commonplace Book
         </h2>
         <Link

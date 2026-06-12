@@ -179,7 +179,7 @@ export default async function BookClubsPage() {
 
           {archivedClubs.length > 0 && (
             <section className="mt-16">
-              <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Archived Clubs
               </h2>
               <ul className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">

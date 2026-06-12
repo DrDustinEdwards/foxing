@@ -50,7 +50,7 @@ export function ScheduleSection({ clubId, entries, canManage }: Props) {
   const now = new Date()
   return (
     <section className="mt-10">
-      <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Reading schedule
       </h2>
       {entries.length === 0 ? (
@@ -80,7 +80,7 @@ export function ScheduleSection({ clubId, entries, canManage }: Props) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span
-                    className={`rounded-md px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider ${CHIP_CLASS[status.chip]}`}
+                    className={`rounded-md px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider ${CHIP_CLASS[status.chip]}`}
                   >
                     {status.label}
                   </span>

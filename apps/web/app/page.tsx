@@ -171,7 +171,7 @@ function PassageOfDaySection({ passage }: { passage: PassageOfDay }) {
       <PageWrapper className="py-16 md:py-20">
         <SectionEyebrow className="mb-6">Passage of the day</SectionEyebrow>
         <figure className="mx-auto flex max-w-3xl flex-col items-center gap-5 text-center">
-          <blockquote className="font-source-serif-4 text-[17px] italic leading-relaxed text-text-primary">
+          <blockquote className="font-source-serif-4 text-[1.0625rem] italic leading-relaxed text-text-primary">
             &ldquo;{passage.text}&rdquo;
           </blockquote>
           <figcaption className="flex flex-col items-center gap-1">
@@ -185,7 +185,7 @@ function PassageOfDaySection({ passage }: { passage: PassageOfDay }) {
               <span> · {passage.book.author}</span>
             </Link>
             {passage.author && (
-              <span className="font-dm-sans text-[11px] text-text-tertiary">
+              <span className="font-dm-sans text-[0.6875rem] text-text-tertiary">
                 Saved by @{passage.author.username}
               </span>
             )}
@@ -507,7 +507,7 @@ function StoreBadge({
       className="inline-flex h-12 items-center gap-3 rounded-lg border border-white/30 bg-black/30 px-5 hover:bg-black/50"
     >
       <span className="flex flex-col items-start leading-tight">
-        <span className="font-dm-sans text-[10px] uppercase tracking-wider text-text-secondary">
+        <span className="font-dm-sans text-[0.625rem] uppercase tracking-wider text-text-secondary">
           {sub}
         </span>
         <span className="font-dm-sans text-sm font-medium text-text-on-dark">

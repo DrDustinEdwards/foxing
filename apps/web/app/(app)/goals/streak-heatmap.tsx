@@ -88,7 +88,7 @@ export function StreakHeatmap({ activity, weeks = 52 }: StreakHeatmapProps) {
         ))}
       </div>
       <div
-        className="grid grid-flow-col gap-[2px] font-dm-mono text-[10px] text-text-tertiary"
+        className="grid grid-flow-col gap-[2px] font-dm-mono text-[0.625rem] text-text-tertiary"
         style={{ gridTemplateColumns: `repeat(${weeks}, minmax(0, 1fr))` }}
       >
         {columns.map((_, i) => {

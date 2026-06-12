@@ -43,7 +43,7 @@ export default async function AdminNotificationsPage() {
       </section>
 
       <section className="mt-10 max-w-3xl">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Recent sends
         </h2>
         {recent.length === 0 ? (

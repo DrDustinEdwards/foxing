@@ -25,7 +25,7 @@ export default function NotFound() {
       </header>
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-16 text-center">
-          <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             404
           </p>
           <h1 className="mt-3 font-fraunces text-[2.5rem] text-text-primary">

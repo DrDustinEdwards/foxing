@@ -248,7 +248,7 @@ function PickCard({ pick }: { pick: MonthlyPicksRow }) {
       className="flex flex-col gap-4 rounded-lg border border-border-subtle bg-bg-surface p-5 scroll-mt-20"
     >
       <header>
-        <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           {pick.club_full.name}
         </p>
         {pick.club_full.curator && (
@@ -283,11 +283,11 @@ function PickCard({ pick }: { pick: MonthlyPicksRow }) {
               {pick.book.title}
             </Link>
           </h2>
-          <p className="font-dm-sans text-[13px] text-text-secondary">
+          <p className="font-dm-sans text-[0.8125rem] text-text-secondary">
             {pick.book.author}
           </p>
           {pick.curator_quote && (
-            <blockquote className="mt-2 font-source-serif-4 text-[14px] italic text-text-secondary">
+            <blockquote className="mt-2 font-source-serif-4 text-[0.875rem] italic text-text-secondary">
               {truncateText(pick.curator_quote, 160)}
             </blockquote>
           )}

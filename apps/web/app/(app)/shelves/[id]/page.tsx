@@ -60,7 +60,7 @@ export default async function ShelfDetailPage(
       />
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Books on this shelf ({shelf.books.length})
         </h2>
         {shelf.books.length === 0 ? (

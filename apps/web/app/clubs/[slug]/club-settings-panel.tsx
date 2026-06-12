@@ -229,7 +229,7 @@ function GeneralForm({ club }: { club: ClubData }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         General
       </h3>
       <Input
@@ -374,7 +374,7 @@ function TransferOwnershipBlock({ clubId }: { clubId: string }) {
 
   return (
     <div className="flex flex-col gap-2 border-t border-border-subtle pt-4">
-      <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Transfer ownership
       </h3>
       {!confirmOpen ? (

@@ -27,7 +27,7 @@ export function AnnouncementsSection({
   if (announcements.length === 0) return null
   return (
     <section className="mt-10">
-      <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Announcements
       </h2>
       <div className="flex flex-col gap-4">
@@ -65,12 +65,12 @@ function AnnouncementCard({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {a.is_pinned && (
-            <span className="font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+            <span className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
               Pinned
             </span>
           )}
           {isEvent && a.event_date && (
-            <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[11px] uppercase tracking-wider text-brand-subtle-text">
+            <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-wider text-brand-subtle-text">
               {formatEventDate(a.event_date)}
             </span>
           )}

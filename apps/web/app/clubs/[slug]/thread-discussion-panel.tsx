@@ -63,7 +63,7 @@ export function ThreadDiscussionPanel({
     if (!canGenerate) return null
     return (
       <section className="mt-8 flex flex-col gap-2 rounded-lg border border-border-subtle bg-bg-surface p-4">
-        <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Discussion Questions
         </p>
         <p className="font-source-serif-4 text-sm text-text-secondary">

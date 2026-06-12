@@ -46,7 +46,7 @@ export default async function DiscoverPage() {
 
           {popular.length > 0 && (
             <section>
-              <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Popular this week
               </h2>
               <div className="-mx-6 overflow-x-auto px-6 md:mx-0 md:px-0">
@@ -63,7 +63,7 @@ export default async function DiscoverPage() {
 
           {clubs.length > 0 && (
             <section>
-              <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Clubs looking for readers
               </h2>
               <div className="grid gap-4 md:grid-cols-3">
@@ -99,7 +99,7 @@ function TodaysPickCard({
 }) {
   return (
     <section className="rounded-lg border border-border-subtle bg-bg-surface p-5">
-      <p className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <p className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Today&apos;s pick
       </p>
       <div className="flex flex-col gap-5 md:flex-row md:items-start">
@@ -166,7 +166,7 @@ function MoodPromptCard() {
 function MoodChips() {
   return (
     <section>
-      <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Browse by mood
       </h2>
       <div className="flex flex-wrap gap-2">
@@ -189,7 +189,7 @@ function BrowseBy() {
     <CollapsibleSection heading="Browse by">
       <div className="flex flex-col gap-5">
         <div>
-          <p className="mb-2 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <p className="mb-2 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             Era
           </p>
           <div className="flex flex-wrap gap-2">
@@ -205,7 +205,7 @@ function BrowseBy() {
           </div>
         </div>
         <div>
-          <p className="mb-2 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <p className="mb-2 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             Length
           </p>
           <div className="flex flex-wrap gap-2">

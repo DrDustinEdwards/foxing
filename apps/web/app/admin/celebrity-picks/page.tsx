@@ -195,7 +195,7 @@ function PickRowItem({ club, pick }: { club: ClubRow; pick: PickRow }) {
     <article className="rounded-lg border border-border-subtle bg-bg-surface p-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             {club.name}
           </p>
           <p className="font-fraunces text-base text-text-primary">
@@ -236,7 +236,7 @@ function MissingClubRow({
     <article className="flex flex-col gap-3 rounded-lg border border-dashed border-border-default bg-bg-sunken p-4">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             {club.name}
           </p>
           {club.curator && (

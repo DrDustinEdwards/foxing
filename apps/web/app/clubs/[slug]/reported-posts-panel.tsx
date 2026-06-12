@@ -34,7 +34,7 @@ export function ReportedPostsPanel({ clubId, reports }: Props) {
   if (reports.length === 0) {
     return (
       <div className="flex flex-col gap-2">
-        <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Reports
         </h3>
         <p className="font-source-serif-4 text-sm text-text-tertiary">
@@ -45,7 +45,7 @@ export function ReportedPostsPanel({ clubId, reports }: Props) {
   }
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Reports ({reports.length})
       </h3>
       <ul className="flex flex-col gap-3">

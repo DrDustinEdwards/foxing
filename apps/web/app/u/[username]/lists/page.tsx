@@ -88,7 +88,7 @@ export default async function UserListsPage(
                         {l.description}
                       </p>
                     )}
-                    <p className="mt-auto font-dm-mono text-[11px] text-text-tertiary">
+                    <p className="mt-auto font-dm-mono text-[0.6875rem] text-text-tertiary">
                       {l.is_featured ? 'Featured · ' : ''}
                       {new Date(l.created_at).toLocaleDateString('en-US', {
                         month: 'short',

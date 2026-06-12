@@ -55,7 +55,7 @@ export default async function ChallengesPage() {
             <>
               {active.length > 0 && (
                 <section className="mt-10">
-                  <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                  <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                     Active
                   </h2>
                   <ul className="mt-3 flex flex-col gap-3">
@@ -67,7 +67,7 @@ export default async function ChallengesPage() {
               )}
               {past.length > 0 && (
                 <section className="mt-10">
-                  <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                  <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                     Past
                   </h2>
                   <ul className="mt-3 flex flex-col gap-3">
@@ -104,7 +104,7 @@ function ChallengeCard({
             {challenge.description}
           </p>
         )}
-        <p className="font-dm-mono text-[11px] text-text-tertiary">
+        <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
           {challenge.participant_count} participants
           {challenge.end_date && (
             <span>

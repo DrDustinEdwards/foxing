@@ -114,7 +114,7 @@ export default async function GiveawayDetailPage(
 
           <section className="mt-6 flex flex-wrap items-center gap-4 rounded-lg border border-border-subtle bg-bg-surface p-4">
             <div className="flex flex-col">
-              <span className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+              <span className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
                 Entries
               </span>
               <span className="font-fraunces text-2xl text-text-primary">
@@ -122,7 +122,7 @@ export default async function GiveawayDetailPage(
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+              <span className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
                 Winners
               </span>
               <span className="font-fraunces text-2xl text-text-primary">
@@ -130,7 +130,7 @@ export default async function GiveawayDetailPage(
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+              <span className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
                 {ended ? 'Ended' : 'Ends'}
               </span>
               <span className="font-dm-sans text-base text-text-primary">

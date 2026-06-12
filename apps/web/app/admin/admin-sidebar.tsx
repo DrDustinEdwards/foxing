@@ -202,7 +202,7 @@ export function AdminSidebar({ adminName }: Props) {
                 {section.label && (
                   <li
                     aria-hidden="true"
-                    className="px-3 pb-1 pt-4 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary"
+                    className="px-3 pb-1 pt-4 font-dm-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-tertiary"
                   >
                     {section.label}
                   </li>
@@ -343,7 +343,7 @@ export function AdminSidebar({ adminName }: Props) {
           onMouseEnter={() => openFlyout(openSection.key)}
           onMouseLeave={scheduleFlyoutClose}
         >
-          <p className="px-4 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
+          <p className="px-4 pb-2 pt-5 font-dm-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-tertiary">
             {openSection.railName}
           </p>
           <ul>

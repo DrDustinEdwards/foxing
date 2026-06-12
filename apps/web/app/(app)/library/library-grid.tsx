@@ -45,7 +45,7 @@ export function LibraryGrid({ items }: { items: LibraryEntry[] }) {
     <div className="flex flex-col gap-6">
       {allTags.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             Tags
           </span>
           {allTags.map((t) => (
@@ -170,7 +170,7 @@ function LibraryCard({
                 type="button"
                 onClick={() => onTagClick(t)}
                 className={cn(
-                  'rounded-full px-1.5 py-0.5 font-dm-mono text-[10px] transition-colors',
+                  'rounded-full px-1.5 py-0.5 font-dm-mono text-[0.625rem] transition-colors',
                   activeTag === t
                     ? 'bg-brand-ui text-text-on-brand'
                     : 'bg-bg-sunken text-text-tertiary hover:bg-bg-hover',

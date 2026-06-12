@@ -127,7 +127,7 @@ export default async function VocabularyPage(
                   {e.word}
                 </h2>
                 {e.looked_up_at && (
-                  <time className="font-dm-mono text-[11px] text-text-tertiary">
+                  <time className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                     {new Date(e.looked_up_at).toLocaleDateString('en-US', {
                       month: 'short',
                       day: 'numeric',

@@ -267,7 +267,7 @@ function Section({ id, eyebrow, heading, children }: SectionProps) {
       id={id}
       className="mt-16 border-t border-border-subtle pt-12 first-of-type:mt-0 first-of-type:border-t-0 first-of-type:pt-0"
     >
-      <p className="mb-2 font-dm-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+      <p className="mb-2 font-dm-mono text-[0.6875rem] uppercase tracking-[0.14em] text-text-tertiary">
         {eyebrow}
       </p>
       <h2 className="mb-4 font-fraunces text-[1.625rem] text-text-primary">

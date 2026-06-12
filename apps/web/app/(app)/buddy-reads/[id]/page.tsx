@@ -76,7 +76,7 @@ function BuddyReadHeader({ buddyRead }: { buddyRead: BuddyRead }) {
         </Link>
       )}
       <div className="flex flex-col gap-2">
-        <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Buddy read
         </p>
         <h1 className="font-fraunces text-[1.75rem] text-text-primary">
@@ -96,7 +96,7 @@ function BuddyReadHeader({ buddyRead }: { buddyRead: BuddyRead }) {
           )}
         </div>
         {buddyRead.started_at && (
-          <p className="font-dm-mono text-[11px] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
             Started {new Date(buddyRead.started_at).toLocaleDateString()}
           </p>
         )}
@@ -159,7 +159,7 @@ function PostList({
                 <span className="font-dm-sans text-sm font-medium text-text-primary">
                   {p.author?.display_name ?? 'Reader'}
                 </span>
-                <time className="font-dm-mono text-[11px] text-text-tertiary">
+                <time className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                   {new Date(p.created_at).toLocaleString()}
                 </time>
                 {p.page_number && (

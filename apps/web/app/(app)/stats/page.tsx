@@ -207,7 +207,7 @@ export default async function StatsPage(
       </section>
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           {selectedYear
             ? `Books finished in ${selectedYear}`
             : 'Books per month, last 12 months'}
@@ -219,7 +219,7 @@ export default async function StatsPage(
 
       {genres.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             Genres
           </h2>
           <div className="grid items-center gap-6 rounded-lg border border-border-subtle bg-bg-surface p-4 md:grid-cols-[1fr_auto]">
@@ -244,7 +244,7 @@ export default async function StatsPage(
       )}
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Reading moods
         </h2>
         <div className="rounded-lg border border-border-subtle bg-bg-surface p-4">
@@ -260,7 +260,7 @@ export default async function StatsPage(
       </section>
 
       <section className="mt-10">
-        <h2 className="mb-1 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Reading pace
         </h2>
         <p className="mb-3 font-dm-sans text-xs text-text-tertiary">
@@ -285,7 +285,7 @@ export default async function StatsPage(
 
       {formatTotal > 0 && (
         <section className="mt-10">
-          <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             Format
           </h2>
           <ul className="flex flex-wrap gap-2">
@@ -307,7 +307,7 @@ export default async function StatsPage(
       )}
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Recent sessions
         </h2>
         {recentSessions.length === 0 ? (
@@ -435,7 +435,7 @@ function StatCard({
         {label}
       </p>
       {hint && (
-        <p className="mt-1 line-clamp-1 font-dm-mono text-[11px] text-text-tertiary">
+        <p className="mt-1 line-clamp-1 font-dm-mono text-[0.6875rem] text-text-tertiary">
           {hint}
         </p>
       )}

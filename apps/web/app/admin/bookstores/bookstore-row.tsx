@@ -159,7 +159,7 @@ export function BookstoreRow({ store }: { store: BookstoreView }) {
             defaultValue={store.bookstore_phone ?? ''}
           />
           <div className="md:col-span-2">
-            <p className="mb-2 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <p className="mb-2 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Hours (free text per day)
             </p>
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">

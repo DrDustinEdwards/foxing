@@ -113,7 +113,7 @@ export function BroadcastForm() {
 
       {title && body && (
         <div className="rounded-md border border-border-subtle bg-bg-sunken p-3">
-          <p className="font-dm-mono text-[11px] uppercase tracking-wide text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-wide text-text-tertiary">
             Preview
           </p>
           <p className="mt-1 font-fraunces text-base text-text-primary">

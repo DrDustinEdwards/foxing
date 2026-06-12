@@ -53,7 +53,7 @@ export function BookShelvesPicker({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Add to shelves
       </p>
       {shelves.length === 0 ? (

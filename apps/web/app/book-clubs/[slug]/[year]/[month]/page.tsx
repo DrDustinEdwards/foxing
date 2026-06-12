@@ -361,10 +361,10 @@ export default async function ClubMonthlyPickPage(
               </p>
               {pick.curator_quote && (
                 <figure className="mt-4 border-l-[3px] border-brand-ui pl-4">
-                  <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                  <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                     What {pick.club_full.curator ?? pick.club_full.short_name ?? pick.club_full.name} said
                   </p>
-                  <blockquote className="mt-2 font-source-serif-4 text-[17px] italic leading-[1.8] text-text-primary">
+                  <blockquote className="mt-2 font-source-serif-4 text-[1.0625rem] italic leading-[1.8] text-text-primary">
                     {pick.curator_quote}
                   </blockquote>
                   <figcaption className="mt-2 font-dm-sans text-xs text-text-tertiary">
@@ -414,7 +414,7 @@ export default async function ClubMonthlyPickPage(
 
           {(hasPrevPick || hasNextPick || adjacent.length > 0) && (
             <section className="mt-10">
-              <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Other months
               </h2>
               <nav

@@ -113,7 +113,7 @@ function PublicListCard({ list }: { list: PublicListRow }) {
           {list.description}
         </p>
       )}
-      <p className="mt-auto font-dm-mono text-[11px] text-text-tertiary">
+      <p className="mt-auto font-dm-mono text-[0.6875rem] text-text-tertiary">
         {list.creator ? `@${list.creator.username} · ` : ''}
         {list.book_count} books
         {list.like_count > 0 && ` · ${list.like_count} likes`}

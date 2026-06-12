@@ -81,7 +81,7 @@ export default async function GoalsPage() {
       </h1>
 
       <section className="mt-8 rounded-lg border border-border-subtle bg-bg-surface p-6">
-        <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           {year} goal
         </h2>
         {target > 0 ? (
@@ -110,7 +110,7 @@ export default async function GoalsPage() {
 
       <section className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-lg border border-border-subtle bg-bg-surface p-5">
-          <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             {monthPeriod.label} goal
           </h2>
           {monthlyTarget && monthlyTarget > 0 ? (
@@ -144,7 +144,7 @@ export default async function GoalsPage() {
         </div>
 
         <div className="rounded-lg border border-border-subtle bg-bg-surface p-5">
-          <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             {weekPeriod.label} goal
           </h2>
           {weeklyTarget && weeklyTarget > 0 ? (
@@ -179,7 +179,7 @@ export default async function GoalsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Reading activity, last 52 weeks
         </h2>
         <div className="overflow-x-auto rounded-lg border border-border-subtle bg-bg-surface p-4">
@@ -217,7 +217,7 @@ export default async function GoalsPage() {
       />
 
       <section className="mt-10">
-        <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Community challenges
         </h2>
         {challenges.length === 0 ? (
@@ -296,7 +296,7 @@ function FreezeSection({
   return (
     <section className="mt-6 flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-5">
       <header>
-        <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Streak freeze
         </h2>
         <p className="mt-1 font-fraunces text-xl text-text-primary">
@@ -339,7 +339,7 @@ function StreakCard({
       <p className="mt-1 font-dm-sans text-xs uppercase tracking-wide text-text-tertiary">
         {label}
       </p>
-      <p className="mt-1 font-dm-mono text-[11px] text-text-tertiary">{hint}</p>
+      <p className="mt-1 font-dm-mono text-[0.6875rem] text-text-tertiary">{hint}</p>
     </div>
   )
 }
