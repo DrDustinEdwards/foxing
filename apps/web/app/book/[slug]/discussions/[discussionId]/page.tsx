@@ -106,7 +106,7 @@ export default async function DiscussionPage(
                 </h1>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
-                    className={`rounded-md px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider ${typeClass}`}
+                    className={`rounded-md px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider ${typeClass}`}
                   >
                     {discussion.type.replace(/_/g, ' ')}
                   </span>
@@ -114,7 +114,7 @@ export default async function DiscussionPage(
                     <Badge variant="warning">Spoilers</Badge>
                   )}
                   {discussion.chapter_gate && (
-                    <span className="font-dm-mono text-[11px] text-text-tertiary">
+                    <span className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                       {discussion.chapter_gate}
                     </span>
                   )}
@@ -222,7 +222,7 @@ function PostCard({
             <span className="font-dm-sans text-sm font-medium text-text-primary">
               {post.author?.display_name ?? 'Reader'}
             </span>
-            <time className="font-dm-mono text-[11px] text-text-tertiary">
+            <time className="font-dm-mono text-[0.6875rem] text-text-tertiary">
               {formatRelativeDate(post.created_at)}
               {post.is_edited && ' · edited'}
             </time>

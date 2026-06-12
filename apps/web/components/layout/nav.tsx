@@ -235,7 +235,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
                 {unreadNotifications > 0 && (
                   <span
                     aria-hidden="true"
-                    className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-ui px-1 font-dm-mono text-[10px] font-medium text-text-on-brand"
+                    className="absolute right-1.5 top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-brand-ui px-1 font-dm-mono text-[0.625rem] font-medium text-text-on-brand"
                   >
                     {unreadNotifications > 99 ? '99+' : unreadNotifications}
                   </span>
@@ -421,7 +421,7 @@ function MegaMenu({
       <div className="absolute left-1/2 top-9 z-50 w-[520px] -translate-x-1/2 rounded-lg border border-border-subtle bg-bg-elevated p-5 shadow-lg">
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <p className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Browse
             </p>
             <ul className="flex flex-col gap-1">
@@ -440,7 +440,7 @@ function MegaMenu({
             </ul>
           </div>
           <div>
-            <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <p className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Themes
             </p>
             <div className="flex flex-wrap gap-1.5">
@@ -471,7 +471,7 @@ function MegaMenu({
     <div className="absolute left-1/2 top-9 z-50 w-[440px] -translate-x-1/2 rounded-lg border border-border-subtle bg-bg-elevated p-5 shadow-lg">
       {botm ? (
         <div className="mb-3 rounded-md border border-border-subtle bg-bg-sunken p-3">
-          <p className="font-dm-mono text-[10px] uppercase tracking-wider text-brand-text">
+          <p className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-brand-text">
             Foxing pick &middot; {monthYearLabel}
           </p>
           <p className="mt-1 font-fraunces text-sm text-text-primary">
@@ -490,7 +490,7 @@ function MegaMenu({
           </Link>
         </div>
       ) : null}
-      <p className="mb-3 font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <p className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Featured clubs
       </p>
       <ul className="grid grid-cols-2 gap-1">
@@ -596,7 +596,7 @@ function MobileDrawer({
           </button>
         </div>
 
-        <p className="px-5 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
+        <p className="px-5 pb-2 pt-5 font-dm-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-tertiary">
           Discover
         </p>
         <ul>
@@ -612,7 +612,7 @@ function MobileDrawer({
           ))}
         </ul>
 
-        <p className="px-5 pb-2 pt-5 font-dm-mono text-[10px] uppercase tracking-[0.14em] text-text-tertiary">
+        <p className="px-5 pb-2 pt-5 font-dm-mono text-[0.625rem] uppercase tracking-[0.14em] text-text-tertiary">
           Community
         </p>
         <ul>
@@ -812,11 +812,11 @@ function AccountMenu({
             <p className="truncate font-dm-sans text-sm font-medium text-text-primary">
               {user.display_name}
               {isPlus ? (
-                <span className="ml-1 rounded-full bg-brand-subtle px-1.5 py-0.5 font-dm-mono text-[10px] text-brand-text">
+                <span className="ml-1 rounded-full bg-brand-subtle px-1.5 py-0.5 font-dm-mono text-[0.625rem] text-brand-text">
                   Plus
                 </span>
               ) : (
-                <span className="ml-1 rounded-full border border-border-subtle px-1.5 py-0.5 font-dm-mono text-[10px] text-text-tertiary">
+                <span className="ml-1 rounded-full border border-border-subtle px-1.5 py-0.5 font-dm-mono text-[0.625rem] text-text-tertiary">
                   Free
                 </span>
               )}
@@ -895,7 +895,7 @@ function AccountMenu({
             ) : null}
           </div>
           {!isPlus ? (
-            <span className="ml-auto rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text">
+            <span className="ml-auto rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-brand-subtle-text">
               Plus
             </span>
           ) : null}
@@ -922,7 +922,7 @@ function AccountMenu({
           href={`/u/${user.username}`}
           role="menuitem"
           onClick={onClose}
-          className="flex cursor-pointer flex-col items-center gap-1 px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover"
+          className="flex cursor-pointer flex-col items-center gap-1 px-2 py-2.5 font-dm-sans text-[0.6875rem] text-text-secondary hover:bg-bg-hover"
         >
           <PersonIcon size={15} />
           Profile
@@ -931,7 +931,7 @@ function AccountMenu({
           href="/settings"
           role="menuitem"
           onClick={onClose}
-          className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover"
+          className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[0.6875rem] text-text-secondary hover:bg-bg-hover"
         >
           <GearIcon size={15} />
           Settings
@@ -944,7 +944,7 @@ function AccountMenu({
           <button
             type="submit"
             role="menuitem"
-            className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[11px] text-text-secondary hover:bg-bg-hover hover:text-error"
+            className="flex cursor-pointer flex-col items-center gap-1 border-l border-border-subtle px-2 py-2.5 font-dm-sans text-[0.6875rem] text-text-secondary hover:bg-bg-hover hover:text-error"
           >
             <LogoutIcon size={15} />
             Sign out
@@ -974,7 +974,7 @@ function StatTile({
       <span className="font-fraunces text-lg leading-none text-text-primary">
         {value}
       </span>
-      <span className="mt-1 font-dm-mono text-[10px] uppercase tracking-wide text-text-tertiary">
+      <span className="mt-1 font-dm-mono text-[0.625rem] uppercase tracking-wide text-text-tertiary">
         {label}
       </span>
     </div>

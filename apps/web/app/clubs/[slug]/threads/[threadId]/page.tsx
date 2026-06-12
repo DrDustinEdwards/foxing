@@ -131,7 +131,7 @@ export default async function ThreadPage(
           </ul>
 
           <section className="mt-8">
-            <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Reply
             </h2>
             <ReplyForm threadId={thread.id} />

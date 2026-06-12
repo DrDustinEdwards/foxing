@@ -135,7 +135,7 @@ function PricingCard({
       )}
     >
       <header>
-        <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           {name}
         </p>
         <p className="mt-2 font-fraunces text-[2rem] leading-none text-text-primary">

@@ -52,7 +52,7 @@ export default async function ComparePage(
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">
-            <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Reading comparison
             </p>
             <h1 className="font-fraunces text-[2rem] text-text-primary">
@@ -81,7 +81,7 @@ export default async function ComparePage(
           </div>
 
           <section className="mt-10">
-            <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Books in common ({compare.shared_count})
             </h2>
             {compare.shared_books.length === 0 ? (
@@ -160,7 +160,7 @@ function UserColumn({
       <Section title="Top themes" items={stats.top_themes} />
       <Section title="Top moods" items={stats.top_moods} />
       <div className="mt-4">
-        <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Most-read author
         </p>
         <p className="mt-1 font-fraunces text-base text-text-primary">
@@ -174,7 +174,7 @@ function UserColumn({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+      <dt className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
         {label}
       </dt>
       <dd className="mt-0.5 font-fraunces text-xl text-text-primary">
@@ -187,7 +187,7 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Section({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="mt-4">
-      <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         {title}
       </p>
       {items.length === 0 ? (

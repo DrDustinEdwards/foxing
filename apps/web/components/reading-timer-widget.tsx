@@ -117,7 +117,7 @@ export function ReadingTimerWidget({
 
   return (
     <section className="mt-6 flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
-      <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Reading session
       </p>
       {phase.kind === 'idle' && (

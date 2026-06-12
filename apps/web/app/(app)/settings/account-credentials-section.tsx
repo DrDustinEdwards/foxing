@@ -82,7 +82,7 @@ function Row({
     <div className="flex flex-col gap-3 py-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             {label}
           </p>
           <p className="mt-1 font-source-serif-4 text-base text-text-primary">

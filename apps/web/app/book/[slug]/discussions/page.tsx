@@ -68,7 +68,7 @@ export default async function BookDiscussionsIndexPage(
           </Link>
           <header className="mt-3 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Discussions
               </p>
               <h1 className="font-fraunces text-[2rem] text-text-primary">
@@ -111,7 +111,7 @@ export default async function BookDiscussionsIndexPage(
                       >
                         <div className="flex flex-wrap items-center gap-2">
                           <span
-                            className={`rounded-full px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider ${typeClass}`}
+                            className={`rounded-full px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider ${typeClass}`}
                           >
                             {typeLabel}
                           </span>

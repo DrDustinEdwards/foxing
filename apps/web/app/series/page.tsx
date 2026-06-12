@@ -48,7 +48,7 @@ export default async function SeriesIndexPage() {
                       <h2 className="font-fraunces text-base text-text-primary">
                         {s.name}
                       </h2>
-                      <p className="font-dm-mono text-[11px] text-text-tertiary">
+                      <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                         {s.book_count} {s.book_count === 1 ? 'book' : 'books'}
                       </p>
                     </div>

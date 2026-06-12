@@ -106,7 +106,7 @@ export default async function UserBadgesPage(
           <div className="mt-8 flex flex-col gap-10">
             {[...grouped.entries()].map(([category, badges]) => (
               <section key={category}>
-                <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                   {CATEGORY_LABEL[category] ?? category}
                 </h2>
                 <ul className="grid gap-3 sm:grid-cols-2">
@@ -144,11 +144,11 @@ export default async function UserBadgesPage(
                             </p>
                           )}
                           {isEarned && e ? (
-                            <p className="font-dm-mono text-[11px] text-text-tertiary">
+                            <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                               Earned {formatRelativeDate(e.earned_at)}
                             </p>
                           ) : isOwnProfile ? (
-                            <p className="font-dm-mono text-[11px] text-text-tertiary">
+                            <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                               Not yet earned
                             </p>
                           ) : null}

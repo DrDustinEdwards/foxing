@@ -10,7 +10,7 @@ export function EventCard({ event }: { event: PublicEvent }) {
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-5">
       <div className="flex items-start justify-between gap-3">
-        <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[11px] uppercase tracking-wider text-brand-subtle-text">
+        <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-wider text-brand-subtle-text">
           {formatEventDateTime(event.event_date)}
         </span>
         {event.club?.is_verified && event.club.club_type === 'bookstore' && (

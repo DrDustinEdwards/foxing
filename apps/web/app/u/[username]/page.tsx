@@ -145,7 +145,7 @@ export default async function ProfilePage(
           </MeProfileProvider>
 
           <section className="mt-10">
-            <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               5 books
             </h2>
             <FavoritesRow favorites={favorites} />
@@ -162,7 +162,7 @@ export default async function ProfilePage(
 
           {publicShelves.length > 0 && (
             <section className="mt-12">
-              <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Public shelves
               </h2>
               <ul className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
@@ -196,7 +196,7 @@ export default async function ProfilePage(
 
           {reviews.length > 0 && (
             <section className="mt-12">
-              <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Recent reviews
               </h2>
               <div className="grid gap-4 md:grid-cols-2">

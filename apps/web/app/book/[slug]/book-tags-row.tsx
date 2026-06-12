@@ -83,7 +83,7 @@ export function BookTagsRow({ bookId, bookSlug, initialTags }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Your tags
       </p>
       <div className="flex flex-wrap items-center gap-1.5">

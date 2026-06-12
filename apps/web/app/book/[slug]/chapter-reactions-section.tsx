@@ -108,7 +108,7 @@ export function ChapterReactionsSection({
                     {r.note}
                   </p>
                 )}
-                <span className="font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+                <span className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
                   {PRIVACY_LABEL[r.privacy]}
                 </span>
               </div>

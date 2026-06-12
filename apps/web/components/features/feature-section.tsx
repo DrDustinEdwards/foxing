@@ -25,7 +25,7 @@ export function Section({
       id={id}
       className="mt-16 border-t border-border-subtle pt-12 first-of-type:mt-0 first-of-type:border-t-0 first-of-type:pt-0"
     >
-      <p className="mb-2 font-dm-mono text-[11px] uppercase tracking-[0.14em] text-text-tertiary">
+      <p className="mb-2 font-dm-mono text-[0.6875rem] uppercase tracking-[0.14em] text-text-tertiary">
         {eyebrow}
       </p>
       <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -87,7 +87,7 @@ export function TierBadge({ tier }: { tier: 'free' | 'plus' }) {
 export function PlatformBadge({ platform }: { platform: Platform }) {
   if (platform === 'both') return null
   return (
-    <span className="inline-flex items-center rounded-full border border-border-default px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-[0.08em] text-text-tertiary">
+    <span className="inline-flex items-center rounded-full border border-border-default px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-[0.08em] text-text-tertiary">
       {platform === 'app' ? 'App only' : 'Web only'}
     </span>
   )

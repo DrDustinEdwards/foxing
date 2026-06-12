@@ -289,7 +289,7 @@ export default async function ClubPage(
                 {club.name}
               </h1>
               {memberSeesDiscordBadge && (
-                <span className="rounded-full bg-brand-subtle px-2.5 py-1 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text">
+                <span className="rounded-full bg-brand-subtle px-2.5 py-1 font-dm-mono text-[0.625rem] uppercase tracking-wider text-brand-subtle-text">
                   Connected to Discord
                 </span>
               )}
@@ -384,7 +384,7 @@ export default async function ClubPage(
                   )}
                 </Link>
                 <div className="flex flex-col gap-2">
-                  <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+                  <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                     Reading now
                   </p>
                   <Link
@@ -511,7 +511,7 @@ export default async function ClubPage(
 
           {posts.length > 0 && (
             <section className="mt-10">
-              <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Recent discussion
               </h2>
               <div className="flex flex-col gap-4">

@@ -314,7 +314,7 @@ function Panel({
 }) {
   return (
     <section className="rounded-lg border border-border-subtle bg-bg-surface p-5">
-      <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         {heading}
       </h2>
       {children}

@@ -112,7 +112,7 @@ export default async function UserListDetailPage(
                 {list.description}
               </p>
             )}
-            <p className="font-dm-mono text-[11px] text-text-tertiary">
+            <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
               A list by @{profile.username}
             </p>
             <div className="mt-2 flex items-center gap-3">

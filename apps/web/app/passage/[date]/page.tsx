@@ -62,7 +62,7 @@ export default async function PassagePage(
       <main className="flex-1">
         <PageWrapper className="py-16">
           <div className="mx-auto flex max-w-3xl flex-col items-center gap-8 text-center">
-            <p className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Passage of the day · {formatted}
             </p>
             <blockquote className="font-source-serif-4 text-[1.5rem] italic leading-relaxed text-text-primary md:text-[1.75rem]">

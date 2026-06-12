@@ -45,7 +45,7 @@ export default async function AuthorDashboardPage() {
       </header>
 
       <section className="mt-8">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Giveaways ({giveaways.length})
         </h2>
         <CreateGiveawayForm />
@@ -72,7 +72,7 @@ export default async function AuthorDashboardPage() {
       </section>
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Unanswered questions ({questions.length})
         </h2>
         {questions.length === 0 ? (

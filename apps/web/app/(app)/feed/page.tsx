@@ -218,7 +218,7 @@ function FeedItem({ event }: { event: FeedEvent }) {
           >
             {event.book.title}
           </Link>
-          <time className="ml-auto font-dm-mono text-[11px] text-text-tertiary">
+          <time className="ml-auto font-dm-mono text-[0.6875rem] text-text-tertiary">
             {formatRelativeDate(event.event_time)}
           </time>
         </div>

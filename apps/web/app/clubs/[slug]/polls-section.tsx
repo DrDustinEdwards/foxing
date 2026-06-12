@@ -21,7 +21,7 @@ export function PollsSection({
   const closed = polls.filter((p) => !isPollOpen(p))
   return (
     <section className="mt-10">
-      <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Polls
       </h2>
       {polls.length === 0 ? (
@@ -97,12 +97,12 @@ function PollCard({
           </Badge>
           {open ? (
             poll.closes_at && (
-              <span className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+              <span className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
                 Closes {new Date(poll.closes_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
             )
           ) : (
-            <span className="font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+            <span className="font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
               Closed
             </span>
           )}
@@ -220,7 +220,7 @@ function ResultRow({
             <span className="font-dm-sans text-sm text-text-primary">
               {o.label}
               {isWinner && (
-                <span className="ml-2 rounded-md bg-brand-ui px-1.5 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-text-on-brand">
+                <span className="ml-2 rounded-md bg-brand-ui px-1.5 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-on-brand">
                   Winner
                 </span>
               )}

@@ -30,7 +30,7 @@ export default async function SimilarReadersPage() {
       <main className="flex-1">
         <PageWrapper className="py-10">
           <header className="flex flex-col gap-2">
-            <p className="font-dm-mono text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Discover
             </p>
             <h1 className="font-fraunces text-[2rem] text-text-primary">

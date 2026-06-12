@@ -74,17 +74,17 @@ function DiscussionCard({
       >
         <div className="flex flex-wrap items-center gap-2">
           {d.is_pinned && (
-            <span className="font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+            <span className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
               Pinned
             </span>
           )}
           <span
-            className={`rounded-md px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider ${typeClass}`}
+            className={`rounded-md px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider ${typeClass}`}
           >
             {d.type.replace(/_/g, ' ')}
           </span>
           {d.spoiler_tagged && (
-            <span className="rounded-md bg-bg-sunken px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+            <span className="rounded-md bg-bg-sunken px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
               Spoilers
             </span>
           )}

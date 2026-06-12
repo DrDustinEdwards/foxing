@@ -13,7 +13,7 @@ export function BadgesSection({ username, badges }: Props) {
   const more = badges.length - visible.length
   return (
     <section className="mt-8">
-      <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Badges
       </h2>
       <ul className="flex flex-wrap gap-2">

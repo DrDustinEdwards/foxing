@@ -92,7 +92,7 @@ export default async function Admin404sPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-border-subtle font-dm-mono text-[11px] uppercase tracking-wider text-text-tertiary">
+              <thead className="border-b border-border-subtle font-dm-mono text-[0.6875rem] uppercase tracking-wider text-text-tertiary">
                 <tr>
                   <th className="py-2 pr-3">Path</th>
                   <th className="py-2 pr-3">Hits</th>

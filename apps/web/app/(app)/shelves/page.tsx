@@ -32,14 +32,14 @@ export default async function ShelvesPage() {
       </header>
 
       <section className="mt-8">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Create a shelf
         </h2>
         <ShelfCreateForm />
       </section>
 
       <section className="mt-10">
-        <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Your shelves
         </h2>
         {shelves.length === 0 ? (

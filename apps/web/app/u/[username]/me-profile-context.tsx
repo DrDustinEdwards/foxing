@@ -86,7 +86,7 @@ export function OwnLevelBadge() {
   return (
     <span
       title={`${ownLevel.xp} XP`}
-      className="inline-flex items-center rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[10px] uppercase tracking-wider text-brand-subtle-text"
+      className="inline-flex items-center rounded-full bg-brand-subtle px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider text-brand-subtle-text"
     >
       {ownLevel.label}
     </span>

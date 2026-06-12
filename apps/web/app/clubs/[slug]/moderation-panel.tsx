@@ -75,7 +75,7 @@ export function ModerationPanel({
       <ReportedPostsPanel clubId={clubId} reports={reports} />
       {waitlistCount > 0 && (
         <div className="flex flex-col gap-1">
-          <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+          <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
             Waitlist
           </h3>
           <p className="font-source-serif-4 text-sm text-text-secondary">
@@ -117,7 +117,7 @@ function InvitePanel({ clubId }: { clubId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Invite a member
       </h3>
       <form
@@ -163,7 +163,7 @@ function MembersPanel({
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         Members
       </h3>
       <ul className="flex flex-col divide-y divide-border-subtle border-y border-border-subtle">

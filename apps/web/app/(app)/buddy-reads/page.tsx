@@ -110,7 +110,7 @@ function Section({
 }) {
   return (
     <section className="mt-10">
-      <h2 className="mb-3 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+      <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         {heading}
       </h2>
       <ul className="flex flex-col gap-3">
@@ -169,7 +169,7 @@ function BuddyReadCard({
               </div>
             )}
             {br.started_at && (
-              <p className="font-dm-mono text-[11px] text-text-tertiary">
+              <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
                 Started {new Date(br.started_at).toLocaleDateString()}
               </p>
             )}

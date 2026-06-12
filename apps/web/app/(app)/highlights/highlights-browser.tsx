@@ -169,7 +169,7 @@ function HighlightRow({ highlight }: { highlight: UserHighlight }) {
           : 'var(--brand-ui)',
       }}
     >
-      <blockquote className="font-source-serif-4 text-[15px] italic text-text-primary">
+      <blockquote className="font-source-serif-4 text-[0.9375rem] italic text-text-primary">
         {highlight.text}
       </blockquote>
       {highlight.note && (
@@ -177,7 +177,7 @@ function HighlightRow({ highlight }: { highlight: UserHighlight }) {
           {highlight.note}
         </p>
       )}
-      <div className="mt-3 flex flex-wrap items-center gap-2 font-dm-mono text-[11px] text-text-tertiary">
+      <div className="mt-3 flex flex-wrap items-center gap-2 font-dm-mono text-[0.6875rem] text-text-tertiary">
         <span>{formatRelativeDate(highlight.created_at)}</span>
         {highlight.chapter && (
           <Badge variant="neutral">{highlight.chapter}</Badge>

@@ -108,7 +108,7 @@ export default async function UserHighlightsPage(
                         key={h.id}
                         className="flex flex-col gap-2 rounded-lg border-l-[3px] border-brand-ui bg-bg-surface p-4"
                       >
-                        <blockquote className="font-source-serif-4 text-[15px] italic text-text-primary">
+                        <blockquote className="font-source-serif-4 text-[0.9375rem] italic text-text-primary">
                           {h.text}
                         </blockquote>
                         {h.note && (

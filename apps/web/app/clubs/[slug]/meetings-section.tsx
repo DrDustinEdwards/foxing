@@ -34,7 +34,7 @@ export function MeetingsSection({
   return (
     <section className="mt-10">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+        <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Meetings
         </h2>
       </div>
@@ -86,10 +86,10 @@ function MeetingCard({
   return (
     <article className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[11px] uppercase tracking-wider text-brand-subtle-text">
+        <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-wider text-brand-subtle-text">
           {formatMeetingDate(m.meeting_date)}
         </span>
-        <span className="font-dm-mono text-[10px] uppercase tracking-wider text-text-tertiary">
+        <span className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
           {TYPE_LABEL[m.meeting_type] ?? m.meeting_type}
         </span>
       </div>

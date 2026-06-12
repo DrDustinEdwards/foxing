@@ -54,7 +54,7 @@ export function ListCard({
           {list.title}
         </h3>
         {list.description && (
-          <p className="font-dm-sans text-[13px] text-text-secondary">
+          <p className="font-dm-sans text-[0.8125rem] text-text-secondary">
             {truncate(list.description, 90)}
           </p>
         )}

@@ -144,7 +144,7 @@ export default async function AuthorPage(
             {verifiedAuthor && (
               <a
                 href={`/u/${verifiedAuthor.username}`}
-                className="inline-flex items-center rounded-full bg-success-bg px-2.5 py-1 font-dm-mono text-[10px] uppercase tracking-wider text-success hover:underline"
+                className="inline-flex items-center rounded-full bg-success-bg px-2.5 py-1 font-dm-mono text-[0.625rem] uppercase tracking-wider text-success hover:underline"
               >
                 Verified author
               </a>
@@ -156,7 +156,7 @@ export default async function AuthorPage(
             </p>
           )}
           <section className="mt-10">
-            <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+            <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
               Books in Foxing
             </h2>
             <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
@@ -167,7 +167,7 @@ export default async function AuthorPage(
           </section>
           {highlights.length > 0 && (
             <section className="mt-12">
-              <h2 className="mb-4 font-dm-sans text-[11px] uppercase tracking-[0.18em] text-text-tertiary">
+              <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                 Most saved passages
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
