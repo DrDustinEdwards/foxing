@@ -13,6 +13,7 @@ import { fetchProfileByUsername, isUuid } from '@/lib/queries'
 import { fetchPublicDiaryEntry } from '@/lib/missing-pages-queries'
 import { buildDiaryEntryMetadata } from '@/lib/metadata'
 import { appBookDeeplink, siteOrigin } from '@/lib/foxing'
+import { safeJsonLd } from '@/lib/structured-data'
 
 export const revalidate = 300
 
@@ -108,7 +109,7 @@ export default async function UserDiaryEntryPage(
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(reviewJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(reviewJsonLd) }}
       />
       <main className="flex-1">
         <PageWrapper className="py-12">

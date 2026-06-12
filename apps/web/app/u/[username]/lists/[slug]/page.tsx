@@ -12,6 +12,7 @@ import { fetchPublicReadingList } from '@/lib/missing-pages-queries'
 import { buildReadingListMetadata } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { siteOrigin } from '@/lib/foxing'
+import { safeJsonLd } from '@/lib/structured-data'
 
 export const revalidate = 300
 
@@ -92,7 +93,7 @@ export default async function UserListDetailPage(
       <script
         type="application/ld+json"
         // eslint-disable-next-line react/no-danger
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(itemListJsonLd) }}
       />
       <main className="flex-1">
         <PageWrapper className="py-10">

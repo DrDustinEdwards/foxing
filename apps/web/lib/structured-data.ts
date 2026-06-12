@@ -1,5 +1,15 @@
 import { siteOrigin } from '@/lib/foxing'
 
+/**
+ * Serialize a JSON-LD object for injection into a <script type="application/ld+json">
+ * via dangerouslySetInnerHTML. Escapes `<` so a user-controlled value containing
+ * `</script>` cannot break out of the element (stored XSS). Use this everywhere a
+ * JSON-LD blob is injected; never raw JSON.stringify.
+ */
+export function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, '\\u003c')
+}
+
 interface BookLike {
   id: string
   title: string
@@ -30,7 +40,7 @@ export function bookJsonLd(book: BookLike): string {
     bookFormat: 'EBook',
     inLanguage: 'en',
   }
-  return JSON.stringify(data)
+  return safeJsonLd(data)
 }
 
 export function profileJsonLd(profile: ProfileLike): string {
@@ -44,5 +54,5 @@ export function profileJsonLd(profile: ProfileLike): string {
     image: profile.avatar_url ?? undefined,
     url: `${origin}/u/${profile.username}`,
   }
-  return JSON.stringify(data)
+  return safeJsonLd(data)
 }

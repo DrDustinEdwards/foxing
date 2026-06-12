@@ -15,6 +15,7 @@ import {
 import { buildAuthorMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { fetchVerifiedAuthorByName } from '@/lib/author-claims'
+import { safeJsonLd } from '@/lib/structured-data'
 import { fetchAnsweredQuestions } from '@/lib/author-qa'
 import { AuthorQuestionsSection } from './author-questions-section'
 
@@ -112,7 +113,7 @@ export default async function AuthorPage(
   }
   const knowsAbout = [...themeSet].slice(0, 8)
 
-  const personJsonLdStr = JSON.stringify({
+  const personJsonLdStr = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'Person',
     '@id': `${FOXING_BASE_URL}/author/${params.slug}`,
