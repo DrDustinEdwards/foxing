@@ -216,7 +216,7 @@ export default async function JournalPostPage(
 
               {(prev || next) && (
                 <section className="mt-12 border-t border-border-subtle pt-6">
-                  <p className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.12em] text-text-tertiary">
+                  <p className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
                     Further reading
                   </p>
                   <ul className="flex flex-col gap-2">
