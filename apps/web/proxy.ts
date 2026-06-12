@@ -25,8 +25,15 @@ export async function proxy(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anonKey) {
-    // Env not configured (local dev without .env.local). Skip auth wiring
-    // so the dev server can render the marketing page.
+    // Env not configured (local dev without .env.local). Skip auth wiring so
+    // the dev server can render public pages, but never serve a protected
+    // route unauthenticated when we cannot verify the session: fail closed.
+    if (isProtected(request.nextUrl.pathname)) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/sign-in'
+      redirectUrl.searchParams.set('next', request.nextUrl.pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
     return response
   }
 
