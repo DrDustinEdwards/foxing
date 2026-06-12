@@ -17,7 +17,7 @@ export default function PrivacyPage() {
             Privacy
           </h1>
           <p className="mt-2 font-dm-mono text-xs text-text-tertiary">
-            Last updated 2026-05-17
+            Last updated 2026-06-12
           </p>
 
           <Section heading="What we collect">
@@ -39,20 +39,39 @@ export default function PrivacyPage() {
 
           <Section heading="AI processing">
             When you use the AI companion, the passage you tap and the
-            book&apos;s metadata are sent to Anthropic for inference. They
-            don&apos;t train models on your data per their API terms.
-            Nothing else is sent.
+            book&apos;s metadata are sent to our AI provider for inference.
+            The provider doesn&apos;t train models on your data per its API
+            terms. Nothing else is sent.
+          </Section>
+
+          <Section heading="Your rights">
+            You can see, correct, export, and delete your data. Export a
+            JSON archive of everything from settings. If you live somewhere
+            with a privacy law like the GDPR or the CCPA, those rights
+            apply and we honor them for everyone anyway. Questions go to
+            the address below.
           </Section>
 
           <Section heading="Retention and deletion">
-            Delete your account at any time from settings. We remove your
-            profile, books, highlights, and reviews within 30 days. Backups
-            roll off within 90 days.
+            Delete your account at any time from settings. Your profile,
+            books, highlights, reviews, and reading history are removed
+            immediately. Posts you wrote in shared spaces, like club
+            discussions, stay but are unlinked from you and show no author.
+            Backups roll off within 90 days.
           </Section>
 
-          <Section heading="Cookies">
+          <Section heading="Cookies and analytics">
             We use cookies for sign-in sessions and CSRF protection.
-            That&apos;s the whole set.
+            That&apos;s the whole set. Page analytics are aggregate and
+            cookie-free; they don&apos;t identify you or follow you to
+            other sites.
+          </Section>
+
+          <Section heading="Children">
+            Foxing is not for children under 13, and we don&apos;t
+            knowingly collect their data. If you believe a child under 13
+            has an account, write to the address below and we&apos;ll
+            delete it.
           </Section>
 
           <Section heading="Contact">

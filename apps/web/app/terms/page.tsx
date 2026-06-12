@@ -17,7 +17,7 @@ export default function TermsPage() {
             Terms of service
           </h1>
           <p className="mt-2 font-dm-mono text-xs text-text-tertiary">
-            Last updated 2026-05-17
+            Last updated 2026-06-12
           </p>
 
           <Section heading="The short version">
@@ -25,6 +25,12 @@ export default function TermsPage() {
             readers. Don&apos;t abuse the AI, the community, or other
             people. Keep your account credentials private. That covers most
             of it.
+          </Section>
+
+          <Section heading="Who can use Foxing">
+            You must be at least 13 years old. If the law where you live
+            sets a higher minimum age for consenting to data processing,
+            you must meet that age instead.
           </Section>
 
           <Section heading="Your account">
