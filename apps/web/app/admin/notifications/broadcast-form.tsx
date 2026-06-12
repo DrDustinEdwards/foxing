@@ -80,7 +80,6 @@ export function BroadcastForm() {
               { value: 'all', label: 'All users' },
               { value: 'free', label: 'Free' },
               { value: 'plus', label: 'Plus' },
-              { value: 'patron', label: 'Patron' },
               { value: 'user', label: 'Single user' },
             ] as Array<{ value: BroadcastTarget; label: string }>
           ).map((opt) => (

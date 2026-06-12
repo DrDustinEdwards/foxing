@@ -18,7 +18,7 @@ async function isPlus(userId: string): Promise<boolean> {
     .maybeSingle()
   const tier = (data as { subscription_tier: string | null } | null)
     ?.subscription_tier
-  return tier === 'plus' || tier === 'patron'
+  return tier === 'plus'
 }
 
 export async function createBuddyRead(formData: FormData): Promise<void> {

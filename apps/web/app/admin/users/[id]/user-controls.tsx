@@ -11,7 +11,7 @@ import {
   updateUserTier,
 } from './actions'
 
-const TIERS = ['free', 'plus', 'patron'] as const
+const TIERS = ['free', 'plus'] as const
 
 export function TierSelector({
   userId,

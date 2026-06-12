@@ -17,7 +17,7 @@ export default async function InvitePage() {
   if (!userId) redirect('/sign-in')
   const profile = await fetchProfileBasics(userId)
   const tier = profile?.subscription_tier
-  if (tier !== 'plus' && tier !== 'patron') {
+  if (tier !== 'plus') {
     redirect('/pricing')
   }
   return (

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { requireAdminUserId } from '@/lib/nav-user'
 
-export type BroadcastTarget = 'all' | 'free' | 'plus' | 'patron' | 'user'
+export type BroadcastTarget = 'all' | 'free' | 'plus' | 'user'
 
 interface SendInput {
   title: string
@@ -45,8 +45,6 @@ export async function sendBroadcast(input: SendInput): Promise<{
       query = query.or('subscription_tier.eq.free,subscription_tier.is.null')
     } else if (input.target === 'plus') {
       query = query.eq('subscription_tier', 'plus')
-    } else if (input.target === 'patron') {
-      query = query.eq('subscription_tier', 'patron')
     }
     const { data: profiles, error } = await query
     if (error) return { ok: false, error: error.message }

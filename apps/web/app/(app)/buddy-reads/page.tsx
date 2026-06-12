@@ -30,9 +30,7 @@ export default async function BuddyReadsIndex() {
     fetchUserBuddyReads(userId),
     fetchProfileBasics(userId),
   ])
-  const isPlus =
-    profile?.subscription_tier === 'plus' ||
-    profile?.subscription_tier === 'patron'
+  const isPlus = profile?.subscription_tier === 'plus'
   const active = buddyReads.filter((br) => br.is_active)
   const completed = buddyReads.filter((br) => !br.is_active)
 

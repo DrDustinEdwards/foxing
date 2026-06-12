@@ -2,7 +2,7 @@
 // source of truth in Supabase; these types are hand-maintained mirrors.
 // When adding columns, update both this file and the consumers.
 
-export type SubscriptionTier = 'free' | 'plus' | 'patron'
+export type SubscriptionTier = 'free' | 'plus'
 
 export type ReadingStatus =
   | 'reading'

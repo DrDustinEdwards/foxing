@@ -184,9 +184,8 @@ function Section({
 }
 
 function SubscriptionPanel({ tier }: { tier: string }) {
-  const label = tier === 'plus' ? 'Plus' : tier === 'patron' ? 'Patron' : 'Free'
-  const variant: 'success' | 'brand' | 'neutral' =
-    tier === 'patron' ? 'success' : tier === 'plus' ? 'brand' : 'neutral'
+  const label = tier === 'plus' ? 'Plus' : 'Free'
+  const variant: 'brand' | 'neutral' = tier === 'plus' ? 'brand' : 'neutral'
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
