@@ -19,7 +19,7 @@
 //   create table club_members (
 //     club_id uuid not null references clubs(id) on delete cascade,
 //     user_id uuid not null references profiles(id) on delete cascade,
-//     role text not null default 'member' check (role in ('owner', 'admin', 'member')),
+//     role text not null default 'member' check (role in ('admin', 'moderator', 'member')),
 //     joined_at timestamptz not null default now(),
 //     primary key (club_id, user_id)
 //   );
@@ -73,7 +73,7 @@ import { createNotification } from './notifications'
 import { enqueue } from './offline-queue'
 
 export type ClubPace = 'chill' | 'steady' | 'fast'
-export type ClubRole = 'owner' | 'admin' | 'member'
+export type ClubRole = 'admin' | 'moderator' | 'member'
 
 export const PACE_OPTIONS: Array<{ id: ClubPace; label: string; subtitle: string }> = [
   { id: 'chill', label: 'Chill', subtitle: 'A chapter a week, no pressure.' },
@@ -297,6 +297,8 @@ export async function createClub(input: CreateClubInput): Promise<Club | null> {
       reading_pace: input.pace,
       slug,
     })
+    // NOTE: creator membership role is 'admin' below (highest allowed by the
+    // club_members_role_check: admin/moderator/member). There is no 'owner'.
     .select()
     .single()
   if (error) {
@@ -306,7 +308,7 @@ export async function createClub(input: CreateClubInput): Promise<Club | null> {
   const { error: memErr } = await supabase.from('club_members').insert({
     club_id: data.id,
     user_id: user.id,
-    role: 'owner',
+    role: 'admin',
     status: 'active',
   })
   if (memErr) {

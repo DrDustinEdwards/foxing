@@ -31,8 +31,18 @@ async function uniqueClubSlug(
 }
 
 // Create a club: a standing community (no book) or a single-book club
-// (book chosen now -> current_book_id). The creator becomes the owner.
-export async function createClub(formData: FormData): Promise<void> {
+// (book chosen now -> current_book_id). The creator becomes an admin, the
+// highest club role (the club_members_role_check CHECK allows only
+// admin/moderator/member; there is no 'owner' role).
+//
+// Failures are RETURNED, not thrown: a thrown Server Action error reaches the
+// client only as a redacted generic digest in production, so the form could
+// never show a real message. Success still redirects.
+type CreateClubResult = { ok: false; error: string }
+
+export async function createClub(
+  formData: FormData,
+): Promise<CreateClubResult | void> {
   const name = String(formData.get('name') ?? '').trim().slice(0, 120)
   const description =
     String(formData.get('description') ?? '').trim().slice(0, 2000) || null
@@ -48,10 +58,10 @@ export async function createClub(formData: FormData): Promise<void> {
     ? paceRaw
     : 'moderate'
 
-  if (!name) throw new Error('A club name is required.')
+  if (!name) return { ok: false, error: 'A club name is required.' }
 
   const userId = await getAuthedUserId()
-  if (!userId) throw new Error('Sign in required.')
+  if (!userId) return { ok: false, error: 'Sign in required.' }
 
   const admin = createAdminClient()
   const slug = await uniqueClubSlug(admin, name)
@@ -70,22 +80,22 @@ export async function createClub(formData: FormData): Promise<void> {
     .select('id, slug')
     .single()
   if (reportWriteError(clubErr, { op: 'insert', table: 'clubs' }) || !club) {
-    throw new Error(clubErr?.message ?? 'Could not create the club.')
+    return { ok: false, error: clubErr?.message ?? 'Could not create the club.' }
   }
 
   const newClub = club as { id: string; slug: string }
 
-  // The creator's owner membership. If this fails, roll back the club so we
-  // never leave one without an owner (member_count default 1 assumes it).
+  // The creator's admin membership. If this fails, roll back the club so we
+  // never leave one without an admin (member_count default 1 assumes it).
   const { error: memErr } = await admin.from('club_members').insert({
     club_id: newClub.id,
     user_id: userId,
-    role: 'owner',
+    role: 'admin',
     status: 'active',
   })
   if (reportWriteError(memErr, { op: 'insert', table: 'club_members' })) {
     await admin.from('clubs').delete().eq('id', newClub.id)
-    throw new Error(memErr?.message ?? 'Could not add you to the club.')
+    return { ok: false, error: memErr?.message ?? 'Could not add you to the club.' }
   }
 
   await checkAndAwardBadges(userId)

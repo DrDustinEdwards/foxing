@@ -254,7 +254,7 @@ export default function ClubDetailScreen() {
             style={{ borderColor: colors.borderInteractive }}
           >
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}>
-              {busyJoin ? '…' : role === 'owner' ? 'Owner' : 'Leave'}
+              {busyJoin ? '…' : role === 'admin' ? 'Owner' : 'Leave'}
             </Text>
           </Pressable>
         ) : (
@@ -326,7 +326,7 @@ export default function ClubDetailScreen() {
           <ReadingTab
             club={club}
             schedule={schedule}
-            canModerate={role === 'owner'}
+            canModerate={role === 'admin' || role === 'moderator'}
             onOpenBook={(bookId) => router.push(`/book/${bookId}` as never)}
           />
         ) : tab === 'members' ? (
