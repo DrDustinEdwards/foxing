@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -69,13 +70,17 @@ export async function generateStaticParams() {
     .map((b) => ({ slug: b.slug }))
 }
 
-async function resolveBook(slugOrId: string) {
+// cache() dedupes across generateMetadata and the page render, so each
+// request resolves the book and its AI cache rows once instead of twice.
+const resolveBook = cache(async (slugOrId: string) => {
   let book = await fetchBookBySlug(slugOrId)
   if (!book && isUuid(slugOrId)) {
     book = await fetchBookById(slugOrId)
   }
   return book
-}
+})
+
+const fetchAiCacheOnce = cache(fetchAiCache)
 
 export async function generateMetadata(
   props: {
@@ -85,7 +90,7 @@ export async function generateMetadata(
   const params = await props.params;
   const book = await resolveBook(params.slug)
   if (!book) return { title: 'Book not found' }
-  const aiDesc = await fetchAiCache(book.id, 'book_description')
+  const aiDesc = await fetchAiCacheOnce(book.id, 'book_description')
   const description = aiDesc ?? book.description ?? null
   return buildBookMetadata({
     id: book.id,
@@ -131,8 +136,8 @@ export default async function BookPage(
     fetchBookHighlights(book.id, 3),
     fetchSimilarBooks(book.id, 5),
     fetchPublicClubsForBook(book.id, 3),
-    fetchAiCache(book.id, 'book_description'),
-    fetchAiCache(book.id, 'author_bio'),
+    fetchAiCacheOnce(book.id, 'book_description'),
+    fetchAiCacheOnce(book.id, 'author_bio'),
     fetchDiscussionGuide(book.id),
     fetchBookDiscussions(book.id),
     fetchPublicChapterReactions(book.id, 100),
