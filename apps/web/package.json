@@ -33,9 +33,7 @@
     "next-themes": "^0.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "react-markdown": "^10.1.0",
     "recharts": "^3.8.1",
-    "remark-gfm": "^4.0.1",
     "sanitize-html": "^2.17.4",
     "sharp": "^0.33.0"
   },
