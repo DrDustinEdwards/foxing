@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
@@ -62,13 +63,14 @@ export async function generateStaticParams() {
     .map((c) => ({ slug: c.slug }))
 }
 
-async function resolveClub(slugOrId: string) {
+// cache() dedupes the club lookup across generateMetadata and the page render.
+const resolveClub = cache(async (slugOrId: string) => {
   let club = await fetchPublicClubBySlug(slugOrId)
   if (!club && isUuid(slugOrId)) {
     club = await fetchPublicClubById(slugOrId)
   }
   return club
-}
+})
 
 export async function generateMetadata(
   props: {

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -15,13 +16,16 @@ import { QuoteLikeButton } from './quote-like-button'
 
 export const revalidate = 3600
 
+// generateMetadata and the page both load the quote; cache() dedupes it.
+const fetchQuoteOnce = cache(fetchQuoteById)
+
 export async function generateMetadata(
   props: {
     params: Promise<{ id: string }>
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const quote = await fetchQuoteById(params.id)
+  const quote = await fetchQuoteOnce(params.id)
   if (!quote || !quote.book) return { title: 'Passage not found' }
   return buildQuoteMetadata({
     id: quote.id,
@@ -38,7 +42,7 @@ export default async function QuotePage(
   }
 ) {
   const params = await props.params;
-  const quote = await fetchQuoteById(params.id)
+  const quote = await fetchQuoteOnce(params.id)
   if (!quote) notFound()
   const shareUrl = `${siteOrigin()}/quotes/${quote.id}`
 
