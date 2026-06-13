@@ -17,7 +17,7 @@ import {
 import { ERAS, LENGTHS, MOODS, appBookDeeplink } from '@/lib/foxing'
 import { buildDiscoverMetadata } from '@/lib/metadata'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 export async function generateMetadata() {
   const popular = await fetchPopularThisWeek(2)
