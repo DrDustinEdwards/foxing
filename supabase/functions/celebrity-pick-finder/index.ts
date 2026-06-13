@@ -1,5 +1,8 @@
 // celebrity-pick-finder
-// Runs monthly (pg_cron: 0 9 6 * *). Scrapes Book Riot, Tertulia, Reese's
+// Triggered monthly by Vercel Cron (vercel.json: 0 9 2 * * and 0 9 12 * *)
+// via /api/cron/celebrity-picks, which forwards with Bearer SUPABASE_CRON_SECRET.
+// Must be deployed --no-verify-jwt (it self-checks CRON_SECRET below).
+// Scrapes Book Riot, Tertulia, Reese's
 // Book Club RSS, and BookNotification.com club pages. Falls back to Claude
 // web search for any of the Big 4 (Oprah, Reese, Jenna, GMA) still missing.
 // Every pick is auto-published (is_published = true). Admins get a
@@ -88,6 +91,56 @@ async function storeBookCover(
 // Any cover smaller than this is treated as a stub and triggers the fallback.
 const OL_STUB_BYTES = 200
 
+// Resolve an ISBN-13 from title + author so the ISBN-keyed cover sources
+// (Open Library, Google Books) can be used. Without this, lookupBookCover was
+// always called with isbn=null and fell straight to the weak iTunes match.
+// Google Books first, Open Library search as a fallback.
+async function resolveIsbn13(
+  title: string,
+  author: string,
+): Promise<string | null> {
+  const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
+  try {
+    const res = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&fields=items(volumeInfo(industryIdentifiers))&maxResults=5`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    if (res.ok) {
+      const data = (await res.json()) as {
+        items?: Array<{
+          volumeInfo?: {
+            industryIdentifiers?: Array<{ type?: string; identifier?: string }>
+          }
+        }>
+      }
+      for (const item of data.items ?? []) {
+        const ids = item.volumeInfo?.industryIdentifiers ?? []
+        const isbn13 = ids.find((i) => i.type === 'ISBN_13')?.identifier
+        if (isbn13 && /^\d{13}$/.test(isbn13)) return isbn13
+      }
+    }
+  } catch {
+    // fall through to Open Library
+  }
+  try {
+    const olRes = await fetch(
+      `https://openlibrary.org/search.json?title=${encodeURIComponent(title)}&author=${encodeURIComponent(author)}&fields=isbn&limit=1`,
+      {
+        signal: AbortSignal.timeout(5000),
+        headers: { 'User-Agent': 'Foxing/1.0 (foxing.app)' },
+      },
+    )
+    if (olRes.ok) {
+      const data = (await olRes.json()) as { docs?: Array<{ isbn?: string[] }> }
+      const isbn13 = (data.docs?.[0]?.isbn ?? []).find((i) => /^\d{13}$/.test(i))
+      if (isbn13) return isbn13
+    }
+  } catch {
+    // give up
+  }
+  return null
+}
+
 async function lookupBookCover(
   isbn13: string | null | undefined,
   title: string,
@@ -167,6 +220,46 @@ async function lookupBookCover(
       )
       if (match?.artworkUrl100) {
         return match.artworkUrl100.replace('100x100bb', '600x900bb')
+      }
+    }
+  } catch {
+    // fall through
+  }
+
+  // Source 4: Google Books by title + author (no ISBN). Last resort so an
+  // obscure pick with no resolvable ISBN can still get a cover.
+  try {
+    const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
+    const gbRes = await fetch(
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&fields=items(volumeInfo(imageLinks))&maxResults=1`,
+      { signal: AbortSignal.timeout(5000) },
+    )
+    if (gbRes.ok) {
+      const data = (await gbRes.json()) as {
+        items?: Array<{
+          volumeInfo?: {
+            imageLinks?: {
+              thumbnail?: string
+              small?: string
+              medium?: string
+              large?: string
+              extraLarge?: string
+            }
+          }
+        }>
+      }
+      const links = data.items?.[0]?.volumeInfo?.imageLinks
+      const url =
+        links?.extraLarge ??
+        links?.large ??
+        links?.medium ??
+        links?.small ??
+        links?.thumbnail
+      if (url) {
+        return url
+          .replace('zoom=1', 'zoom=3')
+          .replace('&edge=curl', '')
+          .replace('http://', 'https://')
       }
     }
   } catch {
@@ -300,6 +393,62 @@ serve(async (req: Request) => {
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+  // Targeted cover backfill: POST { "backfill_book_ids": ["uuid", ...] }
+  // re-resolves and stores covers for existing books (e.g. picks that landed
+  // with a null cover). Reuses the same ISBN -> cover resolution as the
+  // monthly run. No body, or a body without this key, falls through to the
+  // normal monthly discovery run.
+  let backfillIds: string[] = []
+  try {
+    const body = await req.json()
+    if (Array.isArray(body?.backfill_book_ids)) {
+      backfillIds = body.backfill_book_ids.filter(
+        (x: unknown): x is string => typeof x === 'string',
+      )
+    }
+  } catch {
+    // no/invalid body -> normal monthly run
+  }
+  if (backfillIds.length > 0) {
+    const results: Array<{
+      book_id: string
+      title: string
+      cover_url: string | null
+      ok: boolean
+    }> = []
+    for (const id of backfillIds) {
+      const { data: book } = await supabase
+        .from('books')
+        .select('id, title, author, slug')
+        .eq('id', id)
+        .maybeSingle()
+      if (!book) {
+        results.push({ book_id: id, title: '(not found)', cover_url: null, ok: false })
+        continue
+      }
+      const isbn13 = await resolveIsbn13(book.title, book.author)
+      const sourceUrl = await lookupBookCover(isbn13, book.title, book.author)
+      let coverUrl: string | null = null
+      if (sourceUrl) {
+        coverUrl = await storeBookCover(supabase, sourceUrl, book.slug)
+      }
+      if (coverUrl) {
+        await supabase.from('books').update({ cover_url: coverUrl }).eq('id', id)
+      }
+      results.push({
+        book_id: id,
+        title: book.title,
+        cover_url: coverUrl,
+        ok: !!coverUrl,
+      })
+    }
+    const ok = results.filter((r) => r.ok).length
+    return new Response(
+      JSON.stringify({ backfill: results, success_rate: `${ok}/${results.length}` }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } },
+    )
+  }
 
   const now = new Date()
   const monthNum = now.getMonth() + 1
@@ -488,8 +637,9 @@ If you don't know with certainty, return: {"book_title":"","author":""}`,
       bookId = existingBook[0].id
     } else {
       let coverUrl: string | null = null
+      const isbn13 = await resolveIsbn13(pick.book_title, pick.author)
       const sourceUrl = await lookupBookCover(
-        null,
+        isbn13,
         pick.book_title,
         pick.author,
       )
