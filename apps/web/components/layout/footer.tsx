@@ -34,7 +34,8 @@ const COLUMNS: FooterColumn[] = [
     heading: 'Community',
     links: [
       { href: '/people', label: 'People' },
-      { href: '/clubs', label: 'Public clubs' },
+      { href: '/clubs', label: 'Reading clubs' },
+      { href: '/book-clubs', label: 'Celebrity Picks' },
       { href: '/lists', label: 'Reading lists' },
       { href: '/quotes', label: 'Quotes' },
     ],
