@@ -389,9 +389,9 @@ export default async function ClubMonthlyPickPage(
               label="Find on Bookshop.org"
             />
             <RetailerLink href={affiliate.amazon} label="Amazon" />
-            {pick.official_announcement_url && (
+            {pick.official_url && (
               <a
-                href={pick.official_announcement_url}
+                href={pick.official_url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="font-dm-sans text-sm text-brand-text hover:underline"
