@@ -24,7 +24,7 @@ export type {
 export interface ClubMember {
   club_id: string
   user_id: string
-  role: 'owner' | 'moderator' | 'member'
+  role: 'admin' | 'moderator' | 'member'
   joined_at: string
 }
 

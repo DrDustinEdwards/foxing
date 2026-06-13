@@ -55,7 +55,13 @@ export function CreateClubForm() {
     fd.set('reading_pace', pace)
     if (mode === 'book' && book) fd.set('book_id', book.id)
     try {
-      await createClub(fd)
+      // Success redirects server-side (no return value); a failure comes back
+      // as { ok: false, error } so we can show a real message.
+      const res = await createClub(fd)
+      if (res && !res.ok) {
+        setSubmitting(false)
+        setError(res.error)
+      }
     } catch (err) {
       setSubmitting(false)
       setError(err instanceof Error ? err.message : 'Could not create the club.')
