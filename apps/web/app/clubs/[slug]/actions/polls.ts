@@ -11,6 +11,7 @@ import {
   postToDiscord,
 } from '@/lib/discord'
 import { FOXING_BASE_URL } from '@/lib/metadata'
+import { reportWriteError } from '@/lib/db-write'
 import type { ActionResult } from './_shared'
 
 async function postPollToDiscord(
@@ -92,7 +93,11 @@ export async function createClubPoll(
     })),
   )
   if (optionsError) {
-    await admin.from('club_polls').delete().eq('id', poll.id)
+    const { error: rollbackError } = await admin
+      .from('club_polls')
+      .delete()
+      .eq('id', poll.id)
+    reportWriteError(rollbackError, { op: 'createClubPoll.rollback', table: 'club_polls' })
     return { ok: false, error: optionsError.message }
   }
 
@@ -164,11 +169,15 @@ export async function voteOnPoll(
   }
 
   const admin = createAdminClient()
-  await admin
+  const { error: clearError } = await admin
     .from('club_poll_votes')
     .delete()
     .eq('poll_id', pollId)
     .eq('user_id', userId)
+  // Inserting on top of a failed clear would double-count the vote.
+  if (reportWriteError(clearError, { op: 'voteOnPoll.clearPrevious', table: 'club_poll_votes' })) {
+    return { ok: false, error: 'Could not update your vote. Try again.' }
+  }
 
   if (pollRow.poll_type === 'single') {
     const optionId = String(formData.get('option_id') ?? '').trim()

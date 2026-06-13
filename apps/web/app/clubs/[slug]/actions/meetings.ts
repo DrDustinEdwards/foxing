@@ -11,6 +11,7 @@ import {
   postToDiscord,
 } from '@/lib/discord'
 import { FOXING_BASE_URL } from '@/lib/metadata'
+import { reportWriteError } from '@/lib/db-write'
 import { type ActionResult, assertMod } from './_shared'
 
 async function notifyClubAboutMeeting(
@@ -191,11 +192,15 @@ export async function rsvpToMeeting(
   }
 
   const admin = createAdminClient()
-  await admin
+  const { error: clearError } = await admin
     .from('club_meeting_rsvps')
     .delete()
     .eq('meeting_id', meetingId)
     .eq('user_id', userId)
+  // Inserting on top of a failed clear would leave two RSVPs for one user.
+  if (reportWriteError(clearError, { op: 'rsvpToMeeting.clearPrevious', table: 'club_meeting_rsvps' })) {
+    return { ok: false, error: 'Could not update your RSVP. Try again.' }
+  }
   const { error } = await admin.from('club_meeting_rsvps').insert({
     meeting_id: meetingId,
     user_id: userId,
