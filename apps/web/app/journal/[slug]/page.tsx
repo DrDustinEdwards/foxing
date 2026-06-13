@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -26,6 +27,9 @@ import { ShareBar } from '@/components/journal/ShareBar'
 
 export const revalidate = 3600
 
+// generateMetadata and the page both load the post; cache() resolves it once.
+const getPostOnce = cache(getJournalPostStatic)
+
 export async function generateStaticParams() {
   if (
     !process.env.NEXT_PUBLIC_SUPABASE_URL ||
@@ -49,7 +53,7 @@ export async function generateMetadata(
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const post = await getJournalPostStatic(params.slug)
+  const post = await getPostOnce(params.slug)
   if (!post) return {}
   const ogTitle = post.og_title ?? post.title
   const description = post.og_description ?? post.excerpt ?? ''
@@ -87,7 +91,7 @@ export default async function JournalPostPage(
   }
 ) {
   const params = await props.params;
-  const post = await getJournalPostStatic(params.slug)
+  const post = await getPostOnce(params.slug)
   if (!post) notFound()
 
   const { prev, next } = post.published_at

@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
@@ -20,6 +21,10 @@ import { fetchAnsweredQuestions } from '@/lib/author-qa'
 import { AuthorQuestionsSection } from './author-questions-section'
 
 export const revalidate = 86_400
+
+// generateMetadata and the page both list the author's books; cache() runs
+// the query once per request.
+const fetchBooksByAuthorOnce = cache(fetchBooksByAuthorSlug)
 
 // Build-time only. Pulls every distinct author_slug so each author page
 // can be statically generated. Uses the admin client because cookies()
@@ -50,7 +55,7 @@ export async function generateMetadata(
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const books = await fetchBooksByAuthorSlug(params.slug)
+  const books = await fetchBooksByAuthorOnce(params.slug)
   if (books.length === 0) {
     return { title: 'Author not found', robots: { index: false, follow: true } }
   }
@@ -68,9 +73,7 @@ export default async function AuthorPage(
   }
 ) {
   const params = await props.params;
-  const [books] = await Promise.all([
-    fetchBooksByAuthorSlug(params.slug),
-  ])
+  const books = await fetchBooksByAuthorOnce(params.slug)
 
   // Legacy URL fallback: when the request looks like an encoded display
   // name, resolve to a canonical author_slug and 301 to that URL.

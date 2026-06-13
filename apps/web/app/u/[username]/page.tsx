@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -30,18 +31,23 @@ import {
 
 export const revalidate = 300
 
+// generateMetadata and the page both resolve the profile and its stats;
+// cache() collapses each into one query per request.
+const fetchProfileOnce = cache(fetchProfileByUsername)
+const fetchStatsOnce = cache(fetchProfileStats)
+
 export async function generateMetadata(
   props: {
     params: Promise<{ username: string }>
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const profile = await fetchProfileByUsername(params.username)
+  const profile = await fetchProfileOnce(params.username)
   if (!profile) return { title: 'Profile not found' }
   if (!profile.is_public) {
     return { title: `@${profile.username}`, robots: { index: false, follow: false } }
   }
-  const stats = await fetchProfileStats(profile.id)
+  const stats = await fetchStatsOnce(profile.id)
   return buildProfileMetadata({
     display_name: profile.display_name,
     username: profile.username,
@@ -56,9 +62,7 @@ export default async function ProfilePage(
   }
 ) {
   const params = await props.params;
-  const [profile] = await Promise.all([
-    fetchProfileByUsername(params.username),
-  ])
+  const profile = await fetchProfileOnce(params.username)
   if (!profile) notFound()
 
   if (!profile.is_public) {
@@ -83,7 +87,7 @@ export default async function ProfilePage(
   const [favorites, stats, reviews, badges, commonplace, publicShelves] =
     await Promise.all([
       fetchUserFavorites(profile.id),
-      fetchProfileStats(profile.id),
+      fetchStatsOnce(profile.id),
       fetchProfileReviews(profile.id, 3),
       fetchUserBadges(profile.id),
       fetchPublicCommonplace(profile.id, 3),

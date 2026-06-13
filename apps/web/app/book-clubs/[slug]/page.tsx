@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -16,6 +17,9 @@ import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86400
+
+// generateMetadata and the page both resolve the club; cache() dedupes it.
+const fetchClubOnce = cache(fetchClubBySlug)
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
   if (
@@ -44,7 +48,7 @@ export async function generateMetadata(
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const club = await fetchClubBySlug(params.slug)
+  const club = await fetchClubOnce(params.slug)
   if (!club) return { title: 'Book club not found' }
   const title = truncateText(`${club.name}, Complete List of Picks`, 70)
   const description = truncateText(
@@ -79,12 +83,10 @@ export default async function ExternalBookClubPage(
   }
 ) {
   const params = await props.params;
-  const club = await fetchClubBySlug(params.slug)
+  const club = await fetchClubOnce(params.slug)
   if (!club) notFound()
 
-  const [picks] = await Promise.all([
-    fetchAllPicksForClub(club.id),
-  ])
+  const picks = await fetchAllPicksForClub(club.id)
 
   const stats = await buildClubStats(picks)
   const eras = club.eras && club.eras.length > 0 ? club.eras : null

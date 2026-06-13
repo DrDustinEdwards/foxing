@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -16,6 +17,9 @@ import { safeJsonLd } from '@/lib/structured-data'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86400
+
+// generateMetadata and the page both resolve the series; cache() dedupes it.
+const fetchSeriesOnce = cache(fetchSeriesBySlug)
 
 // Build-time only. Uses the admin client because the server client calls
 // next/headers cookies(), which fails outside a request scope. Books are
@@ -53,7 +57,7 @@ export async function generateMetadata(
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const series = await fetchSeriesBySlug(params.slug)
+  const series = await fetchSeriesOnce(params.slug)
   if (!series) {
     return { title: 'Series not found', robots: { index: false, follow: true } }
   }
@@ -72,9 +76,7 @@ export default async function SeriesDetailPage(
   }
 ) {
   const params = await props.params;
-  const [series] = await Promise.all([
-    fetchSeriesBySlug(params.slug),
-  ])
+  const series = await fetchSeriesOnce(params.slug)
   if (!series) notFound()
 
   const origin = siteOrigin()
