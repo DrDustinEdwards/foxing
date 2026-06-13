@@ -1,4 +1,6 @@
 import 'server-only'
+import { lookup } from 'node:dns/promises'
+import { isIP } from 'node:net'
 import { marked, type Tokens, type Token } from 'marked'
 import sanitizeHtml from 'sanitize-html'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -210,8 +212,59 @@ function domainOf(url: string): string {
     return url
   }
 }
+// Reject private, loopback, link-local, ULA, CGNAT, and reserved ranges so a
+// bookmark URL cannot reach internal services (SSRF). Accepts a literal IP.
+function isPrivateIp(ip: string): boolean {
+  const v4 = /^(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(ip)
+  if (v4) {
+    const a = Number(v4[1])
+    const b = Number(v4[2])
+    if (a === 0 || a === 10 || a === 127) return true
+    if (a === 169 && b === 254) return true // link-local
+    if (a === 172 && b >= 16 && b <= 31) return true // 172.16/12
+    if (a === 192 && b === 168) return true
+    if (a === 100 && b >= 64 && b <= 127) return true // CGNAT 100.64/10
+    if (a >= 224) return true // multicast + reserved
+    return false
+  }
+  const v6 = ip.toLowerCase()
+  if (v6 === '::1' || v6 === '::') return true
+  if (v6.startsWith('fe80')) return true // link-local
+  if (v6.startsWith('fc') || v6.startsWith('fd')) return true // unique-local
+  const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/.exec(v6)
+  if (mapped) return isPrivateIp(mapped[1])
+  return false
+}
+
+// Resolve the host and confirm it (and every address it resolves to) is a
+// public, routable destination before we fetch it server-side.
+async function isPublicHost(hostname: string): Promise<boolean> {
+  const host = hostname.toLowerCase().replace(/\.$/, '')
+  if (!host) return false
+  if (host === 'localhost' || host.endsWith('.localhost')) return false
+  if (host.endsWith('.local') || host.endsWith('.internal')) return false
+  if (isIP(host)) return !isPrivateIp(host)
+  // Reject single-label hosts (e.g. intranet shortcuts) that aren't IPs.
+  if (!host.includes('.')) return false
+  try {
+    const addresses = await lookup(host, { all: true })
+    if (addresses.length === 0) return false
+    return addresses.every((a) => !isPrivateIp(a.address))
+  } catch {
+    return false
+  }
+}
+
 async function fetchBookmarkTitle(url: string): Promise<string | null> {
   try {
+    let parsed: URL
+    try {
+      parsed = new URL(url)
+    } catch {
+      return null
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return null
+    if (!(await isPublicHost(parsed.hostname))) return null
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), 2000)
     const res = await fetch(url, {
