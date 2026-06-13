@@ -178,12 +178,11 @@ export async function fetchAllPicksForClub(
 
 export interface MonthlyPicksRow extends ExternalPickWithBook {
   curator_quote: string | null
-  official_announcement_url: string | null
   club_full: ExternalClub
 }
 
 const PICK_COLS_WITH_QUOTE =
-  'id, club_id, book_id, picked_at, pick_month, pick_year, category, official_url, notes, is_published, curator_quote, official_announcement_url, club:club_id(id, slug, name, short_name, description, curator, website_url, logo_url, cadence, focus, sort_order, is_active), book:book_id(id, slug, author_slug, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url)' as const
+  'id, club_id, book_id, picked_at, pick_month, pick_year, category, official_url, notes, is_published, curator_quote, club:club_id(id, slug, name, short_name, description, curator, website_url, logo_url, cadence, focus, sort_order, is_active), book:book_id(id, slug, author_slug, title, author, cover_url, isbn, isbn13, source_type, epub_url, amazon_url, bookshop_url)' as const
 
 interface PickWithQuoteRow {
   id: string
@@ -197,7 +196,6 @@ interface PickWithQuoteRow {
   notes: string | null
   is_published: boolean | null
   curator_quote: string | null
-  official_announcement_url: string | null
   club: ExternalClub
   book: ExternalPickWithBook['book']
 }

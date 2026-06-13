@@ -36,7 +36,7 @@ interface PickRow {
   is_auto_discovered: boolean | null
   auto_source: string | null
   curator_quote: string | null
-  official_announcement_url: string | null
+  official_url: string | null
   last_edited_at: string | null
   books: { id: string; title: string; author: string } | null
 }
@@ -88,7 +88,7 @@ export default async function AdminCelebrityPicksPage(
       admin
         .from('external_book_club_picks')
         .select(
-          'id, club_id, book_id, pick_month, pick_year, is_published, is_auto_discovered, auto_source, curator_quote, official_announcement_url, last_edited_at, books:book_id(id, title, author)',
+          'id, club_id, book_id, pick_month, pick_year, is_published, is_auto_discovered, auto_source, curator_quote, official_url, last_edited_at, books:book_id(id, title, author)',
         )
         .eq('pick_month', month)
         .eq('pick_year', year),
@@ -216,7 +216,7 @@ function PickRowItem({ club, pick }: { club: ClubRow; pick: PickRow }) {
           book_title: pick.books?.title ?? '',
           book_author: pick.books?.author ?? '',
           curator_quote: pick.curator_quote ?? '',
-          official_announcement_url: pick.official_announcement_url ?? '',
+          official_url: pick.official_url ?? '',
         }}
       />
     </article>

@@ -532,7 +532,7 @@ If you don't know with certainty, return: {"book_title":"","author":""}`,
       auto_source: pick.source,
       auto_confidence: pick.confidence ?? 'medium',
       curator_quote: pick.curator_quote ?? null,
-      official_announcement_url: pick.announcement_url ?? null,
+      official_url: pick.announcement_url ?? null,
       notes: `Auto-discovered from ${pick.source}`,
     })
 

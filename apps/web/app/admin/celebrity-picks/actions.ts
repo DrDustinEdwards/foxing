@@ -122,7 +122,7 @@ export async function updateCelebrityPick(
   const { data: existing, error: existingError } = await admin
     .from('external_book_club_picks')
     .select(
-      'id, book_id, club_id, pick_month, pick_year, curator_quote, official_announcement_url, books:book_id(title, author)',
+      'id, book_id, club_id, pick_month, pick_year, curator_quote, official_url, books:book_id(title, author)',
     )
     .eq('id', pickId)
     .maybeSingle()
@@ -136,7 +136,7 @@ export async function updateCelebrityPick(
     pick_month: number | null
     pick_year: number | null
     curator_quote: string | null
-    official_announcement_url: string | null
+    official_url: string | null
     books: { title: string; author: string } | null
   }
 
@@ -144,7 +144,7 @@ export async function updateCelebrityPick(
   const newAuthor = String(formData.get('book_author') ?? '').trim()
   const newQuote = String(formData.get('curator_quote') ?? '').trim() || null
   const newUrl =
-    String(formData.get('official_announcement_url') ?? '').trim() || null
+    String(formData.get('official_url') ?? '').trim() || null
 
   if (!newTitle || !newAuthor) {
     return { ok: false, error: 'Title and author are required.' }
@@ -196,12 +196,12 @@ export async function updateCelebrityPick(
       new_value: newQuote,
     })
   }
-  if ((row.official_announcement_url ?? null) !== newUrl) {
+  if ((row.official_url ?? null) !== newUrl) {
     edits.push({
       pick_id: row.id,
       edited_by: editorId,
-      field: 'official_announcement_url',
-      old_value: row.official_announcement_url,
+      field: 'official_url',
+      old_value: row.official_url,
       new_value: newUrl,
     })
   }
@@ -210,7 +210,7 @@ export async function updateCelebrityPick(
     .from('external_book_club_picks')
     .update({
       curator_quote: newQuote,
-      official_announcement_url: newUrl,
+      official_url: newUrl,
       last_edited_at: new Date().toISOString(),
       last_edited_by: editorId,
     })
@@ -265,7 +265,7 @@ export async function addManualCelebrityPick(
   const year = Number(formData.get('pick_year') ?? 0)
   const quote = String(formData.get('curator_quote') ?? '').trim() || null
   const url =
-    String(formData.get('official_announcement_url') ?? '').trim() || null
+    String(formData.get('official_url') ?? '').trim() || null
 
   if (!clubId || !title || !author || !month || !year) {
     return { ok: false, error: 'club, title, author, month, and year are required' }
@@ -325,7 +325,7 @@ export async function addManualCelebrityPick(
       auto_source: 'manual',
       auto_confidence: 'high',
       curator_quote: quote,
-      official_announcement_url: url,
+      official_url: url,
       last_edited_at: new Date().toISOString(),
       last_edited_by: editorId,
     })

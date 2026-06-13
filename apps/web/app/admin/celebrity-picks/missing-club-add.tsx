@@ -34,7 +34,7 @@ export function MissingClubAdd({ clubId, clubName, year, month }: Props) {
     fd.set('pick_month', String(month))
     fd.set('pick_year', String(year))
     fd.set('curator_quote', quote)
-    fd.set('official_announcement_url', url)
+    fd.set('official_url', url)
     const res = await addManualCelebrityPick(fd)
     setSaving(false)
     if (!res.ok) {

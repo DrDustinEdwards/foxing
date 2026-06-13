@@ -12,7 +12,7 @@ interface Props {
     book_title: string
     book_author: string
     curator_quote: string
-    official_announcement_url: string
+    official_url: string
   }
 }
 
@@ -22,7 +22,7 @@ export function PickEditor({ pickId, initial }: Props) {
   const [title, setTitle] = useState(initial.book_title)
   const [author, setAuthor] = useState(initial.book_author)
   const [quote, setQuote] = useState(initial.curator_quote)
-  const [url, setUrl] = useState(initial.official_announcement_url)
+  const [url, setUrl] = useState(initial.official_url)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
@@ -37,7 +37,7 @@ export function PickEditor({ pickId, initial }: Props) {
     fd.set('book_title', title)
     fd.set('book_author', author)
     fd.set('curator_quote', quote)
-    fd.set('official_announcement_url', url)
+    fd.set('official_url', url)
     const res = await updateCelebrityPick(fd)
     setSaving(false)
     if (!res.ok) {

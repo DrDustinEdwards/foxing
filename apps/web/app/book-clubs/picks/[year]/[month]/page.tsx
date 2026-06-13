@@ -300,9 +300,9 @@ function PickCard({ pick }: { pick: MonthlyPicksRow }) {
         >
           See on Foxing
         </Link>
-        {pick.official_announcement_url && (
+        {pick.official_url && (
           <a
-            href={pick.official_announcement_url}
+            href={pick.official_url}
             target="_blank"
             rel="noopener noreferrer"
             className="text-brand-text hover:underline"
