@@ -76,6 +76,52 @@ export async function reportClubPost(
   return { ok: true }
 }
 
+// Resolve the club a report belongs to. post_reports carries no club_id of
+// its own, so ownership must be derived from the reported entity (mirrors the
+// thread->club hop in removeClubPost). Returns null if the report or its
+// entity is missing, or the report type is unknown.
+async function resolveReportClubId(
+  admin: ReturnType<typeof createAdminClient>,
+  reportId: string,
+): Promise<string | null> {
+  const { data: report } = await admin
+    .from('post_reports')
+    .select('post_id, post_type')
+    .eq('id', reportId)
+    .maybeSingle()
+  const row =
+    (report as { post_id: string | null; post_type: string | null } | null) ??
+    null
+  if (!row?.post_id) return null
+
+  if (row.post_type === 'passage_comment') {
+    const { data: comment } = await admin
+      .from('passage_comments')
+      .select('club_id')
+      .eq('id', row.post_id)
+      .maybeSingle()
+    return (comment as { club_id: string | null } | null)?.club_id ?? null
+  }
+
+  if (row.post_type === 'club_post') {
+    const { data: postRow } = await admin
+      .from('club_posts')
+      .select('thread_id')
+      .eq('id', row.post_id)
+      .maybeSingle()
+    const threadId = (postRow as { thread_id: string | null } | null)?.thread_id
+    if (!threadId) return null
+    const { data: threadRow } = await admin
+      .from('club_threads')
+      .select('club_id')
+      .eq('id', threadId)
+      .maybeSingle()
+    return (threadRow as { club_id: string | null } | null)?.club_id ?? null
+  }
+
+  return null
+}
+
 export async function dismissReport(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -85,6 +131,11 @@ export async function dismissReport(
   const auth = await assertMod(clubId)
   if (!auth.ok) return auth
   const admin = createAdminClient()
+  const reportClubId = await resolveReportClubId(admin, reportId)
+  if (!reportClubId) return { ok: false, error: 'Report not found.' }
+  if (reportClubId !== clubId) {
+    return { ok: false, error: 'Report not in this club.' }
+  }
   const { error } = await admin
     .from('post_reports')
     .update({
@@ -113,6 +164,11 @@ export async function actionReport(
   const auth = await assertMod(clubId)
   if (!auth.ok) return auth
   const admin = createAdminClient()
+  const reportClubId = await resolveReportClubId(admin, reportId)
+  if (!reportClubId) return { ok: false, error: 'Report not found.' }
+  if (reportClubId !== clubId) {
+    return { ok: false, error: 'Report not in this club.' }
+  }
   await admin
     .from('post_reports')
     .update({
