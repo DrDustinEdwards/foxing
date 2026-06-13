@@ -116,17 +116,79 @@ export default async function ClubPage(
     ])
   const canModerate = isClubMod(role)
   const isMember = role !== null
-  const members = canModerate ? await fetchClubMembers(club.id) : []
   const adminClient = createAdminClient()
-  const { data: adminClubRow } = canModerate
-    ? await adminClient
-        .from('clubs')
-        .select(
-          'member_approval, max_members, reading_pace, chapters_per_week, genre_tags, discord_webhook_url',
-        )
-        .eq('id', club.id)
-        .maybeSingle()
-    : { data: null }
+  // These reads only depend on club.id / userId / role, so run them in one
+  // parallel batch; pendingMembers and membershipStatus depend on batch
+  // results and stay sequential below.
+  const [
+    members,
+    { data: adminClubRow },
+    { data: nonModDiscordRow },
+    { data: reportRows },
+    { data: scheduleRows },
+    { data: capacityRow },
+    { data: ownWaitlistRow },
+    { count: waitlistCount },
+    { count: clubBookCount },
+  ] = await Promise.all([
+    canModerate ? fetchClubMembers(club.id) : Promise.resolve([]),
+    canModerate
+      ? adminClient
+          .from('clubs')
+          .select(
+            'member_approval, max_members, reading_pace, chapters_per_week, genre_tags, discord_webhook_url',
+          )
+          .eq('id', club.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    isMember && !canModerate
+      ? adminClient
+          .from('clubs')
+          .select('discord_webhook_url')
+          .eq('id', club.id)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    canModerate
+      ? adminClient
+          .from('post_reports')
+          .select(
+            'id, post_id, reason, created_at, post:post_id(content, author_id, has_spoiler, thread:thread_id(club_id), author:author_id(display_name)), reporter:reporter_id(display_name)',
+          )
+          .eq('status', 'pending')
+          .eq('post_type', 'club_post')
+          .order('created_at', { ascending: true })
+      : Promise.resolve({ data: null }),
+    isMember
+      ? adminClient
+          .from('club_schedule')
+          .select('id, chapter_name, unlock_date')
+          .eq('club_id', club.id)
+          .order('unlock_date', { ascending: true })
+      : Promise.resolve({ data: null }),
+    adminClient
+      .from('clubs')
+      .select('max_members, member_approval')
+      .eq('id', club.id)
+      .maybeSingle(),
+    userId
+      ? adminClient
+          .from('club_waitlist')
+          .select('user_id')
+          .eq('club_id', club.id)
+          .eq('user_id', userId)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
+    canModerate
+      ? adminClient
+          .from('club_waitlist')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('club_id', club.id)
+      : Promise.resolve({ count: 0 }),
+    adminClient
+      .from('club_books')
+      .select('book_id', { count: 'exact', head: true })
+      .eq('club_id', club.id),
+  ])
   const adminClubFields = (adminClubRow as {
     member_approval: boolean | null
     max_members: number | null
@@ -138,14 +200,6 @@ export default async function ClubPage(
   const discordConnected = Boolean(
     adminClubFields?.discord_webhook_url ?? null,
   )
-  const { data: nonModDiscordRow } =
-    isMember && !canModerate
-      ? await adminClient
-          .from('clubs')
-          .select('discord_webhook_url')
-          .eq('id', club.id)
-          .maybeSingle()
-      : { data: null }
   const memberSeesDiscordBadge =
     isMember &&
     (discordConnected ||
@@ -186,16 +240,6 @@ export default async function ClubPage(
       avatar_url: r.profile!.avatar_url,
     }))
 
-  const { data: reportRows } = canModerate
-    ? await adminClient
-        .from('post_reports')
-        .select(
-          'id, post_id, reason, created_at, post:post_id(content, author_id, has_spoiler, thread:thread_id(club_id), author:author_id(display_name)), reporter:reporter_id(display_name)',
-        )
-        .eq('status', 'pending')
-        .eq('post_type', 'club_post')
-        .order('created_at', { ascending: true })
-    : { data: null }
   type ReportRowShape = {
     id: string
     post_id: string
@@ -226,23 +270,11 @@ export default async function ClubPage(
       reporter_name: r.reporter?.display_name ?? 'Reader',
     }))
 
-  const { data: scheduleRows } = isMember
-    ? await adminClient
-        .from('club_schedule')
-        .select('id, chapter_name, unlock_date')
-        .eq('club_id', club.id)
-        .order('unlock_date', { ascending: true })
-    : { data: null }
   const scheduleEntries =
     (scheduleRows as
       | Array<{ id: string; chapter_name: string; unlock_date: string }>
       | null) ?? []
 
-  const { data: capacityRow } = await adminClient
-    .from('clubs')
-    .select('max_members, member_approval')
-    .eq('id', club.id)
-    .maybeSingle()
   const capacity = capacityRow as
     | { max_members: number | null; member_approval: boolean | null }
     | null
@@ -250,32 +282,12 @@ export default async function ClubPage(
   const clubMemberApproval = Boolean(capacity?.member_approval)
   const isFull =
     maxMembers !== null && (club.member_count ?? 0) >= maxMembers
-  const { data: ownWaitlistRow } = userId
-    ? await adminClient
-        .from('club_waitlist')
-        .select('user_id')
-        .eq('club_id', club.id)
-        .eq('user_id', userId)
-        .maybeSingle()
-    : { data: null }
   const isOnWaitlist = Boolean(ownWaitlistRow)
   const requiresApproval = !isMember && clubMemberApproval
   const membershipStatus =
     requiresApproval && userId
       ? await getClubMembershipStatus(club.id, userId)
       : null
-  const { count: waitlistCount } = canModerate
-    ? await adminClient
-        .from('club_waitlist')
-        .select('user_id', { count: 'exact', head: true })
-        .eq('club_id', club.id)
-    : { count: 0 }
-
-  const { count: clubBookCount } = await adminClient
-    .from('club_books')
-    .select('book_id', { count: 'exact', head: true })
-    .eq('club_id', club.id)
-
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   return (
