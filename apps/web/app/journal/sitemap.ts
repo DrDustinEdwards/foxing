@@ -23,16 +23,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   try {
     const supabase = createAdminClient()
-    const { data } = await supabase
-      .from('journal_posts')
-      .select('slug, updated_at, published_at')
-      .eq('is_published', true)
-    const rows =
-      (data as Array<{
-        slug: string
-        updated_at: string | null
-        published_at: string | null
-      }> | null) ?? []
+    // Page in chunks of 1000 to defeat the PostgREST max-rows cap; the unbounded
+    // read silently returned only the first 1000 published posts.
+    const rows: Array<{
+      slug: string
+      updated_at: string | null
+      published_at: string | null
+    }> = []
+    const chunk = 1000
+    const max = 50000
+    for (let from = 0; from < max; from += chunk) {
+      const { data } = await supabase
+        .from('journal_posts')
+        .select('slug, updated_at, published_at')
+        .eq('is_published', true)
+        .order('id')
+        .range(from, from + chunk - 1)
+      const page =
+        (data as Array<{
+          slug: string
+          updated_at: string | null
+          published_at: string | null
+        }> | null) ?? []
+      rows.push(...page)
+      if (page.length < chunk) break
+    }
     const postEntries: MetadataRoute.Sitemap = rows.map((p) => ({
       url: `${FOXING_BASE_URL}/journal/${p.slug}`,
       lastModified: p.updated_at
