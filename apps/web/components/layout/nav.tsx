@@ -41,8 +41,8 @@ interface NavProps {
 // entry, distinct from /clubs.
 const PRIMARY_LINKS = [
   { href: '/books', label: 'Books', match: '/books' },
-  { href: '/clubs', label: 'Clubs', match: '/clubs' },
   { href: '/book-clubs', label: 'Celebrity Picks', match: '/book-clubs' },
+  { href: '/clubs', label: 'Clubs', match: '/clubs' },
   { href: '/journal', label: 'Journal', match: '/journal' },
   { href: '/people', label: 'People', match: '/people' },
 ] as const
@@ -387,8 +387,8 @@ function SecondaryAuthBar({ pathname }: { pathname: string }) {
   const items = [
     { href: '/home', label: 'Home' },
     { href: '/library', label: 'Library' },
-    { href: '/diary', label: 'Diary' },
     { href: '/feed', label: 'Feed' },
+    { href: '/diary', label: 'Diary' },
     { href: '/clubs', label: 'Clubs' },
     { href: '/people', label: 'People' },
   ]
