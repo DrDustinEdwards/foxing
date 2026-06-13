@@ -253,18 +253,48 @@ export interface CreateClubInput {
   is_public: boolean
 }
 
+// Slug for /clubs/[slug] routing. Matches the web slug rule (lib/slug.ts).
+function slugifyClub(s: string): string {
+  return (
+    s
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'club'
+  )
+}
+
+async function uniqueClubSlug(name: string): Promise<string> {
+  const base = slugifyClub(name)
+  const { data } = await supabase.from('clubs').select('slug').like('slug', `${base}%`)
+  const taken = new Set(
+    ((data ?? []) as Array<{ slug: string | null }>)
+      .map((r) => r.slug)
+      .filter((s): s is string => !!s),
+  )
+  if (!taken.has(base)) return base
+  let n = 2
+  while (taken.has(`${base}-${n}`)) n++
+  return `${base}-${n}`
+}
+
 export async function createClub(input: CreateClubInput): Promise<Club | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  // Live columns are creator_id / visibility / slug (NOT created_by / is_public /
+  // pace). current_book_id is optional, so a club can be a standing community.
+  const slug = await uniqueClubSlug(input.name)
+  const visibility = input.is_public ? 'public' : 'private'
   const { data, error } = await supabase
     .from('clubs')
     .insert({
       name: input.name,
       description: input.description ?? null,
       current_book_id: input.current_book_id ?? null,
-      pace: input.pace,
-      is_public: input.is_public,
-      created_by: user.id,
+      creator_id: user.id,
+      visibility,
+      slug,
     })
     .select()
     .single()
@@ -276,11 +306,23 @@ export async function createClub(input: CreateClubInput): Promise<Club | null> {
     club_id: data.id,
     user_id: user.id,
     role: 'owner',
+    status: 'active',
   })
-  if (memErr) console.warn('[clubs] createClub owner membership failed:', memErr.message)
+  if (memErr) {
+    console.warn('[clubs] createClub owner membership failed:', memErr.message)
+    // Roll back so we never leave a club without an owner.
+    await supabase.from('clubs').delete().eq('id', data.id)
+    return null
+  }
   // first_club + club_founder unlocks
   checkAndAwardBadges(user.id).catch(() => {})
-  return data as Club
+  // Map live columns back onto the Club shape the UI still reads.
+  return {
+    ...data,
+    is_public: visibility === 'public',
+    created_by: user.id,
+    pace: input.pace,
+  } as Club
 }
 
 export async function joinClub(clubId: string): Promise<boolean> {
