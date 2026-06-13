@@ -18,6 +18,10 @@ const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const CRON_SECRET = Deno.env.get('CRON_SECRET')!
+// Optional Google Books API key. Unauthenticated calls get 429'd under the
+// monthly burst, which kneecaps the two best (ISBN + title) cover sources.
+const GOOGLE_BOOKS_API_KEY = Deno.env.get('GOOGLE_BOOKS_API_KEY') ?? ''
+const GB_KEY = GOOGLE_BOOKS_API_KEY ? `&key=${GOOGLE_BOOKS_API_KEY}` : ''
 
 type Confidence = 'high' | 'medium' | 'low'
 
@@ -102,7 +106,7 @@ async function resolveIsbn13(
   const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
   try {
     const res = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${q}&fields=items(volumeInfo(industryIdentifiers))&maxResults=5`,
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&fields=items(volumeInfo(industryIdentifiers))&maxResults=5${GB_KEY}`,
       { signal: AbortSignal.timeout(5000) },
     )
     if (res.ok) {
@@ -167,7 +171,7 @@ async function lookupBookCover(
   if (isbn13) {
     try {
       const gbRes = await fetch(
-        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}&fields=items(volumeInfo(imageLinks))`,
+        `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn13}&fields=items(volumeInfo(imageLinks))${GB_KEY}`,
         { signal: AbortSignal.timeout(5000) },
       )
       if (gbRes.ok) {
@@ -231,7 +235,7 @@ async function lookupBookCover(
   try {
     const q = encodeURIComponent(`intitle:${title} inauthor:${author}`)
     const gbRes = await fetch(
-      `https://www.googleapis.com/books/v1/volumes?q=${q}&fields=items(volumeInfo(imageLinks))&maxResults=1`,
+      `https://www.googleapis.com/books/v1/volumes?q=${q}&fields=items(volumeInfo(imageLinks))&maxResults=1${GB_KEY}`,
       { signal: AbortSignal.timeout(5000) },
     )
     if (gbRes.ok) {
@@ -338,13 +342,47 @@ const BN_MONTH_NAMES: Record<number, string> = {
   7: 'July', 8: 'August', 9: 'September', 10: 'October', 11: 'November', 12: 'December',
 }
 
-function bnStripTags(s: string): string {
+function bnDecodeEntities(s: string): string {
   return s
-    .replace(/<[^>]+>/g, '')
     .replace(/&amp;/g, '&')
     .replace(/&#39;/g, "'")
     .replace(/&#8217;/g, "'")
     .replace(/&quot;/g, '"')
+}
+
+function bnStripTags(s: string): string {
+  // Replace tags with a space (not empty) so adjacent tag-separated text does
+  // not fuse together when the markup is removed.
+  return bnDecodeEntities(s.replace(/<[^>]+>/g, ' '))
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+// BookNotification lists co-authors in separate tags (links / <br>) inside the
+// author cell. Stripping tags to nothing fused them ("Marie BenedictVictoria
+// Christopher Murray"). Split on tags so each author stays whole, then join
+// with a comma. We intentionally do NOT split on intra-name capitals, which
+// would corrupt legitimate names like "Julian Brave NoiseCat".
+function parseAuthorsCell(raw: string): string {
+  const authors: string[] = []
+  const seen = new Set<string>()
+  for (const part of raw.split(/<[^>]+>/)) {
+    const a = bnDecodeEntities(part).replace(/\s+/g, ' ').trim()
+    if (a && !seen.has(a)) {
+      seen.add(a)
+      authors.push(a)
+    }
+  }
+  return authors.join(', ')
+}
+
+// Normalize an author string from any source: collapse whitespace and tidy
+// comma spacing. Does not attempt to split fused names.
+function cleanAuthor(s: string): string {
+  return s
+    .replace(/\s+/g, ' ')
+    .replace(/\s*,\s*/g, ', ')
+    .replace(/(^,\s*|,\s*$)/g, '')
     .trim()
 }
 
@@ -375,7 +413,7 @@ async function scrapeBookNotificationLatest(
       const wantFull = `${monthLong} ${year}`
       const wantTick = `${monthLong} '${yyShort}`
       if (!label.startsWith(wantFull) && !label.startsWith(wantTick)) continue
-      const author = bnStripTags(tds[2] ?? '')
+      const author = parseAuthorsCell(tds[2] ?? '')
       const title = bnStripTags(tds[3] ?? '')
       if (!title || !author) return null
       return { title, author }
@@ -458,7 +496,7 @@ serve(async (req: Request) => {
 
   const EXTRACTION_PROMPT = `Extract every book club pick from this text for ${monthName} ${year}.
 Return ONLY a JSON array with no other text, no markdown, no explanation.
-Format: [{"club_name":"exact club name","book_title":"exact title","author":"author name","curator_quote":"the curator's actual words about the book (50-200 chars)","announcement_url":"url if mentioned","confidence":"high"}]
+Format: [{"club_name":"exact club name","book_title":"exact title","author":"author name (comma-separate co-authors)","curator_quote":"the curator's actual words about the book (50-200 chars)","announcement_url":"url if mentioned","confidence":"high"}]
 Include every club you can find. If you cannot find a pick for a club, omit it.`
 
   const allResults: PickResult[] = []
@@ -557,7 +595,7 @@ Include every club you can find. If you cannot find a pick for a club, omit it.`
 
     const searchResponse = await callClaude(
       `What is ${club.label}'s book club pick for ${monthName} ${year}?
-Return ONLY JSON: {"book_title":"...","author":"...","curator_quote":"..."}
+Return ONLY JSON: {"book_title":"...","author":"... (comma-separate co-authors)","curator_quote":"..."}
 If you don't know with certainty, return: {"book_title":"","author":""}`,
       150,
     )
@@ -594,6 +632,7 @@ If you don't know with certainty, return: {"book_title":"","author":""}`,
 
   for (const pick of allResults) {
     if (!pick.book_title || !pick.author) continue
+    pick.author = cleanAuthor(pick.author)
 
     const pickNameLower = pick.club_name.toLowerCase()
     const club = clubs.find((c) => {
