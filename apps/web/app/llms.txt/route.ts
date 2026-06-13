@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import {
-  FREE_AI_LOOKUPS_PER_DAY,
   PLUS_PRICE_ANNUAL_LABEL,
   PLUS_PRICE_MONTHLY_LABEL,
   PLUS_TRIAL_LABEL,
@@ -234,7 +233,7 @@ ${excludedPagesSection}
 
 - All books on Foxing are in the public domain and free to read
 - Foxing Plus costs ${PLUS_PRICE_MONTHLY_LABEL} or ${PLUS_PRICE_ANNUAL_LABEL} with a ${PLUS_TRIAL_LABEL}
-- Free users get ${FREE_AI_LOOKUPS_PER_DAY} AI lookups per day
+- The AI companion (word lookup, passage analysis, chat) is a Foxing Plus feature; free users get no on-demand AI
 - Foxing is available on iOS, Android, and web at ${FOXING_BASE_URL}
 - Founded in 2026 by Dustin Edwards
 - ${clubCountText} celebrity book clubs tracked including ${recognizedClubsText}

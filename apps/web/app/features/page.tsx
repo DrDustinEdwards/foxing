@@ -9,7 +9,6 @@ import {
 } from '@/components/features/feature-section'
 import { Button } from '@/components/ui/button'
 import {
-  FREE_AI_LOOKUPS_PER_DAY,
   PLUS_PRICE_COMBINED_LABEL,
   PLUS_PRICE_MONTHLY_LABEL,
   PLUS_TRIAL_LABEL,
@@ -112,7 +111,7 @@ export default function FeaturesPage() {
                 'Named bookmarks with quick-add, view and delete bookmarks from the web on any book detail page',
                 'History of recently visited positions',
                 'Swipe gesture navigation',
-                'AI search: describe a scene in plain English and the companion points you to the chapters that likely match',
+                'AI search: describe a scene in plain English and the companion points you to the chapters that likely match (Plus)',
               ]}
             />
           </Section>
@@ -148,7 +147,7 @@ export default function FeaturesPage() {
                 items={[
                   'Long press to begin a selection',
                   'Drag handles to extend a selection',
-                  'Tap a single word for an instant AI lookup',
+                  'Tap a single word for an instant AI lookup (Plus)',
                   'Highlight any selection in one of the seven colors straight from the selection menu',
                 ]}
               />
@@ -327,10 +326,7 @@ export default function FeaturesPage() {
               definition. That is the simplest thing the AI companion does.
             </Prose>
 
-            <Subgroup
-              title="Word level"
-              meta={`Free: ${FREE_AI_LOOKUPS_PER_DAY}/day. Plus: unlimited`}
-            >
+            <Subgroup title="Word level" tier="plus">
               <FeatureList
                 items={[
                   'Definition in context (specific to the sentence and book, not generic)',
@@ -416,7 +412,7 @@ export default function FeaturesPage() {
               />
             </Subgroup>
 
-            <Subgroup title="Discussion questions" tier="free" platform="both">
+            <Subgroup title="Discussion questions" tier="plus" platform="both">
               <FeatureList
                 items={[
                   '12 to 15 AI-generated discussion questions per book',
@@ -492,7 +488,7 @@ export default function FeaturesPage() {
                   'Spoiler tagging and blur on any post',
                   'Like and save individual posts',
                   'Report a post',
-                  "AI-generated discussion questions for the club's current book",
+                  "AI-generated discussion questions for the club's current book (Plus)",
                   'Full thread reading view with inline save, report, and reply on every post (web)',
                 ]}
               />

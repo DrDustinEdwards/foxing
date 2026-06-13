@@ -1,10 +1,7 @@
 import { type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
-import {
-  FREE_AI_LOOKUPS_PER_DAY,
-  PLUS_TRIAL_LABEL,
-} from '@/lib/config'
+import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const dynamic = 'force-static'
@@ -86,8 +83,7 @@ export default function AppGuidePage() {
               Word lookup: tap any word for its definition in context. Two
               sentences about what the word means in that sentence, in that
               book. You also get etymology, synonyms, and how the word appears
-              in other literature. Free users get {FREE_AI_LOOKUPS_PER_DAY}{' '}
-              lookups per day. Plus is unlimited.
+              in other literature. The AI companion is a Foxing Plus feature.
             </P>
             <P>
               Passage analysis: long press and drag to select text. A menu

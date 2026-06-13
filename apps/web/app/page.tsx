@@ -25,7 +25,6 @@ import {
   type JournalPostSummary,
 } from '@/lib/journal'
 import {
-  FREE_AI_LOOKUPS_PER_DAY,
   PLUS_PRICE_MONTHLY_LABEL,
   PLUS_TRIAL_LABEL,
 } from '@/lib/config'
@@ -76,7 +75,7 @@ const FAQ_JSONLD = JSON.stringify({
       name: 'Does Foxing have an AI for reading?',
       acceptedAnswer: {
         '@type': 'Answer',
-        text: `Yes. Foxing includes an AI companion powered by Claude. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. Free users get ${FREE_AI_LOOKUPS_PER_DAY} AI lookups per day. Foxing Plus gives unlimited access.`,
+        text: `Yes. Foxing includes an AI companion. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. The AI companion is a Foxing Plus feature.`,
       },
     },
   ],

@@ -12,8 +12,9 @@ export const PLUS_ANNUAL_SAVINGS = '$26'
 export const PLUS_TRIAL_DAYS = 7
 
 // ─── Free tier limits ────────────────────────────────────────────────────
+// Free gets ZERO on-demand AI (decision D11); all AI companion features are
+// Plus. No free AI allowance constant exists by design.
 
-export const FREE_AI_LOOKUPS_PER_DAY = 5
 export const FREE_MAX_CLUBS = 1
 
 // ─── Human-readable labels derived from the above ─────────────────────────
