@@ -2,8 +2,11 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
-export async function POST(req: Request) {
+// Vercel cron invokes registered paths with GET. This was POST-only, so every
+// scheduled tick returned 405 and scheduled posts never published.
+export async function GET(req: Request) {
   const cronSecret = process.env.CRON_SECRET
   const authHeader = req.headers.get('authorization')
   if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
