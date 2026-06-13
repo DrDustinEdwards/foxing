@@ -80,6 +80,12 @@ export async function reportClubPost(
 // its own, so ownership must be derived from the reported entity (mirrors the
 // thread->club hop in removeClubPost). Returns null if the report or its
 // entity is missing, or the report type is unknown.
+//
+// NOTE: the join chains here are schema-verified (post_reports.post_id keys
+// club_posts.id / passage_comments.id; club_posts.thread_id -> club_threads
+// .club_id; passage_comments.club_id is direct), but post_reports is empty in
+// production, so this has NOT been verified against a real report. Data-level
+// verification is pending the first actual report row.
 async function resolveReportClubId(
   admin: ReturnType<typeof createAdminClient>,
   reportId: string,
