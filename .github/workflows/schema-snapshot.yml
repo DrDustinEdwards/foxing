@@ -1,0 +1,38 @@
+name: Schema snapshot
+
+# Dumps the live Foxing schema and commits supabase/schema.sql when it
+# changed. Runs on a Linux runner because supabase db dump needs Docker,
+# which the local dev machine does not have. Trigger manually after DB
+# migrations: gh workflow run schema-snapshot.yml
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Dump remote schema
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          supabase link --project-ref ekjpsuewrkvqzbuteurc
+          supabase db dump -f supabase/schema.sql
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add supabase/schema.sql
+          if git diff --cached --quiet; then
+            echo "No schema changes"
+            exit 0
+          fi
+          git commit -m "Schema snapshot: supabase db dump"
+          git push
