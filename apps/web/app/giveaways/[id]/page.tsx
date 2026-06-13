@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { fetchGiveawayById } from '@/lib/giveaways'
+import { fetchGiveawayById, fetchGiveawayRow } from '@/lib/giveaways'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { EnterGiveawayButton } from './enter-button'
 
@@ -18,7 +18,7 @@ export async function generateMetadata(
   }
 ): Promise<Metadata> {
   const params = await props.params;
-  const g = await fetchGiveawayById(params.id, null)
+  const g = await fetchGiveawayRow(params.id)
   if (!g) return { title: 'Giveaway not found' }
   return {
     title: `${g.title} · Foxing giveaway`,
