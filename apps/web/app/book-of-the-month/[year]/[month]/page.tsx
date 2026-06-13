@@ -1,3 +1,4 @@
+import { cache } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -18,6 +19,10 @@ import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const revalidate = 86400
+
+// generateMetadata and the page both need the month's picks; cache() resolves
+// the query once per request instead of twice.
+const fetchPicksOnce = cache(fetchPicksForMonthWithRatings)
 
 interface PageParams {
   year: string
@@ -77,7 +82,7 @@ export async function generateMetadata(
   const params = await props.params;
   const parsed = parseParams(params)
   if (!parsed) return { title: 'Book of the Month not found' }
-  const picks = await fetchPicksForMonthWithRatings(parsed.year, parsed.month)
+  const picks = await fetchPicksOnce(parsed.year, parsed.month)
   const first = picks[0]
   if (!first) return { title: 'Book of the Month not found' }
   const monthLabel = monthName(first.month)
@@ -132,9 +137,7 @@ export default async function BookOfMonthDetailPage(
   if (!parsed) notFound()
   const { year, month } = parsed
 
-  const [picks] = await Promise.all([
-    fetchPicksForMonthWithRatings(year, month),
-  ])
+  const picks = await fetchPicksOnce(year, month)
   if (picks.length === 0) notFound()
 
   const [prev, next] = await Promise.all([
