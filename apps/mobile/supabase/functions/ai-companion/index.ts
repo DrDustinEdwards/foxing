@@ -19,28 +19,30 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-// ─── Rate limiting + subscription gates (task.md Section 6) ──────────────
-// Free users get FREE_DAILY_LIMIT metered AI calls per UTC day; matches
-// monetization.md ("5 AI word lookups per day"). Deep Dive is Plus-only.
-// Server-side counting + enforcement; client checks alone can't protect API
-// spend during a viral moment.
-const FREE_DAILY_LIMIT = 5;
-
-// Actions whose cost we throttle on the free tier. Names match the action
-// strings the request handler dispatches on (not the client lib export
-// names, which differ slightly).
-const METERED_ACTIONS = new Set<string>([
+// ─── Subscription gate (decision D11) ───────────────────────────────────
+// Free = ZERO on-demand AI. Every reader-triggered AI action requires Plus
+// and returns a tier gate (403 PLUS_REQUIRED), not a quota. The four cached
+// catalog generators (book_description, author_bio, similar_books,
+// reading_order) run once and cache to feed public book pages, so they stay
+// free and are deliberately NOT in this set. Server-side enforcement; client
+// checks alone can't protect API spend during a viral moment.
+const PLUS_REQUIRED_ACTIONS = new Set<string>([
   "word_lookup",
   "passage_analysis",
   "chat",
   "word_aspect",
   "language_difficulty",
+  "semantic_search",
+  "discussion_starter",
+  "word_wise",
+  "character_map",
+  "chapter_feature",
+  "bilingual_paragraph",
+  "recommendations",
+  "reading_personality",
+  "book_insight",
+  "deep_dive",
 ]);
-
-// Deep Dive is a single action with a `kind` payload; gated to Plus. Free
-// users get 403 PLUS_REQUIRED so the client can show an upgrade prompt
-// instead of charging us for the call.
-const DEEP_DIVE_ACTION = "deep_dive";
 
 interface RateLimitOutcome {
   // When set, the server should return this Response instead of running
@@ -152,17 +154,12 @@ async function enforceLimitsAndGate(
   userId: string | undefined,
   action: string,
 ): Promise<RateLimitOutcome> {
-  const admin = getAdminClient();
-  if (!admin) {
-    // Without an admin client we can't enforce limits, log and let the
-    // request through. The migrations REQUIRE the service role key, so this
-    // path should never fire in prod.
-    console.warn("[ai-companion] service role key missing, limits disabled");
-    return {};
-  }
+  // Free actions: the four cached catalog generators, delete_account, and
+  // anything non-AI. No gate.
+  if (!PLUS_REQUIRED_ACTIONS.has(action)) return {};
 
-  // Anonymous calls aren't permitted for any metered/Plus-gated action.
-  if (!userId && (METERED_ACTIONS.has(action) || action === DEEP_DIVE_ACTION)) {
+  // Every on-demand AI action requires an authenticated Plus user.
+  if (!userId) {
     return {
       response: new Response(
         JSON.stringify({
@@ -177,77 +174,39 @@ async function enforceLimitsAndGate(
     };
   }
 
-  if (action === DEEP_DIVE_ACTION) {
-    const tier = await getSubscriptionTier(admin, userId!);
-    if (tier !== "plus") {
-      return {
-        response: new Response(
-          JSON.stringify({
-            error: "PLUS_REQUIRED",
-            message: "Deep Dive requires Foxing Plus.",
-          }),
-          {
-            status: 403,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          },
-        ),
-      };
-    }
-    // Plus subscribers hit the API path unlimited; no rate-limit counter.
-    return {};
-  }
-
-  if (!METERED_ACTIONS.has(action)) return {};
-
-  // Free tier check. Plus skips the counter entirely.
-  const tier = await getSubscriptionTier(admin, userId!);
-  if (tier === "plus") return {};
-
-  // Date in UTC YYYY-MM-DD to match the table's primary key.
-  const today = new Date().toISOString().split("T")[0];
-  let currentCount = 0;
-  try {
-    const { data } = await admin
-      .from("ai_rate_limits")
-      .select("count")
-      .eq("user_id", userId!)
-      .eq("date", today)
-      .maybeSingle();
-    currentCount = (data as { count?: number } | null)?.count ?? 0;
-  } catch (e) {
-    console.warn("[ai-companion] rate-limit read failed:", e);
-  }
-
-  if (currentCount >= FREE_DAILY_LIMIT) {
+  const admin = getAdminClient();
+  if (!admin) {
+    // Can't verify tier without the service role key. Fail closed so free
+    // users can't slip through; the migrations REQUIRE this key in prod.
+    console.error("[ai-companion] service role key missing, cannot verify tier");
     return {
       response: new Response(
         JSON.stringify({
-          error: "RATE_LIMITED",
-          limitReached: true,
-          message:
-            "Daily AI limit reached. Upgrade to Foxing Plus for unlimited AI.",
+          error: "UNAVAILABLE",
+          message: "Subscription check is unavailable. Please try again shortly.",
         }),
         {
-          status: 429,
+          status: 503,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       ),
     };
   }
 
-  // Increment-then-call. We do this before the Anthropic call so a crashed
-  // request still counts against the user, otherwise repeated retries
-  // could bypass the limit. The tradeoff is a transient inflate on errors,
-  // which is the safer side.
-  try {
-    await admin
-      .from("ai_rate_limits")
-      .upsert(
-        { user_id: userId!, date: today, count: currentCount + 1 },
-        { onConflict: "user_id,date" },
-      );
-  } catch (e) {
-    console.warn("[ai-companion] rate-limit increment failed:", e);
+  const tier = await getSubscriptionTier(admin, userId);
+  if (tier !== "plus") {
+    return {
+      response: new Response(
+        JSON.stringify({
+          error: "PLUS_REQUIRED",
+          message: "This AI feature requires Foxing Plus.",
+        }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      ),
+    };
   }
 
   return {};
@@ -1571,8 +1530,8 @@ Deno.serve(async (req) => {
 
     console.log(`[ai-companion] → ${action}`);
 
-    // Server-side cache check FIRST, a hit means we skip Anthropic and
-    // skip the rate-limit counter, since this isn't a fresh AI call.
+    // Server-side cache check FIRST; a hit means we skip Anthropic entirely
+    // (and the cached catalog generators aren't gated anyway).
     const cacheTarget = getCacheTarget(action, payload);
     if (cacheTarget) {
       const cached = await readCache(cacheTarget);
@@ -1585,9 +1544,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Server-side rate limit + subscription gate. Must run BEFORE any
-    // Anthropic call, this is the only thing standing between a viral
-    // moment and a five-figure API bill.
+    // Server-side subscription gate. Must run BEFORE any Anthropic call,
+    // this is the only thing standing between a viral moment and a
+    // five-figure API bill.
     const gate = await enforceLimitsAndGate(userId, action);
     if (gate.response) return gate.response;
 
