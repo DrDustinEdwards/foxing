@@ -320,6 +320,23 @@ $$;
 ALTER FUNCTION "public"."check_streak_badges"() OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."count_duplicate_slugs"() RETURNS bigint
+    LANGUAGE "sql" STABLE SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+  select coalesce(count(*), 0)::bigint
+  from (
+    select slug from public.books
+    where slug is not null
+    group by slug
+    having count(*) > 1
+  ) d;
+$$;
+
+
+ALTER FUNCTION "public"."count_duplicate_slugs"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
     SET "search_path" TO 'public'
@@ -1913,7 +1930,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "total_highlights" integer DEFAULT 0,
     "theme_preference" "text" DEFAULT 'system'::"text",
     "discord_id" "text",
-    CONSTRAINT "profiles_subscription_tier_check" CHECK (("subscription_tier" = ANY (ARRAY['free'::"text", 'plus'::"text", 'patron'::"text"]))),
+    CONSTRAINT "profiles_subscription_tier_check" CHECK (("subscription_tier" = ANY (ARRAY['free'::"text", 'plus'::"text"]))),
     CONSTRAINT "profiles_theme_preference_check" CHECK (("theme_preference" = ANY (ARRAY['light'::"text", 'dark'::"text", 'system'::"text"])))
 );
 
@@ -2724,10 +2741,6 @@ CREATE UNIQUE INDEX "books_epub_url_unique" ON "public"."books" USING "btree" ("
 
 
 
-CREATE INDEX "books_gutenberg_id_idx" ON "public"."books" USING "btree" ("gutenberg_id");
-
-
-
 CREATE INDEX "books_source_idx" ON "public"."books" USING "btree" ("source");
 
 
@@ -2996,10 +3009,6 @@ CREATE INDEX "idx_books_author_slug" ON "public"."books" USING "btree" ("author_
 
 
 
-CREATE INDEX "idx_books_slug" ON "public"."books" USING "btree" ("slug");
-
-
-
 CREATE INDEX "idx_buddy_read_posts_read" ON "public"."buddy_read_posts" USING "btree" ("buddy_read_id", "created_at");
 
 
@@ -3036,19 +3045,11 @@ CREATE INDEX "idx_clubs_bookstore" ON "public"."clubs" USING "btree" ("club_type
 
 
 
-CREATE INDEX "idx_clubs_slug" ON "public"."clubs" USING "btree" ("slug");
-
-
-
 CREATE INDEX "idx_diary_entries_slug" ON "public"."diary_entries" USING "btree" ("user_id", "slug");
 
 
 
 CREATE INDEX "idx_diary_entries_user_public" ON "public"."diary_entries" USING "btree" ("user_id", "privacy", "log_date" DESC);
-
-
-
-CREATE INDEX "idx_discussion_guides_book" ON "public"."book_discussion_guides" USING "btree" ("book_id");
 
 
 
@@ -3124,6 +3125,10 @@ CREATE INDEX "journal_post_links_source_idx" ON "public"."journal_post_links" US
 
 
 
+CREATE INDEX "journal_post_links_target_id_idx" ON "public"."journal_post_links" USING "btree" ("target_id");
+
+
+
 CREATE INDEX "journal_post_versions_post_idx" ON "public"."journal_post_versions" USING "btree" ("post_id", "saved_at" DESC);
 
 
@@ -3136,7 +3141,15 @@ CREATE INDEX "journal_posts_scheduled_idx" ON "public"."journal_posts" USING "bt
 
 
 
+CREATE INDEX "oauth_codes_client_id_idx" ON "public"."oauth_codes" USING "btree" ("client_id");
+
+
+
 CREATE INDEX "oauth_codes_expires_idx" ON "public"."oauth_codes" USING "btree" ("expires_at");
+
+
+
+CREATE INDEX "oauth_tokens_client_id_idx" ON "public"."oauth_tokens" USING "btree" ("client_id");
 
 
 
@@ -4114,19 +4127,19 @@ CREATE POLICY "Active giveaways visible to all" ON "public"."giveaways" FOR SELE
 
 
 
-CREATE POLICY "Admin write clubs" ON "public"."external_book_clubs" USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admin write clubs" ON "public"."external_book_clubs" USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
 
 
-CREATE POLICY "Admin write picks" ON "public"."external_book_club_picks" USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admin write picks" ON "public"."external_book_club_picks" USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
 
 
-CREATE POLICY "Admins can view edit log" ON "public"."external_book_club_pick_edits" FOR SELECT USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admins can view edit log" ON "public"."external_book_club_pick_edits" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
@@ -4144,31 +4157,25 @@ CREATE POLICY "Admins manage all giveaways" ON "public"."giveaways" USING ((EXIS
 
 
 
-CREATE POLICY "Admins manage journal" ON "public"."journal_posts" USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admins manage journal" ON "public"."journal_posts" USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
 
 
-CREATE POLICY "Admins manage picks" ON "public"."book_of_the_month" USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admins manage picks" ON "public"."book_of_the_month" USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
 
 
-CREATE POLICY "Admins manage social queue" ON "public"."social_post_queue" USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admins manage social queue" ON "public"."social_post_queue" USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
 
 
-CREATE POLICY "Admins view all reports" ON "public"."post_reports" FOR SELECT USING (("auth"."uid"() IN ( SELECT "profiles"."id"
-   FROM "public"."profiles"
-  WHERE ("profiles"."is_admin" = true))));
-
-
-
-CREATE POLICY "Admins view reports" ON "public"."post_reports" FOR SELECT USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "Admins view all reports" ON "public"."post_reports" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
@@ -4179,10 +4186,6 @@ CREATE POLICY "Anyone can see list likes" ON "public"."reading_list_likes" FOR S
 
 
 CREATE POLICY "Askers see own questions" ON "public"."author_questions" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") = "asker_id"));
-
-
-
-CREATE POLICY "Auth users can report" ON "public"."post_reports" FOR INSERT WITH CHECK (("auth"."uid"() = "reporter_id"));
 
 
 
@@ -4228,7 +4231,7 @@ CREATE POLICY "Challenges readable by all" ON "public"."challenges" FOR SELECT U
 
 
 
-CREATE POLICY "Chapter reactions viewable" ON "public"."chapter_reactions" FOR SELECT USING ((("privacy" = 'public'::"text") OR ("auth"."uid"() = "user_id")));
+CREATE POLICY "Chapter reactions viewable" ON "public"."chapter_reactions" FOR SELECT USING ((("privacy" = 'public'::"text") OR (( SELECT "auth"."uid"() AS "uid") = "user_id")));
 
 
 
@@ -4262,13 +4265,13 @@ CREATE POLICY "Follows visible to all" ON "public"."follows" FOR SELECT USING (t
 
 CREATE POLICY "List books inherit list visibility" ON "public"."reading_list_books" FOR SELECT USING ((EXISTS ( SELECT 1
    FROM "public"."reading_lists"
-  WHERE (("reading_lists"."id" = "reading_list_books"."list_id") AND (("reading_lists"."is_public" = true) OR ("auth"."uid"() = "reading_lists"."user_id"))))));
+  WHERE (("reading_lists"."id" = "reading_list_books"."list_id") AND (("reading_lists"."is_public" = true) OR (( SELECT "auth"."uid"() AS "uid") = "reading_lists"."user_id"))))));
 
 
 
 CREATE POLICY "List owners manage books" ON "public"."reading_list_books" USING ((EXISTS ( SELECT 1
    FROM "public"."reading_lists"
-  WHERE (("reading_lists"."id" = "reading_list_books"."list_id") AND ("reading_lists"."user_id" = "auth"."uid"())))));
+  WHERE (("reading_lists"."id" = "reading_list_books"."list_id") AND ("reading_lists"."user_id" = ( SELECT "auth"."uid"() AS "uid"))))));
 
 
 
@@ -4304,19 +4307,19 @@ CREATE POLICY "Public clubs books readable by all" ON "public"."club_books" FOR 
 
 
 
-CREATE POLICY "Public commonplace readable" ON "public"."commonplace_book" FOR SELECT USING ((("is_public" = true) OR ("auth"."uid"() = "user_id")));
+CREATE POLICY "Public commonplace readable" ON "public"."commonplace_book" FOR SELECT USING ((("is_public" = true) OR (( SELECT "auth"."uid"() AS "uid") = "user_id")));
 
 
 
-CREATE POLICY "Public diary entries viewable" ON "public"."diary_entries" FOR SELECT USING ((("privacy" = 'public'::"text") OR ("auth"."uid"() = "user_id")));
+CREATE POLICY "Public diary entries viewable" ON "public"."diary_entries" FOR SELECT USING ((("privacy" = 'public'::"text") OR (( SELECT "auth"."uid"() AS "uid") = "user_id")));
 
 
 
-CREATE POLICY "Public entries readable" ON "public"."commonplace_entries" FOR SELECT USING ((("is_public" = true) OR ("auth"."uid"() = "user_id")));
+CREATE POLICY "Public entries readable" ON "public"."commonplace_entries" FOR SELECT USING ((("is_public" = true) OR (( SELECT "auth"."uid"() AS "uid") = "user_id")));
 
 
 
-CREATE POLICY "Public lists are viewable" ON "public"."reading_lists" FOR SELECT USING ((("is_public" = true) OR ("auth"."uid"() = "user_id")));
+CREATE POLICY "Public lists are viewable" ON "public"."reading_lists" FOR SELECT USING ((("is_public" = true) OR (( SELECT "auth"."uid"() AS "uid") = "user_id")));
 
 
 
@@ -4327,10 +4330,6 @@ CREATE POLICY "Public passage comments readable" ON "public"."passage_comments" 
 CREATE POLICY "Public read active announcements from public clubs" ON "public"."club_announcements" FOR SELECT USING ((("expires_at" > "now"()) AND ("is_removed" = false) AND ("club_id" IN ( SELECT "clubs"."id"
    FROM "public"."clubs"
   WHERE ("clubs"."visibility" = 'public'::"text")))));
-
-
-
-CREATE POLICY "Public read ai cache" ON "public"."book_ai_cache" FOR SELECT USING (true);
 
 
 
@@ -4372,15 +4371,15 @@ CREATE POLICY "Upvotes visible to all" ON "public"."author_question_upvotes" FOR
 
 
 
-CREATE POLICY "Users can delete own follows" ON "public"."follows" FOR DELETE USING (("auth"."uid"() = "follower_id"));
+CREATE POLICY "Users can delete own follows" ON "public"."follows" FOR DELETE USING ((( SELECT "auth"."uid"() AS "uid") = "follower_id"));
 
 
 
-CREATE POLICY "Users can insert own follows" ON "public"."follows" FOR INSERT WITH CHECK (("auth"."uid"() = "follower_id"));
+CREATE POLICY "Users can insert own follows" ON "public"."follows" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "follower_id"));
 
 
 
-CREATE POLICY "Users can like highlights" ON "public"."highlight_likes" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users can like highlights" ON "public"."highlight_likes" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -4400,11 +4399,11 @@ CREATE POLICY "Users can manage own sprints" ON "public"."discord_sprints" USING
 
 
 
-CREATE POLICY "Users can report posts" ON "public"."post_reports" FOR INSERT WITH CHECK (("auth"."uid"() = "reporter_id"));
+CREATE POLICY "Users can report posts" ON "public"."post_reports" FOR INSERT WITH CHECK ((( SELECT "auth"."uid"() AS "uid") = "reporter_id"));
 
 
 
-CREATE POLICY "Users manage close friends" ON "public"."close_friends" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage close friends" ON "public"."close_friends" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -4412,7 +4411,7 @@ CREATE POLICY "Users manage own RSVPs" ON "public"."club_meeting_rsvps" TO "auth
 
 
 
-CREATE POLICY "Users manage own challenges" ON "public"."challenges" USING (("auth"."uid"() = "creator_id"));
+CREATE POLICY "Users manage own challenges" ON "public"."challenges" USING ((( SELECT "auth"."uid"() AS "uid") = "creator_id"));
 
 
 
@@ -4420,7 +4419,7 @@ CREATE POLICY "Users manage own claims" ON "public"."author_claims" USING ((( SE
 
 
 
-CREATE POLICY "Users manage own comment reactions" ON "public"."passage_comment_reactions" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage own comment reactions" ON "public"."passage_comment_reactions" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -4428,11 +4427,7 @@ CREATE POLICY "Users manage own entries" ON "public"."giveaway_entries" USING ((
 
 
 
-CREATE POLICY "Users manage own favorites" ON "public"."user_favorites" USING (("auth"."uid"() = "user_id"));
-
-
-
-CREATE POLICY "Users manage own follows" ON "public"."follows" USING (("auth"."uid"() = "follower_id"));
+CREATE POLICY "Users manage own follows" ON "public"."follows" USING ((( SELECT "auth"."uid"() AS "uid") = "follower_id"));
 
 
 
@@ -4444,11 +4439,11 @@ CREATE POLICY "Users manage own post reactions" ON "public"."post_reactions" TO 
 
 
 
-CREATE POLICY "Users manage own reactions" ON "public"."club_post_reactions" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage own reactions" ON "public"."club_post_reactions" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users manage own streaks" ON "public"."reading_streaks" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage own streaks" ON "public"."reading_streaks" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -4460,59 +4455,59 @@ CREATE POLICY "Users manage own votes" ON "public"."club_poll_votes" TO "authent
 
 
 
-CREATE POLICY "Users manage their own diary" ON "public"."diary_entries" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage their own diary" ON "public"."diary_entries" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users manage their own likes" ON "public"."reading_list_likes" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage their own likes" ON "public"."reading_list_likes" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users manage their own lists" ON "public"."reading_lists" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users manage their own lists" ON "public"."reading_lists" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own book tags" ON "public"."user_book_tags" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own book tags" ON "public"."user_book_tags" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own bookmarks" ON "public"."bookmarks" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own bookmarks" ON "public"."bookmarks" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own chapter reactions" ON "public"."chapter_reactions" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own chapter reactions" ON "public"."chapter_reactions" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own commonplace" ON "public"."commonplace_book" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own commonplace" ON "public"."commonplace_book" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own commonplace entries" ON "public"."commonplace_entries" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own commonplace entries" ON "public"."commonplace_entries" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own favorites" ON "public"."user_favorites" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own favorites" ON "public"."user_favorites" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own quote cards" ON "public"."quote_cards" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own quote cards" ON "public"."quote_cards" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own reports" ON "public"."post_reports" USING (("auth"."uid"() = "reporter_id"));
+CREATE POLICY "Users own reports" ON "public"."post_reports" USING ((( SELECT "auth"."uid"() AS "uid") = "reporter_id"));
 
 
 
-CREATE POLICY "Users own saved posts" ON "public"."saved_posts" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own saved posts" ON "public"."saved_posts" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own user_challenges" ON "public"."user_challenges" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own user_challenges" ON "public"."user_challenges" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
-CREATE POLICY "Users own waitlist entries" ON "public"."club_waitlist" USING (("auth"."uid"() = "user_id"));
+CREATE POLICY "Users own waitlist entries" ON "public"."club_waitlist" USING ((( SELECT "auth"."uid"() AS "uid") = "user_id"));
 
 
 
@@ -4544,7 +4539,7 @@ CREATE POLICY "admins can update books" ON "public"."books" FOR UPDATE TO "authe
 
 
 
-CREATE POLICY "admins read notification log" ON "public"."admin_notification_log" FOR SELECT USING (("auth"."uid"() IN ( SELECT "profiles"."id"
+CREATE POLICY "admins read notification log" ON "public"."admin_notification_log" FOR SELECT USING ((( SELECT "auth"."uid"() AS "uid") IN ( SELECT "profiles"."id"
    FROM "public"."profiles"
   WHERE ("profiles"."is_admin" = true))));
 
@@ -5362,6 +5357,10 @@ GRANT ALL ON FUNCTION "private"."is_club_member"("p_club" "uuid", "p_user" "uuid
 GRANT ALL ON FUNCTION "private"."is_club_mod"("p_club" "uuid", "p_user" "uuid") TO "anon";
 GRANT ALL ON FUNCTION "private"."is_club_mod"("p_club" "uuid", "p_user" "uuid") TO "authenticated";
 GRANT ALL ON FUNCTION "private"."is_club_mod"("p_club" "uuid", "p_user" "uuid") TO "service_role";
+
+
+
+GRANT ALL ON FUNCTION "public"."count_duplicate_slugs"() TO "service_role";
 
 
 
