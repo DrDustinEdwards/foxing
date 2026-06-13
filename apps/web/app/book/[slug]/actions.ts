@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { checkAndAwardBadges } from '@/lib/badges'
+import { reportWriteError } from '@/lib/db-write'
 import {
   generateAndStoreDiscussionGuide,
   type DiscussionQuestion,
@@ -236,18 +237,24 @@ export async function togglePostReaction(
     .eq('reaction', reaction)
     .maybeSingle()
   if (existing) {
-    await admin
+    const { error } = await admin
       .from('post_reactions')
       .delete()
       .eq('post_id', postId)
       .eq('user_id', userId)
       .eq('reaction', reaction)
+    if (reportWriteError(error, { op: 'togglePostReaction.remove', table: 'post_reactions' })) {
+      return { ok: false, error: 'Could not update reaction.' }
+    }
   } else {
-    await admin.from('post_reactions').insert({
+    const { error } = await admin.from('post_reactions').insert({
       post_id: postId,
       user_id: userId,
       reaction,
     })
+    if (reportWriteError(error, { op: 'togglePostReaction.add', table: 'post_reactions' })) {
+      return { ok: false, error: 'Could not update reaction.' }
+    }
   }
   if (bookSlug && discussionId) {
     revalidatePath(`/book/${bookSlug}/discussions/${discussionId}`)

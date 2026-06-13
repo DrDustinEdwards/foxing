@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportWriteError } from '@/lib/db-write'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,12 +52,16 @@ export async function POST(request: NextRequest) {
       { status: 429 },
     )
   }
-  await admin
+  const { error: rateError } = await admin
     .from('ai_rate_limits')
     .upsert(
       { user_id: user.id, date: today, count: currentCount + 1 },
       { onConflict: 'user_id,date' },
     )
+  // Fail closed: an unmetered request would mean unlimited paid AI calls.
+  if (reportWriteError(rateError, { op: 'findNextBook.rateLimit', table: 'ai_rate_limits' })) {
+    return NextResponse.json({ error: 'temporarily_unavailable' }, { status: 503 })
+  }
 
   let body: Body
   try {

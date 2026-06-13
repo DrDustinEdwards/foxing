@@ -1,5 +1,6 @@
 import 'server-only'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { reportWriteError } from '@/lib/db-write'
 
 // XP awarded per badge slug. Keep in sync with badges seeded in the DB.
 const XP_BY_BADGE: Record<string, number> = {
@@ -255,18 +256,22 @@ export async function checkAndAwardBadges(
     awarded[awarded.length - 1] === 'week_streak'
   ) {
     // Reward the milestone with one streak freeze credit.
-    const { data: row } = await admin
+    const { data: row, error: freezeReadError } = await admin
       .from('reading_streaks')
       .select('streak_freeze_credits')
       .eq('user_id', userId)
       .maybeSingle()
-    const current =
-      (row as { streak_freeze_credits: number | null } | null)
-        ?.streak_freeze_credits ?? 0
-    await admin
-      .from('reading_streaks')
-      .update({ streak_freeze_credits: current + 1 })
-      .eq('user_id', userId)
+    // A failed read must not clobber existing credits with a reset-to-1 write.
+    if (!reportWriteError(freezeReadError, { op: 'checkAndAwardBadges.freezeCredit.read', table: 'reading_streaks' })) {
+      const current =
+        (row as { streak_freeze_credits: number | null } | null)
+          ?.streak_freeze_credits ?? 0
+      const { error: freezeError } = await admin
+        .from('reading_streaks')
+        .update({ streak_freeze_credits: current + 1 })
+        .eq('user_id', userId)
+      reportWriteError(freezeError, { op: 'checkAndAwardBadges.freezeCredit', table: 'reading_streaks' })
+    }
   }
   await tryAward('month_streak', async () => streak >= 30)
   await tryAward('year_streak', async () => streak >= 365)

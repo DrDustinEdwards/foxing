@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { bearerFromHeaders, verifySession } from '@/lib/discord-auth'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { assertActiveClubMember } from '@/lib/club-membership'
+import { reportWriteError } from '@/lib/db-write'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -56,11 +57,15 @@ export async function POST(request: NextRequest, props: { params: Promise<{ club
     return NextResponse.json({ error: 'invalid_option' }, { status: 400 })
   }
 
-  await admin
+  const { error: clearError } = await admin
     .from('club_poll_votes')
     .delete()
     .eq('user_id', session.userId)
     .in('option_id', optionIds)
+  // Inserting on top of a failed clear would double-count the vote.
+  if (reportWriteError(clearError, { op: 'discordVote.clearPrevious', table: 'club_poll_votes' })) {
+    return NextResponse.json({ error: 'vote_failed' }, { status: 500 })
+  }
 
   const { error } = await admin.from('club_poll_votes').insert({
     poll_id: body.poll_id,

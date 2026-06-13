@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { reportWriteError } from '@/lib/db-write'
 
 type ActionResult = { ok: true } | { ok: false; error: string }
 
@@ -134,10 +135,14 @@ export async function pickGiveawayWinners(
       .in('id', winnerIds)
     if (error) return { ok: false, error: error.message }
   }
-  await admin
+  const { error: markError } = await admin
     .from('giveaways')
     .update({ winner_picked_at: new Date().toISOString() })
     .eq('id', giveawayId)
+  // If this write fails the giveaway still looks open and winners could be re-picked.
+  if (reportWriteError(markError, { op: 'pickGiveawayWinners.markPicked', table: 'giveaways' })) {
+    return { ok: false, error: 'Winners were marked but the giveaway could not be closed. Retry.' }
+  }
   revalidatePath('/admin/giveaways')
   revalidatePath('/giveaways')
   revalidatePath(`/giveaways/${giveawayId}`)
