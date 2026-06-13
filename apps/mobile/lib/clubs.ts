@@ -294,6 +294,7 @@ export async function createClub(input: CreateClubInput): Promise<Club | null> {
       current_book_id: input.current_book_id ?? null,
       creator_id: user.id,
       visibility,
+      reading_pace: input.pace,
       slug,
     })
     .select()

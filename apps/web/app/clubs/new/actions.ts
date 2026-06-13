@@ -41,6 +41,12 @@ export async function createClub(formData: FormData): Promise<void> {
     String(formData.get('visibility') ?? 'public').trim() === 'private'
       ? 'private'
       : 'public'
+  // Match the vocabulary the web club reader + settings panel use
+  // (relaxed/moderate/intensive); default moderate.
+  const paceRaw = String(formData.get('reading_pace') ?? 'moderate').trim()
+  const reading_pace = ['relaxed', 'moderate', 'intensive'].includes(paceRaw)
+    ? paceRaw
+    : 'moderate'
 
   if (!name) throw new Error('A club name is required.')
 
@@ -58,6 +64,7 @@ export async function createClub(formData: FormData): Promise<void> {
       current_book_id: bookId,
       creator_id: userId,
       visibility,
+      reading_pace,
       slug,
     })
     .select('id, slug')

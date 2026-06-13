@@ -29,6 +29,9 @@ export function CreateClubForm() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [visibility, setVisibility] = useState<'public' | 'private'>('public')
+  const [pace, setPace] = useState<'relaxed' | 'moderate' | 'intensive'>(
+    'moderate',
+  )
   const [book, setBook] = useState<BookHit | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -49,6 +52,7 @@ export function CreateClubForm() {
     fd.set('name', name.trim())
     fd.set('description', description.trim())
     fd.set('visibility', visibility)
+    fd.set('reading_pace', pace)
     if (mode === 'book' && book) fd.set('book_id', book.id)
     try {
       await createClub(fd)
@@ -131,6 +135,21 @@ export function CreateClubForm() {
           />
         </div>
       </fieldset>
+
+      <label className="flex flex-col gap-1.5 font-dm-sans text-sm text-text-secondary">
+        <span>Reading pace</span>
+        <select
+          value={pace}
+          onChange={(e) =>
+            setPace(e.target.value as 'relaxed' | 'moderate' | 'intensive')
+          }
+          className="rounded-md border border-border-default bg-bg-surface px-3 py-2 text-text-primary"
+        >
+          <option value="relaxed">Relaxed</option>
+          <option value="moderate">Moderate</option>
+          <option value="intensive">Intensive</option>
+        </select>
+      </label>
 
       {error && (
         <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
