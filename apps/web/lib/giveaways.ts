@@ -1,4 +1,5 @@
 import 'server-only'
+import { cache } from 'react'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import type {
@@ -81,21 +82,39 @@ export async function fetchActiveGiveaways(
   }))
 }
 
+// Viewer-independent base row. cache() lets generateMetadata (which only needs
+// title/description) and the page render share one query per request instead of
+// each issuing its own full fetch.
+export const fetchGiveawayRow = cache(
+  async (
+    id: string,
+  ): Promise<
+    | (Giveaway & {
+        book: GiveawayWithMeta['book']
+        author: GiveawayWithMeta['author']
+      })
+    | null
+  > => {
+    const admin = createAdminClient()
+    const { data } = await admin
+      .from('giveaways')
+      .select(FULL_COLS)
+      .eq('id', id)
+      .maybeSingle()
+    if (!data) return null
+    return data as unknown as Giveaway & {
+      book: GiveawayWithMeta['book']
+      author: GiveawayWithMeta['author']
+    }
+  },
+)
+
 export async function fetchGiveawayById(
   id: string,
   viewerId: string | null,
 ): Promise<GiveawayWithMeta | null> {
-  const admin = createAdminClient()
-  const { data } = await admin
-    .from('giveaways')
-    .select(FULL_COLS)
-    .eq('id', id)
-    .maybeSingle()
-  if (!data) return null
-  const row = data as unknown as Giveaway & {
-    book: GiveawayWithMeta['book']
-    author: GiveawayWithMeta['author']
-  }
+  const row = await fetchGiveawayRow(id)
+  if (!row) return null
   const { counts, mine } = await fetchEntryStats([id], viewerId)
   return {
     ...row,
