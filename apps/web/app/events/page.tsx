@@ -5,6 +5,7 @@ import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchEventStates, fetchUpcomingEvents } from '@/lib/events'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
+import { safeJsonLd } from '@/lib/structured-data'
 import { EventCard } from './event-card'
 
 export const revalidate = 3600
@@ -30,7 +31,7 @@ export default async function EventsPage() {
     fetchEventStates(),
   ])
 
-  const itemListJsonLd = JSON.stringify({
+  const itemListJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     itemListElement: events.slice(0, 50).map((e, i) => ({

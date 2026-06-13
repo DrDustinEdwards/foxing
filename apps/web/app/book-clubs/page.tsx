@@ -7,6 +7,7 @@ import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { cn } from '@/lib/cn'
+import { safeJsonLd } from '@/lib/structured-data'
 import {
   type ExternalClub,
   fetchActiveClubs,
@@ -73,7 +74,7 @@ export default async function BookClubsPage() {
   const now = new Date()
   const month = monthName(now.getUTCMonth() + 1)
 
-  const breadcrumbJsonLd = JSON.stringify({
+  const breadcrumbJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [

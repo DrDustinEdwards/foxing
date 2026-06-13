@@ -22,6 +22,7 @@ import {
   renderJournalMarkdown,
 } from '@/lib/journal-markdown'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { safeJsonLd } from '@/lib/structured-data'
 import { ArrowLeftIcon, ArrowRightIcon } from '@/components/journal/Icons'
 import { ShareBar } from '@/components/journal/ShareBar'
 
@@ -414,13 +415,13 @@ function articleJsonLd(post: JournalPost): string {
       },
     },
   }
-  return JSON.stringify(data)
+  return safeJsonLd(data)
 }
 
 function faqJsonLd(
   pairs: Array<{ question: string; answer: string }>,
 ): string {
-  return JSON.stringify({
+  return safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: pairs.map(({ question, answer }) => ({
@@ -456,5 +457,5 @@ function breadcrumbJsonLd(post: JournalPost): string {
       },
     ],
   }
-  return JSON.stringify(data)
+  return safeJsonLd(data)
 }

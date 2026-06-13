@@ -14,6 +14,7 @@ import {
   fetchPickByClubSlugAndMonth,
   type MonthlyPicksRow,
 } from '@/lib/book-clubs'
+import { safeJsonLd } from '@/lib/structured-data'
 import { monthName, nextMonth, previousMonth } from '@/lib/month'
 import { resolveAffiliateLinks } from '@/lib/affiliate'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
@@ -202,7 +203,7 @@ export default async function ClubMonthlyPickPage(
     bookshop_url: pick.book.bookshop_url,
   })
 
-  const bookJsonLd = JSON.stringify({
+  const bookJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'Book',
     name: pick.book.title,
@@ -219,7 +220,7 @@ export default async function ClubMonthlyPickPage(
     isbn: pick.book.isbn13 ?? pick.book.isbn ?? undefined,
   })
 
-  const breadcrumbJsonLd = JSON.stringify({
+  const breadcrumbJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
@@ -244,7 +245,7 @@ export default async function ClubMonthlyPickPage(
     ],
   })
 
-  const faqJsonLd = JSON.stringify({
+  const faqJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     mainEntity: [

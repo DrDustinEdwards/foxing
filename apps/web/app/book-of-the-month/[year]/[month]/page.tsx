@@ -14,6 +14,7 @@ import {
   fetchPicksForMonthWithRatings,
 } from '@/lib/botm'
 import { monthName } from '@/lib/month'
+import { safeJsonLd } from '@/lib/structured-data'
 import { fetchBookReviews } from '@/lib/queries'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -156,7 +157,7 @@ export default async function BookOfMonthDetailPage(
     }),
   )
 
-  const breadcrumbJsonLd = JSON.stringify({
+  const breadcrumbJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
