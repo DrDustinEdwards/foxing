@@ -12,6 +12,7 @@ import {
   fetchAllPicksForClub,
   fetchClubBySlug,
 } from '@/lib/book-clubs'
+import { safeJsonLd } from '@/lib/structured-data'
 import { monthName } from '@/lib/month'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -91,7 +92,7 @@ export default async function ExternalBookClubPage(
   const stats = await buildClubStats(picks)
   const eras = club.eras && club.eras.length > 0 ? club.eras : null
 
-  const breadcrumbJsonLd = JSON.stringify({
+  const breadcrumbJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [

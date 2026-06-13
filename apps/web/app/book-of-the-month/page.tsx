@@ -10,6 +10,7 @@ import { WhereToRead } from '@/components/where-to-read'
 import { fetchPublishedPicksWithRatings } from '@/lib/botm'
 import { monthName } from '@/lib/month'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
+import { safeJsonLd } from '@/lib/structured-data'
 
 export const revalidate = 3600
 
@@ -77,7 +78,7 @@ export default async function BookOfMonthListPage() {
     byYear.set(p.year, existing)
   }
 
-  const breadcrumbJsonLd = JSON.stringify({
+  const breadcrumbJsonLd = safeJsonLd({
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
@@ -92,7 +93,7 @@ export default async function BookOfMonthListPage() {
   })
 
   const currentBookJsonLd = current
-    ? JSON.stringify({
+    ? safeJsonLd({
         '@context': 'https://schema.org',
         '@type': 'Book',
         name: current.book.title,
