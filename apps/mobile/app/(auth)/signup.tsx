@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Linking } from 'react-native'
+import { View, Text, TextInput, Pressable, ActivityIndicator, Linking } from 'react-native'
 import { Link } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+import { Screen } from '@/components/ui/screen'
 import { Info, X as XIcon, Check } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
@@ -134,10 +135,11 @@ export default function Signup() {
     usernameState.kind === 'invalid'
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1 px-8 justify-center"
+    <Screen>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 32 }}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
       >
         <View className="mb-10 items-center">
           <Text className="font-display text-4xl text-brand-text-light dark:text-brand-text-dark">
@@ -285,8 +287,8 @@ export default function Signup() {
           </View>
         </View>
         )}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </KeyboardAwareScrollView>
+    </Screen>
   )
 }
 
