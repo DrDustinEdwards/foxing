@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import {
-  View, Text, Modal, Pressable, ScrollView, TextInput, ActivityIndicator,
-  KeyboardAvoidingView, Platform,
+  View, Text, Pressable, ScrollView, TextInput, ActivityIndicator,
 } from 'react-native'
 import { X as XIcon } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { friendlyAiError, semanticSearch, type SemanticSearchResult } from '@/lib/claude'
@@ -71,17 +71,14 @@ export function SearchSheet({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
-      <Pressable className="flex-1 justify-end" onPress={handleClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl pt-4 pb-8 px-5 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '88%' }}
-        >
-          <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={{ flex: 1 }}
-          >
+    <SheetScaffold
+      visible={visible}
+      onClose={handleClose}
+      variant="bottom"
+      scroll={false}
+      maxHeight="88%"
+      contentContainerStyle={{ flex: 1, paddingHorizontal: 20 }}
+    >
             <View className="flex-row items-center justify-between mb-3">
               <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
                 Search
@@ -203,9 +200,6 @@ export function SearchSheet({
                 </Text>
               )}
             </ScrollView>
-          </KeyboardAvoidingView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }

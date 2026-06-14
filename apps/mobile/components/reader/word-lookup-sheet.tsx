@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react'
 import {
   View,
   Text,
-  Modal,
   Pressable,
   ActivityIndicator,
   ScrollView,
 } from 'react-native'
 import { X as XIcon } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { friendlyAiError, getWordAspect, lookupWord, type WordAspect } from '@/lib/claude'
 import { supabase } from '@/lib/supabase'
 import { reportWriteError } from '@/lib/db-write'
@@ -130,15 +130,13 @@ export function WordLookupSheet({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose} accessibilityLabel="Close word lookup">
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          accessibilityViewIsModal
-          accessibilityLabel={`Word lookup for ${word}`}
-          className="rounded-t-3xl px-6 pt-6 pb-10 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '85%' }}
-        >
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      contentContainerStyle={{ flex: 1, paddingHorizontal: 24 }}
+    >
           <View className="flex-row justify-between items-center mb-4">
             <Text className="font-display text-2xl text-brand-text-light dark:text-brand-text-dark">
               {word}
@@ -267,8 +265,6 @@ export function WordLookupSheet({
               </Text>
             ) : null}
           </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Modal, Pressable, ScrollView, ActivityIndicator } from 'react-native'
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
 import { X as XIcon, Dot } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { friendlyAiError, getCharacterMap, type CharacterEntry } from '@/lib/claude'
@@ -70,13 +71,14 @@ export function CharacterMapSheet({
   }
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
-      <Pressable className="flex-1 justify-end" onPress={handleClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl pt-4 pb-8 px-5 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '88%' }}
-        >
+    <SheetScaffold
+      visible={visible}
+      onClose={handleClose}
+      variant="bottom"
+      scroll={false}
+      maxHeight="88%"
+      contentContainerStyle={{ flex: 1, paddingHorizontal: 20 }}
+    >
           <View className="flex-row items-center justify-between mb-2">
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }} numberOfLines={1}>
@@ -181,8 +183,6 @@ export function CharacterMapSheet({
               })
             )}
           </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
