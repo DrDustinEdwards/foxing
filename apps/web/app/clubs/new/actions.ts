@@ -76,6 +76,10 @@ export async function createClub(
       visibility,
       reading_pace,
       slug,
+      // Start at 0: the club_member_count_trigger increments on the creator's
+      // membership insert below. Relying on the column DEFAULT (1) double-counts
+      // (1 default + 1 trigger = 2). See the default -> 0 migration note.
+      member_count: 0,
     })
     .select('id, slug')
     .single()
