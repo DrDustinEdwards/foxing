@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { View, Modal, Pressable, type StyleProp, type ViewStyle } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+import { KeyboardAwareScrollView, KeyboardStickyView } from 'react-native-keyboard-controller'
 
 // Shared sheet wrapper. Provides the one-and-only keyboard layer for sheets
 // (react-native-keyboard-controller's KeyboardAwareScrollView) plus a footer
@@ -31,6 +31,9 @@ interface SheetScaffoldProps {
   contentContainerStyle?: StyleProp<ViewStyle>
   // bottom variant only: cap the sheet height. Default '85%'.
   maxHeight?: number | `${number}%`
+  // Lift the footer above the keyboard (chat-style composers). Uses
+  // keyboard-controller's KeyboardStickyView -- still a single keyboard library.
+  stickyFooter?: boolean
 }
 
 const FOOTER_CLASS =
@@ -46,6 +49,7 @@ export function SheetScaffold({
   scroll = true,
   contentContainerStyle,
   maxHeight = '85%',
+  stickyFooter = false,
 }: SheetScaffoldProps) {
   const insets = useSafeAreaInsets()
 
@@ -66,7 +70,7 @@ export function SheetScaffold({
     </View>
   )
 
-  const footerNode = footer ? (
+  const footerView = footer ? (
     <View
       className={FOOTER_CLASS}
       style={{ paddingTop: 12, paddingHorizontal: 16, paddingBottom: insets.bottom + 12 }}
@@ -74,6 +78,13 @@ export function SheetScaffold({
       {footer}
     </View>
   ) : null
+
+  const footerNode =
+    footerView && stickyFooter ? (
+      <KeyboardStickyView>{footerView}</KeyboardStickyView>
+    ) : (
+      footerView
+    )
 
   if (variant === 'bottom') {
     return (
