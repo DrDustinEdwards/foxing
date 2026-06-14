@@ -9,11 +9,10 @@ import {
   Modal,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useFocusEffect, useRouter } from 'expo-router'
 import {
   Plus,
@@ -841,7 +840,6 @@ function AddBookSheet({
   onMatch: (bookId: string) => void
 }) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   // Two-step sheet: 'choose' shows the three actions; 'url' swaps in a text
   // input + lookup result. Keeping it inside the same modal avoids modal
   // stacking jank on Android.
@@ -890,31 +888,26 @@ function AddBookSheet({
   }, [lookupBusy, onMatch, url])
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 items-center justify-end"
-        style={{ backgroundColor: colors.overlay }}
-        onPress={onClose}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="w-full rounded-t-3xl pt-4 bg-bg-elevated-light dark:bg-bg-elevated-dark"
-          style={{ paddingBottom: insets.bottom + 24 }}
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 11,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            paddingHorizontal: 20,
+            marginBottom: 8,
+          }}
         >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              paddingHorizontal: 20,
-              marginBottom: 8,
-            }}
-          >
-            {mode === 'url' ? 'Add from URL' : 'Add a book'}
-          </Text>
-
+          {mode === 'url' ? 'Add from URL' : 'Add a book'}
+        </Text>
+      }
+    >
           {mode === 'choose' ? (
             <>
               <AddOption
@@ -1006,9 +999,7 @@ function AddBookSheet({
               </View>
             </View>
           )}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
@@ -1385,32 +1376,28 @@ function BulkShelfPicker({
   onPick: (status: UserBookStatus) => void | Promise<void>
 }) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 items-center justify-end"
-        style={{ backgroundColor: colors.overlay }}
-        onPress={onClose}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="w-full rounded-t-3xl pt-4 bg-bg-elevated-light dark:bg-bg-elevated-dark"
-          style={{ paddingBottom: insets.bottom + 24 }}
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 11,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            paddingHorizontal: 20,
+            marginBottom: 8,
+          }}
         >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              paddingHorizontal: 20,
-              marginBottom: 8,
-            }}
-          >
-            Move to shelf
-          </Text>
+          Move to shelf
+        </Text>
+      }
+    >
           {STATUS_SHELVES.map((s, i) => (
             <Pressable
               key={s.status}
@@ -1428,9 +1415,7 @@ function BulkShelfPicker({
               </Text>
             </Pressable>
           ))}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
@@ -1683,14 +1668,16 @@ function ReviewModal({
   onSaved: (review: string, isPublic: boolean) => void
 }) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   const [text, setText] = useState(row.review ?? '')
   const [isPublic, setIsPublic] = useState(!!row.review_is_public)
   const [saving, setSaving] = useState(false)
 
   return (
-    <Modal visible animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
+    <SheetScaffold
+      visible
+      onClose={onClose}
+      contentContainerStyle={{ padding: 16 }}
+      header={
         <View className="flex-row items-center justify-between px-3 py-2">
           <Pressable onPress={onClose} hitSlop={10} className="p-2">
             <XIcon color={colors.textPrimary} size={20} />
@@ -1700,49 +1687,9 @@ function ReviewModal({
           </Text>
           <View style={{ width: 36 }} />
         </View>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <View className="p-4">
-            <TextInput
-              value={text}
-              onChangeText={setText}
-              placeholder="280 chars max"
-              placeholderTextColor={colors.textTertiary}
-              maxLength={280}
-              multiline
-              style={{
-                fontFamily: Fonts.body,
-                fontSize: 15,
-                color: colors.textPrimary,
-                backgroundColor: colors.bgSurface,
-                borderColor: colors.borderSubtle,
-                borderWidth: 1,
-                borderRadius: 12,
-                padding: 12,
-                minHeight: 140,
-                textAlignVertical: 'top',
-              }}
-            />
-            <View
-              className="flex-row items-center justify-between mt-3 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
-                Public on my profile
-              </Text>
-              <Switch
-                value={isPublic}
-                onValueChange={setIsPublic}
-                trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
-              />
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-        <View
-          className="flex-row items-center justify-end px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ paddingBottom: insets.bottom + 12 }}
-        >
+      }
+      footer={
+        <View className="flex-row items-center justify-end">
           <Pressable
             onPress={async () => {
               setSaving(true)
@@ -1763,7 +1710,40 @@ function ReviewModal({
             )}
           </Pressable>
         </View>
-      </SafeAreaView>
-    </Modal>
+      }
+    >
+      <TextInput
+        value={text}
+        onChangeText={setText}
+        placeholder="280 chars max"
+        placeholderTextColor={colors.textTertiary}
+        maxLength={280}
+        multiline
+        style={{
+          fontFamily: Fonts.body,
+          fontSize: 15,
+          color: colors.textPrimary,
+          backgroundColor: colors.bgSurface,
+          borderColor: colors.borderSubtle,
+          borderWidth: 1,
+          borderRadius: 12,
+          padding: 12,
+          minHeight: 140,
+          textAlignVertical: 'top',
+        }}
+      />
+      <View
+        className="flex-row items-center justify-between mt-3 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
+      >
+        <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
+          Public on my profile
+        </Text>
+        <Switch
+          value={isPublic}
+          onValueChange={setIsPublic}
+          trackColor={{ false: colors.bgDisabled, true: colors.brandUi }}
+        />
+      </View>
+    </SheetScaffold>
   )
 }
