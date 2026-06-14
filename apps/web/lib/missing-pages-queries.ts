@@ -434,7 +434,7 @@ export async function fetchPublicLists(opts: {
   }))
 }
 
-async function fetchLikedReadingListIds(
+export async function fetchLikedReadingListIds(
   userId: string | null,
   listIds: string[],
 ): Promise<Set<string>> {

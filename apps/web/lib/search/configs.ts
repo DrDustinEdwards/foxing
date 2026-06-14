@@ -66,6 +66,37 @@ export const PEOPLE_FILTER_CONFIG: FilterBarConfig = {
 }
 
 /**
+ * Lists config. Text search over title/description + most-liked/newest sort.
+ * No facets. (/lists keeps its own card + per-viewer like button — it consumes
+ * the shared QUERY layer, not the shared result card. See the page comment.)
+ */
+export const LISTS_FILTER_CONFIG: FilterBarConfig = {
+  entity: 'list',
+  searchPlaceholder: 'Search lists',
+  defaultSort: 'most_liked',
+  sorts: [
+    { value: 'most_liked', label: 'Most liked' },
+    { value: 'newest', label: 'Newest' },
+  ],
+  facets: [],
+}
+
+/**
+ * Quotes config. Text search over the highlight text/note + most-liked/newest
+ * sort. No facets. (Per-viewer like button stays on the page; shared query only.)
+ */
+export const QUOTES_FILTER_CONFIG: FilterBarConfig = {
+  entity: 'quote',
+  searchPlaceholder: 'Search quotes, books, authors',
+  defaultSort: 'newest',
+  sorts: [
+    { value: 'newest', label: 'Newest' },
+    { value: 'most_liked', label: 'Most liked' },
+  ],
+  facets: [],
+}
+
+/**
  * Clubs config. Genre options come from real genre_tags data (empty hides the
  * facet). URL token `genre_tag` maps to ClubFilters.genreTag via filterKey.
  */

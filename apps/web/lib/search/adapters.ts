@@ -218,7 +218,7 @@ const personAdapter: EntityAdapter<'person'> = {
 // ── list ────────────────────────────────────────────────────────────────────
 
 const LIST_COLS =
-  'id, slug, title, description, cover_url, is_public, is_featured, like_count, created_at'
+  'id, slug, title, description, cover_url, is_public, is_featured, like_count, created_at, user_id, creator:user_id(username, display_name, avatar_url)'
 
 const listAdapter: EntityAdapter<'list'> = {
   entity: 'list',
