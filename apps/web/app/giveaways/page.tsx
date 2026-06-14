@@ -2,38 +2,47 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { fetchActiveGiveaways, type GiveawayKind } from '@/lib/giveaways'
+import { FilterBar } from '@/components/search/filter-bar'
+import { GIVEAWAYS_FILTER_CONFIG } from '@/lib/search/configs'
+import {
+  fetchActiveGiveaways,
+  fetchEndedGiveaways,
+  type GiveawayKind,
+} from '@/lib/giveaways'
+import { buildGiveawaysMetadata } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
-import { cn } from '@/lib/cn'
 
 export const revalidate = 60
 
-const FILTERS: Array<{ id: GiveawayKind | 'all'; label: string }> = [
-  { id: 'all', label: 'All' },
-  { id: 'digital', label: 'Digital' },
-  { id: 'physical', label: 'Physical' },
-]
+export const metadata: Metadata = buildGiveawaysMetadata()
 
-export const metadata: Metadata = {
-  title: 'Book giveaways · Foxing',
-  description: 'Enter to win books from verified authors on Foxing.',
+// /giveaways is NOT a federated search entity (see GIVEAWAYS_FILTER_CONFIG). It
+// reuses the shared FilterBar UI primitive for URL-synced type/status facets but
+// runs its OWN query -- giveaways are transactional, not catalog content, and
+// must not enter the universal search palette. Do not migrate this to
+// searchPageData; there is deliberately no giveaway adapter.
+
+function firstParam(v: string | string[] | undefined): string | undefined {
+  return Array.isArray(v) ? v[0] : v
 }
 
-export default async function GiveawaysPage(
-  props: {
-    searchParams: Promise<{ kind?: string }>
-  }
-) {
-  const searchParams = await props.searchParams;
-  const filter = FILTERS.find((f) => f.id === searchParams.kind)?.id ?? 'all'
-  const [viewerId] = await Promise.all([
-    getAuthedUserId(),
-  ])
-  const kindFilter = filter === 'all' ? undefined : (filter as GiveawayKind)
-  const giveaways = await fetchActiveGiveaways(viewerId, kindFilter)
+export default async function GiveawaysPage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const searchParams = await props.searchParams
+  const kindRaw = firstParam(searchParams.kind)
+  const kind: GiveawayKind | undefined =
+    kindRaw === 'digital' || kindRaw === 'physical' ? kindRaw : undefined
+  const ended = firstParam(searchParams.status) === 'ended'
+
+  const viewerId = await getAuthedUserId()
+  const giveaways = ended
+    ? await fetchEndedGiveaways(viewerId, kind)
+    : await fetchActiveGiveaways(viewerId, kind)
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -49,30 +58,28 @@ export default async function GiveawaysPage(
             </p>
           </header>
 
-          <nav
-            aria-label="Giveaway filters"
-            className="mt-6 flex flex-wrap gap-1 border-b border-border-subtle"
-          >
-            {FILTERS.map((f) => (
-              <Link
-                key={f.id}
-                href={f.id === 'all' ? '/giveaways' : `/giveaways?kind=${f.id}`}
-                className={cn(
-                  '-mb-px border-b-2 px-4 py-2 font-dm-sans text-sm transition-colors',
-                  filter === f.id
-                    ? 'border-brand-ui text-text-primary'
-                    : 'border-transparent text-text-tertiary hover:text-text-primary',
-                )}
-              >
-                {f.label}
-              </Link>
-            ))}
-          </nav>
+          <div className="mt-6">
+            <FilterBar config={GIVEAWAYS_FILTER_CONFIG} />
+          </div>
 
           {giveaways.length === 0 ? (
-            <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">
-              No active giveaways right now.
-            </p>
+            <div className="mt-10">
+              <EmptyState
+                heading={
+                  ended
+                    ? 'No ended giveaways match those filters.'
+                    : 'No active giveaways right now.'
+                }
+                action={
+                  <Link
+                    href="/giveaways"
+                    className="font-dm-sans text-sm text-brand-text hover:underline"
+                  >
+                    See active giveaways
+                  </Link>
+                }
+              />
+            </div>
           ) : (
             <ul className="mt-8 grid gap-4 md:grid-cols-2">
               {giveaways.map((g) => (
@@ -116,7 +123,8 @@ export default async function GiveawaysPage(
                     </div>
                   </div>
                   <p className="font-dm-mono text-xs text-text-tertiary">
-                    Ends {new Date(g.deadline).toLocaleString('en-US')}
+                    {ended ? 'Ended ' : 'Ends '}
+                    {new Date(g.deadline).toLocaleString('en-US')}
                   </p>
                 </li>
               ))}

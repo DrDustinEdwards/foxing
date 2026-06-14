@@ -1080,6 +1080,32 @@ export function buildListsIndexMetadata(): Metadata {
   }
 }
 
+// --- /giveaways ---
+
+export function buildGiveawaysMetadata(): Metadata {
+  const title = 'Book Giveaways on Foxing'
+  const description =
+    'Enter to win books from verified authors on Foxing. Filter active and ended giveaways by digital or physical prizes.'
+  const url = `${BASE_URL}/giveaways`
+  return {
+    title: clampTitle(title),
+    description: clampDescription(description),
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      title: clampTitle(title),
+      description: clampDescription(description),
+      url,
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: 'summary',
+      title: clampTitle(title),
+      description: clampDescription(description),
+    },
+  }
+}
+
 // --- /book-clubs/picks ---
 
 export function buildPicksIndexMetadata(): Metadata {

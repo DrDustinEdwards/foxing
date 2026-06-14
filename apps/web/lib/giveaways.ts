@@ -151,6 +151,40 @@ export async function fetchEndedGiveawaysForAdmin(): Promise<GiveawayWithMeta[]>
   }))
 }
 
+/** Public listing of ended giveaways (deadline passed), newest-ended first. */
+export async function fetchEndedGiveaways(
+  viewerId: string | null,
+  kind?: GiveawayKind,
+): Promise<GiveawayWithMeta[]> {
+  const admin = createAdminClient()
+  const nowIso = new Date().toISOString()
+  let query = admin
+    .from('giveaways')
+    .select(FULL_COLS)
+    .lte('deadline', nowIso)
+    .order('deadline', { ascending: false })
+    .limit(60)
+  if (kind) query = query.eq('kind', kind)
+  const { data } = await query
+  const rows =
+    (data as unknown as Array<
+      Giveaway & {
+        book: GiveawayWithMeta['book']
+        author: GiveawayWithMeta['author']
+      }
+    > | null) ?? []
+  if (rows.length === 0) return []
+  const { counts, mine } = await fetchEntryStats(
+    rows.map((r) => r.id),
+    viewerId,
+  )
+  return rows.map((r) => ({
+    ...r,
+    entry_count: counts.get(r.id) ?? 0,
+    viewer_entered: mine.has(r.id),
+  }))
+}
+
 export async function fetchGiveawaysByAuthor(
   authorUserId: string,
 ): Promise<Giveaway[]> {

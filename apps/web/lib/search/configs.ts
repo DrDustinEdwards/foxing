@@ -128,6 +128,42 @@ export function buildClubsFilterConfig(
 }
 
 /**
+ * Giveaways config. /giveaways is NOT a federated search entity (it is excluded
+ * from the Layer 1 entity list by design -- giveaways are transactional, not
+ * catalog content, and must not enter the universal palette). It reuses the
+ * FilterBar UI primitive for URL-synced type/status facets while the page runs
+ * its own giveaway query. No `entity`, no free-text search, no sort.
+ */
+export const GIVEAWAYS_FILTER_CONFIG: FilterBarConfig = {
+  searchPlaceholder: '',
+  showSearch: false,
+  defaultSort: '',
+  sorts: [],
+  facets: [
+    {
+      type: 'select',
+      key: 'kind',
+      label: 'Type',
+      param: 'kind',
+      options: [
+        { value: 'digital', label: 'Digital' },
+        { value: 'physical', label: 'Physical' },
+      ],
+    },
+    {
+      type: 'select',
+      key: 'status',
+      label: 'Status',
+      param: 'status',
+      options: [
+        { value: 'active', label: 'Active' },
+        { value: 'ended', label: 'Ended' },
+      ],
+    },
+  ],
+}
+
+/**
  * Picks config (/book-clubs/picks). Text search over the embedded book
  * title/author, with year / club / era facets. Year + club options come from
  * real data; era uses the canonical lib/foxing ERAS (filters book.publication_year
