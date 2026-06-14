@@ -46,7 +46,12 @@ export interface SortConfig {
 }
 
 export interface FilterBarConfig {
-  entity: SearchEntity
+  /** Federated entity this config queries. Optional: pages that are NOT a
+   * federated search entity (e.g. /giveaways) reuse the FilterBar *UI* primitive
+   * for URL-synced facets while running their own data query. The query side
+   * (paramsToSearch / searchPageData) takes the entity separately, so this field
+   * is only documentary and is unused by the FilterBar component itself. */
+  entity?: SearchEntity
   /** Placeholder for the text input. */
   searchPlaceholder: string
   /** Whether to render the free-text input at all (some pages are facet-only). */
