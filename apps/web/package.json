@@ -29,6 +29,7 @@
     "@tanstack/react-query": "^5.101.0",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
+    "cmdk": "^1.1.1",
     "marked": "^18.0.5",
     "next": "^16.2.4",
     "next-themes": "^0.3.0",

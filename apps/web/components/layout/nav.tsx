@@ -21,6 +21,7 @@ import {
   WandIcon,
 } from '@/components/icons'
 import { cn } from '@/lib/cn'
+import { openCommandPalette } from '@/components/search/command-palette'
 import type { MenuStats } from '@/lib/user-queries-types'
 
 interface NavUser {
@@ -222,13 +223,14 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
         </ul>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/search"
+          <button
+            type="button"
+            onClick={() => openCommandPalette()}
             className="inline-flex h-9 w-9 items-center justify-center rounded-md text-text-secondary hover:bg-bg-hover"
             aria-label="Search"
           >
             <SearchIcon size={18} />
-          </Link>
+          </button>
 
           <ThemeToggle className="inline-flex" />
 
