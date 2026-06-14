@@ -7,12 +7,10 @@ import {
   ActivityIndicator,
   Share,
   TextInput,
-  Modal,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Screen } from '@/components/ui/screen'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useRouter } from 'expo-router'
 import { CaretLeft, Plus, ShareNetwork, Trash, Eye, EyeSlash } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
@@ -160,7 +158,7 @@ export default function CommonplaceScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <View className="flex-row items-center px-3 py-2">
         <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
           <CaretLeft color={colors.textPrimary} size={22} />
@@ -309,17 +307,11 @@ export default function CommonplaceScreen() {
         </ScrollView>
       )}
 
-      <Modal
+      <SheetScaffold
         visible={addOpen}
-        animationType="slide"
-        onRequestClose={() => setAddOpen(false)}
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          >
+        onClose={() => setAddOpen(false)}
+        contentContainerStyle={{ padding: 16, gap: 12 }}
+        header={
           <View className="flex-row items-center px-3 py-2">
             <Pressable onPress={() => setAddOpen(false)} hitSlop={10} className="p-2">
               <CaretLeft color={colors.textPrimary} size={22} />
@@ -356,7 +348,8 @@ export default function CommonplaceScreen() {
               </Text>
             </Pressable>
           </View>
-          <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+        }
+      >
             <TextInput
               value={passage}
               onChangeText={setPassage}
@@ -435,10 +428,7 @@ export default function CommonplaceScreen() {
                 {isPublic ? 'Public on profile' : 'Private to you'}
               </Text>
             </Pressable>
-          </ScrollView>
-          </KeyboardAvoidingView>
-        </SafeAreaView>
-      </Modal>
-    </SafeAreaView>
+      </SheetScaffold>
+    </Screen>
   )
 }
