@@ -97,7 +97,7 @@ export function Footer() {
             © {year} Foxing · Built for readers
           </p>
           <p className="font-dm-mono text-[0.6875rem] text-text-tertiary">
-            No ads. No algorithms selling you books.
+            1,400+ classic books, free.
           </p>
         </div>
       </div>

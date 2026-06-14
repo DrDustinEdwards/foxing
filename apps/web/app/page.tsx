@@ -240,7 +240,7 @@ function Hero() {
             </Link>
           </div>
           <p className="mt-1 font-dm-sans text-xs text-text-tertiary">
-            No ads. No algorithms selling you books.
+            Free to read. The classics, properly formatted for your phone.
           </p>
         </div>
       </PageWrapper>
@@ -265,8 +265,7 @@ function ValueProps() {
           heading="Read with your friends."
         >
           Book clubs that move at a real pace. Inline passage comments tied
-          to the line that prompted them. A reading diary that feels like
-          yours, not a leaderboard.
+          to the line that prompted them. A reading diary that's yours to keep.
         </ValueColumn>
         <ValueColumn
           icon={<CompassIcon size={28} />}

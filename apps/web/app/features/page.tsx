@@ -458,8 +458,7 @@ export default function FeaturesPage() {
             <Prose>
               Public reading profiles. Inline passage comments tied to the
               exact line that prompted them. Book clubs with chapter-by-chapter
-              discussions. The social layer is built around the books, not
-              engagement metrics.
+              discussions. The social layer is built around the books.
             </Prose>
 
             <Subgroup
