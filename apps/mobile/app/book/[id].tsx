@@ -7,11 +7,11 @@ import {
   Image,
   ActivityIndicator,
   Share,
-  Modal,
   Alert,
   TextInput,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
@@ -1747,26 +1747,28 @@ function RecommendToFriendSheet({
   )
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '80%' }}
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      maxHeight="80%"
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 12,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            paddingHorizontal: 20,
+            marginBottom: 8,
+          }}
         >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 12,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              paddingHorizontal: 20,
-              marginBottom: 8,
-            }}
-          >
-            Recommend to a friend
-          </Text>
+          Recommend to a friend
+        </Text>
+      }
+    >
           <View style={{ paddingHorizontal: 20, marginBottom: 12 }}>
             <Text
               style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textSecondary }}
@@ -1875,9 +1877,7 @@ function RecommendToFriendSheet({
               })}
             </ScrollView>
           )}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
@@ -1930,25 +1930,27 @@ function BottomSheetMenu({
 }) {
   const colors = useColors()
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 12,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            paddingHorizontal: 20,
+            marginBottom: 8,
+          }}
         >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 12,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              paddingHorizontal: 20,
-              marginBottom: 8,
-            }}
-          >
-            {title}
-          </Text>
+          {title}
+        </Text>
+      }
+    >
           {items.map((item, i) => (
             <Pressable
               key={item.id}
@@ -1983,9 +1985,7 @@ function BottomSheetMenu({
               </Text>
             </Pressable>
           ))}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
@@ -2006,17 +2006,14 @@ function PauseNoteModal({
 }) {
   const colors = useColors()
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onCancel}>
-      <Pressable
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: colors.overlay }}
-        onPress={onCancel}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          accessibilityViewIsModal
-          className="w-full p-5 rounded-2xl bg-bg-elevated-light dark:bg-bg-elevated-dark"
-        >
+    <SheetScaffold
+      visible={visible}
+      onClose={onCancel}
+      variant="bottom"
+      stickyFooter
+      contentContainerStyle={{ paddingHorizontal: 20 }}
+      header={
+        <View style={{ paddingHorizontal: 20 }}>
           <Text
             style={{
               fontFamily: Fonts.displayBold,
@@ -2037,6 +2034,34 @@ function PauseNoteModal({
           >
             Why are you pausing? (optional)
           </Text>
+        </View>
+      }
+      footer={
+        <View className="flex-row justify-end" style={{ gap: 10 }}>
+          <Pressable
+            onPress={onCancel}
+            accessibilityRole="button"
+            accessibilityLabel="Cancel"
+            className="px-4 py-2"
+          >
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
+              Cancel
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={onConfirm}
+            accessibilityRole="button"
+            accessibilityLabel="Pause book"
+            className="px-4 py-2 rounded-full"
+            style={{ backgroundColor: colors.brandUi }}
+          >
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+              Pause
+            </Text>
+          </Pressable>
+        </View>
+      }
+    >
           <TextInput
             value={note}
             onChangeText={onChangeNote}
@@ -2060,31 +2085,6 @@ function PauseNoteModal({
               marginBottom: 12,
             }}
           />
-          <View className="flex-row justify-end" style={{ gap: 10 }}>
-            <Pressable
-              onPress={onCancel}
-              accessibilityRole="button"
-              accessibilityLabel="Cancel"
-              className="px-4 py-2"
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
-                Cancel
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={onConfirm}
-              accessibilityRole="button"
-              accessibilityLabel="Pause book"
-              className="px-4 py-2 rounded-full"
-              style={{ backgroundColor: colors.brandUi }}
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Pause
-              </Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
