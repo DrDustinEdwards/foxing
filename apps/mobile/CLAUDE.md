@@ -30,6 +30,17 @@ in this directory.
 After changing `tailwind.config.js` or NativeWind tokens, restart with
 `expo start --clear`. Metro caches Tailwind output aggressively.
 
+## Layout primitives
+
+All mobile screens use `<Screen>` (`components/ui/screen.tsx`); all sheets use
+`<SheetScaffold>` (`components/ui/sheet-scaffold.tsx`). Keyboard handling is
+`react-native-keyboard-controller` only (`KeyboardProvider` is mounted at the
+app root). Never hand-roll `SafeAreaView`/`edges`/`KeyboardAvoidingView` or
+manual `useSafeAreaInsets` padding in a screen or sheet -- the primitives own
+the safe-area insets and the single keyboard layer. Never nest a `ScrollView`
+inside `SheetScaffold` (its `KeyboardAwareScrollView` is the only scroller; pass
+`scroll={false}` for fixed content).
+
 ## TypeScript
 
 TypeScript throughout. No plain `.js` files. Functional components only.
