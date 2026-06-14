@@ -6,14 +6,12 @@ import {
   ScrollView,
   Image,
   ActivityIndicator,
-  Modal,
   TextInput,
   TextInput as RNTextInput,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router'
 import {
   CaretLeft,
@@ -991,7 +989,6 @@ function NewThreadSheet({
   onPosted: (threadId: string) => void
 }) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   const [title, setTitle] = useState('')
   const [opening, setOpening] = useState('')
   const [chapter, setChapter] = useState(defaultChapter)
@@ -1023,8 +1020,11 @@ function NewThreadSheet({
   }, [busy, chapter, clubId, hasSpoilers, onPosted, opening, title])
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      header={
         <View className="flex-row items-center justify-between px-3 py-2">
           <Pressable onPress={onClose} hitSlop={10} className="p-2">
             <XIcon color={colors.textPrimary} size={20} />
@@ -1034,14 +1034,29 @@ function NewThreadSheet({
           </Text>
           <View style={{ width: 36 }} />
         </View>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      }
+      footer={
+        <View className="flex-row items-center justify-end">
+          <Pressable
+            onPress={post}
+            disabled={!title.trim() || busy}
+            className="px-5 py-2 rounded-full"
+            style={{
+              backgroundColor: title.trim() ? colors.brandUi : colors.bgDisabled,
+              opacity: busy ? 0.7 : 1,
+            }}
           >
+            {busy ? (
+              <ActivityIndicator color={colors.textOnBrand} size="small" />
+            ) : (
+              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+                Post
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      }
+    >
             <Text style={fieldLabelStyle(colors)}>Title</Text>
             <TextInput
               value={title}
@@ -1081,32 +1096,7 @@ function NewThreadSheet({
                 trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
               />
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-        <View
-          className="flex-row items-center justify-end px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ paddingBottom: insets.bottom + 12 }}
-        >
-          <Pressable
-            onPress={post}
-            disabled={!title.trim() || busy}
-            className="px-5 py-2 rounded-full"
-            style={{
-              backgroundColor: title.trim() ? colors.brandUi : colors.bgDisabled,
-              opacity: busy ? 0.7 : 1,
-            }}
-          >
-            {busy ? (
-              <ActivityIndicator color={colors.textOnBrand} size="small" />
-            ) : (
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Post
-              </Text>
-            )}
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
