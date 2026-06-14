@@ -153,9 +153,9 @@ export interface ClubPost {
   id: string
   thread_id: string
   parent_post_id: string | null
-  user_id: string
-  body: string
-  has_spoilers: boolean
+  author_id: string
+  content: string
+  has_spoiler: boolean
   created_at: string
   author?: {
     id: string
@@ -435,7 +435,7 @@ export async function fetchPosts(threadId: string): Promise<ClubPost[]> {
 
   const { data, error } = await supabase
     .from('club_posts')
-    .select('*, author:profiles!user_id(id, display_name, username, avatar_url)')
+    .select('*, author:profiles!author_id(id, display_name, username, avatar_url)')
     .eq('thread_id', threadId)
     .order('created_at', { ascending: true })
   if (error) {
@@ -481,14 +481,14 @@ export async function createPost(input: {
   const insertPayload = {
     thread_id: input.threadId,
     parent_post_id: input.parentPostId ?? null,
-    user_id: user.id,
-    body: input.body,
-    has_spoilers: !!input.hasSpoilers,
+    author_id: user.id,
+    content: input.body,
+    has_spoiler: !!input.hasSpoilers,
   }
   const { data, error } = await supabase
     .from('club_posts')
     .insert(insertPayload)
-    .select('*, author:profiles!user_id(id, display_name, username, avatar_url)')
+    .select('*, author:profiles!author_id(id, display_name, username, avatar_url)')
     .single()
   if (error) {
     console.warn('[clubs] createPost failed:', error.message)
@@ -530,7 +530,7 @@ export async function getClubStats(clubId: string): Promise<ClubStats> {
     // client-side from the row set so RLS plays nicely.
     supabase
       .from('club_posts')
-      .select('id, user_id, thread:club_threads!thread_id(club_id), author:profiles!user_id(display_name, username)')
+      .select('id, author_id, thread:club_threads!thread_id(club_id), author:profiles!author_id(display_name, username)')
       .eq('thread.club_id', clubId)
       .limit(1000),
     // Top poster, same set used for the count, processed in code.
@@ -539,7 +539,7 @@ export async function getClubStats(clubId: string): Promise<ClubStats> {
   void topPosterRes
   type PR = {
     id: string
-    user_id: string
+    author_id: string
     thread: { club_id: string } | Array<{ club_id: string }> | null
     author: { display_name: string | null; username: string | null }
       | Array<{ display_name: string | null; username: string | null }>
@@ -551,9 +551,9 @@ export async function getClubStats(clubId: string): Promise<ClubStats> {
   })
   const tally = new Map<string, { count: number; profile: { display_name: string | null; username: string | null } | null }>()
   for (const p of posts) {
-    const cur = tally.get(p.user_id)
+    const cur = tally.get(p.author_id)
     const profile = Array.isArray(p.author) ? p.author[0] ?? null : p.author
-    tally.set(p.user_id, {
+    tally.set(p.author_id, {
       count: (cur?.count ?? 0) + 1,
       profile: cur?.profile ?? profile,
     })
@@ -759,12 +759,12 @@ export async function toggleReaction(postId: string, emoji: string): Promise<boo
   ;(async () => {
     const { data: post } = await supabase
       .from('club_posts')
-      .select('user_id, thread_id, thread:club_threads!thread_id(club_id, title)')
+      .select('author_id, thread_id, thread:club_threads!thread_id(club_id, title)')
       .eq('id', postId)
       .maybeSingle()
     const p = post as
       | {
-          user_id: string
+          author_id: string
           thread_id: string
           thread:
             | { club_id: string; title: string }
@@ -772,10 +772,10 @@ export async function toggleReaction(postId: string, emoji: string): Promise<boo
             | null
         }
       | null
-    if (!p || p.user_id === user.id) return
+    if (!p || p.author_id === user.id) return
     const thread = Array.isArray(p.thread) ? p.thread[0] : p.thread
     await createNotification(
-      p.user_id,
+      p.author_id,
       'post_reaction',
       `Someone reacted ${emoji}`,
       thread?.title ? `On "${thread.title}"` : null,

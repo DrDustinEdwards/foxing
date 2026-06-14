@@ -106,7 +106,7 @@ export default function UserProfileScreen() {
         .order('started_at', { ascending: false, nullsFirst: false })
         .limit(1),
       supabase
-        .from('commonplace_entries')
+        .from('commonplace_book')
         .select('id, passage_text, book:books(id, title, author)')
         .eq('user_id', id)
         .eq('is_public', true)

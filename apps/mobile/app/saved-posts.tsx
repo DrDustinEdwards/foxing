@@ -52,7 +52,7 @@ export default function SavedPostsScreen() {
     const { data } = await supabase
       .from('saved_posts')
       .select(
-        'post_id, saved_at, post:club_posts!post_id(id, body, created_at, thread_id, thread:club_threads!thread_id(id, title, club_id), author:profiles!user_id(display_name, username))',
+        'post_id, saved_at, post:club_posts!post_id(id, content, created_at, thread_id, thread:club_threads!thread_id(id, title, club_id), author:profiles!author_id(display_name, username))',
       )
       .eq('user_id', user.id)
       .order('saved_at', { ascending: false })
@@ -68,7 +68,7 @@ export default function SavedPostsScreen() {
         saved_at: String(r.saved_at),
         post: {
           id: String(post.id ?? ''),
-          body: String(post.body ?? ''),
+          body: String(post.content ?? ''),
           created_at: String(post.created_at ?? ''),
           thread_id: String(post.thread_id ?? ''),
           thread: thread
