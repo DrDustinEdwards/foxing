@@ -25,9 +25,8 @@ export default function AboutPage() {
           <p className="mt-4 font-source-serif-4 text-base text-text-secondary">
             The catalog is public-domain literature, formatted properly for
             a phone. The AI explains words and passages in context, without
-            taking you out of the book. The social layer is small on purpose.
-            No follower counts on display. No infinite scroll designed to
-            keep you off the book.
+            taking you out of the book. The social layer is small on purpose,
+            built for talking about books with the people who read them.
           </p>
           <p className="mt-4 font-source-serif-4 text-base text-text-secondary">
             Built by Dustin Edwards. One person, one inbox. Email
