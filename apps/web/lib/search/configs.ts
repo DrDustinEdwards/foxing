@@ -187,9 +187,14 @@ export const GIVEAWAYS_FILTER_CONFIG: FilterBarConfig = {
 
 /**
  * Picks config (/book-clubs/picks). Text search over the embedded book
- * title/author, with year / club / era facets. Year + club options come from
- * real data; era uses the canonical lib/foxing ERAS (filters book.publication_year
- * via the pick adapter's inner-joined book). URL `club` maps to PickFilters.clubId.
+ * title/author, with year + club facets (both from real data). URL `club` maps
+ * to PickFilters.clubId.
+ *
+ * NOTE: no era facet. The pick adapter supports `era` (filtering the inner-joined
+ * book.publication_year), but pick books' publication_year is essentially
+ * unpopulated (only a handful of 888 picks have it, all post-2000 -- outside the
+ * pre-1800..mid-1900s ERAS buckets), so every era option would return 0 results.
+ * Surface era here once publication_year is backfilled for the pick catalog.
  */
 export function buildPicksFilterConfig(
   yearOptions: FacetOption[],
@@ -228,14 +233,6 @@ export function buildPicksFilterConfig(
             },
           ]
         : []),
-      {
-        type: 'select' as const,
-        key: 'era',
-        label: 'Era',
-        param: 'era',
-        filterKey: 'era',
-        options: ERAS.map((e) => ({ value: e.value, label: e.label })),
-      },
     ],
   }
 }
