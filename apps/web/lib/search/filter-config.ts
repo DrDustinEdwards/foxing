@@ -19,6 +19,10 @@ export interface ChoiceFacet {
   label: string
   /** URL search param this facet reads/writes. */
   param: string
+  /** Filter object key for the adapter (defaults to `param`). Use when the
+   * URL token and the typed filter key differ, e.g. URL `genre_tag` ->
+   * ClubFilters.genreTag. */
+  filterKey?: string
   options: FacetOption[]
   /** Allow multiple selections (chips only). */
   multiple?: boolean
@@ -30,6 +34,7 @@ export interface RangeFacet {
   key: string
   label: string
   param: string
+  filterKey?: string
   options: FacetOption[]
 }
 
@@ -89,14 +94,15 @@ export function paramsToSearch<E extends SearchEntity>(
   for (const facet of config.facets) {
     const raw = searchParams[facet.param]
     if (raw == null) continue
+    const key = facet.filterKey ?? facet.param
     if (facet.type === 'chips' && facet.multiple) {
       const values = Array.isArray(raw) ? raw : [raw]
       const valid = values.filter((v) => facet.options.some((o) => o.value === v))
-      if (valid.length) filters[facet.param] = valid
+      if (valid.length) filters[key] = valid
     } else {
       const value = first(raw)
       if (value && facet.options.some((o) => o.value === value)) {
-        filters[facet.param] = value
+        filters[key] = value
       }
     }
   }

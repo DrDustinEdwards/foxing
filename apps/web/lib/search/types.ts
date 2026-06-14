@@ -29,12 +29,8 @@ export function isSearchEntity(value: string): value is SearchEntity {
 // `era` and `length` are named buckets resolved to numeric ranges in the
 // adapter, so the URL/UI stays stable even if the underlying thresholds move.
 
-export type EraBucket =
-  | 'ancient'
-  | 'early-modern'
-  | 'nineteenth'
-  | 'twentieth'
-  | 'contemporary'
+// Tokens match lib/foxing ERAS so existing indexed /books?era=… URLs resolve.
+export type EraBucket = 'pre-1800' | '1800s' | 'early-1900s' | 'mid-1900s'
 
 export type LengthBucket = 'short' | 'medium' | 'long'
 
