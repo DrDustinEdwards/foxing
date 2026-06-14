@@ -126,3 +126,58 @@ export function buildClubsFilterConfig(
       : [],
   }
 }
+
+/**
+ * Picks config (/book-clubs/picks). Text search over the embedded book
+ * title/author, with year / club / era facets. Year + club options come from
+ * real data; era uses the canonical lib/foxing ERAS (filters book.publication_year
+ * via the pick adapter's inner-joined book). URL `club` maps to PickFilters.clubId.
+ */
+export function buildPicksFilterConfig(
+  yearOptions: FacetOption[],
+  clubOptions: FacetOption[],
+): FilterBarConfig {
+  return {
+    entity: 'pick',
+    searchPlaceholder: 'Search picks by title or author',
+    defaultSort: 'newest',
+    sorts: [
+      { value: 'newest', label: 'Newest' },
+      { value: 'year', label: 'By year' },
+    ],
+    facets: [
+      ...(yearOptions.length
+        ? [
+            {
+              type: 'select' as const,
+              key: 'year',
+              label: 'Year',
+              param: 'year',
+              filterKey: 'year',
+              options: yearOptions,
+            },
+          ]
+        : []),
+      ...(clubOptions.length
+        ? [
+            {
+              type: 'select' as const,
+              key: 'club',
+              label: 'Club',
+              param: 'club',
+              filterKey: 'clubId',
+              options: clubOptions,
+            },
+          ]
+        : []),
+      {
+        type: 'select' as const,
+        key: 'era',
+        label: 'Era',
+        param: 'era',
+        filterKey: 'era',
+        options: ERAS.map((e) => ({ value: e.value, label: e.label })),
+      },
+    ],
+  }
+}

@@ -39,3 +39,40 @@ export async function fetchTagFacetOptions(
 export async function fetchClubGenreOptions(): Promise<FacetOption[]> {
   return fetchTagFacetOptions('clubs', 'genre_tags')
 }
+
+/** Distinct pick years (newest first) for the /book-clubs/picks year facet. */
+export async function fetchPickYearOptions(): Promise<FacetOption[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('external_book_club_picks')
+    .select('pick_year')
+    .eq('is_published', true)
+    .not('pick_year', 'is', null)
+
+  const years = new Set<number>()
+  for (const row of (data ?? []) as { pick_year: number | null }[]) {
+    if (typeof row.pick_year === 'number') years.add(row.pick_year)
+  }
+  return [...years]
+    .sort((a, b) => b - a)
+    .map((y) => ({ value: String(y), label: String(y) }))
+}
+
+/** External book clubs (those with published picks) for the club facet. */
+export async function fetchPickClubOptions(): Promise<FacetOption[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('external_book_clubs')
+    .select('id, name, short_name, sort_order')
+    .order('sort_order', { ascending: true, nullsFirst: false })
+    .order('name', { ascending: true })
+
+  return ((data ?? []) as {
+    id: string
+    name: string | null
+    short_name: string | null
+  }[]).map((c) => ({
+    value: c.id,
+    label: c.name || c.short_name || c.id,
+  }))
+}
