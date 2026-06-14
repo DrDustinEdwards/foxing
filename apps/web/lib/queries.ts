@@ -803,50 +803,6 @@ async function fetchLikedHighlightIds(
   )
 }
 
-/**
- * Search across books, profiles, and clubs. Returns each category's
- * top matches. Callers pick which they need.
- */
-export async function searchAll(query: string): Promise<{
-  books: BookSummary[]
-  people: PublicProfile[]
-  clubs: PublicClub[]
-}> {
-  if (!hasEnv() || !query.trim()) return { books: [], people: [], clubs: [] }
-  const sb = supabase()
-  const like = `%${query.replace(/[%_]/g, '\\$&')}%`
-  const [booksRes, peopleRes, clubsRes] = await Promise.all([
-    sb
-      .from('books')
-      .select(BOOK_SUMMARY_COLS)
-      .or(`title.ilike.${like},author.ilike.${like}`)
-      .limit(20),
-    sb
-      .from('profiles')
-      .select(
-        'id, username, display_name, avatar_url, bio, reading_personality, is_public, progress_is_public, subscription_tier',
-      )
-      .eq('is_public', true)
-      .or(`display_name.ilike.${like},username.ilike.${like}`)
-      .limit(20),
-    sb
-      .from('clubs')
-      .select(
-        'id, name, description, cover_url, current_book_id, member_count, visibility, current_book:current_book_id(id, slug, title, author, cover_url)',
-      )
-      .eq('visibility', 'public')
-      .ilike('name', like)
-      .limit(20),
-  ])
-  return {
-    books: (
-      (booksRes.data as unknown as BookSummary[] | null) ?? []
-    ).map((b) => ({ ...b, weighted_rating: null })),
-    people: (peopleRes.data as PublicProfile[] | null) ?? [],
-    clubs: (clubsRes.data as unknown as PublicClub[] | null) ?? [],
-  }
-}
-
 export interface BooksListResult {
   items: BookSummary[]
   total: number
