@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X as XIcon, CaretLeft, CaretRight, Check, BookOpen } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -52,6 +52,7 @@ interface CreateClubSheetProps {
 
 export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheetProps) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const [step, setStep] = useState<Step>('basics')
   const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT)
   const [submitting, setSubmitting] = useState(false)
@@ -168,6 +169,7 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
 
         <View
           className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           <Pressable
             onPress={goBack}

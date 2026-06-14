@@ -10,7 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import ViewShot, { captureRef, type ViewShotRef } from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
@@ -67,6 +67,7 @@ const TEMPLATE_ORDER: TemplateId[] = ['minimal', 'ornate', 'dark', 'sepia']
 
 export default function QuoteCardScreen() {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const router = useRouter()
   const params = useLocalSearchParams<{
     type?: CardType
@@ -393,6 +394,7 @@ export default function QuoteCardScreen() {
 
         <View
           className="flex-row items-center gap-2 px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           <Pressable
             onPress={onSave}

@@ -13,7 +13,7 @@ import {
   Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useFocusEffect, useRouter } from 'expo-router'
 import {
   Plus,
@@ -841,6 +841,7 @@ function AddBookSheet({
   onMatch: (bookId: string) => void
 }) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   // Two-step sheet: 'choose' shows the three actions; 'url' swaps in a text
   // input + lookup result. Keeping it inside the same modal avoids modal
   // stacking jank on Android.
@@ -897,7 +898,8 @@ function AddBookSheet({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark"
+          className="w-full rounded-t-3xl pt-4 bg-bg-elevated-light dark:bg-bg-elevated-dark"
+          style={{ paddingBottom: insets.bottom + 24 }}
         >
           <Text
             style={{
@@ -1383,6 +1385,7 @@ function BulkShelfPicker({
   onPick: (status: UserBookStatus) => void | Promise<void>
 }) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
       <Pressable
@@ -1392,7 +1395,8 @@ function BulkShelfPicker({
       >
         <Pressable
           onPress={(e) => e.stopPropagation()}
-          className="w-full rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark"
+          className="w-full rounded-t-3xl pt-4 bg-bg-elevated-light dark:bg-bg-elevated-dark"
+          style={{ paddingBottom: insets.bottom + 24 }}
         >
           <Text
             style={{
@@ -1679,6 +1683,7 @@ function ReviewModal({
   onSaved: (review: string, isPublic: boolean) => void
 }) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const [text, setText] = useState(row.review ?? '')
   const [isPublic, setIsPublic] = useState(!!row.review_is_public)
   const [saving, setSaving] = useState(false)
@@ -1736,6 +1741,7 @@ function ReviewModal({
         </KeyboardAvoidingView>
         <View
           className="flex-row items-center justify-end px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           <Pressable
             onPress={async () => {

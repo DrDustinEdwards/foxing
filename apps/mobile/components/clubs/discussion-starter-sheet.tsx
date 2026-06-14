@@ -11,7 +11,7 @@ import {
   Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X as XIcon, Sparkle, ArrowsClockwise } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -42,6 +42,7 @@ export function DiscussionStarterSheet({
   onPosted,
 }: DiscussionStarterSheetProps) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -231,6 +232,7 @@ export function DiscussionStarterSheet({
 
         <View
           className="flex-row items-center justify-end px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           <Pressable
             onPress={post}

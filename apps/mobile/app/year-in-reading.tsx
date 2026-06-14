@@ -98,7 +98,7 @@ export default function YearInReadingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bgBase }}>
-      <SafeAreaView style={{ flex: 1 }} edges={['top']}>
+      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
         <View
           style={{
             flexDirection: 'row',

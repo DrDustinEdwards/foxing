@@ -13,7 +13,7 @@ import {
   Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router'
 import {
   CaretLeft,
@@ -991,6 +991,7 @@ function NewThreadSheet({
   onPosted: (threadId: string) => void
 }) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const [title, setTitle] = useState('')
   const [opening, setOpening] = useState('')
   const [chapter, setChapter] = useState(defaultChapter)
@@ -1084,6 +1085,7 @@ function NewThreadSheet({
         </KeyboardAvoidingView>
         <View
           className="flex-row items-center justify-end px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           <Pressable
             onPress={post}
