@@ -317,8 +317,11 @@ const journalAdapter: EntityAdapter<'journal'> = {
 
 // ── pick (celebrity / external book-club picks) ──────────────────────────────
 
+// book is embedded !inner so the `era` facet (a filter on book.publication_year)
+// filters the parent picks rather than just nulling the embed. Safe: every
+// published pick has a book_id, so no pick is lost by the inner join.
 const PICK_COLS =
-  'id, club_id, book_id, picked_at, pick_year, pick_month, category, is_published, book:book_id(id, slug, title, author, cover_url, publication_year), club:club_id(id, slug, name, short_name)'
+  'id, club_id, book_id, picked_at, pick_year, pick_month, category, is_published, book:book_id!inner(id, slug, title, author, cover_url, publication_year), club:club_id(id, slug, name, short_name)'
 
 const pickAdapter: EntityAdapter<'pick'> = {
   entity: 'pick',

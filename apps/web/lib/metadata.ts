@@ -1080,6 +1080,32 @@ export function buildListsIndexMetadata(): Metadata {
   }
 }
 
+// --- /book-clubs/picks ---
+
+export function buildPicksIndexMetadata(): Metadata {
+  const title = 'Every Book Club Pick, Searchable'
+  const description =
+    'Search and filter every celebrity book club pick by year, club, and era. Oprah, Reese, Jenna, GMA, and more, rated by Foxing readers.'
+  const url = `${BASE_URL}/book-clubs/picks`
+  return {
+    title: clampTitle(title),
+    description: clampDescription(description),
+    alternates: { canonical: url },
+    openGraph: {
+      type: 'website',
+      title: clampTitle(title),
+      description: clampDescription(description),
+      url,
+      siteName: SITE_NAME,
+    },
+    twitter: {
+      card: 'summary',
+      title: clampTitle(title),
+      description: clampDescription(description),
+    },
+  }
+}
+
 // --- /passage/[date] ---
 
 export function buildPassageMetadata(passage: {
