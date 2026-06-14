@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import {
   X as XIcon,
   PaperPlaneRight,
@@ -62,6 +62,7 @@ export function PassageCommentSheet({
   onClose,
 }: PassageCommentSheetProps) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const [comments, setComments] = useState<PassageComment[]>([])
   const [loading, setLoading] = useState(true)
   const [body, setBody] = useState('')
@@ -301,7 +302,7 @@ export function PassageCommentSheet({
 
           <View
             className="border-t border-border-subtle-light dark:border-border-subtle-dark"
-            style={{ backgroundColor: colors.bgSurface, padding: 10 }}
+            style={{ backgroundColor: colors.bgSurface, padding: 10, paddingBottom: insets.bottom + 10 }}
           >
             {replyTo ? (
               <View
