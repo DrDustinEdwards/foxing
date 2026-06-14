@@ -1,4 +1,5 @@
-import { View, Text, Modal, Pressable } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { Colors } from '@/constants/colors'
 
 export type ThemeKey = 'light' | 'sepia' | 'dark'
@@ -34,12 +35,13 @@ export function SettingsSheet({
   onClose,
 }: SettingsSheetProps) {
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl px-6 pt-6 pb-10 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-        >
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      contentContainerStyle={{ paddingHorizontal: 24 }}
+    >
           <View className="flex-row justify-between items-center mb-4">
             <Text className="font-display text-lg text-text-primary-light dark:text-text-primary-dark">
               Reading settings
@@ -138,8 +140,6 @@ export function SettingsSheet({
               )
             })}
           </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
