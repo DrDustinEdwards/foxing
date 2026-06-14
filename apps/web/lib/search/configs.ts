@@ -4,6 +4,7 @@
  * existing indexed /books?mood=… / ?era=… / ?length=… URLs resolve identically.
  */
 import { ERAS, LENGTHS, MOODS } from '@/lib/foxing'
+import { JOURNAL_TAGS } from '@/lib/journal-shared'
 import type { FacetOption, FilterBarConfig } from './filter-config'
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -125,6 +126,27 @@ export function buildClubsFilterConfig(
         ]
       : [],
   }
+}
+
+/**
+ * Journal config (the /journal/archive browse surface). Text search over
+ * title/excerpt/content + a single-select tag facet drawn from the canonical
+ * JOURNAL_TAGS list. URL token `tag` matches existing /journal/archive?tag= URLs.
+ */
+export const JOURNAL_FILTER_CONFIG: FilterBarConfig = {
+  entity: 'journal',
+  searchPlaceholder: 'Search the journal',
+  defaultSort: 'newest',
+  sorts: [{ value: 'newest', label: 'Newest' }],
+  facets: [
+    {
+      type: 'chips',
+      key: 'tag',
+      label: 'Tag',
+      param: 'tag',
+      options: JOURNAL_TAGS.map((t) => ({ value: t.slug, label: t.label })),
+    },
+  ],
 }
 
 /**
