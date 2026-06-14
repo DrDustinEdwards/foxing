@@ -185,7 +185,7 @@ const clubAdapter: EntityAdapter<'club'> = {
 // ── person ──────────────────────────────────────────────────────────────────
 
 const PERSON_COLS =
-  'id, username, display_name, avatar_url, reading_personality, is_public, total_books_read, created_at'
+  'id, username, display_name, avatar_url, reading_personality, is_public, total_books_read, total_highlights, created_at'
 
 const personAdapter: EntityAdapter<'person'> = {
   entity: 'person',
@@ -200,6 +200,7 @@ const personAdapter: EntityAdapter<'person'> = {
   applyFilters: (q) => q,
   sorts: [
     { value: 'most_books', label: 'Most books', column: 'total_books_read', dir: 'desc', nullsFirst: false },
+    { value: 'most_active', label: 'Most active', column: 'total_highlights', dir: 'desc', nullsFirst: false },
     { value: 'new', label: 'Newest', column: 'created_at', dir: 'desc' },
   ],
   defaultSortValue: 'most_books',

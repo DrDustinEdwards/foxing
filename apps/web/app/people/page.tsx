@@ -1,33 +1,30 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { Avatar } from '@/components/ui/avatar'
-import { Card, CardMeta } from '@/components/ui/card'
+import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { fetchPublicPeople, type PeopleSort } from '@/lib/missing-pages-queries'
+import { FilterBar } from '@/components/search/filter-bar'
+import { SearchPagination } from '@/components/search/search-pagination'
+import { SearchResultItem } from '@/components/search/search-result-item'
+import { PEOPLE_FILTER_CONFIG } from '@/lib/search/configs'
+import { searchPageData } from '@/lib/search/server'
 import { buildPeopleMetadata } from '@/lib/metadata'
-import { cn } from '@/lib/cn'
 
 export const revalidate = 600
 
-const SORTS: Array<{ id: PeopleSort; label: string }> = [
-  { id: 'most_books', label: 'Most books' },
-  { id: 'most_active', label: 'Most active' },
-  { id: 'newest', label: 'New members' },
-]
-
 export const metadata: Metadata = buildPeopleMetadata()
 
-export default async function PeoplePage(
-  props: {
-    searchParams: Promise<{ sort?: PeopleSort; q?: string }>
-  }
-) {
-  const searchParams = await props.searchParams;
-  const sort = SORTS.find((s) => s.id === searchParams.sort)?.id ?? 'most_books'
-  const search = searchParams.q?.trim() || undefined
-  const people = await fetchPublicPeople({ sort, search, limit: 48 })
+export default async function PeoplePage(props: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const searchParams = await props.searchParams
+  const { result, page, totalPages } = await searchPageData(
+    'person',
+    PEOPLE_FILTER_CONFIG,
+    searchParams,
+    { pageSize: 48 },
+  )
 
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
@@ -51,89 +48,38 @@ export default async function PeoplePage(
             </Link>
           </header>
 
-          <form
-            action="/people"
-            method="get"
-            className="mt-6 flex w-full max-w-md items-center gap-2 rounded-lg border border-border-interactive bg-bg-surface px-3 py-2"
-          >
-            <input
-              type="search"
-              name="q"
-              defaultValue={search}
-              placeholder="Search by name or username"
-              className="flex-1 bg-transparent font-dm-sans text-base text-text-primary placeholder:text-text-tertiary focus:outline-none"
-              autoComplete="off"
-            />
-            {sort !== 'most_books' && (
-              <input type="hidden" name="sort" value={sort} />
-            )}
-          </form>
+          <div className="mt-6">
+            <FilterBar config={PEOPLE_FILTER_CONFIG} />
+          </div>
 
-          <nav
-            aria-label="Sort"
-            className="mt-6 flex flex-wrap gap-1 border-b border-border-subtle"
-          >
-            {SORTS.map((s) => {
-              const params = new URLSearchParams()
-              if (s.id !== 'most_books') params.set('sort', s.id)
-              if (search) params.set('q', search)
-              const href = `/people${params.toString() ? `?${params}` : ''}`
-              return (
-                <Link
-                  key={s.id}
-                  href={href}
-                  className={cn(
-                    '-mb-px border-b-2 px-4 py-2 font-dm-sans text-sm transition-colors',
-                    sort === s.id
-                      ? 'border-brand-ui text-text-primary'
-                      : 'border-transparent text-text-tertiary hover:text-text-primary',
-                  )}
-                >
-                  {s.label}
-                </Link>
-              )
-            })}
-          </nav>
-
-          {people.length === 0 ? (
-            <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">
-              No public readers match that yet.
-            </p>
-          ) : (
-            <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-              {people.map((p) => (
-                <Card
-                  key={p.id}
-                  variant="entity"
-                  href={`/u/${p.username}`}
-                  className="p-4 gap-3"
-                >
-                  <div className="flex items-start gap-3">
-                    <Avatar
-                      src={p.avatar_url}
-                      name={p.display_name}
-                      size="md"
-                    />
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate font-dm-sans text-sm font-medium text-text-primary">
-                        {p.display_name}
-                      </span>
-                      <span className="truncate font-dm-sans text-xs text-text-tertiary">
-                        @{p.username}
-                      </span>
-                    </div>
-                  </div>
-                  {p.reading_personality && (
-                    <p className="line-clamp-2 font-source-serif-4 text-sm italic text-text-tertiary">
-                      {p.reading_personality}
-                    </p>
-                  )}
-                  <CardMeta>
-                    {p.books_count} books · {p.highlight_count} highlights
-                  </CardMeta>
-                </Card>
-              ))}
+          {result.hits.length === 0 ? (
+            <div className="mt-10">
+              <EmptyState
+                heading="No public readers match those filters."
+                action={
+                  <Link
+                    href="/people"
+                    className="font-dm-sans text-sm text-brand-text hover:underline"
+                  >
+                    See all readers
+                  </Link>
+                }
+              />
             </div>
+          ) : (
+            <>
+              <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+                {result.hits.map((hit) => (
+                  <SearchResultItem key={hit.id} hit={hit} />
+                ))}
+              </div>
+              <SearchPagination
+                basePath="/people"
+                page={page}
+                totalPages={totalPages}
+                searchParams={searchParams}
+              />
+            </>
           )}
         </PageWrapper>
       </main>
