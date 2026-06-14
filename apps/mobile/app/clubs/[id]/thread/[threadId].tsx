@@ -462,7 +462,7 @@ function PostCard({
   const colors = useColors()
   const name = post.author?.display_name ?? post.author?.username ?? 'Reader'
   const initial = (name || '?')[0]?.toUpperCase() ?? '?'
-  const hidden = post.has_spoilers && !revealed
+  const hidden = post.has_spoiler && !revealed
 
   return (
     <Pressable
@@ -471,7 +471,7 @@ function PostCard({
       className="flex-row p-3 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
       style={{ opacity: nested ? 0.98 : 1 }}
     >
-      <Pressable onPress={() => onOpenAuthor(post.user_id)} hitSlop={4}>
+      <Pressable onPress={() => onOpenAuthor(post.author_id)} hitSlop={4}>
         <View
           style={{
             width: nested ? 32 : 36,
@@ -505,7 +505,7 @@ function PostCard({
       <View style={{ flex: 1 }}>
         <View className="flex-row items-center" style={{ marginBottom: 2 }}>
           <Text
-            onPress={() => onOpenAuthor(post.user_id)}
+            onPress={() => onOpenAuthor(post.author_id)}
             style={{
               fontFamily: Fonts.uiMedium,
               fontSize: 13,
@@ -553,9 +553,9 @@ function PostCard({
                 lineHeight: 21,
               }}
             >
-              {post.body}
+              {post.content}
             </Text>
-            {post.has_spoilers ? (
+            {post.has_spoiler ? (
               <Pressable
                 onPress={onToggleReveal}
                 className="flex-row items-center gap-1 mt-2"

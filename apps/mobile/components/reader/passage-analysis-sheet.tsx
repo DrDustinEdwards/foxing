@@ -33,7 +33,7 @@ interface PassageAnalysisSheetProps {
   bookId?: string
   currentChapter?: string
   progress?: number
-  // CFI of the selected passage, required to save to commonplace_entries.
+  // CFI of the selected passage, required to save to commonplace_book.
   cfi?: string | null
   onClose: () => void
 }
@@ -82,8 +82,8 @@ export function PassageAnalysisSheet({
     }
   }
 
-  // Save to commonplace_entries, book_id may be null if we couldn't resolve
-  // (legacy reader paths) but we always have the passage text.
+  // Save to commonplace_book (the canonical table web reads), book_id may be
+  // null if we couldn't resolve but we always have the passage text.
   const addToCommonplace = useCallback(async () => {
     if (commonplaceState === 'saving' || commonplaceState === 'saved') return
     setCommonplaceState('saving')
@@ -92,7 +92,7 @@ export function PassageAnalysisSheet({
       setCommonplaceState('error')
       return
     }
-    const { error: insertError } = await supabase.from('commonplace_entries').insert({
+    const { error: insertError } = await supabase.from('commonplace_book').insert({
       user_id: user.id,
       book_id: bookId ?? null,
       passage_text: passage.slice(0, 4000),

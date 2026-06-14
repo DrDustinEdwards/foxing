@@ -1,14 +1,10 @@
 // Admin: triage user-submitted reports of club posts / passage comments.
-// Backed by `reports` table assumed shape:
-//   create table reports (
-//     id uuid primary key default gen_random_uuid(),
-//     reporter_id uuid references profiles(id),
-//     target_kind text not null check (target_kind in ('club_post','passage_comment')),
-//     target_id uuid not null,
-//     reason text,
-//     status text not null default 'open' check (status in ('open','dismissed','actioned')),
-//     created_at timestamptz not null default now()
-//   );
+// Backed by the live `post_reports` table:
+//   id, post_id, reporter_id, reason, created_at, post_type, status,
+//   reviewed_by, reviewed_at.
+// post_type ('club_post'|'passage_comment') and post_id are aliased to
+// target_kind/target_id below so the UI shape stays the same. Open reports
+// have status 'pending'; triage sets 'dismissed' or 'actioned' + reviewed_at.
 
 import { useCallback, useEffect, useState } from 'react'
 import {
@@ -34,7 +30,7 @@ interface ReportRow {
   target_kind: TargetKind
   target_id: string
   reason: string | null
-  status: 'open' | 'dismissed' | 'actioned'
+  status: 'pending' | 'dismissed' | 'actioned'
   created_at: string
   // Hydrated client-side.
   preview?: string
@@ -51,9 +47,9 @@ export default function ReportsScreen() {
   const load = useCallback(async () => {
     setLoading(true)
     const { data } = await supabase
-      .from('reports')
-      .select('id, reporter_id, target_kind, target_id, reason, status, created_at')
-      .eq('status', 'open')
+      .from('post_reports')
+      .select('id, reporter_id, target_kind:post_type, target_id:post_id, reason, status, created_at')
+      .eq('status', 'pending')
       .order('created_at', { ascending: false })
       .limit(100)
     const rows = ((data ?? []) as unknown) as ReportRow[]
@@ -64,21 +60,21 @@ export default function ReportsScreen() {
       postIds.length > 0
         ? supabase
             .from('club_posts')
-            .select('id, body, user_id, author:profiles!user_id(display_name, username)')
+            .select('id, content, author_id, author:profiles!author_id(display_name, username)')
             .in('id', postIds)
         : Promise.resolve({ data: [] as Array<Record<string, unknown>> }),
       commentIds.length > 0
         ? supabase
             .from('passage_comments')
-            .select('id, body, user_id, author:profiles!user_id(display_name, username)')
+            .select('id, content, author_id, author:profiles!author_id(display_name, username)')
             .in('id', commentIds)
         : Promise.resolve({ data: [] as Array<Record<string, unknown>> }),
     ])
     const previewById = new Map<string, { preview: string; authorId: string | null; authorName: string | null }>()
     type PR = {
       id: string
-      body: string
-      user_id: string | null
+      content: string
+      author_id: string | null
       author:
         | { display_name: string | null; username: string | null }
         | Array<{ display_name: string | null; username: string | null }>
@@ -87,16 +83,16 @@ export default function ReportsScreen() {
     for (const r of (((postsRes.data ?? []) as unknown) as PR[])) {
       const a = Array.isArray(r.author) ? r.author[0] : r.author
       previewById.set(r.id, {
-        preview: r.body,
-        authorId: r.user_id,
+        preview: r.content,
+        authorId: r.author_id,
         authorName: a?.display_name ?? a?.username ?? null,
       })
     }
     for (const r of (((commentsRes.data ?? []) as unknown) as PR[])) {
       const a = Array.isArray(r.author) ? r.author[0] : r.author
       previewById.set(r.id, {
-        preview: r.body,
-        authorId: r.user_id,
+        preview: r.content,
+        authorId: r.author_id,
         authorName: a?.display_name ?? a?.username ?? null,
       })
     }
@@ -117,7 +113,10 @@ export default function ReportsScreen() {
   }, [load])
 
   const dismiss = useCallback(async (id: string) => {
-    await supabase.from('reports').update({ status: 'dismissed' }).eq('id', id)
+    await supabase
+      .from('post_reports')
+      .update({ status: 'dismissed', reviewed_at: new Date().toISOString() })
+      .eq('id', id)
     setReports((prev) => prev.filter((r) => r.id !== id))
   }, [])
 
@@ -130,7 +129,10 @@ export default function ReportsScreen() {
         onPress: async () => {
           const table = r.target_kind === 'club_post' ? 'club_posts' : 'passage_comments'
           await supabase.from(table).delete().eq('id', r.target_id)
-          await supabase.from('reports').update({ status: 'actioned' }).eq('id', r.id)
+          await supabase
+            .from('post_reports')
+            .update({ status: 'actioned', reviewed_at: new Date().toISOString() })
+            .eq('id', r.id)
           setReports((prev) => prev.filter((x) => x.id !== r.id))
         },
       },
@@ -149,7 +151,10 @@ export default function ReportsScreen() {
           style: 'destructive',
           onPress: async () => {
             await supabase.from('profiles').update({ is_banned: true }).eq('id', r.authorId!)
-            await supabase.from('reports').update({ status: 'actioned' }).eq('id', r.id)
+            await supabase
+            .from('post_reports')
+            .update({ status: 'actioned', reviewed_at: new Date().toISOString() })
+            .eq('id', r.id)
             setReports((prev) => prev.filter((x) => x.id !== r.id))
           },
         },
