@@ -22,8 +22,9 @@ export default function PricingPage() {
             </h1>
             <p className="mx-auto mt-3 max-w-prose font-source-serif-4 text-base text-text-secondary">
               Free works on its own: 1,400+ classic books, library, diary,
-              stats, and a few AI lookups a day. Plus adds the AI that reads
-              alongside you, plus book club creation and more.
+              and stats. Plus unlocks the AI that reads alongside you (word
+              lookups, passage analysis, chat, and more) and book club
+              creation.
             </p>
             <p className="mt-4 font-dm-sans text-xs text-text-tertiary">
               {PLUS_TRIAL_LABEL}. No credit card required. Cancel anytime.
@@ -46,10 +47,9 @@ export default function PricingPage() {
               How the AI cost gets paid
             </h2>
             <p className="mt-2 font-source-serif-4 text-base text-text-secondary">
-              Every AI call costs real money. Five lookups a day stays free
-              because that&apos;s what fits the budget. Plus fees go directly
-              to compute, hosting, and one person&apos;s time. No ads, no data
-              resale.
+              Every AI call costs real money, so the AI companion is a Foxing
+              Plus feature. Plus fees go directly to compute, hosting, and one
+              person&apos;s time.
             </p>
           </section>
         </PageWrapper>

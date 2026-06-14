@@ -29,7 +29,6 @@ export function PricingContent() {
             '1,400+ classic books, free',
             'Reader, highlights, vocabulary',
             'Reading diary, stats, lists',
-            'Five AI word lookups a day',
             'Join one book club',
           ]}
         />
