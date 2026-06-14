@@ -18,6 +18,7 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useState } from 'react'
 import { useFederatedSearch } from '@/lib/search/hooks'
 import { SearchQueryProvider } from '@/lib/search/provider'
+import { AI_SEARCH_ENABLED, buildFindNextBookHref } from '@/lib/search/ai-intent'
 import type { SearchEntity, SearchHit } from '@/lib/search/types'
 
 const OPEN_EVENT = 'foxing:open-command-palette'
@@ -187,6 +188,25 @@ function CommandPaletteInner() {
               ))}
             </Command.Group>
           </>
+        )}
+
+        {hasQuery && AI_SEARCH_ENABLED && (
+          // AI intent entry point (flag OFF by default). Routes the NL query to
+          // the existing /find-next-book AI flow with best-effort structured
+          // params. Full in-palette NL results are the D10-eval slice. See
+          // lib/search/ai-intent.ts.
+          <Command.Group
+            heading="Ask AI"
+            className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:font-dm-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.15em] [&_[cmdk-group-heading]]:text-text-tertiary"
+          >
+            <Command.Item
+              value="ask-ai"
+              onSelect={() => go(buildFindNextBookHref(query), query)}
+              className="flex cursor-pointer items-center rounded-lg px-2 py-2 font-dm-sans text-sm text-brand-text data-[selected=true]:bg-bg-hover"
+            >
+              Ask AI: &ldquo;{query}&rdquo;
+            </Command.Item>
+          </Command.Group>
         )}
 
         {hasQuery && (

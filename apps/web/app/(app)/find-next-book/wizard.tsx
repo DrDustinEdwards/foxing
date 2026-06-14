@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { BookCard } from '@/components/book-card'
 import { MOODS } from '@/lib/foxing'
@@ -8,6 +9,10 @@ import { cn } from '@/lib/cn'
 
 type Pace = 'slow' | 'any' | 'fast'
 type Era = 'anytime' | 'pre-1900' | '1900-1950' | 'modern'
+
+const PACE_VALUES: readonly Pace[] = ['slow', 'any', 'fast']
+const ERA_VALUES: readonly Era[] = ['anytime', 'pre-1900', '1900-1950', 'modern']
+const MOOD_VALUES: readonly string[] = MOODS
 
 interface Recommendation {
   id?: string
@@ -31,10 +36,27 @@ const ERAS: Array<{ id: Era; label: string }> = [
 ]
 
 export function FindNextBookWizard() {
+  // Optional prefill from URL params (the command palette's AI-intent entry maps
+  // a natural-language query to mood/pace/era and links here). Absent params ->
+  // the normal empty wizard.
+  const searchParams = useSearchParams()
+  const initialMoods = (searchParams.get('mood') ?? '')
+    .split(',')
+    .map((m) => m.trim())
+    .filter((m) => MOOD_VALUES.includes(m))
+  const paceParam = searchParams.get('pace')
+  const initialPace: Pace = PACE_VALUES.includes(paceParam as Pace)
+    ? (paceParam as Pace)
+    : 'any'
+  const eraParam = searchParams.get('era')
+  const initialEra: Era = ERA_VALUES.includes(eraParam as Era)
+    ? (eraParam as Era)
+    : 'anytime'
+
   const [step, setStep] = useState<1 | 2 | 3>(1)
-  const [moods, setMoods] = useState<string[]>([])
-  const [pace, setPace] = useState<Pace>('any')
-  const [era, setEra] = useState<Era>('anytime')
+  const [moods, setMoods] = useState<string[]>(initialMoods)
+  const [pace, setPace] = useState<Pace>(initialPace)
+  const [era, setEra] = useState<Era>(initialEra)
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState<Recommendation[] | null>(null)
   const [error, setError] = useState<string | null>(null)
