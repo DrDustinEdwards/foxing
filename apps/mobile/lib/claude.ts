@@ -16,8 +16,10 @@ type Action =
   | 'deep_dive'
 
 // Edge Function failure codes the client cares about. These map 1:1 to
-// the `error` field the Edge Function returns alongside HTTP status codes
-// (429 RATE_LIMITED, 403 PLUS_REQUIRED, 401 UNAUTHENTICATED).
+// the `error` field the Edge Function returns alongside HTTP status codes.
+// All on-demand AI is now Plus-gated: free users get 403 PLUS_REQUIRED
+// (there is no free quota / 429 RATE_LIMITED path anymore; the code is kept
+// only as a defensive branch for infra-level throttling).
 export type AiCompanionErrorCode =
   | 'RATE_LIMITED'
   | 'PLUS_REQUIRED'
@@ -39,15 +41,14 @@ const KNOWN_ERROR_CODES: AiCompanionErrorCode[] = [
 ]
 
 // User-facing text for the codes the Edge Function can return. Sheets pass
-// the caught error here and display whatever string comes back. The "foxing.app"
-// mention is informational per task.md Section 6, no direct link.
+// the caught error here and display whatever string comes back.
 export function friendlyAiError(e: unknown): string {
   if (e instanceof AiCompanionError) {
-    if (e.code === 'RATE_LIMITED') {
-      return "You've used your 5 free AI lookups for today.\nUpgrade to Foxing Plus for unlimited AI, foxing.app"
-    }
     if (e.code === 'PLUS_REQUIRED') {
-      return 'Deep Dive requires Foxing Plus.\nUpgrade at foxing.app to unlock.'
+      return 'This is a Foxing Plus feature.\nUpgrade at foxing.app to unlock the AI companion.'
+    }
+    if (e.code === 'RATE_LIMITED') {
+      return 'Too many requests right now. Please try again in a moment.'
     }
     if (e.code === 'UNAUTHENTICATED') {
       return 'Sign in to use AI features.'
