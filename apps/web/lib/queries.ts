@@ -787,7 +787,7 @@ export async function fetchQuoteById(
   }
 }
 
-async function fetchLikedHighlightIds(
+export async function fetchLikedHighlightIds(
   userId: string | null,
   highlightIds: string[],
 ): Promise<Set<string>> {

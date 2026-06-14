@@ -250,7 +250,7 @@ const listAdapter: EntityAdapter<'list'> = {
 // ── quote (public highlights) ────────────────────────────────────────────────
 
 const QUOTE_COLS =
-  'id, text, note, like_count, is_public, created_at, book:book_id(id, slug, title, author, cover_url)'
+  'id, text, note, like_count, is_public, created_at, book:book_id(id, slug, title, author, cover_url), author:user_id(username, display_name, avatar_url)'
 
 const quoteAdapter: EntityAdapter<'quote'> = {
   entity: 'quote',
