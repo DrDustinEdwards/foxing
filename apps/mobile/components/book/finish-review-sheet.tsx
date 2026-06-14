@@ -8,8 +8,10 @@ import {
   ScrollView,
   ActivityIndicator,
   Switch,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X as XIcon, CaretRight, CaretLeft, Star, StarHalf } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { reportWriteError } from '@/lib/db-write'
@@ -66,6 +68,7 @@ export function FinishReviewSheet({
   onSaved,
 }: FinishReviewSheetProps) {
   const colors = useColors()
+  const insets = useSafeAreaInsets()
   const [page, setPage] = useState<1 | 2>(1)
   const [rating, setRating] = useState(0) // 0..5 in half-steps
   const [review, setReview] = useState('')
@@ -186,6 +189,10 @@ export function FinishReviewSheet({
           ))}
         </View>
 
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
         {page === 1 ? (
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textTertiary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>
@@ -356,6 +363,7 @@ export function FinishReviewSheet({
 
         <View
           className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+          style={{ paddingBottom: insets.bottom + 12 }}
         >
           <Pressable
             onPress={onSkip}
@@ -429,6 +437,7 @@ export function FinishReviewSheet({
             </Pressable>
           )}
         </View>
+        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   )

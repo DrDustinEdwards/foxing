@@ -9,6 +9,8 @@ import {
   TextInput,
   Modal,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -314,6 +316,10 @@ export default function CommonplaceScreen() {
         presentationStyle="pageSheet"
       >
         <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+          <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          >
           <View className="flex-row items-center px-3 py-2">
             <Pressable onPress={() => setAddOpen(false)} hitSlop={10} className="p-2">
               <CaretLeft color={colors.textPrimary} size={22} />
@@ -430,6 +436,7 @@ export default function CommonplaceScreen() {
               </Text>
             </Pressable>
           </ScrollView>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
