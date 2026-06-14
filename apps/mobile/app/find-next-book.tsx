@@ -6,7 +6,7 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Screen } from '@/components/ui/screen'
 import { useRouter } from 'expo-router'
 import { CaretLeft, Sparkle } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
@@ -113,7 +113,7 @@ export default function FindNextBookScreen() {
   }, [])
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <View className="flex-row items-center px-3 py-2">
         <Pressable
           onPress={() => router.back()}
@@ -421,7 +421,7 @@ export default function FindNextBookScreen() {
           </Pressable>
         </View>
       ) : null}
-    </SafeAreaView>
+    </Screen>
   )
 }
 

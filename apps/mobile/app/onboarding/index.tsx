@@ -8,7 +8,7 @@ import {
   Image,
   ActivityIndicator,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Screen } from '@/components/ui/screen'
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Check, CaretLeft, CaretRight, BookOpen } from 'phosphor-react-native'
@@ -100,7 +100,7 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <View className="flex-row items-center justify-between px-3 py-2">
         <Pressable
           onPress={back}
@@ -197,7 +197,7 @@ export default function OnboardingScreen() {
           )}
         </Pressable>
       </View>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
@@ -214,7 +214,7 @@ const C = Colors.dark
 function Welcome({ onStart }: { onStart: () => void }) {
   return (
     <View style={{ flex: 1, backgroundColor: C.bgBase }}>
-      <SafeAreaView style={{ flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+      <Screen style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
         <Text
           style={{
             fontFamily: Fonts.display,
@@ -252,7 +252,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
             Start
           </Text>
         </Pressable>
-      </SafeAreaView>
+      </Screen>
     </View>
   )
 }

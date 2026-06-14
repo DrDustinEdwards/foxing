@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text, Pressable, Modal, useWindowDimensions } from 'react-native'
+import { View, Text, Pressable, useWindowDimensions } from 'react-native'
 import {
   MagnifyingGlass,
   ClipboardText,
@@ -14,6 +14,7 @@ import {
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { PrivacySelector, type PrivacyTier } from '@/components/privacy-selector'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 
 // Seven Foxing highlight colors. Order matches design-system.md and is
 // tuned for spectrum visibility, warm tones first, cool last.
@@ -452,31 +453,27 @@ function AllOptionsSheet({
   items.push({ key: 'dismiss', label: 'Dismiss', Icon: XIcon, onPress: onDismissAll, destructive: true })
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 justify-end"
-        onPress={onClose}
-        accessibilityLabel="Close action menu"
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          accessibilityViewIsModal
-          accessibilityLabel="Pill actions"
-          className="rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 11,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            paddingHorizontal: 20,
+            marginBottom: 8,
+          }}
         >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              paddingHorizontal: 20,
-              marginBottom: 8,
-            }}
-          >
-            Actions
-          </Text>
+          Actions
+        </Text>
+      }
+    >
           {items.map((item, i) => (
             <Pressable
               key={item.key}
@@ -520,9 +517,7 @@ function AllOptionsSheet({
               </Text>
             </Pressable>
           ))}
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
