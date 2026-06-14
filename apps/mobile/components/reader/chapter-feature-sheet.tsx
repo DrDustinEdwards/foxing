@@ -1,13 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Modal,
   View,
   Text,
   Pressable,
-  ScrollView,
   ActivityIndicator,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { X as XIcon, CheckCircle, XCircle, ArrowRight } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -94,8 +92,11 @@ export function ChapterFeatureSheet({
   }, [visible, kind, bookTitle, author, chapterTitle, bookId, progress])
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      header={
         <View className="flex-row items-center justify-between px-3 py-2">
           <Pressable onPress={onClose} hitSlop={10} className="p-2">
             <XIcon color={colors.textPrimary} size={20} />
@@ -105,7 +106,8 @@ export function ChapterFeatureSheet({
           </Text>
           <View style={{ width: 36 }} />
         </View>
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+      }
+    >
           {chapterTitle ? (
             <Text
               style={{
@@ -150,9 +152,7 @@ export function ChapterFeatureSheet({
               {proseResult ?? ''}
             </Text>
           )}
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
+    </SheetScaffold>
   )
 }
 

@@ -2,14 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   View,
   Text,
-  Modal,
   Pressable,
   TextInput,
   ScrollView,
   Image,
   ActivityIndicator,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { X as XIcon, BookOpen } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
@@ -117,8 +116,11 @@ export function PickFavoritesSheet({
   )
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      scroll={false}
+      header={
         <View className="flex-row items-center justify-between px-3 py-2">
           <Pressable
             onPress={onClose}
@@ -134,6 +136,8 @@ export function PickFavoritesSheet({
           </Text>
           <View style={{ width: 36 }} />
         </View>
+      }
+    >
         <View style={{ paddingHorizontal: 16 }}>
           <TextInput
             value={query}
@@ -243,7 +247,6 @@ export function PickFavoritesSheet({
             })}
           </ScrollView>
         )}
-      </SafeAreaView>
-    </Modal>
+    </SheetScaffold>
   )
 }
