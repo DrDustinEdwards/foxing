@@ -296,6 +296,9 @@ export async function createClub(input: CreateClubInput): Promise<Club | null> {
       visibility,
       reading_pace: input.pace,
       slug,
+      // Start at 0: the club_member_count_trigger increments on the owner
+      // membership insert below (DEFAULT 1 + trigger would double-count).
+      member_count: 0,
     })
     // NOTE: creator membership role is 'admin' below (highest allowed by the
     // club_members_role_check: admin/moderator/member). There is no 'owner'.
