@@ -7,11 +7,10 @@ import {
   Image,
   ActivityIndicator,
   TextInput,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardStickyView } from 'react-native-keyboard-controller'
+import { Screen } from '@/components/ui/screen'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
@@ -234,14 +233,14 @@ export default function ThreadScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     )
   }
   if (!thread) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center px-8">
         <Text
           style={{
             fontFamily: Fonts.ui,
@@ -252,12 +251,12 @@ export default function ThreadScreen() {
         >
           Thread not found.
         </Text>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <View className="flex-row items-center px-3 py-2">
         <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
           <CaretLeft color={colors.textPrimary} size={22} />
@@ -294,13 +293,9 @@ export default function ThreadScreen() {
         </View>
       </View>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
-      >
         <ScrollView
           ref={scrollRef}
+          style={{ flex: 1 }}
           contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, paddingTop: 8 }}
         >
           {grouped.length === 0 ? (
@@ -353,6 +348,7 @@ export default function ThreadScreen() {
         </ScrollView>
 
         {viewerId ? (
+          <KeyboardStickyView>
           <View
             className="border-t border-border-subtle-light dark:border-border-subtle-dark"
             style={{ backgroundColor: colors.bgSurface, padding: 10 }}
@@ -430,9 +426,9 @@ export default function ThreadScreen() {
               </Text>
             </View>
           </View>
+          </KeyboardStickyView>
         ) : null}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
