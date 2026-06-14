@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform } from 'react-native'
+import { View, Text, TextInput, Pressable, ActivityIndicator, KeyboardAvoidingView, Platform, Linking } from 'react-native'
 import { Link } from 'expo-router'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { Info, X as XIcon, Check } from 'phosphor-react-native'
@@ -37,6 +37,7 @@ export default function Signup() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [confirmationSent, setConfirmationSent] = useState(false)
+  const [agreed, setAgreed] = useState(false)
   const [usernameState, setUsernameState] = useState<UsernameState>({ kind: 'idle' })
 
   const normalizedUsername = username.trim().toLowerCase()
@@ -74,6 +75,10 @@ export default function Signup() {
   }, [normalizedUsername])
 
   async function signUp() {
+    if (!agreed) {
+      setError('Confirm your age and agreement to the terms to continue.')
+      return
+    }
     setLoading(true)
     setError(null)
     try {
@@ -119,6 +124,7 @@ export default function Signup() {
 
   const disabled =
     loading ||
+    !agreed ||
     !email ||
     !password ||
     !displayName ||
@@ -203,6 +209,36 @@ export default function Signup() {
             secureTextEntry
             className="font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
           />
+
+          <View className="flex-row items-start gap-2">
+            <Pressable
+              onPress={() => setAgreed((a) => !a)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: agreed }}
+              accessibilityLabel="I am at least 13 and agree to the terms and privacy policy"
+              className="mt-0.5 h-5 w-5 rounded items-center justify-center border border-border-interactive-light dark:border-border-interactive-dark"
+              style={{ backgroundColor: agreed ? colors.brandUi : 'transparent' }}
+            >
+              {agreed ? <Check color={colors.textOnBrand} size={14} weight="bold" /> : null}
+            </Pressable>
+            <Text className="font-ui text-sm text-text-secondary-light dark:text-text-secondary-dark flex-1">
+              I am at least 13 years old and agree to the{' '}
+              <Text
+                className="text-brand-text-light dark:text-brand-text-dark"
+                onPress={() => Linking.openURL('https://foxing.app/terms')}
+              >
+                terms of service
+              </Text>{' '}
+              and{' '}
+              <Text
+                className="text-brand-text-light dark:text-brand-text-dark"
+                onPress={() => Linking.openURL('https://foxing.app/privacy')}
+              >
+                privacy policy
+              </Text>
+              .
+            </Text>
+          </View>
 
           {error ? (
             <View
