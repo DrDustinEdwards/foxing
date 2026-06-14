@@ -79,7 +79,7 @@ import {
   PARAGRAPH_SPACING_EM,
   FONT_FAMILY_CSS,
 } from '@/lib/reader-settings'
-import { getWordWiseHints, getBilingualParagraphs } from '@/lib/claude'
+import { getWordWiseHints } from '@/lib/claude'
 import { resolvePreferredEpubUrl } from '@/lib/books'
 import { updateStreak, checkAndAwardBadges } from '@/lib/streaks'
 import { haptic } from '@/lib/haptics'
@@ -837,33 +837,11 @@ export default function Reader() {
   // translations when bilingualMode flips off.
   useEffect(() => {
     if (readerState !== 'ready' || !book) return
-    if (!prefs.bilingualMode) {
-      readerRef.current?.setBilingualContent([])
-      return
-    }
-    let mounted = true
-    ;(async () => {
-      try {
-        const paragraphs = await (readerRef.current?.getChapterParagraphs?.() ?? Promise.resolve([]))
-        if (!mounted || paragraphs.length === 0) return
-        const translations = await getBilingualParagraphs({
-          paragraphs,
-          targetLanguage: prefs.targetLanguage,
-          bookTitle: book.title,
-          author: book.author,
-          bookId: book.id,
-          currentChapter: currentChapter.title,
-        })
-        if (!mounted) return
-        readerRef.current?.setBilingualContent(translations)
-      } catch (e) {
-        console.warn('[reader] bilingual fetch failed:', e instanceof Error ? e.message : e)
-      }
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [readerState, book, currentChapter.title, prefs.bilingualMode, prefs.targetLanguage])
+    // Bilingual translation is disabled (D13): the paid bilingual_paragraph
+    // AI call did not render usefully in-reader, so we skip the API spend and
+    // just ensure no stale translations remain shown.
+    readerRef.current?.setBilingualContent([])
+  }, [readerState, book])
 
   const toggleChrome = useCallback(() => setChrome((v) => !v), [])
 

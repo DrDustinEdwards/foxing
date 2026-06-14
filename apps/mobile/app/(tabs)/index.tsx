@@ -646,7 +646,6 @@ function SectionRow({
 
 function SupaBookMini({ book, onPress }: { book: SupaBook; onPress: () => void }) {
   const colors = useColors()
-  const isPdf = !!book.epub_url && /\.pdf(\?|#|$)/i.test(book.epub_url)
   return (
     <Pressable onPress={onPress} style={{ width: 110 }}>
       <View
@@ -666,26 +665,6 @@ function SupaBookMini({ book, onPress }: { book: SupaBook; onPress: () => void }
         ) : (
           <BookOpen color={colors.textTertiary} size={20} />
         )}
-        {isPdf ? (
-          <View
-            style={{
-              position: 'absolute',
-              top: 4,
-              left: 4,
-              paddingHorizontal: 4,
-              paddingVertical: 1,
-              borderRadius: 3,
-              backgroundColor: colors.scrimDark,
-            }}
-            accessibilityLabel="PDF format"
-          >
-            <Text
-              style={{ fontFamily: Fonts.uiMedium, fontSize: 8, color: colors.textOnDark, letterSpacing: 0.6 }}
-            >
-              PDF
-            </Text>
-          </View>
-        ) : null}
       </View>
       <Text
         style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}
