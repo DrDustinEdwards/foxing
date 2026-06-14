@@ -1203,26 +1203,6 @@ function LibraryRow({
             accessibilityLabel={`${book?.title ?? 'Book'} cover`}
           />
         ) : null}
-        {book?.epub_url && /\.pdf(\?|#|$)/i.test(book.epub_url) ? (
-          <View
-            style={{
-              position: 'absolute',
-              top: 4,
-              left: 4,
-              paddingHorizontal: 4,
-              paddingVertical: 1,
-              borderRadius: 3,
-              backgroundColor: colors.scrimDark,
-            }}
-            accessibilityLabel="PDF format"
-          >
-            <Text
-              style={{ fontFamily: Fonts.uiMedium, fontSize: 8, color: colors.textOnDark, letterSpacing: 0.6 }}
-            >
-              PDF
-            </Text>
-          </View>
-        ) : null}
         {row.status === 'paused' ? (
           <View
             style={{
