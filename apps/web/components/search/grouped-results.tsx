@@ -13,12 +13,23 @@ interface GroupedResultsViewProps {
   /** Build a "see all" link for a group (e.g. /books?q=...). Optional. */
   seeAllHref?: (group: SearchGroup) => string | undefined
   emptyLabel?: string
+  /** Force the compact single-column layout everywhere (used by the palette). */
+  dense?: boolean
+}
+
+/** Books render as a cover grid; every other entity uses a stacked list. */
+function groupLayout(entity: SearchGroup['entity'], dense: boolean): string {
+  if (dense) return 'flex flex-col gap-1'
+  return entity === 'book'
+    ? 'flex flex-wrap gap-4'
+    : 'flex flex-col gap-2'
 }
 
 export function GroupedResultsView({
   results,
   seeAllHref,
   emptyLabel = 'No results.',
+  dense = false,
 }: GroupedResultsViewProps) {
   if (results.groups.length === 0) {
     return (
@@ -50,7 +61,7 @@ export function GroupedResultsView({
                 </Link>
               )}
             </header>
-            <div className="flex flex-col gap-2">
+            <div className={groupLayout(group.entity, dense)}>
               {group.hits.map((hit) => (
                 <SearchResultItem key={`${hit.entity}:${hit.id}`} hit={hit} />
               ))}
