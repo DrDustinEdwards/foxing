@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
-import { View, Text, Modal, Pressable, ScrollView, ActivityIndicator, Share } from 'react-native'
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Share } from 'react-native'
 import { X as XIcon, Export } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { supabase } from '@/lib/supabase'
@@ -113,13 +114,15 @@ export function HighlightsSheet({
   )
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl pt-4 pb-8 px-5 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '88%' }}
-        >
+    <>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      maxHeight="88%"
+      contentContainerStyle={{ flex: 1, paddingHorizontal: 20 }}
+    >
           <View className="flex-row items-center justify-between mb-3">
             <View style={{ flex: 1 }}>
               <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
@@ -243,25 +246,14 @@ export function HighlightsSheet({
               ))
             )}
           </ScrollView>
-        </Pressable>
-      </Pressable>
+    </SheetScaffold>
 
-      {/* Export format picker, nested modal stacks above the sheet. */}
-      <Modal
-        visible={formatPickerOpen}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setFormatPickerOpen(false)}
-      >
-        <Pressable
-          className="flex-1 items-center justify-center px-8"
-          style={{ backgroundColor: colors.overlay }}
-          onPress={() => setFormatPickerOpen(false)}
-        >
-          <Pressable
-            onPress={(e) => e.stopPropagation()}
-            className="w-full rounded-2xl py-2 bg-bg-elevated-light dark:bg-bg-elevated-dark"
-          >
+    <SheetScaffold
+      visible={formatPickerOpen}
+      onClose={() => setFormatPickerOpen(false)}
+      variant="bottom"
+      scroll={false}
+      header={
             <Text
               style={{
                 fontFamily: Fonts.uiMedium,
@@ -276,6 +268,8 @@ export function HighlightsSheet({
             >
               Export {filtered.length} highlight{filtered.length === 1 ? '' : 's'} as
             </Text>
+      }
+    >
             {([
               { id: 'text', label: 'Plain Text' },
               { id: 'csv', label: 'CSV' },
@@ -297,9 +291,7 @@ export function HighlightsSheet({
                 </Text>
               </Pressable>
             ))}
-          </Pressable>
-        </Pressable>
-      </Modal>
-    </Modal>
+    </SheetScaffold>
+    </>
   )
 }

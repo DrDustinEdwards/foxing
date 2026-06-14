@@ -2,12 +2,12 @@ import { useCallback, useState } from 'react'
 import {
   View,
   Text,
-  Modal,
   Pressable,
   ActivityIndicator,
   ScrollView,
 } from 'react-native'
 import { X as XIcon, BookmarkSimple } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { analyzePassage, friendlyAiError, type PassageAnalysisType } from '@/lib/claude'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
@@ -124,13 +124,14 @@ export function PassageAnalysisSheet({
           : 'Save Passage'
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
-      <Pressable className="flex-1 justify-end" onPress={handleClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl px-6 pt-6 pb-10 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '90%' }}
-        >
+    <SheetScaffold
+      visible={visible}
+      onClose={handleClose}
+      variant="bottom"
+      scroll={false}
+      maxHeight="90%"
+      contentContainerStyle={{ flex: 1, paddingHorizontal: 24 }}
+    >
           <View className="flex-row justify-between items-center mb-4">
             <Text className="font-display text-lg text-text-primary-light dark:text-text-primary-dark">
               Passage analysis
@@ -230,8 +231,6 @@ export function PassageAnalysisSheet({
               </Text>
             )}
           </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
