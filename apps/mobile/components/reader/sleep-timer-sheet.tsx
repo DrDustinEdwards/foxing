@@ -1,4 +1,5 @@
-import { View, Text, Modal, Pressable } from 'react-native'
+import { View, Text, Pressable } from 'react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -23,26 +24,27 @@ export function SleepTimerSheet({ visible, active, onPick, onClose }: Props) {
   const isActiveEoc = active?.kind === 'end_of_chapter'
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          accessibilityViewIsModal
-          className="rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 12,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            paddingHorizontal: 20,
+            marginBottom: 8,
+          }}
         >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 12,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              paddingHorizontal: 20,
-              marginBottom: 8,
-            }}
-          >
-            Sleep timer
-          </Text>
+          Sleep timer
+        </Text>
+      }
+    >
           <View style={{ paddingHorizontal: 16, paddingVertical: 4 }}>
             <View className="flex-row flex-wrap" style={{ gap: 8 }}>
               {MINUTE_OPTIONS.map((m) => {
@@ -116,8 +118,6 @@ export function SleepTimerSheet({ visible, active, onPick, onClose }: Props) {
               {active ? 'Cancel timer' : 'No timer set'}
             </Text>
           </Pressable>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
