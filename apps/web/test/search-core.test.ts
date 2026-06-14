@@ -127,7 +127,7 @@ describe('searchEntity — book query construction', () => {
       entity: 'book',
       query: 'dracula',
       sort: 'newest',
-      filters: { mood: 'gothic', genre: 'horror', era: 'nineteenth', length: 'long' },
+      filters: { mood: 'gothic', genre: 'horror', era: '1800s', length: 'long' },
       limit: 24,
     })
     const b = lastBuilder(client)
@@ -204,7 +204,7 @@ describe('searchEntity — per-entity base predicates + filters', () => {
     await searchEntity(client, {
       entity: 'pick',
       query: 'austen',
-      filters: { year: 2021, era: 'twentieth' },
+      filters: { year: 2021, era: 'early-1900s' },
     })
     const b = lastBuilder(client)
     expect(call(b, 'from')!.args[0]).toBe('external_book_club_picks')
@@ -334,7 +334,7 @@ const BOOK_CONFIG: FilterBarConfig = {
       key: 'era',
       label: 'Era',
       param: 'era',
-      options: [{ value: 'nineteenth', label: '1800s' }],
+      options: [{ value: '1800s', label: '1800s' }],
     },
     {
       type: 'chips',
@@ -355,14 +355,14 @@ describe('filter-config', () => {
     const p = paramsToSearch('book', BOOK_CONFIG, {
       q: 'dracula',
       sort: 'newest',
-      era: 'nineteenth',
+      era: '1800s',
       mood: ['gothic', 'cozy'],
     })
     expect(p).toMatchObject({
       entity: 'book',
       query: 'dracula',
       sort: 'newest',
-      filters: { era: 'nineteenth', mood: ['gothic', 'cozy'] },
+      filters: { era: '1800s', mood: ['gothic', 'cozy'] },
     })
   })
 
@@ -382,9 +382,9 @@ describe('filter-config', () => {
     const out = searchToParams(BOOK_CONFIG, {
       query: 'dracula',
       sort: 'relevance',
-      filters: { era: 'nineteenth', mood: ['gothic'] },
+      filters: { era: '1800s', mood: ['gothic'] },
     })
-    expect(out).toEqual({ q: 'dracula', era: 'nineteenth', mood: ['gothic'] })
+    expect(out).toEqual({ q: 'dracula', era: '1800s', mood: ['gothic'] })
     expect(out.sort).toBeUndefined()
   })
 })

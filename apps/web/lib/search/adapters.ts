@@ -23,12 +23,12 @@ import type {
 // ── Named filter buckets → numeric ranges ─────────────────────────────────
 // Kept here so the URL/UI tokens stay stable even if thresholds are retuned.
 
+// Tokens + ranges align with lib/foxing ERAS (the indexed /books?era=… values).
 export const ERA_RANGES: Record<EraBucket, { min: number | null; max: number | null }> = {
-  ancient: { min: null, max: 1499 },
-  'early-modern': { min: 1500, max: 1799 },
-  nineteenth: { min: 1800, max: 1899 },
-  twentieth: { min: 1900, max: 1999 },
-  contemporary: { min: 2000, max: null },
+  'pre-1800': { min: null, max: 1799 },
+  '1800s': { min: 1800, max: 1899 },
+  'early-1900s': { min: 1900, max: 1949 },
+  'mid-1900s': { min: 1950, max: 1999 },
 }
 
 /** word_count thresholds (a 60k / 120k split ≈ short / medium / long novels). */
