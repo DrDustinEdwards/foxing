@@ -16,6 +16,7 @@ import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { CaretLeft, CaretRight, X as XIcon, Trash } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
+import { reportWriteError } from '@/lib/db-write'
 import { rescheduleAll } from '@/lib/local-notifications'
 import { getHapticsEnabled, setHapticsEnabled } from '@/lib/haptics'
 import {
@@ -205,10 +206,11 @@ export default function SettingsScreen() {
       // is_public is stored as either a boolean or a 3-value text enum in
       // the schema. Write the text value, Postgres will coerce to bool
       // when the column is boolean.
-      await supabase
+      const { error } = await supabase
         .from('profiles')
         .update({ is_public: v === 'private' ? false : v })
         .eq('id', userId)
+      reportWriteError(error, { op: 'update', table: 'profiles', extra: { field: 'is_public' } })
     },
     [userId],
   )
@@ -217,7 +219,11 @@ export default function SettingsScreen() {
     async (value: boolean) => {
       setProgressPublic(value)
       if (!userId) return
-      await supabase.from('profiles').update({ progress_is_public: value }).eq('id', userId)
+      const { error } = await supabase
+        .from('profiles')
+        .update({ progress_is_public: value })
+        .eq('id', userId)
+      reportWriteError(error, { op: 'update', table: 'profiles', extra: { field: 'progress_is_public' } })
     },
     [userId],
   )

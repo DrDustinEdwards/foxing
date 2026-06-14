@@ -10,6 +10,7 @@ import {
 import { X as XIcon } from 'phosphor-react-native'
 import { friendlyAiError, getWordAspect, lookupWord, type WordAspect } from '@/lib/claude'
 import { supabase } from '@/lib/supabase'
+import { reportWriteError } from '@/lib/db-write'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -81,13 +82,14 @@ export function WordLookupSheet({
         setDefinition(result)
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          await supabase.from('vocabulary').insert({
+          const { error: vocabErr } = await supabase.from('vocabulary').insert({
             user_id: user.id,
             book_id: bookId,
             word,
             definition: result,
             context: sentence,
           })
+          reportWriteError(vocabErr, { op: 'insert', table: 'vocabulary' })
         }
       } catch (e) {
         const message = friendlyAiError(e)

@@ -12,6 +12,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { X as XIcon, CaretRight, CaretLeft, Star, StarHalf } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
+import { reportWriteError } from '@/lib/db-write'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -92,7 +93,7 @@ export function FinishReviewSheet({
     setSaving(true)
     const ratingInt = rating === 0 ? null : Math.max(0, Math.min(5, Math.round(rating)))
     const ratingHalf = rating === 0 ? null : rating
-    await supabase
+    const { error } = await supabase
       .from('user_books')
       .update({
         rating: ratingInt,
@@ -101,6 +102,7 @@ export function FinishReviewSheet({
         review_is_public: isPublic,
       })
       .eq('id', userBookId)
+    reportWriteError(error, { op: 'update', table: 'user_books', extra: { stage: 'review' } })
     setSaving(false)
   }, [isPublic, rating, review, userBookId])
 
@@ -109,7 +111,7 @@ export function FinishReviewSheet({
     // Best-effort, these columns may not exist on older deployments. The
     // update call returns an error in that case but doesn't surface it.
     try {
-      await supabase
+      const { error } = await supabase
         .from('user_books')
         .update({
           mood_tags: moods.size > 0 ? [...moods] : null,
@@ -117,6 +119,7 @@ export function FinishReviewSheet({
           format_read: format ?? null,
         })
         .eq('id', userBookId)
+      reportWriteError(error, { op: 'update', table: 'user_books', extra: { stage: 'review_meta' } })
     } catch (e) {
       console.warn('[finish-review] page 2 save failed:', e instanceof Error ? e.message : e)
     }

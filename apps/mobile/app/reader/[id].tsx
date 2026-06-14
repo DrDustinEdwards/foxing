@@ -23,6 +23,7 @@ import {
 import { TtsBar } from '@/components/reader/tts-bar'
 import { GoToSheet } from '@/components/reader/go-to-sheet'
 import { supabase } from '@/lib/supabase'
+import { reportWriteError } from '@/lib/db-write'
 import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import type {
@@ -872,7 +873,7 @@ export default function Reader() {
     lastSaveRef.current = Date.now()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
-    await supabase
+    const { error } = await supabase
       .from('user_books')
       .upsert(
         {
@@ -884,6 +885,7 @@ export default function Reader() {
         },
         { onConflict: 'user_id,book_id' },
       )
+    reportWriteError(error, { op: 'upsert', table: 'user_books', extra: { bookId: book.id } })
   }
 
   // Keep the ref pointed at the current-render saveProgress so the interval
@@ -1209,7 +1211,7 @@ export default function Reader() {
     // Word highlight also auto-saves vocabulary so the word ends up in
     // the Vocabulary screen even if the user didn't tap "Look up".
     if (pillMode === 'word' && wordPayload) {
-      await supabase.from('vocabulary').insert({
+      const { error: vocabErr } = await supabase.from('vocabulary').insert({
         user_id: user.id,
         book_id: book.id,
         book_title: book.title,
@@ -1222,6 +1224,7 @@ export default function Reader() {
         // highlight-only saves; lookups overwrite this with the real AI text.
         definition: '(highlighted, open to look up definition)',
       })
+      reportWriteError(vocabErr, { op: 'insert', table: 'vocabulary' })
     }
     dismissPill()
   }
