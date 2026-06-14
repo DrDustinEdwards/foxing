@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Check, CaretLeft, CaretRight, BookOpen } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
+import { reportWriteError } from '@/lib/db-write'
 import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -497,10 +498,11 @@ async function persistGoal(goalBooks: string) {
   // New schema uses type='books_per_year' per task.md Section 1f. Older rows
   // with type='books_year' coexist; the upsert key includes type so they
   // don't collide.
-  await supabase.from('reading_goals').upsert(
+  const { error } = await supabase.from('reading_goals').upsert(
     { user_id: user.id, year, type: 'books_per_year', target },
     { onConflict: 'user_id,year,type' },
   )
+  reportWriteError(error, { op: 'upsert', table: 'reading_goals' })
 }
 
 async function persistStarterBooks(picked: Set<string>) {
@@ -512,7 +514,8 @@ async function persistStarterBooks(picked: Set<string>) {
     book_id,
     status: 'want_to_read' as const,
   }))
-  await supabase.from('user_books').upsert(rows, { onConflict: 'user_id,book_id' })
+  const { error } = await supabase.from('user_books').upsert(rows, { onConflict: 'user_id,book_id' })
+  reportWriteError(error, { op: 'upsert', table: 'user_books', extra: { count: rows.length } })
 }
 
 // ── Reusable layout bits ─────────────────────────────────────────────────
