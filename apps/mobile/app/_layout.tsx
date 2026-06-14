@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
+import { KeyboardProvider } from 'react-native-keyboard-controller'
 import * as Linking from 'expo-linking'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
@@ -284,15 +286,19 @@ function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {/* Default Phosphor weight + size for every icon in the app. Per
-          design spec the regular weight is the only one we use; setting
-          it here means individual call sites don't have to remember. */}
-      <IconContext.Provider value={{ weight: 'regular', size: 20 }}>
-        <ReaderProvider>
-          <Stack screenOptions={{ headerShown: false }} />
-          <StatusBar style="auto" />
-        </ReaderProvider>
-      </IconContext.Provider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <KeyboardProvider>
+          {/* Default Phosphor weight + size for every icon in the app. Per
+              design spec the regular weight is the only one we use; setting
+              it here means individual call sites don't have to remember. */}
+          <IconContext.Provider value={{ weight: 'regular', size: 20 }}>
+            <ReaderProvider>
+              <Stack screenOptions={{ headerShown: false }} />
+              <StatusBar style="auto" />
+            </ReaderProvider>
+          </IconContext.Provider>
+        </KeyboardProvider>
+      </SafeAreaProvider>
     </GestureHandlerRootView>
   )
 }
