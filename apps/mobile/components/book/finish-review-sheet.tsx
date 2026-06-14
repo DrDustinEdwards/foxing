@@ -2,17 +2,13 @@ import { useCallback, useEffect, useState } from 'react'
 import {
   View,
   Text,
-  Modal,
   Pressable,
   TextInput,
-  ScrollView,
   ActivityIndicator,
   Switch,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X as XIcon, CaretRight, CaretLeft, Star, StarHalf } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { supabase } from '@/lib/supabase'
 import { reportWriteError } from '@/lib/db-write'
 import { useColors } from '@/constants/colors'
@@ -68,7 +64,6 @@ export function FinishReviewSheet({
   onSaved,
 }: FinishReviewSheetProps) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   const [page, setPage] = useState<1 | 2>(1)
   const [rating, setRating] = useState(0) // 0..5 in half-steps
   const [review, setReview] = useState('')
@@ -150,51 +145,127 @@ export function FinishReviewSheet({
   }, [onClose, onSaved])
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
-        <View className="flex-row items-center justify-between px-3 py-2">
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      header={
+        <>
+          <View className="flex-row items-center justify-between px-3 py-2">
+            <Pressable
+              onPress={page === 2 ? () => setPage(1) : onClose}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={page === 2 ? 'Back to rating' : 'Close'}
+              className="p-2"
+            >
+              {page === 2 ? (
+                <CaretLeft color={colors.textPrimary} size={20} />
+              ) : (
+                <XIcon color={colors.textPrimary} size={20} />
+              )}
+            </Pressable>
+            <Text
+              style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textSecondary }}
+              numberOfLines={1}
+            >
+              How was {bookTitle}?
+            </Text>
+            <View style={{ width: 36 }} />
+          </View>
+          <View className="flex-row gap-1 px-4 mb-2">
+            {[1, 2].map((p) => (
+              <View
+                key={p}
+                style={{
+                  flex: 1,
+                  height: 3,
+                  borderRadius: 2,
+                  backgroundColor: p <= page ? colors.brandUi : colors.borderSubtle,
+                }}
+              />
+            ))}
+          </View>
+        </>
+      }
+      footer={
+        <View className="flex-row items-center justify-between">
           <Pressable
-            onPress={page === 2 ? () => setPage(1) : onClose}
-            hitSlop={10}
+            onPress={onSkip}
             accessibilityRole="button"
-            accessibilityLabel={page === 2 ? 'Back to rating' : 'Close'}
-            className="p-2"
+            accessibilityLabel="Skip remaining steps"
+            className="px-4 py-2"
           >
-            {page === 2 ? (
-              <CaretLeft color={colors.textPrimary} size={20} />
-            ) : (
-              <XIcon color={colors.textPrimary} size={20} />
-            )}
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textTertiary, fontSize: 13 }}>
+              Skip
+            </Text>
           </Pressable>
-          <Text
-            style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textSecondary }}
-            numberOfLines={1}
-          >
-            How was {bookTitle}?
-          </Text>
-          <View style={{ width: 36 }} />
-        </View>
-
-        <View className="flex-row gap-1 px-4 mb-2">
-          {[1, 2].map((p) => (
-            <View
-              key={p}
+          {page === 1 ? (
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={onDone}
+                accessibilityRole="button"
+                accessibilityLabel="Done with review"
+                disabled={saving}
+                className="flex-row items-center gap-1 px-4 py-2 rounded-full border"
+                style={{
+                  borderColor: colors.borderInteractive,
+                  opacity: saving ? 0.7 : 1,
+                }}
+              >
+                <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
+                  Done
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={onNext}
+                accessibilityRole="button"
+                accessibilityLabel="Continue to tags"
+                disabled={saving}
+                className="flex-row items-center gap-1 px-5 py-2 rounded-full"
+                style={{
+                  backgroundColor: colors.brandUi,
+                  opacity: saving ? 0.7 : 1,
+                }}
+              >
+                {saving ? (
+                  <ActivityIndicator color={colors.textOnBrand} size="small" />
+                ) : (
+                  <>
+                    <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+                      Next
+                    </Text>
+                    <CaretRight color={colors.textOnBrand} size={14} weight="bold" />
+                  </>
+                )}
+              </Pressable>
+            </View>
+          ) : (
+            <Pressable
+              onPress={onDone}
+              accessibilityRole="button"
+              accessibilityLabel="Save tags and finish"
+              disabled={saving}
+              className="px-5 py-2 rounded-full"
               style={{
-                flex: 1,
-                height: 3,
-                borderRadius: 2,
-                backgroundColor: p <= page ? colors.brandUi : colors.borderSubtle,
+                backgroundColor: colors.brandUi,
+                opacity: saving ? 0.7 : 1,
               }}
-            />
-          ))}
+            >
+              {saving ? (
+                <ActivityIndicator color={colors.textOnBrand} size="small" />
+              ) : (
+                <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+                  Done
+                </Text>
+              )}
+            </Pressable>
+          )}
         </View>
-
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
+      }
+    >
         {page === 1 ? (
-          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+          <>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textTertiary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>
               Your rating
             </Text>
@@ -250,9 +321,9 @@ export function FinishReviewSheet({
                 trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
               />
             </View>
-          </ScrollView>
+          </>
         ) : (
-          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
+          <>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textTertiary, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>
               How did it feel?
             </Text>
@@ -358,88 +429,9 @@ export function FinishReviewSheet({
                 )
               })}
             </View>
-          </ScrollView>
+          </>
         )}
-
-        <View
-          className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ paddingBottom: insets.bottom + 12 }}
-        >
-          <Pressable
-            onPress={onSkip}
-            accessibilityRole="button"
-            accessibilityLabel="Skip remaining steps"
-            className="px-4 py-2"
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textTertiary, fontSize: 13 }}>
-              Skip
-            </Text>
-          </Pressable>
-          {page === 1 ? (
-            <View className="flex-row gap-3">
-              <Pressable
-                onPress={onDone}
-                accessibilityRole="button"
-                accessibilityLabel="Done with review"
-                disabled={saving}
-                className="flex-row items-center gap-1 px-4 py-2 rounded-full border"
-                style={{
-                  borderColor: colors.borderInteractive,
-                  opacity: saving ? 0.7 : 1,
-                }}
-              >
-                <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
-                  Done
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={onNext}
-                accessibilityRole="button"
-                accessibilityLabel="Continue to tags"
-                disabled={saving}
-                className="flex-row items-center gap-1 px-5 py-2 rounded-full"
-                style={{
-                  backgroundColor: colors.brandUi,
-                  opacity: saving ? 0.7 : 1,
-                }}
-              >
-                {saving ? (
-                  <ActivityIndicator color={colors.textOnBrand} size="small" />
-                ) : (
-                  <>
-                    <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                      Next
-                    </Text>
-                    <CaretRight color={colors.textOnBrand} size={14} weight="bold" />
-                  </>
-                )}
-              </Pressable>
-            </View>
-          ) : (
-            <Pressable
-              onPress={onDone}
-              accessibilityRole="button"
-              accessibilityLabel="Save tags and finish"
-              disabled={saving}
-              className="px-5 py-2 rounded-full"
-              style={{
-                backgroundColor: colors.brandUi,
-                opacity: saving ? 0.7 : 1,
-              }}
-            >
-              {saving ? (
-                <ActivityIndicator color={colors.textOnBrand} size="small" />
-              ) : (
-                <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                  Done
-                </Text>
-              )}
-            </Pressable>
-          )}
-        </View>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
