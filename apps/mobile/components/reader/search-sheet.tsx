@@ -6,7 +6,7 @@ import {
 import { X as XIcon } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { semanticSearch, type SemanticSearchResult } from '@/lib/claude'
+import { friendlyAiError, semanticSearch, type SemanticSearchResult } from '@/lib/claude'
 
 type SearchMode = 'exact' | 'ai'
 
@@ -57,7 +57,7 @@ export function SearchSheet({
         setError('Exact search inside the book is coming soon. Try AI Search for now.')
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Search failed')
+      setError(friendlyAiError(e))
     } finally {
       setLoading(false)
     }

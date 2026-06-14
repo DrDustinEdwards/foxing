@@ -12,6 +12,7 @@ import { X as XIcon, CheckCircle, XCircle, ArrowRight } from 'phosphor-react-nat
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import {
+  friendlyAiError,
   getChapterFeature,
   getComprehensionQuiz,
   type ChapterFeatureKind,
@@ -85,7 +86,7 @@ export function ChapterFeatureSheet({
           setProseResult(text)
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load')
+        setError(friendlyAiError(e))
       } finally {
         setLoading(false)
       }

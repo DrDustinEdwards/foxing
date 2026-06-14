@@ -15,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { X as XIcon, Sparkle, ArrowsClockwise } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { getDiscussionStarter } from '@/lib/claude'
+import { friendlyAiError, getDiscussionStarter } from '@/lib/claude'
 import { createThread } from '@/lib/clubs'
 
 interface DiscussionStarterSheetProps {
@@ -69,7 +69,7 @@ export function DiscussionStarterSheet({
       setTitle(draft.title)
       setOpening(draft.opening)
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Failed to generate'
+      const msg = friendlyAiError(e)
       // Most likely: Edge Function doesn't implement `discussion_starter`
       // yet. Tell the user but leave the form usable for a manual post.
       setError(`${msg}. You can still write your own starter below.`)

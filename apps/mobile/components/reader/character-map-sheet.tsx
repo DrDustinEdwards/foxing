@@ -3,7 +3,7 @@ import { View, Text, Modal, Pressable, ScrollView, ActivityIndicator } from 'rea
 import { X as XIcon, Dot } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { getCharacterMap, type CharacterEntry } from '@/lib/claude'
+import { friendlyAiError, getCharacterMap, type CharacterEntry } from '@/lib/claude'
 
 interface CharacterMapSheetProps {
   visible: boolean
@@ -57,7 +57,7 @@ export function CharacterMapSheet({
         })
         setChars(sorted)
       } catch (e) {
-        setError(e instanceof Error ? e.message : 'Couldn’t load character map')
+        setError(friendlyAiError(e))
       } finally {
         setLoading(false)
       }
