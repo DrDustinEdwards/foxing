@@ -3,14 +3,12 @@ import {
   View,
   Text,
   Pressable,
-  ScrollView,
   TextInput,
   Share,
   Image,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+import { Screen } from '@/components/ui/screen'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import ViewShot, { captureRef, type ViewShotRef } from 'react-native-view-shot'
 import * as MediaLibrary from 'expo-media-library'
@@ -67,7 +65,6 @@ const TEMPLATE_ORDER: TemplateId[] = ['minimal', 'ornate', 'dark', 'sepia']
 
 export default function QuoteCardScreen() {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   const router = useRouter()
   const params = useLocalSearchParams<{
     type?: CardType
@@ -226,10 +223,7 @@ export default function QuoteCardScreen() {
   }, [bookId, bookTitle, captureCard, cardType, clubName, passage, template])
 
   return (
-    <SafeAreaView
-      className="flex-1 bg-bg-base-light dark:bg-bg-base-dark"
-      edges={['top']}
-    >
+    <Screen>
       <View className="flex-row items-center px-3 py-2">
         <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
           <CaretLeft color={colors.textPrimary} size={22} />
@@ -252,14 +246,12 @@ export default function QuoteCardScreen() {
         </Text>
       </View>
 
-      <KeyboardAvoidingView
+      <KeyboardAwareScrollView
         style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
       >
-        <ScrollView
-          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-          keyboardShouldPersistTaps="handled"
-        >
           {/* Wrapped in ViewShot so capture targets exactly the card rect
               (not the surrounding ScrollView padding). The inner View has
               collapsable={false} because Android RN may otherwise flatten
@@ -390,12 +382,11 @@ export default function QuoteCardScreen() {
               </Text>
             </View>
           ) : null}
-        </ScrollView>
+      </KeyboardAwareScrollView>
 
-        <View
-          className="flex-row items-center gap-2 px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ paddingBottom: insets.bottom + 12 }}
-        >
+      <View
+        className="flex-row items-center gap-2 px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
+      >
           <Pressable
             onPress={onSave}
             disabled={saving}
@@ -421,9 +412,8 @@ export default function QuoteCardScreen() {
               Share
             </Text>
           </Pressable>
-        </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </View>
+    </Screen>
   )
 }
 

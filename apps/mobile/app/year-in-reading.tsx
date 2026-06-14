@@ -11,7 +11,7 @@ import {
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { Screen } from '@/components/ui/screen'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   X as XIcon,
@@ -90,15 +90,15 @@ export default function YearInReadingScreen() {
 
   if (loading || !stats) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center" style={{ backgroundColor: C.bgBase }}>
+      <Screen className="items-center justify-center" style={{ backgroundColor: C.bgBase }}>
         <ActivityIndicator color={C.brandUi} />
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bgBase }}>
-      <SafeAreaView style={{ flex: 1 }} edges={['top', 'bottom']}>
+      <Screen style={{ flex: 1 }}>
         <View
           style={{
             flexDirection: 'row',
@@ -318,7 +318,7 @@ export default function YearInReadingScreen() {
             </Pressable>
           </Slide>
         </ScrollView>
-      </SafeAreaView>
+      </Screen>
     </View>
   )
 }
