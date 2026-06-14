@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import {
   View, Text, Pressable, ScrollView, ActivityIndicator, TextInput,
-  KeyboardAvoidingView, Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+import { Screen } from '@/components/ui/screen'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { CaretLeft, X as XIcon, Check } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
@@ -79,7 +79,7 @@ export default function VocabularyScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <View className="flex-row items-center justify-between px-5 py-3">
         <Pressable onPress={() => router.back()} className="flex-row items-center">
           <CaretLeft color={colors.brandText} size={18} />
@@ -210,7 +210,7 @@ export default function VocabularyScreen() {
           })
         )}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   )
 }
 
@@ -246,7 +246,7 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <View className="flex-row items-center justify-between px-5 py-3">
         <Pressable onPress={onExit}>
           <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, fontSize: 16 }}>
@@ -259,10 +259,6 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
         <View style={{ width: 60 }} />
       </View>
 
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
         <View className="flex-1 items-center justify-center px-6">
           {done ? (
             <>
@@ -297,10 +293,11 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
               </Text>
             </Pressable>
           ) : (
-            <ScrollView
+            <KeyboardAwareScrollView
               style={{ flex: 1, width: '100%' }}
               contentContainerStyle={{ paddingVertical: 24 }}
               keyboardShouldPersistTaps="handled"
+              bottomOffset={24}
             >
               <Pressable
                 onPress={() => setFlipped(false)}
@@ -375,10 +372,9 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                   <Check color={colors.textOnBrand} size={14} />
                 </Pressable>
               </View>
-            </ScrollView>
+            </KeyboardAwareScrollView>
           )}
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }

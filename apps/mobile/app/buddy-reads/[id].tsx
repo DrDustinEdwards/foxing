@@ -8,10 +8,9 @@ import {
   ActivityIndicator,
   Image,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardStickyView } from 'react-native-keyboard-controller'
+import { Screen } from '@/components/ui/screen'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
@@ -229,14 +228,14 @@ export default function BuddyReadConversation() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     )
   }
   if (!info) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark px-8">
+      <Screen className="items-center justify-center px-8">
         <Text
           style={{
             fontFamily: Fonts.body,
@@ -247,16 +246,12 @@ export default function BuddyReadConversation() {
         >
           Buddy read not found.
         </Text>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
-      >
+    <Screen>
         <View className="flex-row items-center px-3 py-2">
           <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
             <CaretLeft color={colors.textPrimary} size={22} />
@@ -294,6 +289,7 @@ export default function BuddyReadConversation() {
         </View>
 
         <ScrollView
+          style={{ flex: 1 }}
           contentContainerStyle={{ padding: 16, paddingBottom: 16 }}
         >
           {posts.length === 0 ? (
@@ -471,6 +467,7 @@ export default function BuddyReadConversation() {
         </ScrollView>
 
         {info.is_active ? (
+          <KeyboardStickyView>
           <View
             style={{
               padding: 12,
@@ -577,8 +574,8 @@ export default function BuddyReadConversation() {
               </Pressable>
             </View>
           </View>
+          </KeyboardStickyView>
         ) : null}
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+    </Screen>
   )
 }

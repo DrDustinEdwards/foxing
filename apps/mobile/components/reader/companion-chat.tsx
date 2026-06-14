@@ -7,11 +7,10 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardStickyView } from 'react-native-keyboard-controller'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { Sliders } from 'phosphor-react-native'
 import { chatWithCompanion, friendlyAiError, type ChatMode } from '@/lib/claude'
@@ -122,10 +121,6 @@ export function CompanionChat({
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          className="flex-1"
-        >
           <View className="flex-row items-center justify-between px-4 py-3 border-b border-border-subtle-light dark:border-border-subtle-dark">
             <View style={{ flex: 1 }}>
               <View className="flex-row items-center" style={{ gap: 8 }}>
@@ -236,6 +231,7 @@ export function CompanionChat({
             {sending ? <ActivityIndicator color={colors.brandUi} className="mt-2" /> : null}
           </ScrollView>
 
+          <KeyboardStickyView>
           <View className="flex-row items-center px-4 py-3 gap-2 border-t border-border-subtle-light dark:border-border-subtle-dark">
             <TextInput
               value={input}
@@ -258,7 +254,7 @@ export function CompanionChat({
               <Text className="font-ui-medium text-text-on-brand">Send</Text>
             </Pressable>
           </View>
-        </KeyboardAvoidingView>
+          </KeyboardStickyView>
       </SafeAreaView>
     </Modal>
   )
