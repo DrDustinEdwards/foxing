@@ -1,18 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Modal,
   View,
   Text,
   TextInput,
   Pressable,
-  ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Switch,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X as XIcon, Sparkle, ArrowsClockwise } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { friendlyAiError, getDiscussionStarter } from '@/lib/claude'
@@ -42,7 +38,6 @@ export function DiscussionStarterSheet({
   onPosted,
 }: DiscussionStarterSheetProps) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -113,8 +108,11 @@ export function DiscussionStarterSheet({
   }, [clubId, currentChapter, hasSpoilers, onClose, onPosted, opening, posting, title])
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      header={
         <View className="flex-row items-center justify-between px-3 py-2">
           <Pressable onPress={onClose} hitSlop={10} className="p-2">
             <XIcon color={colors.textPrimary} size={20} />
@@ -129,15 +127,30 @@ export function DiscussionStarterSheet({
           </View>
           <View style={{ width: 36 }} />
         </View>
-
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      }
+      footer={
+        <View className="flex-row items-center justify-end">
+          <Pressable
+            onPress={post}
+            disabled={!title.trim() || !opening.trim() || posting}
+            className="px-5 py-2 rounded-full"
+            style={{
+              backgroundColor:
+                title.trim() && opening.trim() ? colors.brandUi : colors.bgDisabled,
+              opacity: posting ? 0.7 : 1,
+            }}
           >
+            {posting ? (
+              <ActivityIndicator color={colors.textOnBrand} size="small" />
+            ) : (
+              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+                Post thread
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      }
+    >
             <Text
               style={{
                 fontFamily: Fonts.body,
@@ -227,34 +240,7 @@ export function DiscussionStarterSheet({
                 </Text>
               </View>
             ) : null}
-          </ScrollView>
-        </KeyboardAvoidingView>
-
-        <View
-          className="flex-row items-center justify-end px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ paddingBottom: insets.bottom + 12 }}
-        >
-          <Pressable
-            onPress={post}
-            disabled={!title.trim() || !opening.trim() || posting}
-            className="px-5 py-2 rounded-full"
-            style={{
-              backgroundColor:
-                title.trim() && opening.trim() ? colors.brandUi : colors.bgDisabled,
-              opacity: posting ? 0.7 : 1,
-            }}
-          >
-            {posting ? (
-              <ActivityIndicator color={colors.textOnBrand} size="small" />
-            ) : (
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Post thread
-              </Text>
-            )}
-          </Pressable>
-        </View>
-      </SafeAreaView>
-    </Modal>
+    </SheetScaffold>
   )
 }
 

@@ -1,19 +1,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Modal,
   View,
   Text,
   TextInput,
   Pressable,
-  ScrollView,
   Image,
   ActivityIndicator,
   Switch,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { X as XIcon, CaretLeft, CaretRight, Check, BookOpen } from 'phosphor-react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import {
@@ -52,7 +48,6 @@ interface CreateClubSheetProps {
 
 export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheetProps) {
   const colors = useColors()
-  const insets = useSafeAreaInsets()
   const [step, setStep] = useState<Step>('basics')
   const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT)
   const [submitting, setSubmitting] = useState(false)
@@ -115,62 +110,30 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
   }, [idx, onClose])
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
-        <View className="flex-row items-center justify-between px-3 py-2">
-          <Pressable onPress={goBack} hitSlop={10} className="p-2 flex-row items-center">
-            {idx === 0 ? (
-              <XIcon color={colors.textPrimary} size={20} />
-            ) : (
-              <CaretLeft color={colors.textPrimary} size={20} />
-            )}
-          </Pressable>
-          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textSecondary }}>
-            New Club · {idx + 1}/{STEP_ORDER.length}
-          </Text>
-          <View style={{ width: 36 }} />
-        </View>
-
-        <StepBar count={STEP_ORDER.length} index={idx} />
-
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-          >
-            {step === 'basics' ? (
-              <BasicsStep draft={draft} setDraft={setDraft} />
-            ) : step === 'book' ? (
-              <BookStep draft={draft} setDraft={setDraft} />
-            ) : step === 'pace' ? (
-              <PaceStep draft={draft} setDraft={setDraft} />
-            ) : (
-              <InviteStep club={created} />
-            )}
-            {error ? (
-              <View
-                style={{
-                  marginTop: 16,
-                  padding: 12,
-                  borderRadius: 12,
-                  backgroundColor: colors.errorBg,
-                }}
-              >
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>
-                  {error}
-                </Text>
-              </View>
-            ) : null}
-          </ScrollView>
-        </KeyboardAvoidingView>
-
-        <View
-          className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ paddingBottom: insets.bottom + 12 }}
-        >
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+      header={
+        <>
+          <View className="flex-row items-center justify-between px-3 py-2">
+            <Pressable onPress={goBack} hitSlop={10} className="p-2 flex-row items-center">
+              {idx === 0 ? (
+                <XIcon color={colors.textPrimary} size={20} />
+              ) : (
+                <CaretLeft color={colors.textPrimary} size={20} />
+              )}
+            </Pressable>
+            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textSecondary }}>
+              New Club · {idx + 1}/{STEP_ORDER.length}
+            </Text>
+            <View style={{ width: 36 }} />
+          </View>
+          <StepBar count={STEP_ORDER.length} index={idx} />
+        </>
+      }
+      footer={
+        <View className="flex-row items-center justify-between">
           <Pressable
             onPress={goBack}
             className="px-4 py-2 rounded-full"
@@ -201,8 +164,32 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
             )}
           </Pressable>
         </View>
-      </SafeAreaView>
-    </Modal>
+      }
+    >
+            {step === 'basics' ? (
+              <BasicsStep draft={draft} setDraft={setDraft} />
+            ) : step === 'book' ? (
+              <BookStep draft={draft} setDraft={setDraft} />
+            ) : step === 'pace' ? (
+              <PaceStep draft={draft} setDraft={setDraft} />
+            ) : (
+              <InviteStep club={created} />
+            )}
+            {error ? (
+              <View
+                style={{
+                  marginTop: 16,
+                  padding: 12,
+                  borderRadius: 12,
+                  backgroundColor: colors.errorBg,
+                }}
+              >
+                <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>
+                  {error}
+                </Text>
+              </View>
+            ) : null}
+    </SheetScaffold>
   )
 }
 
