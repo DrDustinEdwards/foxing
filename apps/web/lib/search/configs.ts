@@ -49,6 +49,23 @@ export const BOOKS_FILTER_CONFIG: FilterBarConfig = {
 }
 
 /**
+ * People config. No structured facets (text + sort only). Sort tokens match the
+ * person adapter (most_books -> total_books_read, most_active -> total_highlights,
+ * new -> created_at).
+ */
+export const PEOPLE_FILTER_CONFIG: FilterBarConfig = {
+  entity: 'person',
+  searchPlaceholder: 'Search by name or username',
+  defaultSort: 'most_books',
+  sorts: [
+    { value: 'most_books', label: 'Most books' },
+    { value: 'most_active', label: 'Most active' },
+    { value: 'new', label: 'New members' },
+  ],
+  facets: [],
+}
+
+/**
  * Clubs config. Genre options come from real genre_tags data (empty hides the
  * facet). URL token `genre_tag` maps to ClubFilters.genreTag via filterKey.
  */
