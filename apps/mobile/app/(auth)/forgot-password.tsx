@@ -5,11 +5,10 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
+import { Screen } from '@/components/ui/screen'
 import { X as XIcon } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
@@ -41,7 +40,7 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen>
         <View className="flex-1 px-8 justify-center gap-4">
           <Text className="font-display text-3xl text-brand-text-light dark:text-brand-text-dark">
             Check your email
@@ -61,15 +60,16 @@ export default function ForgotPassword() {
             </Text>
           </Pressable>
         </View>
-      </SafeAreaView>
+      </Screen>
     )
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1 px-8 justify-center"
+    <Screen>
+      <KeyboardAwareScrollView
+        contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 32 }}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
       >
         <View className="mb-10 items-center">
           <Text className="font-display text-3xl text-brand-text-light dark:text-brand-text-dark">
@@ -136,7 +136,7 @@ export default function ForgotPassword() {
             </Link>
           </View>
         </View>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      </KeyboardAwareScrollView>
+    </Screen>
   )
 }
