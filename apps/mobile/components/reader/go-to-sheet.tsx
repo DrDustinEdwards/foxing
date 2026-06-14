@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
 import {
-  Modal,
   View,
   Text,
   Pressable,
@@ -9,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { X as XIcon, Trash, BookmarkSimple, ListBullets, NavigationArrow, MapPin } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -111,24 +110,29 @@ export function GoToSheet({
   )
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark" edges={['top']}>
-        <View className="flex-row items-center justify-between px-3 py-2">
-          <Pressable onPress={onClose} hitSlop={10} className="p-2">
-            <XIcon color={colors.textPrimary} size={20} />
-          </Pressable>
-          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textSecondary }}>
-            Go to
-          </Text>
-          <View style={{ width: 36 }} />
-        </View>
-
-        <View className="flex-row px-2 mb-2">
-          <TabButton tab="contents" current={tab} setTab={setTab} icon={ListBullets} label="Contents" />
-          <TabButton tab="location" current={tab} setTab={setTab} icon={NavigationArrow} label="Location" />
-          <TabButton tab="places" current={tab} setTab={setTab} icon={MapPin} label="My Places" />
-        </View>
-
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      scroll={false}
+      header={
+        <>
+          <View className="flex-row items-center justify-between px-3 py-2">
+            <Pressable onPress={onClose} hitSlop={10} className="p-2">
+              <XIcon color={colors.textPrimary} size={20} />
+            </Pressable>
+            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textSecondary }}>
+              Go to
+            </Text>
+            <View style={{ width: 36 }} />
+          </View>
+          <View className="flex-row px-2 mb-2">
+            <TabButton tab="contents" current={tab} setTab={setTab} icon={ListBullets} label="Contents" />
+            <TabButton tab="location" current={tab} setTab={setTab} icon={NavigationArrow} label="Location" />
+            <TabButton tab="places" current={tab} setTab={setTab} icon={MapPin} label="My Places" />
+          </View>
+        </>
+      }
+    >
         {tab === 'contents' ? (
           <ScrollView contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24 }}>
             {tocLoading ? (
@@ -269,8 +273,7 @@ export function GoToSheet({
             }}
           />
         )}
-      </SafeAreaView>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
