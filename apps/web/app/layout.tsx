@@ -5,6 +5,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { Analytics } from '@vercel/analytics/react'
 import { FOXING_BASE_URL } from '@/lib/metadata'
 import { SessionProvider } from '@/components/providers/session-provider'
+import { CommandPalette } from '@/components/search/command-palette'
 
 // Runs before any paint. Reads the stored preference from localStorage and
 // sets data-mode + color-scheme on <html> so there is no flash of the
@@ -213,6 +214,7 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: WEBSITE_JSONLD }}
           />
           {children}
+          <CommandPalette />
           <SpeedInsights />
           <Analytics />
         </SessionProvider>
