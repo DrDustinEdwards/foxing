@@ -6,7 +6,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
-  Modal,
   TextInput,
   Alert,
   Switch,
@@ -1434,28 +1433,49 @@ function BulkRatePicker({
     if (visible) setDraft(0)
   }, [visible])
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 items-center justify-center px-8"
-        style={{ backgroundColor: colors.overlay }}
-        onPress={onClose}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="w-full p-5 rounded-2xl bg-bg-elevated-light dark:bg-bg-elevated-dark"
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      scroll={false}
+      contentContainerStyle={{ paddingHorizontal: 20 }}
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 11,
+            color: colors.textTertiary,
+            textTransform: 'uppercase',
+            letterSpacing: 0.6,
+            marginBottom: 10,
+            paddingHorizontal: 20,
+          }}
         >
-          <Text
+          Rate selected books
+        </Text>
+      }
+      footer={
+        <View className="flex-row justify-end" style={{ gap: 10 }}>
+          <Pressable onPress={onClose} className="px-4 py-2">
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
+              Cancel
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => onPick(draft)}
+            disabled={draft === 0}
+            className="px-4 py-2 rounded-full"
             style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              marginBottom: 10,
+              backgroundColor: draft > 0 ? colors.brandUi : colors.bgDisabled,
             }}
           >
-            Rate selected books
-          </Text>
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+              Apply
+            </Text>
+          </Pressable>
+        </View>
+      }
+    >
           <View className="flex-row justify-center" style={{ gap: 6, marginBottom: 16 }}>
             {[1, 2, 3, 4, 5].map((n) => {
               const filled = n <= draft
@@ -1476,28 +1496,7 @@ function BulkRatePicker({
               )
             })}
           </View>
-          <View className="flex-row justify-end" style={{ gap: 10 }}>
-            <Pressable onPress={onClose} className="px-4 py-2">
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
-                Cancel
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onPick(draft)}
-              disabled={draft === 0}
-              className="px-4 py-2 rounded-full"
-              style={{
-                backgroundColor: draft > 0 ? colors.brandUi : colors.bgDisabled,
-              }}
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Apply
-              </Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
@@ -1584,26 +1583,54 @@ function CreateShelfModal({
   }, [visible])
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: colors.overlay }}
-        onPress={onClose}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="w-full p-4 rounded-2xl bg-bg-elevated-light dark:bg-bg-elevated-dark"
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      stickyFooter
+      contentContainerStyle={{ paddingHorizontal: 16 }}
+      header={
+        <Text
+          style={{
+            fontFamily: Fonts.displayBold,
+            fontSize: 16,
+            color: colors.textPrimary,
+            marginBottom: 12,
+            paddingHorizontal: 16,
+          }}
         >
-          <Text
+          New shelf
+        </Text>
+      }
+      footer={
+        <View className="flex-row justify-end gap-3">
+          <Pressable onPress={onClose} className="px-4 py-2">
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
+              Cancel
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={async () => {
+              if (!name.trim() || saving) return
+              setSaving(true)
+              await onCreate(name.trim())
+              setSaving(false)
+              onClose()
+            }}
+            disabled={!name.trim() || saving}
+            className="px-4 py-2 rounded-full"
             style={{
-              fontFamily: Fonts.displayBold,
-              fontSize: 16,
-              color: colors.textPrimary,
-              marginBottom: 12,
+              backgroundColor: name.trim() ? colors.brandUi : colors.bgDisabled,
+              opacity: saving ? 0.7 : 1,
             }}
           >
-            New shelf
-          </Text>
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
+              Create
+            </Text>
+          </Pressable>
+        </View>
+      }
+    >
           <TextInput
             value={name}
             onChangeText={setName}
@@ -1624,35 +1651,7 @@ function CreateShelfModal({
               marginBottom: 12,
             }}
           />
-          <View className="flex-row justify-end gap-3">
-            <Pressable onPress={onClose} className="px-4 py-2">
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
-                Cancel
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={async () => {
-                if (!name.trim() || saving) return
-                setSaving(true)
-                await onCreate(name.trim())
-                setSaving(false)
-                onClose()
-              }}
-              disabled={!name.trim() || saving}
-              className="px-4 py-2 rounded-full"
-              style={{
-                backgroundColor: name.trim() ? colors.brandUi : colors.bgDisabled,
-                opacity: saving ? 0.7 : 1,
-              }}
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Create
-              </Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 

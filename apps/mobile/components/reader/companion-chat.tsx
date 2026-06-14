@@ -12,6 +12,7 @@ import {
   Switch,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { Sliders } from 'phosphor-react-native'
 import { chatWithCompanion, friendlyAiError, type ChatMode } from '@/lib/claude'
 import { useColors } from '@/constants/colors'
@@ -278,28 +279,26 @@ function ModePickerSheet({
 }) {
   const colors = useColors()
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose} accessibilityLabel="Close mode picker">
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          accessibilityViewIsModal
-          accessibilityLabel="Companion mode picker"
-          className="rounded-t-3xl pt-4 pb-8 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '85%' }}
-        >
-          <View className="flex-row items-center justify-between px-5 mb-3">
-            <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
-              Companion mode
-            </Text>
-            <Pressable
-              onPress={onClose}
-              accessibilityRole="button"
-              accessibilityLabel="Close mode picker"
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Close</Text>
-            </Pressable>
-          </View>
-          <ScrollView contentContainerStyle={{ paddingBottom: 12 }}>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      contentContainerStyle={{ paddingBottom: 12 }}
+      header={
+        <View className="flex-row items-center justify-between px-5 mb-3">
+          <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
+            Companion mode
+          </Text>
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel="Close mode picker"
+          >
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Close</Text>
+          </Pressable>
+        </View>
+      }
+    >
             {CHAT_MODES.map((m) => {
               const active = m.id === activeMode
               return (
@@ -338,9 +337,6 @@ function ModePickerSheet({
                 </Pressable>
               )
             })}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
