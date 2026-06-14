@@ -2,14 +2,13 @@ import { useEffect, useState, useCallback } from 'react'
 import {
   View,
   Text,
-  Modal,
   Pressable,
-  ScrollView,
   TextInput,
   ActivityIndicator,
   Image,
   Alert,
 } from 'react-native'
+import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import {
   X as XIcon,
   Check,
@@ -213,38 +212,37 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
   const initial = (displayName || username || '?')[0]?.toUpperCase() ?? '?'
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end" onPress={onClose} style={{ backgroundColor: colors.overlay }}>
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="rounded-t-3xl pt-4 pb-8 px-5 bg-bg-elevated-light dark:bg-bg-elevated-dark border-t border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ maxHeight: '92%' }}
-        >
-          {/* Header */}
-          <View className="flex-row items-center justify-between mb-5">
-            <Pressable onPress={onClose} hitSlop={8}>
-              <Text style={{ fontFamily: Fonts.ui, color: colors.textSecondary }}>Cancel</Text>
-            </Pressable>
-            <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
-              Edit Profile
-            </Text>
-            <Pressable onPress={handleSave} disabled={!canSave} hitSlop={8}>
-              {saving ? (
-                <ActivityIndicator color={colors.brandUi} size="small" />
-              ) : (
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    color: canSave ? colors.brandText : colors.textDisabled,
-                  }}
-                >
-                  Save
-                </Text>
-              )}
-            </Pressable>
-          </View>
-
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: 24 }}>
+    <SheetScaffold
+      visible={visible}
+      onClose={onClose}
+      variant="bottom"
+      maxHeight="92%"
+      contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 24 }}
+      header={
+        <View className="flex-row items-center justify-between mb-5 px-5">
+          <Pressable onPress={onClose} hitSlop={8}>
+            <Text style={{ fontFamily: Fonts.ui, color: colors.textSecondary }}>Cancel</Text>
+          </Pressable>
+          <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
+            Edit Profile
+          </Text>
+          <Pressable onPress={handleSave} disabled={!canSave} hitSlop={8}>
+            {saving ? (
+              <ActivityIndicator color={colors.brandUi} size="small" />
+            ) : (
+              <Text
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  color: canSave ? colors.brandText : colors.textDisabled,
+                }}
+              >
+                Save
+              </Text>
+            )}
+          </Pressable>
+        </View>
+      }
+    >
             {/* Avatar */}
             <View className="items-center mb-6">
               <Pressable onPress={handleAvatarUpload} disabled={uploading}>
@@ -458,10 +456,7 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
                 </Text>
               </View>
             ) : null}
-          </ScrollView>
-        </Pressable>
-      </Pressable>
-    </Modal>
+    </SheetScaffold>
   )
 }
 
