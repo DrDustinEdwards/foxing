@@ -5,6 +5,7 @@ import { BookCard } from '@/components/book-card'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchBooksForTheme,
 } from '@/lib/missing-pages-queries'
@@ -48,17 +49,11 @@ export default async function ThemePage(
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-              Theme
-            </p>
-            <h1 className="font-fraunces text-[2.25rem] text-text-primary">
-              {theme.name}
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              {theme.description}
-            </p>
-          </header>
+          <PageHeader
+            title={theme.name}
+            subtitle={theme.description}
+            subtitleVariant="description"
+          />
 
           {books.length === 0 ? (
             <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">

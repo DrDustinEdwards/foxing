@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Select } from '@/components/ui/select'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchVocabulary } from '@/lib/missing-pages-queries'
 import { VOCABULARY_METADATA } from '@/lib/metadata'
 import { getAuthedUserId } from '@/lib/nav-user'
@@ -45,14 +46,11 @@ export default async function VocabularyPage(
 
   return (
     <PageWrapper className="py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-fraunces text-[1.75rem] text-text-primary">
-          Your vocabulary
-        </h1>
-        <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-          Words you&apos;ve looked up while reading.
-        </p>
-      </header>
+      <PageHeader
+        title="Your vocabulary"
+        subtitle="Words you've looked up while reading."
+        subtitleVariant="description"
+      />
 
       <form
         action="/vocabulary"

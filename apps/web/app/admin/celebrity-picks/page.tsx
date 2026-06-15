@@ -9,6 +9,7 @@ import { PickEditor } from './pick-editor'
 import { MissingClubAdd } from './missing-club-add'
 import { MonthTabs } from './month-tabs'
 import { RunNowButton } from './run-now-button'
+import { PageHeader } from '@/components/ui/page-header'
 
 export const dynamic = 'force-dynamic'
 
@@ -108,22 +109,17 @@ export default async function AdminCelebrityPicksPage(
 
   return (
     <div className="p-6 md:p-10">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="font-fraunces text-[2rem] text-text-primary">
-            Celebrity picks
-          </h1>
-          <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-            {monthName} {year} · {picks.length} of {clubs.length} clubs have a
-            pick
-          </p>
-        </div>
-        <Link href="/admin/celebrity-picks/new">
-          <Button variant="secondary" size="sm">
-            New pick (custom date)
-          </Button>
-        </Link>
-      </header>
+      <PageHeader
+        title="Celebrity picks"
+        subtitle={`${monthName} ${year} · ${picks.length} of ${clubs.length} clubs have a pick`}
+        actions={
+          <Link href="/admin/celebrity-picks/new">
+            <Button variant="secondary" size="sm">
+              New pick (custom date)
+            </Button>
+          </Link>
+        }
+      />
 
       <MonthTabs current={{ year, month }} />
 

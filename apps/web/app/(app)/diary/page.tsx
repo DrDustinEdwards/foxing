@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { StarRating } from '@/components/ui/star-rating'
 import { fetchDiaryEntries } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
@@ -39,12 +40,7 @@ export default async function DiaryPage(
 
   return (
     <PageWrapper className="py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Reading diary
-        </h1>
-        <LogEntryDialog />
-      </div>
+      <PageHeader title="Reading diary" actions={<LogEntryDialog />} />
 
       <div className="mt-6 flex flex-wrap items-center gap-3">
         <ViewToggle

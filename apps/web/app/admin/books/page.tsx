@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -45,10 +46,10 @@ export default async function AdminBooksPage(
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">Books</h1>
-      <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-        {totalCount.toLocaleString()} books in catalog
-      </p>
+      <PageHeader
+        title="Books"
+        subtitle={`${totalCount.toLocaleString()} books in catalog`}
+      />
 
       <form className="mt-6 max-w-md" action="/admin/books" method="get">
         <Input

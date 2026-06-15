@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchSeriesBySlug,
 } from '@/lib/missing-pages-queries'
@@ -109,14 +110,10 @@ export default async function SeriesDetailPage(
       />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2.25rem] text-text-primary">
-              {series.name}
-            </h1>
-            <p className="font-dm-sans text-sm text-text-tertiary">
-              {series.books.length} books in reading order
-            </p>
-          </header>
+          <PageHeader
+            title={series.name}
+            subtitle={`${series.books.length} books in reading order`}
+          />
 
           <ol className="mt-8 flex flex-col gap-4">
             {series.books.map((b, i) => (

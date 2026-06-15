@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchPublicChallenges,
   type ChallengeRow,
@@ -26,14 +27,11 @@ export default async function ChallengesPage() {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Reading challenges
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Join a community challenge and read alongside thousands of others.
-            </p>
-          </header>
+          <PageHeader
+            title="Reading challenges"
+            subtitle="Join a community challenge and read alongside thousands of others."
+            subtitleVariant="description"
+          />
 
           {challenges.length === 0 ? (
             <div className="mt-10 rounded-lg border border-border-subtle bg-bg-surface p-8 text-center">

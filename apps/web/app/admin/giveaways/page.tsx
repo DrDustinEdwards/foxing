@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchEndedGiveawaysForAdmin } from '@/lib/giveaways'
@@ -31,12 +32,11 @@ export default async function AdminGiveawaysPage() {
 
   return (
     <PageWrapper className="py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Giveaways awaiting winners
-      </h1>
-      <p className="mt-2 font-source-serif-4 text-base text-text-secondary">
-        Pick winners for giveaways past their deadline.
-      </p>
+      <PageHeader
+        title="Giveaways awaiting winners"
+        subtitle="Pick winners for giveaways past their deadline."
+        subtitleVariant="description"
+      />
       <section className="mt-8">
         {giveaways.length === 0 ? (
           <p className="font-source-serif-4 text-base text-text-tertiary">

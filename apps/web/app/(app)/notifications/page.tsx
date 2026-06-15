@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { formatRelativeDate } from '@foxing/utils'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { createClient } from '@/lib/supabase/server'
 import { cn } from '@/lib/cn'
@@ -50,12 +51,10 @@ export default async function NotificationsPage() {
 
   return (
     <PageWrapper className="py-10">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Notifications
-        </h1>
-        {unreadCount > 0 && <MarkAllReadButton />}
-      </div>
+      <PageHeader
+        title="Notifications"
+        actions={unreadCount > 0 && <MarkAllReadButton />}
+      />
       {items.length === 0 ? (
         <p className="mt-10 max-w-prose font-source-serif-4 text-base text-text-tertiary">
           Nothing here yet. When club members post or events are scheduled,

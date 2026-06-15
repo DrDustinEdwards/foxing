@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { formatRelativeDate } from '@foxing/utils'
 import {
   fetchPublicClubById,
@@ -127,14 +128,13 @@ export default async function ClubLibraryPage(
           >
             ← Back to {club.name}
           </Link>
-          <header className="mt-6 flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              {club.name} · Library
-            </h1>
-            <p className="font-source-serif-4 text-base text-text-secondary">
-              Every book this club has read together.
-            </p>
-          </header>
+          <div className="mt-6">
+            <PageHeader
+              title={`${club.name} · Library`}
+              subtitle="Every book this club has read together."
+              subtitleVariant="description"
+            />
+          </div>
 
           {books.length === 0 ? (
             <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">

@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { PageHeader } from '@/components/ui/page-header'
 import { PickForm } from '../pick-form'
 
 export const dynamic = 'force-dynamic'
@@ -43,10 +44,11 @@ export default async function AdminBookOfMonthNewPage(
           ← All picks
         </Link>
       </p>
-      <h1 className="font-fraunces text-[2rem] text-text-primary">New pick</h1>
-      <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-        Choose a book, set the month, and write a short reason.
-      </p>
+      <PageHeader
+        title="New pick"
+        subtitle="Choose a book, set the month, and write a short reason."
+        subtitleVariant="description"
+      />
       <div className="mt-6 rounded-lg border border-border-subtle bg-bg-surface p-5">
         <PickForm mode="create" prefill={seeded ?? undefined} />
       </div>

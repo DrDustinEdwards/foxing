@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
 import { DuplicateButton } from './DuplicateButton'
+import { PageHeader } from '@/components/ui/page-header'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,16 +34,16 @@ export default async function AdminJournalListPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Journal
-        </h1>
-        <Link href="/admin/journal/new">
-          <Button variant="primary" size="sm">
-            New post
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Journal"
+        actions={
+          <Link href="/admin/journal/new">
+            <Button variant="primary" size="sm">
+              New post
+            </Button>
+          </Link>
+        }
+      />
 
       {posts.length === 0 ? (
         <div className="mt-10">

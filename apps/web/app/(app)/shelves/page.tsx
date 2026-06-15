@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchUserShelves } from '@/lib/shelves'
 import { ShelfCreateForm } from './shelf-create-form'
@@ -21,15 +22,11 @@ export default async function ShelvesPage() {
 
   return (
     <PageWrapper className="py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          My shelves
-        </h1>
-        <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-          Custom shelves let you group books however you like. Make them
-          public to share on your profile.
-        </p>
-      </header>
+      <PageHeader
+        title="My shelves"
+        subtitle="Custom shelves let you group books however you like. Make them public to share on your profile."
+        subtitleVariant="description"
+      />
 
       <section className="mt-8">
         <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">

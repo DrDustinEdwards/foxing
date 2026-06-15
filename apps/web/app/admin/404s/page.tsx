@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
@@ -78,12 +79,11 @@ export default async function Admin404sPage() {
 
   return (
     <PageWrapper className="py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        404 log
-      </h1>
-      <p className="mt-2 font-source-serif-4 text-base text-text-secondary">
-        Recent broken-link hits, grouped by path. Last 500 events.
-      </p>
+      <PageHeader
+        title="404 log"
+        subtitle="Recent broken-link hits, grouped by path. Last 500 events."
+        subtitleVariant="description"
+      />
       <section className="mt-8">
         {grouped.length === 0 ? (
           <p className="font-source-serif-4 text-base text-text-tertiary">

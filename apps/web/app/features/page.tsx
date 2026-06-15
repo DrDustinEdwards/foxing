@@ -8,6 +8,7 @@ import {
   Subgroup,
 } from '@/components/features/feature-section'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   PLUS_PRICE_COMBINED_LABEL,
   PLUS_PRICE_MONTHLY_LABEL,
@@ -43,16 +44,11 @@ export default function FeaturesPage() {
       <NavAuthClient />
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
-          <header>
-            <h1 className="font-fraunces text-[2.5rem] text-text-primary">
-              What Foxing does
-            </h1>
-            <p className="mt-4 font-source-serif-4 text-base text-text-secondary leading-[1.85]">
-              Everything on this page is available today. Free and Plus (
-              {PLUS_PRICE_MONTHLY_LABEL}) features are labeled. Sections marked
-              App only or Web only are limited to that surface.
-            </p>
-          </header>
+          <PageHeader
+            title="What Foxing does"
+            subtitle={`Everything on this page is available today. Free and Plus (${PLUS_PRICE_MONTHLY_LABEL}) features are labeled. Sections marked App only or Web only are limited to that surface.`}
+            subtitleVariant="description"
+          />
 
           <nav
             aria-label="Sections"

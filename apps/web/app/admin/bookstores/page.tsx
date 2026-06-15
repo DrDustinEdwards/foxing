@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { BookstoreRow } from './bookstore-row'
 
@@ -53,14 +54,12 @@ export default async function AdminBookstoresPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <header className="mb-6">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Bookstores
-        </h1>
-        <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-          {stores.length} clubs marked as bookstore or verified.
-        </p>
-      </header>
+      <div className="mb-6">
+        <PageHeader
+          title="Bookstores"
+          subtitle={`${stores.length} clubs marked as bookstore or verified.`}
+        />
+      </div>
       {stores.length === 0 ? (
         <p className="font-source-serif-4 text-base text-text-tertiary">
           No bookstores yet. Mark a club as bookstore and verify it from this

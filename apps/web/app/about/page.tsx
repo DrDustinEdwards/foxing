@@ -1,6 +1,7 @@
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const dynamic = 'force-static'
@@ -13,9 +14,7 @@ export default function AboutPage() {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-14">
-          <h1 className="font-fraunces text-[2.5rem] text-text-primary">
-            About Foxing
-          </h1>
+          <PageHeader title="About Foxing" />
           <p className="mt-6 font-source-serif-4 text-base text-text-secondary">
             Foxing is a reader, a quiet club, and an AI that reads with you.
             The name comes from the brown spots that bloom on the pages of

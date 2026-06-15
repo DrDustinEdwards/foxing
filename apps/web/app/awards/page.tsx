@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { BookCover } from '@/components/ui/book-cover'
 import {
   AWARD_CATEGORIES,
@@ -30,15 +31,11 @@ export default async function AwardsPage() {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2.25rem] text-text-primary">
-              Award-winning classics
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Nobel, Pulitzer, and other major literary awards represented in
-              the Foxing catalog.
-            </p>
-          </header>
+          <PageHeader
+            title="Award-winning classics"
+            subtitle="Nobel, Pulitzer, and other major literary awards represented in the Foxing catalog."
+            subtitleVariant="description"
+          />
 
           <div className="mt-10 flex flex-col gap-12">
             {sections.map(({ cat, books }) => (

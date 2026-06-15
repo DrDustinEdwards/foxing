@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchEventStates, fetchUpcomingEvents } from '@/lib/events'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { safeJsonLd } from '@/lib/structured-data'
@@ -73,14 +74,11 @@ export default async function EventsPage() {
       />
       <main className="flex-1">
         <PageWrapper className="py-12">
-          <header className="max-w-prose">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              Literary Events
-            </h1>
-            <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-              Author signings, book clubs, and readings near you.
-            </p>
-          </header>
+          <PageHeader
+            title="Literary Events"
+            subtitle="Author signings, book clubs, and readings near you."
+            subtitleVariant="description"
+          />
 
           {states.length > 0 && (
             <nav className="mt-8 flex flex-wrap gap-2 font-dm-sans text-sm">

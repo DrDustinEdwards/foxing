@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchUnansweredQuestionsForAuthor } from '@/lib/author-qa'
@@ -35,14 +36,11 @@ export default async function AuthorDashboardPage() {
 
   return (
     <PageWrapper className="py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Author dashboard
-        </h1>
-        <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-          Unanswered questions from readers, sorted by upvotes.
-        </p>
-      </header>
+      <PageHeader
+        title="Author dashboard"
+        subtitle="Unanswered questions from readers, sorted by upvotes."
+        subtitleVariant="description"
+      />
 
       <section className="mt-8">
         <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
 
@@ -47,10 +48,7 @@ export default async function AdminClubsPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">Clubs</h1>
-      <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-        {clubs.length} clubs shown
-      </p>
+      <PageHeader title="Clubs" subtitle={`${clubs.length} clubs shown`} />
 
       <div className="mt-6 overflow-x-auto rounded-lg border border-border-subtle bg-bg-surface">
         <table className="min-w-full text-left font-dm-sans text-sm">

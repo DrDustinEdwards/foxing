@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
 import { BroadcastForm } from './broadcast-form'
@@ -31,12 +32,11 @@ export default async function AdminNotificationsPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Send a notification
-      </h1>
-      <p className="mt-1 max-w-prose font-source-serif-4 text-sm text-text-tertiary">
-        Inserts into the in-app notifications table. No push, no scheduling.
-      </p>
+      <PageHeader
+        title="Send a notification"
+        subtitle="Inserts into the in-app notifications table. No push, no scheduling."
+        subtitleVariant="description"
+      />
 
       <section className="mt-6 max-w-2xl rounded-lg border border-border-subtle bg-bg-surface p-5">
         <BroadcastForm />

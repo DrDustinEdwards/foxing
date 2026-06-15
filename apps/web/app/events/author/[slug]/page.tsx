@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchUpcomingEvents } from '@/lib/events'
 import { FOXING_BASE_URL, FOXING_SITE_NAME } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -68,15 +69,13 @@ export default async function AuthorEventsPage(
               ← All events
             </Link>
           </nav>
-          <header className="mt-4 max-w-prose">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              Events for {name ?? 'this author'}
-            </h1>
-            <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-              Book signings, readings, and book club meetings tied to their
-              titles.
-            </p>
-          </header>
+          <div className="mt-4">
+            <PageHeader
+              title={`Events for ${name ?? 'this author'}`}
+              subtitle="Book signings, readings, and book club meetings tied to their titles."
+              subtitleVariant="description"
+            />
+          </div>
 
           {events.length === 0 ? (
             <p className="mt-12 font-source-serif-4 text-base text-text-tertiary">

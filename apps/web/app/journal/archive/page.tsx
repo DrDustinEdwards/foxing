@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { EmptyState } from '@/components/ui/empty-state'
 import { JournalPageShell } from '@/components/journal/JournalPageShell'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { JOURNAL_FILTER_CONFIG } from '@/lib/search/configs'
@@ -61,15 +62,10 @@ export default async function JournalArchivePage(props: {
           Journal
         </Link>
       </p>
-      <header className="flex flex-col gap-2">
-        <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-          All articles
-        </h1>
-        <p className="font-dm-mono text-sm text-text-tertiary">
-          {result.total} {countLabel}
-          {activeLabel ? ` in ${activeLabel}` : ''}
-        </p>
-      </header>
+      <PageHeader
+        title="All articles"
+        subtitle={`${result.total} ${countLabel}${activeLabel ? ` in ${activeLabel}` : ''}`}
+      />
 
       <div className="mt-8">
         <FilterBar config={JOURNAL_FILTER_CONFIG} facetCounts={facetCounts} />

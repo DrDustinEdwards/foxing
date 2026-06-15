@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchAuthorAndFormatStats,
   fetchFinishedBooksForStats,
@@ -135,15 +136,10 @@ export default async function StatsPage(
 
   return (
     <PageWrapper className="py-10">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Reading stats
-        </h1>
-        <YearFilter
-          years={years}
-          selected={selectedYear}
-        />
-      </header>
+      <PageHeader
+        title="Reading stats"
+        actions={<YearFilter years={years} selected={selectedYear} />}
+      />
 
       <section className="mt-8 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
         <StatCard label="Books finished" value={totalBooks.toString()} />

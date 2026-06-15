@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   PLUS_PRICE_MONTHLY_LABEL,
   PLUS_TRIAL_LABEL,
@@ -26,13 +27,11 @@ export default async function FindNextBookPage() {
 
   return (
     <PageWrapper className="max-w-prose py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Find your next book
-      </h1>
-      <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-        Pick a mood, pace, and era. The AI returns three picks with a line
-        about why each one fits.
-      </p>
+      <PageHeader
+        title="Find your next book"
+        subtitle="Pick a mood, pace, and era. The AI returns three picks with a line about why each one fits."
+        subtitleVariant="description"
+      />
 
       {isUnlocked ? (
         <FindNextBookWizard />

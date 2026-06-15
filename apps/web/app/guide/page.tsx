@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
+import { PageHeader } from '@/components/ui/page-header'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const dynamic = 'force-static'
@@ -24,15 +25,11 @@ export default function GuidePage() {
       <NavAuthClient />
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
-          <header>
-            <h1 className="font-fraunces text-[2.5rem] text-text-primary">
-              Using Foxing on the web
-            </h1>
-            <p className="mt-4 font-source-serif-4 text-base text-text-secondary leading-[1.85]">
-              How the foxing.app web platform works: your library, reading
-              diary, stats, book clubs, vocabulary, and settings.
-            </p>
-          </header>
+          <PageHeader
+            title="Using Foxing on the web"
+            subtitle="How the foxing.app web platform works: your library, reading diary, stats, book clubs, vocabulary, and settings."
+            subtitleVariant="description"
+          />
 
           <nav
             aria-label="Sections"
