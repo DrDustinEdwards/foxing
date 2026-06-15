@@ -7,7 +7,11 @@ import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { SearchResultItem } from '@/components/search/search-result-item'
 import { buildPicksFilterConfig } from '@/lib/search/configs'
-import { fetchPickClubOptions, fetchPickYearOptions } from '@/lib/search/facets'
+import {
+  fetchPickClubOptions,
+  fetchPickEraOptions,
+  fetchPickYearOptions,
+} from '@/lib/search/facets'
 import { searchPageData } from '@/lib/search/server'
 import { buildPicksIndexMetadata } from '@/lib/metadata'
 
@@ -19,11 +23,12 @@ export default async function PicksIndexPage(props: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const searchParams = await props.searchParams
-  const [yearOptions, clubOptions] = await Promise.all([
+  const [yearOptions, clubOptions, eraOptions] = await Promise.all([
     fetchPickYearOptions(),
     fetchPickClubOptions(),
+    fetchPickEraOptions(),
   ])
-  const config = buildPicksFilterConfig(yearOptions, clubOptions)
+  const config = buildPicksFilterConfig(yearOptions, clubOptions, eraOptions)
   const { result, page, totalPages, facetCounts } = await searchPageData(
     'pick',
     config,
