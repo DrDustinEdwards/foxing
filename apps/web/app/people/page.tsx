@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { SearchResultItem } from '@/components/search/search-result-item'
@@ -31,22 +32,19 @@ export default async function PeoplePage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex flex-col gap-2">
-              <h1 className="font-fraunces text-[2rem] text-text-primary">
-                Readers
-              </h1>
-              <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-                People reading classic literature on Foxing.
-              </p>
-            </div>
-            <Link
-              href="/people/similar"
-              className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
-            >
-              Find similar readers
-            </Link>
-          </header>
+          <PageHeader
+            title="Readers"
+            subtitle="People reading classic literature on Foxing."
+            subtitleVariant="description"
+            actions={
+              <Link
+                href="/people/similar"
+                className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-sm text-text-primary hover:bg-bg-hover"
+              >
+                Find similar readers
+              </Link>
+            }
+          />
 
           <div className="mt-6">
             <FilterBar config={PEOPLE_FILTER_CONFIG} />

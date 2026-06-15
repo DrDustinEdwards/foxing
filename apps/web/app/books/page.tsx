@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { BOOKS_FILTER_CONFIG } from '@/lib/search/configs'
@@ -83,10 +84,10 @@ export default async function BooksPage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <h1 className="font-fraunces text-[2rem] text-text-primary">{title}</h1>
-          <p className="mt-2 font-dm-sans text-sm text-text-tertiary">
-            {result.total.toLocaleString()} {result.total === 1 ? 'book' : 'books'}
-          </p>
+          <PageHeader
+            title={title}
+            subtitle={`${result.total.toLocaleString()} ${result.total === 1 ? 'book' : 'books'}`}
+          />
 
           <div className="mt-6">
             <FilterBar config={BOOKS_FILTER_CONFIG} facetCounts={facetCounts} />

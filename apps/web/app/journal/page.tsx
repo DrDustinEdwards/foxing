@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { TagPill } from '@/components/ui/tag-pill'
 import { JournalPageShell } from '@/components/journal/JournalPageShell'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   estimateReadingTime,
   getFeaturedJournalPostFullStatic,
@@ -77,15 +78,12 @@ export default async function JournalIndexPage() {
 
 function JournalHeader() {
   return (
-    <header className="flex flex-col gap-3">
-      <div className="max-w-prose">
-        <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-          Journal
-        </h1>
-        <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-          Notes on the books, the reading habit, and what holds up.
-        </p>
-      </div>
+    <div className="flex flex-col gap-3">
+      <PageHeader
+        title="Journal"
+        subtitle="Notes on the books, the reading habit, and what holds up."
+        subtitleVariant="description"
+      />
       <p className="flex flex-wrap gap-x-4 gap-y-1 font-dm-sans text-xs text-text-tertiary">
         <Link
           href="/journal/archive"
@@ -100,7 +98,7 @@ function JournalHeader() {
           RSS feed
         </Link>
       </p>
-    </header>
+    </div>
   )
 }
 
