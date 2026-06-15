@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   banClubMember,
   changeClubMemberRole,
@@ -238,18 +239,19 @@ function MemberRow({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {isAdmin && (
-            <select
+            <Select
+              aria-label={`Role for @${member.username}`}
               defaultValue={member.role}
-              onChange={(e) =>
-                call(changeClubMemberRole, { role: e.target.value })
+              onChange={(v) =>
+                call(changeClubMemberRole, { role: v })
               }
               disabled={saving}
-              className="rounded-md border border-border-default bg-bg-surface px-2 py-1 font-dm-sans text-xs text-text-primary"
-            >
-              <option value="member">member</option>
-              <option value="moderator">moderator</option>
-              <option value="admin">admin</option>
-            </select>
+              options={[
+                { value: 'member', label: 'member' },
+                { value: 'moderator', label: 'moderator' },
+                { value: 'admin', label: 'admin' },
+              ]}
+            />
           )}
           <Button
             variant="ghost"

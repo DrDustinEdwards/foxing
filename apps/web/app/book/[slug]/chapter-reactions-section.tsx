@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   REACTION_EMOJIS,
   type ChapterReaction,
@@ -178,15 +179,16 @@ export function ChapterReactionsSection({
         </div>
         <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
           <span>Privacy</span>
-          <select
+          <Select
             value={privacy}
-            onChange={(e) => setPrivacy(e.target.value as ReactionPrivacy)}
-            className="rounded-md border border-border-default bg-bg-surface px-2 py-1.5 text-text-primary"
-          >
-            <option value="public">Public</option>
-            <option value="close_friends">Close friends</option>
-            <option value="private">Private</option>
-          </select>
+            onChange={(v) => setPrivacy(v as ReactionPrivacy)}
+            size="sm"
+            options={[
+              { value: 'public', label: 'Public' },
+              { value: 'close_friends', label: 'Close friends' },
+              { value: 'private', label: 'Private' },
+            ]}
+          />
         </label>
         {error && (
           <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">

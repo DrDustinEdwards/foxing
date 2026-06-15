@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Select } from '@/components/ui/select'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchVocabulary } from '@/lib/missing-pages-queries'
 import { VOCABULARY_METADATA } from '@/lib/metadata'
@@ -68,18 +69,16 @@ export default async function VocabularyPage(
           autoComplete="off"
         />
         {bookOptions.length > 0 && (
-          <select
+          <Select
             name="book"
             defaultValue={searchParams.book ?? ''}
-            className="h-10 rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-sm text-text-primary"
-          >
-            <option value="">All books</option>
-            {bookOptions.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
+            aria-label="Filter by book"
+            size="md"
+            options={[
+              { value: '', label: 'All books' },
+              ...bookOptions.map((b) => ({ value: b, label: b })),
+            ]}
+          />
         )}
         <Button type="submit" variant="secondary" size="sm">
           Filter

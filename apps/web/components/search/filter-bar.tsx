@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { cn } from '@/lib/cn'
+import { Select, type SelectOption } from '@/components/ui/select'
 import {
   RESERVED_PARAMS,
   type FacetConfig,
@@ -146,31 +147,30 @@ export function FilterBar({
     }
     // 'select' and 'range' both render as a dropdown.
     const value = get(facet.param) ?? ''
+    const selectOptions: SelectOption[] = [
+      { value: '', label: 'Any' },
+      ...facet.options.map((opt) => {
+        const count = countFor(facet.param, opt.value)
+        return {
+          value: opt.value,
+          label: opt.label,
+          count,
+          disabled: count === 0 && opt.value !== value,
+        }
+      }),
+    ]
     return (
       <label key={facet.key} className="flex flex-col gap-2">
         <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.15em] text-text-tertiary">
           {facet.label}
         </span>
-        <select
+        <Select
           value={value}
-          onChange={(e) => setParams({ [facet.param]: e.target.value || null })}
-          className="w-full rounded-full border border-border-subtle bg-bg-surface px-3 py-1.5 font-dm-sans text-sm text-text-primary focus:border-border-interactive focus:outline-none"
-        >
-          <option value="">Any</option>
-          {facet.options.map((opt) => {
-            const count = countFor(facet.param, opt.value)
-            return (
-              <option
-                key={opt.value}
-                value={opt.value}
-                disabled={count === 0 && opt.value !== value}
-              >
-                {opt.label}
-                {count != null ? ` (${count})` : ''}
-              </option>
-            )
-          })}
-        </select>
+          onChange={(v) => setParams({ [facet.param]: v || null })}
+          options={selectOptions}
+          aria-label={facet.label}
+          className="w-full"
+        />
       </label>
     )
   }
@@ -276,25 +276,16 @@ export function FilterBar({
         )}
 
         {config.sorts.length > 0 && (
-          <label className="flex items-center gap-2">
-            <span className="sr-only">Sort</span>
-            <select
-              value={currentSort}
-              onChange={(e) =>
-                setParams({
-                  [RESERVED_PARAMS.sort]:
-                    e.target.value === config.defaultSort ? null : e.target.value,
-                })
-              }
-              className="rounded-full border border-border-subtle bg-bg-surface px-3 py-2 font-dm-sans text-sm text-text-primary focus:border-border-interactive focus:outline-none"
-            >
-              {config.sorts.map((s) => (
-                <option key={s.value} value={s.value}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
+          <Select
+            aria-label="Sort"
+            value={currentSort}
+            onChange={(v) =>
+              setParams({
+                [RESERVED_PARAMS.sort]: v === config.defaultSort ? null : v,
+              })
+            }
+            options={config.sorts.map((s) => ({ value: s.value, label: s.label }))}
+          />
         )}
       </div>
 

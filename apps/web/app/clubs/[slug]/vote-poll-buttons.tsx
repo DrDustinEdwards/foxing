@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/cn'
+import { Select } from '@/components/ui/select'
 import { voteOnPoll } from './actions'
 
 interface OptionView {
@@ -138,28 +138,24 @@ export function RankedChoiceVote({
       <div className="flex flex-col gap-2">
         {options.map((o) => (
           <div key={o.id} className="flex items-center gap-3">
-            <select
-              value={ranks[o.id]}
-              onChange={(e) => {
-                const v = e.target.value
+            <Select
+              aria-label={`Rank for ${o.label}`}
+              value={String(ranks[o.id])}
+              onChange={(v) => {
                 setRanks((prev) => ({
                   ...prev,
                   [o.id]: v === '' ? '' : Number(v),
                 }))
               }}
               disabled={disabled}
-              className={cn(
-                'rounded-md border border-border-default bg-bg-surface px-2 py-1 font-dm-mono text-xs text-text-primary',
-                'disabled:opacity-50',
-              )}
-            >
-              <option value="">Skip</option>
-              {options.map((_, i) => (
-                <option key={i + 1} value={i + 1}>
-                  {i + 1}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Skip' },
+                ...options.map((_, i) => ({
+                  value: String(i + 1),
+                  label: String(i + 1),
+                })),
+              ]}
+            />
             <span className="font-dm-sans text-sm text-text-primary">
               {o.label}
             </span>

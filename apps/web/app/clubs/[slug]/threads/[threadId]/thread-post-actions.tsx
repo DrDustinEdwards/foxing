@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import {
   reportClubPost,
   removeClubPost,
@@ -202,17 +203,13 @@ export function ThreadPostActions({
         >
           <label className="font-dm-sans text-sm text-text-secondary">
             Reason
-            <select
+            <Select
+              options={REPORT_REASONS}
               value={reason}
-              onChange={(e) => setReason(e.target.value)}
-              className="ml-2 rounded-md border border-border-interactive bg-bg-surface px-2 py-1 text-text-primary"
-            >
-              {REPORT_REASONS.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
-              ))}
-            </select>
+              onChange={(v) => setReason(v)}
+              size="sm"
+              className="ml-2"
+            />
           </label>
           <div className="flex gap-2">
             <Button

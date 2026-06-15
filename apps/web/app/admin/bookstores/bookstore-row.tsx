@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { toggleVerification, updateBookstoreProfile } from './actions'
 
 interface BookstoreView {
@@ -177,14 +178,15 @@ export function BookstoreRow({ store }: { store: BookstoreView }) {
           <div className="md:col-span-2">
             <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
               <span>Type</span>
-              <select
+              <Select
                 name="club_type"
                 defaultValue={store.club_type ?? 'bookstore'}
-                className="rounded-md border border-border-default bg-bg-surface px-2 py-1.5 font-dm-sans text-sm text-text-primary"
-              >
-                <option value="bookstore">bookstore</option>
-                <option value="reading">reading</option>
-              </select>
+                aria-label="Type"
+                options={[
+                  { value: 'bookstore', label: 'bookstore' },
+                  { value: 'reading', label: 'reading' },
+                ]}
+              />
             </label>
           </div>
           {error && (

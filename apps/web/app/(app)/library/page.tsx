@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Select } from '@/components/ui/select'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { fetchLibrary, type LibraryStatus } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
@@ -83,17 +84,12 @@ export default async function LibraryPage(
             <input type="hidden" name="status" value={status} />
             <label className="flex items-center gap-2 font-dm-sans text-xs text-text-tertiary">
               Sort
-              <select
+              <Select
                 name="sort"
                 defaultValue={sort}
-                className="h-9 rounded-md border border-border-interactive bg-bg-surface px-2 font-dm-sans text-sm text-text-primary"
-              >
-                {SORTS.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.label}
-                  </option>
-                ))}
-              </select>
+                aria-label="Sort"
+                options={SORTS.map((s) => ({ value: s.id, label: s.label }))}
+              />
             </label>
             <Button type="submit" variant="ghost" size="sm">
               Apply

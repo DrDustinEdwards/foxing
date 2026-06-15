@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import { BookSearchAdd } from '@/components/book-search-add'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { createPick, deletePick, updatePick } from './actions'
 
 const CATEGORIES = [
@@ -155,20 +156,18 @@ export function PickForm({ mode, pickId, initial, prefill }: Props) {
           >
             Month
           </label>
-          <select
+          <Select
             id="month"
             name="month"
-            defaultValue={initial?.month ?? DEFAULT_MONTH}
-            className="h-11 rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-base text-text-primary"
-          >
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-              <option key={m} value={m}>
-                {new Date(2000, m - 1, 1).toLocaleString('en-US', {
-                  month: 'long',
-                })}
-              </option>
-            ))}
-          </select>
+            size="md"
+            defaultValue={String(initial?.month ?? DEFAULT_MONTH)}
+            options={Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({
+              value: String(m),
+              label: new Date(2000, m - 1, 1).toLocaleString('en-US', {
+                month: 'long',
+              }),
+            }))}
+          />
         </div>
         <Input
           label="Year"
@@ -186,18 +185,16 @@ export function PickForm({ mode, pickId, initial, prefill }: Props) {
           >
             Category
           </label>
-          <select
+          <Select
             id="category"
             name="category"
+            size="md"
             defaultValue={initial?.category ?? 'fiction'}
-            className="h-11 rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-base text-text-primary"
-          >
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c[0]!.toUpperCase() + c.slice(1)}
-              </option>
-            ))}
-          </select>
+            options={CATEGORIES.map((c) => ({
+              value: c,
+              label: c[0]!.toUpperCase() + c.slice(1),
+            }))}
+          />
         </div>
       </section>
 

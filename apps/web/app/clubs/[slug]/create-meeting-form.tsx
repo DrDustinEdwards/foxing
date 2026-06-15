@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { createClubMeeting } from './actions'
 
 interface Props {
@@ -153,15 +154,16 @@ export function CreateMeetingForm({ clubId, defaultCity, defaultState }: Props) 
       {isRecurring && (
         <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
           <span>Repeat</span>
-          <select
+          <Select
             name="recurrence_rule"
             defaultValue="WEEKLY"
-            className="rounded-md border border-border-default bg-bg-surface px-2 py-1 font-dm-sans text-sm text-text-primary"
-          >
-            <option value="WEEKLY">Weekly</option>
-            <option value="BIWEEKLY">Every 2 weeks</option>
-            <option value="MONTHLY">Monthly</option>
-          </select>
+            aria-label="Repeat"
+            options={[
+              { value: 'WEEKLY', label: 'Weekly' },
+              { value: 'BIWEEKLY', label: 'Every 2 weeks' },
+              { value: 'MONTHLY', label: 'Monthly' },
+            ]}
+          />
         </label>
       )}
       {error && (

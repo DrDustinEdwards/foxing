@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   deleteUser,
   sendAdminNotification,
@@ -24,8 +25,7 @@ export function TierSelector({
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  async function handleChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const next = e.target.value
+  async function handleChange(next: string) {
     setValue(next)
     setSaved(false)
     setSaving(true)
@@ -47,19 +47,17 @@ export function TierSelector({
         Subscription tier
       </label>
       <div className="flex items-center gap-3">
-        <select
+        <Select
           id="tier"
           value={value}
           onChange={handleChange}
           disabled={saving}
-          className="h-10 rounded-md border border-border-interactive bg-bg-surface px-2 font-dm-sans text-sm capitalize text-text-primary"
-        >
-          {TIERS.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+          size="md"
+          options={TIERS.map((t) => ({
+            value: t,
+            label: t.charAt(0).toUpperCase() + t.slice(1),
+          }))}
+        />
         {saving && (
           <span className="font-dm-mono text-xs text-text-tertiary">
             Saving

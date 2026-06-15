@@ -12,13 +12,14 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<Variant, string> = {
-  // Saturated auburn primary: lift + brighten on hover (NOT darken to
-  // --brand-hover, which read as pressed/disabled). The fill stays --brand-ui so
-  // white text contrast is unchanged. Translate is gated behind motion-safe and
-  // the inherited transition is killed under reduced motion, so reduced-motion
-  // users still get a perceptible brightness + shadow change with no movement.
+  // Saturated auburn primary: subtle resting depth, then lift + brighten on
+  // hover (NOT darken to --brand-hover, which read as pressed/disabled). The
+  // fill stays --brand-ui so white text contrast is unchanged. Translate is
+  // gated behind motion-safe and the inherited transition is killed under
+  // reduced motion, so reduced-motion users still get a perceptible brightness
+  // + shadow change with no movement.
   primary:
-    'bg-brand-ui text-text-on-amber hover:brightness-[1.06] hover:shadow-md active:brightness-100 active:shadow-sm motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 motion-reduce:transition-none disabled:bg-bg-disabled disabled:text-text-disabled disabled:shadow-none disabled:brightness-100 disabled:translate-y-0',
+    'bg-brand-ui text-text-on-amber shadow-sm hover:brightness-[1.06] hover:shadow-md active:brightness-100 active:shadow-none motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 motion-reduce:transition-none disabled:bg-bg-disabled disabled:text-text-disabled disabled:shadow-none disabled:brightness-100 disabled:translate-y-0',
   secondary:
     'bg-transparent text-brand-text border border-border-interactive hover:bg-brand-subtle disabled:text-text-disabled disabled:border-border-default',
   ghost:
@@ -28,9 +29,16 @@ const variantStyles: Record<Variant, string> = {
 }
 
 const sizeStyles: Record<Size, string> = {
-  sm: 'h-9 px-3 text-sm rounded-md',
-  md: 'h-11 px-4 text-base rounded-md',
-  lg: 'h-12 px-6 text-base rounded-lg',
+  sm: 'h-9 px-3 text-sm',
+  md: 'h-11 px-4 text-base',
+  lg: 'h-12 px-6 text-base',
+}
+
+// Pill radius for the standard variants; danger stays rounded-md. Large keeps
+// rounded-lg (a full pill reads oversized at that height).
+function radiusFor(variant: Variant, size: Size): string {
+  if (size === 'lg') return 'rounded-lg'
+  return variant === 'danger' ? 'rounded-md' : 'rounded-full'
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -57,6 +65,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           'active:scale-[0.97]',
           variantStyles[variant],
           sizeStyles[size],
+          radiusFor(variant, size),
           fullWidth && 'w-full',
           className,
         )}
