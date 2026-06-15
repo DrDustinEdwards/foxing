@@ -1,4 +1,5 @@
 import { Avatar } from '@/components/ui/avatar'
+import { ClubSectionHeader } from './club-section-header'
 
 export interface MemberRosterEntry {
   user_id: string
@@ -16,13 +17,17 @@ const ROLE_LABEL: Record<MemberRosterEntry['role'], string | null> = {
 
 export function MembersSection({ members }: { members: MemberRosterEntry[] }) {
   return (
-    <section className="flex flex-col gap-5">
-      <h2 className="font-fraunces text-xl text-text-primary">
-        Members
-        <span className="ml-2 font-dm-sans text-sm font-normal text-text-tertiary">
-          {members.length}
-        </span>
-      </h2>
+    <section>
+      <ClubSectionHeader
+        title={
+          <>
+            Members
+            <span className="ml-2 font-dm-sans text-sm font-normal text-text-tertiary">
+              {members.length}
+            </span>
+          </>
+        }
+      />
       {members.length === 0 ? (
         <p className="font-source-serif-4 text-base text-text-secondary">
           No members yet.

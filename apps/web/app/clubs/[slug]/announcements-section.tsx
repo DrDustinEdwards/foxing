@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { formatRelativeDate } from '@foxing/utils'
 import type { ClubAnnouncement } from '@/lib/club-announcements'
+import { ClubSectionHeader } from './club-section-header'
 import { RemoveAnnouncementButton } from './remove-announcement-button'
 
 function formatEventDate(iso: string): string {
@@ -26,10 +27,8 @@ export function AnnouncementsSection({
 }) {
   if (announcements.length === 0) return null
   return (
-    <section className="mt-10">
-      <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-        Announcements
-      </h2>
+    <section>
+      <ClubSectionHeader title="Announcements" />
       <div className="flex flex-col gap-4">
         {announcements.map((a) => (
           <AnnouncementCard

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { Avatar } from '@/components/ui/avatar'
 import { formatRelativeDate } from '@foxing/utils'
 import type { ClubThreadSummary } from '@/lib/club-threads'
+import { ClubSectionHeader } from './club-section-header'
 import { NewThreadForm } from './new-thread-form'
 
 export function DiscussionsSection({
@@ -16,11 +17,14 @@ export function DiscussionsSection({
   isMember: boolean
 }) {
   return (
-    <section className="flex flex-col gap-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-fraunces text-xl text-text-primary">Discussions</h2>
-        {isMember && <NewThreadForm clubId={clubId} clubSlug={clubSlug} />}
-      </div>
+    <section>
+      <ClubSectionHeader title="Discussions" />
+
+      {isMember && (
+        <div className="mb-5">
+          <NewThreadForm clubId={clubId} clubSlug={clubSlug} />
+        </div>
+      )}
 
       {threads.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border-subtle bg-bg-surface p-8 text-center">

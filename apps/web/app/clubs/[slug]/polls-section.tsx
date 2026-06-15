@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import type { ClubPoll, PollOption } from '@/lib/club-polls'
 import { isPollOpen } from '@/lib/club-polls'
+import { ClubSectionHeader } from './club-section-header'
 import { ClosePollButton } from './close-poll-button'
 import { CreatePollForm } from './create-poll-form'
 import { RankedChoiceVote, SingleChoiceVote } from './vote-poll-buttons'
@@ -20,16 +21,14 @@ export function PollsSection({
   const active = polls.filter(isPollOpen)
   const closed = polls.filter((p) => !isPollOpen(p))
   return (
-    <section className="mt-10">
-      <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-        Polls
-      </h2>
+    <section>
+      <ClubSectionHeader title="Polls" />
       {polls.length === 0 ? (
-        <p className="mt-3 font-source-serif-4 text-sm text-text-tertiary">
+        <p className="font-source-serif-4 text-sm text-text-tertiary">
           No polls yet.
         </p>
       ) : (
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           {active.map((p) => (
             <PollCard
               key={p.id}

@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { ClubSectionHeader } from './club-section-header'
 import {
   banClubMember,
   changeClubMemberRole,
@@ -54,27 +55,27 @@ export function ModerationPanel({
   waitlistCount = 0,
 }: Props) {
   return (
-    <section className="mt-6 flex flex-col gap-6 rounded-lg border border-border-subtle bg-bg-surface p-5">
-      <header className="flex items-center justify-between gap-3">
-        <h2 className="font-fraunces text-xl text-text-primary">Moderation</h2>
-      </header>
-      <InvitePanel clubId={clubId} />
-      {showPending && (
-        <PendingMembersPanel clubId={clubId} pending={pending} />
-      )}
-      <ReportedPostsPanel clubId={clubId} reports={reports} />
-      {waitlistCount > 0 && (
-        <div className="flex flex-col gap-1">
-          <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-            Waitlist
-          </h3>
-          <p className="font-source-serif-4 text-sm text-text-secondary">
-            {waitlistCount} on waitlist. Invite the next person when a member
-            leaves.
-          </p>
-        </div>
-      )}
-      <MembersPanel clubId={clubId} isAdmin={isAdmin} members={members} />
+    <section>
+      <ClubSectionHeader title="Moderation" />
+      <div className="flex flex-col gap-6">
+        <InvitePanel clubId={clubId} />
+        {showPending && (
+          <PendingMembersPanel clubId={clubId} pending={pending} />
+        )}
+        <ReportedPostsPanel clubId={clubId} reports={reports} />
+        {waitlistCount > 0 && (
+          <div className="flex flex-col gap-1">
+            <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
+              Waitlist
+            </h3>
+            <p className="font-source-serif-4 text-sm text-text-secondary">
+              {waitlistCount} on waitlist. Invite the next person when a member
+              leaves.
+            </p>
+          </div>
+        )}
+        <MembersPanel clubId={clubId} isAdmin={isAdmin} members={members} />
+      </div>
     </section>
   )
 }
