@@ -233,7 +233,7 @@ export function FilterBar({
                 <div
                   role="dialog"
                   aria-label="Filters"
-                  className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-auto rounded-t-2xl border border-border-subtle bg-bg-surface p-4 shadow-lg sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:mt-2 sm:max-h-[70vh] sm:w-[22rem] sm:rounded-xl"
+                  className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-auto rounded-t-2xl border border-border-subtle bg-bg-surface p-4 shadow-lg sm:absolute sm:inset-x-auto sm:bottom-auto sm:right-0 sm:mt-2 sm:max-h-[70vh] sm:w-[22rem] sm:rounded-xl"
                 >
                   <div className="mb-3 flex items-center justify-between sm:hidden">
                     <span className="font-fraunces text-base text-text-primary">
