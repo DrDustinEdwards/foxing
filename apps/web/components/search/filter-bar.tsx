@@ -15,11 +15,12 @@ import { useSearchParamsState } from './use-search-params-state'
  * shared results grid -- no bespoke per-page filter components. All state lives
  * in the URL (shareable / SEO / ISR-safe).
  *
- * Consistent layout on every index page: [search] [sort] [Filters (mobile)] on
- * the top row, an active-filter chip row (each removable + "Clear all"), then a
- * facet row (collapsed behind the Filters disclosure on narrow screens). Facet
- * options carry result counts ("Dark (62)"); a 0-count option is disabled so a
- * filter can never lead to an empty grid. Counts come from the query layer.
+ * Progressive disclosure (eBay / Maps / Booking 2026): a single control row
+ * [search ....] [Filters (n)] [Sort], with the facet controls collapsed behind
+ * the Filters button on every breakpoint -- a popover on desktop, a bottom
+ * sheet on mobile. Active selections surface as removable chips just below the
+ * row, so the panel can stay shut. Facet options carry result counts and 0-count
+ * options are disabled. Counts come from the query layer.
  */
 export function FilterBar({
   config,
@@ -32,7 +33,7 @@ export function FilterBar({
 
   const urlQuery = get(RESERVED_PARAMS.query) ?? ''
   const [text, setText] = useState(urlQuery)
-  const [showFacets, setShowFacets] = useState(false)
+  const [open, setOpen] = useState(false)
 
   // Keep the input in sync if the URL changes externally (back/forward).
   useEffect(() => setText(urlQuery), [urlQuery])
@@ -44,7 +45,18 @@ export function FilterBar({
     return () => clearTimeout(t)
   }, [text, urlQuery, setParams])
 
+  // Close the disclosure on Escape.
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open])
+
   const currentSort = get(RESERVED_PARAMS.sort) ?? config.defaultSort
+  const hasFacets = config.facets.length > 0
 
   const selectedValues = (facet: FacetConfig): string[] => {
     if (facet.type === 'chips' && facet.multiple) return getAll(facet.param)
@@ -54,7 +66,7 @@ export function FilterBar({
   const countFor = (param: string, value: string): number | undefined =>
     facetCounts[param]?.[value]
 
-  // Active-filter chips (each facet selection + the free-text query).
+  // Active-filter chips (one per selected facet value).
   const activeChips = config.facets.flatMap((facet) => {
     const multiple = facet.type === 'chips' && facet.multiple === true
     return selectedValues(facet).map((value) => ({
@@ -64,7 +76,7 @@ export function FilterBar({
       multiple,
     }))
   })
-  const activeCount = activeChips.length + (urlQuery ? 1 : 0)
+  const activeCount = activeChips.length
 
   const removeChip = (chip: { param: string; value: string; multiple: boolean }) => {
     if (chip.multiple) {
@@ -74,14 +86,98 @@ export function FilterBar({
     }
   }
   const clearAll = () => {
-    const updates: Record<string, null> = { [RESERVED_PARAMS.query]: null }
+    const updates: Record<string, null> = {}
     for (const facet of config.facets) updates[facet.param] = null
-    setText('')
     setParams(updates)
   }
 
+  const inputCls =
+    'rounded-full border border-border-subtle bg-bg-surface px-4 py-2 font-dm-sans text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-interactive focus:outline-none'
+
+  function renderFacet(facet: FacetConfig) {
+    if (facet.type === 'chips') {
+      const selected = selectedValues(facet)
+      return (
+        <fieldset key={facet.key} className="flex flex-col gap-2">
+          <legend className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.15em] text-text-tertiary">
+            {facet.label}
+          </legend>
+          <div className="flex flex-wrap gap-1.5">
+            {facet.options.map((opt) => {
+              const active = selected.includes(opt.value)
+              const count = countFor(facet.param, opt.value)
+              const disabled = count === 0 && !active
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={active}
+                  disabled={disabled}
+                  onClick={() => {
+                    if (facet.multiple) {
+                      const next = active
+                        ? selected.filter((v) => v !== opt.value)
+                        : [...selected, opt.value]
+                      setParams({ [facet.param]: next })
+                    } else {
+                      setParams({ [facet.param]: active ? null : opt.value })
+                    }
+                  }}
+                  className={cn(
+                    'rounded-full border px-3 py-1 font-dm-sans text-xs transition-colors',
+                    active
+                      ? 'border-brand-ui bg-brand-subtle text-brand-subtle-text'
+                      : 'border-border-subtle text-text-tertiary hover:text-text-primary',
+                    disabled && 'cursor-not-allowed opacity-40 hover:text-text-tertiary',
+                  )}
+                >
+                  {opt.label}
+                  {count != null && (
+                    <span className="ml-1 font-dm-mono text-[0.625rem] opacity-70">
+                      {count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+        </fieldset>
+      )
+    }
+    // 'select' and 'range' both render as a dropdown.
+    const value = get(facet.param) ?? ''
+    return (
+      <label key={facet.key} className="flex flex-col gap-2">
+        <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.15em] text-text-tertiary">
+          {facet.label}
+        </span>
+        <select
+          value={value}
+          onChange={(e) => setParams({ [facet.param]: e.target.value || null })}
+          className="w-full rounded-full border border-border-subtle bg-bg-surface px-3 py-1.5 font-dm-sans text-sm text-text-primary focus:border-border-interactive focus:outline-none"
+        >
+          <option value="">Any</option>
+          {facet.options.map((opt) => {
+            const count = countFor(facet.param, opt.value)
+            return (
+              <option
+                key={opt.value}
+                value={opt.value}
+                disabled={count === 0 && opt.value !== value}
+              >
+                {opt.label}
+                {count != null ? ` (${count})` : ''}
+              </option>
+            )
+          })}
+        </select>
+      </label>
+    )
+  }
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
+      {/* Control row: [search ....] [Filters (n)] [Sort] */}
       <div className="flex flex-wrap items-center gap-2">
         {config.showSearch !== false && (
           <input
@@ -90,9 +186,95 @@ export function FilterBar({
             onChange={(e) => setText(e.target.value)}
             placeholder={config.searchPlaceholder}
             aria-label={config.searchPlaceholder}
-            className="min-w-[14rem] flex-1 rounded-full border border-border-subtle bg-bg-surface px-4 py-2 font-dm-sans text-sm text-text-primary placeholder:text-text-tertiary focus:border-border-interactive focus:outline-none"
+            className={cn('min-w-[12rem] flex-1', inputCls)}
           />
         )}
+
+        {hasFacets && (
+          <div className="relative">
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={open}
+              onClick={() => setOpen((v) => !v)}
+              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle bg-bg-surface px-3 py-2 font-dm-sans text-sm text-text-primary hover:border-border-interactive focus:border-border-interactive focus:outline-none"
+            >
+              Filters
+              {activeCount > 0 && (
+                <span className="rounded-full bg-brand-subtle px-1.5 py-0.5 font-dm-mono text-[0.625rem] text-brand-subtle-text">
+                  {activeCount}
+                </span>
+              )}
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 12 12"
+                fill="none"
+                aria-hidden
+                className={cn('transition-transform', open && 'rotate-180')}
+              >
+                <path
+                  d="M3 4.5L6 7.5L9 4.5"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+
+            {open && (
+              <>
+                <div
+                  aria-hidden
+                  onClick={() => setOpen(false)}
+                  className="fixed inset-0 z-40 bg-black/20 sm:bg-transparent"
+                />
+                <div
+                  role="dialog"
+                  aria-label="Filters"
+                  className="fixed inset-x-0 bottom-0 z-50 max-h-[80vh] overflow-auto rounded-t-2xl border border-border-subtle bg-bg-surface p-4 shadow-lg sm:absolute sm:inset-x-auto sm:bottom-auto sm:left-0 sm:mt-2 sm:max-h-[70vh] sm:w-[22rem] sm:rounded-xl"
+                >
+                  <div className="mb-3 flex items-center justify-between sm:hidden">
+                    <span className="font-fraunces text-base text-text-primary">
+                      Filters
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="font-dm-sans text-sm text-brand-text"
+                    >
+                      Done
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-4">
+                    {config.facets.map((facet) => renderFacet(facet))}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between border-t border-border-subtle pt-3">
+                    <button
+                      type="button"
+                      onClick={clearAll}
+                      disabled={activeCount === 0}
+                      className="font-dm-sans text-xs text-text-tertiary underline-offset-2 hover:text-text-primary hover:underline disabled:opacity-40 disabled:no-underline disabled:hover:text-text-tertiary"
+                    >
+                      Clear all
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      className="hidden font-dm-sans text-xs text-brand-text sm:inline"
+                    >
+                      Done
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
         {config.sorts.length > 0 && (
           <label className="flex items-center gap-2">
             <span className="sr-only">Sort</span>
@@ -114,23 +296,9 @@ export function FilterBar({
             </select>
           </label>
         )}
-        {config.facets.length > 0 && (
-          <button
-            type="button"
-            aria-expanded={showFacets}
-            onClick={() => setShowFacets((v) => !v)}
-            className="rounded-full border border-border-subtle bg-bg-surface px-3 py-2 font-dm-sans text-sm text-text-primary hover:border-border-interactive focus:border-border-interactive focus:outline-none sm:hidden"
-          >
-            Filters
-            {activeCount > 0 && (
-              <span className="ml-1.5 rounded-full bg-brand-subtle px-1.5 py-0.5 font-dm-mono text-[0.625rem] text-brand-subtle-text">
-                {activeCount}
-              </span>
-            )}
-          </button>
-        )}
       </div>
 
+      {/* Active selections, visible without opening the panel. */}
       {activeChips.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
           {activeChips.map((chip) => (
@@ -154,97 +322,6 @@ export function FilterBar({
           >
             Clear all
           </button>
-        </div>
-      )}
-
-      {config.facets.length > 0 && (
-        <div
-          className={cn(
-            'flex-wrap items-start gap-x-6 gap-y-3',
-            showFacets ? 'flex' : 'hidden',
-            'sm:flex',
-          )}
-        >
-          {config.facets.map((facet) => {
-            if (facet.type === 'chips') {
-              const selected = selectedValues(facet)
-              return (
-                <fieldset key={facet.key} className="flex flex-wrap items-center gap-1.5">
-                  <legend className="mr-1 font-dm-mono text-[0.6875rem] uppercase tracking-[0.15em] text-text-tertiary">
-                    {facet.label}
-                  </legend>
-                  {facet.options.map((opt) => {
-                    const active = selected.includes(opt.value)
-                    const count = countFor(facet.param, opt.value)
-                    const disabled = count === 0 && !active
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        aria-pressed={active}
-                        disabled={disabled}
-                        onClick={() => {
-                          if (facet.multiple) {
-                            const next = active
-                              ? selected.filter((v) => v !== opt.value)
-                              : [...selected, opt.value]
-                            setParams({ [facet.param]: next })
-                          } else {
-                            setParams({ [facet.param]: active ? null : opt.value })
-                          }
-                        }}
-                        className={cn(
-                          'rounded-full border px-3 py-1 font-dm-sans text-xs transition-colors',
-                          active
-                            ? 'border-brand-ui bg-brand-subtle text-brand-subtle-text'
-                            : 'border-border-subtle text-text-tertiary hover:text-text-primary',
-                          disabled && 'cursor-not-allowed opacity-40 hover:text-text-tertiary',
-                        )}
-                      >
-                        {opt.label}
-                        {count != null && (
-                          <span className="ml-1 font-dm-mono text-[0.625rem] opacity-70">
-                            {count}
-                          </span>
-                        )}
-                      </button>
-                    )
-                  })}
-                </fieldset>
-              )
-            }
-            // 'select' and 'range' both render as dropdown(s).
-            const value = get(facet.param) ?? ''
-            return (
-              <label key={facet.key} className="flex items-center gap-2">
-                <span className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.15em] text-text-tertiary">
-                  {facet.label}
-                </span>
-                <select
-                  value={value}
-                  onChange={(e) =>
-                    setParams({ [facet.param]: e.target.value || null })
-                  }
-                  className="rounded-full border border-border-subtle bg-bg-surface px-3 py-1.5 font-dm-sans text-sm text-text-primary focus:border-border-interactive focus:outline-none"
-                >
-                  <option value="">Any</option>
-                  {facet.options.map((opt) => {
-                    const count = countFor(facet.param, opt.value)
-                    return (
-                      <option
-                        key={opt.value}
-                        value={opt.value}
-                        disabled={count === 0 && opt.value !== value}
-                      >
-                        {opt.label}
-                        {count != null ? ` (${count})` : ''}
-                      </option>
-                    )
-                  })}
-                </select>
-              </label>
-            )
-          })}
         </div>
       )}
     </div>
