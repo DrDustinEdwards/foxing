@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Avatar } from '@/components/ui/avatar'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
@@ -11,7 +10,7 @@ import { fetchClubThread } from '@/lib/club-threads'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { getClubRole, isClubMod } from '@/lib/club-membership'
 import { ThreadDiscussionPanel } from '../../thread-discussion-panel'
-import { ThreadPostActions } from './thread-post-actions'
+import { ThreadPosts } from './thread-posts'
 import { ReplyForm } from './reply-form'
 
 export const dynamic = 'force-dynamic'
@@ -92,43 +91,14 @@ export default async function ThreadPage(
             />
           ) : null}
 
-          <ul className="mt-6 flex flex-col gap-4">
-            {posts.map((p) => (
-              <li
-                key={p.id}
-                className="rounded-lg border border-border-subtle bg-bg-surface p-4"
-              >
-                <header className="flex items-start gap-3">
-                  <Avatar
-                    src={p.author?.avatar_url ?? null}
-                    name={p.author?.display_name ?? 'Reader'}
-                    size="sm"
-                  />
-                  <div className="flex flex-col leading-tight">
-                    <span className="font-dm-sans text-sm text-text-primary">
-                      {p.author?.display_name ?? 'Reader'}
-                    </span>
-                    <time className="font-dm-mono text-xs text-text-tertiary">
-                      {formatTime(p.created_at)}
-                      {p.updated_at &&
-                        p.updated_at !== p.created_at &&
-                        ' · edited'}
-                    </time>
-                  </div>
-                </header>
-                <p className="mt-3 whitespace-pre-line font-source-serif-4 text-base text-text-primary">
-                  {p.content}
-                </p>
-                <ThreadPostActions
-                  postId={p.id}
-                  threadId={thread.id}
-                  isOwn={p.author_id === viewerId}
-                  initialSaved={savedSet.has(p.id)}
-                  initialContent={p.content}
-                />
-              </li>
-            ))}
-          </ul>
+          <div className="mt-6">
+            <ThreadPosts
+              posts={posts}
+              threadId={thread.id}
+              viewerId={viewerId}
+              savedSet={savedSet}
+            />
+          </div>
 
           <section className="mt-8">
             <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
