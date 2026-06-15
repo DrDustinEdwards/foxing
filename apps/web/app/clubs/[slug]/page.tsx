@@ -382,6 +382,12 @@ export default async function ClubPage(
 
   const discussionsNode = (
     <div className="flex flex-col gap-6">
+      <DiscussionsSection
+        clubId={club.id}
+        clubSlug={club.slug ?? club.id}
+        threads={threads}
+        isMember={isMember}
+      />
       {club.current_book && club.current_book_id && (
         <ThreadDiscussionPanel
           bookId={club.current_book_id}
@@ -391,12 +397,6 @@ export default async function ClubPage(
           canGenerate={canModerate}
         />
       )}
-      <DiscussionsSection
-        clubId={club.id}
-        clubSlug={club.slug ?? club.id}
-        threads={threads}
-        isMember={isMember}
-      />
     </div>
   )
 

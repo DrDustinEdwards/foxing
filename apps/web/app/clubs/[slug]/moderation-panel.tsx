@@ -53,21 +53,10 @@ export function ModerationPanel({
   reports = [],
   waitlistCount = 0,
 }: Props) {
-  const [open, setOpen] = useState(false)
-  if (!open) {
-    return (
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
-        Open moderation panel
-      </Button>
-    )
-  }
   return (
     <section className="mt-6 flex flex-col gap-6 rounded-lg border border-border-subtle bg-bg-surface p-5">
       <header className="flex items-center justify-between gap-3">
         <h2 className="font-fraunces text-xl text-text-primary">Moderation</h2>
-        <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-          Close
-        </Button>
       </header>
       <InvitePanel clubId={clubId} />
       {showPending && (

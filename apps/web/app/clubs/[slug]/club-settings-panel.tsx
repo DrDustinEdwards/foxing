@@ -28,23 +28,12 @@ interface ClubData {
 }
 
 export function ClubSettingsPanel({ club }: { club: ClubData }) {
-  const [open, setOpen] = useState(false)
-  if (!open) {
-    return (
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
-        Open club settings
-      </Button>
-    )
-  }
   return (
     <section className="mt-6 flex flex-col gap-6 rounded-lg border border-border-subtle bg-bg-surface p-5">
       <header className="flex items-center justify-between">
         <h2 className="font-fraunces text-xl text-text-primary">
           Club Settings
         </h2>
-        <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
-          Close
-        </Button>
       </header>
       <GeneralForm club={club} />
       <DiscordWebhookBlock
