@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { createGiveaway } from '@/app/giveaways/actions'
 
 export function CreateGiveawayForm() {
@@ -84,14 +85,15 @@ export function CreateGiveawayForm() {
       />
       <label className="flex flex-col gap-1 font-dm-sans text-sm text-text-secondary">
         Kind
-        <select
+        <Select
           value={kind}
-          onChange={(e) => setKind(e.target.value as 'digital' | 'physical')}
-          className="rounded-md border border-border-interactive bg-bg-surface px-2 py-1.5 text-text-primary"
-        >
-          <option value="digital">Digital</option>
-          <option value="physical">Physical</option>
-        </select>
+          onChange={(v) => setKind(v as 'digital' | 'physical')}
+          size="sm"
+          options={[
+            { value: 'digital', label: 'Digital' },
+            { value: 'physical', label: 'Physical' },
+          ]}
+        />
       </label>
       <Input
         label="Prize count"

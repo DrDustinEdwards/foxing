@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Select } from '@/components/ui/select'
 import { triggerClubBackfill } from './actions'
 
 interface State {
@@ -34,21 +35,14 @@ export function BackfillClubButton({
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
-        <span className="sr-only">Club to backfill</span>
-        <select
-          value={slug}
-          onChange={(e) => setSlug(e.target.value)}
-          disabled={state.status === 'running' || clubs.length === 0}
-          className="rounded-md border border-border-default bg-bg-surface px-2 py-1.5 font-dm-sans text-sm text-text-primary"
-        >
-          {clubs.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <Select
+        aria-label="Club to backfill"
+        value={slug}
+        onChange={(v) => setSlug(v)}
+        disabled={state.status === 'running' || clubs.length === 0}
+        size="sm"
+        options={clubs.map((c) => ({ value: c.slug, label: c.name }))}
+      />
       <Button
         variant="secondary"
         size="sm"

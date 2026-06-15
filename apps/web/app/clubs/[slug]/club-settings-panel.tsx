@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import {
   deleteClub,
   testClubDiscordWebhook,
@@ -290,17 +291,18 @@ function GeneralForm({ club }: { club: ClubData }) {
       />
       <label className="flex flex-col gap-1.5 font-dm-sans text-sm text-text-secondary">
         <span>Reading pace</span>
-        <select
+        <Select
           name="_pace"
           value={pace}
-          onChange={(e) => setPace(e.target.value)}
-          className="rounded-md border border-border-default bg-bg-surface px-3 py-2 text-text-primary"
-        >
-          <option value="relaxed">Relaxed</option>
-          <option value="moderate">Moderate</option>
-          <option value="intensive">Intensive</option>
-          <option value="custom">Custom</option>
-        </select>
+          onChange={(v) => setPace(v)}
+          size="md"
+          options={[
+            { value: 'relaxed', label: 'Relaxed' },
+            { value: 'moderate', label: 'Moderate' },
+            { value: 'intensive', label: 'Intensive' },
+            { value: 'custom', label: 'Custom' },
+          ]}
+        />
       </label>
       {pace === 'custom' && (
         <Input

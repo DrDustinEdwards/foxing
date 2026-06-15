@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { createClub } from './actions'
 
 interface BookHit {
@@ -144,17 +145,19 @@ export function CreateClubForm() {
 
       <label className="flex flex-col gap-1.5 font-dm-sans text-sm text-text-secondary">
         <span>Reading pace</span>
-        <select
+        <Select
+          aria-label="Reading pace"
           value={pace}
-          onChange={(e) =>
-            setPace(e.target.value as 'relaxed' | 'moderate' | 'intensive')
+          onChange={(v) =>
+            setPace(v as 'relaxed' | 'moderate' | 'intensive')
           }
-          className="rounded-md border border-border-default bg-bg-surface px-3 py-2 text-text-primary"
-        >
-          <option value="relaxed">Relaxed</option>
-          <option value="moderate">Moderate</option>
-          <option value="intensive">Intensive</option>
-        </select>
+          options={[
+            { value: 'relaxed', label: 'Relaxed' },
+            { value: 'moderate', label: 'Moderate' },
+            { value: 'intensive', label: 'Intensive' },
+          ]}
+          className="w-full"
+        />
       </label>
 
       {error && (

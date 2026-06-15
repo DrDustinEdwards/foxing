@@ -5,6 +5,7 @@ import { useState, useTransition } from 'react'
 import { BookSearchAdd } from '@/components/book-search-add'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { createCelebrityPick } from '../actions'
 
 interface BookSelection {
@@ -111,19 +112,17 @@ export function CelebrityPickForm({ clubs }: Props) {
           >
             Club
           </label>
-          <select
+          <Select
             id="club_id"
             name="club_id"
             required
-            className="h-11 rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-base text-text-primary"
-          >
-            <option value="">Choose a club</option>
-            {clubs.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+            size="md"
+            defaultValue=""
+            options={[
+              { value: '', label: 'Choose a club' },
+              ...clubs.map((c) => ({ value: c.id, label: c.name })),
+            ]}
+          />
         </div>
         <div className="flex flex-col gap-1.5">
           <label
@@ -132,20 +131,18 @@ export function CelebrityPickForm({ clubs }: Props) {
           >
             Month
           </label>
-          <select
+          <Select
             id="pick_month"
             name="pick_month"
-            defaultValue={DEFAULT_MONTH}
-            className="h-11 rounded-md border border-border-interactive bg-bg-surface px-3 font-dm-sans text-base text-text-primary"
-          >
-            {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-              <option key={m} value={m}>
-                {new Date(2000, m - 1, 1).toLocaleString('en-US', {
-                  month: 'long',
-                })}
-              </option>
-            ))}
-          </select>
+            size="md"
+            defaultValue={String(DEFAULT_MONTH)}
+            options={Array.from({ length: 12 }, (_, i) => i + 1).map((m) => ({
+              value: String(m),
+              label: new Date(2000, m - 1, 1).toLocaleString('en-US', {
+                month: 'long',
+              }),
+            }))}
+          />
         </div>
         <Input
           label="Year"

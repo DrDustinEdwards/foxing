@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState } from 'react'
 import { cn } from '@/lib/cn'
+import { Select } from '@/components/ui/select'
 
 interface Props {
   current: { year: number; month: number }
@@ -99,19 +100,20 @@ export function MonthTabs({ current }: Props) {
               <label className="font-dm-sans text-xs text-text-tertiary">
                 Month
               </label>
-              <select
-                value={pickMonth}
-                onChange={(e) => setPickMonth(Number(e.target.value))}
-                className="h-8 rounded border border-border-interactive bg-bg-surface px-2 font-dm-sans text-sm text-text-primary"
-              >
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                  <option key={m} value={m}>
-                    {new Date(2000, m - 1, 1).toLocaleString('en-US', {
+              <Select
+                aria-label="Month"
+                value={String(pickMonth)}
+                onChange={(v) => setPickMonth(Number(v))}
+                size="sm"
+                options={Array.from({ length: 12 }, (_, i) => i + 1).map(
+                  (m) => ({
+                    value: String(m),
+                    label: new Date(2000, m - 1, 1).toLocaleString('en-US', {
                       month: 'long',
-                    })}
-                  </option>
-                ))}
-              </select>
+                    }),
+                  }),
+                )}
+              />
             </div>
             <Link
               href={tabHref(pickYear, pickMonth)}
