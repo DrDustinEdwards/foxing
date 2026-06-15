@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { ClubMeeting } from '@/lib/club-meetings'
 import { formatMeetingDate } from '@/lib/club-meetings'
+import { ClubSectionHeader } from './club-section-header'
 import { CreateMeetingForm } from './create-meeting-form'
 import { RsvpButtons } from './rsvp-buttons'
 import { CancelMeetingButton } from './cancel-meeting-button'
@@ -32,18 +33,14 @@ export function MeetingsSection({
   defaultState,
 }: Props) {
   return (
-    <section className="mt-10">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-          Meetings
-        </h2>
-      </div>
+    <section>
+      <ClubSectionHeader title="Meetings" />
       {meetings.length === 0 ? (
-        <p className="mt-3 font-source-serif-4 text-sm text-text-tertiary">
+        <p className="font-source-serif-4 text-sm text-text-tertiary">
           No meetings scheduled yet.
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-4">
+        <ul className="flex flex-col gap-4">
           {meetings.map((m) => (
             <li key={m.id}>
               <MeetingCard

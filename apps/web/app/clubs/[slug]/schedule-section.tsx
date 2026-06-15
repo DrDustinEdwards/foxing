@@ -1,4 +1,5 @@
 import { AddScheduleForm } from './add-schedule-form'
+import { ClubSectionHeader } from './club-section-header'
 import { ScheduleDeleteButton } from './schedule-delete-button'
 
 export interface ScheduleEntry {
@@ -49,10 +50,8 @@ const CHIP_CLASS: Record<'upcoming' | 'today' | 'unlocked', string> = {
 export function ScheduleSection({ clubId, entries, canManage }: Props) {
   const now = new Date()
   return (
-    <section className="mt-10">
-      <h2 className="mb-3 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-        Reading schedule
-      </h2>
+    <section>
+      <ClubSectionHeader title="Reading schedule" />
       {entries.length === 0 ? (
         <p className="font-source-serif-4 text-sm text-text-tertiary">
           {canManage
