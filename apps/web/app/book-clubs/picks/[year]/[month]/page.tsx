@@ -6,6 +6,7 @@ import { BookCoverPlaceholder } from '@/components/book-cover-placeholder'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchPicksForMonth,
   monthHasAnyPicks,
@@ -150,14 +151,12 @@ export default async function MonthlyRoundupPage(
             <span className="text-text-secondary">{label}</span>
           </nav>
 
-          <h1 className="mt-4 font-fraunces text-[2.25rem] leading-tight text-text-primary md:text-[2.5rem]">
-            Celebrity Book Club Picks, {monthName} {year}
-          </h1>
-          <p className="mt-2 font-dm-sans text-sm text-text-tertiary">
-            {picks.length}{' '}
-            {picks.length === 1 ? 'club' : 'clubs'} ·{' '}
-            Updated as picks are announced
-          </p>
+          <div className="mt-4">
+            <PageHeader
+              title={`Celebrity Book Club Picks, ${monthName} ${year}`}
+              subtitle={`${picks.length} ${picks.length === 1 ? 'club' : 'clubs'} · Updated as picks are announced`}
+            />
+          </div>
 
           {picks.length === 0 ? (
             <p className="mt-10 font-source-serif-4 text-base text-text-secondary">

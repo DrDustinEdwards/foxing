@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchProfileBasics } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { InviteForm } from './invite-form'
@@ -22,13 +23,11 @@ export default async function InvitePage() {
   }
   return (
     <PageWrapper className="max-w-prose py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Start a buddy read
-      </h1>
-      <p className="mt-2 font-source-serif-4 text-base text-text-secondary">
-        Pick a book and a reading partner. You will be able to share
-        chapter-by-chapter thoughts.
-      </p>
+      <PageHeader
+        title="Start a buddy read"
+        subtitle="Pick a book and a reading partner. You will be able to share chapter-by-chapter thoughts."
+        subtitleVariant="description"
+      />
       <InviteForm />
     </PageWrapper>
   )

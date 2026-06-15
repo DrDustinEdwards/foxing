@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { GoodreadsImporter } from './goodreads-importer'
 
 export const metadata: Metadata = {
@@ -11,14 +12,11 @@ export const metadata: Metadata = {
 export default function LibraryImportPage() {
   return (
     <PageWrapper className="max-w-2xl py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Import your library
-      </h1>
-      <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-        Upload your Goodreads export. Foxing matches each book by title and
-        author, copies your rating and review, and places it on the right
-        shelf. You see a preview before anything is saved.
-      </p>
+      <PageHeader
+        title="Import your library"
+        subtitle="Upload your Goodreads export. Foxing matches each book by title and author, copies your rating and review, and places it on the right shelf. You see a preview before anything is saved."
+        subtitleVariant="description"
+      />
 
       <div className="mt-6">
         <GoodreadsImporter />

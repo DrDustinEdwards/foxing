@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Select } from '@/components/ui/select'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchLibrary, type LibraryStatus } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { cn } from '@/lib/cn'
@@ -75,43 +76,43 @@ export default async function LibraryPage(
 
   return (
     <PageWrapper className="py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          My library
-        </h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <form action="/library" method="get" className="flex items-center gap-2">
-            <input type="hidden" name="status" value={status} />
-            <label className="flex items-center gap-2 font-dm-sans text-xs text-text-tertiary">
-              Sort
-              <Select
-                name="sort"
-                defaultValue={sort}
-                aria-label="Sort"
-                options={SORTS.map((s) => ({ value: s.id, label: s.label }))}
-              />
-            </label>
-            <Button type="submit" variant="ghost" size="sm">
-              Apply
-            </Button>
-          </form>
-          <Link href="/shelves">
-            <Button variant="secondary" size="sm">
-              My shelves
-            </Button>
-          </Link>
-          <Link href="/library/import">
-            <Button variant="secondary" size="sm">
-              Import
-            </Button>
-          </Link>
-          <Link href="/api/library/export" prefetch={false}>
-            <Button variant="secondary" size="sm">
-              Export CSV
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="My library"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <form action="/library" method="get" className="flex items-center gap-2">
+              <input type="hidden" name="status" value={status} />
+              <label className="flex items-center gap-2 font-dm-sans text-xs text-text-tertiary">
+                Sort
+                <Select
+                  name="sort"
+                  defaultValue={sort}
+                  aria-label="Sort"
+                  options={SORTS.map((s) => ({ value: s.id, label: s.label }))}
+                />
+              </label>
+              <Button type="submit" variant="ghost" size="sm">
+                Apply
+              </Button>
+            </form>
+            <Link href="/shelves">
+              <Button variant="secondary" size="sm">
+                My shelves
+              </Button>
+            </Link>
+            <Link href="/library/import">
+              <Button variant="secondary" size="sm">
+                Import
+              </Button>
+            </Link>
+            <Link href="/api/library/export" prefetch={false}>
+              <Button variant="secondary" size="sm">
+                Export CSV
+              </Button>
+            </Link>
+          </div>
+        }
+      />
 
       <nav
         aria-label="Library tabs"

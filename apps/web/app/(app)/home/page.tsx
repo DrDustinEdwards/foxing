@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { BookCard } from '@/components/book-card'
 import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { SectionEyebrow } from '@/components/ui/section-eyebrow'
 import { fetchSimilarBooks } from '@/lib/queries'
 import { getAuthedUserId } from '@/lib/nav-user'
@@ -55,9 +56,7 @@ export default async function DashboardHome() {
 
   return (
     <PageWrapper className="flex flex-col gap-10 py-10">
-      <h1 className="font-fraunces text-[1.75rem] text-text-primary">
-        {greeting}
-      </h1>
+      <PageHeader title={greeting} />
 
       {currentlyReading && (
         <CurrentlyReadingCard entry={currentlyReading} />

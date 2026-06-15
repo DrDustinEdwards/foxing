@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchActiveChallenges,
   fetchBooksFinishedInRange,
@@ -76,9 +77,7 @@ export default async function GoalsPage() {
 
   return (
     <PageWrapper className="py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Reading goals
-      </h1>
+      <PageHeader title="Reading goals" />
 
       <section className="mt-8 rounded-lg border border-border-subtle bg-bg-surface p-6">
         <h2 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">

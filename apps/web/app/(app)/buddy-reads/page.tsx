@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchUserBuddyReads,
   type BuddyRead,
@@ -36,29 +37,26 @@ export default async function BuddyReadsIndex() {
 
   return (
     <PageWrapper className="py-10">
-      <header className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-fraunces text-[2rem] text-text-primary">
-            Buddy reads
-          </h1>
-          <p className="mt-1 font-source-serif-4 text-base text-text-secondary">
-            Read a classic with one other person.
-          </p>
-        </div>
-        {isPlus ? (
-          <Link href="/buddy-reads/invite">
-            <Button variant="primary" size="sm">
-              Start a buddy read
-            </Button>
-          </Link>
-        ) : (
-          <Link href="/pricing">
-            <Button variant="secondary" size="sm">
-              Upgrade to Plus
-            </Button>
-          </Link>
-        )}
-      </header>
+      <PageHeader
+        title="Buddy reads"
+        subtitle="Read a classic with one other person."
+        subtitleVariant="description"
+        actions={
+          isPlus ? (
+            <Link href="/buddy-reads/invite">
+              <Button variant="primary" size="sm">
+                Start a buddy read
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/pricing">
+              <Button variant="secondary" size="sm">
+                Upgrade to Plus
+              </Button>
+            </Link>
+          )
+        }
+      />
 
       {!isPlus && (
         <div className="mt-6 rounded-lg border border-border-subtle bg-brand-subtle p-4">

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { Card } from '@/components/ui/card'
 import { fetchSeriesIndex } from '@/lib/missing-pages-queries'
 import { buildSeriesIndexMetadata } from '@/lib/metadata'
@@ -21,14 +22,11 @@ export default async function SeriesIndexPage() {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Series
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Multi-book series available on Foxing, in reading order.
-            </p>
-          </header>
+          <PageHeader
+            title="Series"
+            subtitle="Multi-book series available on Foxing, in reading order."
+            subtitleVariant="description"
+          />
 
           {series.length === 0 ? (
             <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">

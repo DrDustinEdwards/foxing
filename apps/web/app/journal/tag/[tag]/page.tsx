@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { JournalPageShell } from '@/components/journal/JournalPageShell'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   getJournalPostsStatic,
   JOURNAL_TAGS,
@@ -96,14 +97,10 @@ export default async function JournalTagPage(
               Journal
             </Link>
           </p>
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              {label}
-            </h1>
-            <p className="font-dm-mono text-sm text-text-tertiary">
-              {posts.length} {posts.length === 1 ? 'post' : 'posts'}
-            </p>
-          </header>
+          <PageHeader
+            title={label}
+            subtitle={`${posts.length} ${posts.length === 1 ? 'post' : 'posts'}`}
+          />
 
           {posts.length === 0 ? (
             <div className="mt-12">

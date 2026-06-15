@@ -6,6 +6,7 @@ import { formatRelativeDate } from '@foxing/utils'
 import { Avatar } from '@/components/ui/avatar'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { StarRating } from '@/components/ui/star-rating'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { createClient } from '@/lib/supabase/server'
@@ -179,12 +180,11 @@ export default async function FeedPage() {
 
 function Header() {
   return (
-    <header className="flex flex-col gap-2">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">Feed</h1>
-      <p className="font-source-serif-4 text-base text-text-secondary">
-        Books and passages from the readers you follow.
-      </p>
-    </header>
+    <PageHeader
+      title="Feed"
+      subtitle="Books and passages from the readers you follow."
+      subtitleVariant="description"
+    />
   )
 }
 

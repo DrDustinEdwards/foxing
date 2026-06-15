@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
+import { PageHeader } from '@/components/ui/page-header'
 import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
@@ -33,15 +34,11 @@ export default function AppGuidePage() {
       <NavAuthClient />
       <main className="flex-1">
         <article className="mx-auto w-full max-w-[900px] px-6 py-16">
-          <header>
-            <h1 className="font-fraunces text-[2.5rem] text-text-primary">
-              Using the Foxing app
-            </h1>
-            <p className="mt-4 font-source-serif-4 text-base text-text-secondary leading-[1.85]">
-              How the Foxing mobile app works: reading, AI companion,
-              highlights, tracking, clubs, and settings.
-            </p>
-          </header>
+          <PageHeader
+            title="Using the Foxing app"
+            subtitle="How the Foxing mobile app works: reading, AI companion, highlights, tracking, clubs, and settings."
+            subtitleVariant="description"
+          />
 
           <nav
             aria-label="Sections"

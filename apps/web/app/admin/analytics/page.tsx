@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { CountBarChart, DonutChart, SignupsLine } from './charts'
 
@@ -153,9 +154,7 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Analytics
-      </h1>
+      <PageHeader title="Analytics" />
 
       <section className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-5">
         <StatCard

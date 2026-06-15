@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
+import { PageHeader } from '@/components/ui/page-header'
 
 export const dynamic = 'force-dynamic'
 
@@ -131,7 +132,7 @@ export default async function AdminOverviewPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">Overview</h1>
+      <PageHeader title="Overview" />
 
       <section className="mt-6 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
         <StatCard label="Total users" value={totalUsers.toLocaleString()} />

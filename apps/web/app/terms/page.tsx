@@ -1,6 +1,7 @@
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { STATIC_PAGE_METADATA } from '@/lib/metadata'
 
 export const dynamic = 'force-static'
@@ -13,12 +14,7 @@ export default function TermsPage() {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="max-w-prose py-12 font-source-serif-4 text-base text-text-secondary">
-          <h1 className="font-fraunces text-[2.25rem] text-text-primary">
-            Terms of service
-          </h1>
-          <p className="mt-2 font-dm-mono text-xs text-text-tertiary">
-            Last updated 2026-06-12
-          </p>
+          <PageHeader title="Terms of service" subtitle="Last updated 2026-06-12" />
 
           <Section heading="The short version">
             Read the books, save passages, talk about them with other

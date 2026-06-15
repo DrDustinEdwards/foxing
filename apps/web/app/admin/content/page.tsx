@@ -4,6 +4,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
 import { ReportActions } from './report-actions'
+import { PageHeader } from '@/components/ui/page-header'
 
 export const dynamic = 'force-dynamic'
 
@@ -139,12 +140,11 @@ export default async function AdminContentPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Content reports
-      </h1>
-      <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-        Pending reports only. Dismissed and actioned reports are kept for audit.
-      </p>
+      <PageHeader
+        title="Content reports"
+        subtitle="Pending reports only. Dismissed and actioned reports are kept for audit."
+        subtitleVariant="description"
+      />
 
       {reports.length === 0 ? (
         <div className="mt-10">

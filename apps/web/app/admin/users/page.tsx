@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { formatRelativeDate } from '@foxing/utils'
 
@@ -46,7 +47,7 @@ export default async function AdminUsersPage(
 
   return (
     <div className="p-6 md:p-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">Users</h1>
+      <PageHeader title="Users" />
 
       <form className="mt-6 max-w-md" action="/admin/users" method="get">
         <Input

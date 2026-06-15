@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import type { Metadata } from 'next'
 import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { PLUS_TRIAL_LABEL } from '@/lib/config'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
@@ -96,9 +97,7 @@ export default async function SettingsPage() {
 
   return (
     <PageWrapper className="max-w-[640px] py-10">
-      <h1 className="font-fraunces text-[1.75rem] text-text-primary">
-        Settings
-      </h1>
+      <PageHeader title="Settings" />
 
       <Section heading="Account">
         <AccountCredentialsSection

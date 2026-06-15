@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchFeaturedLists,
   fetchUserLists,
@@ -39,16 +40,16 @@ export default async function ListsPage(
 
   return (
     <PageWrapper className="py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h1 className="font-fraunces text-[2rem] text-text-primary">
-          Lists
-        </h1>
-        <Link href="/my-lists/new">
-          <Button variant="primary" size="sm">
-            Create a list
-          </Button>
-        </Link>
-      </div>
+      <PageHeader
+        title="Lists"
+        actions={
+          <Link href="/my-lists/new">
+            <Button variant="primary" size="sm">
+              Create a list
+            </Button>
+          </Link>
+        }
+      />
 
       <nav
         aria-label="Lists tabs"

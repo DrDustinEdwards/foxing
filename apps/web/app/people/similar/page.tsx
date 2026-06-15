@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchSimilarReaders } from '@/lib/similar-readers'
 
@@ -29,17 +30,11 @@ export default async function SimilarReadersPage() {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-              Discover
-            </p>
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Readers with similar taste
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Ranked by books you have both finished.
-            </p>
-          </header>
+          <PageHeader
+            title="Readers with similar taste"
+            subtitle="Ranked by books you have both finished."
+            subtitleVariant="description"
+          />
 
           {readers.length === 0 ? (
             <p className="mt-10 font-source-serif-4 text-base text-text-tertiary">

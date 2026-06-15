@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchAllPicksForAdmin } from '@/lib/botm'
 import { monthName } from '@/lib/month'
 import { BotmCandidates } from './candidates'
@@ -17,21 +18,17 @@ export default async function AdminBookOfMonthPage() {
 
   return (
     <div className="p-6 md:p-10">
-      <header className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-fraunces text-[2rem] text-text-primary">
-            Book of the Month
-          </h1>
-          <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-            {picks.length} pick{picks.length === 1 ? '' : 's'} on the schedule
-          </p>
-        </div>
-        <Link href="/admin/book-of-month/new">
-          <Button variant="primary" size="md">
-            New pick
-          </Button>
-        </Link>
-      </header>
+      <PageHeader
+        title="Book of the Month"
+        subtitle={`${picks.length} pick${picks.length === 1 ? '' : 's'} on the schedule`}
+        actions={
+          <Link href="/admin/book-of-month/new">
+            <Button variant="primary" size="md">
+              New pick
+            </Button>
+          </Link>
+        }
+      />
 
       <div className="mt-6">
         <BotmCandidates />

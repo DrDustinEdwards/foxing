@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { createClient } from '@/lib/supabase/server'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchPendingClaims } from '@/lib/author-claims'
@@ -31,13 +32,11 @@ export default async function AuthorClaimsPage() {
 
   return (
     <PageWrapper className="py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Author claims
-      </h1>
-      <p className="mt-2 font-source-serif-4 text-base text-text-secondary">
-        Review pending claims and verify the email domain matches the author
-        website before approving.
-      </p>
+      <PageHeader
+        title="Author claims"
+        subtitle="Review pending claims and verify the email domain matches the author website before approving."
+        subtitleVariant="description"
+      />
       <section className="mt-8">
         {claims.length === 0 ? (
           <p className="font-source-serif-4 text-base text-text-tertiary">

@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import {
   fetchEventCitiesForState,
   fetchEventStates,
@@ -73,14 +74,13 @@ export default async function StateEventsPage(
               ← All events
             </Link>
           </nav>
-          <header className="mt-4 max-w-prose">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              Literary events in {code}
-            </h1>
-            <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-              Upcoming author signings, readings, and book club meetings.
-            </p>
-          </header>
+          <div className="mt-4">
+            <PageHeader
+              title={`Literary events in ${code}`}
+              subtitle="Upcoming author signings, readings, and book club meetings."
+              subtitleVariant="description"
+            />
+          </div>
 
           {cities.length > 0 && (
             <nav className="mt-6 flex flex-wrap gap-2 font-dm-sans text-sm">

@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { fetchUserHighlights } from '@/lib/user-queries'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { HighlightsBrowser } from './highlights-browser'
@@ -20,21 +21,17 @@ export default async function HighlightsPage() {
 
   return (
     <PageWrapper className="py-10">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="font-fraunces text-[2rem] text-text-primary">
-            My highlights
-          </h1>
-          <p className="mt-1 font-dm-sans text-sm text-text-tertiary">
-            {items.length.toLocaleString()} saved passages
-          </p>
-        </div>
-        <a href="/api/highlights/export" download>
-          <Button variant="secondary" size="sm">
-            Export TXT
-          </Button>
-        </a>
-      </div>
+      <PageHeader
+        title="My highlights"
+        subtitle={`${items.length.toLocaleString()} saved passages`}
+        actions={
+          <a href="/api/highlights/export" download>
+            <Button variant="secondary" size="sm">
+              Export TXT
+            </Button>
+          </a>
+        }
+      />
 
       {items.length === 0 ? (
         <div className="mt-10">

@@ -6,6 +6,7 @@ import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { WhereToRead } from '@/components/where-to-read'
 import { fetchPublishedPicksWithRatings } from '@/lib/botm'
 import { monthName } from '@/lib/month'
@@ -124,14 +125,11 @@ export default async function BookOfMonthListPage() {
       )}
       <main className="flex-1">
         <PageWrapper className="py-12">
-          <header className="max-w-prose">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              Book of the Month
-            </h1>
-            <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-              Foxing&apos;s community-driven monthly pick.
-            </p>
-          </header>
+          <PageHeader
+            title="Book of the Month"
+            subtitle="Foxing's community-driven monthly pick."
+            subtitleVariant="description"
+          />
 
           {current ? (
             <CurrentPick pick={current} />

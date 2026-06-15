@@ -1,3 +1,5 @@
+import { PageHeader } from '@/components/ui/page-header'
+
 interface Tool {
   name: string
   description: string
@@ -103,15 +105,13 @@ const SERVERS: Server[] = [
 export default function McpPage() {
   return (
     <div className="p-6 md:p-10">
-      <header className="mb-8 max-w-3xl">
-        <h1 className="font-fraunces text-3xl text-text-primary">
-          MCP Servers
-        </h1>
-        <p className="mt-2 font-dm-sans text-sm text-text-secondary">
-          Model Context Protocol servers connected to Claude.ai for admin and
-          planning sessions.
-        </p>
-      </header>
+      <div className="mb-8">
+        <PageHeader
+          title="MCP Servers"
+          subtitle="Model Context Protocol servers connected to Claude.ai for admin and planning sessions."
+          subtitleVariant="description"
+        />
+      </div>
       <div className="flex flex-col gap-6">
         {SERVERS.map((server) => (
           <ServerCard key={server.name} server={server} />

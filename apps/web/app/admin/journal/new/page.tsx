@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
 import { JournalEditor } from '../editor'
+import { PageHeader } from '@/components/ui/page-header'
 
 export const metadata: Metadata = {
   title: 'New journal post · Admin · Foxing',
@@ -17,9 +18,7 @@ export default function NewJournalPostPage() {
           ← Journal
         </Link>
       </p>
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        New post
-      </h1>
+      <PageHeader title="New post" />
       <div className="mt-6">
         <JournalEditor
           initial={{

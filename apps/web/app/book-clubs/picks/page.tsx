@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { SearchResultItem } from '@/components/search/search-result-item'
@@ -41,15 +42,11 @@ export default async function PicksIndexPage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Book club picks
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Every celebrity book club pick, searchable by title, year, club,
-              and era.
-            </p>
-          </header>
+          <PageHeader
+            title="Book club picks"
+            subtitle="Every celebrity book club pick, searchable by title, year, club, and era."
+            subtitleVariant="description"
+          />
 
           <p className="mt-4 font-dm-sans text-sm text-text-tertiary">
             {result.total.toLocaleString()}{' '}

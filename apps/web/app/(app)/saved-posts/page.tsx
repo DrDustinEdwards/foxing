@@ -5,6 +5,7 @@ import { formatRelativeDate } from '@foxing/utils'
 import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { getAuthedUserId } from '@/lib/nav-user'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { UnsaveButton } from './unsave-button'
@@ -57,9 +58,7 @@ export default async function SavedPostsPage() {
 
   return (
     <PageWrapper className="py-10">
-      <h1 className="font-fraunces text-[2rem] text-text-primary">
-        Saved Posts
-      </h1>
+      <PageHeader title="Saved Posts" />
       {rows.length === 0 ? (
         <p className="mt-10 max-w-prose font-source-serif-4 text-base text-text-tertiary">
           No saved posts yet. Bookmark posts in your clubs to find them here.
