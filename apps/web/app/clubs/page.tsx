@@ -3,6 +3,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { SearchResultItem } from '@/components/search/search-result-item'
@@ -34,15 +35,11 @@ export default async function ClubsIndexPage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Reading clubs
-            </h1>
-            <StartClubButton />
-          </div>
-          <p className="mt-2 font-dm-sans text-sm text-text-tertiary">
-            {result.total.toLocaleString()} {result.total === 1 ? 'club' : 'clubs'}
-          </p>
+          <PageHeader
+            title="Reading clubs"
+            subtitle={`${result.total.toLocaleString()} ${result.total === 1 ? 'club' : 'clubs'}`}
+            actions={<StartClubButton />}
+          />
 
           <div className="mt-6">
             <FilterBar config={config} facetCounts={facetCounts} />

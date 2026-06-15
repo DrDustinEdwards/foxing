@@ -6,6 +6,7 @@ import { StarRating } from '@/components/ui/star-rating'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { cn } from '@/lib/cn'
 import { safeJsonLd } from '@/lib/structured-data'
 import {
@@ -98,14 +99,11 @@ export default async function BookClubsPage() {
       />
       <main className="flex-1">
         <PageWrapper className="py-12">
-          <header className="max-w-prose">
-            <h1 className="font-fraunces text-[2.5rem] leading-tight text-text-primary">
-              Celebrity Book Club Picks
-            </h1>
-            <p className="mt-3 font-source-serif-4 text-base text-text-secondary">
-              Every major book club&apos;s picks, rated by Foxing readers.
-            </p>
-          </header>
+          <PageHeader
+            title="Celebrity Book Club Picks"
+            subtitle="Every major book club's picks, rated by Foxing readers."
+            subtitleVariant="description"
+          />
 
           {currentMonthPicks.length > 0 && (
             <section className="mt-12">

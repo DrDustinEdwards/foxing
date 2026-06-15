@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card'
 import { LikeListButton } from '@/components/ui/like-list-button'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { LISTS_FILTER_CONFIG } from '@/lib/search/configs'
@@ -54,14 +55,11 @@ export default async function PublicListsPage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Reading lists
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Curated reading lists from the Foxing community.
-            </p>
-          </header>
+          <PageHeader
+            title="Reading lists"
+            subtitle="Curated reading lists from the Foxing community."
+            subtitleVariant="description"
+          />
 
           <div className="mt-6">
             <FilterBar config={LISTS_FILTER_CONFIG} />

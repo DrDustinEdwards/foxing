@@ -5,6 +5,7 @@ import { HighlightCard } from '@/components/highlight-card'
 import { LikeHighlightButton } from '@/components/ui/like-highlight-button'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { SearchPagination } from '@/components/search/search-pagination'
 import { QUOTES_FILTER_CONFIG } from '@/lib/search/configs'
@@ -57,12 +58,10 @@ export default async function QuotesPage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <h1 className="font-fraunces text-[2rem] text-text-primary">
-            Passages readers saved
-          </h1>
-          <p className="mt-2 font-dm-sans text-sm text-text-tertiary">
-            {result.total.toLocaleString()} public highlights
-          </p>
+          <PageHeader
+            title="Passages readers saved"
+            subtitle={`${result.total.toLocaleString()} public highlights`}
+          />
 
           <div className="mt-6">
             <FilterBar config={QUOTES_FILTER_CONFIG} />

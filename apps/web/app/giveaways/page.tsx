@@ -6,6 +6,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
+import { PageHeader } from '@/components/ui/page-header'
 import { FilterBar } from '@/components/search/filter-bar'
 import { GIVEAWAYS_FILTER_CONFIG } from '@/lib/search/configs'
 import {
@@ -49,14 +50,11 @@ export default async function GiveawaysPage(props: {
       <NavAuthClient />
       <main className="flex-1">
         <PageWrapper className="py-10">
-          <header className="flex flex-col gap-2">
-            <h1 className="font-fraunces text-[2rem] text-text-primary">
-              Book giveaways
-            </h1>
-            <p className="max-w-prose font-source-serif-4 text-base text-text-secondary">
-              Active giveaways run by verified authors. One entry per reader.
-            </p>
-          </header>
+          <PageHeader
+            title="Book giveaways"
+            subtitle="Active giveaways run by verified authors. One entry per reader."
+            subtitleVariant="description"
+          />
 
           <div className="mt-6">
             <FilterBar config={GIVEAWAYS_FILTER_CONFIG} />
