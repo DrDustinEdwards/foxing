@@ -1,6 +1,15 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
+import { ERAS } from '@/lib/foxing'
+import { ERA_RANGES } from './adapters'
+import type { EraBucket } from './types'
 import type { FacetOption } from './filter-config'
+
+// Era facet on /book-clubs/picks is data-driven: it appears only once the catalog
+// backfill has populated enough book.publication_year. Thresholds below define
+// "meaningful coverage" so the control is never an all-empty / single-bucket stub.
+const ERA_FACET_MIN_PICKS = 10 // picks (with any year) before the facet earns a slot
+const ERA_FACET_MIN_BUCKETS = 2 // must span >1 era bucket, else not a useful filter
 
 /**
  * Distinct values for an array/tag column, ranked by frequency, for building a
@@ -56,6 +65,48 @@ export async function fetchPickYearOptions(): Promise<FacetOption[]> {
   return [...years]
     .sort((a, b) => b - a)
     .map((y) => ({ value: String(y), label: String(y) }))
+}
+
+/**
+ * Era options for the picks facet, derived from real data. Returns the populated
+ * era buckets ONLY when coverage is meaningful (>= ERA_FACET_MIN_PICKS picks with
+ * a year, spanning >= ERA_FACET_MIN_BUCKETS buckets); otherwise [] so the page
+ * omits the era facet entirely. Before the catalog backfill almost no pick-book
+ * has a publication_year (and the few are post-2000, outside every bucket), so
+ * this returns [] today and auto-populates once publication_year is filled.
+ */
+export async function fetchPickEraOptions(): Promise<FacetOption[]> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('external_book_club_picks')
+    .select('book:book_id(publication_year)')
+    .eq('is_published', true)
+    .limit(1000)
+
+  const counts = new Map<string, number>()
+  let withYear = 0
+  for (const row of (data ?? []) as Array<{ book: unknown }>) {
+    const book = Array.isArray(row.book) ? row.book[0] : row.book
+    const y = (book as { publication_year?: number | null } | null)?.publication_year
+    if (typeof y !== 'number') continue
+    withYear++
+    for (const e of ERAS) {
+      const range = ERA_RANGES[e.value as EraBucket]
+      if (
+        (range.min == null || y >= range.min) &&
+        (range.max == null || y <= range.max)
+      ) {
+        counts.set(e.value, (counts.get(e.value) ?? 0) + 1)
+        break
+      }
+    }
+  }
+
+  const populated = ERAS.filter((e) => (counts.get(e.value) ?? 0) > 0)
+  if (withYear < ERA_FACET_MIN_PICKS || populated.length < ERA_FACET_MIN_BUCKETS) {
+    return []
+  }
+  return populated.map((e) => ({ value: e.value, label: e.label }))
 }
 
 /** External book clubs (those with published picks) for the club facet. */

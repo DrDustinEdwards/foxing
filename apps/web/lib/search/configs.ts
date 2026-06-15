@@ -190,15 +190,16 @@ export const GIVEAWAYS_FILTER_CONFIG: FilterBarConfig = {
  * title/author, with year + club facets (both from real data). URL `club` maps
  * to PickFilters.clubId.
  *
- * NOTE: no era facet. The pick adapter supports `era` (filtering the inner-joined
- * book.publication_year), but pick books' publication_year is essentially
- * unpopulated (only a handful of 888 picks have it, all post-2000 -- outside the
- * pre-1800..mid-1900s ERAS buckets), so every era option would return 0 results.
- * Surface era here once publication_year is backfilled for the pick catalog.
+ * The era facet is DATA-DRIVEN: it is included only when `eraOptions` is
+ * non-empty, which fetchPickEraOptions returns only once enough pick-books carry
+ * a publication_year (the pending catalog backfill). Until then era is absent
+ * (not a disabled control) -- the pick adapter still supports the `era` filter,
+ * so it lights up on its own with no further code change.
  */
 export function buildPicksFilterConfig(
   yearOptions: FacetOption[],
   clubOptions: FacetOption[],
+  eraOptions: FacetOption[] = [],
 ): FilterBarConfig {
   return {
     entity: 'pick',
@@ -230,6 +231,18 @@ export function buildPicksFilterConfig(
               param: 'club',
               filterKey: 'clubId',
               options: clubOptions,
+            },
+          ]
+        : []),
+      ...(eraOptions.length
+        ? [
+            {
+              type: 'select' as const,
+              key: 'era',
+              label: 'Era',
+              param: 'era',
+              filterKey: 'era',
+              options: eraOptions,
             },
           ]
         : []),
