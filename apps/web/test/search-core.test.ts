@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { searchEntity, searchFederated } from '@/lib/search/query'
+import { getAdapter } from '@/lib/search/adapters'
 import {
   encodeCursor,
   decodeCursor,
@@ -315,6 +316,53 @@ describe('RLS safety', () => {
       // service-role env key. The core must use only the injected viewer client.
       expect(src).not.toMatch(/createAdminClient|SERVICE_ROLE_KEY|['"]@?\/?lib\/supabase\/admin['"]/)
     }
+  })
+})
+
+// ── embed shape (PostgREST to-one normalization) ────────────────────────────
+// Regression guard for the /quotes 500: highlights.user_id FKs to auth.users,
+// not public.profiles, so the old `author:user_id(...)` embed 400'd (PGRST200)
+// and crashed the page. The author is now joined separately; the to-one book
+// embed is normalized so a stray array can never reach a card as `undefined`.
+
+describe('embed shape', () => {
+  it('quote adapter does not request the unresolvable highlights->profiles embed', () => {
+    const cols = getAdapter('quote').selectColumns
+    expect(cols).not.toMatch(/author:user_id/)
+    expect(cols).toContain('user_id')
+  })
+
+  it('quote mapRow normalizes an array-shaped book embed to a single object', () => {
+    const hit = getAdapter('quote').mapRow({
+      id: 'h1',
+      text: 'a passage',
+      user_id: 'u1',
+      book: [
+        { id: 'b1', slug: 'dracula', title: 'Dracula', author: 'Stoker', cover_url: 'x.jpg' },
+      ],
+    })
+    expect(hit.subtitle).toBe('Dracula · Stoker')
+    expect(hit.imageUrl).toBe('x.jpg')
+    const data = hit.data as { book: { title: string } | null; user_id: string }
+    expect(data.book?.title).toBe('Dracula')
+    expect(data.user_id).toBe('u1')
+  })
+
+  it('quote mapRow tolerates a null book without throwing', () => {
+    const hit = getAdapter('quote').mapRow({ id: 'h2', text: 't', user_id: 'u2', book: null })
+    expect(hit.subtitle).toBeNull()
+    expect(hit.imageUrl).toBeNull()
+  })
+
+  it('pick mapRow normalizes array-shaped book/club embeds', () => {
+    const hit = getAdapter('pick').mapRow({
+      id: 'p1',
+      book: [{ id: 'b9', slug: 's9', title: 'T', author: 'A', cover_url: 'c.jpg' }],
+      club: [{ id: 'c9', slug: 'cs', name: 'Club', short_name: 'C' }],
+    })
+    expect(hit.title).toBe('T')
+    expect(hit.subtitle).toBe('A · Club')
+    expect(hit.imageUrl).toBe('c.jpg')
   })
 })
 
