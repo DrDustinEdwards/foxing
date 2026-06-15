@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/cn'
 
 /**
@@ -72,12 +73,38 @@ export function Select({
 
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
+  // The listbox is portaled to <body> with fixed positioning so it is never
+  // clipped by an overflow ancestor (e.g. the FilterBar's scrollable Filters
+  // popover) -- the way a native <select> popup escapes its container.
+  const [pos, setPos] = useState<{
+    left: number
+    width: number
+    top?: number
+    bottom?: number
+    maxHeight: number
+  } | null>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
   const typeahead = useRef({ buf: '', t: 0 })
   const baseId = useId()
   const listId = `${baseId}-list`
+
+  const updatePosition = useCallback(() => {
+    const el = triggerRef.current
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    const spaceBelow = window.innerHeight - r.bottom
+    const spaceAbove = r.top
+    const openUp = spaceBelow < 240 && spaceAbove > spaceBelow
+    setPos({
+      left: r.left,
+      width: r.width,
+      top: openUp ? undefined : r.bottom + 4,
+      bottom: openUp ? window.innerHeight - r.top + 4 : undefined,
+      maxHeight: Math.min(264, (openUp ? spaceAbove : spaceBelow) - 8),
+    })
+  }, [])
 
   const selected = options.find((o) => o.value === value) ?? null
   const selectedIndex = options.findIndex((o) => o.value === value)
@@ -98,18 +125,35 @@ export function Select({
   const openList = useCallback(() => {
     if (disabled) return
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabled(options))
+    updatePosition()
     setOpen(true)
-  }, [disabled, options, selectedIndex])
+  }, [disabled, options, selectedIndex, updatePosition])
 
-  // Close on an outside pointer press.
+  // Close on an outside pointer press (the listbox lives in a portal, so check
+  // both the root and the list).
   useEffect(() => {
     if (!open) return
     const onDown = (e: PointerEvent) => {
-      if (!rootRef.current?.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (!rootRef.current?.contains(t) && !listRef.current?.contains(t)) {
+        setOpen(false)
+      }
     }
     window.addEventListener('pointerdown', onDown)
     return () => window.removeEventListener('pointerdown', onDown)
   }, [open])
+
+  // Keep the portaled list aligned to the trigger while open.
+  useEffect(() => {
+    if (!open) return
+    const onMove = () => updatePosition()
+    window.addEventListener('scroll', onMove, true)
+    window.addEventListener('resize', onMove)
+    return () => {
+      window.removeEventListener('scroll', onMove, true)
+      window.removeEventListener('resize', onMove)
+    }
+  }, [open, updatePosition])
 
   // Move focus into the list when it opens; keep the active option in view.
   useEffect(() => {
@@ -163,6 +207,9 @@ export function Select({
       }
       case 'Escape':
         e.preventDefault()
+        // Consume it so a parent overlay (e.g. the FilterBar popover) does not
+        // also close on the same keypress.
+        e.stopPropagation()
         close()
         break
       case 'Tab':
@@ -235,18 +282,28 @@ export function Select({
         </svg>
       </button>
 
-      {open && (
-        <ul
-          ref={listRef}
-          id={listId}
-          role="listbox"
-          tabIndex={-1}
-          aria-activedescendant={
-            activeIndex >= 0 ? `${baseId}-opt-${activeIndex}` : undefined
-          }
-          onKeyDown={onListKeyDown}
-          className="absolute left-0 z-50 mt-1 max-h-60 min-w-full overflow-auto rounded-xl border border-border-subtle bg-bg-surface p-1 shadow-md focus:outline-none"
-        >
+      {open &&
+        pos &&
+        createPortal(
+          <ul
+            ref={listRef}
+            id={listId}
+            role="listbox"
+            tabIndex={-1}
+            aria-activedescendant={
+              activeIndex >= 0 ? `${baseId}-opt-${activeIndex}` : undefined
+            }
+            onKeyDown={onListKeyDown}
+            style={{
+              position: 'fixed',
+              left: pos.left,
+              top: pos.top,
+              bottom: pos.bottom,
+              minWidth: pos.width,
+              maxHeight: pos.maxHeight,
+            }}
+            className="z-50 overflow-auto rounded-xl border border-border-subtle bg-bg-surface p-1 shadow-md focus:outline-none"
+          >
           {options.map((opt, i) => {
             const isSelected = opt.value === value
             const isActive = i === activeIndex
@@ -280,8 +337,9 @@ export function Select({
               </li>
             )
           })}
-        </ul>
-      )}
+          </ul>,
+          document.body,
+        )}
     </div>
   )
 }
