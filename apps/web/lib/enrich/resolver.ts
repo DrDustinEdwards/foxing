@@ -275,13 +275,25 @@ export async function resolveBook(
   if (r.year != null && r.year < 1000) flags.push('pre-1000-manual')
   if (r.titleTier === 1) flags.push('partial-title')
 
+  // Plausibility guard: a resolved year >= 1930 on a public-domain catalog book is
+  // almost always a reprint / edition year (the Standard Ebooks contamination),
+  // UNLESS it is strongly corroborated by an exact-title Open Library work match.
+  // Drop it rather than store an edition year, so a future re-run can't reintroduce
+  // the same bad years. (<= 1929 is left untouched -- verified accurate.)
+  const stronglyCorroborated = r.source === 'openlibrary' && r.titleTier === 2
+  let year = r.year
+  if (year != null && year >= 1930 && !stronglyCorroborated) {
+    flags.push('rejected-modern-year')
+    year = null
+  }
+
   const genres = mapGenres(r.subjects)
   const confidence: ResolveResult['confidence'] =
-    r.source === 'openlibrary' && r.titleTier === 2 && r.year != null
+    r.source === 'openlibrary' && r.titleTier === 2 && year != null
       ? 'high'
-      : r.year != null
+      : year != null
         ? 'medium'
         : 'low'
 
-  return { year: r.year, genres, source: r.source, matched: r.matched, confidence, flags }
+  return { year, genres, source: r.source, matched: r.matched, confidence, flags }
 }
