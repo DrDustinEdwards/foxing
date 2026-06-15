@@ -142,7 +142,7 @@ function FeaturedHero({
         <div>
           <Link
             href={`/journal/${post.slug}`}
-            className="inline-flex items-center rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm text-text-on-brand no-underline transition-colors hover:bg-brand-hover"
+            className="inline-flex items-center rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm text-text-on-brand no-underline transition-colors hover:brightness-[1.08]"
           >
             Read the article →
           </Link>

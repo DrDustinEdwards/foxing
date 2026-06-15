@@ -380,7 +380,7 @@ export default async function ClubMonthlyPickPage(
           <section className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               href={`/book/${pick.book.slug ?? pick.book.id}`}
-              className="inline-flex h-11 items-center justify-center rounded-md bg-brand-ui px-5 font-dm-sans text-sm font-medium text-text-on-brand hover:bg-brand-hover"
+              className="inline-flex h-11 items-center justify-center rounded-md bg-brand-ui px-5 font-dm-sans text-sm font-medium text-text-on-brand hover:brightness-[1.08]"
             >
               Add to your library
             </Link>
@@ -407,7 +407,7 @@ export default async function ClubMonthlyPickPage(
             </p>
             <Link
               href={`/clubs/new?book=${pick.book.id}`}
-              className="mt-3 inline-flex h-10 items-center rounded-md bg-brand-ui px-4 font-dm-sans text-sm font-medium text-text-on-brand hover:bg-brand-hover"
+              className="mt-3 inline-flex h-10 items-center rounded-md bg-brand-ui px-4 font-dm-sans text-sm font-medium text-text-on-brand hover:brightness-[1.08]"
             >
               Create a club
             </Link>

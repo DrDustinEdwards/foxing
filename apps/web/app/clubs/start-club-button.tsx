@@ -12,7 +12,7 @@ export function StartClubButton() {
   return (
     <Link
       href="/clubs/new"
-      className="inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-brand-ui px-4 font-dm-sans text-base font-medium text-text-on-amber no-underline transition-all hover:bg-brand-hover active:scale-[0.97]"
+      className="inline-flex h-11 shrink-0 items-center justify-center rounded-md bg-brand-ui px-4 font-dm-sans text-base font-medium text-text-on-amber no-underline transition-all hover:brightness-[1.08] active:scale-[0.97]"
     >
       Start a club
     </Link>

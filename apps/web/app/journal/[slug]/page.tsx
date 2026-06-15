@@ -301,7 +301,7 @@ export default async function JournalPostPage(
                 <div>
                   <Link
                     href="/sign-up"
-                    className="inline-flex items-center rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm text-text-on-brand no-underline hover:bg-brand-hover"
+                    className="inline-flex items-center rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm text-text-on-brand no-underline hover:brightness-[1.08]"
                   >
                     Join free →
                   </Link>

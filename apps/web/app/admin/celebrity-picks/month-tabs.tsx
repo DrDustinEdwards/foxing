@@ -117,7 +117,7 @@ export function MonthTabs({ current }: Props) {
             </div>
             <Link
               href={tabHref(pickYear, pickMonth)}
-              className="rounded-md bg-brand-ui px-3 py-1.5 text-center font-dm-sans text-xs font-medium text-text-on-amber hover:bg-brand-hover"
+              className="rounded-md bg-brand-ui px-3 py-1.5 text-center font-dm-sans text-xs font-medium text-text-on-amber hover:brightness-[1.08]"
               onClick={() => setPickerOpen(false)}
             >
               Go
