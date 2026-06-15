@@ -821,7 +821,7 @@ function AccountMenu({
     <div
       role="menu"
       className={cn(
-        'absolute right-0 top-12 z-50 w-72 overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md max-h-[calc(100dvh-80px)] overflow-y-auto',
+        'absolute right-0 top-12 z-50 w-96 max-w-[calc(100vw-1rem)] overflow-hidden rounded-lg border border-border-subtle bg-bg-elevated shadow-md max-h-[calc(100dvh-80px)] overflow-y-auto',
       )}
     >
       <div className="bg-bg-sunken px-4 py-3">
