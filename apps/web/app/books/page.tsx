@@ -70,7 +70,7 @@ export default async function BooksPage(props: {
 }) {
   const searchParams = await props.searchParams
   const spRecord = searchParams as Record<string, string | string[] | undefined>
-  const { result, page, totalPages } = await searchPageData(
+  const { result, page, totalPages, facetCounts } = await searchPageData(
     'book',
     BOOKS_FILTER_CONFIG,
     spRecord,
@@ -89,7 +89,7 @@ export default async function BooksPage(props: {
           </p>
 
           <div className="mt-6">
-            <FilterBar config={BOOKS_FILTER_CONFIG} />
+            <FilterBar config={BOOKS_FILTER_CONFIG} facetCounts={facetCounts} />
           </div>
 
           {result.hits.length === 0 ? (

@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { searchEntity, searchFederated } from '@/lib/search/query'
+import {
+  countEntity,
+  fetchFacetCounts,
+  searchEntity,
+  searchFederated,
+} from '@/lib/search/query'
 import { getAdapter } from '@/lib/search/adapters'
 import {
   encodeCursor,
@@ -363,6 +368,73 @@ describe('embed shape', () => {
     expect(hit.title).toBe('T')
     expect(hit.subtitle).toBe('A · Club')
     expect(hit.imageUrl).toBe('c.jpg')
+  })
+})
+
+// ── facet counts ────────────────────────────────────────────────────────────
+
+const COUNTS_CONFIG: FilterBarConfig = {
+  entity: 'book',
+  searchPlaceholder: '',
+  defaultSort: 'relevance',
+  sorts: [{ value: 'relevance', label: 'Best match' }],
+  facets: [
+    {
+      type: 'select',
+      key: 'era',
+      label: 'Era',
+      param: 'era',
+      options: [
+        { value: '1800s', label: '1800s' },
+        { value: 'mid-1900s', label: 'Mid 1900s' },
+      ],
+    },
+  ],
+}
+
+describe('facet counts', () => {
+  it('countEntity issues a head count and returns the count', async () => {
+    const client = fixed([], 42)
+    const n = await countEntity(client, { entity: 'book', filters: { era: '1800s' } })
+    expect(n).toBe(42)
+    expect(call(lastBuilder(client), 'select')!.args[1]).toEqual({
+      count: 'exact',
+      head: true,
+    })
+  })
+
+  it('returns {} and touches no table when the config has no facets', async () => {
+    const client = fixed([], 5)
+    const counts = await fetchFacetCounts(
+      client,
+      { ...COUNTS_CONFIG, facets: [] },
+      { entity: 'book' },
+    )
+    expect(counts).toEqual({})
+    expect(client.fromCalls).toHaveLength(0)
+  })
+
+  it('counts every option, keyed by param then value (one query per option)', async () => {
+    const client = fixed([], 7)
+    const counts = await fetchFacetCounts(client, COUNTS_CONFIG, {
+      entity: 'book',
+      filters: { era: '1800s' },
+    })
+    expect(counts.era).toEqual({ '1800s': 7, 'mid-1900s': 7 })
+    expect(client.fromCalls).toHaveLength(2)
+  })
+
+  it('is disjunctive: a facet drops its own selection and applies each option', async () => {
+    const client = fixed([], 3)
+    await fetchFacetCounts(client, COUNTS_CONFIG, {
+      entity: 'book',
+      filters: { era: '1800s' },
+    })
+    // Last option counted is mid-1900s -> publication_year 1950..1999, NOT the
+    // incoming 1800s selection.
+    const b = lastBuilder(client)
+    expect(calls(b, 'gte')).toContainEqual({ method: 'gte', args: ['publication_year', 1950] })
+    expect(calls(b, 'lte')).toContainEqual({ method: 'lte', args: ['publication_year', 1999] })
   })
 })
 

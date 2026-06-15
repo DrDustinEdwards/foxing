@@ -24,7 +24,7 @@ export default async function PicksIndexPage(props: {
     fetchPickClubOptions(),
   ])
   const config = buildPicksFilterConfig(yearOptions, clubOptions)
-  const { result, page, totalPages } = await searchPageData(
+  const { result, page, totalPages, facetCounts } = await searchPageData(
     'pick',
     config,
     searchParams,
@@ -52,7 +52,7 @@ export default async function PicksIndexPage(props: {
           </p>
 
           <div className="mt-6">
-            <FilterBar config={config} />
+            <FilterBar config={config} facetCounts={facetCounts} />
           </div>
 
           {result.hits.length === 0 ? (

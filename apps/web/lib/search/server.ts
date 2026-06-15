@@ -1,9 +1,9 @@
 import 'server-only'
 import { createClient } from '@/lib/supabase/server'
-import { searchEntity } from './query'
+import { fetchFacetCounts, searchEntity } from './query'
 import { encodeCursor } from './escape'
 import { paramsToSearch } from './filter-config'
-import type { FilterBarConfig } from './filter-config'
+import type { FacetCounts, FilterBarConfig } from './filter-config'
 import {
   DEFAULT_PAGE_SIZE,
   type SearchClient,
@@ -19,6 +19,8 @@ export interface SearchPageData<E extends SearchEntity> {
   totalPages: number
   pageSize: number
   query: string
+  /** Per-option result counts for the config's facets ({} when no facets). */
+  facetCounts: FacetCounts
 }
 
 /**
@@ -48,10 +50,18 @@ export async function searchPageData<E extends SearchEntity>(
   params.limit = pageSize
 
   const supabase = await createClient()
-  const result = await searchEntity(
-    supabase as unknown as SearchClient,
-    params,
-  )
+  const client = supabase as unknown as SearchClient
+  const [result, facetCounts] = await Promise.all([
+    searchEntity(client, params),
+    fetchFacetCounts(client, config, params),
+  ])
   const totalPages = Math.max(1, Math.ceil(result.total / pageSize))
-  return { result, page, totalPages, pageSize, query: params.query ?? '' }
+  return {
+    result,
+    page,
+    totalPages,
+    pageSize,
+    query: params.query ?? '',
+    facetCounts,
+  }
 }

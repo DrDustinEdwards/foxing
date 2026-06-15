@@ -34,7 +34,7 @@ export default async function JournalArchivePage(props: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const searchParams = await props.searchParams
-  const { result, page, totalPages } = await searchPageData(
+  const { result, page, totalPages, facetCounts } = await searchPageData(
     'journal',
     JOURNAL_FILTER_CONFIG,
     searchParams,
@@ -72,7 +72,7 @@ export default async function JournalArchivePage(props: {
       </header>
 
       <div className="mt-8">
-        <FilterBar config={JOURNAL_FILTER_CONFIG} />
+        <FilterBar config={JOURNAL_FILTER_CONFIG} facetCounts={facetCounts} />
       </div>
 
       {posts.length === 0 ? (
