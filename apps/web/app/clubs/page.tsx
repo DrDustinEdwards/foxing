@@ -22,7 +22,7 @@ export default async function ClubsIndexPage(props: {
   const searchParams = await props.searchParams
   const genreOptions = await fetchClubGenreOptions()
   const config = buildClubsFilterConfig(genreOptions)
-  const { result, page, totalPages } = await searchPageData(
+  const { result, page, totalPages, facetCounts } = await searchPageData(
     'club',
     config,
     searchParams,
@@ -45,7 +45,7 @@ export default async function ClubsIndexPage(props: {
           </p>
 
           <div className="mt-6">
-            <FilterBar config={config} />
+            <FilterBar config={config} facetCounts={facetCounts} />
           </div>
 
           {result.hits.length === 0 ? (

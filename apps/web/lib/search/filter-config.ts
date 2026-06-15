@@ -40,6 +40,13 @@ export interface RangeFacet {
 
 export type FacetConfig = ChoiceFacet | RangeFacet
 
+/**
+ * Per-option result counts, keyed by facet `param` then option `value`.
+ * Computed in the query layer (fetchFacetCounts) and passed to <FilterBar> so
+ * it can label options ("Dark (62)") and disable dead (0-count) ones.
+ */
+export type FacetCounts = Record<string, Record<string, number>>
+
 export interface SortConfig {
   value: string
   label: string

@@ -19,7 +19,12 @@ export function useSearchParamsState() {
       opts?: { resetCursor?: boolean },
     ) => {
       const next = new URLSearchParams(params?.toString() ?? '')
-      if (opts?.resetCursor !== false) next.delete('cursor')
+      // Pages paginate with ?page=N (numbered) behind the cursor; reset both so
+      // changing a filter/sort/query always returns to the first page.
+      if (opts?.resetCursor !== false) {
+        next.delete('cursor')
+        next.delete('page')
+      }
       for (const [key, value] of Object.entries(updates)) {
         next.delete(key)
         if (value == null || value === '') continue
