@@ -31,6 +31,7 @@ import { appBookDeeplink } from '@/lib/foxing'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { fetchBookDiscussions } from '@/lib/discussions'
 import { fetchPublicChapterReactions } from '@/lib/chapter-reactions'
+import { fetchBookAwards, type BookAwardBadge } from '@/lib/missing-pages-queries'
 import { buildBookMetadata, FOXING_BASE_URL } from '@/lib/metadata'
 import { safeJsonLd } from '@/lib/structured-data'
 import { createAdminClient } from '@/lib/supabase/admin'
@@ -131,6 +132,7 @@ export default async function BookPage(
     discussionGuide,
     discussions,
     publicReactions,
+    awards,
   ] = await Promise.all([
     fetchBookReviews(book.id, 5),
     fetchBookHighlights(book.id, 3),
@@ -141,6 +143,7 @@ export default async function BookPage(
     fetchDiscussionGuide(book.id),
     fetchBookDiscussions(book.id),
     fetchPublicChapterReactions(book.id, 100),
+    fetchBookAwards(book.id),
   ])
 
   const description = aiDescription || book.description || null
@@ -253,7 +256,7 @@ export default async function BookPage(
         <MeBookProvider bookId={book.id}>
         <PageWrapper className="grid gap-10 py-10 md:grid-cols-[1fr_320px] md:py-12">
             <div className="flex flex-col">
-              <BookHeader book={book} />
+              <BookHeader book={book} awards={awards} />
               <ActionBar bookId={book.id} hasEpub={Boolean(book.epub_url)} />
               <WhereToRead
                 book={{
@@ -362,10 +365,19 @@ function BookHero({
   )
 }
 
+function awardBadgeLabel(award: BookAwardBadge): string {
+  const honor =
+    award.scope === 'author' ? 'Nobel laureate' : award.award_name
+  if (award.distinction === 'winner') return `${honor} ${award.year}`
+  return `${honor} ${award.distinction} ${award.year}`
+}
+
 function BookHeader({
   book,
+  awards,
 }: {
   book: Awaited<ReturnType<typeof fetchBookById>> & object
+  awards: BookAwardBadge[]
 }) {
   const year =
     typeof book.created_at === 'string' ? null : null /* publication year is not on the schema */
@@ -394,6 +406,15 @@ function BookHeader({
           </span>
         )}
       </p>
+      {awards.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {awards.map((a) => (
+            <Badge key={`${a.award_slug}-${a.year}`} variant="brand">
+              {awardBadgeLabel(a)}
+            </Badge>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         {typeof book.avg_rating === 'number' && (
           <div className="flex items-center gap-2">
