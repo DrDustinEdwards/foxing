@@ -1,19 +1,18 @@
-import { cache } from 'react'
+import { cache, type ReactNode } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
-import { formatRelativeDate } from '@foxing/utils'
 import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
 import { fetchUpcomingMeetings } from '@/lib/club-meetings'
 import { fetchPollsForClub } from '@/lib/club-polls'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
+import { fetchClubThreads } from '@/lib/club-threads'
 import {
   fetchClubMembers,
   getClubMembershipStatus,
@@ -22,7 +21,6 @@ import {
 } from '@/lib/club-membership'
 import { RequestJoinButton } from './request-join-button'
 import {
-  fetchClubPostsPreview,
   fetchPublicClubById,
   fetchPublicClubBySlug,
   isUuid,
@@ -41,6 +39,9 @@ import { PostAnnouncementForm } from './post-announcement-form'
 import { ScheduleSection } from './schedule-section'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
 import { WaitlistButton } from './waitlist-button'
+import { DiscussionsSection } from './discussions-section'
+import { MembersSection } from './members-section'
+import { ClubWorkspace, type ClubTabKey } from './club-workspace'
 
 export const revalidate = 60
 
@@ -105,9 +106,9 @@ export default async function ClubPage(
   if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
     permanentRedirect(`/clubs/${club.slug}`)
   }
-  const [posts, announcements, meetings, polls, role, discussionGuide] =
+  const [threads, announcements, meetings, polls, role, discussionGuide] =
     await Promise.all([
-      fetchClubPostsPreview(club.id, 3),
+      fetchClubThreads(club.id),
       fetchAnnouncementsForClub(club.id),
       fetchUpcomingMeetings(club.id, userId),
       fetchPollsForClub(club.id, userId),
@@ -133,7 +134,7 @@ export default async function ClubPage(
     { count: waitlistCount },
     { count: clubBookCount },
   ] = await Promise.all([
-    canModerate ? fetchClubMembers(club.id) : Promise.resolve([]),
+    fetchClubMembers(club.id),
     canModerate
       ? adminClient
           .from('clubs')
@@ -292,6 +293,198 @@ export default async function ClubPage(
       : null
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
+  const roster = members
+    .map((m) => ({
+      user_id: m.user_id,
+      role: m.role,
+      username: m.profile?.username ?? '',
+      display_name: m.profile?.display_name ?? '',
+      avatar_url: m.profile?.avatar_url ?? null,
+    }))
+    .filter((m) => m.username)
+
+  const overviewNode = (
+    <div className="flex flex-col gap-6">
+      <AnnouncementsSection
+        clubId={club.id}
+        announcements={announcements}
+        canModerate={canModerate}
+      />
+      {canModerate && (
+        <PostAnnouncementForm
+          clubId={club.id}
+          defaultCity={club.bookstore_city}
+          defaultState={club.bookstore_state}
+          canPin
+        />
+      )}
+      {club.current_book && bookPath && (
+        <section className="flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start">
+            <Link
+              href={`/book/${bookPath}`}
+              className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken"
+            >
+              {club.current_book.cover_url && (
+                <Image
+                  src={club.current_book.cover_url}
+                  alt={club.current_book.title}
+                  fill
+                  sizes="128px"
+                  className="object-cover"
+                />
+              )}
+            </Link>
+            <div className="flex flex-col gap-2">
+              <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
+                Reading now
+              </p>
+              <Link
+                href={`/book/${bookPath}`}
+                className="font-fraunces text-xl text-text-primary hover:text-brand-text"
+              >
+                {club.current_book.title}
+              </Link>
+              <p className="font-dm-sans text-sm text-text-tertiary">
+                {club.current_book.author}
+              </p>
+            </div>
+          </div>
+          {(club.current_book.source_type === 'community' ||
+            !club.current_book.epub_url) && (
+            <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
+              <p className="font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
+                Get the book
+              </p>
+              <WhereToRead
+                variant="inline"
+                book={{
+                  id: club.current_book.id,
+                  title: club.current_book.title,
+                  author: club.current_book.author,
+                  isbn: club.current_book.isbn,
+                  isbn13: club.current_book.isbn13,
+                  amazon_url: club.current_book.amazon_url,
+                  bookshop_url: club.current_book.bookshop_url,
+                  source_type: club.current_book.source_type,
+                  epub_url: club.current_book.epub_url,
+                }}
+              />
+              <p className="font-dm-sans text-xs text-text-tertiary">
+                All members read from the same edition.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+    </div>
+  )
+
+  const discussionsNode = (
+    <div className="flex flex-col gap-6">
+      {club.current_book && club.current_book_id && (
+        <ThreadDiscussionPanel
+          bookId={club.current_book_id}
+          bookSlug={club.current_book.slug}
+          bookTitle={club.current_book.title}
+          initialQuestions={discussionGuide?.questions ?? null}
+          canGenerate={canModerate}
+        />
+      )}
+      <DiscussionsSection
+        clubId={club.id}
+        clubSlug={club.slug ?? club.id}
+        threads={threads}
+        isMember={isMember}
+      />
+    </div>
+  )
+
+  const sections: Partial<Record<ClubTabKey, ReactNode>> = {
+    overview: overviewNode,
+    discussions: discussionsNode,
+    meetings: (
+      <MeetingsSection
+        clubId={club.id}
+        clubSlug={club.slug ?? club.id}
+        meetings={meetings}
+        canModerate={canModerate}
+        isMember={isMember}
+        defaultCity={club.bookstore_city}
+        defaultState={club.bookstore_state}
+      />
+    ),
+    polls: (
+      <PollsSection
+        clubId={club.id}
+        polls={polls}
+        canModerate={canModerate}
+        isMember={isMember}
+      />
+    ),
+    members: <MembersSection members={roster} />,
+  }
+  const available: ClubTabKey[] = [
+    'overview',
+    'discussions',
+    'meetings',
+    'polls',
+    'members',
+  ]
+  if (isMember) {
+    sections.schedule = (
+      <ScheduleSection
+        clubId={club.id}
+        entries={scheduleEntries}
+        canManage={canModerate}
+      />
+    )
+    available.push('schedule')
+  }
+  if (canModerate) {
+    sections.moderation = (
+      <ModerationPanel
+        clubId={club.id}
+        isAdmin={role === 'admin'}
+        members={members.map((m) => ({
+          user_id: m.user_id,
+          role: m.role,
+          status: m.status,
+          muted_until: m.muted_until,
+          banned_at: m.banned_at,
+          username: m.profile?.username ?? '',
+          display_name: m.profile?.display_name ?? '',
+          avatar_url: m.profile?.avatar_url ?? null,
+        }))}
+        pending={pendingMembers}
+        showPending={showPending}
+        reports={reports}
+        waitlistCount={waitlistCount ?? 0}
+      />
+    )
+    available.push('moderation')
+  }
+  if (role === 'admin') {
+    sections.settings = (
+      <ClubSettingsPanel
+        club={{
+          id: club.id,
+          name: club.name,
+          description: club.description,
+          visibility: club.visibility,
+          member_approval: adminClubFields?.member_approval ?? null,
+          max_members: adminClubFields?.max_members ?? null,
+          reading_pace: adminClubFields?.reading_pace ?? null,
+          chapters_per_week: adminClubFields?.chapters_per_week ?? null,
+          genre_tags: adminClubFields?.genre_tags ?? null,
+          current_book_id: club.current_book_id,
+          discord_webhook_url: adminClubFields?.discord_webhook_url ?? null,
+        }}
+      />
+    )
+    available.push('settings')
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-bg-base">
       <NavAuthClient />
@@ -328,236 +521,51 @@ export default async function ClubPage(
 
           <VerifiedBookstoreHeader club={club} />
 
-          <AnnouncementsSection
-            clubId={club.id}
-            announcements={announcements}
-            canModerate={canModerate}
-          />
-
-          {canModerate && (
-            <section className="mt-6">
-              <PostAnnouncementForm
-                clubId={club.id}
-                defaultCity={club.bookstore_city}
-                defaultState={club.bookstore_state}
-                canPin
-              />
-            </section>
-          )}
-
-          <MeetingsSection
-            clubId={club.id}
-            clubSlug={club.slug ?? club.id}
-            meetings={meetings}
-            canModerate={canModerate}
-            isMember={isMember}
-            defaultCity={club.bookstore_city}
-            defaultState={club.bookstore_state}
-          />
-
-          <PollsSection
-            clubId={club.id}
-            polls={polls}
-            canModerate={canModerate}
-            isMember={isMember}
-          />
-
-          {isMember && (
-            <ScheduleSection
-              clubId={club.id}
-              entries={scheduleEntries}
-              canManage={canModerate}
-            />
-          )}
-
-          {club.current_book && club.current_book_id && (
-            <ThreadDiscussionPanel
-              bookId={club.current_book_id}
-              bookSlug={club.current_book.slug}
-              bookTitle={club.current_book.title}
-              initialQuestions={discussionGuide?.questions ?? null}
-              canGenerate={canModerate}
-            />
-          )}
-
-          {club.current_book && bookPath && (
-            <section className="mt-8 flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
-              <div className="flex flex-col gap-4 md:flex-row md:items-start">
-                <Link
-                  href={`/book/${bookPath}`}
-                  className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken"
-                >
-                  {club.current_book.cover_url && (
-                    <Image
-                      src={club.current_book.cover_url}
-                      alt={club.current_book.title}
-                      fill
-                      sizes="128px"
-                      className="object-cover"
-                    />
-                  )}
-                </Link>
-                <div className="flex flex-col gap-2">
-                  <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-                    Reading now
-                  </p>
-                  <Link
-                    href={`/book/${bookPath}`}
-                    className="font-fraunces text-xl text-text-primary hover:text-brand-text"
-                  >
-                    {club.current_book.title}
+          {!isMember && (
+            <section className="mt-6 flex flex-wrap items-center gap-3">
+              {isFull ? (
+                userId ? (
+                  <WaitlistButton clubId={club.id} onWaitlist={isOnWaitlist} />
+                ) : (
+                  <Link href="/sign-in">
+                    <Button variant="primary" size="md">
+                      Sign in to join waitlist
+                    </Button>
                   </Link>
-                  <p className="font-dm-sans text-sm text-text-tertiary">
-                    {club.current_book.author}
-                  </p>
-                </div>
-              </div>
-              {(club.current_book.source_type === 'community' ||
-                !club.current_book.epub_url) && (
-                <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
-                  <p className="font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
-                    Get the book
-                  </p>
-                  <WhereToRead
-                    variant="inline"
-                    book={{
-                      id: club.current_book.id,
-                      title: club.current_book.title,
-                      author: club.current_book.author,
-                      isbn: club.current_book.isbn,
-                      isbn13: club.current_book.isbn13,
-                      amazon_url: club.current_book.amazon_url,
-                      bookshop_url: club.current_book.bookshop_url,
-                      source_type: club.current_book.source_type,
-                      epub_url: club.current_book.epub_url,
-                    }}
+                )
+              ) : requiresApproval ? (
+                userId ? (
+                  <RequestJoinButton
+                    clubId={club.id}
+                    alreadyPending={membershipStatus === 'pending'}
                   />
-                  <p className="font-dm-sans text-xs text-text-tertiary">
-                    All members read from the same edition.
-                  </p>
-                </div>
+                ) : (
+                  <Link href={`/sign-in?next=/clubs/${params.slug}`}>
+                    <Button variant="primary" size="md">
+                      Sign in to request to join
+                    </Button>
+                  </Link>
+                )
+              ) : (
+                <Link href={appClubDeeplink(club.id)}>
+                  <Button variant="primary" size="md">
+                    Join this club
+                  </Button>
+                </Link>
+              )}
+              {isFull && (
+                <p className="font-dm-mono text-xs text-text-tertiary">
+                  Club is full ({club.member_count} of {maxMembers}).
+                </p>
               )}
             </section>
           )}
 
-          <section className="mt-10 flex flex-wrap items-center gap-3">
-            {isMember ? null : isFull ? (
-              userId ? (
-                <WaitlistButton clubId={club.id} onWaitlist={isOnWaitlist} />
-              ) : (
-                <Link href="/sign-in">
-                  <Button variant="primary" size="md">
-                    Sign in to join waitlist
-                  </Button>
-                </Link>
-              )
-            ) : requiresApproval ? (
-              userId ? (
-                <RequestJoinButton
-                  clubId={club.id}
-                  alreadyPending={membershipStatus === 'pending'}
-                />
-              ) : (
-                <Link href={`/sign-in?next=/clubs/${params.slug}`}>
-                  <Button variant="primary" size="md">
-                    Sign in to request to join
-                  </Button>
-                </Link>
-              )
-            ) : (
-              <Link href={appClubDeeplink(club.id)}>
-                <Button variant="primary" size="md">
-                  Join this club
-                </Button>
-              </Link>
-            )}
-            {isFull && !isMember && (
-              <p className="font-dm-mono text-xs text-text-tertiary">
-                Club is full ({club.member_count} of {maxMembers}).
-              </p>
-            )}
-            <Link href={appClubDeeplink(club.id)}>
-              <Button variant="secondary" size="md">
-                See all discussions in the app
-              </Button>
-            </Link>
-          </section>
-
-          {canModerate && (
-            <ModerationPanel
-              clubId={club.id}
-              isAdmin={role === 'admin'}
-              members={members.map((m) => ({
-                user_id: m.user_id,
-                role: m.role,
-                status: m.status,
-                muted_until: m.muted_until,
-                banned_at: m.banned_at,
-                username: m.profile?.username ?? '',
-                display_name: m.profile?.display_name ?? '',
-                avatar_url: m.profile?.avatar_url ?? null,
-              }))}
-              pending={pendingMembers}
-              showPending={showPending}
-              reports={reports}
-              waitlistCount={waitlistCount ?? 0}
-            />
-          )}
-
-          {role === 'admin' && (
-            <ClubSettingsPanel
-              club={{
-                id: club.id,
-                name: club.name,
-                description: club.description,
-                visibility: club.visibility,
-                member_approval: adminClubFields?.member_approval ?? null,
-                max_members: adminClubFields?.max_members ?? null,
-                reading_pace: adminClubFields?.reading_pace ?? null,
-                chapters_per_week: adminClubFields?.chapters_per_week ?? null,
-                genre_tags: adminClubFields?.genre_tags ?? null,
-                current_book_id: club.current_book_id,
-                discord_webhook_url:
-                  adminClubFields?.discord_webhook_url ?? null,
-              }}
-            />
-          )}
-
-          {posts.length > 0 && (
-            <section className="mt-10">
-              <h2 className="mb-4 font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-                Recent discussion
-              </h2>
-              <div className="flex flex-col gap-4">
-                {posts.map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/clubs/${club.slug}/threads/${p.thread_id}`}
-                    className="block rounded-lg border border-border-subtle bg-bg-surface p-4 hover:bg-bg-hover"
-                  >
-                    <header className="flex items-center gap-2">
-                      <Avatar
-                        src={p.author?.avatar_url}
-                        name={p.author?.display_name ?? 'Reader'}
-                        size="sm"
-                      />
-                      <div className="flex flex-col leading-tight">
-                        <span className="font-dm-sans text-sm text-text-primary">
-                          {p.author?.display_name ?? 'Reader'}
-                        </span>
-                        <time className="font-dm-mono text-xs text-text-tertiary">
-                          {formatRelativeDate(p.created_at)}
-                        </time>
-                      </div>
-                    </header>
-                    <p className="mt-3 line-clamp-4 font-source-serif-4 text-base text-text-secondary">
-                      {p.content}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
+          <ClubWorkspace
+            defaultTab="discussions"
+            available={available}
+            sections={sections}
+          />
         </PageWrapper>
       </main>
       <Footer />
