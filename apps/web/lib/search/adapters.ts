@@ -69,6 +69,19 @@ function strOrNull(v: unknown): string | null {
   return typeof v === 'string' ? v : null
 }
 
+/**
+ * Normalize a PostgREST to-one embed to a single object (or null). A genuine
+ * to-one FK comes back as an object, but PostgREST returns an *array* whenever
+ * it can't prove the relationship is to-one (loose / inferred joins). Taking the
+ * first element keeps a stray array from reaching a card as `undefined` fields
+ * (which renders broken text and can crash an avatar on `undefined.trim()`).
+ */
+function toOne(v: unknown): Record<string, unknown> | null {
+  if (Array.isArray(v)) return (v[0] as Record<string, unknown> | undefined) ?? null
+  if (v && typeof v === 'object') return v as Record<string, unknown>
+  return null
+}
+
 function applyRange(
   q: SearchQueryBuilder,
   column: string,
@@ -217,6 +230,8 @@ const personAdapter: EntityAdapter<'person'> = {
 
 // ── list ────────────────────────────────────────────────────────────────────
 
+// reading_lists.user_id FKs to public.profiles, so `creator` resolves to-one;
+// toOne() in mapRow is belt-and-suspenders against a loose embed shape.
 const LIST_COLS =
   'id, slug, title, description, cover_url, is_public, is_featured, like_count, created_at, user_id, creator:user_id(username, display_name, avatar_url)'
 
@@ -243,14 +258,19 @@ const listAdapter: EntityAdapter<'list'> = {
     title: str(r.title),
     subtitle: strOrNull(r.description),
     imageUrl: strOrNull(r.cover_url),
-    data: r,
+    data: { ...r, creator: toOne(r.creator) },
   }),
 }
 
 // ── quote (public highlights) ────────────────────────────────────────────────
 
+// NOTE: no `author:user_id(...)` embed. highlights.user_id FKs to auth.users,
+// not public.profiles, so PostgREST cannot embed the author here (it 400s with
+// PGRST200, which is what was crashing /quotes). The author profile is joined
+// in a second query at the page layer (fetchHighlightAuthors), the same way
+// liked-state is enriched separately.
 const QUOTE_COLS =
-  'id, text, note, like_count, is_public, created_at, book:book_id(id, slug, title, author, cover_url), author:user_id(username, display_name, avatar_url)'
+  'id, text, note, like_count, is_public, created_at, user_id, book:book_id(id, slug, title, author, cover_url)'
 
 const quoteAdapter: EntityAdapter<'quote'> = {
   entity: 'quote',
@@ -269,7 +289,7 @@ const quoteAdapter: EntityAdapter<'quote'> = {
   ],
   defaultSortValue: 'newest',
   mapRow: (r) => {
-    const book = r.book as Record<string, unknown> | null
+    const book = toOne(r.book)
     return {
       entity: 'quote',
       id: str(r.id),
@@ -277,7 +297,7 @@ const quoteAdapter: EntityAdapter<'quote'> = {
       title: str(r.text),
       subtitle: book ? `${str(book.title)} · ${str(book.author)}` : null,
       imageUrl: book ? strOrNull(book.cover_url) : null,
-      data: r,
+      data: { ...r, book },
     }
   },
 }
@@ -349,8 +369,8 @@ const pickAdapter: EntityAdapter<'pick'> = {
   ],
   defaultSortValue: 'newest',
   mapRow: (r) => {
-    const book = r.book as Record<string, unknown> | null
-    const club = r.club as Record<string, unknown> | null
+    const book = toOne(r.book)
+    const club = toOne(r.club)
     return {
       entity: 'pick',
       id: str(r.id),
@@ -360,7 +380,7 @@ const pickAdapter: EntityAdapter<'pick'> = {
         .filter(Boolean)
         .join(' · '),
       imageUrl: book ? strOrNull(book.cover_url) : null,
-      data: r,
+      data: { ...r, book, club },
     }
   },
 }

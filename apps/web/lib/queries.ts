@@ -803,6 +803,39 @@ export async function fetchLikedHighlightIds(
   )
 }
 
+export interface HighlightAuthor {
+  username: string
+  display_name: string
+  avatar_url: string | null
+}
+
+/**
+ * Resolve the author profile for a set of highlight `user_id`s. The highlights
+ * table FKs user_id to auth.users (not public.profiles), so PostgREST cannot
+ * embed the author in the highlights query -- it is joined here, the same way
+ * liked-state is enriched separately. Returns a map keyed by user_id.
+ */
+export async function fetchHighlightAuthors(
+  userIds: string[],
+): Promise<Map<string, HighlightAuthor>> {
+  const ids = [...new Set(userIds.filter(Boolean))]
+  if (!hasEnv() || ids.length === 0) return new Map()
+  const sb = supabase()
+  const { data } = await sb
+    .from('profiles')
+    .select('id, username, display_name, avatar_url')
+    .in('id', ids)
+  const map = new Map<string, HighlightAuthor>()
+  for (const r of (data as Array<{ id: string } & HighlightAuthor> | null) ?? []) {
+    map.set(r.id, {
+      username: r.username,
+      display_name: r.display_name,
+      avatar_url: r.avatar_url,
+    })
+  }
+  return map
+}
+
 export interface BooksListResult {
   items: BookSummary[]
   total: number
