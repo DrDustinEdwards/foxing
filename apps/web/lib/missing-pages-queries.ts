@@ -199,50 +199,40 @@ export async function fetchSeriesBySlug(slug: string): Promise<{
 }
 
 // --- AWARDS ---
+//
+// Awards are read from the curated `book_awards` table (one normalized row
+// per book that won, with name, year, scope and distinction). Sections are
+// DATA-DRIVEN: the page renders one section per award that actually has
+// rows, so adding an award is a pure DB insert with zero code change. The
+// old description-substring matching (which let "Booker T. Washington" match
+// the Booker Prize) is gone entirely.
 
-export interface AwardCategory {
-  slug: string
-  name: string
-  blurb: string
-  searchTerms: string[]
+export type AwardScope = 'work' | 'author'
+export type AwardDistinction = 'winner' | 'finalist' | 'shortlist' | 'longlist'
+
+// Slug -> short blurb used only for section descriptions. A slug with no
+// entry simply renders without a blurb.
+export const AWARD_BLURBS: Record<string, string> = {
+  'nobel-literature':
+    'The Swedish Academy awards this each year to an author whose body of work has had a lasting impact.',
+  'pulitzer-fiction':
+    'For distinguished fiction by an American author, ideally dealing with American life.',
+  'pulitzer-poetry':
+    'For a distinguished volume of original verse by an American poet.',
+  'james-tait-black':
+    "Britain's oldest literary awards, recognizing the year's finest fiction.",
+  'newbery-medal':
+    "For the year's most distinguished contribution to American literature for children.",
 }
 
-export const AWARD_CATEGORIES: AwardCategory[] = [
-  {
-    slug: 'nobel',
-    name: 'Nobel Prize in Literature',
-    blurb:
-      'The Swedish Academy awards this each year to an author whose body of work has had a lasting impact.',
-    searchTerms: ['nobel', 'nobel prize'],
-  },
-  {
-    slug: 'pulitzer',
-    name: 'Pulitzer Prize for Fiction',
-    blurb:
-      'For distinguished fiction by an American author, ideally dealing with American life.',
-    searchTerms: ['pulitzer'],
-  },
-  {
-    slug: 'booker',
-    name: 'Booker Prize',
-    blurb: 'The leading literary award in the English-speaking world.',
-    searchTerms: ['booker'],
-  },
-  {
-    slug: 'national-book-award',
-    name: 'National Book Award',
-    blurb:
-      'A US literary prize given by the National Book Foundation since 1950.',
-    searchTerms: ['national book award'],
-  },
-  {
-    slug: 'hugo',
-    name: 'Hugo Award',
-    blurb:
-      'The genre award for science fiction and fantasy, voted on by readers.',
-    searchTerms: ['hugo award'],
-  },
-]
+export interface PresentAward {
+  award_slug: string
+  award_name: string
+  scope: AwardScope
+  count: number
+  min_year: number
+  max_year: number
+}
 
 export interface AwardBookHit {
   id: string
@@ -250,23 +240,115 @@ export interface AwardBookHit {
   title: string
   author: string
   cover_url: string | null
-  themes: string[] | null
+  year: number
+  distinction: AwardDistinction
+  scope: AwardScope
 }
 
+/**
+ * Distinct awards that have at least one row in book_awards, ordered by how
+ * many books they cover (desc). Drives which sections the awards page shows.
+ */
+export async function fetchPresentAwards(): Promise<PresentAward[]> {
+  if (!hasEnv()) return []
+  const { data } = await sb()
+    .from('book_awards')
+    .select('award_slug, award_name, scope, year')
+    .limit(5000)
+  if (!data) return []
+  const rows = data as Array<{
+    award_slug: string
+    award_name: string
+    scope: AwardScope
+    year: number
+  }>
+  const grouped = new Map<string, PresentAward>()
+  for (const r of rows) {
+    const entry = grouped.get(r.award_slug)
+    if (entry) {
+      entry.count += 1
+      if (r.year < entry.min_year) entry.min_year = r.year
+      if (r.year > entry.max_year) entry.max_year = r.year
+    } else {
+      grouped.set(r.award_slug, {
+        award_slug: r.award_slug,
+        award_name: r.award_name,
+        scope: r.scope,
+        count: 1,
+        min_year: r.year,
+        max_year: r.year,
+      })
+    }
+  }
+  return Array.from(grouped.values()).sort((a, b) => b.count - a.count)
+}
+
+/**
+ * Books that won a given award, joined to the books table, ordered by year
+ * then title.
+ */
 export async function fetchAwardWinners(
-  category: AwardCategory,
-  limit = 8,
+  awardSlug: string,
+  limit = 200,
 ): Promise<AwardBookHit[]> {
   if (!hasEnv()) return []
-  const orParts = category.searchTerms
-    .map((t) => `description.ilike.%${escapeLike(t)}%`)
-    .join(',')
   const { data } = await sb()
-    .from('books')
-    .select('id, slug, title, author, cover_url, themes')
-    .or(orParts)
+    .from('book_awards')
+    .select(
+      'year, distinction, scope, books:book_id(id, slug, title, author, cover_url)',
+    )
+    .eq('award_slug', awardSlug)
+    .order('year', { ascending: true })
     .limit(limit)
-  return (data as AwardBookHit[] | null) ?? []
+  if (!data) return []
+  const rows = data as unknown as Array<{
+    year: number
+    distinction: AwardDistinction
+    scope: AwardScope
+    books: {
+      id: string
+      slug: string | null
+      title: string
+      author: string
+      cover_url: string | null
+    } | null
+  }>
+  return rows
+    .filter((r) => r.books !== null)
+    .map((r) => ({
+      id: r.books!.id,
+      slug: r.books!.slug,
+      title: r.books!.title,
+      author: r.books!.author,
+      cover_url: r.books!.cover_url,
+      year: r.year,
+      distinction: r.distinction,
+      scope: r.scope,
+    }))
+    .sort((a, b) => a.year - b.year || a.title.localeCompare(b.title))
+}
+
+export interface BookAwardBadge {
+  award_slug: string
+  award_name: string
+  year: number
+  distinction: AwardDistinction
+  scope: AwardScope
+}
+
+/**
+ * Awards won by a single book, for the award badge on the book detail page.
+ */
+export async function fetchBookAwards(
+  bookId: string,
+): Promise<BookAwardBadge[]> {
+  if (!hasEnv()) return []
+  const { data } = await sb()
+    .from('book_awards')
+    .select('award_slug, award_name, year, distinction, scope')
+    .eq('book_id', bookId)
+    .order('year', { ascending: true })
+  return (data as BookAwardBadge[] | null) ?? []
 }
 
 // --- CHALLENGES ---
