@@ -12,14 +12,12 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles: Record<Variant, string> = {
-  // Saturated auburn primary: subtle resting depth, then lift + brighten on
-  // hover (NOT darken to --brand-hover, which read as pressed/disabled). The
-  // fill stays --brand-ui so white text contrast is unchanged. Translate is
-  // gated behind motion-safe and the inherited transition is killed under
-  // reduced motion, so reduced-motion users still get a perceptible brightness
-  // + shadow change with no movement.
+  // Saturated auburn primary: subtle resting depth, then BRIGHTEN on hover
+  // (never darken to --brand-hover, which read as pressed/disabled). The fill
+  // stays --brand-ui so white text contrast is unchanged. No lift/translate --
+  // only brightness + shadow change; active keeps the press scale.
   primary:
-    'bg-brand-ui text-text-on-amber shadow-sm hover:brightness-[1.06] hover:shadow-md active:brightness-100 active:shadow-none motion-safe:hover:-translate-y-px motion-safe:active:translate-y-0 motion-reduce:transition-none disabled:bg-bg-disabled disabled:text-text-disabled disabled:shadow-none disabled:brightness-100 disabled:translate-y-0',
+    'bg-brand-ui text-text-on-amber shadow-sm hover:brightness-[1.08] hover:shadow-md active:brightness-100 active:shadow-none disabled:bg-bg-disabled disabled:text-text-disabled disabled:shadow-none disabled:brightness-100',
   secondary:
     'bg-transparent text-brand-text border border-border-interactive hover:bg-brand-subtle disabled:text-text-disabled disabled:border-border-default',
   ghost:

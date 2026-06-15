@@ -208,7 +208,7 @@ function SubscriptionPanel({ tier }: { tier: string }) {
       {tier === 'free' ? (
         <Link
           href="/pricing"
-          className="self-start rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm font-medium text-text-on-brand hover:bg-brand-hover"
+          className="self-start rounded-md bg-brand-ui px-4 py-2 font-dm-sans text-sm font-medium text-text-on-brand hover:brightness-[1.08]"
         >
           Upgrade to Plus
         </Link>
