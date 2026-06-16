@@ -26,7 +26,6 @@ import {
   isUuid,
 } from '@/lib/queries'
 import { getAuthedUserId } from '@/lib/nav-user'
-import { appClubDeeplink } from '@/lib/foxing'
 import { buildClubMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { AnnouncementsSection } from './announcements-section'
@@ -41,6 +40,7 @@ import { VerifiedBookstoreHeader } from './verified-bookstore-header'
 import { WaitlistButton } from './waitlist-button'
 import { DiscussionsSection } from './discussions-section'
 import { MembersSection } from './members-section'
+import { JoinClubButton } from './join-club-button'
 import { ClubWorkspace, type ClubTabKey } from './club-workspace'
 
 export const revalidate = 60
@@ -170,7 +170,7 @@ export default async function ClubPage(
       : Promise.resolve({ data: null }),
     adminClient
       .from('clubs')
-      .select('max_members, member_approval')
+      .select('max_members, member_approval, creator_id')
       .eq('id', club.id)
       .maybeSingle(),
     userId
@@ -279,8 +279,13 @@ export default async function ClubPage(
       | null) ?? []
 
   const capacity = capacityRow as
-    | { max_members: number | null; member_approval: boolean | null }
+    | {
+        max_members: number | null
+        member_approval: boolean | null
+        creator_id: string | null
+      }
     | null
+  const creatorId = capacity?.creator_id ?? null
   const maxMembers = capacity?.max_members ?? null
   const clubMemberApproval = Boolean(capacity?.member_approval)
   const isFull =
@@ -294,9 +299,11 @@ export default async function ClubPage(
   const bookPath = club.current_book?.slug ?? club.current_book?.id
 
   const roster = members
+    .filter((m) => m.status === 'active' || m.status === null)
     .map((m) => ({
       user_id: m.user_id,
       role: m.role,
+      joined_at: m.joined_at,
       username: m.profile?.username ?? '',
       display_name: m.profile?.display_name ?? '',
       avatar_url: m.profile?.avatar_url ?? null,
@@ -422,7 +429,16 @@ export default async function ClubPage(
         isMember={isMember}
       />
     ),
-    members: <MembersSection members={roster} />,
+    members: (
+      <MembersSection
+        members={roster}
+        clubId={club.id}
+        clubSlug={club.slug ?? club.id}
+        viewerId={userId}
+        viewerRole={role}
+        creatorId={creatorId}
+      />
+    ),
   }
   const available: ClubTabKey[] = [
     'overview',
@@ -546,10 +562,12 @@ export default async function ClubPage(
                     </Button>
                   </Link>
                 )
+              ) : userId ? (
+                <JoinClubButton clubId={club.id} />
               ) : (
-                <Link href={appClubDeeplink(club.id)}>
+                <Link href={`/sign-in?next=/clubs/${params.slug}`}>
                   <Button variant="primary" size="md">
-                    Join this club
+                    Sign in to join
                   </Button>
                 </Link>
               )}
