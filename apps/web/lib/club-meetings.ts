@@ -22,29 +22,50 @@ function hasEnv(): boolean {
   )
 }
 
-export async function fetchUpcomingMeetings(
+type RawMeeting = Omit<ClubMeeting, 'rsvp_counts' | 'user_rsvp'>
+
+// Upcoming (future, ascending) and past (last 20, descending). Cancelled
+// meetings are kept in their date bucket so the UI can render the cancelled
+// state -- callers decide how to display them. RSVP counts + the viewer's own
+// status are attached in a single rsvps round-trip across both lists.
+export async function fetchClubMeetings(
   clubId: string,
   userId: string | null,
-): Promise<ClubMeeting[]> {
-  if (!hasEnv()) return []
+): Promise<{ upcoming: ClubMeeting[]; past: ClubMeeting[] }> {
+  if (!hasEnv()) return { upcoming: [], past: [] }
   const sb = await createClient()
-  const { data } = await sb
-    .from('club_meetings')
-    .select(MEETING_COLS)
-    .eq('club_id', clubId)
-    .eq('is_cancelled', false)
-    .gte('meeting_date', new Date().toISOString())
-    .order('meeting_date', { ascending: true })
-  const rows = ((data as unknown as Array<
-    Omit<ClubMeeting, 'rsvp_counts' | 'user_rsvp'>
-  > | null) ?? []).filter((r) => r.id)
-  if (rows.length === 0) return []
+  const nowIso = new Date().toISOString()
+  const [{ data: upData }, { data: pastData }] = await Promise.all([
+    sb
+      .from('club_meetings')
+      .select(MEETING_COLS)
+      .eq('club_id', clubId)
+      .gte('meeting_date', nowIso)
+      .order('meeting_date', { ascending: true }),
+    sb
+      .from('club_meetings')
+      .select(MEETING_COLS)
+      .eq('club_id', clubId)
+      .lt('meeting_date', nowIso)
+      .order('meeting_date', { ascending: false })
+      .limit(20),
+  ])
+  const upRows = ((upData as unknown as RawMeeting[] | null) ?? []).filter(
+    (r) => r.id,
+  )
+  const pastRows = ((pastData as unknown as RawMeeting[] | null) ?? []).filter(
+    (r) => r.id,
+  )
+  const all = [...upRows, ...pastRows]
+  if (all.length === 0) return { upcoming: [], past: [] }
 
-  const meetingIds = rows.map((m) => m.id)
   const { data: rsvps } = await sb
     .from('club_meeting_rsvps')
     .select('meeting_id, user_id, status')
-    .in('meeting_id', meetingIds)
+    .in(
+      'meeting_id',
+      all.map((m) => m.id),
+    )
   const rsvpRows =
     (rsvps as { meeting_id: string; user_id: string; status: RsvpStatus }[] | null) ??
     []
@@ -63,11 +84,13 @@ export async function fetchUpcomingMeetings(
     }
   }
 
-  return rows.map((m) => ({
+  const decorate = (m: RawMeeting): ClubMeeting => ({
     ...m,
     rsvp_counts: counts.get(m.id) ?? { going: 0, maybe: 0, not_going: 0 },
     user_rsvp: userByMeeting.get(m.id) ?? null,
-  }))
+  })
+
+  return { upcoming: upRows.map(decorate), past: pastRows.map(decorate) }
 }
 
 export function formatMeetingDate(iso: string): string {

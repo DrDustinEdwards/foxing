@@ -9,7 +9,7 @@ import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
 import { WhereToRead } from '@/components/where-to-read'
 import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
-import { fetchUpcomingMeetings } from '@/lib/club-meetings'
+import { fetchClubMeetings } from '@/lib/club-meetings'
 import { fetchPollsForClub } from '@/lib/club-polls'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { fetchClubThreads } from '@/lib/club-threads'
@@ -106,11 +106,11 @@ export default async function ClubPage(
   if (isUuid(params.slug) && club.slug && club.slug !== params.slug) {
     permanentRedirect(`/clubs/${club.slug}`)
   }
-  const [threads, announcements, meetings, polls, role, discussionGuide] =
+  const [threads, announcements, meetingData, polls, role, discussionGuide] =
     await Promise.all([
       fetchClubThreads(club.id),
       fetchAnnouncementsForClub(club.id),
-      fetchUpcomingMeetings(club.id, userId),
+      fetchClubMeetings(club.id, userId),
       fetchPollsForClub(club.id, userId),
       getClubRole(club.id, userId),
       club.current_book_id
@@ -414,7 +414,8 @@ export default async function ClubPage(
       <MeetingsSection
         clubId={club.id}
         clubSlug={club.slug ?? club.id}
-        meetings={meetings}
+        upcoming={meetingData.upcoming}
+        past={meetingData.past}
         canModerate={canModerate}
         isMember={isMember}
         defaultCity={club.bookstore_city}

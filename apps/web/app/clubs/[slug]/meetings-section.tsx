@@ -5,12 +5,13 @@ import { formatMeetingDate } from '@/lib/club-meetings'
 import { ClubSectionHeader } from './club-section-header'
 import { CreateMeetingForm } from './create-meeting-form'
 import { RsvpButtons } from './rsvp-buttons'
-import { CancelMeetingButton } from './cancel-meeting-button'
+import { MeetingModControls } from './meeting-mod-controls'
 
 interface Props {
   clubId: string
   clubSlug: string
-  meetings: ClubMeeting[]
+  upcoming: ClubMeeting[]
+  past: ClubMeeting[]
   canModerate: boolean
   isMember: boolean
   defaultCity: string | null
@@ -26,36 +27,78 @@ const TYPE_LABEL: Record<string, string> = {
 export function MeetingsSection({
   clubId,
   clubSlug,
-  meetings,
+  upcoming,
+  past,
   canModerate,
   isMember,
   defaultCity,
   defaultState,
 }: Props) {
   return (
-    <section>
+    <section className="flex flex-col gap-6">
       <ClubSectionHeader title="Meetings" />
-      {meetings.length === 0 ? (
+
+      {upcoming.length === 0 && past.length === 0 ? (
         <p className="font-source-serif-4 text-sm text-text-tertiary">
           No meetings scheduled yet.
         </p>
       ) : (
-        <ul className="flex flex-col gap-4">
-          {meetings.map((m) => (
-            <li key={m.id}>
-              <MeetingCard
-                meeting={m}
-                clubId={clubId}
-                clubSlug={clubSlug}
-                canModerate={canModerate}
-                canRsvp={isMember}
-              />
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="flex flex-col gap-3">
+            <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
+              Upcoming
+            </h3>
+            {upcoming.length === 0 ? (
+              <p className="font-source-serif-4 text-sm text-text-tertiary">
+                Nothing on the calendar right now.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-4">
+                {upcoming.map((m) => (
+                  <li key={m.id}>
+                    <MeetingCard
+                      meeting={m}
+                      clubId={clubId}
+                      clubSlug={clubSlug}
+                      canModerate={canModerate}
+                      canRsvp={isMember}
+                      defaultCity={defaultCity}
+                      defaultState={defaultState}
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          {past.length > 0 && (
+            <div className="flex flex-col gap-3">
+              <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
+                Past
+              </h3>
+              <ul className="flex flex-col gap-4">
+                {past.map((m) => (
+                  <li key={m.id}>
+                    <MeetingCard
+                      meeting={m}
+                      clubId={clubId}
+                      clubSlug={clubSlug}
+                      canModerate={canModerate}
+                      canRsvp={isMember}
+                      defaultCity={defaultCity}
+                      defaultState={defaultState}
+                      isPast
+                    />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </>
       )}
+
       {canModerate && (
-        <div className="mt-6">
+        <div>
           <CreateMeetingForm
             clubId={clubId}
             defaultCity={defaultCity}
@@ -73,24 +116,53 @@ function MeetingCard({
   clubSlug,
   canModerate,
   canRsvp,
+  defaultCity,
+  defaultState,
+  isPast = false,
 }: {
   meeting: ClubMeeting
   clubId: string
   clubSlug: string
   canModerate: boolean
   canRsvp: boolean
+  defaultCity: string | null
+  defaultState: string | null
+  isPast?: boolean
 }) {
+  const cancelled = m.is_cancelled
+  const isFull = m.rsvp_limit !== null && m.rsvp_counts.going >= m.rsvp_limit
+  const active = !cancelled && !isPast
+
   return (
-    <article className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4">
+    <article
+      className={
+        'flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-4' +
+        (cancelled || isPast ? ' opacity-70' : '')
+      }
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <span className="rounded-md bg-brand-subtle px-2 py-1 font-dm-mono text-[0.6875rem] uppercase tracking-wider text-brand-subtle-text">
           {formatMeetingDate(m.meeting_date)}
         </span>
-        <span className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
-          {TYPE_LABEL[m.meeting_type] ?? m.meeting_type}
-        </span>
+        <div className="flex items-center gap-2">
+          {cancelled && (
+            <span className="rounded-md bg-error-bg px-2 py-1 font-dm-mono text-[0.625rem] uppercase tracking-wider text-error">
+              Cancelled
+            </span>
+          )}
+          <span className="font-dm-mono text-[0.625rem] uppercase tracking-wider text-text-tertiary">
+            {TYPE_LABEL[m.meeting_type] ?? m.meeting_type}
+          </span>
+        </div>
       </div>
-      <h3 className="font-fraunces text-lg text-text-primary">{m.title}</h3>
+      <h3
+        className={
+          'font-fraunces text-lg text-text-primary' +
+          (cancelled ? ' line-through' : '')
+        }
+      >
+        {m.title}
+      </h3>
       {m.description && (
         <p className="line-clamp-2 font-source-serif-4 text-[0.9375rem] text-text-secondary">
           {m.description}
@@ -101,20 +173,21 @@ function MeetingCard({
           {[m.location_name, m.location_address].filter(Boolean).join(' · ')}
         </p>
       )}
-      {m.location_url &&
+      {active &&
+        m.location_url &&
         /^https?:\/\//i.test(m.location_url) &&
         m.meeting_type !== 'in_person' && (
-        <a
-          href={m.location_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border-interactive bg-bg-surface px-3 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
-        >
-          {m.location_url.startsWith('https://meet.google.com')
-            ? 'Join on Google Meet'
-            : 'Join link'}
-        </a>
-      )}
+          <a
+            href={m.location_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border-interactive bg-bg-surface px-3 py-1.5 font-dm-sans text-sm text-brand-text hover:bg-bg-hover"
+          >
+            {m.location_url.startsWith('https://meet.google.com')
+              ? 'Join on Google Meet'
+              : 'Join link'}
+          </a>
+        )}
       {m.book && (
         <Link
           href={`/book/${m.book.slug ?? m.book.id}`}
@@ -142,19 +215,29 @@ function MeetingCard({
         </Link>
       )}
       <p className="font-dm-mono text-xs text-text-tertiary">
-        Going ({m.rsvp_counts.going}) · Maybe ({m.rsvp_counts.maybe}) · Not
-        going ({m.rsvp_counts.not_going})
+        Going ({m.rsvp_counts.going}
+        {m.rsvp_limit !== null ? `/${m.rsvp_limit}` : ''}) · Maybe (
+        {m.rsvp_counts.maybe}) · Not going ({m.rsvp_counts.not_going})
       </p>
-      {canRsvp && <RsvpButtons meetingId={m.id} current={m.user_rsvp} />}
+      {active && canRsvp && (
+        <RsvpButtons meetingId={m.id} current={m.user_rsvp} full={isFull} />
+      )}
       <div className="flex flex-wrap items-center justify-between gap-2 font-dm-mono text-xs text-text-tertiary">
-        <a
-          href={`/clubs/${clubSlug}/meetings/${m.id}/calendar`}
-          className="text-brand-text hover:underline"
-        >
-          Add to calendar
-        </a>
-        {canModerate && (
-          <CancelMeetingButton meetingId={m.id} clubId={clubId} />
+        {active && (
+          <a
+            href={`/clubs/${clubSlug}/meetings/${m.id}/calendar`}
+            className="text-brand-text hover:underline"
+          >
+            Add to calendar
+          </a>
+        )}
+        {canModerate && active && (
+          <MeetingModControls
+            clubId={clubId}
+            meeting={m}
+            defaultCity={defaultCity}
+            defaultState={defaultState}
+          />
         )}
       </div>
     </article>
