@@ -15,9 +15,12 @@ const OPTIONS: Array<{ value: RsvpStatus; label: string }> = [
 export function RsvpButtons({
   meetingId,
   current,
+  full = false,
 }: {
   meetingId: string
   current: RsvpStatus | null
+  /** Meeting is at its rsvp_limit; 'going' is blocked unless already going. */
+  full?: boolean
 }) {
   const router = useRouter()
   const [pending, setPending] = useState<RsvpStatus | null>(null)
@@ -46,12 +49,14 @@ export function RsvpButtons({
       <div className="flex flex-wrap gap-2">
         {OPTIONS.map((opt) => {
           const active = optimistic === opt.value
+          const blocked =
+            opt.value === 'going' && full && optimistic !== 'going'
           return (
             <button
               key={opt.value}
               type="button"
               onClick={() => handleClick(opt.value)}
-              disabled={pending !== null}
+              disabled={pending !== null || blocked}
               className={cn(
                 'rounded-md border px-3 py-1.5 font-dm-sans text-xs transition-colors disabled:opacity-50',
                 active
@@ -64,6 +69,11 @@ export function RsvpButtons({
           )
         })}
       </div>
+      {full && optimistic !== 'going' && (
+        <p className="font-dm-mono text-xs text-text-tertiary">
+          This meeting is full.
+        </p>
+      )}
       {error && (
         <p className="font-dm-sans text-xs text-error">{error}</p>
       )}

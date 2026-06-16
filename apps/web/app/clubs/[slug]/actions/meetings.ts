@@ -167,6 +167,65 @@ export async function createClubMeeting(
   return { ok: true }
 }
 
+// Edit an existing meeting (mod-gated). Mirrors createClubMeeting's field
+// parsing but updates by id and stamps updated_at. No re-notify on edit to
+// avoid spamming members. NOTE: like the create form, the editor exposes a
+// single location field that switches by meeting_type, so switching a hybrid
+// meeting's type can clear the unshown location field -- parity with create.
+export async function updateClubMeeting(
+  formData: FormData,
+): Promise<ActionResult> {
+  const get = (k: string) => String(formData.get(k) ?? '').trim()
+  const meetingId = get('meeting_id')
+  const clubId = get('club_id')
+  const title = get('title').slice(0, 120)
+  const meetingDate = get('meeting_date')
+  if (!meetingId || !clubId || !title || !meetingDate) {
+    return { ok: false, error: 'Title and date are required.' }
+  }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+
+  const meetingTypeRaw = get('meeting_type') || 'in_person'
+  const meetingType = ['in_person', 'virtual', 'hybrid'].includes(meetingTypeRaw)
+    ? meetingTypeRaw
+    : 'in_person'
+  const rsvpLimitRaw = get('rsvp_limit')
+  const rsvpLimit = rsvpLimitRaw ? Number(rsvpLimitRaw) || null : null
+  const isRecurring = formData.get('is_recurring') === 'on'
+  const recurrenceRule = isRecurring ? get('recurrence_rule') || null : null
+
+  const admin = createAdminClient()
+  const { error } = await admin
+    .from('club_meetings')
+    .update({
+      title,
+      description: get('description').slice(0, 2000) || null,
+      book_id: get('book_id') || null,
+      meeting_date: meetingDate,
+      end_date: get('end_date') || null,
+      location_name: get('location_name') || null,
+      location_address: get('location_address') || null,
+      location_url: get('location_url') || null,
+      meeting_type: meetingType,
+      is_recurring: isRecurring,
+      recurrence_rule: recurrenceRule,
+      rsvp_limit: rsvpLimit,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', meetingId)
+    .eq('club_id', clubId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
 export async function rsvpToMeeting(
   formData: FormData,
 ): Promise<ActionResult> {
@@ -181,17 +240,37 @@ export async function rsvpToMeeting(
   const sb = await createClient()
   const { data: meeting } = await sb
     .from('club_meetings')
-    .select('club_id')
+    .select('club_id, rsvp_limit, is_cancelled')
     .eq('id', meetingId)
     .maybeSingle()
-  const clubId = (meeting as { club_id: string } | null)?.club_id
-  if (!clubId) return { ok: false, error: 'Meeting not found.' }
+  const mt = meeting as
+    | { club_id: string; rsvp_limit: number | null; is_cancelled: boolean }
+    | null
+  if (!mt) return { ok: false, error: 'Meeting not found.' }
+  if (mt.is_cancelled) {
+    return { ok: false, error: 'This meeting was cancelled.' }
+  }
+  const clubId = mt.club_id
   const role = await getClubRole(clubId, userId)
   if (!role) {
     return { ok: false, error: 'You need to join the club to RSVP.' }
   }
 
   const admin = createAdminClient()
+  // Capacity is on 'going' only: count other members already going and block if
+  // the cap is reached. The viewer's own prior 'going' is excluded so re-RSVPing
+  // 'going' never trips the limit against themselves.
+  if (status === 'going' && mt.rsvp_limit !== null) {
+    const { count } = await admin
+      .from('club_meeting_rsvps')
+      .select('user_id', { count: 'exact', head: true })
+      .eq('meeting_id', meetingId)
+      .eq('status', 'going')
+      .neq('user_id', userId)
+    if ((count ?? 0) >= mt.rsvp_limit) {
+      return { ok: false, error: 'This meeting is full.' }
+    }
+  }
   const { error: clearError } = await admin
     .from('club_meeting_rsvps')
     .delete()
