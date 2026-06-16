@@ -488,6 +488,192 @@ export async function deleteClub(formData: FormData): Promise<void> {
   redirect('/clubs')
 }
 
+// Direct join for an open public club. Inserts an active membership (or a
+// pending one if the club requires approval). RLS allows a self-insert
+// (club_members_insert_self: user_id = auth.uid()); the admin client is used
+// here so capacity/visibility can be validated server-side, mirroring
+// joinWaitlist / requestToJoinClub. role is always 'member'
+// (club_members_role_check is admin|moderator|member -- never 'owner').
+export async function joinClub(
+  formData: FormData,
+): Promise<
+  { ok: true; status: 'active' | 'pending' } | { ok: false; error: string }
+> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug, visibility, member_approval, max_members, member_count')
+    .eq('id', clubId)
+    .maybeSingle()
+  const row = club as
+    | {
+        slug: string | null
+        visibility: string | null
+        member_approval: boolean | null
+        max_members: number | null
+        member_count: number | null
+      }
+    | null
+  if (!row) return { ok: false, error: 'Club not found.' }
+  if (row.visibility !== 'public') {
+    return { ok: false, error: 'This club is invite-only.' }
+  }
+  const { data: existing } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const status = (existing as { status: string | null } | null)?.status ?? null
+  if (status === 'active' || status === 'muted') {
+    return { ok: false, error: 'You are already a member.' }
+  }
+  if (status === 'pending') {
+    return { ok: false, error: 'Your request is already pending.' }
+  }
+  if (status === 'banned') {
+    return { ok: false, error: 'You cannot join this club.' }
+  }
+  const isFull =
+    row.max_members !== null && (row.member_count ?? 0) >= row.max_members
+  if (isFull && !row.member_approval) {
+    return { ok: false, error: 'Club is full. Join the waitlist instead.' }
+  }
+  const nextStatus: 'active' | 'pending' = row.member_approval
+    ? 'pending'
+    : 'active'
+  const { error } = await admin.from('club_members').upsert(
+    { club_id: clubId, user_id: userId, role: 'member', status: nextStatus },
+    { onConflict: 'club_id,user_id' },
+  )
+  if (error) return { ok: false, error: error.message }
+  if (row.slug) revalidatePath(`/clubs/${row.slug}`)
+  return { ok: true, status: nextStatus }
+}
+
+// Leave a club by deleting your own membership row
+// (club_members_delete_self covers this under RLS). The creator cannot leave
+// without first transferring ownership (see transferClubOwnership).
+export async function leaveClub(formData: FormData): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug, creator_id')
+    .eq('id', clubId)
+    .maybeSingle()
+  const row = club as { slug: string | null; creator_id: string | null } | null
+  if (!row) return { ok: false, error: 'Club not found.' }
+  if (row.creator_id === userId) {
+    return {
+      ok: false,
+      error: 'Transfer ownership before leaving the club.',
+    }
+  }
+  const { error } = await admin
+    .from('club_members')
+    .delete()
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+  if (error) return { ok: false, error: error.message }
+  if (row.slug) revalidatePath(`/clubs/${row.slug}`)
+  return { ok: true }
+}
+
+// Generate a shareable invite. invite_code + expires_at (now()+7d) are filled
+// by column defaults, so the insert just needs club_id + invited_by; the code
+// is read back for the share link. /clubs/[slug]/join?code= redeems it.
+export async function generateClubInvite(
+  formData: FormData,
+): Promise<{ ok: true; code: string } | { ok: false; error: string }> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  if (!clubId) return { ok: false, error: 'Missing club id.' }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from('club_invites')
+    .insert({ club_id: clubId, invited_by: auth.actorId })
+    .select('invite_code')
+    .single()
+  if (error) return { ok: false, error: error.message }
+  const code = (data as { invite_code: string | null }).invite_code
+  if (!code) return { ok: false, error: 'Could not generate an invite.' }
+  return { ok: true, code }
+}
+
+// Redeem an invite code: validate code + expiry + club match, then insert an
+// active membership and mark the invite accepted. Uses the admin client because
+// the redeemer cannot SELECT the invite under RLS (invites are visible only to
+// the invitee or club mods).
+export async function redeemClubInvite(
+  formData: FormData,
+): Promise<ActionResult> {
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const code = String(formData.get('code') ?? '').trim()
+  if (!clubId || !code) return { ok: false, error: 'Missing invite code.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const admin = createAdminClient()
+  const { data: inviteRow } = await admin
+    .from('club_invites')
+    .select('id, club_id, status, expires_at')
+    .eq('invite_code', code)
+    .maybeSingle()
+  const invite = inviteRow as
+    | { id: string; club_id: string; status: string | null; expires_at: string | null }
+    | null
+  if (!invite || invite.club_id !== clubId) {
+    return { ok: false, error: 'This invite is not valid.' }
+  }
+  if (invite.status !== 'pending') {
+    return { ok: false, error: 'This invite has already been used.' }
+  }
+  if (invite.expires_at && new Date(invite.expires_at) < new Date()) {
+    await admin
+      .from('club_invites')
+      .update({ status: 'expired' })
+      .eq('id', invite.id)
+    return { ok: false, error: 'This invite has expired.' }
+  }
+  const { data: existing } = await admin
+    .from('club_members')
+    .select('status')
+    .eq('club_id', clubId)
+    .eq('user_id', userId)
+    .maybeSingle()
+  const status = (existing as { status: string | null } | null)?.status ?? null
+  if (status === 'banned') {
+    return { ok: false, error: 'You cannot join this club.' }
+  }
+  if (status !== 'active' && status !== 'muted') {
+    const { error: insErr } = await admin.from('club_members').upsert(
+      { club_id: clubId, user_id: userId, role: 'member', status: 'active' },
+      { onConflict: 'club_id,user_id' },
+    )
+    if (insErr) return { ok: false, error: insErr.message }
+  }
+  await admin
+    .from('club_invites')
+    .update({ status: 'accepted', invited_user_id: userId })
+    .eq('id', invite.id)
+  const { data: clubRow } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const slug = (clubRow as { slug: string | null } | null)?.slug
+  if (slug) revalidatePath(`/clubs/${slug}`)
+  return { ok: true }
+}
+
 export async function requestToJoinClub(
   formData: FormData,
 ): Promise<ActionResult> {
