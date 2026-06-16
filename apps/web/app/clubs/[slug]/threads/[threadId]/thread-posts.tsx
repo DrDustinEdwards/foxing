@@ -22,11 +22,13 @@ export function ThreadPosts({
   threadId,
   viewerId,
   savedSet,
+  likedSet,
 }: {
   posts: ClubThreadPost[]
   threadId: string
   viewerId: string
   savedSet: Set<string>
+  likedSet: Set<string>
 }) {
   const byParent = new Map<string | null, ClubThreadPost[]>()
   for (const p of posts) {
@@ -84,6 +86,8 @@ export function ThreadPosts({
                 threadId={threadId}
                 isOwn={p.author_id === viewerId}
                 initialSaved={savedSet.has(p.id)}
+                initialLiked={likedSet.has(p.id)}
+                initialLikeCount={p.like_count ?? 0}
                 initialContent={p.content}
               />
             )}

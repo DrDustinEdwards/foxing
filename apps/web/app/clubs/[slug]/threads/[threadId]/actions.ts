@@ -80,6 +80,41 @@ export async function updateClubPost(
   return { ok: true }
 }
 
+// Toggle the viewer's like on a club post. Uses the user-scoped client so RLS
+// enforces club membership on insert (with_check joins club_posts->club_threads
+// and calls private.is_club_member). The trg_club_post_like_count trigger keeps
+// club_posts.like_count correct, so the client reconciles its own optimistic
+// count on next load.
+export async function toggleClubPostLike(
+  formData: FormData,
+): Promise<{ ok: true; liked: boolean } | { ok: false; error: string }> {
+  const postId = String(formData.get('post_id') ?? '').trim()
+  if (!postId) return { ok: false, error: 'Missing id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const sb = await createClient()
+  const { data: existing } = await sb
+    .from('club_post_likes')
+    .select('post_id')
+    .eq('user_id', userId)
+    .eq('post_id', postId)
+    .maybeSingle()
+  if (existing) {
+    const { error } = await sb
+      .from('club_post_likes')
+      .delete()
+      .eq('user_id', userId)
+      .eq('post_id', postId)
+    if (error) return { ok: false, error: error.message }
+    return { ok: true, liked: false }
+  }
+  const { error } = await sb
+    .from('club_post_likes')
+    .insert({ post_id: postId, user_id: userId })
+  if (error) return { ok: false, error: error.message }
+  return { ok: true, liked: true }
+}
+
 export async function unsaveOwnClubPost(
   formData: FormData,
 ): Promise<ActionResult> {

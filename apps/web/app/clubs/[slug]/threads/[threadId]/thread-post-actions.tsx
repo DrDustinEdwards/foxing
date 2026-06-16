@@ -10,7 +10,11 @@ import {
   saveClubPost,
 } from '@/app/clubs/[slug]/actions'
 import { ReplyForm } from './reply-form'
-import { unsaveOwnClubPost, updateClubPost } from './actions'
+import {
+  toggleClubPostLike,
+  unsaveOwnClubPost,
+  updateClubPost,
+} from './actions'
 
 const REPORT_REASONS = [
   { value: 'spam', label: 'Spam' },
@@ -25,6 +29,8 @@ interface Props {
   threadId: string
   isOwn: boolean
   initialSaved: boolean
+  initialLiked: boolean
+  initialLikeCount: number
   initialContent: string
 }
 
@@ -33,11 +39,16 @@ export function ThreadPostActions({
   threadId,
   isOwn,
   initialSaved,
+  initialLiked,
+  initialLikeCount,
   initialContent,
 }: Props) {
   const router = useRouter()
   const [saved, setSaved] = useState(initialSaved)
   const [savingPending, setSavingPending] = useState(false)
+  const [liked, setLiked] = useState(initialLiked)
+  const [likeCount, setLikeCount] = useState(initialLikeCount)
+  const [likePending, setLikePending] = useState(false)
   const [replyOpen, setReplyOpen] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -62,6 +73,25 @@ export function ThreadPostActions({
       return
     }
     setSaved(!saved)
+  }
+
+  async function handleLikeToggle() {
+    if (likePending) return
+    // Optimistic: flip state + count now; the trigger keeps like_count exact,
+    // so a reload reconciles. Revert both on failure.
+    const nextLiked = !liked
+    setLiked(nextLiked)
+    setLikeCount((c) => Math.max(0, c + (nextLiked ? 1 : -1)))
+    setLikePending(true)
+    const fd = new FormData()
+    fd.set('post_id', postId)
+    const res = await toggleClubPostLike(fd)
+    setLikePending(false)
+    if (!res.ok) {
+      setLiked(!nextLiked)
+      setLikeCount((c) => Math.max(0, c + (nextLiked ? -1 : 1)))
+      setError(res.error)
+    }
   }
 
   async function handleReport(e: React.FormEvent) {
@@ -116,7 +146,32 @@ export function ThreadPostActions({
 
   return (
     <div className="mt-3 flex flex-col gap-2">
-      <div className="flex flex-wrap gap-3 font-dm-mono text-xs text-text-tertiary">
+      <div className="flex flex-wrap items-center gap-3 font-dm-mono text-xs text-text-tertiary">
+        <button
+          type="button"
+          onClick={handleLikeToggle}
+          disabled={likePending}
+          aria-pressed={liked}
+          className={`flex items-center gap-1 disabled:opacity-50 ${
+            liked ? 'text-brand-text' : 'hover:text-text-primary'
+          }`}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill={liked ? 'currentColor' : 'none'}
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+          </svg>
+          {likeCount > 0 ? likeCount : ''}
+          <span className="sr-only">{liked ? 'Unlike' : 'Like'}</span>
+        </button>
         <button
           type="button"
           onClick={handleSaveToggle}

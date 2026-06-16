@@ -41,7 +41,7 @@ export default async function ThreadPage(
   if (!viewerId) redirect(`/sign-in?next=/clubs/${params.slug}/threads/${params.threadId}`)
   const data = await fetchClubThread(club.id, params.threadId)
   if (!data) notFound()
-  const { thread, posts, savedSet } = data
+  const { thread, posts, savedSet, likedSet } = data
 
   const [discussionGuide, role] = await Promise.all([
     club.current_book_id
@@ -97,6 +97,7 @@ export default async function ThreadPage(
               threadId={thread.id}
               viewerId={viewerId}
               savedSet={savedSet}
+              likedSet={likedSet}
             />
           </div>
 
