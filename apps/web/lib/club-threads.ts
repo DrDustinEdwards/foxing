@@ -72,6 +72,7 @@ export async function fetchClubThread(
   thread: ClubThread
   posts: ClubThreadPost[]
   savedSet: Set<string>
+  likedSet: Set<string>
 } | null> {
   const sb = await createClient()
   const { data: threadRow } = await sb
@@ -96,19 +97,28 @@ export async function fetchClubThread(
     data: { user },
   } = await sb.auth.getUser()
   const savedSet = new Set<string>()
+  const likedSet = new Set<string>()
   if (user && posts.length > 0) {
-    const { data: saves } = await sb
-      .from('saved_posts')
-      .select('post_id')
-      .eq('user_id', user.id)
-      .in(
-        'post_id',
-        posts.map((p) => p.id),
-      )
+    const postIds = posts.map((p) => p.id)
+    const [{ data: saves }, { data: likes }] = await Promise.all([
+      sb
+        .from('saved_posts')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds),
+      sb
+        .from('club_post_likes')
+        .select('post_id')
+        .eq('user_id', user.id)
+        .in('post_id', postIds),
+    ])
     for (const r of (saves as { post_id: string }[] | null) ?? []) {
       savedSet.add(r.post_id)
     }
+    for (const r of (likes as { post_id: string }[] | null) ?? []) {
+      likedSet.add(r.post_id)
+    }
   }
 
-  return { thread, posts, savedSet }
+  return { thread, posts, savedSet, likedSet }
 }
