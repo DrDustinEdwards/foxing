@@ -163,6 +163,7 @@ export interface ReadingStreak {
   total_books_finished: number
   total_pages_read: number
   total_highlights: number
+  total_words_looked_up: number
   streak_freeze_credits: number
 }
 
@@ -172,7 +173,7 @@ export async function fetchReadingStreak(
   const { data } = await (await createClient())
     .from('reading_streaks')
     .select(
-      'current_streak, longest_streak, last_read_date, total_books_finished, total_pages_read, total_highlights, streak_freeze_credits',
+      'current_streak, longest_streak, last_read_date, total_books_finished, total_pages_read, total_highlights, total_words_looked_up, streak_freeze_credits',
     )
     .eq('user_id', userId)
     .maybeSingle()
@@ -184,6 +185,7 @@ export async function fetchReadingStreak(
     total_books_finished: row?.total_books_finished ?? 0,
     total_pages_read: row?.total_pages_read ?? 0,
     total_highlights: row?.total_highlights ?? 0,
+    total_words_looked_up: row?.total_words_looked_up ?? 0,
     streak_freeze_credits: row?.streak_freeze_credits ?? 0,
   }
 }

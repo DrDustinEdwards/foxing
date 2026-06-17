@@ -22,6 +22,7 @@ import {
   type MonthlyBucket,
   type ThemeBucket,
 } from './charts'
+import { StreakPanel } from './streak-panel'
 
 export const dynamic = 'force-dynamic'
 
@@ -141,7 +142,9 @@ export default async function StatsPage(
         actions={<YearFilter years={years} selected={selectedYear} />}
       />
 
-      <section className="mt-8 grid gap-3 sm:grid-cols-2 md:grid-cols-4">
+      <StreakPanel streak={streak} />
+
+      <section className="mt-3 grid gap-3 sm:grid-cols-2 md:grid-cols-3">
         <StatCard label="Books finished" value={totalBooks.toString()} />
         <StatCard
           label="Pages read"
@@ -151,11 +154,6 @@ export default async function StatsPage(
         <StatCard
           label="Average rating"
           value={avgRating ? avgRating.toFixed(1) : 'no ratings'}
-        />
-        <StatCard
-          label="Current streak"
-          value={`${streak.current_streak}`}
-          hint={`longest ${streak.longest_streak}`}
         />
       </section>
 
