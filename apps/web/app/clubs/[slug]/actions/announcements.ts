@@ -184,6 +184,40 @@ export async function createAnnouncement(
   return { ok: true }
 }
 
+// Pin/unpin an announcement (mod-gated). RLS club_announcements_mod_update
+// permits the write; we also gate on role here so the UI never sees a silent
+// no-op. fetchAnnouncementsForClub already sorts pinned-first.
+export async function setAnnouncementPinned(
+  formData: FormData,
+): Promise<ActionResult> {
+  const id = String(formData.get('id') ?? '').trim()
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const pinned = formData.get('pinned') === 'on'
+  if (!id || !clubId) return { ok: false, error: 'Missing id.' }
+  const userId = await getAuthedUserId()
+  if (!userId) return { ok: false, error: 'Sign in required.' }
+  const role = await getClubRole(clubId, userId)
+  if (!isClubMod(role)) return { ok: false, error: 'Moderator access required.' }
+
+  const sb = await createClient()
+  const { error } = await sb
+    .from('club_announcements')
+    .update({ is_pinned: pinned })
+    .eq('id', id)
+    .eq('club_id', clubId)
+  if (error) return { ok: false, error: error.message }
+
+  const admin = createAdminClient()
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
 export async function removeAnnouncement(
   formData: FormData,
 ): Promise<ActionResult> {
