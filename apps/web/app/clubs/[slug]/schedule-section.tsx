@@ -1,6 +1,6 @@
 import { AddScheduleForm } from './add-schedule-form'
 import { ClubSectionHeader } from './club-section-header'
-import { ScheduleDeleteButton } from './schedule-delete-button'
+import { ScheduleRow } from './schedule-row'
 
 export interface ScheduleEntry {
   id: string
@@ -61,36 +61,17 @@ export function ScheduleSection({ clubId, entries, canManage }: Props) {
       ) : (
         <ul className="flex flex-col divide-y divide-border-subtle border-y border-border-subtle">
           {entries.map((e) => {
-            const unlock = new Date(e.unlock_date)
-            const status = statusFor(unlock, now)
+            const status = statusFor(new Date(e.unlock_date), now)
             return (
-              <li
+              <ScheduleRow
                 key={e.id}
-                className="flex items-center justify-between gap-3 py-3"
-              >
-                <div className="flex flex-col leading-tight">
-                  <span className="font-fraunces text-sm text-text-primary">
-                    {e.chapter_name}
-                  </span>
-                  <span className="font-dm-mono text-xs text-text-tertiary">
-                    {status.chip === 'unlocked' ? 'Unlocked' : 'Unlocks'}{' '}
-                    {formatUnlock(e.unlock_date)}
-                  </span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`rounded-md px-2 py-0.5 font-dm-mono text-[0.625rem] uppercase tracking-wider ${CHIP_CLASS[status.chip]}`}
-                  >
-                    {status.label}
-                  </span>
-                  {canManage && (
-                    <ScheduleDeleteButton
-                      scheduleId={e.id}
-                      clubId={clubId}
-                    />
-                  )}
-                </div>
-              </li>
+                clubId={clubId}
+                entry={e}
+                canManage={canManage}
+                statusLabel={status.label}
+                chipClass={CHIP_CLASS[status.chip]}
+                unlockDisplay={formatUnlock(e.unlock_date)}
+              />
             )
           })}
         </ul>

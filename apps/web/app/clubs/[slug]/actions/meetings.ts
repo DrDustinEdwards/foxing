@@ -356,6 +356,38 @@ export async function createScheduleEntry(
   return { ok: true }
 }
 
+export async function updateScheduleEntry(
+  formData: FormData,
+): Promise<ActionResult> {
+  const scheduleId = String(formData.get('schedule_id') ?? '').trim()
+  const clubId = String(formData.get('club_id') ?? '').trim()
+  const chapterName = String(formData.get('chapter_name') ?? '')
+    .trim()
+    .slice(0, 120)
+  const unlockDate = String(formData.get('unlock_date') ?? '').trim()
+  if (!scheduleId || !clubId || !chapterName || !unlockDate) {
+    return { ok: false, error: 'Chapter and unlock date required.' }
+  }
+  const auth = await assertMod(clubId)
+  if (!auth.ok) return auth
+  const admin = createAdminClient()
+  // club_schedule has no updated_at column -- do not set it.
+  const { error } = await admin
+    .from('club_schedule')
+    .update({ chapter_name: chapterName, unlock_date: unlockDate })
+    .eq('id', scheduleId)
+    .eq('club_id', clubId)
+  if (error) return { ok: false, error: error.message }
+  const { data: club } = await admin
+    .from('clubs')
+    .select('slug')
+    .eq('id', clubId)
+    .maybeSingle()
+  const clubSlug = (club as { slug: string | null } | null)?.slug
+  if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
+  return { ok: true }
+}
+
 export async function deleteScheduleEntry(
   formData: FormData,
 ): Promise<ActionResult> {
