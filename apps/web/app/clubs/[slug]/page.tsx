@@ -161,13 +161,11 @@ export default async function ClubPage(
           .eq('post_type', 'club_post')
           .order('created_at', { ascending: true })
       : Promise.resolve({ data: null }),
-    isMember
-      ? adminClient
-          .from('club_schedule')
-          .select('id, chapter_name, unlock_date')
-          .eq('club_id', club.id)
-          .order('unlock_date', { ascending: true })
-      : Promise.resolve({ data: null }),
+    adminClient
+      .from('club_schedule')
+      .select('id, chapter_name, unlock_date')
+      .eq('club_id', club.id)
+      .order('unlock_date', { ascending: true }),
     adminClient
       .from('clubs')
       .select('max_members, member_approval, creator_id')
@@ -277,6 +275,15 @@ export default async function ClubPage(
     (scheduleRows as
       | Array<{ id: string; chapter_name: string; unlock_date: string }>
       | null) ?? []
+  // Chapters still locked (unlock_date in the future), keyed by normalized name,
+  // for spoiler-gating Discussions threads.
+  const nowMs = Date.now()
+  const lockedChapterDates: Record<string, string> = {}
+  for (const e of scheduleEntries) {
+    if (new Date(e.unlock_date).getTime() > nowMs) {
+      lockedChapterDates[e.chapter_name.trim().toLowerCase()] = e.unlock_date
+    }
+  }
 
   const capacity = capacityRow as
     | {
@@ -394,6 +401,9 @@ export default async function ClubPage(
         clubSlug={club.slug ?? club.id}
         threads={threads}
         isMember={isMember}
+        viewerId={userId}
+        canModerate={canModerate}
+        lockedChapterDates={lockedChapterDates}
       />
       {club.current_book && club.current_book_id && (
         <ThreadDiscussionPanel

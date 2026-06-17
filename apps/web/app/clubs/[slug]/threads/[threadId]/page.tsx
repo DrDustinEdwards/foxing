@@ -9,9 +9,11 @@ import { getAuthedUserId } from '@/lib/nav-user'
 import { fetchClubThread } from '@/lib/club-threads'
 import { fetchDiscussionGuide } from '@/lib/discussion-guide'
 import { getClubRole, isClubMod } from '@/lib/club-membership'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { ThreadDiscussionPanel } from '../../thread-discussion-panel'
 import { ThreadPosts } from './thread-posts'
 import { ReplyForm } from './reply-form'
+import { LockedChapterGate } from './locked-chapter-gate'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +52,27 @@ export default async function ThreadPage(
     getClubRole(club.id, viewerId),
   ])
   const canGenerate = isClubMod(role)
+
+  // Chapter gating: if this thread's chapter is on the schedule with a future
+  // unlock, blur it for regular members (author + mods always see it).
+  const chapterNorm = thread.chapter?.trim().toLowerCase()
+  let lockedUntil: string | null = null
+  if (chapterNorm && !isClubMod(role) && thread.author_id !== viewerId) {
+    const admin = createAdminClient()
+    const { data: scheduleRows } = await admin
+      .from('club_schedule')
+      .select('chapter_name, unlock_date')
+      .eq('club_id', club.id)
+    const match = (
+      (scheduleRows as { chapter_name: string; unlock_date: string }[] | null) ??
+      []
+    ).find(
+      (r) =>
+        r.chapter_name.trim().toLowerCase() === chapterNorm &&
+        new Date(r.unlock_date).getTime() > Date.now(),
+    )
+    lockedUntil = match?.unlock_date ?? null
+  }
 
   function formatTime(iso: string): string {
     return new Date(iso).toLocaleString('en-US', {
@@ -92,13 +115,25 @@ export default async function ThreadPage(
           ) : null}
 
           <div className="mt-6">
-            <ThreadPosts
-              posts={posts}
-              threadId={thread.id}
-              viewerId={viewerId}
-              savedSet={savedSet}
-              likedSet={likedSet}
-            />
+            {lockedUntil ? (
+              <LockedChapterGate unlockLabel={formatTime(lockedUntil)}>
+                <ThreadPosts
+                  posts={posts}
+                  threadId={thread.id}
+                  viewerId={viewerId}
+                  savedSet={savedSet}
+                  likedSet={likedSet}
+                />
+              </LockedChapterGate>
+            ) : (
+              <ThreadPosts
+                posts={posts}
+                threadId={thread.id}
+                viewerId={viewerId}
+                savedSet={savedSet}
+                likedSet={likedSet}
+              />
+            )}
           </div>
 
           <section className="mt-8">
