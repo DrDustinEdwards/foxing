@@ -64,6 +64,20 @@ export default async function GoalsPage() {
     target > 0
       ? Math.min(100, Math.round((finishedCount / target) * 100))
       : 0
+  const nowMs = Date.now()
+  const yStart = new Date(year, 0, 1).getTime()
+  const yEnd = new Date(year + 1, 0, 1).getTime()
+  const annualFraction = clampFraction((nowMs - yStart) / (yEnd - yStart))
+  const monthlyFraction = periodFraction(
+    monthPeriod.startISO,
+    monthPeriod.endISO,
+    nowMs,
+  )
+  const weeklyFraction = periodFraction(
+    weekPeriod.startISO,
+    weekPeriod.endISO,
+    nowMs,
+  )
   const monthlyTarget = monthlyGoal?.target ?? null
   const weeklyTarget = weeklyGoal?.target ?? null
   const monthlyPct =
@@ -97,9 +111,16 @@ export default async function GoalsPage() {
                 style={{ width: `${pct}%` }}
               />
             </div>
-            <p className="font-dm-mono text-xs text-text-tertiary">
-              {pct}% there
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="font-dm-mono text-xs text-text-tertiary">
+                {pct}% there
+              </p>
+              <OnTrackBadge
+                finished={finishedCount}
+                target={target}
+                fraction={annualFraction}
+              />
+            </div>
             <GoalSetter currentTarget={target} year={year} />
           </div>
         ) : (
@@ -126,9 +147,16 @@ export default async function GoalsPage() {
                   style={{ width: `${monthlyPct}%` }}
                 />
               </div>
-              <p className="font-dm-mono text-xs text-text-tertiary">
-                {monthlyPct}% there
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-dm-mono text-xs text-text-tertiary">
+                  {monthlyPct}% there
+                </p>
+                <OnTrackBadge
+                  finished={monthlyFinished}
+                  target={monthlyTarget}
+                  fraction={monthlyFraction}
+                />
+              </div>
             </div>
           ) : (
             <p className="mt-2 font-source-serif-4 text-sm text-text-secondary">
@@ -160,9 +188,16 @@ export default async function GoalsPage() {
                   style={{ width: `${weeklyPct}%` }}
                 />
               </div>
-              <p className="font-dm-mono text-xs text-text-tertiary">
-                {weeklyPct}% there
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="font-dm-mono text-xs text-text-tertiary">
+                  {weeklyPct}% there
+                </p>
+                <OnTrackBadge
+                  finished={weeklyFinished}
+                  target={weeklyTarget}
+                  fraction={weeklyFraction}
+                />
+              </div>
             </div>
           ) : (
             <p className="mt-2 font-source-serif-4 text-sm text-text-secondary">
@@ -275,6 +310,37 @@ export default async function GoalsPage() {
       </section>
     </PageWrapper>
   )
+}
+
+function clampFraction(f: number): number {
+  if (!Number.isFinite(f)) return 1
+  return Math.min(1, Math.max(0, f))
+}
+
+function periodFraction(startISO: string, endISO: string, nowMs: number): number {
+  const start = new Date(startISO).getTime()
+  const end = new Date(endISO).getTime()
+  if (end <= start) return 1
+  return clampFraction((nowMs - start) / (end - start))
+}
+
+// On-track = finished at least the share of the target the elapsed period
+// implies. "Behind by N" tells the reader how many books to catch up.
+function OnTrackBadge({
+  finished,
+  target,
+  fraction,
+}: {
+  finished: number
+  target: number
+  fraction: number
+}) {
+  if (target <= 0) return null
+  if (finished >= target) return <Badge variant="success">Goal reached</Badge>
+  const expected = target * fraction
+  if (finished + 1e-9 >= expected) return <Badge variant="success">On track</Badge>
+  const behind = Math.max(1, Math.ceil(expected - finished))
+  return <Badge variant="neutral">Behind by {behind}</Badge>
 }
 
 function FreezeSection({
