@@ -2,7 +2,12 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getAuthedUserId } from '@/lib/nav-user'
+import {
+  extractMentionHandles,
+  resolveMentionedMembers,
+} from '@/lib/club-notify'
 
 type NewThreadResult =
   | { ok: true; threadId: string }
@@ -71,6 +76,41 @@ export async function createClubThread(
     .eq('id', clubId)
     .maybeSingle()
   const slug = (club as { slug: string | null } | null)?.slug
+
+  // Notify @mentioned active members in the opening post.
+  const admin = createAdminClient()
+  const mentioned = await resolveMentionedMembers(
+    admin,
+    clubId,
+    extractMentionHandles(content),
+    userId,
+  )
+  if (mentioned.length > 0) {
+    const { data: actor } = await admin
+      .from('profiles')
+      .select('display_name')
+      .eq('id', userId)
+      .maybeSingle()
+    const actorName =
+      (actor as { display_name: string | null } | null)?.display_name ??
+      'A member'
+    const href = slug ? `/clubs/${slug}/threads/${threadId}` : undefined
+    await admin.from('notifications').insert(
+      mentioned.map((m) => ({
+        user_id: m.user_id,
+        type: 'club_mention',
+        title: `${actorName} mentioned you`,
+        body: content.slice(0, 140),
+        data: {
+          club_id: clubId,
+          club_slug: slug ?? null,
+          thread_id: threadId,
+          ...(href ? { href } : {}),
+        },
+      })),
+    )
+  }
+
   if (slug) revalidatePath(`/clubs/${slug}`)
   return { ok: true, threadId }
 }

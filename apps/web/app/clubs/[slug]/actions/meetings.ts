@@ -324,6 +324,43 @@ export async function cancelClubMeeting(
     .eq('id', clubId)
     .maybeSingle()
   const clubSlug = (club as { slug: string | null } | null)?.slug
+
+  // Notify members who RSVP'd going/maybe that the meeting was cancelled.
+  const { data: meetingRow } = await admin
+    .from('club_meetings')
+    .select('title')
+    .eq('id', meetingId)
+    .maybeSingle()
+  const meetingTitle =
+    (meetingRow as { title: string | null } | null)?.title ?? 'A meeting'
+  const { data: rsvps } = await admin
+    .from('club_meeting_rsvps')
+    .select('user_id, status')
+    .eq('meeting_id', meetingId)
+    .in('status', ['going', 'maybe'])
+  const recipientIds = [
+    ...new Set(
+      ((rsvps as { user_id: string }[] | null) ?? []).map((r) => r.user_id),
+    ),
+  ].filter((id) => id !== userId)
+  if (recipientIds.length > 0) {
+    const href = clubSlug ? `/clubs/${clubSlug}` : undefined
+    await admin.from('notifications').insert(
+      recipientIds.map((uid) => ({
+        user_id: uid,
+        type: 'club_meeting_cancelled',
+        title: 'Meeting cancelled',
+        body: meetingTitle,
+        data: {
+          club_id: clubId,
+          club_slug: clubSlug ?? null,
+          meeting_id: meetingId,
+          ...(href ? { href } : {}),
+        },
+      })),
+    )
+  }
+
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
   return { ok: true }
 }
