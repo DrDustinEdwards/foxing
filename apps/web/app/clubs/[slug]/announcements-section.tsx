@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { formatRelativeDate } from '@foxing/utils'
 import type { ClubAnnouncement } from '@/lib/club-announcements'
 import { ClubSectionHeader } from './club-section-header'
+import { PinAnnouncementButton } from './pin-announcement-button'
 import { RemoveAnnouncementButton } from './remove-announcement-button'
 
 function formatEventDate(iso: string): string {
@@ -75,7 +76,14 @@ function AnnouncementCard({
           )}
         </div>
         {canModerate && (
-          <RemoveAnnouncementButton id={a.id} clubId={clubId} />
+          <div className="flex items-center gap-3">
+            <PinAnnouncementButton
+              id={a.id}
+              clubId={clubId}
+              pinned={Boolean(a.is_pinned)}
+            />
+            <RemoveAnnouncementButton id={a.id} clubId={clubId} />
+          </div>
         )}
       </div>
       <h3 className="font-fraunces text-[1.0625rem] text-text-primary">
