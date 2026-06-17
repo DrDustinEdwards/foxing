@@ -29,6 +29,7 @@ export async function setReadingGoal(
     .select('id')
     .eq('user_id', userId)
     .eq('year', year)
+    .eq('period_type', 'annual')
     .maybeSingle()
   const row = existing as { id: string } | null
   if (row) {
@@ -41,6 +42,7 @@ export async function setReadingGoal(
     const { error } = await sb.from('reading_goals').insert({
       user_id: userId,
       year,
+      period_type: 'annual',
       type: 'books',
       target,
     })
