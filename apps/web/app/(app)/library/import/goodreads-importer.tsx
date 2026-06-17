@@ -3,20 +3,20 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
-import { importGoodreadsRows } from './actions'
-
-interface ParsedRow {
-  title: string
-  author: string
-  rating: number | null
-  review: string | null
-  date_finished: string | null
-  shelf: string
-}
+import {
+  importGoodreadsRows,
+  matchGoodreadsRows,
+  type GoodreadsRow,
+} from './actions'
 
 interface PreviewState {
-  rows: ParsedRow[]
+  rows: GoodreadsRow[]
   filename: string
+}
+
+interface MatchState {
+  matched: number
+  unmatched: { title: string; author: string }[]
 }
 
 interface ImportResult {
@@ -25,15 +25,33 @@ interface ImportResult {
   unmatched: { title: string; author: string }[]
 }
 
+function downloadUnmatched(unmatched: { title: string; author: string }[]) {
+  const esc = (s: string) => `"${s.replace(/"/g, '""')}"`
+  const csv = [
+    'Title,Author',
+    ...unmatched.map((u) => `${esc(u.title)},${esc(u.author)}`),
+  ].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = 'foxing-unmatched-books.csv'
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export function GoodreadsImporter() {
   const [preview, setPreview] = useState<PreviewState | null>(null)
+  const [match, setMatch] = useState<MatchState | null>(null)
   const [result, setResult] = useState<ImportResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [pending, startTransition] = useTransition()
+  const [matching, startMatching] = useTransition()
+  const [importing, startImporting] = useTransition()
 
   async function handleFile(file: File) {
     setError(null)
     setResult(null)
+    setMatch(null)
     try {
       const text = await file.text()
       const rows = parseGoodreadsCsv(text)
@@ -42,6 +60,16 @@ export function GoodreadsImporter() {
         return
       }
       setPreview({ rows, filename: file.name })
+      // Dry-run match so the review step shows matched vs unmatched first.
+      startMatching(() => {
+        void matchGoodreadsRows(rows).then((res) => {
+          if (!res.ok) {
+            setError(res.error)
+            return
+          }
+          setMatch({ matched: res.matched, unmatched: res.unmatched })
+        })
+      })
     } catch (e) {
       setError(`Could not read CSV: ${(e as Error).message}`)
     }
@@ -49,7 +77,7 @@ export function GoodreadsImporter() {
 
   function confirm() {
     if (!preview) return
-    startTransition(() => {
+    startImporting(() => {
       void importGoodreadsRows(preview.rows).then((res) => {
         if (!res.ok) {
           setError(res.error)
@@ -61,34 +89,52 @@ export function GoodreadsImporter() {
           unmatched: res.unmatched,
         })
         setPreview(null)
+        setMatch(null)
       })
     })
+  }
+
+  function reset() {
+    setPreview(null)
+    setMatch(null)
+    setResult(null)
+    setError(null)
   }
 
   if (result) {
     return (
       <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-5">
-        <h2 className="font-fraunces text-lg text-text-primary">Import complete</h2>
+        <h2 className="font-fraunces text-lg text-text-primary">
+          Import complete
+        </h2>
         <p className="font-source-serif-4 text-sm text-text-secondary">
-          {result.inserted} books added to your library.{' '}
-          {result.matched - result.inserted > 0 &&
-            `${result.matched - result.inserted} were already on your shelves. `}
+          {result.inserted} book{result.inserted === 1 ? '' : 's'} saved to your
+          library.{' '}
           {result.unmatched.length > 0 &&
             `${result.unmatched.length} weren't in the Foxing catalog.`}
         </p>
         {result.unmatched.length > 0 && (
-          <details className="rounded border border-border-subtle bg-bg-base p-3">
-            <summary className="cursor-pointer font-dm-sans text-sm text-text-secondary">
-              Unmatched titles
-            </summary>
-            <ul className="mt-2 max-h-60 overflow-auto font-dm-mono text-xs text-text-tertiary">
-              {result.unmatched.map((u, i) => (
-                <li key={i}>
-                  {u.title} · {u.author}
-                </li>
-              ))}
-            </ul>
-          </details>
+          <div className="flex flex-col gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => downloadUnmatched(result.unmatched)}
+            >
+              Download unmatched ({result.unmatched.length})
+            </Button>
+            <details className="rounded border border-border-subtle bg-bg-base p-3">
+              <summary className="cursor-pointer font-dm-sans text-sm text-text-secondary">
+                Unmatched titles
+              </summary>
+              <ul className="mt-2 max-h-60 overflow-auto font-dm-mono text-xs text-text-tertiary">
+                {result.unmatched.map((u, i) => (
+                  <li key={i}>
+                    {u.title} · {u.author}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          </div>
         )}
         <div className="flex gap-2">
           <Link href="/library">
@@ -96,11 +142,7 @@ export function GoodreadsImporter() {
               Go to library
             </Button>
           </Link>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => setResult(null)}
-          >
+          <Button variant="secondary" size="sm" onClick={reset}>
             Import another file
           </Button>
         </div>
@@ -112,12 +154,32 @@ export function GoodreadsImporter() {
     return (
       <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-bg-surface p-5">
         <h2 className="font-fraunces text-lg text-text-primary">
-          Preview · {preview.filename}
+          Review · {preview.filename}
         </h2>
-        <p className="font-dm-sans text-sm text-text-tertiary">
-          {preview.rows.length} rows found. Foxing will match each book by
-          title + author and add it to the matching shelf.
-        </p>
+        {match ? (
+          <p className="font-dm-sans text-sm text-text-secondary">
+            {match.matched} of {preview.rows.length} book
+            {preview.rows.length === 1 ? '' : 's'} matched the Foxing catalog and
+            will be added.{' '}
+            {match.unmatched.length > 0 &&
+              `${match.unmatched.length} couldn't be matched and will be skipped.`}
+          </p>
+        ) : (
+          <p className="font-dm-sans text-sm text-text-tertiary">
+            {matching ? 'Checking matches…' : 'Preparing…'}
+          </p>
+        )}
+
+        {match && match.unmatched.length > 0 && (
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => downloadUnmatched(match.unmatched)}
+          >
+            Download unmatched ({match.unmatched.length})
+          </Button>
+        )}
+
         <div className="max-h-72 overflow-auto rounded border border-border-subtle bg-bg-base">
           <table className="w-full text-left text-xs">
             <thead className="border-b border-border-subtle bg-bg-surface font-dm-mono uppercase tracking-wide text-text-tertiary">
@@ -147,15 +209,15 @@ export function GoodreadsImporter() {
             variant="primary"
             size="sm"
             onClick={confirm}
-            disabled={pending}
+            disabled={importing || !match || match.matched === 0}
           >
-            {pending ? 'Importing' : `Import ${preview.rows.length} books`}
+            {importing
+              ? 'Importing…'
+              : match
+                ? `Import ${match.matched} book${match.matched === 1 ? '' : 's'}`
+                : 'Import'}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setPreview(null)}
-          >
+          <Button variant="ghost" size="sm" onClick={reset}>
             Cancel
           </Button>
         </div>
@@ -182,7 +244,7 @@ export function GoodreadsImporter() {
       </label>
       <p className="font-dm-sans text-xs text-text-tertiary">
         Goodreads → My Books → Import and Export → Export Library. Your data
-        stays on your device until you confirm the preview below.
+        stays on your device until you confirm the review step.
       </p>
       {error && <p className="font-dm-sans text-sm text-error">{error}</p>}
     </div>
@@ -193,7 +255,7 @@ export function GoodreadsImporter() {
  * Minimal Goodreads CSV parser. Handles quoted fields, escaped quotes ("")
  * inside quoted fields, and commas in quoted fields. Skips empty lines.
  */
-function parseGoodreadsCsv(text: string): ParsedRow[] {
+function parseGoodreadsCsv(text: string): GoodreadsRow[] {
   const lines: string[][] = []
   let current: string[] = []
   let field = ''
@@ -233,41 +295,48 @@ function parseGoodreadsCsv(text: string): ParsedRow[] {
 
   if (lines.length === 0) return []
   const headers = lines[0].map((h) => h.trim())
+  const col = (name: string) => headers.indexOf(name)
   const idx = {
-    title: headers.indexOf('Title'),
-    author: headers.indexOf('Author'),
-    rating: headers.indexOf('My Rating'),
-    review: headers.indexOf('My Review'),
-    date_read: headers.indexOf('Date Read'),
-    shelf: headers.indexOf('Exclusive Shelf'),
+    title: col('Title'),
+    author: col('Author'),
+    isbn: col('ISBN'),
+    isbn13: col('ISBN13'),
+    rating: col('My Rating'),
+    review: col('My Review'),
+    date_read: col('Date Read'),
+    date_added: col('Date Added'),
+    shelf: col('Exclusive Shelf'),
   }
   if (idx.title === -1 || idx.author === -1) return []
 
-  const out: ParsedRow[] = []
+  const cell = (row: string[], i: number) =>
+    i !== -1 ? (row[i] ?? '').trim() : ''
+
+  const out: GoodreadsRow[] = []
   for (let i = 1; i < lines.length; i++) {
     const row = lines[i]
-    const title = (row[idx.title] ?? '').trim()
-    const author = (row[idx.author] ?? '').trim()
+    const title = cell(row, idx.title)
+    const author = cell(row, idx.author)
     if (!title || !author) continue
-    const ratingRaw = idx.rating !== -1 ? row[idx.rating]?.trim() : ''
-    const rating = ratingRaw && /^[1-5]$/.test(ratingRaw) ? Number(ratingRaw) : null
-    const review = idx.review !== -1 ? row[idx.review]?.trim() || null : null
-    const dateRaw = idx.date_read !== -1 ? row[idx.date_read]?.trim() : ''
-    const dateFinished = dateRaw ? normalizeDate(dateRaw) : null
-    const shelf = idx.shelf !== -1 ? row[idx.shelf]?.trim() || 'to-read' : 'to-read'
+    const ratingRaw = cell(row, idx.rating)
+    const rating = /^[1-5]$/.test(ratingRaw) ? Number(ratingRaw) : null
     out.push({
       title,
       author,
+      isbn: cell(row, idx.isbn) || null,
+      isbn13: cell(row, idx.isbn13) || null,
       rating,
-      review,
-      date_finished: dateFinished,
-      shelf,
+      review: cell(row, idx.review) || null,
+      date_finished: normalizeDate(cell(row, idx.date_read)),
+      date_added: normalizeDate(cell(row, idx.date_added)),
+      shelf: cell(row, idx.shelf) || 'to-read',
     })
   }
   return out
 }
 
 function normalizeDate(raw: string): string | null {
+  if (!raw) return null
   const d = new Date(raw)
   if (Number.isNaN(d.getTime())) return null
   return d.toISOString()
