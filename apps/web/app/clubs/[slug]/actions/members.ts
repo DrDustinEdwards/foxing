@@ -303,19 +303,41 @@ export async function approveClubMember(
   const auth = await assertMod(club_id)
   if (!auth.ok) return auth
   const admin = createAdminClient()
-  const { error } = await admin
+  const { data: updated, error } = await admin
     .from('club_members')
     .update({ status: 'active', joined_at: new Date().toISOString() })
     .eq('club_id', club_id)
     .eq('user_id', user_id)
     .eq('status', 'pending')
+    .select('user_id')
   if (error) return { ok: false, error: error.message }
   const { data: club } = await admin
     .from('clubs')
-    .select('slug')
+    .select('slug, name')
     .eq('id', club_id)
     .maybeSingle()
-  const clubSlug = (club as { slug: string | null } | null)?.slug
+  const clubRow = club as { slug: string | null; name: string | null } | null
+  const clubSlug = clubRow?.slug
+
+  // Notify the requester that they're in -- only if a pending row was actually
+  // flipped to active (avoids a spurious ping on re-approve).
+  if (((updated as { user_id: string }[] | null) ?? []).length > 0) {
+    const href = clubSlug ? `/clubs/${clubSlug}` : undefined
+    await admin.from('notifications').insert({
+      user_id,
+      type: 'club_join_approved',
+      title: 'Request approved',
+      body: clubRow?.name
+        ? `You're now a member of ${clubRow.name}`
+        : "You're now a member of the club",
+      data: {
+        club_id,
+        club_slug: clubSlug ?? null,
+        ...(href ? { href } : {}),
+      },
+    })
+  }
+
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
   return { ok: true }
 }
@@ -723,6 +745,43 @@ export async function requestToJoinClub(
     { onConflict: 'club_id,user_id' },
   )
   if (error) return { ok: false, error: error.message }
+
+  // Notify the club's admins/moderators so the pending request is visible.
+  const { data: mods } = await admin
+    .from('club_members')
+    .select('user_id')
+    .eq('club_id', clubId)
+    .in('role', ['admin', 'moderator'])
+    .eq('status', 'active')
+  const modIds = ((mods as { user_id: string }[] | null) ?? [])
+    .map((m) => m.user_id)
+    .filter((id) => id !== userId)
+  if (modIds.length > 0) {
+    const { data: requester } = await admin
+      .from('profiles')
+      .select('display_name')
+      .eq('id', userId)
+      .maybeSingle()
+    const requesterName =
+      (requester as { display_name: string | null } | null)?.display_name ??
+      'A reader'
+    const href = clubRow.slug ? `/clubs/${clubRow.slug}` : undefined
+    await admin.from('notifications').insert(
+      modIds.map((uid) => ({
+        user_id: uid,
+        type: 'club_join_request',
+        title: 'New join request',
+        body: `${requesterName} asked to join`,
+        data: {
+          club_id: clubId,
+          club_slug: clubRow.slug ?? null,
+          requester_id: userId,
+          ...(href ? { href } : {}),
+        },
+      })),
+    )
+  }
+
   if (clubRow.slug) revalidatePath(`/clubs/${clubRow.slug}`)
   return { ok: true }
 }
