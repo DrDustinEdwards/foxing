@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  ScrollView,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -14,18 +15,26 @@ import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as Haptics from 'expo-haptics'
 import { CaretLeft } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
+import {
+  resolveScannedIsbn,
+  loadClubContext,
+  setClubCurrentRead,
+  startClubBookThread,
+  addScannedToLibrary,
+  isClubMod,
+  type ScannedBook,
+  type ResolvedMeta,
+  type ClubRel,
+  type LibraryStatus,
+} from '@/lib/scan-book'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-interface BookHit {
-  id: string
-  slug: string | null
-  title: string
-  author: string
-  cover_url: string | null
-}
-
-const FOXING_API = 'https://foxing.app'
+const STATUS_LABELS: Array<{ value: LibraryStatus; label: string }> = [
+  { value: 'want_to_read', label: 'Want to read' },
+  { value: 'reading', label: 'Reading' },
+  { value: 'finished', label: 'Finished' },
+]
 
 export default function ScanScreen() {
   const colors = useColors()
@@ -33,10 +42,12 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions()
   const [scanning, setScanning] = useState(true)
   const [manualIsbn, setManualIsbn] = useState('')
-  const [book, setBook] = useState<BookHit | null>(null)
+  const [book, setBook] = useState<ScannedBook | null>(null)
+  const [resolved, setResolved] = useState<ResolvedMeta | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [adding, setAdding] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [clubs, setClubs] = useState<ClubRel[]>([])
   const detected = useRef(false)
 
   useEffect(() => {
@@ -46,28 +57,44 @@ export default function ScanScreen() {
     }
   }, [permission, requestPermission])
 
-  const lookup = useCallback(async (isbnRaw: string) => {
-    const clean = isbnRaw.replace(/[^0-9Xx]/g, '')
-    if (clean.length !== 10 && clean.length !== 13) {
-      Alert.alert('Invalid ISBN', 'ISBN must be 10 or 13 digits.')
+  // Load the viewer's club relationships once a catalog book is matched.
+  useEffect(() => {
+    let active = true
+    if (!book) {
+      setClubs([])
       return
     }
+    void (async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user || !active) return
+      const rels = await loadClubContext(book.id, user.id)
+      if (active) setClubs(rels)
+    })()
+    return () => {
+      active = false
+    }
+  }, [book])
+
+  const lookup = useCallback(async (isbnRaw: string) => {
     setLoading(true)
     setNotFound(false)
-    try {
-      const res = await fetch(`${FOXING_API}/api/books/lookup?isbn=${clean}`)
-      const data = (await res.json()) as
-        | { found: true; book: BookHit }
-        | { found: false }
-      if (data.found) {
-        setBook(data.book)
-      } else {
-        setNotFound(true)
-      }
-    } catch (err) {
-      Alert.alert('Lookup failed', err instanceof Error ? err.message : 'Network error')
-    } finally {
-      setLoading(false)
+    setBook(null)
+    setResolved(null)
+    const res = await resolveScannedIsbn(isbnRaw)
+    setLoading(false)
+    if (!res.ok) {
+      Alert.alert('Invalid ISBN', res.error)
+      detected.current = false
+      setScanning(true)
+      return
+    }
+    setResolved(res.result.resolved)
+    if (res.result.match) {
+      setBook(res.result.match)
+    } else {
+      setNotFound(true)
     }
   }, [])
 
@@ -86,37 +113,60 @@ export default function ScanScreen() {
     [lookup],
   )
 
-  async function addToLibrary() {
+  function rescan() {
+    setBook(null)
+    setResolved(null)
+    setNotFound(false)
+    setClubs([])
+    detected.current = false
+    setScanning(true)
+  }
+
+  async function handleAddToLibrary(status: LibraryStatus) {
     if (!book) return
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      Alert.alert('Sign in required')
+    setBusy(true)
+    const res = await addScannedToLibrary(book.id, status)
+    setBusy(false)
+    if (!res.ok) {
+      Alert.alert('Could not add', res.error ?? 'Try again.')
       return
     }
-    setAdding(true)
-    const { error } = await supabase.from('user_books').upsert(
-      {
-        user_id: user.id,
-        book_id: book.id,
-        status: 'want_to_read',
-      },
-      { onConflict: 'user_id,book_id' },
-    )
-    setAdding(false)
-    if (error) {
-      Alert.alert('Could not add', error.message)
+    const label = STATUS_LABELS.find((s) => s.value === status)?.label ?? 'library'
+    Alert.alert('Added to library', `${book.title} → ${label}.`)
+  }
+
+  async function handleSetCurrent(rel: ClubRel) {
+    if (!book) return
+    setBusy(true)
+    const res = await setClubCurrentRead(rel.club_id, book.id)
+    setBusy(false)
+    if (!res.ok) {
+      Alert.alert('Could not update', res.error ?? 'Try again.')
       return
     }
-    Alert.alert('Added to library', `${book.title} was added to Want to Read.`, [
-      { text: 'OK', onPress: () => router.back() },
+    Alert.alert('Current read set', `${book.title} is now ${rel.name}'s current read.`, [
+      { text: 'Open club', onPress: () => router.push(`/clubs/${rel.club_id}` as never) },
+      { text: 'OK' },
     ])
   }
 
-  function rescan() {
-    setBook(null)
-    setNotFound(false)
-    detected.current = false
-    setScanning(true)
+  async function handleStartDiscussion(rel: ClubRel) {
+    if (!book) return
+    setBusy(true)
+    const res = await startClubBookThread(
+      rel.club_id,
+      book.id,
+      `Reading ${book.title}`,
+    )
+    setBusy(false)
+    if (!res.ok) {
+      Alert.alert('Could not start discussion', res.error ?? 'Try again.')
+      return
+    }
+    Alert.alert('Discussion started', `A thread for ${book.title} is live in ${rel.name}.`, [
+      { text: 'Open club', onPress: () => router.push(`/clubs/${rel.club_id}` as never) },
+      { text: 'OK' },
+    ])
   }
 
   if (!permission) {
@@ -126,6 +176,9 @@ export default function ScanScreen() {
       </SafeAreaView>
     )
   }
+
+  const showCamera =
+    permission.granted && scanning && !book && !notFound && !loading
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -145,14 +198,12 @@ export default function ScanScreen() {
         </Text>
       </View>
 
-      {permission.granted && scanning && !book && !notFound && !loading ? (
+      {showCamera ? (
         <View style={{ flex: 1, position: 'relative' }}>
           <CameraView
             style={{ flex: 1 }}
             facing="back"
-            barcodeScannerSettings={{
-              barcodeTypes: ['ean13', 'ean8'],
-            }}
+            barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8'] }}
             onBarcodeScanned={onBarcodeScanned}
           />
           <View
@@ -186,7 +237,11 @@ export default function ScanScreen() {
           </Text>
         </View>
       ) : (
-        <View style={{ flex: 1, padding: 16 }}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={{ padding: 16 }}
+          keyboardShouldPersistTaps="handled"
+        >
           {!permission.granted ? (
             <View style={{ marginBottom: 16 }}>
               <Text
@@ -226,17 +281,13 @@ export default function ScanScreen() {
           ) : null}
 
           {loading ? (
-            <View
-              className="items-center justify-center p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            >
+            <View className="items-center justify-center p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
               <ActivityIndicator color={colors.brandUi} />
             </View>
           ) : null}
 
           {book ? (
-            <View
-              className="p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            >
+            <View className="p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
               <View className="flex-row">
                 <View
                   style={{
@@ -278,106 +329,143 @@ export default function ScanScreen() {
                   </Text>
                 </View>
               </View>
-              <View className="flex-row" style={{ marginTop: 12, gap: 8 }}>
-                <Pressable
-                  onPress={addToLibrary}
-                  disabled={adding}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    borderRadius: 999,
-                    backgroundColor: colors.brandUi,
-                    opacity: adding ? 0.7 : 1,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      color: colors.textOnBrand,
-                      fontSize: 13,
-                    }}
-                  >
-                    Add to library
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={rescan}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: colors.borderInteractive,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      color: colors.textPrimary,
-                      fontSize: 13,
-                    }}
-                  >
-                    Scan again
-                  </Text>
-                </Pressable>
+
+              {/* READ FREE: public-domain edition in the catalog. */}
+              {book.epub_url ? (
+                <Section colors={colors} label="Read free">
+                  <PrimaryBtn
+                    colors={colors}
+                    label="Read now"
+                    onPress={() => router.push(`/reader/${book.id}` as never)}
+                  />
+                </Section>
+              ) : null}
+
+              {/* LIBRARY: add with a status. */}
+              <Section colors={colors} label="Add to your library">
+                <View className="flex-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  {STATUS_LABELS.map((s) => (
+                    <OutlineBtn
+                      key={s.value}
+                      colors={colors}
+                      label={s.label}
+                      disabled={busy}
+                      onPress={() => handleAddToLibrary(s.value)}
+                    />
+                  ))}
+                </View>
+              </Section>
+
+              {/* CLUB: open where it's being read, or admin actions. */}
+              {clubs.some(
+                (c) => c.reading || c.hasThread || isClubMod(c.role),
+              ) ? (
+                <Section colors={colors} label="Your clubs">
+                  <View style={{ gap: 10 }}>
+                    {clubs
+                      .filter(
+                        (c) => c.reading || c.hasThread || isClubMod(c.role),
+                      )
+                      .map((c) => (
+                        <View key={c.club_id} style={{ gap: 6 }}>
+                          <Text
+                            style={{
+                              fontFamily: Fonts.uiMedium,
+                              fontSize: 13,
+                              color: colors.textPrimary,
+                            }}
+                          >
+                            {c.name}
+                          </Text>
+                          <View
+                            className="flex-row"
+                            style={{ gap: 8, flexWrap: 'wrap' }}
+                          >
+                            {c.reading || c.hasThread ? (
+                              <OutlineBtn
+                                colors={colors}
+                                label={
+                                  c.reading
+                                    ? 'Open discussion'
+                                    : 'View discussion'
+                                }
+                                onPress={() =>
+                                  router.push(`/clubs/${c.club_id}` as never)
+                                }
+                              />
+                            ) : null}
+                            {!c.reading && isClubMod(c.role) ? (
+                              <OutlineBtn
+                                colors={colors}
+                                label="Set as current read"
+                                disabled={busy}
+                                onPress={() => handleSetCurrent(c)}
+                              />
+                            ) : null}
+                            {!c.hasThread && isClubMod(c.role) ? (
+                              <OutlineBtn
+                                colors={colors}
+                                label="Start a discussion"
+                                disabled={busy}
+                                onPress={() => handleStartDiscussion(c)}
+                              />
+                            ) : null}
+                          </View>
+                        </View>
+                      ))}
+                  </View>
+                </Section>
+              ) : null}
+
+              <View style={{ marginTop: 14 }}>
+                <OutlineBtn colors={colors} label="Scan again" onPress={rescan} />
               </View>
             </View>
           ) : null}
 
           {notFound ? (
-            <View
-              className="p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            >
+            <View className="p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
               <Text
                 style={{
                   fontFamily: Fonts.uiMedium,
                   fontSize: 14,
                   color: colors.textPrimary,
-                  marginBottom: 6,
+                  marginBottom: 4,
                 }}
               >
-                Book not in catalog.
+                We don&apos;t have this one yet.
               </Text>
+              {resolved ? (
+                <Text
+                  style={{
+                    fontFamily: Fonts.ui,
+                    fontSize: 12,
+                    color: colors.textTertiary,
+                    marginBottom: 8,
+                  }}
+                >
+                  Scanned: {resolved.title}
+                  {resolved.author ? ` · ${resolved.author}` : ''}
+                </Text>
+              ) : (
+                <Text
+                  style={{
+                    fontFamily: Fonts.ui,
+                    fontSize: 12,
+                    color: colors.textTertiary,
+                    marginBottom: 8,
+                  }}
+                >
+                  That barcode did not resolve to a known book.
+                </Text>
+              )}
               <View className="flex-row" style={{ gap: 8 }}>
-                <Pressable
+                <PrimaryBtn
+                  colors={colors}
+                  label="Search by title"
                   onPress={() => router.push('/search' as never)}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    borderRadius: 999,
-                    backgroundColor: colors.brandUi,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      color: colors.textOnBrand,
-                      fontSize: 13,
-                    }}
-                  >
-                    Search by title
-                  </Text>
-                </Pressable>
-                <Pressable
-                  onPress={rescan}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 9,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: colors.borderInteractive,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      color: colors.textPrimary,
-                      fontSize: 13,
-                    }}
-                  >
-                    Try again
-                  </Text>
-                </Pressable>
+                />
+                <OutlineBtn colors={colors} label="Try again" onPress={rescan} />
               </View>
             </View>
           ) : null}
@@ -398,7 +486,9 @@ export default function ScanScreen() {
           <View className="flex-row" style={{ gap: 8 }}>
             <TextInput
               value={manualIsbn}
-              onChangeText={(t) => setManualIsbn(t.replace(/[^0-9Xx]/g, '').slice(0, 13))}
+              onChangeText={(t) =>
+                setManualIsbn(t.replace(/[^0-9Xx]/g, '').slice(0, 13))
+              }
               keyboardType="number-pad"
               placeholder="9780000000000"
               placeholderTextColor={colors.textTertiary}
@@ -437,8 +527,109 @@ export default function ScanScreen() {
               </Text>
             </Pressable>
           </View>
-        </View>
+        </ScrollView>
       )}
     </SafeAreaView>
+  )
+}
+
+function Section({
+  colors,
+  label,
+  children,
+}: {
+  colors: ReturnType<typeof useColors>
+  label: string
+  children: React.ReactNode
+}) {
+  return (
+    <View style={{ marginTop: 14 }}>
+      <Text
+        style={{
+          fontFamily: Fonts.uiMedium,
+          fontSize: 11,
+          color: colors.textTertiary,
+          textTransform: 'uppercase',
+          letterSpacing: 0.6,
+          marginBottom: 8,
+        }}
+      >
+        {label}
+      </Text>
+      {children}
+    </View>
+  )
+}
+
+function PrimaryBtn({
+  colors,
+  label,
+  onPress,
+  disabled,
+}: {
+  colors: ReturnType<typeof useColors>
+  label: string
+  onPress: () => void
+  disabled?: boolean
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        borderRadius: 999,
+        backgroundColor: colors.brandUi,
+        opacity: disabled ? 0.6 : 1,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: Fonts.uiMedium,
+          color: colors.textOnBrand,
+          fontSize: 13,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
+  )
+}
+
+function OutlineBtn({
+  colors,
+  label,
+  onPress,
+  disabled,
+}: {
+  colors: ReturnType<typeof useColors>
+  label: string
+  onPress: () => void
+  disabled?: boolean
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 9,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: colors.borderInteractive,
+        opacity: disabled ? 0.6 : 1,
+      }}
+    >
+      <Text
+        style={{
+          fontFamily: Fonts.uiMedium,
+          color: colors.textPrimary,
+          fontSize: 13,
+        }}
+      >
+        {label}
+      </Text>
+    </Pressable>
   )
 }
