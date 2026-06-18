@@ -1067,6 +1067,11 @@ export interface YearStats {
   top_genre: string | null
   top_author: string | null
   longest_streak: number
+  longest_streak_year: number
+  reading_minutes: number
+  avg_wpm: number | null
+  sessions_count: number
+  top_moods: string[]
   finished_books: Array<{
     book_id: string
     title: string
@@ -1076,6 +1081,26 @@ export interface YearStats {
     rating: number | null
     word_count: number | null
   }>
+}
+
+// Longest run of consecutive calendar days in a set of YYYY-MM-DD strings.
+function longestConsecutiveDays(days: Set<string>): number {
+  if (days.size === 0) return 0
+  const sorted = [...days].sort()
+  let longest = 1
+  let run = 1
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(`${sorted[i - 1]}T00:00:00Z`).getTime()
+    const cur = new Date(`${sorted[i]}T00:00:00Z`).getTime()
+    const diffDays = Math.round((cur - prev) / 86400000)
+    if (diffDays === 1) {
+      run += 1
+      longest = Math.max(longest, run)
+    } else if (diffDays > 1) {
+      run = 1
+    }
+  }
+  return longest
 }
 
 export async function fetchYearStats(
@@ -1094,16 +1119,21 @@ export async function fetchYearStats(
     top_genre: null,
     top_author: null,
     longest_streak: 0,
+    longest_streak_year: 0,
+    reading_minutes: 0,
+    avg_wpm: null,
+    sessions_count: 0,
+    top_moods: [],
     finished_books: [],
   }
   if (!hasEnv()) return empty
   const start = `${year}-01-01T00:00:00.000Z`
   const end = `${year + 1}-01-01T00:00:00.000Z`
-  const [booksRes, highlightsRes, streakRes] = await Promise.all([
+  const [booksRes, highlightsRes, streakRes, sessionsRes] = await Promise.all([
     sb()
       .from('user_books')
       .select(
-        'rating, finished_at, books:book_id(id, slug, title, author, cover_url, word_count, themes)',
+        'rating, finished_at, mood_tags, books:book_id(id, slug, title, author, cover_url, word_count, themes)',
       )
       .eq('user_id', userId)
       .eq('status', 'finished')
@@ -1121,11 +1151,48 @@ export async function fetchYearStats(
       .select('longest_streak')
       .eq('user_id', userId)
       .maybeSingle(),
+    sb()
+      .from('reading_sessions')
+      .select('started_at, ended_at, avg_wpm')
+      .eq('user_id', userId)
+      .not('ended_at', 'is', null)
+      .gte('ended_at', start)
+      .lt('ended_at', end),
   ])
+
+  // Reading time / pace / year-scoped streak from this year's sessions.
+  const sessionRows =
+    (sessionsRes.data as
+      | { started_at: string | null; ended_at: string | null; avg_wpm: number | null }[]
+      | null) ?? []
+  let sessionMs = 0
+  const wpmValues: number[] = []
+  const readingDays = new Set<string>()
+  for (const s of sessionRows) {
+    if (s.started_at && s.ended_at) {
+      const ms = new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()
+      if (ms > 0) sessionMs += ms
+    }
+    if (typeof s.avg_wpm === 'number' && s.avg_wpm > 0) wpmValues.push(s.avg_wpm)
+    if (s.started_at) readingDays.add(s.started_at.slice(0, 10))
+  }
+  const readingMinutes = Math.round(sessionMs / 60000)
+  const avgWpm =
+    wpmValues.length > 0
+      ? Math.round(wpmValues.reduce((a, b) => a + b, 0) / wpmValues.length)
+      : null
+  const longestStreakYear = longestConsecutiveDays(readingDays)
+  const sessionStats = {
+    reading_minutes: readingMinutes,
+    avg_wpm: avgWpm,
+    sessions_count: sessionRows.length,
+    longest_streak_year: longestStreakYear,
+  }
 
   const finishedBooks = ((booksRes.data ?? []) as unknown as Array<{
     rating: number | null
     finished_at: string | null
+    mood_tags: string[] | null
     books: {
       id: string
       slug: string | null
@@ -1146,17 +1213,30 @@ export async function fetchYearStats(
       rating: r.rating,
       word_count: r.books!.word_count,
       themes: r.books!.themes,
+      mood_tags: r.mood_tags,
     }))
 
   if (finishedBooks.length === 0) {
     return {
       ...empty,
+      ...sessionStats,
       highlight_count: highlightsRes.count ?? 0,
       longest_streak:
         (streakRes.data as { longest_streak: number } | null)?.longest_streak ??
         0,
     }
   }
+
+  const moodCounts = new Map<string, number>()
+  for (const b of finishedBooks) {
+    for (const mood of b.mood_tags ?? []) {
+      if (mood) moodCounts.set(mood, (moodCounts.get(mood) ?? 0) + 1)
+    }
+  }
+  const topMoods = Array.from(moodCounts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([m]) => m)
 
   const pagesCount = finishedBooks.reduce(
     (sum, b) => sum + Math.round((b.word_count ?? 0) / 250),
@@ -1229,6 +1309,8 @@ export async function fetchYearStats(
     longest_streak:
       (streakRes.data as { longest_streak: number } | null)?.longest_streak ??
       0,
+    ...sessionStats,
+    top_moods: topMoods,
     finished_books: finishedBooks.map((b) => ({
       book_id: b.book_id,
       title: b.title,
