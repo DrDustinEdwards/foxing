@@ -127,12 +127,12 @@ export interface ClubThread {
   club_id: string
   title: string
   chapter: string | null
-  // Schedule gate, when this matches a club_schedule.chapter_gate whose
+  // Schedule gate, when this matches a club_schedule.chapter_name whose
   // unlock_date is in the future, the thread is locked in the UI.
-  chapter_gate?: string | null
+  chapter_name?: string | null
   author_id: string
   is_ai_starter: boolean
-  pinned: boolean
+  is_pinned: boolean
   post_count: number
   created_at: string
   author?: {
@@ -164,6 +164,29 @@ export interface ClubPost {
     avatar_url: string | null
   } | null
   reactions?: ReactionGroup[]
+}
+
+interface ProfileLite {
+  id: string
+  display_name: string | null
+  username: string | null
+  avatar_url: string | null
+}
+
+// club_threads.author_id, club_posts.author_id, and club_members.user_id all FK
+// to auth.users (not profiles), so PostgREST cannot embed the author. Resolve the
+// profiles in one by-id query and join them in app code (same pattern as the web
+// fetchHighlightAuthors fix).
+async function fetchProfilesByIds(ids: string[]): Promise<Map<string, ProfileLite>> {
+  const unique = [...new Set(ids.filter(Boolean))]
+  if (unique.length === 0) return new Map()
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, display_name, username, avatar_url')
+    .in('id', unique)
+  const map = new Map<string, ProfileLite>()
+  for (const p of ((data ?? []) as ProfileLite[])) map.set(p.id, p)
+  return map
 }
 
 // ── List ─────────────────────────────────────────────────────────────────
@@ -223,14 +246,16 @@ export async function fetchClub(id: string): Promise<ClubWithBook | null> {
 export async function fetchMembers(clubId: string): Promise<ClubMember[]> {
   const { data, error } = await supabase
     .from('club_members')
-    .select('*, profile:profiles!user_id(id, display_name, username, avatar_url)')
+    .select('*')
     .eq('club_id', clubId)
     .order('joined_at', { ascending: true })
   if (error) {
     console.warn('[clubs] fetchMembers failed:', error.message)
     return []
   }
-  return ((data ?? []) as unknown) as ClubMember[]
+  const members = ((data ?? []) as unknown) as ClubMember[]
+  const profiles = await fetchProfilesByIds(members.map((m) => m.user_id))
+  return members.map((m) => ({ ...m, profile: profiles.get(m.user_id) ?? null }))
 }
 
 export async function isMember(clubId: string, userId: string): Promise<ClubRole | null> {
@@ -365,28 +390,33 @@ export async function leaveClub(clubId: string): Promise<boolean> {
 export async function fetchThreads(clubId: string): Promise<ClubThread[]> {
   const { data, error } = await supabase
     .from('club_threads')
-    .select('*, author:profiles!created_by(id, display_name, username, avatar_url)')
+    .select('*')
     .eq('club_id', clubId)
-    .order('pinned', { ascending: false })
+    .order('is_pinned', { ascending: false })
     .order('created_at', { ascending: false })
   if (error) {
     console.warn('[clubs] fetchThreads failed:', error.message)
     return []
   }
-  return ((data ?? []) as unknown) as ClubThread[]
+  const threads = ((data ?? []) as unknown) as ClubThread[]
+  const authors = await fetchProfilesByIds(threads.map((t) => t.author_id))
+  return threads.map((t) => ({ ...t, author: authors.get(t.author_id) ?? null }))
 }
 
 export async function fetchThread(threadId: string): Promise<ClubThread | null> {
   const { data, error } = await supabase
     .from('club_threads')
-    .select('*, author:profiles!created_by(id, display_name, username, avatar_url)')
+    .select('*')
     .eq('id', threadId)
     .maybeSingle()
   if (error) {
     console.warn('[clubs] fetchThread failed:', error.message)
     return null
   }
-  return (data as unknown) as ClubThread | null
+  if (!data) return null
+  const thread = (data as unknown) as ClubThread
+  const authors = await fetchProfilesByIds([thread.author_id])
+  return { ...thread, author: authors.get(thread.author_id) ?? null }
 }
 
 export async function createThread(input: {
@@ -439,7 +469,7 @@ export async function fetchPosts(threadId: string): Promise<ClubPost[]> {
 
   const { data, error } = await supabase
     .from('club_posts')
-    .select('*, author:profiles!author_id(id, display_name, username, avatar_url)')
+    .select('*')
     .eq('thread_id', threadId)
     .order('created_at', { ascending: true })
   if (error) {
@@ -448,6 +478,8 @@ export async function fetchPosts(threadId: string): Promise<ClubPost[]> {
   }
   const posts = ((data ?? []) as unknown) as ClubPost[]
   if (posts.length === 0) return posts
+
+  const authors = await fetchProfilesByIds(posts.map((p) => p.author_id))
 
   // Hydrate reactions in one query, group client-side.
   const ids = posts.map((p) => p.id)
@@ -466,6 +498,7 @@ export async function fetchPosts(threadId: string): Promise<ClubPost[]> {
   }
   return posts.map((p) => ({
     ...p,
+    author: authors.get(p.author_id) ?? null,
     reactions: Array.from(byPost.get(p.id)?.entries() ?? []).map(([emoji, v]) => ({
       emoji,
       count: v.count,
@@ -492,7 +525,7 @@ export async function createPost(input: {
   const { data, error } = await supabase
     .from('club_posts')
     .insert(insertPayload)
-    .select('*, author:profiles!author_id(id, display_name, username, avatar_url)')
+    .select('*')
     .single()
   if (error) {
     console.warn('[clubs] createPost failed:', error.message)
@@ -502,14 +535,16 @@ export async function createPost(input: {
   }
   // first_discussion badge unlock
   checkAndAwardBadges(user.id).catch(() => {})
-  return (data as unknown) as ClubPost
+  const post = (data as unknown) as ClubPost
+  const authors = await fetchProfilesByIds([post.author_id])
+  return { ...post, author: authors.get(post.author_id) ?? null }
 }
 
 // ── Phase G enhancements: waitlist, schedule, save/report posts, stats ──
 
 export interface ClubScheduleRow {
   club_id: string
-  chapter_gate: string
+  chapter_name: string
   unlock_date: string
 }
 
@@ -534,7 +569,7 @@ export async function getClubStats(clubId: string): Promise<ClubStats> {
     // client-side from the row set so RLS plays nicely.
     supabase
       .from('club_posts')
-      .select('id, author_id, thread:club_threads!thread_id(club_id), author:profiles!author_id(display_name, username)')
+      .select('id, author_id, thread:club_threads!thread_id(club_id)')
       .eq('thread.club_id', clubId)
       .limit(1000),
     // Top poster, same set used for the count, processed in code.
@@ -545,32 +580,33 @@ export async function getClubStats(clubId: string): Promise<ClubStats> {
     id: string
     author_id: string
     thread: { club_id: string } | Array<{ club_id: string }> | null
-    author: { display_name: string | null; username: string | null }
-      | Array<{ display_name: string | null; username: string | null }>
-      | null
   }
   const posts = (((postsRes.data ?? []) as unknown) as PR[]).filter((p) => {
     const t = Array.isArray(p.thread) ? p.thread[0] : p.thread
     return t?.club_id === clubId
   })
-  const tally = new Map<string, { count: number; profile: { display_name: string | null; username: string | null } | null }>()
+  const tally = new Map<string, number>()
   for (const p of posts) {
-    const cur = tally.get(p.author_id)
-    const profile = Array.isArray(p.author) ? p.author[0] ?? null : p.author
-    tally.set(p.author_id, {
-      count: (cur?.count ?? 0) + 1,
-      profile: cur?.profile ?? profile,
-    })
+    tally.set(p.author_id, (tally.get(p.author_id) ?? 0) + 1)
   }
+  let topId: string | null = null
+  let topCount = 0
+  for (const [user_id, count] of tally) {
+    if (count > topCount) {
+      topCount = count
+      topId = user_id
+    }
+  }
+  // club_posts.author_id FKs auth.users, so the top poster's profile is fetched
+  // separately rather than embedded.
   let mostActive: ClubStats['mostActive'] = null
-  for (const [user_id, v] of tally) {
-    if (!mostActive || v.count > mostActive.count) {
-      mostActive = {
-        user_id,
-        display_name: v.profile?.display_name ?? null,
-        username: v.profile?.username ?? null,
-        count: v.count,
-      }
+  if (topId) {
+    const profile = (await fetchProfilesByIds([topId])).get(topId)
+    mostActive = {
+      user_id: topId,
+      display_name: profile?.display_name ?? null,
+      username: profile?.username ?? null,
+      count: topCount,
     }
   }
   return {
@@ -584,7 +620,7 @@ export async function getClubStats(clubId: string): Promise<ClubStats> {
 export async function getClubSchedule(clubId: string): Promise<ClubScheduleRow[]> {
   const { data, error } = await supabase
     .from('club_schedule')
-    .select('club_id, chapter_gate, unlock_date')
+    .select('club_id, chapter_name, unlock_date')
     .eq('club_id', clubId)
   if (error) return []
   return ((data ?? []) as ClubScheduleRow[])
@@ -614,13 +650,22 @@ export async function joinWaitlist(clubId: string): Promise<number | null> {
 export async function getWaitlistPosition(clubId: string): Promise<number | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  const { data } = await supabase
+  // No position column on club_waitlist; derive it from arrival order, matching
+  // joinWaitlist (position = number of rows joined at or before this user).
+  const { data: mine } = await supabase
     .from('club_waitlist')
-    .select('position')
+    .select('joined_at')
     .eq('club_id', clubId)
     .eq('user_id', user.id)
     .maybeSingle()
-  return ((data as { position: number } | null)?.position) ?? null
+  const joinedAt = (mine as { joined_at: string } | null)?.joined_at
+  if (!joinedAt) return null
+  const { count } = await supabase
+    .from('club_waitlist')
+    .select('user_id', { count: 'exact', head: true })
+    .eq('club_id', clubId)
+    .lte('joined_at', joinedAt)
+  return count ?? null
 }
 
 export async function savePost(postId: string): Promise<boolean> {
