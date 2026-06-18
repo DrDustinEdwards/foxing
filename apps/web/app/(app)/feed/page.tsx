@@ -126,7 +126,7 @@ export default async function FeedPage() {
     sb
       .from('highlights')
       .select(
-        'id, text, created_at, profiles:user_id(username, display_name, avatar_url, is_public), books:book_id(id, slug, title, author, cover_url)',
+        'id, text, created_at, user_id, books:book_id(id, slug, title, author, cover_url)',
       )
       .in('user_id', followingIds)
       .eq('is_public', true)
@@ -167,19 +167,33 @@ export default async function FeedPage() {
     })
   }
 
-  for (const row of (highlightsRes.data ?? []) as unknown as Array<{
+  const highlightRows = (highlightsRes.data ?? []) as unknown as Array<{
     id: string
     text: string
     created_at: string
-    profiles: (Actor & { is_public: boolean }) | null
+    user_id: string
     books: FeedBook | null
-  }>) {
-    if (!row.profiles?.is_public || !row.books) continue
+  }>
+  // highlights.user_id FKs auth.users, not profiles, so the actor profile is
+  // fetched separately rather than embedded.
+  const highlightActorsById = new Map<string, Actor & { is_public: boolean }>()
+  if (highlightRows.length > 0) {
+    const { data: hlActors } = await sb
+      .from('profiles')
+      .select('id, username, display_name, avatar_url, is_public')
+      .in('id', [...new Set(highlightRows.map((r) => r.user_id))])
+    for (const a of (hlActors as Array<Actor & { id: string; is_public: boolean }> | null) ?? []) {
+      highlightActorsById.set(a.id, a)
+    }
+  }
+  for (const row of highlightRows) {
+    const actor = highlightActorsById.get(row.user_id)
+    if (!actor || !actor.is_public || !row.books) continue
     entries.push({
       kind: 'highlighted',
       id: `h-${row.id}`,
       time: row.created_at,
-      actor: row.profiles,
+      actor,
       book: row.books,
       text: row.text,
     })

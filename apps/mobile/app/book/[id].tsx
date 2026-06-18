@@ -239,24 +239,35 @@ export default function BookDetail() {
     // Popular highlights, public passages from other readers for this book.
     const { data: hlRows } = await supabase
       .from('highlights')
-      .select('id, text, user:profiles!user_id(display_name, username)')
+      .select('id, text, user_id')
       .eq('book_id', bookRow.id)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(3)
-    type HR = {
-      id: string
-      text: string
-      user:
-        | { display_name: string | null; username: string | null }
-        | Array<{ display_name: string | null; username: string | null }>
-        | null
+    type HR = { id: string; text: string; user_id: string }
+    const highlights = ((hlRows ?? []) as unknown) as HR[]
+    // highlights.user_id FKs auth.users, not profiles, so the author is fetched
+    // separately rather than embedded.
+    const hlAuthorIds = [...new Set(highlights.map((r) => r.user_id).filter(Boolean))]
+    const hlAuthorById = new Map<string, { display_name: string | null; username: string | null }>()
+    if (hlAuthorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, display_name, username')
+        .in('id', hlAuthorIds)
+      for (const p of (((profs ?? []) as unknown) as Array<{
+        id: string
+        display_name: string | null
+        username: string | null
+      }>)) {
+        hlAuthorById.set(p.id, { display_name: p.display_name, username: p.username })
+      }
     }
     setPopularHighlights(
-      (((hlRows ?? []) as unknown) as HR[]).map((r) => ({
+      highlights.map((r) => ({
         id: r.id,
         text: r.text,
-        user: Array.isArray(r.user) ? r.user[0] ?? null : r.user,
+        user: hlAuthorById.get(r.user_id) ?? null,
       })),
     )
 
