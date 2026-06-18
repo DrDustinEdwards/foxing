@@ -535,7 +535,7 @@ function DiscussionsTab({
               <View className="flex-row items-center gap-1">
                 {locked ? <Text style={{ fontSize: 12 }}>🔒</Text> : null}
                 {t.pinned ? <PushPin color={colors.textTertiary} size={12} weight="fill" /> : null}
-                {t.is_starter ? (
+                {t.is_ai_starter ? (
                   <Sparkle color={colors.brandUi} size={12} weight="regular" />
                 ) : null}
                 <Text

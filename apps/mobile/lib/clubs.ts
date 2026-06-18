@@ -130,8 +130,8 @@ export interface ClubThread {
   // Schedule gate, when this matches a club_schedule.chapter_gate whose
   // unlock_date is in the future, the thread is locked in the UI.
   chapter_gate?: string | null
-  created_by: string
-  is_starter: boolean
+  author_id: string
+  is_ai_starter: boolean
   pinned: boolean
   post_count: number
   created_at: string
@@ -399,14 +399,18 @@ export async function createThread(input: {
 }): Promise<ClubThread | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
+  // Live club_threads columns are author_id + is_ai_starter + has_spoilers
+  // (NOT created_by / is_starter). Writing the stale names threw on every
+  // mobile thread creation.
   const { data, error } = await supabase
     .from('club_threads')
     .insert({
       club_id: input.clubId,
       title: input.title,
       chapter: input.chapter ?? null,
-      created_by: user.id,
-      is_starter: !!input.isStarter,
+      author_id: user.id,
+      is_ai_starter: !!input.isStarter,
+      has_spoilers: !!input.hasSpoilers,
     })
     .select()
     .single()
@@ -595,9 +599,11 @@ export async function joinWaitlist(clubId: string): Promise<number | null> {
     .select('user_id', { count: 'exact', head: true })
     .eq('club_id', clubId)
   const position = (count ?? 0) + 1
+  // club_waitlist has only (club_id, user_id, joined_at) -- there is no
+  // position column; position is derived from arrival order.
   const { error } = await supabase
     .from('club_waitlist')
-    .insert({ club_id: clubId, user_id: user.id, position })
+    .insert({ club_id: clubId, user_id: user.id })
   if (error && !error.message.includes('duplicate')) {
     console.warn('[clubs] joinWaitlist failed:', error.message)
     return null
