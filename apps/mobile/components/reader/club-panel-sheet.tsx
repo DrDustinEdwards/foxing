@@ -105,9 +105,7 @@ export function ClubPanelSheet({
     setLoading(true)
     const { data, error } = await supabase
       .from('club_members')
-      .select(
-        'user_id, profile:profiles!user_id(id, display_name, username, avatar_url)',
-      )
+      .select('user_id')
       .eq('club_id', club.club_id)
     if (error) {
       console.warn('[club-panel] members fetch failed:', error.message)
@@ -115,28 +113,34 @@ export function ClubPanelSheet({
       setLoading(false)
       return
     }
-    const rows = ((data ?? []) as unknown) as Array<{
-      user_id: string
-      profile:
-        | {
-            id: string
-            display_name: string | null
-            username: string | null
-            avatar_url: string | null
-          }
-        | Array<{
-            id: string
-            display_name: string | null
-            username: string | null
-            avatar_url: string | null
-          }>
-        | null
-    }>
+    const rows = ((data ?? []) as unknown) as Array<{ user_id: string }>
     const memberIds = rows.map((r) => r.user_id)
     if (memberIds.length === 0) {
       setMembers([])
       setLoading(false)
       return
+    }
+    // club_members.user_id FKs auth.users, not profiles, so member profiles are
+    // fetched separately rather than embedded.
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id, display_name, username, avatar_url')
+      .in('id', memberIds)
+    const profileById = new Map<
+      string,
+      { display_name: string | null; username: string | null; avatar_url: string | null }
+    >()
+    for (const p of (((profileData ?? []) as unknown) as Array<{
+      id: string
+      display_name: string | null
+      username: string | null
+      avatar_url: string | null
+    }>)) {
+      profileById.set(p.id, {
+        display_name: p.display_name,
+        username: p.username,
+        avatar_url: p.avatar_url,
+      })
     }
     // Pull progress in a second query rather than as a nested join --
     // user_books has its own RLS that doesn't necessarily allow joined
@@ -157,7 +161,7 @@ export function ClubPanelSheet({
     }
     setMembers(
       rows.map((r) => {
-        const p = Array.isArray(r.profile) ? r.profile[0] : r.profile
+        const p = profileById.get(r.user_id)
         return {
           user_id: r.user_id,
           display_name: p?.display_name ?? null,

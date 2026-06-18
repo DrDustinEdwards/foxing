@@ -555,6 +555,20 @@ export interface PassageOfDay {
 
 const PASSAGE_POOL_SIZE = 100
 
+// highlights.user_id FKs auth.users, not profiles, so PostgREST cannot embed the
+// author. Resolve it from profiles by id (admin client, no cookies).
+async function fetchPassageAuthor(
+  userId: string,
+): Promise<{ username: string; display_name: string } | null> {
+  if (!userId) return null
+  const { data } = await sb()
+    .from('profiles')
+    .select('username, display_name')
+    .eq('id', userId)
+    .maybeSingle()
+  return (data as { username: string; display_name: string } | null) ?? null
+}
+
 export async function fetchPassageOfDay(
   date: string,
 ): Promise<PassageOfDay | null> {
@@ -562,7 +576,7 @@ export async function fetchPassageOfDay(
   const { data } = await sb()
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name)',
+      'id, text, note, created_at, user_id, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('is_public', true)
     .not('note', 'is', null)
@@ -576,8 +590,8 @@ export async function fetchPassageOfDay(
     text: string
     note: string | null
     created_at: string
+    user_id: string
     books: PassageOfDay['book'] | null
-    profiles: PassageOfDay['author']
   }>
   const filtered = rows.filter(
     (r) => r.text && r.text.length > 80 && r.text.length < 400 && r.books,
@@ -585,6 +599,8 @@ export async function fetchPassageOfDay(
   if (filtered.length === 0) return await fetchPassageFallback(date)
   const idx = dateOffset(date, filtered.length)
   const pick = filtered[idx]
+  // highlights.user_id FKs auth.users, not profiles -- author fetched separately.
+  const author = await fetchPassageAuthor(pick.user_id)
   return pick.books
     ? {
         id: pick.id,
@@ -592,7 +608,7 @@ export async function fetchPassageOfDay(
         note: pick.note,
         date,
         book: pick.books,
-        author: pick.profiles,
+        author,
       }
     : null
 }
@@ -603,7 +619,7 @@ async function fetchPassageFallback(
   const { data } = await sb()
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name)',
+      'id, text, note, created_at, user_id, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('is_public', true)
     .order('created_at', { ascending: false })
@@ -614,13 +630,15 @@ async function fetchPassageFallback(
     text: string
     note: string | null
     created_at: string
+    user_id: string
     books: PassageOfDay['book'] | null
-    profiles: PassageOfDay['author']
   }>
   const filtered = rows.filter((r) => r.text && r.books)
   if (filtered.length === 0) return null
   const idx = dateOffset(date, filtered.length)
   const pick = filtered[idx]
+  // highlights.user_id FKs auth.users, not profiles -- author fetched separately.
+  const author = await fetchPassageAuthor(pick.user_id)
   return pick.books
     ? {
         id: pick.id,
@@ -628,7 +646,7 @@ async function fetchPassageFallback(
         note: pick.note,
         date,
         book: pick.books,
-        author: pick.profiles,
+        author,
       }
     : null
 }

@@ -337,14 +337,18 @@ export async function fetchBookHighlights(
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, user_id, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('book_id', bookId)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(limit)
   if (!data) return []
-  return (data as unknown as PublicHighlight[]).map((row) => row)
+  // highlights.user_id FKs auth.users, not profiles, so the author is joined
+  // separately via fetchHighlightAuthors rather than embedded.
+  const rows = data as unknown as Array<Omit<PublicHighlight, 'author'> & { user_id: string }>
+  const authors = await fetchHighlightAuthors(rows.map((r) => r.user_id))
+  return rows.map((r) => ({ ...r, author: authors.get(r.user_id) ?? null }))
 }
 
 export async function fetchAiCache(
@@ -746,19 +750,26 @@ export async function fetchPublicQuotes(
   const { data, count } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, like_count, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, like_count, user_id, books:book_id(id, slug, title, author, cover_url)',
       { count: 'exact' },
     )
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .range(offset, offset + pageSize - 1)
-  const rows = (data as unknown as Array<Omit<PublicQuote, 'liked_by_me'>> | null) ?? []
+  const rows =
+    (data as unknown as Array<Omit<PublicQuote, 'liked_by_me' | 'author'> & { user_id: string }> | null) ??
+    []
   const ids = rows.map((r) => r.id)
-  const likedIds = await fetchLikedHighlightIds(userId ?? null, ids)
+  // highlights.user_id FKs auth.users, not profiles -- author joined separately.
+  const [likedIds, authors] = await Promise.all([
+    fetchLikedHighlightIds(userId ?? null, ids),
+    fetchHighlightAuthors(rows.map((r) => r.user_id)),
+  ])
   const items: PublicQuote[] = rows.map((r) => ({
     ...r,
     like_count: r.like_count ?? 0,
     liked_by_me: likedIds.has(r.id),
+    author: authors.get(r.user_id) ?? null,
   }))
   return { items, total: count ?? 0 }
 }
@@ -772,18 +783,23 @@ export async function fetchQuoteById(
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, like_count, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, like_count, user_id, books:book_id(id, slug, title, author, cover_url)',
     )
     .eq('id', id)
     .eq('is_public', true)
     .maybeSingle()
   if (!data) return null
-  const row = data as unknown as Omit<PublicQuote, 'liked_by_me'>
-  const likedIds = await fetchLikedHighlightIds(userId ?? null, [row.id])
+  const row = data as unknown as Omit<PublicQuote, 'liked_by_me' | 'author'> & { user_id: string }
+  // highlights.user_id FKs auth.users, not profiles -- author joined separately.
+  const [likedIds, authors] = await Promise.all([
+    fetchLikedHighlightIds(userId ?? null, [row.id]),
+    fetchHighlightAuthors([row.user_id]),
+  ])
   return {
     ...row,
     like_count: row.like_count ?? 0,
     liked_by_me: likedIds.has(row.id),
+    author: authors.get(row.user_id) ?? null,
   }
 }
 
@@ -941,13 +957,16 @@ export async function fetchHighlightsByAuthor(
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, user_id, books:book_id(id, slug, title, author, cover_url)',
     )
     .in('book_id', ids)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(limit)
-  return (data as unknown as PublicHighlight[] | null) ?? []
+  // highlights.user_id FKs auth.users, not profiles -- author joined separately.
+  const rows = (data as unknown as Array<Omit<PublicHighlight, 'author'> & { user_id: string }> | null) ?? []
+  const authors = await fetchHighlightAuthors(rows.map((r) => r.user_id))
+  return rows.map((r) => ({ ...r, author: authors.get(r.user_id) ?? null }))
 }
 
 /**
@@ -970,13 +989,16 @@ export async function fetchHighlightsByAuthorSlug(
   const { data } = await sb
     .from('highlights')
     .select(
-      'id, text, note, created_at, books:book_id(id, slug, title, author, cover_url), profiles:user_id(username, display_name, avatar_url)',
+      'id, text, note, created_at, user_id, books:book_id(id, slug, title, author, cover_url)',
     )
     .in('book_id', ids)
     .eq('is_public', true)
     .order('created_at', { ascending: false })
     .limit(limit)
-  return (data as unknown as PublicHighlight[] | null) ?? []
+  // highlights.user_id FKs auth.users, not profiles -- author joined separately.
+  const rows = (data as unknown as Array<Omit<PublicHighlight, 'author'> & { user_id: string }> | null) ?? []
+  const authors = await fetchHighlightAuthors(rows.map((r) => r.user_id))
+  return rows.map((r) => ({ ...r, author: authors.get(r.user_id) ?? null }))
 }
 
 /**
