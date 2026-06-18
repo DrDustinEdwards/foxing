@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
   const { data } = await admin
     .from('books')
     .select('id, slug, title, author, cover_url')
-    .ilike('title', `%${escaped}%`)
+    .or(`title.ilike.%${escaped}%,author.ilike.%${escaped}%`)
     .order('title', { ascending: true })
     .limit(limit)
   return NextResponse.json((data as unknown[] | null) ?? [])
