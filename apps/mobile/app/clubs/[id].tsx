@@ -144,16 +144,16 @@ export default function ClubDetailScreen() {
       ? threads.filter((t) => t.title.toLowerCase().includes(q))
       : threads
     return [...filtered].sort((a, b) => {
-      if (a.pinned !== b.pinned) return a.pinned ? -1 : 1
+      if (a.is_pinned !== b.is_pinned) return a.is_pinned ? -1 : 1
       return a.created_at < b.created_at ? 1 : -1
     })
   }, [threadQuery, threads])
 
-  // Map chapter_gate → unlock_date (string ISO). Threads with a gate
+  // Map chapter_name → unlock_date (string ISO). Threads with a gate
   // whose unlock_date is in the future are locked.
   const scheduleByGate = useMemo(() => {
     const m = new Map<string, string>()
-    for (const r of schedule) m.set(r.chapter_gate, r.unlock_date)
+    for (const r of schedule) m.set(r.chapter_name, r.unlock_date)
     return m
   }, [schedule])
 
@@ -170,8 +170,8 @@ export default function ClubDetailScreen() {
 
   const isLocked = useCallback(
     (t: ClubThread) => {
-      if (!t.chapter_gate) return false
-      const unlockIso = scheduleByGate.get(t.chapter_gate)
+      if (!t.chapter_name) return false
+      const unlockIso = scheduleByGate.get(t.chapter_name)
       if (!unlockIso) return false
       return new Date(unlockIso).getTime() > Date.now()
     },
@@ -534,7 +534,7 @@ function DiscussionsTab({
             <View style={{ flex: 1, paddingRight: 12 }}>
               <View className="flex-row items-center gap-1">
                 {locked ? <Text style={{ fontSize: 12 }}>🔒</Text> : null}
-                {t.pinned ? <PushPin color={colors.textTertiary} size={12} weight="fill" /> : null}
+                {t.is_pinned ? <PushPin color={colors.textTertiary} size={12} weight="fill" /> : null}
                 {t.is_ai_starter ? (
                   <Sparkle color={colors.brandUi} size={12} weight="regular" />
                 ) : null}
@@ -739,7 +739,7 @@ function ReadingTab({
                     : colors.info
               return (
                 <View
-                  key={`${s.chapter_gate}-${s.unlock_date}`}
+                  key={`${s.chapter_name}-${s.unlock_date}`}
                   className="flex-row items-center justify-between"
                   style={{ paddingVertical: 8 }}
                 >
@@ -751,7 +751,7 @@ function ReadingTab({
                         color: colors.textPrimary,
                       }}
                     >
-                      {s.chapter_gate}
+                      {s.chapter_name}
                     </Text>
                     <Text
                       style={{

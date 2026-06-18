@@ -33,16 +33,16 @@ export async function POST(request: NextRequest, props: { params: Promise<{ club
   if (denied) return denied
   const { data: poll } = await admin
     .from('club_polls')
-    .select('id, club_id, closed_at')
+    .select('id, club_id, is_closed')
     .eq('id', body.poll_id)
     .maybeSingle()
   const pollRow = poll as
-    | { id: string; club_id: string; closed_at: string | null }
+    | { id: string; club_id: string; is_closed: boolean | null }
     | null
   if (!pollRow || pollRow.club_id !== params.clubId) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 })
   }
-  if (pollRow.closed_at) {
+  if (pollRow.is_closed) {
     return NextResponse.json({ error: 'closed' }, { status: 400 })
   }
 

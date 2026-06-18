@@ -60,40 +60,52 @@ export default function ReportsScreen() {
       postIds.length > 0
         ? supabase
             .from('club_posts')
-            .select('id, content, author_id, author:profiles!author_id(display_name, username)')
+            .select('id, content, author_id')
             .in('id', postIds)
         : Promise.resolve({ data: [] as Array<Record<string, unknown>> }),
       commentIds.length > 0
         ? supabase
             .from('passage_comments')
-            .select('id, content, author_id, author:profiles!author_id(display_name, username)')
+            .select('id, content:comment, author_id')
             .in('id', commentIds)
         : Promise.resolve({ data: [] as Array<Record<string, unknown>> }),
     ])
-    const previewById = new Map<string, { preview: string; authorId: string | null; authorName: string | null }>()
     type PR = {
       id: string
       content: string
       author_id: string | null
-      author:
-        | { display_name: string | null; username: string | null }
-        | Array<{ display_name: string | null; username: string | null }>
-        | null
     }
-    for (const r of (((postsRes.data ?? []) as unknown) as PR[])) {
-      const a = Array.isArray(r.author) ? r.author[0] : r.author
+    const postRows = ((postsRes.data ?? []) as unknown) as PR[]
+    const commentRows = ((commentsRes.data ?? []) as unknown) as PR[]
+    // club_posts.author_id and passage_comments.author_id FK to auth.users, not
+    // profiles, so author names are resolved in a separate profiles-by-id query.
+    const authorIds = [
+      ...new Set(
+        [...postRows, ...commentRows]
+          .map((r) => r.author_id)
+          .filter((x): x is string => !!x),
+      ),
+    ]
+    const authorNameById = new Map<string, string | null>()
+    if (authorIds.length > 0) {
+      const { data: profs } = await supabase
+        .from('profiles')
+        .select('id, display_name, username')
+        .in('id', authorIds)
+      for (const p of (((profs ?? []) as unknown) as Array<{
+        id: string
+        display_name: string | null
+        username: string | null
+      }>)) {
+        authorNameById.set(p.id, p.display_name ?? p.username ?? null)
+      }
+    }
+    const previewById = new Map<string, { preview: string; authorId: string | null; authorName: string | null }>()
+    for (const r of [...postRows, ...commentRows]) {
       previewById.set(r.id, {
         preview: r.content,
         authorId: r.author_id,
-        authorName: a?.display_name ?? a?.username ?? null,
-      })
-    }
-    for (const r of (((commentsRes.data ?? []) as unknown) as PR[])) {
-      const a = Array.isArray(r.author) ? r.author[0] : r.author
-      previewById.set(r.id, {
-        preview: r.content,
-        authorId: r.author_id,
-        authorName: a?.display_name ?? a?.username ?? null,
+        authorName: r.author_id ? authorNameById.get(r.author_id) ?? null : null,
       })
     }
     for (const r of rows) {

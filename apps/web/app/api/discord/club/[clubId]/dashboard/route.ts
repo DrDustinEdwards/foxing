@@ -69,7 +69,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ clubI
         'id, title, poll_type, closes_at, options:club_poll_options(id, label)',
       )
       .eq('club_id', params.clubId)
-      .is('closed_at', null)
+      .eq('is_closed', false)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle(),
