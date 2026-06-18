@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { getClubRole } from '@/lib/club-membership'
 import { getAuthedUserId } from '@/lib/nav-user'
+import { emitActivity, resolveActivityVisibility } from '@/lib/activity'
 import { type ActionResult, assertMod } from './_shared'
 
 interface MemberActionInput {
@@ -336,6 +337,16 @@ export async function approveClubMember(
         ...(href ? { href } : {}),
       },
     })
+    // The approved member just joined -- emit for them (admin client, since the
+    // actor here is the mod, not the new member).
+    const visibility = await resolveActivityVisibility(admin, user_id)
+    await emitActivity(admin, {
+      userId: user_id,
+      type: 'joined_club',
+      targetId: club_id,
+      data: { club_slug: clubSlug ?? null },
+      visibility,
+    })
   }
 
   if (clubSlug) revalidatePath(`/clubs/${clubSlug}`)
@@ -573,6 +584,16 @@ export async function joinClub(
     { onConflict: 'club_id,user_id' },
   )
   if (error) return { ok: false, error: error.message }
+  if (nextStatus === 'active') {
+    const visibility = await resolveActivityVisibility(admin, userId)
+    await emitActivity(admin, {
+      userId,
+      type: 'joined_club',
+      targetId: clubId,
+      data: { club_slug: row.slug },
+      visibility,
+    })
+  }
   if (row.slug) revalidatePath(`/clubs/${row.slug}`)
   return { ok: true, status: nextStatus }
 }
@@ -675,7 +696,8 @@ export async function redeemClubInvite(
   if (status === 'banned') {
     return { ok: false, error: 'You cannot join this club.' }
   }
-  if (status !== 'active' && status !== 'muted') {
+  const newlyJoined = status !== 'active' && status !== 'muted'
+  if (newlyJoined) {
     const { error: insErr } = await admin.from('club_members').upsert(
       { club_id: clubId, user_id: userId, role: 'member', status: 'active' },
       { onConflict: 'club_id,user_id' },
@@ -692,6 +714,16 @@ export async function redeemClubInvite(
     .eq('id', clubId)
     .maybeSingle()
   const slug = (clubRow as { slug: string | null } | null)?.slug
+  if (newlyJoined) {
+    const visibility = await resolveActivityVisibility(admin, userId)
+    await emitActivity(admin, {
+      userId,
+      type: 'joined_club',
+      targetId: clubId,
+      data: { club_slug: slug ?? null },
+      visibility,
+    })
+  }
   if (slug) revalidatePath(`/clubs/${slug}`)
   return { ok: true }
 }
