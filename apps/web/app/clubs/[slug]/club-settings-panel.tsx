@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import { BookSearchPicker, type BookHit } from '@/components/book-search-picker'
 import { ClubSectionHeader } from './club-section-header'
 import {
   deleteClub,
@@ -25,6 +26,13 @@ interface ClubData {
   chapters_per_week: number | null
   genre_tags: string[] | null
   current_book_id: string | null
+  current_book: {
+    id: string
+    slug: string | null
+    title: string
+    author: string
+    cover_url: string | null
+  } | null
   discord_webhook_url: string | null
 }
 
@@ -123,8 +131,8 @@ function DiscordWebhookBlock({
 
   return (
     <section className="flex flex-col gap-3 border-t border-border-subtle pt-5">
-      <header>
-        <h3 className="font-fraunces text-lg text-text-primary">
+      <header className="flex flex-col gap-1">
+        <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
           Discord notifications
         </h3>
         <p className="font-source-serif-4 text-sm text-text-secondary">
@@ -190,12 +198,58 @@ function DiscordWebhookBlock({
   )
 }
 
+const VISIBILITY_OPTIONS = [
+  {
+    value: 'public',
+    label: 'Public',
+    description: 'Listed in search and browse. Anyone can find and join.',
+  },
+  {
+    value: 'private',
+    label: 'Private',
+    description: 'Hidden from search and browse. People join with an invite link.',
+  },
+  {
+    value: 'secret',
+    label: 'Secret',
+    description:
+      'Hidden everywhere. Only members can see it exists. Invite link only.',
+  },
+] as const
+
 function GeneralForm({ club }: { club: ClubData }) {
   const router = useRouter()
   const [pace, setPace] = useState(club.reading_pace ?? 'moderate')
+  const [book, setBook] = useState<BookHit | null>(
+    club.current_book
+      ? {
+          id: club.current_book.id,
+          title: club.current_book.title,
+          author: club.current_book.author,
+          cover_url: club.current_book.cover_url,
+          slug: club.current_book.slug,
+        }
+      : null,
+  )
+  const [genres, setGenres] = useState<string[]>(club.genre_tags ?? [])
+  const [genreDraft, setGenreDraft] = useState('')
+  const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
+
+  function addGenre(raw: string) {
+    const next = raw.trim().toLowerCase().replace(/,/g, '')
+    setGenreDraft('')
+    if (!next || genres.includes(next) || genres.length >= 12) return
+    setGenres([...genres, next])
+    setDirty(true)
+  }
+
+  function removeGenre(tag: string) {
+    setGenres(genres.filter((g) => g !== tag))
+    setDirty(true)
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -205,6 +259,8 @@ function GeneralForm({ club }: { club: ClubData }) {
     const fd = new FormData(e.currentTarget)
     fd.set('club_id', club.id)
     fd.set('reading_pace', pace)
+    fd.set('genre_tags', genres.join(','))
+    fd.set('current_book_id', book?.id ?? '')
     const res = await updateClubSettings(fd)
     setSaving(false)
     if (!res.ok) {
@@ -212,12 +268,17 @@ function GeneralForm({ club }: { club: ClubData }) {
       return
     }
     setSaved(true)
+    setDirty(false)
     setTimeout(() => setSaved(false), 2000)
     router.refresh()
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+    <form
+      onSubmit={handleSubmit}
+      onInput={() => setDirty(true)}
+      className="flex flex-col gap-3"
+    >
       <h3 className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
         General
       </h3>
@@ -244,23 +305,29 @@ function GeneralForm({ club }: { club: ClubData }) {
           className="rounded-md border border-border-interactive bg-bg-surface px-3 py-2 font-source-serif-4 text-sm text-text-primary"
         />
       </div>
-      <fieldset className="flex flex-col gap-2">
+      <fieldset className="flex flex-col gap-2.5">
         <legend className="font-dm-sans text-sm text-text-secondary">
           Visibility
         </legend>
-        <div className="flex flex-wrap gap-3 font-dm-sans text-sm text-text-secondary">
-          {(['public', 'private', 'secret'] as const).map((v) => (
-            <label key={v} className="flex items-center gap-2">
-              <input
-                type="radio"
-                name="visibility"
-                value={v}
-                defaultChecked={club.visibility === v}
-              />
-              {v.charAt(0).toUpperCase() + v.slice(1)}
-            </label>
-          ))}
-        </div>
+        {VISIBILITY_OPTIONS.map((opt) => (
+          <label key={opt.value} className="flex gap-2.5">
+            <input
+              type="radio"
+              name="visibility"
+              value={opt.value}
+              defaultChecked={club.visibility === opt.value}
+              className="mt-1"
+            />
+            <span className="flex flex-col">
+              <span className="font-dm-sans text-sm text-text-primary">
+                {opt.label}
+              </span>
+              <span className="font-dm-sans text-xs text-text-tertiary">
+                {opt.description}
+              </span>
+            </span>
+          </label>
+        ))}
       </fieldset>
       <label className="flex items-center gap-2 font-dm-sans text-sm text-text-secondary">
         <input
@@ -271,18 +338,25 @@ function GeneralForm({ club }: { club: ClubData }) {
         Require admin approval to join
       </label>
       <Input
-        label="Member limit (leave blank for unlimited)"
+        label="Member limit"
         name="max_members"
         type="number"
         min={1}
         defaultValue={club.max_members ?? ''}
+        hint="Leave blank for unlimited."
       />
-      <label className="flex flex-col gap-1.5 font-dm-sans text-sm text-text-secondary">
-        <span>Reading pace</span>
+      <div className="flex flex-col gap-1.5">
+        <span className="font-dm-sans text-sm text-text-secondary">
+          Reading pace
+        </span>
         <Select
+          aria-label="Reading pace"
           name="_pace"
           value={pace}
-          onChange={(v) => setPace(v)}
+          onChange={(v) => {
+            setPace(v)
+            setDirty(true)
+          }}
           size="md"
           options={[
             { value: 'relaxed', label: 'Relaxed' },
@@ -291,7 +365,11 @@ function GeneralForm({ club }: { club: ClubData }) {
             { value: 'custom', label: 'Custom' },
           ]}
         />
-      </label>
+        <span className="font-dm-sans text-sm text-text-tertiary">
+          Sets the club&apos;s target speed through a book. Custom lets you set
+          chapters per week.
+        </span>
+      </div>
       {pace === 'custom' && (
         <Input
           label="Chapters per week"
@@ -301,30 +379,98 @@ function GeneralForm({ club }: { club: ClubData }) {
           defaultValue={club.chapters_per_week ?? ''}
         />
       )}
-      <Input
-        label="Genre tags (comma-separated)"
-        name="genre_tags"
-        defaultValue={(club.genre_tags ?? []).join(', ')}
-        placeholder="gothic, romance, mystery"
-      />
-      <Input
-        label="Current book ID (optional)"
-        name="current_book_id"
-        defaultValue={club.current_book_id ?? ''}
-        hint="Paste a book UUID to set the club's current read."
-      />
+      <div className="flex flex-col gap-1.5">
+        <label
+          htmlFor="club-genre-input"
+          className="font-dm-sans text-sm text-text-secondary"
+        >
+          Genre tags
+        </label>
+        <div className="flex flex-wrap items-center gap-2 rounded-md border border-border-interactive bg-bg-surface px-2 py-2">
+          {genres.map((tag) => (
+            <span
+              key={tag}
+              className="flex items-center gap-1 rounded-full bg-bg-sunken py-1 pl-2.5 pr-1.5 font-dm-sans text-xs text-text-primary"
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => removeGenre(tag)}
+                aria-label={`Remove ${tag}`}
+                className="text-text-tertiary transition-colors hover:text-error"
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M3 3l6 6M9 3l-6 6"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </span>
+          ))}
+          <input
+            id="club-genre-input"
+            value={genreDraft}
+            onChange={(e) => setGenreDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ',') {
+                e.preventDefault()
+                addGenre(genreDraft)
+              } else if (
+                e.key === 'Backspace' &&
+                !genreDraft &&
+                genres.length > 0
+              ) {
+                removeGenre(genres[genres.length - 1]!)
+              }
+            }}
+            onBlur={() => addGenre(genreDraft)}
+            placeholder={genres.length === 0 ? 'gothic, romance, mystery' : ''}
+            className="min-w-[8ch] flex-1 bg-transparent font-dm-sans text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none"
+          />
+        </div>
+        <span className="font-dm-sans text-sm text-text-tertiary">
+          Press Enter or comma to add a tag. Up to 12.
+        </span>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <BookSearchPicker
+          selected={book}
+          onSelect={(next) => {
+            setBook(next)
+            setDirty(true)
+          }}
+          label="Current book"
+          placeholder="Search by title or author"
+        />
+        <span className="font-dm-sans text-sm text-text-tertiary">
+          The club&apos;s current read. Clear it to show no active book.
+        </span>
+      </div>
       {error && (
         <p className="rounded-md bg-error-bg px-3 py-2 text-sm text-error">
           {error}
         </p>
       )}
-      <div className="flex items-center gap-3">
+      <div className="sticky bottom-0 flex items-center gap-3 border-t border-border-subtle bg-bg-base/90 py-3 backdrop-blur">
         <Button type="submit" variant="primary" size="sm" loading={saving}>
           Save changes
         </Button>
-        {saved && (
+        {saved ? (
           <span className="font-dm-mono text-xs text-success">Saved</span>
-        )}
+        ) : dirty ? (
+          <span className="font-dm-mono text-xs text-text-tertiary">
+            Unsaved changes
+          </span>
+        ) : null}
       </div>
     </form>
   )
@@ -452,7 +598,9 @@ function DangerZone({
 
   return (
     <div className="rounded-md border border-[var(--error-border-interactive)] bg-error-bg p-4">
-      <p className="font-fraunces text-base text-error">Danger zone</p>
+      <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-error">
+        Danger zone
+      </p>
       <p className="mt-1 font-dm-sans text-sm text-text-secondary">
         Deleting a club is permanent. Posts, announcements, meetings, polls,
         and members are removed with it.
