@@ -505,6 +505,15 @@ export default async function ClubPage(
           chapters_per_week: adminClubFields?.chapters_per_week ?? null,
           genre_tags: adminClubFields?.genre_tags ?? null,
           current_book_id: club.current_book_id,
+          current_book: club.current_book
+            ? {
+                id: club.current_book.id,
+                slug: club.current_book.slug,
+                title: club.current_book.title,
+                author: club.current_book.author,
+                cover_url: club.current_book.cover_url,
+              }
+            : null,
           discord_webhook_url: adminClubFields?.discord_webhook_url ?? null,
         }}
       />
