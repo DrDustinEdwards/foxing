@@ -110,6 +110,46 @@ export default async function YearInReadingPage(
           <Stat label="Top author" value={stats.top_author ?? 'Various'} />
         </div>
 
+        {(stats.reading_minutes > 0 ||
+          stats.avg_wpm !== null ||
+          stats.longest_streak_year > 0) && (
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            {stats.reading_minutes > 0 && (
+              <Stat
+                label="Time reading"
+                value={formatReadingTime(stats.reading_minutes)}
+              />
+            )}
+            {stats.avg_wpm !== null && (
+              <Stat label="Average pace" value={`${stats.avg_wpm} wpm`} />
+            )}
+            {stats.longest_streak_year > 0 && (
+              <Stat
+                label="Longest streak"
+                value={`${stats.longest_streak_year} day${
+                  stats.longest_streak_year === 1 ? '' : 's'
+                }`}
+              />
+            )}
+          </div>
+        )}
+
+        {stats.top_moods.length > 0 && (
+          <div className="mt-10 text-center">
+            <SectionEyebrow>Your reading moods</SectionEyebrow>
+            <ul className="mt-3 flex flex-wrap justify-center gap-2">
+              {stats.top_moods.map((m) => (
+                <li
+                  key={m}
+                  className="rounded-full border border-border-subtle bg-bg-surface px-3 py-1 font-dm-sans text-sm capitalize text-text-secondary"
+                >
+                  {m}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
         {(stats.longest_book || stats.shortest_book) && (
           <div className="mt-10 grid gap-4 md:grid-cols-2">
             {stats.longest_book && (
@@ -181,6 +221,13 @@ export default async function YearInReadingPage(
       </PageWrapper>
     </div>
   )
+}
+
+function formatReadingTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+  const mins = minutes % 60
+  if (hours > 0) return `${hours}h ${mins}m`
+  return `${mins}m`
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
