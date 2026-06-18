@@ -263,7 +263,7 @@ export default function ThreadScreen() {
         </Pressable>
         <View style={{ flex: 1, marginLeft: 4 }}>
           <View className="flex-row items-center gap-1">
-            {thread.is_starter ? (
+            {thread.is_ai_starter ? (
               <Sparkle color={colors.brandUi} size={12} weight="regular" />
             ) : null}
             <Text
