@@ -107,7 +107,6 @@ export default function FeaturesPage() {
                 'Named bookmarks with quick-add, view and delete bookmarks from the web on any book detail page',
                 'History of recently visited positions',
                 'Swipe gesture navigation',
-                'AI search: describe a scene in plain English and the companion points you to the chapters that likely match (Plus)',
               ]}
             />
           </Section>
@@ -752,7 +751,7 @@ export default function FeaturesPage() {
                   'Browse by mood: dark, lighthearted, emotional, tense, hopeful, funny, mysterious, adventurous, reflective, romantic',
                   'Browse by theme: revenge, identity, survival, coming of age, and more',
                   'Browse by genre, era, country of origin, and series',
-                  'Browse award winners: Nobel Prize, Pulitzer, Booker Prize, National Book Award, Hugo Award',
+                  'Browse award winners: Nobel Prize in Literature, Pulitzer Prize (Fiction and Poetry), James Tait Black Memorial Prize, Newbery Medal',
                   'Search by title, author, or keyword',
                   'Community ratings on every book (weighted by number of ratings)',
                   'Content warnings on books that have them',
@@ -929,7 +928,7 @@ export default function FeaturesPage() {
                 items={[
                   'Goodreads CSV import: upload your Goodreads export, preview before anything is saved, matches by title and author, copies ratings, reviews, shelves, and finish dates',
                   'Shows matched count, inserted count, and unmatched titles after import',
-                  'StoryGraph JSON import (mobile app)',
+                  'StoryGraph CSV import (mobile app)',
                 ]}
               />
             </Subgroup>
