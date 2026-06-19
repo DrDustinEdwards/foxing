@@ -94,7 +94,6 @@ export function DiscussionStarterSheet({
       clubId,
       title: title.trim(),
       chapter: currentChapter ?? null,
-      isStarter: true,
       openingPost: opening.trim(),
       hasSpoilers,
     })

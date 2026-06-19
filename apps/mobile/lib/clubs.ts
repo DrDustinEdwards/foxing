@@ -423,15 +423,14 @@ export async function createThread(input: {
   clubId: string
   title: string
   chapter?: string | null
-  isStarter?: boolean
   openingPost?: string
   hasSpoilers?: boolean
 }): Promise<ClubThread | null> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-  // Live club_threads columns are author_id + is_ai_starter + has_spoilers
-  // (NOT created_by / is_starter). Writing the stale names threw on every
-  // mobile thread creation.
+  // is_ai_starter is intentionally NOT set here: it is reserved for the future
+  // P2.9 AI-starter feature, where the ai-companion edge function is the only
+  // writer that sets it true. User-created threads leave it at its false default.
   const { data, error } = await supabase
     .from('club_threads')
     .insert({
@@ -439,7 +438,6 @@ export async function createThread(input: {
       title: input.title,
       chapter: input.chapter ?? null,
       author_id: user.id,
-      is_ai_starter: !!input.isStarter,
       has_spoilers: !!input.hasSpoilers,
     })
     .select()
