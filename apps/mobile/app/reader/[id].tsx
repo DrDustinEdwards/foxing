@@ -5,12 +5,6 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
   CaretUp,
-  TextAa,
-  BookmarkSimple,
-  SpeakerHigh,
-  NavigationArrow,
-  MagnifyingGlass,
-  Sparkle,
   X as XIcon,
 } from 'phosphor-react-native'
 import { Alert, TextInput as RNTextInput, Modal as RNModal } from 'react-native'
@@ -22,6 +16,7 @@ import {
 } from '@/lib/bookmarks'
 import { TtsBar } from '@/components/reader/tts-bar'
 import { GoToSheet } from '@/components/reader/go-to-sheet'
+import { ReaderTopBar } from '@/components/reader/reader-top-bar'
 import { supabase } from '@/lib/supabase'
 import { reportWriteError } from '@/lib/db-write'
 import { Colors, useColors } from '@/constants/colors'
@@ -1538,131 +1533,21 @@ export default function Reader() {
           bar itself stays semi-translucent. Border-bottom separates it
           from the canvas regardless of how close the colors are. */}
       {chrome ? (
-        <SafeAreaView
-          edges={['top']}
-          pointerEvents="box-none"
-          className="absolute top-0 left-0 right-0"
-        >
-          <View
-            style={{
-              backgroundColor: chromeBg,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.borderSubtle,
-              paddingHorizontal: isTablet ? 24 : 12,
-              paddingTop: isTablet ? 10 : 6,
-              paddingBottom: isTablet ? 8 : 6,
-            }}
-          >
-            {/* Row 1: navigation + title + utility icons */}
-            <View className="flex-row items-center">
-              <Pressable
-                onPress={() => router.back()}
-                hitSlop={8}
-                className="px-2 py-2"
-                accessibilityRole="button"
-                accessibilityLabel="Back to library"
-              >
-                <CaretLeft color={colors.brandUi} size={22} />
-              </Pressable>
-              <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}>
-                <Text
-                  numberOfLines={1}
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 14,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {book.title}
-                </Text>
-                {currentChapter.title ? (
-                  <Text
-                    numberOfLines={1}
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 11,
-                      color: colors.textTertiary,
-                      marginTop: 1,
-                    }}
-                  >
-                    {currentChapter.title}
-                  </Text>
-                ) : null}
-              </View>
-              <Pressable
-                onPress={() => setShowSettings(true)}
-                className="px-2 py-2"
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel="Reading typography and layout"
-              >
-                <TextAa color={colors.brandUi} size={22} />
-              </Pressable>
-              <Pressable
-                onPress={onBookmarkTap}
-                className="px-2 py-2"
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel={isCurrentBookmarked ? 'Remove bookmark' : 'Add bookmark'}
-              >
-                <BookmarkSimple
-                  color={colors.brandUi}
-                  size={22}
-                  weight={isCurrentBookmarked ? 'fill' : 'regular'}
-                />
-              </Pressable>
-            </View>
-
-            {/* Row 2: primary actions. Listen, Go To, Search, This Chapter
-                live in chrome so the most-used reading flows are one tap
-                away. Secondary items still surface via the bottom-bar
-                chevron-up. */}
-            <View
-              className="flex-row items-center justify-around"
-              style={{ marginTop: 4, paddingTop: 4 }}
-            >
-              <Pressable
-                onPress={() => handleMenuAction('listen')}
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel="Listen"
-                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-              >
-                <SpeakerHigh color={colors.brandUi} size={22} />
-              </Pressable>
-              <Pressable
-                onPress={() => handleMenuAction('go-to')}
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel="Go to"
-                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-              >
-                <NavigationArrow color={colors.brandUi} size={22} />
-              </Pressable>
-              <Pressable
-                onPress={() => handleMenuAction('search')}
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel="Search"
-                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-              >
-                <MagnifyingGlass color={colors.brandUi} size={22} />
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setMenuInitialView('chapter-features')
-                  setMenuOpen(true)
-                }}
-                hitSlop={6}
-                accessibilityRole="button"
-                accessibilityLabel="This chapter"
-                style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-              >
-                <Sparkle color={colors.brandUi} size={22} />
-              </Pressable>
-            </View>
-          </View>
-        </SafeAreaView>
+        <ReaderTopBar
+          chromeBg={chromeBg}
+          isTablet={isTablet}
+          bookTitle={book.title}
+          chapterTitle={currentChapter.title}
+          isCurrentBookmarked={isCurrentBookmarked}
+          onBack={() => router.back()}
+          onOpenSettings={() => setShowSettings(true)}
+          onBookmarkTap={onBookmarkTap}
+          onMenuAction={handleMenuAction}
+          onOpenChapterFeatures={() => {
+            setMenuInitialView('chapter-features')
+            setMenuOpen(true)
+          }}
+        />
       ) : null}
 
       {/* BOTTOM CHROME BAR — Kindle-style: progress slider, chapter
