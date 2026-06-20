@@ -6,18 +6,13 @@ import {
   ScrollView,
   ActivityIndicator,
   Image,
-  Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect, useRouter } from 'expo-router'
 import {
-  PencilSimple,
   SignOut,
   BookOpen,
-  Camera,
-  CaretRight,
   GearSix,
-  Plus,
 } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
@@ -27,9 +22,13 @@ import {
   pickAndUploadAvatar,
   type EditableProfile,
 } from '@/components/profile/edit-profile-sheet'
-import { badgeIcon } from '@/lib/badges'
 import { refreshReadingPersonality } from '@/lib/recommendations'
 import { PickFavoritesSheet } from '@/components/profile/pick-favorites-sheet'
+import { ProfileHeader } from '@/components/profile/profile-header'
+import { FavoritesStrip } from '@/components/profile/favorites-strip'
+import { BadgesSection } from '@/components/profile/badges-section'
+import { RecentHighlightsSection } from '@/components/profile/recent-highlights-section'
+import { Section } from '@/components/profile/profile-section'
 
 interface CurrentlyReading {
   id: string
@@ -340,117 +339,13 @@ export default function ProfileScreen() {
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {/* Header */}
-        <View className="items-center mt-2 mb-6">
-          <Pressable
-            onPress={handleAvatarTap}
-            disabled={avatarBusy}
-            accessibilityRole="button"
-            accessibilityLabel="Change profile photo"
-            accessibilityState={avatarBusy ? { busy: true } : undefined}
-          >
-            <View
-              style={{
-                width: 80,
-                height: 80,
-                borderRadius: 40,
-                overflow: 'hidden',
-                backgroundColor: colors.brandSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: colors.borderSubtle,
-              }}
-            >
-              {profile?.avatar_url ? (
-                <Image
-                  source={{ uri: profile.avatar_url }}
-                  style={{ width: '100%', height: '100%' }}
-                  accessibilityRole="image"
-                  accessibilityLabel="Your profile photo"
-                />
-              ) : (
-                <Text style={{ fontFamily: Fonts.display, fontSize: 30, color: colors.brandSubtleText }}>
-                  {initial}
-                </Text>
-              )}
-              {avatarBusy ? (
-                <View
-                  style={{
-                    position: 'absolute',
-                    inset: 0 as any,
-                    backgroundColor: colors.overlay,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <ActivityIndicator color={colors.textOnBrand} />
-                </View>
-              ) : null}
-            </View>
-            <View
-              style={{
-                position: 'absolute',
-                right: -2,
-                bottom: -2,
-                width: 26,
-                height: 26,
-                borderRadius: 13,
-                backgroundColor: colors.brandUi,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 2,
-                borderColor: colors.bgBase,
-              }}
-            >
-              <Camera color={colors.textOnBrand} size={14} />
-            </View>
-          </Pressable>
-
-          <Text
-            style={{
-              fontFamily: Fonts.displayBold,
-              fontSize: 22,
-              color: colors.textPrimary,
-              marginTop: 14,
-            }}
-          >
-            {profile?.display_name ?? 'Reader'}
-          </Text>
-          <Text
-            style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary, marginTop: 2 }}
-          >
-            @{profile?.username ?? 'reader'}
-          </Text>
-          {profile?.bio ? (
-            <Text
-              style={{
-                fontFamily: Fonts.body,
-                fontSize: 14,
-                color: colors.textSecondary,
-                marginTop: 10,
-                textAlign: 'center',
-                lineHeight: 20,
-                paddingHorizontal: 16,
-              }}
-            >
-              {profile.bio}
-            </Text>
-          ) : null}
-
-          <Pressable
-            onPress={() => setEditing(true)}
-            disabled={!profile}
-            accessibilityRole="button"
-            accessibilityLabel="Edit profile"
-            accessibilityState={!profile ? { disabled: true } : undefined}
-            className="mt-4 flex-row items-center gap-2 px-4 py-2 rounded-full border border-border-interactive-light dark:border-border-interactive-dark bg-bg-surface-light dark:bg-bg-surface-dark"
-          >
-            <PencilSimple color={colors.textPrimary} size={14} />
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
-              Edit Profile
-            </Text>
-          </Pressable>
-        </View>
+        <ProfileHeader
+          profile={profile}
+          initial={initial}
+          avatarBusy={avatarBusy}
+          onAvatarTap={handleAvatarTap}
+          onEdit={() => setEditing(true)}
+        />
 
         {loading ? (
           <ActivityIndicator color={colors.brandUi} />
@@ -459,87 +354,11 @@ export default function ProfileScreen() {
             {/* 5 Favorite Books grid, the identity section. Tap an empty
                 slot to pick from finished books; tap a filled slot to
                 replace or remove. */}
-            <View style={{ marginBottom: 16 }}>
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  textTransform: 'uppercase',
-                  letterSpacing: 0.6,
-                  marginBottom: 8,
-                }}
-              >
-                My 5 books
-              </Text>
-              <View className="flex-row" style={{ gap: 8 }}>
-                {favorites.map((slot) => {
-                  const filled = !!slot.book
-                  return (
-                    <Pressable
-                      key={slot.position}
-                      onPress={() => {
-                        if (filled) {
-                          Alert.alert(slot.book!.title, undefined, [
-                            { text: 'Cancel', style: 'cancel' },
-                            { text: 'Replace', onPress: () => setFavoritePickPos(slot.position) },
-                            {
-                              text: 'Remove',
-                              style: 'destructive',
-                              onPress: () => onRemoveFavorite(slot.position),
-                            },
-                          ])
-                        } else {
-                          setFavoritePickPos(slot.position)
-                        }
-                      }}
-                      accessibilityRole="button"
-                      accessibilityLabel={
-                        filled
-                          ? `Favorite ${slot.position}: ${slot.book!.title}`
-                          : `Empty favorite slot ${slot.position}`
-                      }
-                      style={{
-                        width: 56,
-                        height: 84,
-                        borderRadius: 6,
-                        overflow: 'hidden',
-                        borderWidth: filled ? 0 : 1.5,
-                        borderColor: colors.borderBrand,
-                        borderStyle: filled ? 'solid' : 'dashed',
-                        backgroundColor: filled ? colors.bgSunken : colors.brandSubtle,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {filled && slot.book?.cover_url ? (
-                        <Image
-                          source={{ uri: slot.book.cover_url }}
-                          style={{ width: '100%', height: '100%' }}
-                          accessibilityRole="image"
-                          accessibilityLabel={`${slot.book.title} cover`}
-                        />
-                      ) : filled ? (
-                        <Text
-                          style={{
-                            fontFamily: Fonts.display,
-                            fontSize: 10,
-                            color: colors.textTertiary,
-                            textAlign: 'center',
-                            paddingHorizontal: 4,
-                          }}
-                          numberOfLines={3}
-                        >
-                          {slot.book?.title}
-                        </Text>
-                      ) : (
-                        <Plus color={colors.brandUi} size={18} weight="bold" />
-                      )}
-                    </Pressable>
-                  )
-                })}
-              </View>
-            </View>
+            <FavoritesStrip
+              favorites={favorites}
+              onPickSlot={setFavoritePickPos}
+              onRemove={onRemoveFavorite}
+            />
 
             {/* Stats row */}
             <View
@@ -780,97 +599,15 @@ export default function ProfileScreen() {
 
             {/* Badges row */}
             {badges.length > 0 ? (
-              <Section title="Badges" actionLabel="View all" onAction={() => router.push('/badges' as never)}>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  contentContainerStyle={{ paddingVertical: 4, paddingRight: 8 }}
-                >
-                  {badges
-                    .filter((b) => b.badge)
-                    .map((b) => {
-                      const Icon = badgeIcon(b.badge!.slug)
-                      return (
-                        <View
-                          key={b.badge!.slug}
-                          style={{
-                            width: 84,
-                            alignItems: 'center',
-                            marginRight: 8,
-                          }}
-                        >
-                          <View
-                            style={{
-                              width: 56,
-                              height: 56,
-                              borderRadius: 28,
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              backgroundColor: colors.brandSubtle,
-                              borderWidth: 1,
-                              borderColor: colors.borderSubtle,
-                            }}
-                          >
-                            <Icon color={colors.brandSubtleText} size={28} weight="regular" />
-                          </View>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.uiMedium,
-                              fontSize: 11,
-                              color: colors.textSecondary,
-                              marginTop: 6,
-                              textAlign: 'center',
-                            }}
-                            numberOfLines={2}
-                          >
-                            {b.badge!.name}
-                          </Text>
-                        </View>
-                      )
-                    })}
-                </ScrollView>
-              </Section>
+              <BadgesSection badges={badges} onViewAll={() => router.push('/badges' as never)} />
             ) : null}
 
             {/* Recent highlights */}
             {recentHighlights.length > 0 ? (
-              <Section
-                title="Recent Highlights"
-                actionLabel="View all"
-                onAction={() => router.push('/highlights' as never)}
-              >
-                {recentHighlights.map((h) => (
-                  <View
-                    key={h.id}
-                    className="mb-2 rounded-2xl p-3 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.body,
-                        fontSize: 14,
-                        color: colors.textPrimary,
-                        lineHeight: 21,
-                      }}
-                      numberOfLines={3}
-                    >
-                      “{h.text}”
-                    </Text>
-                    {h.book ? (
-                      <Text
-                        style={{
-                          fontFamily: Fonts.ui,
-                          fontSize: 11,
-                          color: colors.textTertiary,
-                          marginTop: 6,
-                        }}
-                        numberOfLines={1}
-                      >
-                        {h.book.title} · {h.book.author}
-                      </Text>
-                    ) : null}
-                  </View>
-                ))}
-              </Section>
+              <RecentHighlightsSection
+                highlights={recentHighlights}
+                onViewAll={() => router.push('/highlights' as never)}
+              />
             ) : null}
 
             {error ? (
@@ -966,38 +703,6 @@ function StatTile({
 function Divider() {
   const colors = useColors()
   return <View style={{ width: 1, backgroundColor: colors.borderSubtle, marginVertical: 4 }} />
-}
-
-function Section({
-  title,
-  actionLabel,
-  onAction,
-  children,
-}: {
-  title: string
-  actionLabel?: string
-  onAction?: () => void
-  children: React.ReactNode
-}) {
-  const colors = useColors()
-  return (
-    <View style={{ marginBottom: 24 }}>
-      <View className="flex-row items-center justify-between mb-3">
-        <Text style={{ fontFamily: Fonts.display, fontSize: 16, color: colors.textPrimary }}>
-          {title}
-        </Text>
-        {actionLabel && onAction ? (
-          <Pressable onPress={onAction} hitSlop={8} className="flex-row items-center gap-1">
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}>
-              {actionLabel}
-            </Text>
-            <CaretRight color={colors.brandText} size={12} />
-          </Pressable>
-        ) : null}
-      </View>
-      {children}
-    </View>
-  )
 }
 
 function StatBlock({ heading, children }: { heading: string; children: React.ReactNode }) {
