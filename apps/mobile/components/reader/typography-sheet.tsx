@@ -28,14 +28,15 @@ import {
   type FlowMode,
   type ColumnMode,
   type CanvasTheme,
-  type RulerColor,
-  type RulerStyle,
   type PageAnim,
   type SavedTheme,
   PRESET_THEMES,
   loadSavedThemes,
   saveCustomTheme,
 } from '@/lib/reader-settings'
+import { ReadingLevelContent } from './reading-level-content'
+import { RulerOptions } from './ruler-options'
+import { AutoScrollSpeed } from './auto-scroll-speed'
 
 type TabKey = 'font' | 'layout' | 'canvas' | 'themes' | 'language'
 
@@ -544,37 +545,12 @@ function CanvasTab({
           label="Highlight current line"
         />
         {prefs.rulerEnabled && (
-          <View className="mt-3">
-            <Text
-              style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, marginBottom: 8 }}
-            >
-              Color
-            </Text>
-            <View className="flex-row gap-2 mb-3">
-              {(['amber', 'cream', 'charcoal'] as RulerColor[]).map((c) => {
-                const active = c === prefs.rulerColor
-                const bg = c === 'amber' ? colors.hlAmberT
-                  : c === 'cream' ? Colors.light.bgBase
-                  : Colors.dark.bgBase
-                return (
-                  <Pressable
-                    key={c}
-                    onPress={() => set('rulerColor', c)}
-                    style={{
-                      width: 32, height: 32, borderRadius: 16, backgroundColor: bg,
-                      borderWidth: 2, borderColor: active ? colors.brandUi : colors.borderSubtle,
-                    }}
-                  />
-                )
-              })}
-            </View>
-            <SegmentedRow
-              steps={['highlight', 'block-rest'] as RulerStyle[]}
-              value={prefs.rulerStyle}
-              labelFor={(s) => (s === 'highlight' ? 'Highlight line' : 'Block rest')}
-              onSelect={(v) => set('rulerStyle', v)}
-            />
-          </View>
+          <RulerOptions
+            rulerColor={prefs.rulerColor}
+            rulerStyle={prefs.rulerStyle}
+            onSelectColor={(c) => set('rulerColor', c)}
+            onSelectStyle={(v) => set('rulerStyle', v)}
+          />
         )}
       </Section>
 
@@ -626,51 +602,10 @@ function CanvasTab({
           label="Advance pages automatically"
         />
         {prefs.autoScroll ? (
-          <View style={{ marginTop: 10 }}>
-            <View className="flex-row items-center justify-between" style={{ marginBottom: 6 }}>
-              <Text
-                style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary }}
-              >
-                Speed
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.mono,
-                  fontSize: 12,
-                  color: colors.brandText,
-                }}
-              >
-                {prefs.autoScrollWpm} wpm
-              </Text>
-            </View>
-            <View className="flex-row" style={{ gap: 6 }}>
-              {[100, 160, 220, 280, 340, 400].map((wpm) => {
-                const active = prefs.autoScrollWpm === wpm
-                return (
-                  <Pressable
-                    key={wpm}
-                    onPress={() => set('autoScrollWpm', wpm)}
-                    className="flex-1 items-center py-2 rounded-lg"
-                    style={{
-                      backgroundColor: active ? colors.bgSelected : colors.bgSurface,
-                      borderWidth: 1,
-                      borderColor: active ? colors.borderBrand : colors.borderSubtle,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 11,
-                        color: active ? colors.brandText : colors.textSecondary,
-                      }}
-                    >
-                      {wpm}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-          </View>
+          <AutoScrollSpeed
+            autoScrollWpm={prefs.autoScrollWpm}
+            onSelect={(wpm) => set('autoScrollWpm', wpm)}
+          />
         ) : null}
       </Section>
 
@@ -860,7 +795,7 @@ function StepRow<T extends string>({
   )
 }
 
-function SegmentedRow<T extends string>({
+export function SegmentedRow<T extends string>({
   steps,
   value,
   labelFor,
@@ -1071,28 +1006,11 @@ function LanguageTab({
           <View
             className="p-3 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
-            {difficultyBusy ? (
-              <ActivityIndicator color={colors.brandUi} />
-            ) : difficulty ? (
-              <Text
-                style={{
-                  fontFamily: Fonts.body,
-                  fontSize: 13,
-                  color: colors.textPrimary,
-                  lineHeight: 19,
-                }}
-              >
-                {difficulty}
-              </Text>
-            ) : (
-              <Pressable onPress={loadDifficulty}>
-                <Text
-                  style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.brandText }}
-                >
-                  Rate this book's level
-                </Text>
-              </Pressable>
-            )}
+            <ReadingLevelContent
+              difficultyBusy={difficultyBusy}
+              difficulty={difficulty}
+              onRate={loadDifficulty}
+            />
           </View>
         </Section>
       ) : null}
