@@ -36,6 +36,9 @@ import {
   relativeTime,
 } from '@/lib/feed'
 import { getUnreadCount, weeklyDigestCheck } from '@/lib/notifications'
+import { ActorNameText } from '@/components/feed/actor-name-text'
+import { TrendingBookCard } from '@/components/feed/trending-book-card'
+import { PopularReviewCard } from '@/components/feed/popular-review-card'
 
 interface PopularReview {
   id: string
@@ -414,33 +417,13 @@ export default function FeedScreen() {
         }
         onEndReached={onEndReached}
         onEndReachedThreshold={0.4}
-        ListEmptyComponent={
-          error ? (
-            <FeedEmptyState
-              icon={<Newspaper color={colors.error} size={32} weight="regular" />}
-              title="Couldn't load feed"
-              body={error}
-            />
-          ) : hasNoFollows ? null : (
-            <FeedEmptyState
-              icon={<Newspaper color={colors.brandSubtleText} size={32} weight="regular" />}
-              title="Quiet for now"
-              body="No recent activity from the readers you follow."
-            />
-          )
-        }
+        ListEmptyComponent={<FeedListEmpty error={error} hasNoFollows={hasNoFollows} />}
         ListFooterComponent={
-          loadingMore ? (
-            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-              <ActivityIndicator color={colors.brandUi} />
-            </View>
-          ) : !hasMore && sortedEvents.length > 0 ? (
-            <View style={{ paddingVertical: 16, alignItems: 'center' }}>
-              <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
-                You're all caught up.
-              </Text>
-            </View>
-          ) : null
+          <FeedListFooter
+            loadingMore={loadingMore}
+            hasMore={hasMore}
+            count={sortedEvents.length}
+          />
         }
       />
     </SafeAreaView>
@@ -624,14 +607,7 @@ function ActionLine({
   onPressTarget?: () => void
 }) {
   const colors = useColors()
-  const nameText = (
-    <Text
-      onPress={onPressActor}
-      style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}
-    >
-      {actorName}
-    </Text>
-  )
+  const nameText = <ActorNameText name={actorName} onPress={onPressActor} />
   const bookText = event.book ? (
     <Text
       onPress={onPressBook}
@@ -1035,6 +1011,62 @@ function FeedEmptyState({
   )
 }
 
+function FeedListEmpty({
+  error,
+  hasNoFollows,
+}: {
+  error: string | null
+  hasNoFollows: boolean
+}) {
+  const colors = useColors()
+  if (error) {
+    return (
+      <FeedEmptyState
+        icon={<Newspaper color={colors.error} size={32} weight="regular" />}
+        title="Couldn't load feed"
+        body={error}
+      />
+    )
+  }
+  if (hasNoFollows) return null
+  return (
+    <FeedEmptyState
+      icon={<Newspaper color={colors.brandSubtleText} size={32} weight="regular" />}
+      title="Quiet for now"
+      body="No recent activity from the readers you follow."
+    />
+  )
+}
+
+function FeedListFooter({
+  loadingMore,
+  hasMore,
+  count,
+}: {
+  loadingMore: boolean
+  hasMore: boolean
+  count: number
+}) {
+  const colors = useColors()
+  if (loadingMore) {
+    return (
+      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+        <ActivityIndicator color={colors.brandUi} />
+      </View>
+    )
+  }
+  if (!hasMore && count > 0) {
+    return (
+      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+        <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
+          You're all caught up.
+        </Text>
+      </View>
+    )
+  }
+  return null
+}
+
 function FeedHeader({ unread, onBell }: { unread: number; onBell: () => void }) {
   const colors = useColors()
   const router = useRouter()
@@ -1215,141 +1247,30 @@ function PopularSection({
               style={{ marginBottom: 12 }}
             >
               {trending.map((b) => (
-                <Pressable
+                <TrendingBookCard
                   key={b.id}
-                  onPress={() => onPressBook(b.id)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${b.title} by ${b.author}`}
-                  style={{ width: 120 }}
-                >
-                  <View
-                    style={{
-                      width: 120,
-                      height: 170,
-                      borderRadius: 6,
-                      overflow: 'hidden',
-                      backgroundColor: colors.bgSunken,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 6,
-                    }}
-                  >
-                    {b.cover_url ? (
-                      <Image
-                        source={{ uri: b.cover_url }}
-                        style={{ width: '100%', height: '100%' }}
-                        accessibilityRole="image"
-                        accessibilityLabel={`${b.title} cover`}
-                      />
-                    ) : (
-                      <BookOpen color={colors.textTertiary} size={20} />
-                    )}
-                  </View>
-                  <Text
-                    style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}
-                    numberOfLines={2}
-                  >
-                    {b.title}
-                  </Text>
-                  <Text
-                    style={{ fontFamily: Fonts.ui, fontSize: 10, color: colors.textTertiary, marginTop: 2 }}
-                  >
-                    {b.readerCount} reader{b.readerCount === 1 ? '' : 's'} this week
-                  </Text>
-                </Pressable>
+                  id={b.id}
+                  title={b.title}
+                  author={b.author}
+                  coverUrl={b.cover_url}
+                  readerCount={b.readerCount}
+                  onPress={onPressBook}
+                />
               ))}
             </ScrollView>
           ) : null}
 
-          {reviews.map((r) => {
-            const name = r.user?.display_name ?? r.user?.username ?? 'Reader'
-            return (
-              <View
-                key={r.id}
-                className="p-3 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
-                <View className="flex-row items-center" style={{ marginBottom: 6 }}>
-                  {r.user ? (
-                    <Pressable
-                      onPress={() => onPressUser(r.user!.id)}
-                      accessibilityRole="button"
-                      accessibilityLabel={`Open profile for ${name}`}
-                      className="flex-row items-center"
-                      style={{ flex: 1, gap: 8 }}
-                    >
-                      <View
-                        style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: 12,
-                          overflow: 'hidden',
-                          backgroundColor: colors.brandSubtle,
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {r.user.avatar_url ? (
-                          <Image
-                            source={{ uri: r.user.avatar_url }}
-                            style={{ width: '100%', height: '100%' }}
-                          />
-                        ) : (
-                          <Text
-                            style={{
-                              fontFamily: Fonts.uiMedium,
-                              fontSize: 11,
-                              color: colors.brandSubtleText,
-                            }}
-                          >
-                            {name[0]?.toUpperCase() ?? '?'}
-                          </Text>
-                        )}
-                      </View>
-                      <Text
-                        style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
-                        numberOfLines={1}
-                      >
-                        {name}
-                      </Text>
-                    </Pressable>
-                  ) : null}
-                  {r.rating ? (
-                    <Text
-                      style={{ fontFamily: Fonts.mono, fontSize: 11, color: colors.brandSecondary }}
-                    >
-                      {'★'.repeat(r.rating)}
-                    </Text>
-                  ) : null}
-                </View>
-                <Text
-                  style={{
-                    fontFamily: Fonts.body,
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                    lineHeight: 18,
-                  }}
-                  numberOfLines={3}
-                >
-                  {r.review}
-                </Text>
-                {r.book ? (
-                  <Pressable
-                    onPress={() => onPressBook(r.book!.id)}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Open ${r.book.title}`}
-                    style={{ marginTop: 6 }}
-                  >
-                    <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}
-                      numberOfLines={1}
-                    >
-                      on {r.book.title}
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            )
-          })}
+          {reviews.map((r) => (
+            <PopularReviewCard
+              key={r.id}
+              rating={r.rating}
+              review={r.review}
+              user={r.user}
+              book={r.book}
+              onPressBook={onPressBook}
+              onPressUser={onPressUser}
+            />
+          ))}
         </>
       )}
 
