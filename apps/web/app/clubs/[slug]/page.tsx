@@ -1,13 +1,10 @@
 import { cache, type ReactNode } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound, permanentRedirect } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Button } from '@/components/ui/button'
 import { Footer } from '@/components/layout/footer'
 import { NavAuthClient } from '@/components/layout/nav-auth-client'
 import { PageWrapper } from '@/components/layout/page-wrapper'
-import { WhereToRead } from '@/components/where-to-read'
 import { fetchAnnouncementsForClub } from '@/lib/club-announcements'
 import { fetchClubMeetings } from '@/lib/club-meetings'
 import { fetchPollsForClub } from '@/lib/club-polls'
@@ -19,7 +16,6 @@ import {
   getClubRole,
   isClubMod,
 } from '@/lib/club-membership'
-import { RequestJoinButton } from './request-join-button'
 import {
   fetchPublicClubById,
   fetchPublicClubBySlug,
@@ -28,20 +24,17 @@ import {
 import { getAuthedUserId } from '@/lib/nav-user'
 import { buildClubMetadata } from '@/lib/metadata'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { AnnouncementsSection } from './announcements-section'
 import { MeetingsSection } from './meetings-section'
 import { PollsSection } from './polls-section'
-import { ThreadDiscussionPanel } from './thread-discussion-panel'
 import { ClubSettingsPanel } from './club-settings-panel'
 import { ModerationPanel } from './moderation-panel'
-import { PostAnnouncementForm } from './post-announcement-form'
 import { ScheduleSection } from './schedule-section'
 import { VerifiedBookstoreHeader } from './verified-bookstore-header'
-import { WaitlistButton } from './waitlist-button'
-import { DiscussionsSection } from './discussions-section'
 import { MembersSection } from './members-section'
-import { JoinClubButton } from './join-club-button'
 import { ClubWorkspace, type ClubTabKey } from './club-workspace'
+import { OverviewNode } from '@/components/clubs/overview-node'
+import { DiscussionsNode } from '@/components/clubs/discussions-node'
+import { JoinCta } from '@/components/clubs/join-cta'
 
 export const revalidate = 60
 
@@ -318,103 +311,24 @@ export default async function ClubPage(
     .filter((m) => m.username)
 
   const overviewNode = (
-    <div className="flex flex-col gap-6">
-      <AnnouncementsSection
-        clubId={club.id}
-        announcements={announcements}
-        canModerate={canModerate}
-      />
-      {canModerate && (
-        <PostAnnouncementForm
-          clubId={club.id}
-          defaultCity={club.bookstore_city}
-          defaultState={club.bookstore_state}
-          canPin
-        />
-      )}
-      {club.current_book && bookPath && (
-        <section className="flex flex-col gap-5 rounded-lg border border-border-subtle bg-bg-surface p-5">
-          <div className="flex flex-col gap-4 md:flex-row md:items-start">
-            <Link
-              href={`/book/${bookPath}`}
-              className="relative h-44 w-32 shrink-0 overflow-hidden rounded-md bg-bg-sunken"
-            >
-              {club.current_book.cover_url && (
-                <Image
-                  src={club.current_book.cover_url}
-                  alt={club.current_book.title}
-                  fill
-                  sizes="128px"
-                  className="object-cover"
-                />
-              )}
-            </Link>
-            <div className="flex flex-col gap-2">
-              <p className="font-dm-mono text-[0.6875rem] uppercase tracking-[0.18em] text-text-tertiary">
-                Reading now
-              </p>
-              <Link
-                href={`/book/${bookPath}`}
-                className="font-fraunces text-xl text-text-primary hover:text-brand-text"
-              >
-                {club.current_book.title}
-              </Link>
-              <p className="font-dm-sans text-sm text-text-tertiary">
-                {club.current_book.author}
-              </p>
-            </div>
-          </div>
-          {(club.current_book.source_type === 'community' ||
-            !club.current_book.epub_url) && (
-            <div className="flex flex-col gap-3 border-t border-border-subtle pt-4">
-              <p className="font-dm-mono text-xs uppercase tracking-[0.18em] text-text-tertiary">
-                Get the book
-              </p>
-              <WhereToRead
-                variant="inline"
-                book={{
-                  id: club.current_book.id,
-                  title: club.current_book.title,
-                  author: club.current_book.author,
-                  isbn: club.current_book.isbn,
-                  isbn13: club.current_book.isbn13,
-                  amazon_url: club.current_book.amazon_url,
-                  bookshop_url: club.current_book.bookshop_url,
-                  source_type: club.current_book.source_type,
-                  epub_url: club.current_book.epub_url,
-                }}
-              />
-              <p className="font-dm-sans text-xs text-text-tertiary">
-                All members read from the same edition.
-              </p>
-            </div>
-          )}
-        </section>
-      )}
-    </div>
+    <OverviewNode
+      club={club}
+      bookPath={bookPath}
+      announcements={announcements}
+      canModerate={canModerate}
+    />
   )
 
   const discussionsNode = (
-    <div className="flex flex-col gap-6">
-      <DiscussionsSection
-        clubId={club.id}
-        clubSlug={club.slug ?? club.id}
-        threads={threads}
-        isMember={isMember}
-        viewerId={userId}
-        canModerate={canModerate}
-        lockedChapterDates={lockedChapterDates}
-      />
-      {club.current_book && club.current_book_id && (
-        <ThreadDiscussionPanel
-          bookId={club.current_book_id}
-          bookSlug={club.current_book.slug}
-          bookTitle={club.current_book.title}
-          initialQuestions={discussionGuide?.questions ?? null}
-          canGenerate={canModerate}
-        />
-      )}
-    </div>
+    <DiscussionsNode
+      club={club}
+      threads={threads}
+      isMember={isMember}
+      viewerId={userId}
+      canModerate={canModerate}
+      lockedChapterDates={lockedChapterDates}
+      initialQuestions={discussionGuide?.questions ?? null}
+    />
   )
 
   const sections: Partial<Record<ClubTabKey, ReactNode>> = {
@@ -559,38 +473,15 @@ export default async function ClubPage(
 
           {!isMember && (
             <section className="mt-6 flex flex-wrap items-center gap-3">
-              {isFull ? (
-                userId ? (
-                  <WaitlistButton clubId={club.id} onWaitlist={isOnWaitlist} />
-                ) : (
-                  <Link href="/sign-in">
-                    <Button variant="primary" size="md">
-                      Sign in to join waitlist
-                    </Button>
-                  </Link>
-                )
-              ) : requiresApproval ? (
-                userId ? (
-                  <RequestJoinButton
-                    clubId={club.id}
-                    alreadyPending={membershipStatus === 'pending'}
-                  />
-                ) : (
-                  <Link href={`/sign-in?next=/clubs/${params.slug}`}>
-                    <Button variant="primary" size="md">
-                      Sign in to request to join
-                    </Button>
-                  </Link>
-                )
-              ) : userId ? (
-                <JoinClubButton clubId={club.id} />
-              ) : (
-                <Link href={`/sign-in?next=/clubs/${params.slug}`}>
-                  <Button variant="primary" size="md">
-                    Sign in to join
-                  </Button>
-                </Link>
-              )}
+              <JoinCta
+                clubId={club.id}
+                slug={params.slug}
+                userId={userId}
+                isFull={isFull}
+                isOnWaitlist={isOnWaitlist}
+                requiresApproval={requiresApproval}
+                membershipStatus={membershipStatus}
+              />
               {isFull && (
                 <p className="font-dm-mono text-xs text-text-tertiary">
                   Club is full ({club.member_count} of {maxMembers}).
