@@ -4,23 +4,17 @@ import {
   Text,
   Pressable,
   ActivityIndicator,
-  Image,
-  Linking,
   Modal,
   TextInput,
   Alert,
   ScrollView,
 } from 'react-native'
-import {
-  CalendarBlank,
-  ChartBar,
-  Plus,
-  CaretLeft,
-  GoogleLogo,
-} from 'phosphor-react-native'
+import { Plus, CaretLeft } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
+import { ClubMeetingCard } from './club-meeting-card'
+import { ClubPollCard } from './club-poll-card'
 
 interface MeetingRow {
   id: string
@@ -61,15 +55,6 @@ function pickOne<T>(v: unknown): T | null {
   if (!v) return null
   if (Array.isArray(v)) return (v[0] as T | undefined) ?? null
   return v as T
-}
-
-function formatMeetingTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
 }
 
 interface Props {
@@ -298,189 +283,12 @@ export function MeetingsPollsSection({ clubId, canModerate }: Props) {
         </Text>
       ) : (
         meetings.map((m) => (
-          <View
+          <ClubMeetingCard
             key={m.id}
-            className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-          >
-            <View className="flex-row items-start" style={{ gap: 10 }}>
-              <CalendarBlank
-                color={colors.textSecondary}
-                size={18}
-                weight="regular"
-              />
-              <View style={{ flex: 1 }}>
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 14,
-                    color: colors.textPrimary,
-                  }}
-                >
-                  {m.title}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.mono,
-                    fontSize: 11,
-                    color: colors.textTertiary,
-                    marginTop: 2,
-                  }}
-                >
-                  {formatMeetingTime(m.meeting_date)}
-                  {m.location_name ? ` · ${m.location_name}` : ''}
-                </Text>
-                <View
-                  className="flex-row flex-wrap"
-                  style={{ gap: 6, marginTop: 6 }}
-                >
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 4,
-                      backgroundColor: colors.bgSunken,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.mono,
-                        fontSize: 11,
-                        color: colors.textTertiary,
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {m.meeting_type.replace('_', ' ')}
-                    </Text>
-                  </View>
-                </View>
-                {m.location_url &&
-                m.location_url.includes('meet.google.com') ? (
-                  <Pressable
-                    onPress={() => {
-                      if (m.location_url) void Linking.openURL(m.location_url)
-                    }}
-                    className="flex-row items-center"
-                    style={{ gap: 6, marginTop: 8 }}
-                  >
-                    <GoogleLogo color={colors.brandText} size={14} />
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 12,
-                        color: colors.brandText,
-                      }}
-                    >
-                      Join on Google Meet
-                    </Text>
-                  </Pressable>
-                ) : m.location_url ? (
-                  <Pressable
-                    onPress={() => {
-                      if (m.location_url) void Linking.openURL(m.location_url)
-                    }}
-                    style={{ marginTop: 8 }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 12,
-                        color: colors.brandText,
-                      }}
-                    >
-                      Join link
-                    </Text>
-                  </Pressable>
-                ) : null}
-              </View>
-            </View>
-            {m.book ? (
-              <View
-                className="flex-row items-center"
-                style={{ gap: 8, marginTop: 10 }}
-              >
-                <View
-                  style={{
-                    width: 32,
-                    height: 48,
-                    borderRadius: 3,
-                    overflow: 'hidden',
-                    backgroundColor: colors.bgSunken,
-                  }}
-                >
-                  {m.book.cover_url ? (
-                    <Image
-                      source={{ uri: m.book.cover_url }}
-                      style={{ width: '100%', height: '100%' }}
-                    />
-                  ) : null}
-                </View>
-                <Text
-                  style={{
-                    fontFamily: Fonts.ui,
-                    fontSize: 12,
-                    color: colors.textSecondary,
-                  }}
-                  numberOfLines={2}
-                >
-                  {m.book.title}
-                </Text>
-              </View>
-            ) : null}
-
-            {userId ? (
-              <View
-                className="flex-row"
-                style={{ gap: 6, marginTop: 12 }}
-              >
-                {(['going', 'maybe', 'not_going'] as const).map((s) => {
-                  const active = m.user_rsvp === s
-                  const label =
-                    s === 'going'
-                      ? 'Going'
-                      : s === 'maybe'
-                        ? 'Maybe'
-                        : "Can't go"
-                  return (
-                    <Pressable
-                      key={s}
-                      onPress={() => void rsvp(m.id, s)}
-                      style={{
-                        flex: 1,
-                        paddingVertical: 6,
-                        borderRadius: 999,
-                        borderWidth: 1,
-                        borderColor: active ? colors.brandUi : colors.borderSubtle,
-                        backgroundColor: active
-                          ? colors.brandSubtle
-                          : colors.bgBase,
-                        alignItems: 'center',
-                      }}
-                    >
-                      <Text
-                        style={{
-                          fontFamily: Fonts.uiMedium,
-                          fontSize: 12,
-                          color: active ? colors.brandSubtleText : colors.textSecondary,
-                        }}
-                      >
-                        {label}
-                      </Text>
-                    </Pressable>
-                  )
-                })}
-              </View>
-            ) : null}
-            <Text
-              style={{
-                fontFamily: Fonts.mono,
-                fontSize: 11,
-                color: colors.textTertiary,
-                marginTop: 6,
-              }}
-            >
-              {m.rsvp_counts.going} going · {m.rsvp_counts.maybe} maybe
-            </Text>
-          </View>
+            m={m}
+            userId={userId}
+            onRsvp={rsvp}
+          />
         ))
       )}
 
@@ -516,146 +324,9 @@ export function MeetingsPollsSection({ clubId, canModerate }: Props) {
           No active polls.
         </Text>
       ) : (
-        polls.map((p) => {
-          const total = p.options.reduce((sum, o) => sum + o.vote_count, 0)
-          const hasVoted = p.user_vote !== null
-          return (
-            <View
-              key={p.id}
-              className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            >
-              <View className="flex-row items-start" style={{ gap: 10 }}>
-                <ChartBar
-                  color={colors.textSecondary}
-                  size={18}
-                  weight="regular"
-                />
-                <View style={{ flex: 1 }}>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      fontSize: 14,
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {p.title}
-                  </Text>
-                  {p.description ? (
-                    <Text
-                      style={{
-                        fontFamily: Fonts.body,
-                        fontSize: 12,
-                        color: colors.textSecondary,
-                        marginTop: 4,
-                      }}
-                    >
-                      {p.description}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-              <View style={{ marginTop: 10 }}>
-                {p.options.map((o) => {
-                  const pct = total > 0 ? Math.round((o.vote_count / total) * 100) : 0
-                  const voted = p.user_vote === o.id
-                  return (
-                    <Pressable
-                      key={o.id}
-                      onPress={() => {
-                        if (!hasVoted) void vote(p.id, o.id)
-                      }}
-                      style={{
-                        paddingHorizontal: 10,
-                        paddingVertical: 8,
-                        borderRadius: 8,
-                        borderWidth: 1,
-                        borderColor: voted ? colors.brandUi : colors.borderSubtle,
-                        backgroundColor: voted ? colors.brandSubtle : colors.bgBase,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <View
-                        className="flex-row items-center"
-                        style={{ gap: 8 }}
-                      >
-                        {o.book ? (
-                          <View
-                            style={{
-                              width: 26,
-                              height: 38,
-                              borderRadius: 3,
-                              overflow: 'hidden',
-                              backgroundColor: colors.bgSunken,
-                            }}
-                          >
-                            {o.book.cover_url ? (
-                              <Image
-                                source={{ uri: o.book.cover_url }}
-                                style={{ width: '100%', height: '100%' }}
-                              />
-                            ) : null}
-                          </View>
-                        ) : null}
-                        <Text
-                          style={{
-                            flex: 1,
-                            fontFamily: Fonts.uiMedium,
-                            fontSize: 13,
-                            color: voted ? colors.brandSubtleText : colors.textPrimary,
-                          }}
-                          numberOfLines={2}
-                        >
-                          {o.book?.title ?? o.label}
-                        </Text>
-                        {hasVoted ? (
-                          <Text
-                            style={{
-                              fontFamily: Fonts.mono,
-                              fontSize: 11,
-                              color: voted ? colors.brandSubtleText : colors.textTertiary,
-                            }}
-                          >
-                            {pct}% · {o.vote_count}
-                          </Text>
-                        ) : null}
-                      </View>
-                      {hasVoted ? (
-                        <View
-                          style={{
-                            marginTop: 6,
-                            height: 4,
-                            borderRadius: 2,
-                            backgroundColor: colors.bgSunken,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <View
-                            style={{
-                              height: 4,
-                              width: `${pct}%`,
-                              backgroundColor: voted ? colors.brandUi : colors.brandSubtle,
-                            }}
-                          />
-                        </View>
-                      ) : null}
-                    </Pressable>
-                  )
-                })}
-              </View>
-              <Text
-                style={{
-                  fontFamily: Fonts.mono,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  marginTop: 6,
-                }}
-              >
-                {total} vote{total === 1 ? '' : 's'}
-                {p.closes_at ? ` · closes ${formatMeetingTime(p.closes_at)}` : ''}
-              </Text>
-            </View>
-          )
-        })
+        polls.map((p) => (
+          <ClubPollCard key={p.id} p={p} onVote={vote} />
+        ))
       )}
 
       <AddMeetingModal
