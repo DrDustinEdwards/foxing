@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -142,7 +142,7 @@ export function Nav({ user, unreadNotifications = 0 }: NavProps) {
             href={user ? '/home' : '/'}
             className="flex items-center gap-2 font-fraunces text-xl text-brand-ui"
           >
-            <span aria-hidden="true">ðŸ¦Š</span>
+            <span aria-hidden="true">{'\u{1F98A}'}</span>
             <span>Foxing</span>
           </Link>
         </div>
