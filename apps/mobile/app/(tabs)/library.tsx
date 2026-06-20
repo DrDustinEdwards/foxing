@@ -48,12 +48,14 @@ import {
 } from '@/lib/library'
 import * as DocumentPicker from 'expo-document-picker'
 import * as FileSystem from 'expo-file-system/legacy'
+import { ShelfTabs } from '@/components/library/shelf-tabs'
+import { LibraryEmptyState } from '@/components/library/library-empty-state'
 
-type ShelfKey =
+export type ShelfKey =
   | { kind: 'status'; status: UserBookStatus; label: string }
   | { kind: 'custom'; shelfId: string; label: string }
 
-const STATUS_SHELVES: Array<{ status: UserBookStatus; label: string }> = [
+export const STATUS_SHELVES: Array<{ status: UserBookStatus; label: string }> = [
   { status: 'reading', label: 'Reading' },
   { status: 'paused', label: 'Paused' },
   { status: 'want_to_read', label: 'Want to Read' },
@@ -395,79 +397,13 @@ export default function Library() {
       </View>
 
       {/* Shelf tabs, horizontal scroll across statuses + custom shelves + new */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 12, gap: 6, paddingBottom: 4 }}
-      >
-        {STATUS_SHELVES.map((s) => {
-          const active = activeShelf.kind === 'status' && activeShelf.status === s.status
-          return (
-            <Pressable
-              key={s.status}
-              onPress={() => setActiveShelf({ kind: 'status', status: s.status, label: s.label })}
-              className="px-3 py-2 rounded-full border"
-              style={{
-                backgroundColor: active ? colors.bgSelected : colors.bgSurface,
-                borderColor: active ? colors.borderBrand : colors.borderSubtle,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 12,
-                  color: active ? colors.brandText : colors.textSecondary,
-                }}
-              >
-                {s.label}
-              </Text>
-            </Pressable>
-          )
-        })}
-        {shelves.map((s) => {
-          const active = activeShelf.kind === 'custom' && activeShelf.shelfId === s.id
-          return (
-            <Pressable
-              key={s.id}
-              onPress={() => setActiveShelf({ kind: 'custom', shelfId: s.id, label: s.name })}
-              onLongPress={() => onLongPressShelf(s)}
-              delayLongPress={350}
-              className="px-3 py-2 rounded-full border"
-              style={{
-                backgroundColor: active ? colors.bgSelected : colors.bgSurface,
-                borderColor: active ? colors.borderBrand : colors.borderSubtle,
-              }}
-            >
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 12,
-                  color: active ? colors.brandText : colors.textSecondary,
-                }}
-              >
-                {s.name}
-              </Text>
-            </Pressable>
-          )
-        })}
-        <Pressable
-          onPress={() => setCreateShelfOpen(true)}
-          className="flex-row items-center px-3 py-2 rounded-full border"
-          style={{ backgroundColor: colors.bgSurface, borderColor: colors.borderSubtle }}
-        >
-          <Plus color={colors.textSecondary} size={12} weight="bold" />
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 12,
-              color: colors.textSecondary,
-              marginLeft: 4,
-            }}
-          >
-            New shelf
-          </Text>
-        </Pressable>
-      </ScrollView>
+      <ShelfTabs
+        activeShelf={activeShelf}
+        shelves={shelves}
+        onSelectShelf={setActiveShelf}
+        onLongPressShelf={onLongPressShelf}
+        onNewShelf={() => setCreateShelfOpen(true)}
+      />
 
       {/* Sort + filter row */}
       <View className="flex-row items-center px-4 pt-2 pb-1 gap-2">
@@ -540,26 +476,7 @@ export default function Library() {
         {loading ? (
           <ActivityIndicator color={colors.brandUi} />
         ) : visible.length === 0 ? (
-          <View className="items-center mt-12 px-8">
-            <Text
-              style={{
-                fontFamily: Fonts.body,
-                fontSize: 14,
-                color: colors.textTertiary,
-                textAlign: 'center',
-              }}
-            >
-              {activeShelf.kind === 'status'
-                ? activeShelf.status === 'reading'
-                  ? "You're not reading anything yet."
-                  : activeShelf.status === 'want_to_read'
-                    ? 'Your reading list is empty.'
-                    : activeShelf.status === 'finished'
-                      ? "You haven't finished a book yet."
-                      : 'Nothing abandoned, nice.'
-                : 'This shelf is empty.'}
-            </Text>
-          </View>
+          <LibraryEmptyState activeShelf={activeShelf} />
         ) : (
           visible.map((entry) => (
             <LibraryRow
