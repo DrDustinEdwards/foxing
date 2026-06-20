@@ -9,18 +9,23 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { CaretLeft, Flame, Snowflake, Trophy } from 'phosphor-react-native'
+import { CaretLeft } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import {
   type Challenge,
-  CHALLENGE_TYPES,
   joinChallenge,
   listCommunityChallenges,
   listMyChallenges,
   seedCommunityChallenges,
 } from '@/lib/challenges'
+import { Section } from '@/components/goals/section'
+import { YearGoalCard } from '@/components/goals/year-goal-card'
+import { StreakCard } from '@/components/goals/streak-card'
+import { YourReadingSection } from '@/components/goals/your-reading-section'
+import { WeeklySummaryCard } from '@/components/goals/weekly-summary-card'
+import { CommunityChallengesSection } from '@/components/goals/community-challenges-section'
 
 // Single goal type now (per task.md Section 1f). Legacy rows with
 // type='books_year' coexist; we read them but write the new key.
@@ -541,98 +546,17 @@ export default function GoalsScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48 }}>
-        {/* Goal card */}
-        <Section title={`${year} goal`}>
-          <View
-            className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-          >
-            <Text
-              style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 10 }}
-            >
-              I want to read
-            </Text>
-            <View className="flex-row items-center gap-2">
-              <TextInput
-                value={target}
-                onChangeText={(t) => setTarget(t.replace(/[^0-9]/g, '').slice(0, 3))}
-                keyboardType="number-pad"
-                maxLength={3}
-                placeholder="12"
-                placeholderTextColor={colors.textTertiary}
-                accessibilityLabel="Books per year goal"
-                style={{
-                  flex: 0,
-                  width: 90,
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 22,
-                  textAlign: 'center',
-                  color: colors.textPrimary,
-                  backgroundColor: colors.bgBase,
-                  borderColor: colors.borderSubtle,
-                  borderWidth: 1,
-                  borderRadius: 10,
-                  paddingVertical: 8,
-                }}
-              />
-              <Text style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, flex: 1 }}>
-                books in {year}
-              </Text>
-              <Pressable
-                onPress={save}
-                disabled={saving || !target}
-                accessibilityRole="button"
-                accessibilityLabel="Save goal"
-                accessibilityState={{ disabled: saving || !target }}
-                className="px-4 py-2 rounded-full"
-                style={{
-                  backgroundColor: target ? colors.brandUi : colors.bgDisabled,
-                  opacity: saving ? 0.7 : 1,
-                }}
-              >
-                {saving ? (
-                  <ActivityIndicator color={colors.textOnBrand} size="small" />
-                ) : (
-                  <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand, fontSize: 13 }}>
-                    Save
-                  </Text>
-                )}
-              </Pressable>
-            </View>
-
-            {goalsRow ? (
-              <View style={{ marginTop: 16 }}>
-                <View
-                  style={{
-                    height: 6,
-                    borderRadius: 3,
-                    backgroundColor: colors.bgSunken,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <View
-                    style={{
-                      height: 6,
-                      width: `${Math.round(progress * 100)}%`,
-                      backgroundColor: colors.brandUi,
-                    }}
-                  />
-                </View>
-                <View className="flex-row items-center justify-between" style={{ marginTop: 6 }}>
-                  <Text style={{ fontFamily: Fonts.mono, fontSize: 12, color: colors.textTertiary }}>
-                    {Math.round(progress * 100)}% complete
-                  </Text>
-                  {projectedCompletion ? (
-                    <Text
-                      style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}
-                    >
-                      Projected: {projectedCompletion}
-                    </Text>
-                  ) : null}
-                </View>
-              </View>
-            ) : null}
-          </View>
-        </Section>
+        <YearGoalCard
+          year={year}
+          target={target}
+          setTarget={setTarget}
+          save={save}
+          saving={saving}
+          goalsRow={goalsRow}
+          progress={progress}
+          projectedCompletion={projectedCompletion}
+          colors={colors}
+        />
 
         <PeriodGoalCard
           title={`${MONTH_NAMES[new Date().getUTCMonth()]} goal`}
@@ -662,467 +586,37 @@ export default function GoalsScreen() {
           colors={colors}
         />
 
-        {/* Streak card */}
-        <Section title="Streak">
-          <View
-            className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-          >
-            <View className="flex-row items-center">
-              <Flame color={colors.brandUi} size={42} weight="fill" />
-              <View style={{ marginLeft: 14, flex: 1 }}>
-                <Text
-                  style={{ fontFamily: Fonts.displayBold, fontSize: 36, color: colors.textPrimary }}
-                >
-                  {streak?.current_streak ?? 0}
-                </Text>
-                <Text
-                  style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, marginTop: -4 }}
-                >
-                  day{(streak?.current_streak ?? 0) === 1 ? '' : 's'} in a row
-                </Text>
-              </View>
-              <View style={{ alignItems: 'flex-end' }}>
-                <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
-                  {streak?.longest_streak ?? 0}
-                </Text>
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
-                  longest
-                </Text>
-              </View>
-            </View>
-
-            <View className="flex-row items-center" style={{ marginTop: 12 }}>
-              <Snowflake color={colors.info} size={14} />
-              <Text
-                style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary, marginLeft: 6 }}
-              >
-                {streak?.streak_freeze_credits ?? 0} freeze credit
-                {(streak?.streak_freeze_credits ?? 0) === 1 ? '' : 's'} available
-              </Text>
-            </View>
-
-            {streakAtRisk ? (
-              <View style={{ marginTop: 12 }}>
-                <Text
-                  style={{
-                    fontFamily: Fonts.body,
-                    fontSize: 13,
-                    color: colors.textSecondary,
-                  }}
-                >
-                  Your streak is at risk. Use a freeze to protect it for today.
-                </Text>
-                <Pressable
-                  onPress={useFreeze}
-                  disabled={usingFreeze}
-                  accessibilityRole="button"
-                  accessibilityLabel="Use a freeze"
-                  style={{
-                    alignSelf: 'flex-start',
-                    marginTop: 8,
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    backgroundColor: colors.brandUi,
-                    opacity: usingFreeze ? 0.7 : 1,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      color: colors.textOnBrand,
-                      fontSize: 13,
-                    }}
-                  >
-                    Use a freeze
-                  </Text>
-                </Pressable>
-                {freezeError ? (
-                  <Text
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 11,
-                      color: colors.error ?? colors.textTertiary,
-                      marginTop: 6,
-                    }}
-                  >
-                    {freezeError}
-                  </Text>
-                ) : null}
-              </View>
-            ) : (streak?.streak_freeze_credits ?? 0) === 0 ? (
-              <Text
-                style={{
-                  fontFamily: Fonts.ui,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  marginTop: 6,
-                }}
-              >
-                Earn freeze credits by maintaining a 7-day streak.
-              </Text>
-            ) : null}
-
-            {/* Heat map, 30 dots, last 30 days */}
-            <View className="flex-row flex-wrap" style={{ marginTop: 14, gap: 4 }}>
-              {last30.map((d) => {
-                const intensity = Math.min(1, d.minutes / 30) // 30 min → max
-                const filled = d.minutes > 0
-                const bg = filled
-                  ? colors.brandUi
-                  : colors.bgSunken
-                return (
-                  <View
-                    key={d.date}
-                    style={{
-                      width: 14,
-                      height: 14,
-                      borderRadius: 3,
-                      backgroundColor: bg,
-                      opacity: filled ? 0.35 + intensity * 0.65 : 1,
-                    }}
-                  />
-                )
-              })}
-            </View>
-          </View>
-        </Section>
+        <StreakCard
+          streak={streak}
+          streakAtRisk={streakAtRisk}
+          useFreeze={useFreeze}
+          usingFreeze={usingFreeze}
+          freezeError={freezeError}
+          last30={last30}
+          colors={colors}
+        />
 
         {/* Your Reading, patterns, vocabulary growth, books finished. */}
         {coach ? (
-          <Section title="Your Reading">
-            <View style={{ gap: 12 }}>
-              {/* Patterns */}
-              <View
-                className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 13,
-                    color: colors.textPrimary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Reading patterns
-                </Text>
-                {coach.topWeekday ? (
-                  <CoachLine label="You read most on" value={coach.topWeekday} colors={colors} />
-                ) : null}
-                {coach.avgSessionMin !== null ? (
-                  <CoachLine
-                    label="Average session"
-                    value={`${coach.avgSessionMin} min`}
-                    colors={colors}
-                  />
-                ) : null}
-                {coach.bestTimeBucket ? (
-                  <CoachLine
-                    label="Best reading time"
-                    value={
-                      coach.bestTimeBucket.charAt(0).toUpperCase() +
-                      coach.bestTimeBucket.slice(1)
-                    }
-                    colors={colors}
-                  />
-                ) : null}
-                {!coach.topWeekday && coach.avgSessionMin === null && !coach.bestTimeBucket ? (
-                  <Text
-                    style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary }}
-                  >
-                    Read a few more sessions to unlock pattern insights.
-                  </Text>
-                ) : null}
-              </View>
-
-              {/* Vocabulary growth */}
-              <View
-                className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 13,
-                    color: colors.textPrimary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Vocabulary growth
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.displayBold,
-                    fontSize: 28,
-                    color: colors.textPrimary,
-                    marginBottom: 2,
-                  }}
-                >
-                  {coach.totalVocab}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.ui,
-                    fontSize: 12,
-                    color: colors.textTertiary,
-                    marginBottom: 12,
-                  }}
-                >
-                  new words learned
-                </Text>
-                {coach.topVocabBooks.length > 0 ? (
-                  <View style={{ gap: 6 }}>
-                    {(() => {
-                      const max = Math.max(1, ...coach.topVocabBooks.map((b) => b.count))
-                      return coach.topVocabBooks.map((b) => (
-                        <View key={b.title}>
-                          <View className="flex-row items-center justify-between" style={{ marginBottom: 3 }}>
-                            <Text
-                              numberOfLines={1}
-                              style={{
-                                flex: 1,
-                                fontFamily: Fonts.ui,
-                                fontSize: 12,
-                                color: colors.textSecondary,
-                              }}
-                            >
-                              {b.title}
-                            </Text>
-                            <Text
-                              style={{
-                                fontFamily: Fonts.mono,
-                                fontSize: 11,
-                                color: colors.textTertiary,
-                                marginLeft: 8,
-                              }}
-                            >
-                              {b.count}
-                            </Text>
-                          </View>
-                          <View
-                            style={{
-                              height: 4,
-                              borderRadius: 2,
-                              backgroundColor: colors.bgSunken,
-                              overflow: 'hidden',
-                            }}
-                          >
-                            <View
-                              style={{
-                                height: 4,
-                                width: `${Math.round((b.count / max) * 100)}%`,
-                                backgroundColor: colors.brandUi,
-                              }}
-                            />
-                          </View>
-                        </View>
-                      ))
-                    })()}
-                  </View>
-                ) : null}
-              </View>
-
-              {/* Reading level progression, finished count as a proxy */}
-              <View
-                className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 13,
-                    color: colors.textPrimary,
-                    marginBottom: 8,
-                  }}
-                >
-                  Reading level
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.displayBold,
-                    fontSize: 28,
-                    color: colors.textPrimary,
-                    marginBottom: 2,
-                  }}
-                >
-                  {coach.finishedBooks}
-                </Text>
-                <Text
-                  style={{
-                    fontFamily: Fonts.ui,
-                    fontSize: 12,
-                    color: colors.textTertiary,
-                    marginBottom: 8,
-                  }}
-                >
-                  book{coach.finishedBooks === 1 ? '' : 's'} finished
-                </Text>
-                <Text
-                  style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary }}
-                >
-                  {coach.finishedBooks === 0
-                    ? 'Finish your first book to start tracking your reading level.'
-                    : coach.finishedBooks < 5
-                    ? 'You’re building a foundation, keep going to unlock difficulty trends.'
-                    : 'Your library is growing. Try a slightly harder title next to push your level.'}
-                </Text>
-              </View>
-            </View>
-          </Section>
+          <YourReadingSection coach={coach} colors={colors} />
         ) : null}
 
         {/* Weekly summary */}
-        <Section title="This week">
-          <View
-            className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-          >
-            <View
-              className="flex-row items-end justify-between"
-              style={{ height: 100, marginBottom: 6 }}
-            >
-              {last7.map((d) => {
-                const ratio = d.minutes / max7
-                return (
-                  <View key={d.date} style={{ flex: 1, alignItems: 'center' }}>
-                    <View style={{ flex: 1, justifyContent: 'flex-end', width: '70%' }}>
-                      <View
-                        style={{
-                          height: `${Math.max(2, Math.round(ratio * 100))}%`,
-                          backgroundColor: d.minutes > 0 ? colors.brandUi : colors.bgSunken,
-                          borderRadius: 4,
-                        }}
-                      />
-                    </View>
-                  </View>
-                )
-              })}
-            </View>
-            <View className="flex-row justify-between" style={{ marginTop: 2 }}>
-              {last7.map((d) => {
-                const dayLetter = new Date(d.date + 'T00:00:00Z').toLocaleDateString(undefined, {
-                  weekday: 'narrow',
-                })
-                return (
-                  <Text
-                    key={d.date}
-                    style={{
-                      flex: 1,
-                      textAlign: 'center',
-                      fontFamily: Fonts.ui,
-                      fontSize: 10,
-                      color: colors.textTertiary,
-                    }}
-                  >
-                    {dayLetter}
-                  </Text>
-                )
-              })}
-            </View>
-          </View>
-        </Section>
+        <WeeklySummaryCard last7={last7} max7={max7} colors={colors} />
 
         {/* Community Challenges, merged in from the old challenges screen
             per task.md Section 2b. Personal challenges (create/edit) are
             deferred; this surface just lists + joins community ones. */}
         {communityChallenges.length > 0 ? (
-          <Section title="Community challenges">
-            {communityChallenges.map((c) => {
-              const unit = CHALLENGE_TYPES.find((t) => t.id === c.type)?.unit ?? ''
-              const joined = joinedIds.has(c.id)
-              return (
-                <View
-                  key={c.id}
-                  className="p-4 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-                >
-                  <View className="flex-row items-center" style={{ marginBottom: 6, gap: 8 }}>
-                    <Trophy color={colors.brandUi} size={16} weight="regular" />
-                    <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary, flex: 1 }}
-                      numberOfLines={1}
-                    >
-                      {c.name}
-                    </Text>
-                    {joined ? (
-                      <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.success }}>
-                        Joined
-                      </Text>
-                    ) : (
-                      <Pressable
-                        onPress={() => joinCommunityChallenge(c)}
-                        accessibilityRole="button"
-                        accessibilityLabel={`Join ${c.name}`}
-                        className="px-3 py-1 rounded-full"
-                        style={{ backgroundColor: colors.brandUi }}
-                      >
-                        <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textOnBrand }}>
-                          Join
-                        </Text>
-                      </Pressable>
-                    )}
-                  </View>
-                  {c.description ? (
-                    <Text
-                      style={{
-                        fontFamily: Fonts.body,
-                        fontSize: 13,
-                        color: colors.textSecondary,
-                        marginBottom: 6,
-                      }}
-                    >
-                      {c.description}
-                    </Text>
-                  ) : null}
-                  <Text style={{ fontFamily: Fonts.mono, fontSize: 11, color: colors.textTertiary }}>
-                    Target: {c.target} {unit}
-                    {c.deadline ? ` · by ${new Date(c.deadline).toLocaleDateString()}` : ''}
-                  </Text>
-                </View>
-              )
-            })}
-          </Section>
+          <CommunityChallengesSection
+            communityChallenges={communityChallenges}
+            joinedIds={joinedIds}
+            joinCommunityChallenge={joinCommunityChallenge}
+            colors={colors}
+          />
         ) : null}
       </ScrollView>
     </SafeAreaView>
-  )
-}
-
-function CoachLine({
-  label,
-  value,
-  colors,
-}: {
-  label: string
-  value: string
-  colors: ReturnType<typeof useColors>
-}) {
-  return (
-    <View className="flex-row items-baseline" style={{ marginBottom: 4 }}>
-      <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, flex: 1 }}>
-        {label}
-      </Text>
-      <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
-        {value}
-      </Text>
-    </View>
-  )
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors()
-  return (
-    <View style={{ marginTop: 18 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: 'uppercase',
-          letterSpacing: 0.6,
-          marginBottom: 10,
-        }}
-      >
-        {title}
-      </Text>
-      {children}
-    </View>
   )
 }
 
