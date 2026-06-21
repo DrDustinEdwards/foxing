@@ -12,6 +12,7 @@ import {
   SpeakerHigh,
   MagnifyingGlass,
   ChatCircle,
+  Lock,
   type Icon,
 } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
@@ -53,8 +54,21 @@ interface MenuSheetProps {
   onAction: (action: MenuAction) => void
   // Channel for chapter-feature picks (timeline/quiz/etc).
   onChapterFeature?: (kind: ChapterFeatureKind) => void
+  // Plus gating. When `locked` (free tier), the AI hub entries show a lock
+  // badge and route to `onUpgrade` instead of opening the gated sheet.
+  locked?: boolean
+  onUpgrade?: (feature: string) => void
   onClose: () => void
 }
+
+// Companion hub entries that are Plus-gated AI actions. The overflow utility
+// items (Listen, Sleep Timer, Vocabulary, Quote Card, Share) are not gated.
+const GATED_AI = new Set<MenuAction>([
+  'ask-chat',
+  'character-map',
+  'story-so-far',
+  'search',
+])
 
 interface MenuItem {
   key: MenuAction | 'share'
@@ -89,6 +103,8 @@ export function MenuSheet({
   clubsReadingThis,
   onAction,
   onChapterFeature,
+  locked,
+  onUpgrade,
   onClose,
 }: MenuSheetProps) {
   const colors = useColors()
@@ -115,10 +131,15 @@ export function MenuSheet({
     }
   }
 
-  function handleSelect(key: MenuItem['key']) {
+  function handleSelect(key: MenuItem['key'], label?: string) {
     if (key === 'share') {
       handleShare()
       onClose()
+      return
+    }
+    // Intercept gated AI entries for free users with the upgrade prompt.
+    if (locked && GATED_AI.has(key)) {
+      onUpgrade?.(label ?? 'This feature')
       return
     }
     onAction(key)
@@ -173,9 +194,9 @@ export function MenuSheet({
                   {/* Prominent standalone Ask/Chat entry: opens the companion
                       in general mode (book + chapter context, no seed). */}
                   <Pressable
-                    onPress={() => handleSelect('ask-chat')}
+                    onPress={() => handleSelect('ask-chat', 'Ask')}
                     accessibilityRole="button"
-                    accessibilityLabel="Ask a question"
+                    accessibilityLabel={locked ? 'Ask a question, Plus feature' : 'Ask a question'}
                     style={{
                       flexDirection: 'row',
                       alignItems: 'center',
@@ -205,15 +226,24 @@ export function MenuSheet({
                         Chat about this book and where you are
                       </Text>
                     </View>
+                    {locked ? (
+                      <Lock color={colors.textOnBrand} size={16} weight="fill" />
+                    ) : null}
                   </Pressable>
-                  <Row items={COMPANION_TOOLS} onSelect={handleSelect} />
+                  <Row items={COMPANION_TOOLS} onSelect={handleSelect} locked={locked} />
                   <SectionLabel label="This chapter" />
                 </View>
                 <ChapterFeatureGrid
                   hideHeader
+                  locked={locked}
                   currentChapterTitle={currentChapterTitle}
                   onPick={(kind) => {
                     setShowChapterSub(false)
+                    if (locked) {
+                      onClose()
+                      onUpgrade?.('Chapter tools')
+                      return
+                    }
                     onChapterFeature?.(kind)
                     onClose()
                   }}
@@ -240,10 +270,11 @@ export function MenuSheet({
 
 interface RowProps {
   items: MenuItem[]
-  onSelect: (key: MenuItem['key']) => void
+  onSelect: (key: MenuItem['key'], label: string) => void
+  locked?: boolean
 }
 
-function Row({ items, onSelect }: RowProps) {
+function Row({ items, onSelect, locked }: RowProps) {
   const colors = useColors()
   return (
     <View
@@ -253,49 +284,74 @@ function Row({ items, onSelect }: RowProps) {
         justifyContent: 'space-between',
       }}
     >
-      {items.map((item) => (
-        <Pressable
-          key={item.key}
-          onPress={() => onSelect(item.key)}
-          accessibilityRole="button"
-          accessibilityLabel={item.label}
-          style={{
-            width: '30.5%',
-            alignItems: 'center',
-            paddingVertical: 10,
-            marginBottom: 4,
-            borderRadius: 14,
-          }}
-        >
-          <View
+      {items.map((item) => {
+        const isLocked = !!locked && GATED_AI.has(item.key as MenuAction)
+        return (
+          <Pressable
+            key={item.key}
+            onPress={() => onSelect(item.key, item.label)}
+            accessibilityRole="button"
+            accessibilityLabel={isLocked ? `${item.label}, Plus feature` : item.label}
             style={{
-              width: 40,
-              height: 40,
-              borderRadius: 14,
-              backgroundColor: colors.brandSubtle,
+              width: '30.5%',
               alignItems: 'center',
-              justifyContent: 'center',
-              marginBottom: 6,
+              paddingVertical: 10,
+              marginBottom: 4,
+              borderRadius: 14,
             }}
           >
-            <item.Icon
-              color={colors.brandUi}
-              size={20}
-              weight="regular"
-            />
-          </View>
-          <Text
-            numberOfLines={1}
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textSecondary,
-            }}
-          >
-            {item.label}
-          </Text>
-        </Pressable>
-      ))}
+            <View
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 14,
+                backgroundColor: colors.brandSubtle,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 6,
+              }}
+            >
+              <item.Icon
+                color={colors.brandUi}
+                size={20}
+                weight="regular"
+              />
+              {isLocked ? <LockBadge colors={colors} /> : null}
+            </View>
+            <Text
+              numberOfLines={1}
+              style={{
+                fontFamily: Fonts.uiMedium,
+                fontSize: 11,
+                color: colors.textSecondary,
+              }}
+            >
+              {item.label}
+            </Text>
+          </Pressable>
+        )
+      })}
+    </View>
+  )
+}
+
+// Small lock badge for gated AI tiles (top-right of the icon).
+function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: -3,
+        right: -3,
+        width: 16,
+        height: 16,
+        borderRadius: 8,
+        backgroundColor: colors.bgElevated,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Lock color={colors.brandText} size={10} weight="fill" />
     </View>
   )
 }
@@ -331,6 +387,9 @@ interface ChapterFeatureGridProps {
   // The hub provides its own "This chapter" section label, so it suppresses
   // the grid's internal chapter-title header to avoid a double heading.
   hideHeader?: boolean
+  // Plus gating: every chapter tool is gated, so a lock badge is shown on
+  // each tile for free users (the pick itself routes to the upgrade prompt).
+  locked?: boolean
 }
 
 function ChapterFeatureGrid({
@@ -338,6 +397,7 @@ function ChapterFeatureGrid({
   onPick,
   onBack,
   hideHeader,
+  locked,
 }: ChapterFeatureGridProps) {
   const colors = useColors()
   return (
@@ -395,7 +455,7 @@ function ChapterFeatureGrid({
             key={f.id}
             onPress={() => onPick(f.id)}
             accessibilityRole="button"
-            accessibilityLabel={f.label}
+            accessibilityLabel={locked ? `${f.label}, Plus feature` : f.label}
             style={{
               width: '30.5%',
               alignItems: 'center',
@@ -416,6 +476,7 @@ function ChapterFeatureGrid({
               }}
             >
               <Sparkle color={colors.brandUi} size={18} />
+              {locked ? <LockBadge colors={colors} /> : null}
             </View>
             <Text
               numberOfLines={1}

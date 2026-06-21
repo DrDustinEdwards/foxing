@@ -9,6 +9,7 @@ import {
   Translate,
   Highlighter,
   BookmarkSimple,
+  Lock,
   X as XIcon,
   type Icon,
 } from 'phosphor-react-native'
@@ -59,6 +60,10 @@ interface FloatingPillProps {
   // Shared, both modes show Highlight. Privacy is selected inline after the
   // color pick. Callers translate to is_public.
   onHighlight: (color: HighlightColor, privacy: PrivacyTier) => void
+  // Plus gating. When `locked` (the viewer is on the free tier), the AI
+  // actions show a lock badge and route to `onUpgrade` instead of firing.
+  locked?: boolean
+  onUpgrade?: (feature: string) => void
 }
 
 interface PillActionDef {
@@ -67,6 +72,8 @@ interface PillActionDef {
   Icon: Icon
   onPress: () => void
   primary?: boolean
+  // AI actions are Plus-gated; Highlight and Comment are not.
+  gated?: boolean
 }
 
 const PILL_HEIGHT = 44
@@ -85,6 +92,8 @@ export function FloatingPill({
   showClub,
   onClub,
   onHighlight,
+  locked,
+  onUpgrade,
 }: FloatingPillProps) {
   const colors = useColors()
   const { width: screenWidth, height: screenHeight } = useWindowDimensions()
@@ -131,19 +140,19 @@ export function FloatingPill({
   const actions: PillActionDef[] =
     mode === 'word'
       ? [
-          { key: 'lookup', label: 'Look up', Icon: MagnifyingGlass, onPress: () => onLookup?.(), primary: true },
+          { key: 'lookup', label: 'Look up', Icon: MagnifyingGlass, onPress: () => onLookup?.(), primary: true, gated: true },
           { key: 'highlight', label: 'Highlight', Icon: Palette, onPress: () => setShowColors(true) },
-          { key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() },
-          { key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() },
+          { key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.(), gated: true },
+          { key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.(), gated: true },
         ]
       : [
-          { key: 'analyze', label: 'Analyze', Icon: ClipboardText, onPress: () => onAnalyze?.(), primary: true },
-          { key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() },
+          { key: 'analyze', label: 'Analyze', Icon: ClipboardText, onPress: () => onAnalyze?.(), primary: true, gated: true },
+          { key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.(), gated: true },
           { key: 'highlight', label: 'Highlight', Icon: Palette, onPress: () => setShowColors(true) },
           ...(showClub
             ? [{ key: 'comment', label: 'Comment', Icon: UsersThree, onPress: () => onClub?.() }]
             : []),
-          { key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() },
+          { key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.(), gated: true },
         ]
 
   // Pill width is content-driven: one labeled primary chip plus icon-only
@@ -319,18 +328,22 @@ export function FloatingPill({
         accessibilityLabel={mode === 'word' ? 'Word actions' : 'Passage actions'}
         accessibilityHint="Long press for all options"
       >
-        {actions.map((a, i) => (
-          <PillAction
-            key={a.key}
-            Icon={a.Icon}
-            label={a.label}
-            a11yLabel={a.label}
-            primary={a.primary}
-            iconOnly={!a.primary}
-            autoFocus={i === 0}
-            onPress={a.onPress}
-          />
-        ))}
+        {actions.map((a, i) => {
+          const isLocked = !!locked && !!a.gated
+          return (
+            <PillAction
+              key={a.key}
+              Icon={a.Icon}
+              label={a.label}
+              a11yLabel={isLocked ? `${a.label}, Plus feature` : a.label}
+              primary={a.primary}
+              iconOnly={!a.primary}
+              autoFocus={i === 0}
+              showLock={isLocked}
+              onPress={() => (isLocked ? onUpgrade?.(a.label) : a.onPress())}
+            />
+          )
+        })}
 
         <View style={{ width: 1, height: 22, backgroundColor: colors.borderSubtle, marginHorizontal: 4 }} />
         <Pressable
@@ -347,6 +360,8 @@ export function FloatingPill({
         visible={allOptionsOpen}
         mode={mode}
         showClub={!!showClub}
+        locked={locked}
+        onUpgrade={onUpgrade}
         onClose={() => setAllOptionsOpen(false)}
         onLookup={onLookup}
         onAnalyze={onAnalyze}
@@ -377,6 +392,8 @@ function AllOptionsSheet({
   visible,
   mode,
   showClub,
+  locked,
+  onUpgrade,
   onClose,
   onLookup,
   onAnalyze,
@@ -390,6 +407,8 @@ function AllOptionsSheet({
   visible: boolean
   mode: PillMode
   showClub: boolean
+  locked?: boolean
+  onUpgrade?: (feature: string) => void
   onClose: () => void
   onLookup?: () => void
   onAnalyze?: () => void
@@ -407,19 +426,20 @@ function AllOptionsSheet({
     Icon: Icon
     onPress: () => void
     destructive?: boolean
+    gated?: boolean
   }> = []
   items.push({ key: 'highlight', label: 'Highlight', Icon: Highlighter, onPress: onHighlight })
   if (mode === 'word') {
-    items.push({ key: 'lookup', label: 'Look up', Icon: MagnifyingGlass, onPress: () => onLookup?.() })
-    items.push({ key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() })
-    items.push({ key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() })
+    items.push({ key: 'lookup', label: 'Look up', Icon: MagnifyingGlass, onPress: () => onLookup?.(), gated: true })
+    items.push({ key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.(), gated: true })
+    items.push({ key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.(), gated: true })
   } else {
-    items.push({ key: 'analyze', label: 'Analyze', Icon: MagnifyingGlass, onPress: () => onAnalyze?.() })
-    items.push({ key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() })
+    items.push({ key: 'analyze', label: 'Analyze', Icon: MagnifyingGlass, onPress: () => onAnalyze?.(), gated: true })
+    items.push({ key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.(), gated: true })
     if (showClub) {
       items.push({ key: 'comment', label: 'Comment', Icon: UsersThree, onPress: () => onClub?.() })
     }
-    items.push({ key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() })
+    items.push({ key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.(), gated: true })
     items.push({ key: 'save', label: 'Save Passage', Icon: BookmarkSimple, onPress: onSavePassage })
   }
   items.push({ key: 'dismiss', label: 'Dismiss', Icon: XIcon, onPress: onDismissAll, destructive: true })
@@ -446,49 +466,57 @@ function AllOptionsSheet({
         </Text>
       }
     >
-          {items.map((item, i) => (
-            <Pressable
-              key={item.key}
-              onPress={() => {
-                onClose()
-                item.onPress()
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={item.label}
-              className="flex-row items-center px-5"
-              style={{
-                minHeight: 56,
-                borderTopWidth: i === 0 ? 0 : 1,
-                borderTopColor: colors.borderSubtle,
-              }}
-            >
-              <View
+          {items.map((item, i) => {
+            const isLocked = !!locked && !!item.gated
+            return (
+              <Pressable
+                key={item.key}
+                onPress={() => {
+                  onClose()
+                  if (isLocked) {
+                    onUpgrade?.(item.label)
+                    return
+                  }
+                  item.onPress()
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={isLocked ? `${item.label}, Plus feature` : item.label}
+                className="flex-row items-center px-5"
                 style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: 10,
-                  backgroundColor: colors.brandSubtle,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  marginRight: 12,
+                  minHeight: 56,
+                  borderTopWidth: i === 0 ? 0 : 1,
+                  borderTopColor: colors.borderSubtle,
                 }}
               >
-                <item.Icon
-                  color={item.destructive ? colors.error : colors.brandUi}
-                  size={16}
-                />
-              </View>
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 15,
-                  color: item.destructive ? colors.error : colors.textPrimary,
-                }}
-              >
-                {item.label}
-              </Text>
-            </Pressable>
-          ))}
+                <View
+                  style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: 10,
+                    backgroundColor: colors.brandSubtle,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginRight: 12,
+                  }}
+                >
+                  <item.Icon
+                    color={item.destructive ? colors.error : colors.brandUi}
+                    size={16}
+                  />
+                  {isLocked ? <LockBadge colors={colors} /> : null}
+                </View>
+                <Text
+                  style={{
+                    fontFamily: Fonts.uiMedium,
+                    fontSize: 15,
+                    color: item.destructive ? colors.error : colors.textPrimary,
+                  }}
+                >
+                  {item.label}
+                </Text>
+              </Pressable>
+            )
+          })}
     </SheetScaffold>
   )
 }
@@ -505,6 +533,7 @@ function PillAction({
   primary,
   iconOnly,
   autoFocus,
+  showLock,
 }: {
   Icon: React.ComponentType<{ color: string; size: number; weight?: 'regular' | 'bold' | 'fill' }>
   label: string
@@ -513,6 +542,7 @@ function PillAction({
   primary?: boolean
   iconOnly?: boolean
   autoFocus?: boolean
+  showLock?: boolean
 }) {
   const colors = useColors()
   const ICON_SIZE = 18
@@ -534,7 +564,10 @@ function PillAction({
         backgroundColor: primary ? colors.brandSubtle : 'transparent',
       }}
     >
-      <Icon color={primary ? colors.brandSubtleText : colors.brandText} size={ICON_SIZE} />
+      <View>
+        <Icon color={primary ? colors.brandSubtleText : colors.brandText} size={ICON_SIZE} />
+        {showLock ? <LockBadge colors={colors} /> : null}
+      </View>
       {iconOnly ? null : (
         <Text
           style={{
@@ -548,5 +581,26 @@ function PillAction({
         </Text>
       )}
     </Pressable>
+  )
+}
+
+// Small lock badge overlaid on the top-right of a gated action's icon.
+function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
+  return (
+    <View
+      style={{
+        position: 'absolute',
+        top: -5,
+        right: -7,
+        width: 13,
+        height: 13,
+        borderRadius: 7,
+        backgroundColor: colors.bgSurface,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Lock color={colors.brandText} size={9} weight="fill" />
+    </View>
   )
 }

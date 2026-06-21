@@ -11,6 +11,11 @@
 # carry their full label ("Chapter Timeline", "Chapter Characters") as the
 # accessibility label even when the visible text is shortened, so Maestro can
 # match them. Dismiss selectors are noted inline; confirm on the first run.
+#
+# Requires a Foxing Plus account: the AI hub entries (Ask, Story So Far,
+# Characters, Search, chapter tools) are Plus-gated. On a free account they
+# show a lock badge and open the upgrade prompt instead, so these assertions
+# would fail. See e2e/README.md.
 appId: com.foxing.app
 env:
   BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
