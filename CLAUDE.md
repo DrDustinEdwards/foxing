@@ -101,6 +101,12 @@ Supabase CLI -- always from repo root (supabase/ lives there):
   npx supabase functions deploy [name] --project-ref ekjpsuewrkvqzbuteurc
   npx supabase secrets set KEY=value --project-ref ekjpsuewrkvqzbuteurc
 
+Edge function deploy split (intentional, do NOT consolidate):
+  ai-companion deploys from apps/mobile/supabase/functions (run the CLI
+    from apps/mobile). The mobile tree holds the live AI backend.
+  All other functions deploy from root supabase/functions.
+  Never delete apps/mobile/supabase or merge the two trees.
+
 Web build check before every push:
   cd apps/web && npx tsc --noEmit
 
