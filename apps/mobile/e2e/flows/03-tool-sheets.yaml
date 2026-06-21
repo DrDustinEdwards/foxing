@@ -1,14 +1,16 @@
 # Check: open each tool sheet and confirm it appears.
 #
-# Phase 1 relocation: the Companion button (bottom bar) opens the This Chapter
-# grid plus the Story So Far / Characters / Search tools. The overflow button
-# ("More actions") holds Listen, Sleep Timer, Vocabulary, Quote Card, Share.
-# Typography is 05, Go To is 06, and the selection-driven sheets (word lookup,
-# passage analysis, companion chat) are 04.
+# Phase 3: the Companion button (bottom bar) opens the hub, split into two
+# groups. "This book": a prominent Ask/Chat entry, Characters (whole book),
+# Story So Far, Search. "This chapter": the chapter-features grid, including
+# the deduped "Chapter Characters". The overflow button ("More actions") holds
+# Listen, Sleep Timer, Vocabulary, Quote Card, Share.
 #
 # Chrome auto-hides 3s after it appears, so each bottom-bar interaction is
-# preceded by a center-tap reveal (conditional re-tap for determinism).
-# Dismiss selectors are noted inline; confirm them on the first real run.
+# preceded by a center-tap reveal (../common/reveal-chrome.yaml). Grid tiles
+# carry their full label ("Chapter Timeline", "Chapter Characters") as the
+# accessibility label even when the visible text is shortened, so Maestro can
+# match them. Dismiss selectors are noted inline; confirm on the first run.
 appId: com.foxing.app
 env:
   BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
@@ -17,40 +19,52 @@ tags:
 ---
 - runFlow: ../common/open-reader.yaml
 
-# --- Companion hub -> This Chapter grid + tools ---
+# --- Companion hub: two groups, prominent Ask entry ---
 - tapOn: "Companion"
-- assertVisible: "Chapter Timeline"
+- assertVisible: "This book"
+- assertVisible: "This chapter"
+- assertVisible: "Ask a question"
 - assertVisible: "Story So Far"
-- assertVisible: "Characters"
 - assertVisible: "Search"
+- assertVisible: "Chapter Characters"
 
-# Search (Companion tool) -> SearchSheet
+# Ask/Chat -> CompanionChat in general mode (no selection seed)
+- tapOn: "Ask a question"
+- assertVisible: "AI Companion"
+- back
+- assertNotVisible: "AI Companion"
+
+# Search (This book) -> SearchSheet
+- runFlow: ../common/reveal-chrome.yaml
+- tapOn: "Companion"
 - tapOn: "Search"
 - assertVisible: "Close"
 - tapOn: "Close"
 
-# This Chapter feature (Companion grid) -> ChapterFeatureSheet
+# This chapter feature -> ChapterFeatureSheet
 - runFlow: ../common/reveal-chrome.yaml
 - tapOn: "Companion"
 - tapOn: "Chapter Timeline"
 - assertVisible: "Close"
 - tapOn: "Close"
 
-# Story So Far (Companion tool) -> ChapterSummaryModal
+# Story So Far (This book) -> ChapterSummaryModal
 - runFlow: ../common/reveal-chrome.yaml
 - tapOn: "Companion"
 - tapOn: "Story So Far"
 - assertVisible: "Got it"
 - tapOn: "Got it"
 
-# Characters (Companion tool) -> CharacterMapSheet
+# Characters, whole book (This book) -> CharacterMapSheet. Anchored match so
+# it does not also hit the "Chapter Characters" grid tile.
 - runFlow: ../common/reveal-chrome.yaml
 - tapOn: "Companion"
-- tapOn: "Characters"
+- tapOn:
+    text: "^Characters$"
 - assertVisible: "Close"
 - tapOn: "Close"
 
-# --- Overflow ("More actions") -> lean utility set ---
+# --- Overflow ("More actions") -> lean utility set (unchanged) ---
 - runFlow: ../common/reveal-chrome.yaml
 - tapOn: "More actions"
 - assertVisible: "Listen"

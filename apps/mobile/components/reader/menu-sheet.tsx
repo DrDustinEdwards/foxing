@@ -11,6 +11,7 @@ import {
   Moon,
   SpeakerHigh,
   MagnifyingGlass,
+  ChatCircle,
   type Icon,
 } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
@@ -19,6 +20,7 @@ import { CHAPTER_FEATURES } from './chapter-feature-sheet'
 import type { ChapterFeatureKind } from '@/lib/claude'
 
 export type MenuAction =
+  | 'ask-chat'
   | 'story-so-far'
   | 'character-map'
   | 'highlights'
@@ -69,13 +71,12 @@ const SECONDARY: MenuItem[] = [
   { key: 'share', Icon: ShareIcon, label: 'Share' },
 ]
 
-// The Companion hub view (opened from the bottom-bar Companion button) groups
-// the AI/reference tools above the chapter-features grid. In Phase 3 the
-// Companion becomes the real hub; for now this keeps Story So Far, Characters,
-// and Search reachable from one place.
+// The Companion hub "This book" tools, shown below the prominent Ask/Chat
+// button. Characters here is the whole-book CharacterMapSheet; the
+// chapter-scoped one lives in the grid as "Chapter Characters".
 const COMPANION_TOOLS: MenuItem[] = [
-  { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far' },
   { key: 'character-map', Icon: Users, label: 'Characters' },
+  { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far' },
   { key: 'search', Icon: MagnifyingGlass, label: 'Search' },
 ]
 
@@ -167,20 +168,57 @@ export function MenuSheet({
             />
             {showChapterSub ? (
               <View style={{ paddingBottom: 4 }}>
-                {/* Companion tools sit above the chapter-features grid. */}
                 <View style={{ paddingHorizontal: 12 }}>
+                  <SectionLabel label="This book" />
+                  {/* Prominent standalone Ask/Chat entry: opens the companion
+                      in general mode (book + chapter context, no seed). */}
+                  <Pressable
+                    onPress={() => handleSelect('ask-chat')}
+                    accessibilityRole="button"
+                    accessibilityLabel="Ask a question"
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      backgroundColor: colors.brandUi,
+                      borderRadius: 14,
+                      paddingVertical: 12,
+                      paddingHorizontal: 14,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <ChatCircle color={colors.textOnBrand} size={20} weight="fill" />
+                    <View style={{ marginLeft: 10, flex: 1 }}>
+                      <Text
+                        style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textOnBrand }}
+                      >
+                        Ask a question
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: Fonts.ui,
+                          fontSize: 11,
+                          color: colors.textOnBrand,
+                          opacity: 0.85,
+                          marginTop: 1,
+                        }}
+                      >
+                        Chat about this book and where you are
+                      </Text>
+                    </View>
+                  </Pressable>
                   <Row items={COMPANION_TOOLS} onSelect={handleSelect} />
+                  <SectionLabel label="This chapter" />
                 </View>
                 <ChapterFeatureGrid
+                  hideHeader
                   currentChapterTitle={currentChapterTitle}
                   onPick={(kind) => {
                     setShowChapterSub(false)
                     onChapterFeature?.(kind)
                     onClose()
                   }}
-                  // When the sub-grid was opened directly (initialView ===
-                  // 'chapter-features'), the sheet has nothing to go back to;
-                  // omit Back so dismissing means closing the sheet.
+                  // The hub always opens directly to this view, so there is no
+                  // previous view to return to.
                   onBack={
                     initialView === 'chapter-features'
                       ? undefined
@@ -262,6 +300,27 @@ function Row({ items, onSelect }: RowProps) {
   )
 }
 
+// Group heading inside the Companion hub ("This book" / "This chapter").
+function SectionLabel({ label }: { label: string }) {
+  const colors = useColors()
+  return (
+    <Text
+      style={{
+        fontFamily: Fonts.uiMedium,
+        fontSize: 11,
+        color: colors.textTertiary,
+        textTransform: 'uppercase',
+        letterSpacing: 0.6,
+        marginTop: 4,
+        marginBottom: 8,
+        paddingHorizontal: 4,
+      }}
+    >
+      {label}
+    </Text>
+  )
+}
+
 interface ChapterFeatureGridProps {
   currentChapterTitle?: string
   onPick: (kind: ChapterFeatureKind) => void
@@ -269,55 +328,61 @@ interface ChapterFeatureGridProps {
   // top-bar Sparkle icon there's no "previous view" to return to, so the
   // host passes undefined and we just hide the Back label.
   onBack?: () => void
+  // The hub provides its own "This chapter" section label, so it suppresses
+  // the grid's internal chapter-title header to avoid a double heading.
+  hideHeader?: boolean
 }
 
 function ChapterFeatureGrid({
   currentChapterTitle,
   onPick,
   onBack,
+  hideHeader,
 }: ChapterFeatureGridProps) {
   const colors = useColors()
   return (
     <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginBottom: 6,
-          paddingHorizontal: 4,
-        }}
-      >
-        <View style={{ width: 40 }}>
-          {onBack ? (
-            <Pressable onPress={onBack} hitSlop={8}>
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 13,
-                  color: colors.brandText,
-                }}
-              >
-                Back
-              </Text>
-            </Pressable>
-          ) : null}
-        </View>
-        <Text
-          numberOfLines={1}
+      {hideHeader ? null : (
+        <View
           style={{
-            flex: 1,
-            textAlign: 'center',
-            fontFamily: Fonts.uiMedium,
-            fontSize: 12,
-            color: colors.textTertiary,
-            textTransform: 'uppercase',
-            letterSpacing: 0.6,
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 6,
+            paddingHorizontal: 4,
           }}
         >
-          {currentChapterTitle ?? 'This Chapter'}
-        </Text>
-        <View style={{ width: 40 }} />
-      </View>
+          <View style={{ width: 40 }}>
+            {onBack ? (
+              <Pressable onPress={onBack} hitSlop={8}>
+                <Text
+                  style={{
+                    fontFamily: Fonts.uiMedium,
+                    fontSize: 13,
+                    color: colors.brandText,
+                  }}
+                >
+                  Back
+                </Text>
+              </Pressable>
+            ) : null}
+          </View>
+          <Text
+            numberOfLines={1}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              fontFamily: Fonts.uiMedium,
+              fontSize: 12,
+              color: colors.textTertiary,
+              textTransform: 'uppercase',
+              letterSpacing: 0.6,
+            }}
+          >
+            {currentChapterTitle ?? 'This Chapter'}
+          </Text>
+          <View style={{ width: 40 }} />
+        </View>
+      )}
       <View
         style={{
           flexDirection: 'row',
@@ -360,7 +425,9 @@ function ChapterFeatureGrid({
                 color: colors.textSecondary,
               }}
             >
-              {f.label.replace(/^Chapter /, '')}
+              {/* Keep "Chapter Characters" full so it reads distinctly from the
+                  whole-book "Characters" tile; strip "Chapter " from the rest. */}
+              {f.id === 'characters' ? f.label : f.label.replace(/^Chapter /, '')}
             </Text>
           </Pressable>
         ))}
