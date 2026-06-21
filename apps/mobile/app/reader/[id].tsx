@@ -56,6 +56,7 @@ import type { ChapterFeatureKind } from '@/lib/claude'
 import { CharacterMapSheet } from '@/components/reader/character-map-sheet'
 import { HighlightsSheet } from '@/components/reader/highlights-sheet'
 import { SearchSheet } from '@/components/reader/search-sheet'
+import { TranslateSheet } from '@/components/reader/translate-sheet'
 import {
   FloatingPill,
   type HighlightColor,
@@ -274,6 +275,9 @@ export default function Reader() {
   const [characterMapOpen, setCharacterMapOpen] = useState(false)
   const [highlightsOpen, setHighlightsOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
+  // Translate sheet: holds the selected text split into paragraphs (a word is
+  // a single-item list). Rendered side by side with its translation.
+  const [translateSel, setTranslateSel] = useState<{ paragraphs: string[] } | null>(null)
   const [chapterFeature, setChapterFeature] = useState<ChapterFeatureKind | null>(null)
   // Chapter check-in, pops a 3-option toast at the bottom after a chapter
   // change. previousChapter holds the just-completed chapter's title; the
@@ -1213,15 +1217,46 @@ export default function Reader() {
     dismissPill()
   }
 
-  function handleDiscuss() {
-    if (!passagePayload) {
+  // Ask seeds the companion chat with the current selection. Works for both a
+  // tapped word (with its sentence context) and a selected passage. Renamed
+  // from the old passage-only "Discuss".
+  function handleAsk() {
+    if (pillMode === 'word' && wordPayload) {
+      setChatSeed(
+        `I'm reading and selected the word "${wordPayload.word}" in this sentence: "${wordPayload.surroundingText}". What would you like to know about it?`,
+      )
+      setChatOpen(true)
       dismissPill()
       return
     }
-    setChatSeed(
-      `I selected this passage: "${passagePayload.text}", what would you like to discuss about it?`,
-    )
-    setChatOpen(true)
+    if (passagePayload) {
+      setChatSeed(
+        `I selected this passage: "${passagePayload.text}", what would you like to discuss about it?`,
+      )
+      setChatOpen(true)
+      dismissPill()
+      return
+    }
+    dismissPill()
+  }
+
+  // Translate opens the side-by-side sheet for the current selection, using the
+  // reader's saved target language (prefs.targetLanguage). A word becomes a
+  // single-paragraph translation; a passage is split on blank lines.
+  function handleTranslate() {
+    const raw = pillMode === 'word' ? wordPayload?.word : passagePayload?.text
+    if (!raw) {
+      dismissPill()
+      return
+    }
+    const paragraphs =
+      pillMode === 'word'
+        ? [raw]
+        : raw
+            .split(/\n{2,}/)
+            .map((p) => p.trim())
+            .filter(Boolean)
+    setTranslateSel({ paragraphs: paragraphs.length ? paragraphs : [raw] })
     dismissPill()
   }
 
@@ -1797,7 +1832,8 @@ export default function Reader() {
         onDismiss={dismissPill}
         onLookup={handleLookup}
         onAnalyze={handleAnalyze}
-        onDiscuss={handleDiscuss}
+        onAsk={handleAsk}
+        onTranslate={handleTranslate}
         showClub={matchingClubs.length > 0}
         onClub={() => {
           if (!passagePayload?.cfi) {
@@ -1983,6 +2019,19 @@ export default function Reader() {
         // have a chapter-name → CFI map yet (a follow-up).
         onClose={() => setSearchOpen(false)}
       />
+
+      {translateSel ? (
+        <TranslateSheet
+          visible
+          paragraphs={translateSel.paragraphs}
+          targetLanguage={prefs.targetLanguage}
+          bookTitle={book.title}
+          author={book.author}
+          bookId={book.id}
+          currentChapter={currentChapter.title}
+          onClose={() => setTranslateSel(null)}
+        />
+      ) : null}
 
       {commentSheet ? (
         <PassageCommentSheet

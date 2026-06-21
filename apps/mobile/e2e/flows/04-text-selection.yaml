@@ -1,14 +1,14 @@
-# Check: select text and trigger an action.
+# Check: select text and trigger an action via the unified contextual menu.
 #
-# The reader text lives inside the foliate WebView. Maestro cannot drive the
-# native selection handles reliably, so this flow exercises the two real entry
-# points the reader exposes from text:
-#   1. Single tap on a word -> floating pill (word mode) -> Look up -> WordLookupSheet
-#   2. Long press on a word  -> floating pill (passage mode) -> Analyze -> PassageAnalysisSheet
+# Phase 2: word and passage share one menu whose actions adapt to the
+# selection. The primary action is labeled; secondary actions are icon-only
+# but carry accessibility labels (Look up, Highlight, Translate, Ask, Analyze,
+# Comment), so Maestro can match them by text.
 #
-# Both taps use a coordinate in the body text band. The exact point is content
-# dependent; if a tap lands on whitespace the pill will not appear. Adjust the
-# percentages for your test book if needed. This is the flakiest flow by nature.
+# Selection happens inside the foliate WebView, which Maestro cannot drive
+# precisely, so the taps use fixed coordinates in the body text band. If a tap
+# lands on whitespace the menu will not appear; adjust the percentages for your
+# test book. This is the flakiest flow by nature.
 appId: com.foxing.app
 env:
   BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
@@ -21,26 +21,37 @@ tags:
 - tapOn:
     point: "50%, 50%"
 
-# --- Word tap -> pill -> Look up -> WordLookupSheet ---
+# --- Word tap -> unified menu -> Look up -> WordLookupSheet ---
 - tapOn:
     point: "30%, 45%"
 - assertVisible: "Look up"
+- assertVisible: "Translate"
 - tapOn: "Look up"
 - assertVisible: "Close word lookup"
 - tapOn:
     id: "Close word lookup"
 - takeScreenshot: 04-word-lookup
 
-# --- Long press -> passage pill -> Analyze -> PassageAnalysisSheet ---
-# Re-tap empty area first to clear any lingering pill.
+# --- Long press -> passage menu -> Analyze -> PassageAnalysisSheet ---
 - tapOn:
     point: "50%, 50%"
 - longPressOn:
     point: "30%, 55%"
-# Solo passage layout shows Analyze; a club-reader layout shows it too.
 - assertVisible: "Analyze"
+- assertVisible: "Translate"
 - tapOn: "Analyze"
 # PassageAnalysisSheet renders its mode chips; "Plain English" is the first.
 - assertVisible: "Plain English"
 - tapOn: "Close"
 - takeScreenshot: 04-passage-analysis
+
+# --- Translate path -> TranslateSheet (side by side) ---
+- tapOn:
+    point: "50%, 50%"
+- longPressOn:
+    point: "30%, 55%"
+- assertVisible: "Translate"
+- tapOn: "Translate"
+- assertVisible: "Close translation"
+- tapOn: "Close translation"
+- takeScreenshot: 04-translate

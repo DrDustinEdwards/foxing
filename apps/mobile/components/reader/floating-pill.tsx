@@ -6,6 +6,7 @@ import {
   Palette,
   ChatCircle,
   UsersThree,
+  Translate,
   Highlighter,
   BookmarkSimple,
   X as XIcon,
@@ -44,18 +45,28 @@ interface FloatingPillProps {
   mode: PillMode
   anchor: PillAnchor | null
   onDismiss: () => void
-  // Word actions
+  // Word-only
   onLookup?: () => void
-  // Passage actions
+  // Passage-only
   onAnalyze?: () => void
-  onDiscuss?: () => void
-  // Inline club passage-comment action, only renders in passage mode and
-  // only when the viewer belongs to a club currently reading this book.
+  // Both selection types
+  onAsk?: () => void
+  onTranslate?: () => void
+  // Inline passage-comment action, only renders in passage mode and only when
+  // the viewer belongs to a club currently reading this book.
   showClub?: boolean
   onClub?: () => void
-  // Shared, both modes show Highlight. Privacy is selected inline after
-  // color pick (Section 3 of task.md). Callers translate to is_public.
+  // Shared, both modes show Highlight. Privacy is selected inline after the
+  // color pick. Callers translate to is_public.
   onHighlight: (color: HighlightColor, privacy: PrivacyTier) => void
+}
+
+interface PillActionDef {
+  key: string
+  label: string
+  Icon: Icon
+  onPress: () => void
+  primary?: boolean
 }
 
 const PILL_HEIGHT = 44
@@ -69,7 +80,8 @@ export function FloatingPill({
   onDismiss,
   onLookup,
   onAnalyze,
-  onDiscuss,
+  onAsk,
+  onTranslate,
   showClub,
   onClub,
   onHighlight,
@@ -81,7 +93,7 @@ export function FloatingPill({
   // the user can choose where the highlight is visible before it's written.
   const [pendingColor, setPendingColor] = useState<HighlightColor | null>(null)
   const [privacyDraft, setPrivacyDraft] = useState<PrivacyTier>('public')
-  // Long-press → all-options bottom sheet (Section 4 of task.md).
+  // Long-press shows the full labeled action list as a bottom sheet.
   const [allOptionsOpen, setAllOptionsOpen] = useState(false)
 
   // Reset color picker when the pill closes or the anchor changes
@@ -112,19 +124,42 @@ export function FloatingPill({
     }
   }
 
-  // Pill width is content-driven; we measure-on-render via approximate
-  // content widths. Position anchor above the word with a small gap; if
-  // the result would be off the top of the screen, place it BELOW instead.
-  const passagePillWidth = mode === 'passage' && showClub ? 360 : 280
-  const approxPillWidth = showColors ? 280 : (mode === 'word' ? 200 : passagePillWidth)
+  // One contextual menu, actions adapt to the selection type. The first item
+  // is the primary action (labeled, brand-filled); the rest are icon-only so
+  // four or five actions fit inline on a phone. Long-press reveals the full
+  // labeled list.
+  const actions: PillActionDef[] =
+    mode === 'word'
+      ? [
+          { key: 'lookup', label: 'Look up', Icon: MagnifyingGlass, onPress: () => onLookup?.(), primary: true },
+          { key: 'highlight', label: 'Highlight', Icon: Palette, onPress: () => setShowColors(true) },
+          { key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() },
+          { key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() },
+        ]
+      : [
+          { key: 'analyze', label: 'Analyze', Icon: ClipboardText, onPress: () => onAnalyze?.(), primary: true },
+          { key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() },
+          { key: 'highlight', label: 'Highlight', Icon: Palette, onPress: () => setShowColors(true) },
+          ...(showClub
+            ? [{ key: 'comment', label: 'Comment', Icon: UsersThree, onPress: () => onClub?.() }]
+            : []),
+          { key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() },
+        ]
+
+  // Pill width is content-driven: one labeled primary chip plus icon-only
+  // chips and the dismiss button. Position above the selection with a gap;
+  // drop below if it would clip the top chrome.
+  const LABELED_W = 116
+  const ICON_W = 42
+  const DISMISS_W = 46
+  const approxPillWidth = showColors
+    ? 280
+    : LABELED_W + (actions.length - 1) * ICON_W + DISMISS_W + 12
   const idealLeft = anchor.x + anchor.width / 2 - approxPillWidth / 2
   const left = Math.max(
     PILL_HORIZONTAL_PAD,
     Math.min(idealLeft, screenWidth - approxPillWidth - PILL_HORIZONTAL_PAD),
   )
-  // Prefer above. If above clips behind the top chrome, drop below, but
-  // only if below stays clear of the bottom safe-area / chrome (100px slack).
-  // If both placements overflow, clamp above to a minimum top.
   const aboveTop = anchor.y - PILL_HEIGHT - PILL_VERTICAL_GAP
   const belowTop = anchor.y + anchor.height + PILL_VERTICAL_GAP
   const BOTTOM_LIMIT = screenHeight - 100
@@ -156,19 +191,11 @@ export function FloatingPill({
     elevation: 6,
   }
 
-  const labelStyle = {
-    fontFamily: Fonts.uiMedium,
-    fontSize: 13,
-    color: colors.textSecondary,
-    marginLeft: 6,
-  }
-
   const ICON_SIZE = 18
   const iconColor = colors.brandText
 
   // Color-picker mode: swatch row inside the pill. After a color is picked
-  // (pendingColor !== null) the pill swaps to a privacy selector + Save
-  // button, Section 3 of task.md.
+  // (pendingColor !== null) the pill swaps to a privacy selector + Save button.
   if (showColors) {
     if (pendingColor === null) {
       return (
@@ -283,129 +310,69 @@ export function FloatingPill({
 
   return (
     <>
-    <Pressable
-      onLongPress={() => setAllOptionsOpen(true)}
-      delayLongPress={350}
-      style={pillStyle}
-      accessible
-      accessibilityViewIsModal
-      accessibilityLabel={mode === 'word' ? 'Word actions' : 'Passage actions'}
-      accessibilityHint="Long press for all options"
-    >
-      {mode === 'word' ? (
-        <>
-          <PillAction
-            primary
-            Icon={MagnifyingGlass}
-            label="Look up"
-            a11yLabel="Look up word"
-            autoFocus
-            onPress={() => onLookup?.()}
-          />
-          <PillDivider colors={colors} />
-          <PillAction
-            Icon={Palette}
-            label="Highlight"
-            a11yLabel="Highlight"
-            onPress={() => setShowColors(true)}
-          />
-        </>
-      ) : showClub ? (
-        // Club-first passage layout per task.md Section G, when the viewer
-        // belongs to a club reading this book, the most useful action is
-        // jumping to club discussion of this passage.
-        <>
-          <PillAction
-            primary
-            Icon={UsersThree}
-            label="Club"
-            a11yLabel="Club discussion on passage"
-            autoFocus
-            onPress={() => onClub?.()}
-          />
-          <PillDivider colors={colors} />
-          <PillAction
-            Icon={Palette}
-            label="Highlight"
-            a11yLabel="Highlight"
-            onPress={() => setShowColors(true)}
-          />
-          <PillDivider colors={colors} />
-          <PillAction
-            Icon={ClipboardText}
-            label="Analyze"
-            a11yLabel="Analyze passage"
-            onPress={() => onAnalyze?.()}
-          />
-        </>
-      ) : (
-        // Solo passage layout, highlight is the most common action.
-        <>
-          <PillAction
-            primary
-            Icon={Palette}
-            label="Highlight"
-            a11yLabel="Highlight"
-            autoFocus
-            onPress={() => setShowColors(true)}
-          />
-          <PillDivider colors={colors} />
-          <PillAction
-            Icon={ClipboardText}
-            label="Analyze"
-            a11yLabel="Analyze passage"
-            onPress={() => onAnalyze?.()}
-          />
-          <PillDivider colors={colors} />
-          <PillAction
-            Icon={ChatCircle}
-            label="Discuss"
-            a11yLabel="Discuss passage"
-            onPress={() => onDiscuss?.()}
-          />
-        </>
-      )}
-
-      <View style={{ width: 1, height: 22, backgroundColor: colors.borderSubtle, marginHorizontal: 4 }} />
       <Pressable
-        accessibilityRole="button"
-        accessibilityLabel="Dismiss pill"
-        onPress={onDismiss}
-        style={{ paddingHorizontal: 10, paddingVertical: 8 }}
+        onLongPress={() => setAllOptionsOpen(true)}
+        delayLongPress={350}
+        style={pillStyle}
+        accessible
+        accessibilityViewIsModal
+        accessibilityLabel={mode === 'word' ? 'Word actions' : 'Passage actions'}
+        accessibilityHint="Long press for all options"
       >
-        <XIcon color={iconColor} size={ICON_SIZE} />
-      </Pressable>
-    </Pressable>
+        {actions.map((a, i) => (
+          <PillAction
+            key={a.key}
+            Icon={a.Icon}
+            label={a.label}
+            a11yLabel={a.label}
+            primary={a.primary}
+            iconOnly={!a.primary}
+            autoFocus={i === 0}
+            onPress={a.onPress}
+          />
+        ))}
 
-    <AllOptionsSheet
-      visible={allOptionsOpen}
-      mode={mode}
-      showClub={!!showClub}
-      onClose={() => setAllOptionsOpen(false)}
-      onLookup={onLookup}
-      onAnalyze={onAnalyze}
-      onDiscuss={onDiscuss}
-      onClub={onClub}
-      onHighlight={() => {
-        setAllOptionsOpen(false)
-        setShowColors(true)
-      }}
-      onSavePassage={() => {
-        setAllOptionsOpen(false)
-        onHighlight('amber', 'public')
-        onDismiss()
-      }}
-      onDismissAll={() => {
-        setAllOptionsOpen(false)
-        onDismiss()
-      }}
-    />
+        <View style={{ width: 1, height: 22, backgroundColor: colors.borderSubtle, marginHorizontal: 4 }} />
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Dismiss pill"
+          onPress={onDismiss}
+          style={{ paddingHorizontal: 10, paddingVertical: 8 }}
+        >
+          <XIcon color={iconColor} size={ICON_SIZE} />
+        </Pressable>
+      </Pressable>
+
+      <AllOptionsSheet
+        visible={allOptionsOpen}
+        mode={mode}
+        showClub={!!showClub}
+        onClose={() => setAllOptionsOpen(false)}
+        onLookup={onLookup}
+        onAnalyze={onAnalyze}
+        onAsk={onAsk}
+        onTranslate={onTranslate}
+        onClub={onClub}
+        onHighlight={() => {
+          setAllOptionsOpen(false)
+          setShowColors(true)
+        }}
+        onSavePassage={() => {
+          setAllOptionsOpen(false)
+          onHighlight('amber', 'public')
+          onDismiss()
+        }}
+        onDismissAll={() => {
+          setAllOptionsOpen(false)
+          onDismiss()
+        }}
+      />
     </>
   )
 }
 
-// All-options bottom sheet shown on long-press of the pill (Section 4).
-// Each action calls the existing handler the floating pill already wires.
+// All-options bottom sheet shown on long-press of the pill. Mirrors the inline
+// menu with full labels. Each action calls the handler the pill already wires.
 function AllOptionsSheet({
   visible,
   mode,
@@ -413,7 +380,8 @@ function AllOptionsSheet({
   onClose,
   onLookup,
   onAnalyze,
-  onDiscuss,
+  onAsk,
+  onTranslate,
   onClub,
   onHighlight,
   onSavePassage,
@@ -425,7 +393,8 @@ function AllOptionsSheet({
   onClose: () => void
   onLookup?: () => void
   onAnalyze?: () => void
-  onDiscuss?: () => void
+  onAsk?: () => void
+  onTranslate?: () => void
   onClub?: () => void
   onHighlight: () => void
   onSavePassage: () => void
@@ -441,13 +410,16 @@ function AllOptionsSheet({
   }> = []
   items.push({ key: 'highlight', label: 'Highlight', Icon: Highlighter, onPress: onHighlight })
   if (mode === 'word') {
-    items.push({ key: 'lookup', label: 'Look up word', Icon: MagnifyingGlass, onPress: () => onLookup?.() })
+    items.push({ key: 'lookup', label: 'Look up', Icon: MagnifyingGlass, onPress: () => onLookup?.() })
+    items.push({ key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() })
+    items.push({ key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() })
   } else {
     items.push({ key: 'analyze', label: 'Analyze', Icon: MagnifyingGlass, onPress: () => onAnalyze?.() })
-    items.push({ key: 'discuss', label: 'Discuss with AI', Icon: ChatCircle, onPress: () => onDiscuss?.() })
+    items.push({ key: 'ask', label: 'Ask', Icon: ChatCircle, onPress: () => onAsk?.() })
     if (showClub) {
-      items.push({ key: 'club', label: 'Club comment', Icon: UsersThree, onPress: () => onClub?.() })
+      items.push({ key: 'comment', label: 'Comment', Icon: UsersThree, onPress: () => onClub?.() })
     }
+    items.push({ key: 'translate', label: 'Translate', Icon: Translate, onPress: () => onTranslate?.() })
     items.push({ key: 'save', label: 'Save Passage', Icon: BookmarkSimple, onPress: onSavePassage })
   }
   items.push({ key: 'dismiss', label: 'Dismiss', Icon: XIcon, onPress: onDismissAll, destructive: true })
@@ -521,15 +493,17 @@ function AllOptionsSheet({
   )
 }
 
-// One action chip inside the pill. Primary chips get a brand-subtle bg so
-// the eye lands on them first. autoFocus is iOS-only; safe to pass as a
-// no-op elsewhere via the type cast.
+// One action chip inside the pill. The primary chip gets a brand-subtle bg and
+// a label so the eye lands on it; secondary chips are icon-only (label exposed
+// via accessibilityLabel) so the unified menu fits inline. autoFocus is
+// iOS-only; safe to pass as a no-op elsewhere via the type cast.
 function PillAction({
   Icon,
   label,
   a11yLabel,
   onPress,
   primary,
+  iconOnly,
   autoFocus,
 }: {
   Icon: React.ComponentType<{ color: string; size: number; weight?: 'regular' | 'bold' | 'fill' }>
@@ -537,6 +511,7 @@ function PillAction({
   a11yLabel: string
   onPress: () => void
   primary?: boolean
+  iconOnly?: boolean
   autoFocus?: boolean
 }) {
   const colors = useColors()
@@ -551,7 +526,7 @@ function PillAction({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: primary ? 12 : 10,
+        paddingHorizontal: primary ? 12 : 8,
         paddingVertical: 8,
         marginVertical: 2,
         marginHorizontal: primary ? 2 : 0,
@@ -560,24 +535,18 @@ function PillAction({
       }}
     >
       <Icon color={primary ? colors.brandSubtleText : colors.brandText} size={ICON_SIZE} />
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 13,
-          color: primary ? colors.brandSubtleText : colors.textSecondary,
-          marginLeft: 6,
-        }}
-      >
-        {label}
-      </Text>
+      {iconOnly ? null : (
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 13,
+            color: primary ? colors.brandSubtleText : colors.textSecondary,
+            marginLeft: 6,
+          }}
+        >
+          {label}
+        </Text>
+      )}
     </Pressable>
-  )
-}
-
-function PillDivider({ colors }: { colors: ReturnType<typeof useColors> }) {
-  return (
-    <View
-      style={{ width: 1, height: 22, backgroundColor: colors.borderSubtle, marginHorizontal: 4 }}
-    />
   )
 }
