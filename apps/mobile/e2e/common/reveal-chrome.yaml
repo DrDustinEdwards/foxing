@@ -1,0 +1,14 @@
+# Reusable: ensure the reader chrome is visible via the single center-tap
+# toggle. The conditional re-tap makes it deterministic from either starting
+# state (chrome may have auto-hidden after its 3s timeout).
+appId: com.foxing.app
+---
+- tapOn:
+    point: "50%, 50%"
+- runFlow:
+    when:
+      notVisible: "Back to library"
+    commands:
+      - tapOn:
+          point: "50%, 50%"
+- assertVisible: "Back to library"

@@ -1,18 +1,13 @@
 import { View, Text, Pressable } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import {
-  CaretLeft,
-  TextAa,
-  BookmarkSimple,
-  SpeakerHigh,
-  NavigationArrow,
-  MagnifyingGlass,
-  Sparkle,
-} from 'phosphor-react-native'
+import { CaretLeft, TextAa, BookmarkSimple } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import type { MenuAction, MenuInitialView } from '@/components/reader/menu-sheet'
 
+// Phase 1 reading chrome: the top bar is reduced to Back, a tappable
+// title/chapter that opens the Go To sheet, Bookmark, and Aa (typography).
+// Listen, Search, and the chapter-features (Sparkle) trigger moved to the
+// bottom bar (overflow + Companion button).
 interface ReaderTopBarProps {
   chromeBg: string
   isTablet: boolean
@@ -20,10 +15,9 @@ interface ReaderTopBarProps {
   chapterTitle: string
   isCurrentBookmarked: boolean
   onBack: () => void
+  onOpenGoTo: () => void
   onOpenSettings: () => void
   onBookmarkTap: () => void
-  onMenuAction: (action: MenuAction) => void
-  onOpenChapterFeatures: () => void
 }
 
 export function ReaderTopBar({
@@ -33,10 +27,9 @@ export function ReaderTopBar({
   chapterTitle,
   isCurrentBookmarked,
   onBack,
+  onOpenGoTo,
   onOpenSettings,
   onBookmarkTap,
-  onMenuAction,
-  onOpenChapterFeatures,
 }: ReaderTopBarProps) {
   const colors = useColors()
   return (
@@ -55,7 +48,6 @@ export function ReaderTopBar({
           paddingBottom: isTablet ? 8 : 6,
         }}
       >
-        {/* Row 1: navigation + title + utility icons */}
         <View className="flex-row items-center">
           <Pressable
             onPress={onBack}
@@ -66,12 +58,20 @@ export function ReaderTopBar({
           >
             <CaretLeft color={colors.brandUi} size={22} />
           </Pressable>
-          <View style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}>
+          {/* Title + chapter is the Go To affordance: tapping it opens the
+              table of contents / location sheet. */}
+          <Pressable
+            onPress={onOpenGoTo}
+            hitSlop={6}
+            accessibilityRole="button"
+            accessibilityLabel="Table of contents and location"
+            style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}
+          >
             <Text
               numberOfLines={1}
               style={{
                 fontFamily: Fonts.uiMedium,
-                fontSize: 14,
+                fontSize: 15,
                 color: colors.textPrimary,
               }}
             >
@@ -90,15 +90,6 @@ export function ReaderTopBar({
                 {chapterTitle}
               </Text>
             ) : null}
-          </View>
-          <Pressable
-            onPress={onOpenSettings}
-            className="px-2 py-2"
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel="Reading typography and layout"
-          >
-            <TextAa color={colors.brandUi} size={22} />
           </Pressable>
           <Pressable
             onPress={onBookmarkTap}
@@ -113,51 +104,14 @@ export function ReaderTopBar({
               weight={isCurrentBookmarked ? 'fill' : 'regular'}
             />
           </Pressable>
-        </View>
-
-        {/* Row 2: primary actions. Listen, Go To, Search, This Chapter
-            live in chrome so the most-used reading flows are one tap
-            away. Secondary items still surface via the bottom-bar
-            chevron-up. */}
-        <View
-          className="flex-row items-center justify-around"
-          style={{ marginTop: 4, paddingTop: 4 }}
-        >
           <Pressable
-            onPress={() => onMenuAction('listen')}
+            onPress={onOpenSettings}
+            className="px-2 py-2"
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel="Listen"
-            style={{ paddingHorizontal: 8, paddingVertical: 6 }}
+            accessibilityLabel="Reading typography and layout"
           >
-            <SpeakerHigh color={colors.brandUi} size={22} />
-          </Pressable>
-          <Pressable
-            onPress={() => onMenuAction('go-to')}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel="Go to"
-            style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-          >
-            <NavigationArrow color={colors.brandUi} size={22} />
-          </Pressable>
-          <Pressable
-            onPress={() => onMenuAction('search')}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel="Search"
-            style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-          >
-            <MagnifyingGlass color={colors.brandUi} size={22} />
-          </Pressable>
-          <Pressable
-            onPress={onOpenChapterFeatures}
-            hitSlop={6}
-            accessibilityRole="button"
-            accessibilityLabel="This chapter"
-            style={{ paddingHorizontal: 8, paddingVertical: 6 }}
-          >
-            <Sparkle color={colors.brandUi} size={22} />
+            <TextAa color={colors.brandUi} size={22} />
           </Pressable>
         </View>
       </View>

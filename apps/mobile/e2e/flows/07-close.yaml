@@ -1,0 +1,14 @@
+# Check: close the reader.
+appId: com.foxing.app
+env:
+  BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
+tags:
+  - reader
+---
+- runFlow: ../common/open-reader.yaml
+# Back to library button in the top bar pops the reader off the stack.
+- tapOn: "Back to library"
+# The reader chrome is gone once we leave the screen.
+- assertNotVisible: "Back to library"
+- assertNotVisible: "Companion"
+- takeScreenshot: 07-reader-closed

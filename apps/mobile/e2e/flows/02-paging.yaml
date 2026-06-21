@@ -1,0 +1,44 @@
+# Check: page forward and back.
+#
+# Paging is handled inside the foliate WebView via tap zones: the right third
+# advances, the left third goes back. We tap at mid height (50%) so the taps
+# land on the page area, not the top/bottom chrome bars.
+appId: com.foxing.app
+env:
+  BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
+tags:
+  - reader
+---
+- runFlow: ../common/open-reader.yaml
+# Dismiss chrome so taps reach the page, not the bars. Tapping center empty
+# area toggles chrome off.
+- tapOn:
+    point: "50%, 50%"
+- takeScreenshot: 02-page-0
+# Forward three pages.
+- tapOn:
+    point: "92%, 50%"
+- tapOn:
+    point: "92%, 50%"
+- tapOn:
+    point: "92%, 50%"
+- takeScreenshot: 02-page-forward
+# Back three pages.
+- tapOn:
+    point: "8%, 50%"
+- tapOn:
+    point: "8%, 50%"
+- tapOn:
+    point: "8%, 50%"
+- takeScreenshot: 02-page-back
+# Survived the round trip: reveal chrome again (center tap, the single toggle)
+# and confirm the reader shell is intact (no crash, still on the reader screen).
+- tapOn:
+    point: "50%, 50%"
+- runFlow:
+    when:
+      notVisible: "Back to library"
+    commands:
+      - tapOn:
+          point: "50%, 50%"
+- assertVisible: "Back to library"

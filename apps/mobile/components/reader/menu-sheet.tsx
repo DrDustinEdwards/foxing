@@ -9,6 +9,8 @@ import {
   Share as ShareIcon,
   Sparkle,
   Moon,
+  SpeakerHigh,
+  MagnifyingGlass,
   type Icon,
 } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
@@ -58,13 +60,23 @@ interface MenuItem {
   label: string
 }
 
+// Phase 1 overflow: lean utility set. Listen relocated here from the top bar.
 const SECONDARY: MenuItem[] = [
-  { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far' },
-  { key: 'character-map', Icon: Users, label: 'Characters' },
+  { key: 'listen', Icon: SpeakerHigh, label: 'Listen' },
   { key: 'sleep-timer', Icon: Moon, label: 'Sleep Timer' },
   { key: 'vocabulary', Icon: Books, label: 'Vocabulary' },
   { key: 'quote-card', Icon: ImageSquare, label: 'Quote Card' },
   { key: 'share', Icon: ShareIcon, label: 'Share' },
+]
+
+// The Companion hub view (opened from the bottom-bar Companion button) groups
+// the AI/reference tools above the chapter-features grid. In Phase 3 the
+// Companion becomes the real hub; for now this keeps Story So Far, Characters,
+// and Search reachable from one place.
+const COMPANION_TOOLS: MenuItem[] = [
+  { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far' },
+  { key: 'character-map', Icon: Users, label: 'Characters' },
+  { key: 'search', Icon: MagnifyingGlass, label: 'Search' },
 ]
 
 export function MenuSheet({
@@ -154,22 +166,28 @@ export function MenuSheet({
               }}
             />
             {showChapterSub ? (
-              <ChapterFeatureGrid
-                currentChapterTitle={currentChapterTitle}
-                onPick={(kind) => {
-                  setShowChapterSub(false)
-                  onChapterFeature?.(kind)
-                  onClose()
-                }}
-                // When the sub-grid was opened directly (initialView ===
-                // 'chapter-features'), the sheet has nothing to go back to;
-                // omit Back so dismissing means closing the sheet.
-                onBack={
-                  initialView === 'chapter-features'
-                    ? undefined
-                    : () => setShowChapterSub(false)
-                }
-              />
+              <View style={{ paddingBottom: 4 }}>
+                {/* Companion tools sit above the chapter-features grid. */}
+                <View style={{ paddingHorizontal: 12 }}>
+                  <Row items={COMPANION_TOOLS} onSelect={handleSelect} />
+                </View>
+                <ChapterFeatureGrid
+                  currentChapterTitle={currentChapterTitle}
+                  onPick={(kind) => {
+                    setShowChapterSub(false)
+                    onChapterFeature?.(kind)
+                    onClose()
+                  }}
+                  // When the sub-grid was opened directly (initialView ===
+                  // 'chapter-features'), the sheet has nothing to go back to;
+                  // omit Back so dismissing means closing the sheet.
+                  onBack={
+                    initialView === 'chapter-features'
+                      ? undefined
+                      : () => setShowChapterSub(false)
+                  }
+                />
+              </View>
             ) : (
               <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
                 <Row items={secondaryWithClubs} onSelect={handleSelect} />

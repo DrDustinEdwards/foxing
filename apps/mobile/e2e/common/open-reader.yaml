@@ -1,0 +1,32 @@
+# Shared subflow: launch the app and deep link straight into the reader.
+#
+# Preconditions (see e2e/README.md):
+#   - The emulator/simulator already has an authenticated Foxing session.
+#     The reader renders for a signed-in user; a signed-out deep link may
+#     bounce to the auth stack.
+#   - BOOK_ID is a real catalog book id with a resolvable epub. Pass it with
+#     -e BOOK_ID=<uuid>.
+#
+# clearState is intentionally NOT set so the existing login survives.
+appId: com.foxing.app
+---
+- launchApp
+# Expo Router maps the "foxing" scheme + /reader/[id] route to this screen.
+- openLink: "foxing://reader/${BOOK_ID}"
+# Wait out the book fetch + epub download. The loading overlay shows this text.
+- extendedWaitUntil:
+    notVisible: "Loading book."
+    timeout: 30000
+# Phase 1 chrome has a single toggle: a center tap. The on-open peek may have
+# already auto-hidden by the time the epub finishes loading, so tap once to
+# toggle, then re-tap only if chrome did not appear. Net result: chrome on,
+# regardless of the starting state.
+- tapOn:
+    point: "50%, 50%"
+- runFlow:
+    when:
+      notVisible: "Back to library"
+    commands:
+      - tapOn:
+          point: "50%, 50%"
+- assertVisible: "Back to library"

@@ -1,0 +1,62 @@
+# Check: open each tool sheet and confirm it appears.
+#
+# Phase 1 relocation: the Companion button (bottom bar) opens the This Chapter
+# grid plus the Story So Far / Characters / Search tools. The overflow button
+# ("More actions") holds Listen, Sleep Timer, Vocabulary, Quote Card, Share.
+# Typography is 05, Go To is 06, and the selection-driven sheets (word lookup,
+# passage analysis, companion chat) are 04.
+#
+# Chrome auto-hides 3s after it appears, so each bottom-bar interaction is
+# preceded by a center-tap reveal (conditional re-tap for determinism).
+# Dismiss selectors are noted inline; confirm them on the first real run.
+appId: com.foxing.app
+env:
+  BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
+tags:
+  - reader
+---
+- runFlow: ../common/open-reader.yaml
+
+# --- Companion hub -> This Chapter grid + tools ---
+- tapOn: "Companion"
+- assertVisible: "Chapter Timeline"
+- assertVisible: "Story So Far"
+- assertVisible: "Characters"
+- assertVisible: "Search"
+
+# Search (Companion tool) -> SearchSheet
+- tapOn: "Search"
+- assertVisible: "Close"
+- tapOn: "Close"
+
+# This Chapter feature (Companion grid) -> ChapterFeatureSheet
+- runFlow: ../common/reveal-chrome.yaml
+- tapOn: "Companion"
+- tapOn: "Chapter Timeline"
+- assertVisible: "Close"
+- tapOn: "Close"
+
+# Story So Far (Companion tool) -> ChapterSummaryModal
+- runFlow: ../common/reveal-chrome.yaml
+- tapOn: "Companion"
+- tapOn: "Story So Far"
+- assertVisible: "Got it"
+- tapOn: "Got it"
+
+# Characters (Companion tool) -> CharacterMapSheet
+- runFlow: ../common/reveal-chrome.yaml
+- tapOn: "Companion"
+- tapOn: "Characters"
+- assertVisible: "Close"
+- tapOn: "Close"
+
+# --- Overflow ("More actions") -> lean utility set ---
+- runFlow: ../common/reveal-chrome.yaml
+- tapOn: "More actions"
+- assertVisible: "Listen"
+- assertVisible: "Sleep Timer"
+- assertVisible: "Vocabulary"
+- assertVisible: "Quote Card"
+- assertVisible: "Share"
+# Dismiss the overflow sheet with the platform back gesture (RN Modal).
+- back
