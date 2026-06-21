@@ -1263,6 +1263,12 @@ export default function Reader() {
   function handleMenuAction(action: MenuAction) {
     setMenuOpen(false)
     switch (action) {
+      case 'ask-chat':
+        // Standalone ask-questions entry: open the companion in general mode
+        // with no passage seed (book + current chapter context only).
+        setChatSeed(null)
+        setChatOpen(true)
+        break
       case 'story-so-far':
         setSummaryOpen(true)
         break
@@ -1577,7 +1583,7 @@ export default function Reader() {
         />
       ) : null}
 
-      {/* BOTTOM CHROME BAR — Kindle-style: progress slider, chapter
+      {/* BOTTOM CHROME BAR - Kindle-style: progress slider, chapter
           position, settings icon. Auto-hides with the top bar.
           The slider is visual-only for now (filled portion = progress
           fraction). Drag-to-jump needs a Readium goTo with totalProgression
