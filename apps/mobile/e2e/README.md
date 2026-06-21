@@ -32,6 +32,11 @@ links to the reader.
    renders for an authenticated session, and a signed-out deep link can bounce
    to the auth stack. State is preserved between flows (`clearState` is not set).
 4. Pick a real catalog book id with a resolvable epub. Pass it as `BOOK_ID`.
+5. Use a Foxing Plus account for the AI-sheet flows (03 hub tools and 04
+   selection AI actions). The AI actions are Plus-gated; on a free account they
+   show a lock badge and open the upgrade prompt ("Unlock with Plus") instead of
+   the AI sheet, so those assertions would fail. Non-AI checks (paging,
+   typography, Go To, close, overflow, Highlight) work on any tier.
 
 ## Run
 

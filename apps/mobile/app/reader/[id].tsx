@@ -57,6 +57,7 @@ import { CharacterMapSheet } from '@/components/reader/character-map-sheet'
 import { HighlightsSheet } from '@/components/reader/highlights-sheet'
 import { SearchSheet } from '@/components/reader/search-sheet'
 import { TranslateSheet } from '@/components/reader/translate-sheet'
+import { UpgradeSheet } from '@/components/reader/upgrade-sheet'
 import {
   FloatingPill,
   type HighlightColor,
@@ -242,6 +243,15 @@ export default function Reader() {
 
   const [prefs, setPrefs] = useState<ReaderPrefs>(DEFAULT_PREFS)
   const [userId, setUserId] = useState<string | null>(null)
+  // Subscription tier for client-side Plus gating of AI actions. null = unknown
+  // (tier lookup not done or failed), in which case we do NOT block: the edge
+  // function remains the authoritative gate. 'free' shows the lock + upgrade
+  // prompt; 'plus' is ungated.
+  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'plus' | null>(null)
+  // When set, the upgrade prompt is shown; the string is the feature name for
+  // the headline (e.g. "Translate").
+  const [upgradeFeature, setUpgradeFeature] = useState<string | null>(null)
+  const locked = subscriptionTier === 'free'
   // Mirror userId into a ref so the unmount cleanup, the 30s ticker,
   // and the chapter-change callback always read the latest without
   // re-binding on every render.
@@ -598,6 +608,19 @@ export default function Reader() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUserId(user.id)
+        // Resolve subscription tier for client-side AI gating. Fire and forget
+        // so it never delays the book load; leaves tier null (ungated client
+        // side) if the lookup fails.
+        supabase
+          .from('profiles')
+          .select('subscription_tier')
+          .eq('id', user.id)
+          .maybeSingle()
+          .then(({ data: prof }) => {
+            if (!mounted) return
+            const t = (prof as { subscription_tier: string | null } | null)?.subscription_tier
+            setSubscriptionTier(t === 'plus' ? 'plus' : 'free')
+          })
         const { data: ub } = await supabase
           .from('user_books')
           .select('status, progress_cfi, progress_percentage, started_at')
@@ -1664,6 +1687,10 @@ export default function Reader() {
                   </Text>
                 </Pressable>
               ) : null}
+              {/* Chapter label on the left, a prominent percent read-out on
+                  the right so progress is legible at a glance. Streaks are
+                  intentionally not shown here: reading_streaks recording is an
+                  unverified device bug, so we surface progress only. */}
               <Text
                 numberOfLines={1}
                 style={{
@@ -1673,9 +1700,18 @@ export default function Reader() {
                   color: colors.textSecondary,
                 }}
               >
-                {currentChapter.title
-                  ? `${currentChapter.title} · ${Math.round(progress * 100)}%`
-                  : `${Math.round(progress * 100)}%`}
+                {currentChapter.title || 'Progress'}
+              </Text>
+              <Text
+                accessibilityLabel={`${Math.round(progress * 100)} percent read`}
+                style={{
+                  fontFamily: Fonts.monoMedium,
+                  fontSize: 12,
+                  color: colors.brandText,
+                  marginRight: 8,
+                }}
+              >
+                {Math.round(progress * 100)}%
               </Text>
               {sleepTimer ? (
                 <View
@@ -1840,6 +1876,8 @@ export default function Reader() {
         onAnalyze={handleAnalyze}
         onAsk={handleAsk}
         onTranslate={handleTranslate}
+        locked={locked}
+        onUpgrade={(feature) => setUpgradeFeature(feature)}
         showClub={matchingClubs.length > 0}
         onClub={() => {
           if (!passagePayload?.cfi) {
@@ -1963,6 +2001,8 @@ export default function Reader() {
         clubsReadingThis={matchingClubs}
         onAction={handleMenuAction}
         onChapterFeature={(kind) => setChapterFeature(kind)}
+        locked={locked}
+        onUpgrade={(feature) => setUpgradeFeature(feature)}
         onClose={() => setMenuOpen(false)}
       />
 
@@ -2038,6 +2078,12 @@ export default function Reader() {
           onClose={() => setTranslateSel(null)}
         />
       ) : null}
+
+      <UpgradeSheet
+        visible={upgradeFeature !== null}
+        feature={upgradeFeature ?? undefined}
+        onClose={() => setUpgradeFeature(null)}
+      />
 
       {commentSheet ? (
         <PassageCommentSheet

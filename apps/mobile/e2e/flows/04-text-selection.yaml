@@ -9,6 +9,10 @@
 # precisely, so the taps use fixed coordinates in the body text band. If a tap
 # lands on whitespace the menu will not appear; adjust the percentages for your
 # test book. This is the flakiest flow by nature.
+#
+# Requires a Foxing Plus account: Look up, Analyze, Ask, and Translate are
+# Plus-gated. On a free account they show a lock badge and open the upgrade
+# prompt instead of the AI sheet. See e2e/README.md.
 appId: com.foxing.app
 env:
   BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
