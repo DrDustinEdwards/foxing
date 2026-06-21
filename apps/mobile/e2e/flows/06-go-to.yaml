@@ -1,0 +1,22 @@
+# Check: open TOC / Go To.
+#
+# Phase 1: Go To is opened by tapping the title/chapter in the top bar (it no
+# longer has its own icon).
+appId: com.foxing.app
+env:
+  BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
+tags:
+  - reader
+---
+- runFlow: ../common/open-reader.yaml
+# Top bar title/chapter is the Go To affordance.
+- tapOn: "Table of contents and location"
+# GoToSheet tab bar: Contents (TOC), Location, My Places.
+- assertVisible: "Contents"
+- assertVisible: "Location"
+- takeScreenshot: 06-go-to-open
+# Switch to the Location tab to confirm the segmented control works.
+- tapOn: "Location"
+# Dismiss with the platform back gesture (RN Modal onRequestClose).
+- back
+- assertNotVisible: "Contents"

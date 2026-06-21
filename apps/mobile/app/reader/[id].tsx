@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
   CaretUp,
+  Sparkle,
   X as XIcon,
 } from 'phosphor-react-native'
 import { Alert, TextInput as RNTextInput, Modal as RNModal } from 'react-native'
@@ -537,36 +538,28 @@ export default function Reader() {
     }
   }, [readerState, book, matchingClubs, colors.brandUi])
 
-  // Swipe responder claims TWO gestures while otherwise letting taps fall
+  // Swipe responder claims ONE gesture while otherwise letting taps fall
   // through to the WebView:
-  //   • top-edge swipe down → reveal chrome
   //   • left-edge swipe right → pop the last entry off position history and
   //     navigate to the new tail (history-back)
-  // We never claim onStart so tap-to-flip pages still works; the move check
-  // gates on a clear directional gesture near the relevant edge.
+  // Chrome is toggled by a center tap (the WebView's onTap), so the old
+  // top-edge reveal swipe is gone. We never claim onStart so tap-to-flip
+  // pages still works; the move check gates on a clear left-edge gesture.
   const swipeResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
       onStartShouldSetPanResponderCapture: () => false,
       onMoveShouldSetPanResponder: (evt, gestureState) => {
-        const startY = evt.nativeEvent.pageY - gestureState.dy
         const startX = evt.nativeEvent.pageX - gestureState.dx
-        const topSwipeDown =
-          startY < 60 &&
-          gestureState.dy > 14 &&
-          Math.abs(gestureState.dy) > Math.abs(gestureState.dx) * 1.5
         const leftSwipeRight =
           startX < 32 &&
           gestureState.dx > 36 &&
           Math.abs(gestureState.dx) > Math.abs(gestureState.dy) * 1.5
-        return topSwipeDown || leftSwipeRight
+        return leftSwipeRight
       },
       onPanResponderGrant: (evt, gestureState) => {
-        const startY = evt.nativeEvent.pageY - gestureState.dy
         const startX = evt.nativeEvent.pageX - gestureState.dx
-        if (startY < 60 && gestureState.dy > 14) {
-          setChrome(true)
-        } else if (startX < 32 && gestureState.dx > 36) {
+        if (startX < 32 && gestureState.dx > 36) {
           swipeBackRef.current()
         }
       },
@@ -1399,7 +1392,10 @@ export default function Reader() {
   const themeColors = CANVAS_PALETTE[prefs.canvasTheme]
   const initialSettings: ReaderSettings = prefsToSettings(prefs, isTablet)
 
-  const chromeBg = hexToRgba(colors.bgSurface, 0.95)
+  // Wood-engraving chrome: cream surface (bgBase maps to the Cream token in
+  // light, warm near-black in dark), translucent so the reading canvas reads
+  // through. Mapped to existing tokens so dark mode keeps adapting.
+  const chromeBg = hexToRgba(colors.bgBase, 0.95)
 
   return (
     <View
@@ -1540,13 +1536,9 @@ export default function Reader() {
           chapterTitle={currentChapter.title}
           isCurrentBookmarked={isCurrentBookmarked}
           onBack={() => router.back()}
+          onOpenGoTo={() => setGoToOpen(true)}
           onOpenSettings={() => setShowSettings(true)}
           onBookmarkTap={onBookmarkTap}
-          onMenuAction={handleMenuAction}
-          onOpenChapterFeatures={() => {
-            setMenuInitialView('chapter-features')
-            setMenuOpen(true)
-          }}
         />
       ) : null}
 
@@ -1695,6 +1687,39 @@ export default function Reader() {
                   </Text>
                 </View>
               ) : null}
+              {/* Companion button (Phase 1 stub). Opens the existing This
+                  Chapter grid plus the Story So Far / Characters / Search
+                  tools; becomes the hub in Phase 3. */}
+              <Pressable
+                onPress={() => {
+                  setMenuInitialView('chapter-features')
+                  setMenuOpen(true)
+                }}
+                hitSlop={8}
+                accessibilityRole="button"
+                accessibilityLabel="Companion"
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  marginRight: 6,
+                  borderRadius: 999,
+                  backgroundColor: colors.bgSelected,
+                }}
+              >
+                <Sparkle color={colors.brandText} size={16} />
+                <Text
+                  style={{
+                    fontFamily: Fonts.uiMedium,
+                    fontSize: 12,
+                    color: colors.brandText,
+                    marginLeft: 4,
+                  }}
+                >
+                  Companion
+                </Text>
+              </Pressable>
               <Pressable
                 onPress={() => {
                   setMenuInitialView('secondary')
@@ -1817,22 +1842,6 @@ export default function Reader() {
           }
         }}
         onDismiss={() => setCheckinChapter(null)}
-      />
-
-      {/* Invisible 44×44 corner tap zone at bottom-right. Always toggles
-          chrome regardless of pill state, so the user has a reliable
-          escape hatch when text-dense pages make empty-area taps impossible. */}
-      <Pressable
-        onPress={() => setChrome((v) => !v)}
-        accessibilityRole="button"
-        accessibilityLabel="Toggle reader chrome"
-        style={{
-          position: 'absolute',
-          bottom: 0,
-          right: 0,
-          width: 44,
-          height: 44,
-        }}
       />
 
       <TypographySheet

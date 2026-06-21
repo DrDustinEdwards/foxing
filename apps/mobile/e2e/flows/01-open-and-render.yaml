@@ -1,0 +1,17 @@
+# Check: open a book and confirm the reader renders.
+appId: com.foxing.app
+env:
+  BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
+tags:
+  - reader
+---
+- runFlow: ../common/open-reader.yaml
+# The error state renders "We couldn't open this book." Assert it is NOT shown,
+# i.e. the epub mounted rather than failing.
+- assertNotVisible: "We couldn't open this book."
+# Chrome is up (open-reader forced it). The reduced top bar plus the new bottom
+# bar controls confirm the full reader shell painted, not just a spinner.
+- assertVisible: "Reading typography and layout"
+- assertVisible: "Companion"
+- assertVisible: "More actions"
+- takeScreenshot: 01-reader-rendered

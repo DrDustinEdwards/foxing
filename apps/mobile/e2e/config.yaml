@@ -1,0 +1,25 @@
+# Maestro workspace config for the Foxing reader safety net.
+# Docs: https://maestro.mobile.dev
+#
+# Run the whole suite:   maestro test -e BOOK_ID=<real-book-uuid> e2e
+# Run one flow:          maestro test -e BOOK_ID=<real-book-uuid> e2e/flows/01-open-and-render.yaml
+#
+# These flows are a Phase 0 regression net for the reader redesign. They
+# confirm the current reader still opens, pages, exposes every tool sheet,
+# and closes. They assert presence of UI, not AI output (the AI sheets are
+# Plus gated and may show a loading or upgrade state; that still proves the
+# sheet mounted).
+
+flows:
+  - "flows/*.yaml"
+
+# Run in numeric order so a failure in "open" reports before "paging" etc.
+executionOrder:
+  flowsOrder:
+    - "01-open-and-render"
+    - "02-paging"
+    - "03-tool-sheets"
+    - "04-text-selection"
+    - "05-typography"
+    - "06-go-to"
+    - "07-close"

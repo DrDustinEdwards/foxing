@@ -1,0 +1,18 @@
+# Check: open settings / typography (the Aa sheet).
+appId: com.foxing.app
+env:
+  BOOK_ID: "REPLACE_WITH_A_REAL_BOOK_ID"
+tags:
+  - reader
+---
+- runFlow: ../common/open-reader.yaml
+# Top bar Aa icon. Its accessibility label is the full description.
+- tapOn: "Reading typography and layout"
+# The canvas theme swatches are a stable anchor inside the sheet.
+- assertVisible: "Sepia"
+- takeScreenshot: 05-typography-open
+# No dedicated close label on this sheet; dismiss with the platform back
+# gesture (the sheet is an RN Modal with onRequestClose wired). On iOS, swap
+# this for a tap on the sheet's done/close control once confirmed on device.
+- back
+- assertNotVisible: "Sepia"
