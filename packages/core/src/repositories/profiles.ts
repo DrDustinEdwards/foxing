@@ -1,0 +1,55 @@
+// Profiles repository. All profile data access goes through here so an org/classroom
+// tenancy layer (Foxing Edu) can be added later without touching call sites.
+import { eq } from "drizzle-orm";
+import type { Db } from "../db";
+import { profiles } from "../schema";
+import type { UpdateMeInput } from "../validators/profile";
+
+export type Profile = typeof profiles.$inferSelect;
+export type NewProfile = typeof profiles.$inferInsert;
+
+/** Public projection of a profile, honoring the owner's visibility later. */
+export type PublicProfile = Pick<
+  Profile,
+  "username" | "displayName" | "avatarUrl" | "backdropUrl" | "bio" | "favoriteGenres" | "createdAt"
+>;
+
+export async function getProfileById(db: Db, userId: string): Promise<Profile | null> {
+  const rows = await db.select().from(profiles).where(eq(profiles.id, userId)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getProfileByUsername(db: Db, username: string): Promise<Profile | null> {
+  const rows = await db.select().from(profiles).where(eq(profiles.username, username)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function createProfile(db: Db, values: NewProfile): Promise<Profile> {
+  const [row] = await db.insert(profiles).values(values).returning();
+  return row;
+}
+
+export async function updateProfile(
+  db: Db,
+  userId: string,
+  patch: UpdateMeInput,
+): Promise<Profile | null> {
+  const [row] = await db
+    .update(profiles)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(profiles.id, userId))
+    .returning();
+  return row ?? null;
+}
+
+export function toPublicProfile(p: Profile): PublicProfile {
+  return {
+    username: p.username,
+    displayName: p.displayName,
+    avatarUrl: p.avatarUrl,
+    backdropUrl: p.backdropUrl,
+    bio: p.bio,
+    favoriteGenres: p.favoriteGenres,
+    createdAt: p.createdAt,
+  };
+}
