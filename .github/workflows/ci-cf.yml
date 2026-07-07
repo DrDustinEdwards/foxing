@@ -1,0 +1,76 @@
+name: CI (cf rebuild)
+
+# Scoped to the new Cloudflare workspaces; legacy ci.yml is untouched.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/core/**"
+      - "packages/api/**"
+      - "apps/web-cf/**"
+      - ".github/workflows/ci-cf.yml"
+  pull_request:
+    paths:
+      - "packages/core/**"
+      - "packages/api/**"
+      - "apps/web-cf/**"
+      - ".github/workflows/ci-cf.yml"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # wrangler.jsonc is gitignored; typegen + vitest-pool need a config present.
+      # Placeholder IDs are fine for local D1 (miniflare) and typegen.
+      - name: Stage wrangler config
+        run: cp apps/web-cf/wrangler.jsonc.example apps/web-cf/wrangler.jsonc
+      - name: Cloudflare typegen
+        run: pnpm --filter web-cf exec wrangler types
+      - name: Typecheck core
+        run: pnpm --filter @foxing/core exec tsc --noEmit
+      - name: Typecheck api
+        run: pnpm --filter @foxing/api exec tsc --noEmit
+      - name: Typecheck web
+        run: pnpm --filter web-cf run type-check
+      - name: Lint (biome)
+        run: pnpm run lint:cf
+      - name: Drizzle migration check
+        run: pnpm --filter @foxing/core exec drizzle-kit check
+      - name: Unit tests (core)
+        run: pnpm --filter @foxing/core test
+      - name: Integration tests (web-cf, local D1)
+        run: pnpm --filter web-cf test
+
+  deploy:
+    needs: check
+    # Stays dormant until CF_DEPLOY is set to 'true' in repo variables, so CI is
+    # green before the Cloudflare token + IDs are configured.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Stage wrangler config with real IDs
+        run: |
+          sed -e "s|<D1_DATABASE_ID>|${{ vars.D1_DATABASE_ID }}|" \
+              -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|" \
+              apps/web-cf/wrangler.jsonc.example > apps/web-cf/wrangler.jsonc
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          pnpm --filter web-cf exec react-router build
+          pnpm --filter web-cf exec wrangler deploy --var BETTER_AUTH_URL:${{ vars.BETTER_AUTH_URL }}
