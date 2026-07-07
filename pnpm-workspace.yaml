@@ -2,6 +2,11 @@ packages:
   - 'apps/*'
   - 'packages/*'
 nodeLinker: hoisted
+# react and react-dom must resolve to one identical version across the workspace
+# (SSR throws on a react/react-dom version mismatch).
+overrides:
+  react: 19.2.7
+  react-dom: 19.2.7
 # Readium pulls @edrlab/thorium-locales via a git URL from @readium/shared.
 # That subdep is legitimate, so allow exotic sub-deps for the workspace.
 blockExoticSubdeps: false
@@ -12,6 +17,8 @@ allowBuilds:
   msgpackr-extract: true
   sharp: true
   unrs-resolver: true
+  workerd: true
+
 # react-native-readium's Android selection-menu suppression patch lives
 # in apps/mobile/scripts/patch-readium.mjs and runs from the mobile
 # package's postinstall. pnpm's patchedDependencies was the previous
