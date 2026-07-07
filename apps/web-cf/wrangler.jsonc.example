@@ -1,0 +1,31 @@
+{
+  // Copy to wrangler.jsonc (gitignored) and fill in real IDs.
+  // Secrets (BETTER_AUTH_SECRET, TURNSTILE_SECRET_KEY) are set via `wrangler secret put`, never here.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "foxing-web-cf",
+  "main": "./workers/app.ts",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./build/client" },
+  "observability": { "enabled": true },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "foxing",
+      "database_id": "<D1_DATABASE_ID>",
+      "migrations_dir": "../../packages/core/migrations"
+    }
+  ],
+  "kv_namespaces": [{ "binding": "APP_KV", "id": "<KV_NAMESPACE_ID>" }],
+  "ratelimits": [
+    { "name": "AUTH_RL", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
+    { "name": "WRITE_RL", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+  ],
+  "send_email": [{ "name": "EMAIL" }],
+  "vars": {
+    "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",
+    "EMAIL_FROM": "hello@foxing.app",
+    "TURNSTILE_ENABLED": "false",
+    "TURNSTILE_SITE_KEY": ""
+  }
+}

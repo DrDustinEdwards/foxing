@@ -1,0 +1,5 @@
+# Copy to .dev.vars (gitignored) for local `wrangler dev` / `vite dev`.
+# Generate a secret with: node -e "console.log(crypto.randomUUID()+crypto.randomUUID())"
+BETTER_AUTH_SECRET=""
+# Only needed when TURNSTILE_ENABLED=true
+TURNSTILE_SECRET_KEY=""
