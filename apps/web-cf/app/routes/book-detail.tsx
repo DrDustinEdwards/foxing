@@ -123,17 +123,12 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                   key={b.retailer}
                   href={b.url}
                   variant={b.retailer === "bookshop" ? "secondary" : "ghost"}
-                  rel="sponsored noopener noreferrer"
+                  rel={b.sponsored ? "sponsored noopener noreferrer" : "noopener noreferrer"}
                   target="_blank"
                 >
-                  Buy at {b.label}
+                  {b.retailer === "library" ? b.label : `Buy at ${b.label}`}
                 </Button>
               ))}
-              {!readable && buys.length === 0 ? (
-                <p className="rounded-cover border border-border-subtle px-4 py-2.5 text-center font-ui text-sm text-tertiary">
-                  Tracking only for now
-                </p>
-              ) : null}
             </div>
           </div>
 
@@ -160,7 +155,6 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             <div className="mt-5 flex flex-wrap gap-2">
               {book.publicationYear ? <Chip>{book.publicationYear}</Chip> : null}
               {time ? <Chip>{time}</Chip> : null}
-              {book.language ? <Chip>{book.language.toUpperCase()}</Chip> : null}
               {book.publisher ? <Chip>{book.publisher}</Chip> : null}
             </div>
 

@@ -41,7 +41,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* Hero */}
       <Container className="pb-6 pt-6">
         <div className="mx-auto max-w-3xl text-center">
-          <Eyebrow className="mb-4">Letterboxd for books</Eyebrow>
+          <Eyebrow className="mb-4">A reading home for the classics</Eyebrow>
           <h1 className="font-display text-5xl leading-[1.05] sm:text-6xl">
             Read the classics. Keep the record.
           </h1>

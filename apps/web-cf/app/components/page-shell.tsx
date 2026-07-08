@@ -131,7 +131,7 @@ export function SiteFooter() {
         />
       </Container>
       <Container className="flex flex-col gap-2 border-t border-border-subtle py-6 text-xs text-tertiary sm:flex-row sm:items-center sm:justify-between">
-        <p>&copy; {new Date().getFullYear()} Foxing. Letterboxd for books.</p>
+        <p>&copy; {new Date().getFullYear()} Foxing. Read freely, keep the record.</p>
         <p>
           <span aria-hidden="true">🦊</span> Made for readers.
         </p>
