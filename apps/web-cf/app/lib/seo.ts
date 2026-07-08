@@ -7,7 +7,6 @@
 import type { MetaDescriptor } from "react-router";
 
 export const SITE_NAME = "Foxing";
-export const SITE_TAGLINE = "Letterboxd for books.";
 export const DEFAULT_DESCRIPTION =
   "Foxing is a reading home for the classics: browse the catalog, follow literary awards and celebrity picks, and read the conversations around great books.";
 
