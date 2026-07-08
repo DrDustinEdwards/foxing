@@ -124,5 +124,8 @@ export async function suggest(db: Db, rawQuery: string, limit = 8): Promise<Book
     WHERE books_fts MATCH ${strict} AND source_type = 'catalog'
     ORDER BY bm25(books_fts) LIMIT ${limit}
   `);
-  return getBooksByIds(db, rows.map((r) => r.book_id));
+  return getBooksByIds(
+    db,
+    rows.map((r) => r.book_id),
+  );
 }

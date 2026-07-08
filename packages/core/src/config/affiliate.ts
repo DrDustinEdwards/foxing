@@ -41,7 +41,9 @@ export function buyLinks(book: BuyableBook, cfg: AffiliateConfig = {}): BuyLink[
   if (cfg.bookshopId && book.isbn13) {
     bookshop = `https://bookshop.org/a/${cfg.bookshopId}/${book.isbn13}`;
   } else if (book.bookshopUrl) {
-    bookshop = cfg.bookshopId ? withParam(book.bookshopUrl, "aid", cfg.bookshopId) : book.bookshopUrl;
+    bookshop = cfg.bookshopId
+      ? withParam(book.bookshopUrl, "aid", cfg.bookshopId)
+      : book.bookshopUrl;
   }
   if (bookshop) links.push({ retailer: "bookshop", label: "Bookshop.org", url: bookshop });
 

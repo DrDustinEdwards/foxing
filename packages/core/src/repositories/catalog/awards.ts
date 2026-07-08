@@ -24,8 +24,40 @@ export type AwardDetail = {
   entries: AwardEntry[];
 };
 
+export type BookAward = {
+  awardSlug: string;
+  awardName: string;
+  year: number | null;
+  distinction: string;
+};
+
+/** Awards attached to one book (for the book detail page). */
+export async function getBookAwards(db: Db, bookId: string): Promise<BookAward[]> {
+  const rows = await db.all<{
+    award_slug: string;
+    award_name: string;
+    year: number | null;
+    distinction: string;
+  }>(sql`
+    SELECT award_slug, award_name, year, distinction
+    FROM book_awards WHERE book_id = ${bookId}
+    ORDER BY year DESC
+  `);
+  return rows.map((r) => ({
+    awardSlug: r.award_slug,
+    awardName: r.award_name,
+    year: r.year,
+    distinction: r.distinction,
+  }));
+}
+
 export async function listAwards(db: Db): Promise<AwardSummary[]> {
-  const rows = await db.all<{ slug: string; name: string; scope: string | null; count: number }>(sql`
+  const rows = await db.all<{
+    slug: string;
+    name: string;
+    scope: string | null;
+    count: number;
+  }>(sql`
     SELECT award_slug AS slug, award_name AS name, MAX(scope) AS scope, COUNT(*) AS count
     FROM book_awards
     GROUP BY award_slug

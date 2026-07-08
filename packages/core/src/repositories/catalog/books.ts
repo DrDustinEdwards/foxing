@@ -113,10 +113,7 @@ export async function listBooks(db: Db, params: BrowseParams = {}): Promise<Brow
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  const [{ count }] = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(books)
-    .where(where);
+  const [{ count }] = await db.select({ count: sql<number>`COUNT(*)` }).from(books).where(where);
   const total = Number(count);
 
   return {
@@ -192,6 +189,16 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
       epubUrl: r.epub_url,
     }),
   );
+}
+
+/** Distinct author slugs across the catalog, for the sitemap. */
+export async function listAuthorSlugs(db: Db): Promise<string[]> {
+  const rows = await db.all<{ author_slug: string }>(sql`
+    SELECT DISTINCT author_slug FROM books
+    WHERE source_type = 'catalog' AND author_slug IS NOT NULL AND author_slug != ''
+    ORDER BY author_slug
+  `);
+  return rows.map((r) => r.author_slug);
 }
 
 /** Minimal rows for the sitemap: catalog slugs + last-modified. */
