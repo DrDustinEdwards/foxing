@@ -16,7 +16,10 @@ describe("affiliate buyLinks", () => {
   });
 
   it("appends the Amazon tag to a stored canonical url", () => {
-    const links = buyLinks({ amazonUrl: "https://www.amazon.com/dp/ABC123" }, { amazonTag: "foxing-20" });
+    const links = buyLinks(
+      { amazonUrl: "https://www.amazon.com/dp/ABC123" },
+      { amazonTag: "foxing-20" },
+    );
     expect(links[0].url).toContain("tag=foxing-20");
   });
 

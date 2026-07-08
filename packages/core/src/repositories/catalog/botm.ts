@@ -62,9 +62,7 @@ function toEntry(r: Row): BotmEntry {
 }
 
 export async function getCurrentBotm(db: Db): Promise<BotmEntry | null> {
-  const rows = await db.all<Row>(
-    sql`${SELECT} ORDER BY m.year DESC, m.month DESC LIMIT 1`,
-  );
+  const rows = await db.all<Row>(sql`${SELECT} ORDER BY m.year DESC, m.month DESC LIMIT 1`);
   return rows[0] ? toEntry(rows[0]) : null;
 }
 

@@ -75,6 +75,18 @@ export async function getPostBySlug(db: Db, slug: string): Promise<JournalPost |
   return rows[0] ?? null;
 }
 
+/** All published post slugs + last-modified, for the sitemap. */
+export async function listPublishedSlugs(
+  db: Db,
+): Promise<Array<{ slug: string; updatedAt: Date }>> {
+  const rows = await db
+    .select({ slug: journalPosts.slug, updatedAt: journalPosts.updatedAt })
+    .from(journalPosts)
+    .where(eq(journalPosts.isPublished, true))
+    .orderBy(desc(journalPosts.publishedAt));
+  return rows.map((r) => ({ slug: r.slug, updatedAt: r.updatedAt ?? new Date(0) }));
+}
+
 /** Latest published posts for the RSS feed and sitemap. */
 export async function listRssPosts(db: Db, limit = 30): Promise<JournalPost[]> {
   return db
