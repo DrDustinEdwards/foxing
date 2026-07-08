@@ -9,7 +9,8 @@
       "!**/build/**",
       "!**/.react-router/**",
       "!**/worker-configuration.d.ts",
-      "!**/*.gen.ts"
+      "!**/*.gen.ts",
+      "!apps/web-cf/app/app.css"
     ]
   },
   "formatter": {

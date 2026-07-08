@@ -1,0 +1,306 @@
+@import "tailwindcss";
+
+/*
+  Foxing design system, wired for Tailwind v4 (CSS-first).
+  Raw tokens live in [data-mode] blocks (source of truth: foxing/design-system.md);
+  @theme maps them to utilities so `bg-surface`, `text-primary`, `font-display`,
+  `border-subtle`, `rounded-card` respond to the active mode at runtime.
+  Dark mode is attribute-driven ([data-mode="dark"]), not media-driven.
+*/
+
+@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+
+/* -- Raw tokens ---------------------------------------------------------- */
+
+[data-mode="light"] {
+  --bg-base: #faf6ee;
+  --bg-surface: #ffffff;
+  --bg-elevated: #ffffff;
+  --bg-sunken: #f2ead8;
+  --bg-hover: #e5d8bf;
+  --bg-selected: #fae0d6;
+  --bg-disabled: #ede6dc;
+
+  --text-primary: #16100b;
+  --text-secondary: #3e3028;
+  --text-tertiary: #815e41;
+  --text-disabled: #cfc7bc;
+  --text-on-brand: #ffffff;
+  --text-on-amber: #16100b;
+  --text-on-dark: #f5edde;
+
+  --brand-ui: #d4622e;
+  --brand-text: #b04a1c;
+  --brand-hover: #8a3610;
+  --brand-secondary: #f5a623;
+  --brand-subtle: #fae0d6;
+  --brand-subtle-text: #632507;
+
+  --success: #2b6443;
+  --success-bg: #eef5ef;
+  --warning: #605206;
+  --warning-bg: #fcf5cf;
+  --error: #8d253f;
+  --error-bg: #faf0f3;
+  --info: #2b6391;
+  --info-bg: #eef3f8;
+
+  --border-subtle: #e5d8bf;
+  --border-default: #cfc7bc;
+  --border-interactive: #7a4329;
+  --border-strong: #815e41;
+  --border-brand: #e58d6d;
+  --border-focus: #b04a1c;
+
+  --section-cream: #faf6ee;
+  --section-charcoal: #16100b;
+
+  --skeleton-base: #ede6dc;
+  --skeleton-shimmer: #f5efe6;
+  --overlay: rgba(22, 16, 11, 0.5);
+  --scrim-dark: rgba(22, 16, 11, 0.65);
+
+  --shadow-sm: 0 1px 3px rgba(22, 16, 11, 0.07), 0 1px 2px rgba(22, 16, 11, 0.05);
+  --shadow-md: 0 4px 12px rgba(22, 16, 11, 0.09), 0 2px 4px rgba(22, 16, 11, 0.06);
+  --shadow-lg: 0 16px 32px rgba(22, 16, 11, 0.11), 0 4px 8px rgba(22, 16, 11, 0.07);
+
+  color-scheme: light;
+}
+
+[data-mode="dark"] {
+  --bg-base: #16100b;
+  --bg-surface: #1f1710;
+  --bg-elevated: #2a1f16;
+  --bg-sunken: #100d08;
+  --bg-hover: #261c13;
+  --bg-selected: #3a2418;
+  --bg-disabled: #1e1810;
+
+  --text-primary: #f5edde;
+  --text-secondary: #c4ae96;
+  --text-tertiary: #a28269;
+  --text-disabled: #4a3628;
+  --text-on-brand: #ffffff;
+  --text-on-amber: #16100b;
+  --text-on-dark: #f5edde;
+
+  --brand-ui: #e07840;
+  --brand-text: #e07840;
+  --brand-hover: #e88f58;
+  --brand-secondary: #f79c40;
+  --brand-subtle: #2e1c0e;
+  --brand-subtle-text: #f0a070;
+
+  --success: #72ca9a;
+  --success-bg: #0d2018;
+  --warning: #f3da49;
+  --warning-bg: #221c00;
+  --error: #e46872;
+  --error-bg: #220a0e;
+  --info: #70a6db;
+  --info-bg: #091220;
+
+  --border-subtle: #261c13;
+  --border-default: #3a2c22;
+  --border-interactive: #be7a37;
+  --border-strong: #6a5040;
+  --border-brand: #e07840;
+  --border-focus: #f5b840;
+
+  --section-cream: #1f1710;
+  --section-charcoal: #16100b;
+
+  --skeleton-base: #261c13;
+  --skeleton-shimmer: #3a2c22;
+  --overlay: rgba(0, 0, 0, 0.7);
+  --scrim-dark: rgba(0, 0, 0, 0.72);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5), 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
+}
+
+/* -- Tailwind theme mapping ---------------------------------------------- */
+
+@theme {
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Source Serif 4", Georgia, serif;
+  --font-ui: "DM Sans", system-ui, sans-serif;
+  --font-mono: "DM Mono", ui-monospace, monospace;
+
+  --color-base: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-elevated: var(--bg-elevated);
+  --color-sunken: var(--bg-sunken);
+  --color-hover: var(--bg-hover);
+  --color-selected: var(--bg-selected);
+
+  --color-primary: var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-tertiary: var(--text-tertiary);
+  --color-on-brand: var(--text-on-brand);
+  --color-on-dark: var(--text-on-dark);
+
+  --color-brand: var(--brand-ui);
+  --color-brand-text: var(--brand-text);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-subtle-text: var(--brand-subtle-text);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+
+  --color-border-subtle: var(--border-subtle);
+  --color-border-default: var(--border-default);
+  --color-border-interactive: var(--border-interactive);
+  --color-border-strong: var(--border-strong);
+  --color-border-brand: var(--border-brand);
+
+  --color-section-cream: var(--section-cream);
+  --color-section-charcoal: var(--section-charcoal);
+
+  --radius-card: 0.75rem; /* rounded-lg equivalent for content/entity cards */
+  --radius-hero: 1rem; /* featured callouts only */
+  --radius-cover: 0.375rem; /* covers, chips, small controls */
+
+  --shadow-card-sm: var(--shadow-sm);
+  --shadow-card-md: var(--shadow-md);
+  --shadow-card-lg: var(--shadow-lg);
+}
+
+/* -- Base ---------------------------------------------------------------- */
+
+@layer base {
+  html {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-body);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    text-wrap: balance;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  /* Rule 03: focus rings are always visible. */
+  :focus-visible {
+    outline: 3px solid var(--border-focus);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: var(--brand-subtle);
+    color: var(--brand-subtle-text);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  [data-mode="light"] {
+    --text-tertiary: #443122;
+  }
+  [data-mode="dark"] {
+    --text-tertiary: #b9a492;
+  }
+}
+
+@media (forced-colors: active) {
+  a,
+  button {
+    border: 1px solid transparent;
+  }
+}
+
+/* Journal article prose: Source Serif body on a comfortable measure. */
+.article-prose {
+  font-family: var(--font-body);
+  font-size: 1.1875rem;
+  line-height: 1.75;
+  color: var(--text-secondary);
+}
+.article-prose > * + * {
+  margin-top: 1.25em;
+}
+.article-prose h2,
+.article-prose h3 {
+  font-family: var(--font-display);
+  color: var(--text-primary);
+  line-height: 1.2;
+  margin-top: 1.8em;
+}
+.article-prose h2 {
+  font-size: 1.6rem;
+}
+.article-prose h3 {
+  font-size: 1.3rem;
+}
+.article-prose a {
+  color: var(--brand-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.article-prose strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.article-prose blockquote {
+  border-left: 3px solid var(--border-brand);
+  padding-left: 1.1rem;
+  font-style: italic;
+  color: var(--text-tertiary);
+}
+.article-prose ul,
+.article-prose ol {
+  padding-left: 1.3rem;
+}
+.article-prose ul {
+  list-style: disc;
+}
+.article-prose ol {
+  list-style: decimal;
+}
+.article-prose li + li {
+  margin-top: 0.4em;
+}
+
+/* Blur-up cover placeholder: revealed until the full image decodes. */
+.cover-img {
+  background-size: cover;
+  background-position: center;
+}
+.cover-img[data-loaded="true"] {
+  background-image: none !important;
+}

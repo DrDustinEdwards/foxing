@@ -40,6 +40,12 @@ worker-configuration.d.ts
 apps/web-cf/build/
 apps/web-cf/.react-router/
 
+# Playwright E2E artifacts
+apps/web-cf/test-results/
+apps/web-cf/playwright-report/
+apps/web-cf/blob-report/
+apps/web-cf/.cache/
+
 # Import pipeline: generated SQL batches and probe/run reports
 scripts/import-catalog/sql/
 scripts/import-catalog/reports/
