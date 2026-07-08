@@ -66,7 +66,7 @@ export function SiteNav() {
           <ThemeToggle />
           <Link
             to="/login"
-            className="hidden rounded-cover bg-brand px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover sm:inline-flex"
+            className="hidden rounded-cover bg-brand-text px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover sm:inline-flex dark:text-[color:var(--section-charcoal)]"
           >
             Sign in
           </Link>

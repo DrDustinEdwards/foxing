@@ -46,7 +46,7 @@ export function BookCard({
         <p className="mt-1 font-ui text-sm text-tertiary">
           {book.author}
           {book.publicationYear ? (
-            <span className="text-tertiary/80"> &middot; {book.publicationYear}</span>
+            <span className="text-tertiary"> &middot; {book.publicationYear}</span>
           ) : null}
         </p>
       </div>

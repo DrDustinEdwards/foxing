@@ -29,6 +29,16 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+// Injected at build time (vite define). Namespaces the edge cache per deploy.
+declare const __CACHE_VERSION__: string;
+
+/** Cache key = the request URL plus the build id, so a new deploy starts fresh. */
+function cacheKeyFor(url: URL): Request {
+  const keyUrl = new URL(url.toString());
+  keyUrl.searchParams.set("__v", __CACHE_VERSION__);
+  return new Request(keyUrl.toString(), { method: "GET" });
+}
+
 const reactRouterHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
   import.meta.env.MODE,
@@ -56,7 +66,7 @@ app.all("*", async (c) => {
   const authed = (req.headers.get("Cookie") ?? "").includes("better-auth");
   const cacheable = req.method === "GET" && isPublicPath(url.pathname) && !authed;
   const cache = edgeCache();
-  const key = new Request(url.toString(), { method: "GET" });
+  const key = cacheKeyFor(url);
 
   if (cacheable) {
     const hit = await cache.match(key);
