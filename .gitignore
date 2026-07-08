@@ -39,3 +39,7 @@ worker-configuration.d.ts
 # React Router framework mode build + typegen
 apps/web-cf/build/
 apps/web-cf/.react-router/
+
+# Import pipeline: generated SQL batches and probe/run reports
+scripts/import-catalog/sql/
+scripts/import-catalog/reports/
