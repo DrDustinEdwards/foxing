@@ -23,6 +23,9 @@ export default defineConfig(async () => {
       }),
     ],
     test: {
+      // Only the workerd integration tests under test/. The Playwright specs in e2e/
+      // are a separate runner (default vitest globs would otherwise grab e2e/*.spec.ts).
+      include: ["test/**/*.test.ts"],
       setupFiles: ["./test/apply-migrations.ts"],
     },
   };
