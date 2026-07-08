@@ -26,6 +26,9 @@
     "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",
     "EMAIL_FROM": "hello@foxing.app",
     "TURNSTILE_ENABLED": "false",
-    "TURNSTILE_SITE_KEY": ""
+    "TURNSTILE_SITE_KEY": "",
+    // Affiliate tags applied to buy links at render (public, not secret). Blank = no tag.
+    "AMAZON_ASSOC_TAG": "",
+    "BOOKSHOP_AFFILIATE_ID": ""
   }
 }
