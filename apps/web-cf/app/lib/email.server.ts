@@ -15,7 +15,9 @@ export async function sendVerificationEmail(env: Env, to: string, url: string): 
     });
   } catch (err) {
     const e = err as { code?: string; message?: string };
-    console.error(`EMAIL.send failed: code=${e.code ?? "unknown"} message=${e.message ?? String(err)}`);
+    console.error(
+      `EMAIL.send failed: code=${e.code ?? "unknown"} message=${e.message ?? String(err)}`,
+    );
     throw err;
   }
 }
