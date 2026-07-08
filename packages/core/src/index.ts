@@ -8,3 +8,4 @@ export * from "./validators";
 export * from "./repositories";
 export * from "./events";
 export * from "./domain";
+export * from "./config";
