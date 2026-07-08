@@ -92,7 +92,7 @@ function FacetLink({
   return (
     <Link
       to={to}
-      aria-pressed={active}
+      aria-current={active ? "true" : undefined}
       className={cn(
         "inline-flex items-center rounded-full border px-3 py-1.5 font-ui text-sm transition-colors",
         active

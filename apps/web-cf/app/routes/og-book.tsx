@@ -8,9 +8,12 @@ import type { Route } from "./+types/og-book";
 const WIDTH = 1200;
 const HEIGHT = 630;
 
-/** Google Fonts returns TTF (satori-compatible) when asked with a legacy UA. Cached. */
+/**
+ * Load a font satori can use. A legacy UA makes Google Fonts serve WOFF (satori
+ * supports ttf/otf/woff, not woff2). Cached at the edge for a year.
+ */
 async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  const key = `https://fontcache.foxing.app/${family}-${weight}.ttf`;
+  const key = `https://fontcache.foxing.app/${family}-${weight}.font`;
   const cache = edgeCache();
   const hit = await cache.match(key);
   if (hit) return hit.arrayBuffer();
@@ -19,7 +22,9 @@ async function loadFont(family: string, weight: number): Promise<ArrayBuffer | n
       `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}`,
       { headers: { "User-Agent": "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1)" } },
     ).then((r) => r.text());
-    const url = css.match(/src:\s*url\((.+?)\)\s*format\(['"]?(?:truetype|opentype)['"]?\)/)?.[1];
+    const url = css.match(
+      /src:\s*url\((.+?)\)\s*format\(['"]?(?:woff|truetype|opentype)['"]?\)/,
+    )?.[1];
     if (!url) return null;
     const res = await fetch(url);
     const buf = await res.arrayBuffer();
@@ -79,22 +84,24 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const title = esc(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
   const author = esc(book.author);
 
-  const html = `
-    <div style="display:flex;width:100%;height:100%;background:#FAF6EE;font-family:'DM Sans';padding:72px;box-sizing:border-box;">
-      <div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;padding-right:56px;">
-        <div style="display:flex;align-items:center;color:#B04A1C;font-size:26px;font-weight:500;letter-spacing:2px;">FOXING</div>
-        <div style="display:flex;flex-direction:column;">
-          <div style="display:flex;font-family:'Fraunces';font-size:${title.length > 40 ? 58 : 72}px;font-weight:600;color:#16100B;line-height:1.05;">${title}</div>
-          <div style="display:flex;margin-top:28px;font-size:34px;color:#3E3028;">${author}</div>
-        </div>
-        <div style="display:flex;align-items:center;font-size:24px;color:#815E41;"><div style="width:44px;height:4px;background:#D4622E;margin-right:16px;"></div>Read the classics, free</div>
-      </div>
-      ${
-        cover
-          ? `<div style="display:flex;width:340px;height:100%;align-items:center;"><img src="${cover}" width="340" height="510" style="border-radius:10px;object-fit:cover;box-shadow:0 20px 45px rgba(22,16,11,0.28);"/></div>`
-          : ""
-      }
-    </div>`;
+  // Single line, no whitespace between tags: satori counts whitespace text nodes as
+  // children and requires display:flex on any multi-child element.
+  const titleFamily = display ? "Fraunces" : "DM Sans";
+  const coverBlock = cover
+    ? `<div style="display:flex;width:340px;height:100%;align-items:center;"><img src="${cover}" width="340" height="510" style="border-radius:10px;object-fit:cover;box-shadow:0 20px 45px rgba(22,16,11,0.28);"/></div>`
+    : "";
+  const html =
+    `<div style="display:flex;width:100%;height:100%;background:#FAF6EE;font-family:'DM Sans';padding:72px;box-sizing:border-box;">` +
+    `<div style="display:flex;flex-direction:column;justify-content:space-between;flex:1;padding-right:56px;">` +
+    `<div style="display:flex;color:#B04A1C;font-size:26px;font-weight:500;letter-spacing:2px;">FOXING</div>` +
+    `<div style="display:flex;flex-direction:column;">` +
+    `<div style="display:flex;font-family:'${titleFamily}';font-size:${title.length > 40 ? 56 : 70}px;font-weight:600;color:#16100B;line-height:1.05;">${title}</div>` +
+    `<div style="display:flex;margin-top:28px;font-size:34px;color:#3E3028;">by ${author}</div>` +
+    `</div>` +
+    `<div style="display:flex;align-items:center;font-size:24px;color:#815E41;"><div style="display:flex;width:44px;height:4px;background:#D4622E;margin-right:16px;"></div>Read the classics, free</div>` +
+    `</div>` +
+    coverBlock +
+    `</div>`;
 
   const fonts = [
     display
@@ -103,13 +110,20 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     ui ? { name: "DM Sans", data: ui, weight: 500 as const, style: "normal" as const } : null,
   ].filter((f): f is NonNullable<typeof f> => f !== null);
 
-  const image = new ImageResponse(html, { width: WIDTH, height: HEIGHT, fonts });
-  const response = new Response(image.body, {
-    headers: {
-      "Content-Type": "image/png",
-      "Cache-Control": "public, max-age=0, s-maxage=604800, immutable",
-    },
-  });
-  await cache.put(cacheKey, response.clone());
-  return response;
+  try {
+    const image = new ImageResponse(html, { width: WIDTH, height: HEIGHT, fonts });
+    // Materialize the PNG so any render error is caught here (satori/resvg run async).
+    const png = await new Response(image.body).arrayBuffer();
+    const response = new Response(png, {
+      headers: {
+        "Content-Type": "image/png",
+        "Cache-Control": "public, max-age=0, s-maxage=604800, immutable",
+      },
+    });
+    await cache.put(cacheKey, response.clone());
+    return response;
+  } catch {
+    // Render failed: fall back to the cover (or home) so crawlers still get an image.
+    return Response.redirect(book.coverUrl ?? "https://foxing.app", 302);
+  }
 }

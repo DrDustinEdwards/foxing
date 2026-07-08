@@ -58,7 +58,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <p className="text-lg text-secondary">{message}</p>
       <a
         href="/"
-        className="mt-2 rounded-cover bg-brand px-5 py-2.5 font-ui font-medium text-on-brand transition hover:bg-brand-hover"
+        className="mt-2 rounded-cover bg-brand-text px-5 py-2.5 font-ui font-medium text-on-brand transition hover:bg-brand-hover dark:text-[color:var(--section-charcoal)]"
       >
         Back to Foxing
       </a>

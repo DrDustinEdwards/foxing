@@ -85,8 +85,12 @@ type ButtonProps = {
 
 const BUTTON_BASE =
   "inline-flex items-center justify-center gap-2 rounded-cover px-5 py-2.5 font-ui text-sm font-medium transition disabled:opacity-50";
+// Primary fill is brand-text (#B04A1C), not brand-ui (#D4622E): brand-ui is
+// large-text-only (3.75:1 with white), brand-text clears AA at 5.07:1. In dark mode
+// the fill is light auburn, so the label flips to charcoal to keep the ratio.
 const BUTTON_VARIANT = {
-  primary: "bg-brand text-on-brand hover:bg-brand-hover",
+  primary:
+    "bg-brand-text text-on-brand hover:bg-brand-hover dark:text-[color:var(--section-charcoal)]",
   secondary: "border border-border-interactive text-primary hover:bg-hover",
   ghost: "text-brand-text hover:bg-brand-subtle",
 } as const;

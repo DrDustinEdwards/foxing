@@ -74,3 +74,24 @@ jobs:
         run: |
           pnpm --filter web-cf exec react-router build
           pnpm --filter web-cf exec wrangler deploy --var BETTER_AUTH_URL:${{ vars.BETTER_AUTH_URL }}
+
+  e2e:
+    # Public catalog flows (browse, book page, misspelled-author fuzzy, WCAG AA) run
+    # against the just-deployed preview, which is backed by the real catalog D1.
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: pnpm --filter web-cf exec playwright install --with-deps chromium
+      - name: Run E2E
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: ${{ vars.BETTER_AUTH_URL }}
+        run: pnpm --filter web-cf exec playwright test
