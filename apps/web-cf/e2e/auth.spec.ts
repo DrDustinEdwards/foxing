@@ -50,4 +50,16 @@ test.describe("auth flows", () => {
     await page.goto("/login?reset=1");
     await expect(page.getByText(/password updated/i)).toBeVisible();
   });
+
+  // REGRESSION (2026-07-09): /me crashed into a raw 500 for a signed-in user with no
+  // profile row (account predating onboarding). Profile-gated loaders now redirect:
+  // anonymous -> /login, signed-in-without-profile -> /onboarding. The authed
+  // no-profile -> /onboarding path is covered deterministically in
+  // test/profile-gate.test.ts (e2e cannot forge a verified session here).
+  test("anonymous /me redirects to login, never 500", async ({ page }) => {
+    const res = await page.goto("/me");
+    expect(res?.status()).toBeLessThan(500);
+    await expect(page).toHaveURL(/\/login/);
+    await expect(page.getByText(/something went wrong/i)).toHaveCount(0);
+  });
 });
