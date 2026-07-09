@@ -47,6 +47,40 @@ const handlers: EventHandlers = {
       },
     };
   },
+
+  "library.status.reading": (_actor, payload) => {
+    const { bookId, title } = payload as { bookId: string; title: string };
+    return { activity: { type: "started_book", bookId, data: { title }, visibility: "public" } };
+  },
+
+  "library.status.finished": (_actor, payload) => {
+    const { bookId, title } = payload as { bookId: string; title: string };
+    return { activity: { type: "finished_book", bookId, data: { title }, visibility: "public" } };
+  },
+
+  "goal.met": (actor, payload) => {
+    const { goalId, goalType, target } = payload as {
+      goalId: string;
+      goalType: string;
+      target: number;
+    };
+    return {
+      activity: {
+        type: "goal_met",
+        targetId: goalId,
+        data: { goalType, target },
+        visibility: "public",
+      },
+      notifications: [
+        {
+          userId: actor.userId,
+          type: "goal_met",
+          title: "Goal reached",
+          body: `You reached your goal of ${target} ${goalType}.`,
+        },
+      ],
+    };
+  },
 };
 
 export async function emit(

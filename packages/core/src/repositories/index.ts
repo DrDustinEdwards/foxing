@@ -6,3 +6,6 @@ export * from "./profiles";
 // re-exported flat for ergonomic loader typing (import type { BookCard }).
 export * as catalogRepo from "./catalog";
 export type * from "./catalog";
+
+export * as libraryRepo from "./library";
+export type { LibraryEntry, UserBook, CustomShelf, ReadingGoal, ReadingStreak } from "./library";
