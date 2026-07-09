@@ -47,7 +47,8 @@ function wrapStatement(stmt: D1PreparedStatement): D1PreparedStatement {
   });
 }
 
-function wrapD1(d1: D1Database): D1Database {
+// Exported for unit testing the retry behavior with a fake D1 binding.
+export function wrapD1(d1: D1Database): D1Database {
   return new Proxy(d1, {
     get(target, prop, receiver) {
       const value = Reflect.get(target, prop, receiver);
