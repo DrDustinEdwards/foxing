@@ -1,7 +1,9 @@
 // Profile gate for authenticated routes. A signed-in user with no profile row has
 // not finished onboarding (accounts created before onboarding existed, or a reset
-// mid-signup), so every profile-dependent loader must send them to /onboarding
-// rather than dereferencing a null profile and crashing into the ErrorBoundary.
+// mid-signup), so every profile-dependent loader must send them to /onboarding.
+// Reads the profile in-process via core, per the standing rule: loaders never
+// self-fetch the Worker's own /api/v1 (that loopback returns a 404 HTML page, not
+// JSON, unconditionally, which is what crashed /me before this gate existed).
 import type { Profile } from "@foxing/core";
 import { createDb, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
