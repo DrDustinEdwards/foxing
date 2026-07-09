@@ -10,14 +10,22 @@ export default function ResetPassword() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const token = params.get("token") ?? "";
+  const linkError = params.get("error");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   if (!token) {
+    // "unavailable" means the link check was interrupted rather than the token being
+    // bad, so the retry copy differs. Both cases route back to request a fresh link.
+    const interrupted = linkError === "unavailable";
     return (
       <main>
-        <h1>Link expired or invalid</h1>
-        <p>This reset link is missing or has expired.</p>
+        <h1>{interrupted ? "We couldn't verify that link" : "Link expired or invalid"}</h1>
+        <p>
+          {interrupted
+            ? "Something interrupted the check. Request a new link and try again."
+            : "This reset link is missing or has expired."}
+        </p>
         <p>
           <Link to="/forgot-password">Request a new reset link</Link>
         </p>

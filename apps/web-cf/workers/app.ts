@@ -54,7 +54,38 @@ const api = createApi({
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.on(["GET", "POST"], "/api/auth/*", (c) => getAuth(c.env).handler(c.req.raw));
+// The password reset link is a GET navigation Better Auth handles directly. If the
+// token lookup fails unexpectedly (a D1 blip that outlives the retry, say), Better
+// Auth would answer with a raw 500 or its own "Something went wrong" page. For that
+// one navigation we intercept and send the user to the friendly /reset-password
+// screen, which offers a retry link. Every other auth route is untouched.
+function isResetCallback(req: Request): boolean {
+  if (req.method !== "GET") return false;
+  return new URL(req.url).pathname.startsWith("/api/auth/reset-password/");
+}
+
+function friendlyResetRedirect(req: Request): Response {
+  const to = new URL("/reset-password", req.url);
+  to.searchParams.set("error", "unavailable");
+  return Response.redirect(to.toString(), 302);
+}
+
+app.on(["GET", "POST"], "/api/auth/*", async (c) => {
+  const req = c.req.raw;
+  try {
+    const res = await getAuth(c.env).handler(req);
+    if (isResetCallback(req)) {
+      const location = res.headers.get("Location") ?? "";
+      if (res.status >= 500 || location.includes("/api/auth/error")) {
+        return friendlyResetRedirect(req);
+      }
+    }
+    return res;
+  } catch (err) {
+    if (isResetCallback(req)) return friendlyResetRedirect(req);
+    throw err;
+  }
+});
 
 app.route("/api/v1", api);
 
