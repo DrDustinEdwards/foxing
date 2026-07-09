@@ -1,39 +1,20 @@
-// The reader's personal library (auth-gated). Reads come from /api/v1 (forwarding
-// the session cookie); writes (status, shelves, goals) go to /api/v1 and the page
-// revalidates. Shelf status transitions emit activity events server-side.
+// The reader's personal library (auth-gated). Reads run in-process via core in
+// loadLibraryData (the standing rule: loaders never self-fetch the Worker's own
+// /api/v1, that loopback returns HTML, not JSON). Writes (status, shelves, goals) go
+// to /api/v1 from the browser client and the page revalidates. Status transitions
+// emit events server-side.
 import { useState } from "react";
 import { Link, redirect, useRevalidator } from "react-router";
-import { cloudflareContext } from "~/context";
 import { BookStatusControl, type ShelfStatus } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
+import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
+import type { GoalRow, Shelf, Streak } from "~/lib/library.server";
+import { loadLibraryData } from "~/lib/library.server";
+import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
-
-interface Entry {
-  bookId: string;
-  status: string;
-  progressPct: number;
-  title: string;
-  author: string;
-  slug: string;
-  coverUrl: string | null;
-}
-interface Shelf {
-  id: string;
-  name: string;
-  description: string | null;
-}
-interface GoalRow {
-  goal: { id: string; type: string; target: number; periodType: string; year: number };
-  progress: number;
-}
-interface Streak {
-  currentStreak: number;
-  longestStreak: number;
-  totalBooksFinished: number;
-}
 
 const STATUS_TABS: { value: ShelfStatus; label: string }[] = [
   { value: "reading", label: "Reading" },
@@ -43,30 +24,13 @@ const STATUS_TABS: { value: ShelfStatus; label: string }[] = [
   { value: "abandoned", label: "Abandoned" },
 ];
 
-async function apiJson<T>(path: string, request: Request): Promise<T> {
-  const res = await fetch(new URL(path, request.url), { headers: request.headers });
-  if (!res.ok) return {} as T;
-  return (await res.json()) as T;
-}
-
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await getAuth(env).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect("/login?redirect=/library");
-
-  const [lib, shelves, goals, streak] = await Promise.all([
-    apiJson<{ library: Entry[] }>("/api/v1/library", request),
-    apiJson<{ shelves: Shelf[] }>("/api/v1/shelves", request),
-    apiJson<{ goals: GoalRow[] }>("/api/v1/goals", request),
-    apiJson<{ streak: Streak | null }>("/api/v1/streaks/me", request),
-  ]);
-
-  return {
-    library: lib.library ?? [],
-    shelves: shelves.shelves ?? [],
-    goals: goals.goals ?? [],
-    streak: streak.streak,
-  };
+  // Signed-in but not onboarded -> /onboarding (never render with a null profile).
+  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
+  return loadLibraryData(env, session.user.id);
 }
 
 export function meta() {
