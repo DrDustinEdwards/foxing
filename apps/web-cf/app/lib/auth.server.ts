@@ -5,7 +5,7 @@ import { createDb, schema } from "@foxing/core";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { captcha } from "better-auth/plugins";
-import { sendVerificationEmail } from "./email.server";
+import { sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
 
 export function getAuth(env: Env) {
   const db = createDb(env.DB);
@@ -32,6 +32,9 @@ export function getAuth(env: Env) {
     emailAndPassword: {
       enabled: true,
       requireEmailVerification: true,
+      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
+        await sendPasswordResetEmail(env, user.email, url);
+      },
     },
     emailVerification: {
       sendOnSignUp: true,
