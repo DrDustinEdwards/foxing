@@ -51,10 +51,14 @@ test.describe("auth flows", () => {
     await expect(page.getByText(/password updated/i)).toBeVisible();
   });
 
-  // REGRESSION (2026-07-09): /me crashed into a raw 500 for a signed-in user with no
-  // profile row (account predating onboarding). Profile-gated loaders now redirect:
-  // anonymous -> /login, signed-in-without-profile -> /onboarding. The authed
-  // no-profile -> /onboarding path is covered deterministically in
+  // REGRESSION (2026-07-09): /me returned a raw 500. Two separate defects, both fixed:
+  // (1) the loader self-fetched the Worker's own /api/v1/me and called res.json() on
+  //     the response; that loopback returns a 404 HTML page unconditionally (proven
+  //     for both profile and no-profile users), so the parse threw. Reads now go
+  //     through core in-process, no self-fetch.
+  // (2) the only signed-in user had no profile row. Profile-gated loaders now
+  //     redirect: anonymous -> /login, signed-in-without-profile -> /onboarding.
+  // The authed no-profile -> /onboarding path is covered deterministically in
   // test/profile-gate.test.ts (e2e cannot forge a verified session here).
   test("anonymous /me redirects to login, never 500", async ({ page }) => {
     const res = await page.goto("/me");
