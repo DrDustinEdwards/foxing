@@ -5,6 +5,7 @@ import { Container } from "./ui";
 
 const NAV = [
   { to: "/books", label: "Books" },
+  { to: "/library", label: "Library" },
   { to: "/awards", label: "Awards" },
   { to: "/picks", label: "Picks" },
   { to: "/book-of-the-month", label: "Book of the Month" },
