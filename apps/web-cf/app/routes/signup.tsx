@@ -42,8 +42,15 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
     );
     setPending(false);
     if (res.error) {
-      setError(res.error.message ?? "Sign up failed.");
-      return;
+      // Treat "email already registered" identically to success so callers
+      // cannot enumerate whether an address is in use.
+      const isExisting =
+        (res.error as { code?: string }).code === "USER_ALREADY_EXISTS" ||
+        res.error.message?.toLowerCase().includes("already exists");
+      if (!isExisting) {
+        setError(res.error.message ?? "Sign up failed.");
+        return;
+      }
     }
     setDone(true);
   }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router";
 import { signIn } from "~/lib/auth-client";
 
 export function meta() {
@@ -8,8 +8,10 @@ export function meta() {
 
 export default function Login() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const passwordReset = params.get("reset") === "1";
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -31,6 +33,9 @@ export default function Login() {
   return (
     <main>
       <h1>Sign in</h1>
+      {passwordReset ? (
+        <p role="status">Password updated. Sign in with your new password.</p>
+      ) : null}
       <form onSubmit={onSubmit}>
         <p>
           <label>
@@ -49,6 +54,9 @@ export default function Login() {
           {pending ? "Signing in..." : "Sign in"}
         </button>
       </form>
+      <p>
+        <Link to="/forgot-password">Forgot your password?</Link>
+      </p>
       <p>
         <Link to="/signup">Create an account</Link>
       </p>
