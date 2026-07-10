@@ -1,9 +1,11 @@
 import { catalogRepo } from "@foxing/core";
 import { Link } from "react-router";
-import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
-import { Container, EmptyState, PageHeader } from "~/components/ui";
+import { FilterBar } from "~/components/search/filter-bar";
+import { GroupedResults } from "~/components/search/grouped-results";
+import { Pagination } from "~/components/search/pagination";
+import { Container, PageHeader } from "~/components/ui";
 import { loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/search";
@@ -13,8 +15,25 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") ?? "").trim();
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
-  const result = q ? await catalogRepo.searchCatalog(db, q, { page }) : null;
-  return { origin, q, result };
+  const filters = {
+    genre: url.searchParams.get("genre") || undefined,
+    era: url.searchParams.get("era") || undefined,
+    length: url.searchParams.get("length") || undefined,
+  };
+
+  if (!q) return { origin, q, filters, result: null, authors: [], genres: [] };
+
+  const [result, authors, genres] = await Promise.all([
+    catalogRepo.searchCatalog(db, q, {
+      page,
+      subject: filters.genre,
+      era: filters.era,
+      length: filters.length,
+    }),
+    catalogRepo.searchAuthors(db, q, 8),
+    catalogRepo.getGenreFacets(db, 12),
+  ]);
+  return { origin, q, filters, result, authors, genres };
 }
 
 export function headers(): HeadersInit {
@@ -34,7 +53,17 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 }
 
 export default function Search({ loaderData }: Route.ComponentProps) {
-  const { q, result } = loaderData;
+  const { q, filters, result, authors, genres } = loaderData;
+
+  function hrefFor(page: number) {
+    const sp = new URLSearchParams();
+    sp.set("q", q);
+    if (filters.genre) sp.set("genre", filters.genre);
+    if (filters.era) sp.set("era", filters.era);
+    if (filters.length) sp.set("length", filters.length);
+    if (page > 1) sp.set("page", String(page));
+    return `/search?${sp.toString()}`;
+  }
 
   return (
     <PageShell>
@@ -43,63 +72,17 @@ export default function Search({ loaderData }: Route.ComponentProps) {
         <SearchBox initialQuery={q} />
 
         {result ? (
-          <div className="mt-10">
-            {result.total === 0 ? (
-              <EmptyState
-                title={`Nothing found for "${q}"`}
-                body="Try an author's last name, or a word from the title."
-              />
-            ) : (
-              <>
-                <p className="mb-6 font-ui text-sm text-tertiary">
-                  {result.fuzzy ? (
-                    <>
-                      No exact match for <span className="text-secondary">&ldquo;{q}&rdquo;</span>.
-                      Showing the closest results.
-                    </>
-                  ) : (
-                    <>
-                      {result.total.toLocaleString()} {result.total === 1 ? "result" : "results"}{" "}
-                      for <span className="text-secondary">&ldquo;{q}&rdquo;</span>.
-                    </>
-                  )}
-                </p>
-                <BookGrid>
-                  {result.books.map((b, i) => (
-                    <BookCard key={b.slug} book={b} priority={i < 6} />
-                  ))}
-                </BookGrid>
-                {result.pageCount > 1 ? (
-                  <nav
-                    aria-label="Pagination"
-                    className="mt-12 flex items-center justify-center gap-4"
-                  >
-                    {result.page > 1 ? (
-                      <Link
-                        to={`/search?q=${encodeURIComponent(q)}&page=${result.page - 1}`}
-                        rel="prev"
-                        className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-                      >
-                        Previous
-                      </Link>
-                    ) : null}
-                    <span className="font-ui text-sm text-secondary">
-                      Page {result.page} of {result.pageCount}
-                    </span>
-                    {result.page < result.pageCount ? (
-                      <Link
-                        to={`/search?q=${encodeURIComponent(q)}&page=${result.page + 1}`}
-                        rel="next"
-                        className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-                      >
-                        Next
-                      </Link>
-                    ) : null}
-                  </nav>
-                ) : null}
-              </>
-            )}
-          </div>
+          <>
+            <FilterBar genres={genres} active={filters} />
+            <GroupedResults
+              q={q}
+              books={result.books}
+              bookTotal={result.total}
+              fuzzy={result.fuzzy}
+              authors={authors}
+            />
+            <Pagination page={result.page} pageCount={result.pageCount} hrefFor={hrefFor} />
+          </>
         ) : (
           <p className="mt-8 font-ui text-secondary">
             Start typing to search, or{" "}
