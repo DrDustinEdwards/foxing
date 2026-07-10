@@ -169,9 +169,16 @@ export function SiteFooter() {
       <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2 lg:col-span-1">
           <Wordmark to="/" />
+          <p className="mt-2 font-body text-base italic text-tertiary">reading, together.</p>
           <p className="mt-3 max-w-xs text-sm text-tertiary">
             A reading home for the classics and the conversations around them.
           </p>
+          <Link
+            to="/about"
+            className="mt-3 inline-block font-ui text-sm text-secondary hover:text-brand-text"
+          >
+            About
+          </Link>
         </div>
         <FooterCol
           title="Browse"

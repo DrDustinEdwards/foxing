@@ -16,12 +16,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   // anonymous visitors (whose response is the one that gets edge-cached).
   const session = await getAuth(env).api.getSession({ headers: request.headers });
   if (session?.user) throw redirect("/home");
-  const [botm, browse, journal] = await Promise.all([
-    catalogRepo.getCurrentBotm(db),
+  const [pick, browse, journal] = await Promise.all([
+    catalogRepo.getTodaysPick(db),
     catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
     catalogRepo.listPublishedPosts(db, { pageSize: 3 }),
   ]);
-  return { origin, botm, books: browse.books, total: browse.total, posts: journal.posts };
+  return { origin, pick, books: browse.books, total: browse.total, posts: journal.posts };
 }
 
 export function headers(): HeadersInit {
@@ -39,7 +39,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { botm, books, total, posts } = loaderData;
+  const { pick, books, total, posts } = loaderData;
 
   return (
     <PageShell>
@@ -66,37 +66,41 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </div>
       </Container>
 
-      {/* This month */}
-      {botm?.book ? (
+      <ValueProps />
+
+      {/* Today's Pick: a published Book of the Month, or a staff pick. */}
+      {pick ? (
         <Container className="mt-16">
           <article className="grid gap-6 rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)] sm:items-center sm:p-8">
             <div className="mx-auto w-full max-w-[160px]">
-              <Link to={`/books/${botm.book.slug}`}>
+              <Link to={`/books/${pick.book.slug}`}>
                 <CoverImage
-                  src={botm.book.coverUrl}
-                  alt={`${botm.book.title} by ${botm.book.author}`}
-                  fallbackLabel={botm.book.title}
+                  src={pick.book.coverUrl}
+                  alt={`${pick.book.title} by ${pick.book.author}`}
+                  fallbackLabel={pick.book.title}
                   sizes="160px"
                 />
               </Link>
             </div>
             <div>
-              <Eyebrow>Book of the Month</Eyebrow>
+              <Eyebrow>{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</Eyebrow>
               <h2 className="mt-2 font-display text-2xl leading-tight">
-                <Link to={`/books/${botm.book.slug}`} className="hover:text-brand-text">
-                  {botm.book.title}
+                <Link to={`/books/${pick.book.slug}`} className="hover:text-brand-text">
+                  {pick.book.title}
                 </Link>
               </h2>
-              <p className="mt-1 font-ui text-secondary">{botm.book.author}</p>
-              {botm.curatorNote ? (
-                <p className="mt-3 line-clamp-2 font-body text-secondary">{botm.curatorNote}</p>
+              <p className="mt-1 font-ui text-secondary">{pick.book.author}</p>
+              {pick.note ? (
+                <p className="mt-3 line-clamp-2 font-body text-secondary">{pick.note}</p>
               ) : null}
-              <Link
-                to="/book-of-the-month"
-                className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
-              >
-                Why this book
-              </Link>
+              {pick.source === "botm" ? (
+                <Link
+                  to="/book-of-the-month"
+                  className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
+                >
+                  Why this book
+                </Link>
+              ) : null}
             </div>
           </article>
         </Container>
@@ -145,5 +149,85 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </Container>
       ) : null}
     </PageShell>
+  );
+}
+
+function BookOpenIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M12 6c-1.8-1.4-4-2-6.5-2v13c2.5 0 4.7.6 6.5 2m0-13c1.8-1.4 4-2 6.5-2v13c-2.5 0-4.7.6-6.5 2m0-13v13"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ShelfIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4 4v16M20 4v16M4 12h16M7 4v8M11 4v8M15 4v8M17 4v8"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CompassIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="m15 9-2 5-5 2 2-5 5-2Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ValueProps() {
+  return (
+    <Container className="mt-16">
+      <div className="grid gap-10 sm:grid-cols-3">
+        <ValueColumn icon={<BookOpenIcon />} heading="1,400+ classic books, free.">
+          Public domain literature, properly formatted for reading on the web. No subscription, no
+          paywall, no account required to open a book.
+        </ValueColumn>
+        <ValueColumn icon={<ShelfIcon />} heading="Track every book.">
+          Mark what you're reading, finished, or paused. Set a reading goal, watch your streak
+          build, and organize your own shelves.
+        </ValueColumn>
+        <ValueColumn icon={<CompassIcon />} heading="Find your next read.">
+          Browse by genre, era, or length. Follow award winners and celebrity picks. Search that
+          forgives a misspelled author.
+        </ValueColumn>
+      </div>
+    </Container>
+  );
+}
+
+function ValueColumn({
+  icon,
+  heading,
+  children,
+}: {
+  icon: React.ReactNode;
+  heading: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <span className="text-brand-ui">{icon}</span>
+      <h2 className="font-display text-lg text-primary">{heading}</h2>
+      <p className="font-body text-base text-secondary">{children}</p>
+    </div>
   );
 }
