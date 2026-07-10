@@ -17,7 +17,7 @@ test.describe("search depth", () => {
   test("the filter bar narrows the query by era through the visible controls", async ({ page }) => {
     await page.goto(`/search?q=${encodeURIComponent(query)}`, { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /^filters$/i }).click();
-    await page.getByLabel(/^era$/i).selectOption({ label: "1900 to 1949" });
+    await page.getByRole("combobox", { name: /^era$/i }).selectOption({ label: "1900 to 1949" });
     await expect(page).toHaveURL(/[?&]era=1900-1949/);
     // The active filter is reflected as a removable chip.
     await expect(page.getByRole("button", { name: /1900 to 1949/i })).toBeVisible();
