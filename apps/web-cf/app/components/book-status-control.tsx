@@ -29,6 +29,7 @@ export function BookStatusControl({
 }) {
   const [status, setStatus] = useState<ShelfStatus | "">(currentStatus ?? "");
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!signedIn) {
     return (
@@ -43,46 +44,60 @@ export function BookStatusControl({
 
   async function apply(next: ShelfStatus | "remove") {
     setPending(true);
+    setError(null);
     try {
-      if (next === "remove") {
-        const res = await fetch(`/api/v1/library/${bookId}`, { method: "DELETE" });
-        if (res.ok) {
-          setStatus("");
-          onChanged?.(null);
-        }
-      } else {
-        const res = await fetch(`/api/v1/library/${bookId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: next }),
-        });
-        if (res.ok) {
-          setStatus(next);
-          onChanged?.(next);
-        }
+      const res =
+        next === "remove"
+          ? await fetch(`/api/v1/library/${bookId}`, { method: "DELETE" })
+          : await fetch(`/api/v1/library/${bookId}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: next }),
+            });
+      if (!res.ok) {
+        // Do not swallow: a failed write must be visible, not a silent revert.
+        setError("Could not save. Try again.");
+        return;
       }
+      const applied = next === "remove" ? "" : next;
+      setStatus(applied);
+      onChanged?.(applied || null);
+    } catch {
+      setError("Could not save. Check your connection and try again.");
     } finally {
       setPending(false);
     }
   }
 
   return (
-    <label className="flex w-full items-center gap-2">
-      <span className="sr-only">Reading status</span>
-      <select
-        value={status}
-        disabled={pending}
-        onChange={(e) => apply((e.target.value || "remove") as ShelfStatus | "remove")}
-        className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary disabled:opacity-50"
-      >
-        <option value="">Add to library</option>
-        {STATUSES.map((s) => (
-          <option key={s.value} value={s.value}>
-            {s.label}
-          </option>
-        ))}
-        {status ? <option value="remove">Remove from library</option> : null}
-      </select>
-    </label>
+    <div className="w-full">
+      <label className="flex w-full items-center gap-2">
+        <span className="sr-only">Reading status</span>
+        <select
+          value={status}
+          disabled={pending}
+          onChange={(e) => apply((e.target.value || "remove") as ShelfStatus | "remove")}
+          className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary disabled:opacity-50"
+        >
+          <option value="">Add to library</option>
+          {STATUSES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+          {status ? <option value="remove">Remove from library</option> : null}
+        </select>
+      </label>
+      {pending ? (
+        <p className="mt-1.5 font-ui text-xs text-tertiary" role="status">
+          Saving...
+        </p>
+      ) : null}
+      {error ? (
+        <p className="mt-1.5 font-ui text-xs text-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </div>
   );
 }
