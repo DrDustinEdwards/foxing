@@ -188,6 +188,48 @@ export function EmptyState({ title, body }: { title: string; body?: string }) {
   );
 }
 
+const AVATAR_SIZE = {
+  sm: "h-8 w-8 text-[0.7rem]",
+  md: "h-9 w-9 text-sm",
+  lg: "h-20 w-20 text-2xl",
+} as const;
+
+/** Two-letter initials from a display name, mirroring the legacy avatar fallback. */
+export function avatarInitials(name: string): string {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
+/** Round avatar: the image when present, else brand-subtle initials. */
+export function Avatar({
+  src,
+  name,
+  size = "md",
+}: {
+  src?: string | null;
+  name: string;
+  size?: keyof typeof AVATAR_SIZE;
+}) {
+  const cls = cn(
+    "inline-grid shrink-0 place-items-center overflow-hidden rounded-full bg-brand-subtle font-ui font-semibold text-brand-subtle-text",
+    AVATAR_SIZE[size],
+  );
+  if (src) {
+    return (
+      <span className={cls}>
+        <img src={src} alt="" className="h-full w-full object-cover" />
+      </span>
+    );
+  }
+  return (
+    <span className={cls} aria-hidden="true">
+      {avatarInitials(name)}
+    </span>
+  );
+}
+
 /** Page title block: eyebrow + display heading + optional lede. */
 export function PageHeader({
   eyebrow,
