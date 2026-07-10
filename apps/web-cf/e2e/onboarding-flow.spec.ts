@@ -46,10 +46,13 @@ async function provisionVerifiedAccount(baseURL: string) {
 }
 
 async function deleteAccount(baseURL: string, cookieHeader: string) {
-  await fetch(new URL("/api/v1/account", baseURL), {
+  const res = await fetch(new URL("/api/v1/account", baseURL), {
     method: "DELETE",
     headers: { cookie: cookieHeader },
   });
+  if (!res.ok) {
+    console.error(`Ephemeral account cleanup failed: DELETE /account -> ${res.status}`);
+  }
 }
 
 test.describe("onboarding (ephemeral account)", () => {
@@ -71,8 +74,10 @@ test.describe("onboarding (ephemeral account)", () => {
     // A fresh account has no profile; /me's loader redirects it to /onboarding.
     await expect(page).toHaveURL(/\/onboarding/);
 
+    // The label's accessible name includes the helper text ("Username Letters,
+    // numbers, and underscores."), so match a prefix, not the full string.
     const username = `e2eonb${Date.now().toString(36)}`;
-    await page.getByLabel(/^username$/i).fill(username);
+    await page.getByLabel(/^username/i).fill(username);
     await page.getByRole("button", { name: /^continue$/i }).click();
 
     // Step 2: the starter-book handoff.
