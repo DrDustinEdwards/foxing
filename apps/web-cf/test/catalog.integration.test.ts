@@ -149,3 +149,109 @@ describe("catalog browse + detail", () => {
     expect(community?.sourceType).toBe("community");
   });
 });
+
+describe("today's pick (botm -> staff pick fallback)", () => {
+  beforeEach(async () => {
+    await db().delete(schema.books);
+    await db().delete(schema.bookOfTheMonth);
+    await seed();
+  });
+
+  it("returns null when neither an published BOTM nor a staff pick exists", async () => {
+    expect(await catalogRepo.getTodaysPick(db())).toBeNull();
+  });
+
+  it("falls back to a staff pick when BOTM is unpublished", async () => {
+    const d = db();
+    const [pride] = await d
+      .select({ id: schema.books.id })
+      .from(schema.books)
+      .where(eq(schema.books.slug, "pride-and-prejudice-austen"));
+    await d
+      .update(schema.books)
+      .set({ isStaffPick: true, staffPickNote: "A perfect first classic." })
+      .where(eq(schema.books.id, pride.id));
+
+    const pick = await catalogRepo.getTodaysPick(d);
+    expect(pick?.source).toBe("staff");
+    expect(pick?.book.slug).toBe("pride-and-prejudice-austen");
+    expect(pick?.note).toBe("A perfect first classic.");
+  });
+
+  it("prefers a published BOTM over a staff pick", async () => {
+    const d = db();
+    const [karamazov] = await d
+      .select({ id: schema.books.id })
+      .from(schema.books)
+      .where(eq(schema.books.slug, "the-brothers-karamazov-dostoyevsky"));
+    const [pride] = await d
+      .select({ id: schema.books.id })
+      .from(schema.books)
+      .where(eq(schema.books.slug, "pride-and-prejudice-austen"));
+    await d.update(schema.books).set({ isStaffPick: true }).where(eq(schema.books.id, pride.id));
+    await d.insert(schema.bookOfTheMonth).values({
+      bookId: karamazov.id,
+      year: 2026,
+      month: 7,
+      isPublished: true,
+      curatorNote: "The month's pick.",
+    });
+
+    const pick = await catalogRepo.getTodaysPick(d);
+    expect(pick?.source).toBe("botm");
+    expect(pick?.book.slug).toBe("the-brothers-karamazov-dostoyevsky");
+  });
+});
+
+describe("journal tags + archive", () => {
+  beforeEach(async () => {
+    await db().delete(schema.journalPosts);
+    await db()
+      .insert(schema.journalPosts)
+      .values([
+        {
+          title: "On Dostoyevsky",
+          slug: "on-dostoyevsky",
+          content: "...",
+          excerpt: "A close reading.",
+          tags: ["russian-literature", "philosophy"],
+          isPublished: true,
+          publishedAt: new Date("2026-01-15"),
+        },
+        {
+          title: "Austen's Wit",
+          slug: "austens-wit",
+          content: "...",
+          excerpt: "On comedy of manners.",
+          tags: ["romance"],
+          isPublished: true,
+          publishedAt: new Date("2026-02-01"),
+        },
+        {
+          title: "Draft in progress",
+          slug: "draft-in-progress",
+          content: "...",
+          tags: ["romance"],
+          isPublished: false,
+        },
+      ]);
+  });
+
+  it("counts tags across published posts only", async () => {
+    const tags = await catalogRepo.listTags(db());
+    expect(tags).toEqual(
+      expect.arrayContaining([
+        { tag: "russian-literature", count: 1 },
+        { tag: "philosophy", count: 1 },
+        { tag: "romance", count: 1 },
+      ]),
+    );
+  });
+
+  it("lists published posts by tag, newest first, excluding drafts", async () => {
+    const result = await catalogRepo.listPostsByTag(db(), "romance");
+    expect(result.posts.map((p) => p.slug)).toEqual(["austens-wit"]);
+    expect(result.posts[0].publishedAt).toBeInstanceOf(Date);
+    expect(result.posts[0].publishedAt?.toISOString().slice(0, 10)).toBe("2026-02-01");
+  });
+});
