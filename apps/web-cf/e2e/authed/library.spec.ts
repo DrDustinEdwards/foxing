@@ -1,31 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-// Signed-in library write flow, driven through ONLY the visible controls (see
-// e2e/README.md). This is the coverage the header-session integration test never
-// gave: a real page, a hydrated control, and a real user interaction that must
-// issue the write. Gated on E2E_SESSION_TOKEN because CI cannot forge a verified
-// Better Auth session; skips cleanly when absent.
-const token = process.env.E2E_SESSION_TOKEN;
+// Signed-in library writes, driven through ONLY the visible controls with a REAL
+// session (auth.setup.ts signed in through the form). This is the coverage the
+// deleted header-session integration test pretended to give: a real page, a
+// hydrated control, a real click, and an assertion on what the user sees.
 const slug = process.env.E2E_BOOK_SLUG ?? "said-the-fisherman-pickthall";
 
 test.describe("library writes (signed in)", () => {
-  test.skip(!token, "set E2E_SESSION_TOKEN to run the signed-in write specs");
-
-  test.beforeEach(async ({ context, baseURL }) => {
-    const host = new URL(baseURL ?? "https://foxing.dustin-edwards.workers.dev").hostname;
-    await context.addCookies([
-      {
-        name: "__Secure-better-auth.session_token",
-        value: token as string,
-        domain: host,
-        path: "/",
-        httpOnly: true,
-        secure: true,
-        sameSite: "Lax",
-      },
-    ]);
-  });
-
   test("choosing a status from the visible select issues the write and reflects it", async ({
     page,
   }) => {
@@ -38,24 +19,23 @@ test.describe("library writes (signed in)", () => {
 
     await page.goto(`/books/${slug}`, { waitUntil: "networkidle" });
 
-    // The control is the visible native <select>; a signed-out user would see a
-    // "Sign in to track" link instead. Fail loudly if we are not actually signed in.
+    // The control is the visible native <select>. A signed-out user would see a
+    // "Sign in to track" link instead, so this also proves we are really signed in.
     const control = page.getByRole("combobox", { name: /reading status/i });
     await expect(control).toBeVisible();
 
-    // Two real selections guarantee a change event regardless of the starting
-    // status; the flow must end on "Reading".
+    // Two selections guarantee a change event regardless of the starting status;
+    // the flow must end on "Reading".
     await control.selectOption({ label: "Finished" });
     await control.selectOption({ label: "Reading" });
     await expect(control).toHaveValue("reading");
 
-    // Every write that fired must have succeeded, and no error must be shown.
     expect(writes.length).toBeGreaterThan(0);
     for (const status of writes) expect(status).toBeLessThan(300);
     await expect(page.getByRole("alert")).toHaveCount(0);
   });
 
-  test("a failed write is surfaced, not silently swallowed", async ({ page }) => {
+  test("a failed status write is surfaced, not silently swallowed", async ({ page }) => {
     await page.route(/\/api\/v1\/library\//, (route) =>
       route.request().method() === "PUT"
         ? route.fulfill({
@@ -71,8 +51,26 @@ test.describe("library writes (signed in)", () => {
     await expect(control).toBeVisible();
 
     await control.selectOption({ label: "Paused" });
-
-    // The failure must be visible to the user.
     await expect(page.getByRole("alert")).toContainText(/could not save/i);
+  });
+
+  test("creating then removing a shelf through the visible controls", async ({ page }) => {
+    const name = `e2e-shelf-${Date.now()}`;
+    await page.goto("/library", { waitUntil: "networkidle" });
+
+    // ShelvesCard: type into the visible "New shelf" input and click Add.
+    await page.getByPlaceholder("New shelf").fill(name);
+    await page.getByRole("button", { name: /^add$/i }).click();
+
+    const shelfLink = page.getByRole("link", { name });
+    await expect(shelfLink).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveCount(0);
+
+    // Clean up so the shared e2e account stays tidy; this also exercises delete.
+    await page
+      .locator("li", { hasText: name })
+      .getByRole("button", { name: /^remove$/i })
+      .click();
+    await expect(shelfLink).toHaveCount(0);
   });
 });
