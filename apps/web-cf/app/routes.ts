@@ -1,4 +1,5 @@
 import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { INDEXNOW_KEY } from "./lib/indexnow";
 
 export default [
   index("routes/marketing.tsx"),
@@ -23,17 +24,22 @@ export default [
   route("picks/:clubSlug", "routes/pick-club.tsx"),
   route("book-of-the-month", "routes/botm.tsx"),
   route("journal", "routes/journal.tsx"),
+  route("journal/archive", "routes/journal-archive.tsx"),
+  route("journal/tag/:tag", "routes/journal-tag.tsx"),
   route("journal/:slug", "routes/journal-post.tsx"),
   route("journal/rss.xml", "routes/journal-rss.tsx"),
   route("search", "routes/search.tsx"),
   route("search/suggest", "routes/search-suggest.tsx"),
 
-  // Legal (static, edge-cached).
+  // Legal + content (static, edge-cached).
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
+  route("about", "routes/about.tsx"),
+  route("features", "routes/features.tsx"),
 
   // SEO + share surfaces.
   route("og/book/:slug", "routes/og-book.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
+  route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),
 ] satisfies RouteConfig;
