@@ -13,8 +13,10 @@ test.describe("app shell", () => {
 
   test("anonymous nav shows Sign in and Join free, not an avatar menu", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("link", { name: /^sign in$/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /join free/i })).toBeVisible();
+    // Scope to the header; "Sign in" also appears in the footer account column.
+    const header = page.getByRole("banner");
+    await expect(header.getByRole("link", { name: /^sign in$/i })).toBeVisible();
+    await expect(header.getByRole("link", { name: /join free/i })).toBeVisible();
     await expect(page.getByRole("button", { name: /account menu/i })).toHaveCount(0);
   });
 
