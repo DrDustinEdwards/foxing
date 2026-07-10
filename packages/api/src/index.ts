@@ -5,6 +5,7 @@ import { errorHandler } from "./error";
 import { contextMw } from "./middleware/context";
 import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
+import { accountRoutes } from "./routes/account";
 import { libraryRoutes } from "./routes/library";
 import { profileRoutes } from "./routes/profiles";
 import type { ApiDeps, Env } from "./types";
@@ -22,6 +23,7 @@ export function createApi(deps: ApiDeps) {
 
   app.route("/", profileRoutes);
   app.route("/", libraryRoutes);
+  app.route("/", accountRoutes);
 
   return app;
 }
