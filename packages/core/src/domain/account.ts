@@ -10,7 +10,7 @@
 // CASCADE from the user root, so the final user-row delete is a backstop for
 // anything not enumerated; the explicit deletes make erasure deterministic
 // regardless of foreign-key enforcement in a given environment.
-import { type SQLiteColumn, type SQLiteTable } from "drizzle-orm/sqlite-core";
+import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 import { eq, getTableName, inArray, or } from "drizzle-orm";
 import type { Db } from "../db";
 import {
