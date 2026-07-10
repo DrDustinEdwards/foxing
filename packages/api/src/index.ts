@@ -27,4 +27,5 @@ export function createApi(deps: ApiDeps) {
 }
 
 export { errors, AppError } from "./error";
+export { rateLimit } from "./middleware/rate-limit";
 export type { ApiDeps, Bindings, Env, SessionUser, Variables } from "./types";

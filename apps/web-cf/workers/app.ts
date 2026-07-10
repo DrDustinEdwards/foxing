@@ -3,7 +3,7 @@
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
-import { createApi } from "@foxing/api";
+import { AppError, createApi, rateLimit } from "@foxing/api";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext } from "../app/context";
@@ -54,6 +54,9 @@ const api = createApi({
 
 const app = new Hono<{ Bindings: Env }>();
 
+// The wired AUTH_RL class (5/min/IP). Applied to credential submissions below.
+const authLimiter = rateLimit("auth");
+
 // The password reset link is a GET navigation Better Auth handles directly. If the
 // token lookup fails unexpectedly (a D1 blip that outlives the retry, say), Better
 // Auth would answer with a raw 500 or its own "Something went wrong" page. For that
@@ -72,6 +75,20 @@ function friendlyResetRedirect(req: Request): Response {
 
 app.on(["GET", "POST"], "/api/auth/*", async (c) => {
   const req = c.req.raw;
+  // Credential-stuffing defense: throttle credential submissions (POST: sign-in,
+  // sign-up, password-reset requests) with the wired AUTH_RL class (5/min/IP). GET
+  // navigations (session checks, the reset callback) are not throttled. The class
+  // throws AppError on limit; the root app has no onError, so convert it here.
+  if (req.method === "POST") {
+    try {
+      await authLimiter(c as never, async () => {});
+    } catch (err) {
+      if (err instanceof AppError) {
+        return c.json({ error: { code: err.code, message: err.message } }, 429);
+      }
+      throw err;
+    }
+  }
   try {
     const res = await getAuth(c.env).handler(req);
     if (isResetCallback(req)) {
