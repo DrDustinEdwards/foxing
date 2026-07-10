@@ -41,9 +41,9 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
         const res = await fetch(`/search/suggest?q=${encodeURIComponent(value)}`, {
           signal: abort.current.signal,
         });
-        const data = (await res.json()) as { suggestions: Suggestion[] };
-        setItems(data.suggestions);
-        setOpen(data.suggestions.length > 0);
+        const data = (await res.json()) as { books: Suggestion[] };
+        setItems(data.books);
+        setOpen(data.books.length > 0);
       } catch {
         /* aborted or offline: leave the last suggestions in place */
       }
