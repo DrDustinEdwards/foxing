@@ -7,6 +7,7 @@ export default [
   route("login", "routes/login.tsx"),
   route("onboarding", "routes/onboarding.tsx"),
   route("me", "routes/me.tsx"),
+  route("settings", "routes/settings.tsx"),
   route("forgot-password", "routes/forgot-password.tsx"),
   route("reset-password", "routes/reset-password.tsx"),
   route("library", "routes/library.tsx"),
