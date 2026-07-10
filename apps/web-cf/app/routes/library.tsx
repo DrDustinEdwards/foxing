@@ -213,9 +213,11 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
   const [target, setTarget] = useState(12);
   const [period, setPeriod] = useState<"year" | "month" | "week">("year");
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function addGoal() {
     setPending(true);
+    setError(null);
     try {
       const now = new Date();
       const body: {
@@ -233,14 +235,30 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-      if (res.ok) onChanged();
+      // Do not swallow: a failed write must be visible, not a silent no-op.
+      if (!res.ok) {
+        setError("Could not save your goal. Try again.");
+        return;
+      }
+      onChanged();
+    } catch {
+      setError("Could not save your goal. Check your connection and try again.");
     } finally {
       setPending(false);
     }
   }
   async function del(id: string) {
-    const res = await fetch(`/api/v1/goals/${id}`, { method: "DELETE" });
-    if (res.ok) onChanged();
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/goals/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        setError("Could not remove that goal. Try again.");
+        return;
+      }
+      onChanged();
+    } catch {
+      setError("Could not remove that goal. Check your connection and try again.");
+    }
   }
 
   return (
@@ -314,6 +332,16 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
           Set
         </button>
       </div>
+      {pending ? (
+        <p className="mt-2 font-ui text-xs text-tertiary" role="status">
+          Saving...
+        </p>
+      ) : null}
+      {error ? (
+        <p className="mt-2 font-ui text-xs text-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }
@@ -321,27 +349,43 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
 function ShelvesCard({ shelves, onChanged }: { shelves: Shelf[]; onChanged: () => void }) {
   const [name, setName] = useState("");
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function addShelf() {
     if (!name.trim()) return;
     setPending(true);
+    setError(null);
     try {
       const res = await fetch("/api/v1/shelves", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: name.trim() }),
       });
-      if (res.ok) {
-        setName("");
-        onChanged();
+      // Do not swallow: a failed write must be visible, not a silent no-op.
+      if (!res.ok) {
+        setError("Could not create that shelf. Try again.");
+        return;
       }
+      setName("");
+      onChanged();
+    } catch {
+      setError("Could not create that shelf. Check your connection and try again.");
     } finally {
       setPending(false);
     }
   }
   async function del(id: string) {
-    const res = await fetch(`/api/v1/shelves/${id}`, { method: "DELETE" });
-    if (res.ok) onChanged();
+    setError(null);
+    try {
+      const res = await fetch(`/api/v1/shelves/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        setError("Could not remove that shelf. Try again.");
+        return;
+      }
+      onChanged();
+    } catch {
+      setError("Could not remove that shelf. Check your connection and try again.");
+    }
   }
 
   return (
@@ -383,6 +427,16 @@ function ShelvesCard({ shelves, onChanged }: { shelves: Shelf[]; onChanged: () =
           Add
         </button>
       </div>
+      {pending ? (
+        <p className="mt-2 font-ui text-xs text-tertiary" role="status">
+          Saving...
+        </p>
+      ) : null}
+      {error ? (
+        <p className="mt-2 font-ui text-xs text-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </section>
   );
 }
