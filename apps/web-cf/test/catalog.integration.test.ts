@@ -1,5 +1,6 @@
 import { env } from "cloudflare:test";
 import { catalogRepo, createDb, schema } from "@foxing/core";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 // Catalog reads against a real local D1 (miniflare), so the FTS5 triggers and the
@@ -49,6 +50,19 @@ async function seed() {
       subjects: ["fiction"],
     },
   ]);
+  // Award only the (cover-bearing) Karamazov, so the starter set has one true row.
+  const [karamazov] = await d
+    .select({ id: schema.books.id })
+    .from(schema.books)
+    .where(eq(schema.books.slug, "the-brothers-karamazov-dostoyevsky"));
+  await d.insert(schema.bookAwards).values({
+    bookId: karamazov.id,
+    awardSlug: "nobel-prize",
+    awardName: "Nobel Prize in Literature",
+    year: 1880,
+    distinction: "winner",
+    scope: "international",
+  });
 }
 
 describe("catalog search", () => {
@@ -72,6 +86,44 @@ describe("catalog search", () => {
   it("excludes community books from search", async () => {
     const res = await catalogRepo.searchCatalog(db(), "Community");
     expect(res.books).toHaveLength(0);
+  });
+
+  it("narrows results by the era filter without losing the FTS match", async () => {
+    const inEra = await catalogRepo.searchCatalog(db(), "pride", { era: "1800-1849" });
+    expect(inEra.books.map((b) => b.slug)).toEqual(["pride-and-prejudice-austen"]);
+    const outOfEra = await catalogRepo.searchCatalog(db(), "pride", { era: "pre-1800" });
+    expect(outOfEra.books).toHaveLength(0);
+    expect(outOfEra.total).toBe(0);
+  });
+
+  it("narrows results by the genre (subject) filter", async () => {
+    const romance = await catalogRepo.searchCatalog(db(), "pride", { subject: "romance" });
+    expect(romance.books.map((b) => b.slug)).toEqual(["pride-and-prejudice-austen"]);
+    const philosophy = await catalogRepo.searchCatalog(db(), "pride", { subject: "philosophy" });
+    expect(philosophy.books).toHaveLength(0);
+  });
+});
+
+describe("author search + starter set", () => {
+  beforeEach(async () => {
+    await db().delete(schema.books);
+    await seed();
+  });
+
+  it("finds catalog authors by name substring, ranked by book count", async () => {
+    const hits = await catalogRepo.searchAuthors(db(), "austen");
+    expect(hits).toEqual([{ author: "Jane Austen", authorSlug: "jane-austen", bookCount: 1 }]);
+  });
+
+  it("never surfaces community authors", async () => {
+    const hits = await catalogRepo.searchAuthors(db(), "some author");
+    expect(hits).toHaveLength(0);
+  });
+
+  it("returns award-winning, cover-bearing catalog books as the starter set", async () => {
+    const starters = await catalogRepo.listStarterBooks(db(), 6);
+    // Only Karamazov has both a cover and an award in the seed; Pride has neither.
+    expect(starters.map((b) => b.slug)).toEqual(["the-brothers-karamazov-dostoyevsky"]);
   });
 });
 

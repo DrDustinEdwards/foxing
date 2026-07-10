@@ -191,6 +191,45 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
   );
 }
 
+/**
+ * Curated starter set for onboarding: award-winning catalog books with a cover,
+ * readable ones first so the eventual "Read now" works. Deterministic order (most
+ * awarded, then title) so the handoff is stable across sessions.
+ */
+export async function listStarterBooks(db: Db, limit = 6): Promise<BookCard[]> {
+  const rows = await db.all<{
+    id: string;
+    slug: string;
+    title: string;
+    author: string;
+    author_slug: string | null;
+    cover_url: string | null;
+    publication_year: number | null;
+    epub_url: string | null;
+  }>(sql`
+    SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url,
+           b.publication_year, b.epub_url
+    FROM books b
+    JOIN book_awards ba ON ba.book_id = b.id
+    WHERE b.source_type = 'catalog' AND b.cover_url IS NOT NULL
+    GROUP BY b.id
+    ORDER BY (b.epub_url IS NOT NULL) DESC, COUNT(ba.id) DESC, b.title ASC
+    LIMIT ${limit}
+  `);
+  return rows.map((r) =>
+    toCard({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      author: r.author,
+      authorSlug: r.author_slug,
+      coverUrl: r.cover_url,
+      publicationYear: r.publication_year,
+      epubUrl: r.epub_url,
+    }),
+  );
+}
+
 /** Distinct author slugs across the catalog, for the sitemap. */
 export async function listAuthorSlugs(db: Db): Promise<string[]> {
   const rows = await db.all<{ author_slug: string }>(sql`
