@@ -49,3 +49,4 @@ apps/web-cf/.cache/
 # Import pipeline: generated SQL batches and probe/run reports
 scripts/import-catalog/sql/
 scripts/import-catalog/reports/
+apps/web-cf/e2e/.auth/

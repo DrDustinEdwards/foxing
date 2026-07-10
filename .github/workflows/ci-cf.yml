@@ -76,8 +76,12 @@ jobs:
           pnpm --filter web-cf exec wrangler deploy --var BETTER_AUTH_URL:${{ vars.BETTER_AUTH_URL }}
 
   e2e:
-    # Public catalog flows (browse, book page, misspelled-author fuzzy, WCAG AA) run
-    # against the just-deployed preview, which is backed by the real catalog D1.
+    # Public catalog flows (browse, book page, misspelled-author fuzzy, WCAG AA) and
+    # the signed-in flows (auth.setup.ts signs in through the real form, then the
+    # authed project runs) both run against the just-deployed preview, backed by the
+    # real D1. The signed-in specs need the persistent e2e account: E2E_EMAIL /
+    # E2E_PASSWORD secrets, seeded once via apps/web-cf/scripts/seed-e2e-user.mjs.
+    # Absent those, auth.setup.ts fails loudly rather than skipping the authed suite.
     needs: deploy
     runs-on: ubuntu-latest
     steps:
@@ -94,4 +98,6 @@ jobs:
         env:
           CI: "true"
           PLAYWRIGHT_BASE_URL: ${{ vars.BETTER_AUTH_URL }}
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
         run: pnpm --filter web-cf exec playwright test
