@@ -7,6 +7,8 @@ import { expect, test } from "@playwright/test";
 test.describe("library", () => {
   test("anonymous visitors are redirected to sign in", async ({ page }) => {
     await page.goto("/library");
-    await expect(page).toHaveURL(/\/login\?redirect=%2Flibrary/);
+    // The loader redirects with the return path in the `redirect` param; accept either
+    // an encoded (%2F) or literal slash so the assertion tracks the actual redirect.
+    await expect(page).toHaveURL(/\/login\?redirect=(%2F|\/)library/);
   });
 });
