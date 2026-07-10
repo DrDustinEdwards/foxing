@@ -31,10 +31,14 @@ if (!email || !password || !base) {
   process.exit(1);
 }
 
+// Better Auth rejects state-changing requests without a trusted Origin (CSRF). A
+// browser sends it automatically; a script must add it explicitly.
+const origin = new URL(base).origin;
+
 // 1. Create the account through the real Better Auth endpoint (correct hashing).
 const signup = await fetch(new URL("/api/auth/sign-up/email", base), {
   method: "POST",
-  headers: { "content-type": "application/json" },
+  headers: { "content-type": "application/json", origin },
   body: JSON.stringify({ name: "Foxing E2E", email, password }),
 });
 if (!signup.ok && signup.status !== 422) {
@@ -51,7 +55,7 @@ execSync(
 // 3. Sign in and onboard so the account has a profile row (authed pages need one).
 const signin = await fetch(new URL("/api/auth/sign-in/email", base), {
   method: "POST",
-  headers: { "content-type": "application/json" },
+  headers: { "content-type": "application/json", origin },
   body: JSON.stringify({ email, password }),
 });
 const setCookies =
@@ -63,7 +67,7 @@ const cookie = setCookies.map((c) => String(c).split(";")[0]).join("; ");
 if (signin.ok && cookie) {
   const onboard = await fetch(new URL("/api/v1/me/onboard", base), {
     method: "POST",
-    headers: { "content-type": "application/json", cookie },
+    headers: { "content-type": "application/json", cookie, origin },
     body: JSON.stringify({ username }),
   });
   if (!onboard.ok && onboard.status !== 409) {
