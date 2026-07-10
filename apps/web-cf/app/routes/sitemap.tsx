@@ -1,4 +1,5 @@
 import { catalogRepo } from "@foxing/core";
+import { hashUrls, pingIndexNow } from "~/lib/indexnow";
 import { absoluteUrl } from "~/lib/seo";
 import { loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
@@ -11,17 +12,20 @@ function urlTag(origin: string, u: Url): string {
   }${u.priority ? `<priority>${u.priority}</priority>` : ""}</url>`;
 }
 
+const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
+
 // Sitemap over live catalog data. Catalog books only (source_type='catalog');
 // community books are excluded by the repository queries, never listed here.
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db, env, ctx, origin } = loaderBase(context, request);
 
-  const [books, authors, awards, clubs, posts] = await Promise.all([
+  const [books, authors, awards, clubs, posts, tags] = await Promise.all([
     catalogRepo.listSitemapBooks(db),
     catalogRepo.listAuthorSlugs(db),
     catalogRepo.listAwards(db),
     catalogRepo.listExternalClubs(db),
     catalogRepo.listPublishedSlugs(db),
+    catalogRepo.listTags(db),
   ]);
 
   const urls: Url[] = [
@@ -31,6 +35,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     { loc: "/picks", priority: "0.7" },
     { loc: "/book-of-the-month", priority: "0.7" },
     { loc: "/journal", priority: "0.7" },
+    { loc: "/journal/archive", priority: "0.5" },
+    { loc: "/about", priority: "0.3" },
+    { loc: "/features", priority: "0.4" },
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,
       lastmod: b.updatedAt.toISOString().slice(0, 10),
@@ -44,7 +51,24 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       lastmod: p.updatedAt.toISOString().slice(0, 10),
       priority: "0.6",
     })),
+    ...tags.map((t) => ({ loc: `/journal/tag/${t.tag}`, priority: "0.4" })),
   ];
+
+  // IndexNow: ping only when the URL set actually changed since the last sitemap
+  // request (tracked in KV; no cron infra exists to run this on a schedule). Never
+  // blocks the response.
+  ctx.waitUntil(
+    (async () => {
+      const currentHash = await hashUrls(urls.map((u) => u.loc));
+      const previousHash = await env.APP_KV.get(SITEMAP_HASH_KEY);
+      if (currentHash === previousHash) return;
+      await env.APP_KV.put(SITEMAP_HASH_KEY, currentHash);
+      await pingIndexNow(
+        origin,
+        urls.map((u) => absoluteUrl(origin, u.loc)),
+      );
+    })(),
+  );
 
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
