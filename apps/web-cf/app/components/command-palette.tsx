@@ -174,7 +174,7 @@ export function CommandPalette() {
           <Command.Item
             value={`search:${query}`}
             onSelect={() => runSearch(query)}
-            className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2.5 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-brand-text"
+            className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2.5 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-primary"
           >
             Search all results for &ldquo;{query.trim()}&rdquo;
           </Command.Item>
@@ -230,7 +230,7 @@ export function CommandPalette() {
                 key={r}
                 value={`recent:${r}`}
                 onSelect={() => runSearch(r)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-brand-text"
+                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-primary"
               >
                 {r}
               </Command.Item>
@@ -248,7 +248,7 @@ export function CommandPalette() {
                 key={l.to}
                 value={`go:${l.to}`}
                 onSelect={() => go(l.to)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-brand-text"
+                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-primary"
               >
                 {l.label}
               </Command.Item>
