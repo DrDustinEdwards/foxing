@@ -21,10 +21,12 @@ export function BookShelvesPicker({
 }) {
   const [members, setMembers] = useState<Set<string>>(new Set(memberOf));
   const [pending, setPending] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function toggle(shelfId: string) {
     const on = members.has(shelfId);
     setPending(shelfId);
+    setError(null);
     // Optimistic.
     setMembers((prev) => {
       const next = new Set(prev);
@@ -42,13 +44,14 @@ export function BookShelvesPicker({
           });
       if (!res.ok) throw new Error("toggle failed");
     } catch {
-      // Revert.
+      // Revert and surface the failure instead of silently snapping back.
       setMembers((prev) => {
         const next = new Set(prev);
         if (on) next.add(shelfId);
         else next.delete(shelfId);
         return next;
       });
+      setError("Could not update shelves. Try again.");
     } finally {
       setPending(null);
     }
@@ -84,6 +87,11 @@ export function BookShelvesPicker({
           })}
         </div>
       )}
+      {error ? (
+        <p className="mt-2 font-ui text-xs text-error" role="alert">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }
