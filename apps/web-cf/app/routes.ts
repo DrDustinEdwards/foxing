@@ -27,6 +27,10 @@ export default [
   route("search", "routes/search.tsx"),
   route("search/suggest", "routes/search-suggest.tsx"),
 
+  // Legal (static, edge-cached).
+  route("privacy", "routes/privacy.tsx"),
+  route("terms", "routes/terms.tsx"),
+
   // SEO + share surfaces.
   route("og/book/:slug", "routes/og-book.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),

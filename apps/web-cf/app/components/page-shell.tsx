@@ -368,7 +368,7 @@ export function SiteNav() {
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-border-subtle bg-sunken">
-      <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-4">
+      <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5">
         <div className="sm:col-span-2 lg:col-span-1">
           <Wordmark to="/" />
           <p className="mt-3 max-w-xs text-sm text-tertiary">
@@ -396,6 +396,13 @@ export function SiteFooter() {
           links={[
             { to: "/login", label: "Sign in" },
             { to: "/signup", label: "Create account" },
+          ]}
+        />
+        <FooterCol
+          title="Legal"
+          links={[
+            { to: "/privacy", label: "Privacy" },
+            { to: "/terms", label: "Terms" },
           ]}
         />
       </Container>
