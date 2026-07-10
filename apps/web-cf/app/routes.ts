@@ -9,6 +9,7 @@ export default [
   route("forgot-password", "routes/forgot-password.tsx"),
   route("reset-password", "routes/reset-password.tsx"),
   route("library", "routes/library.tsx"),
+  route("shelves/:id", "routes/shelf-detail.tsx"),
 
   // Public catalog (edge SSR + Cache API). Slugs for SEO (mobile uses ids).
   route("books", "routes/books.tsx"),

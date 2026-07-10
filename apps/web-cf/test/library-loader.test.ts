@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
-import { createDb, schema } from "@foxing/core";
+import { createDb, libraryRepo, schema } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
-import { loadLibraryData } from "../app/lib/library.server";
+import { loadLibraryData, loadShelfDetail } from "../app/lib/library.server";
 
 // Regression: the /library loader used to self-fetch its own /api/v1 and swallow the
 // failure (`if (!res.ok) return {}`), so a reader with tracked books saw an EMPTY
@@ -77,5 +77,28 @@ describe("library loader data", () => {
     expect(data.shelves).toEqual([]);
     expect(data.goals).toEqual([]);
     expect(data.streak).toBeNull();
+  });
+
+  it("shelf detail returns the shelf and its books for the owner", async () => {
+    await seedUser("u_shelf");
+    await seedBook("bk_s1", "shelf-book-one");
+    const db = createDb(env.DB);
+    const shelf = await libraryRepo.createShelf(db, "u_shelf", { name: "Winter reads" });
+    await libraryRepo.addBookToShelf(db, "u_shelf", shelf.id, "bk_s1");
+
+    const detail = await loadShelfDetail(env as never, "u_shelf", shelf.id);
+    expect(detail?.shelf.name).toBe("Winter reads");
+    expect(detail?.books.map((b) => b.slug)).toContain("shelf-book-one");
+
+    // The book-page picker reads shelf membership via shelfIdsForBook.
+    const ids = await libraryRepo.shelfIdsForBook(db, "u_shelf", "bk_s1");
+    expect(ids).toContain(shelf.id);
+  });
+
+  it("shelf detail is null for a shelf the caller does not own", async () => {
+    await seedUser("u_owner");
+    await seedUser("u_other");
+    const shelf = await libraryRepo.createShelf(createDb(env.DB), "u_owner", { name: "Private" });
+    expect(await loadShelfDetail(env as never, "u_other", shelf.id)).toBeNull();
   });
 });

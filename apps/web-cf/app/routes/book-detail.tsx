@@ -2,6 +2,7 @@ import { catalogRepo, libraryRepo } from "@foxing/core";
 import { buyLinks } from "@foxing/core";
 import { Link } from "react-router";
 import { BookCard, BookGrid } from "~/components/book-card";
+import { BookShelvesPicker } from "~/components/book-shelves-picker";
 import { BookStatusControl, type ShelfStatus } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -24,13 +25,18 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const readable = catalogRepo.isReadable(book);
   const community = book.sourceType === "community";
 
-  // Personalized shelf status. Anonymous requests are edge-cached (this loader
-  // does not run), so this only fires for signed-in readers (cache bypassed).
+  // Personalized shelf status + shelves. Anonymous requests are edge-cached (this
+  // loader does not run), so this only fires for signed-in readers (cache bypassed).
   const session = await getAuth(env).api.getSession({ headers: request.headers });
   const userId = session?.user?.id ?? null;
-  const currentStatus = userId
-    ? (((await libraryRepo.getUserBook(db, userId, book.id))?.status as ShelfStatus | null) ?? null)
-    : null;
+  const [userBook, shelves, memberOf] = userId
+    ? await Promise.all([
+        libraryRepo.getUserBook(db, userId, book.id),
+        libraryRepo.listShelves(db, userId),
+        libraryRepo.shelfIdsForBook(db, userId, book.id),
+      ])
+    : [null, [], []];
+  const currentStatus = (userBook?.status as ShelfStatus | null) ?? null;
 
   return {
     origin,
@@ -40,6 +46,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     related,
     signedIn: !!userId,
     currentStatus,
+    shelves: shelves.map((s) => ({ id: s.id, name: s.name })),
+    memberOf,
     bookId: book.id,
     loginHref: `/login?redirect=/books/${book.slug}`,
     buys: buyLinks(book, affiliateConfig(env)),
@@ -101,7 +109,7 @@ function readingTime(words: number | null): string | null {
 
 export default function BookDetail({ loaderData }: Route.ComponentProps) {
   const { book, awards, related, buys, readable, community } = loaderData;
-  const { signedIn, currentStatus, bookId, loginHref } = loaderData;
+  const { signedIn, currentStatus, bookId, loginHref, shelves, memberOf } = loaderData;
   const time = readingTime(book.wordCount);
 
   return (
@@ -139,6 +147,9 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 signedIn={signedIn}
                 loginHref={loginHref}
               />
+              {signedIn ? (
+                <BookShelvesPicker bookId={bookId} shelves={shelves} memberOf={memberOf} />
+              ) : null}
               {buys.map((b) => (
                 <Button
                   key={b.retailer}

@@ -18,7 +18,15 @@ export interface Shelf {
   description: string | null;
 }
 export interface GoalRow {
-  goal: { id: string; type: string; target: number; periodType: string; year: number };
+  goal: {
+    id: string;
+    type: string;
+    target: number;
+    periodType: string;
+    year: number;
+    month: number | null;
+    week: number | null;
+  };
   progress: number;
 }
 export interface Streak {
@@ -31,6 +39,38 @@ export interface LibraryData {
   shelves: Shelf[];
   goals: GoalRow[];
   streak: Streak | null;
+}
+
+export interface ShelfBook {
+  slug: string;
+  title: string;
+  author: string;
+  coverUrl: string | null;
+}
+export interface ShelfDetail {
+  shelf: { id: string; name: string; description: string | null };
+  books: ShelfBook[];
+}
+
+// A shelf the caller owns plus its books, or null if it is not theirs / missing.
+export async function loadShelfDetail(
+  env: Env,
+  userId: string,
+  shelfId: string,
+): Promise<ShelfDetail | null> {
+  const db = createDb(env.DB);
+  const shelf = (await libraryRepo.listShelves(db, userId)).find((s) => s.id === shelfId);
+  if (!shelf) return null;
+  const books = await libraryRepo.listShelfBooks(db, userId, shelfId);
+  return {
+    shelf: { id: shelf.id, name: shelf.name, description: shelf.description },
+    books: books.map((b) => ({
+      slug: b.slug,
+      title: b.title,
+      author: b.author,
+      coverUrl: b.coverUrl,
+    })),
+  };
 }
 
 export async function loadLibraryData(env: Env, userId: string): Promise<LibraryData> {
@@ -68,6 +108,8 @@ export async function loadLibraryData(env: Env, userId: string): Promise<Library
         target: goal.target,
         periodType: goal.periodType,
         year: goal.year,
+        month: goal.month,
+        week: goal.week,
       },
       progress,
     })),
