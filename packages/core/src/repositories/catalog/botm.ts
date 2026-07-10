@@ -70,3 +70,52 @@ export async function listBotm(db: Db): Promise<BotmEntry[]> {
   const rows = await db.all<Row>(sql`${SELECT} ORDER BY m.year DESC, m.month DESC`);
   return rows.map(toEntry);
 }
+
+export type TodaysPick = {
+  source: "botm" | "staff";
+  book: NonNullable<BotmEntry["book"]>;
+  note: string | null;
+};
+
+type StaffRow = {
+  slug: string;
+  title: string;
+  author: string;
+  cover_url: string | null;
+  description: string | null;
+  publication_year: number | null;
+  staff_pick_note: string | null;
+};
+
+/**
+ * The homepage's featured-book slot. Prefers the published Book of the Month; when
+ * none is published, falls back to a staff pick (books.is_staff_pick). Returns null
+ * when neither source has a row, so the homepage section self-omits rather than
+ * scaffolding a placeholder.
+ */
+export async function getTodaysPick(db: Db): Promise<TodaysPick | null> {
+  const botm = await getCurrentBotm(db);
+  if (botm?.book) return { source: "botm", book: botm.book, note: botm.curatorNote };
+
+  const rows = await db.all<StaffRow>(sql`
+    SELECT slug, title, author, cover_url, description, publication_year, staff_pick_note
+    FROM books
+    WHERE source_type = 'catalog' AND is_staff_pick = 1
+    ORDER BY updated_at DESC
+    LIMIT 1
+  `);
+  const r = rows[0];
+  if (!r) return null;
+  return {
+    source: "staff",
+    book: {
+      slug: r.slug,
+      title: r.title,
+      author: r.author,
+      coverUrl: r.cover_url,
+      description: r.description,
+      publicationYear: r.publication_year,
+    },
+    note: r.staff_pick_note,
+  };
+}
