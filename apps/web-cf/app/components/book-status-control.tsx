@@ -67,13 +67,13 @@ export function BookStatusControl({
   }
 
   return (
-    <label className="inline-flex items-center gap-2">
+    <label className="flex w-full items-center gap-2">
       <span className="sr-only">Reading status</span>
       <select
         value={status}
         disabled={pending}
         onChange={(e) => apply((e.target.value || "remove") as ShelfStatus | "remove")}
-        className="rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary disabled:opacity-50"
+        className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary disabled:opacity-50"
       >
         <option value="">Add to library</option>
         {STATUSES.map((s) => (

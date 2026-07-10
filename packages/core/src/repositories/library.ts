@@ -218,6 +218,16 @@ export async function listShelfBooks(
     .orderBy(desc(customShelfBooks.addedAt));
 }
 
+/** Shelf ids (owned by the user) that contain the given book. For the book-page picker. */
+export async function shelfIdsForBook(db: Db, userId: string, bookId: string): Promise<string[]> {
+  const rows = await db
+    .select({ shelfId: customShelfBooks.shelfId })
+    .from(customShelfBooks)
+    .innerJoin(customShelves, eq(customShelfBooks.shelfId, customShelves.id))
+    .where(and(eq(customShelves.userId, userId), eq(customShelfBooks.bookId, bookId)));
+  return rows.map((r) => r.shelfId);
+}
+
 // --- Reading goals ---------------------------------------------------------
 
 export async function createGoal(
