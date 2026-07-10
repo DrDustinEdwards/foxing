@@ -1,144 +1,151 @@
-import { catalogRepo } from "@foxing/core";
+// Signed-in dashboard at /home. Reads run in-process via core (loadLibraryData);
+// the shell (nav, secondary bar) comes from the root loader. Anonymous visitors are
+// sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
 import { Link } from "react-router";
-import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
-import { SearchBox } from "~/components/search-box";
 import { Button, Container, Eyebrow } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
-import { buildMeta } from "~/lib/seo";
+import { cloudflareContext } from "~/context";
+import type { Entry, Streak } from "~/lib/library.server";
+import { loadLibraryData } from "~/lib/library.server";
+import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/home";
 
+function timeOfDay(hour: number): string {
+  if (hour < 12) return "morning";
+  if (hour < 18) return "afternoon";
+  return "evening";
+}
+
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
-  const [botm, browse, journal] = await Promise.all([
-    catalogRepo.getCurrentBotm(db),
-    catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
-    catalogRepo.listPublishedPosts(db, { pageSize: 3 }),
-  ]);
-  return { origin, botm, books: browse.books, total: browse.total, posts: journal.posts };
+  const { env } = context.get(cloudflareContext);
+  const { user, profile } = await requireProfile(env, request);
+  const data = await loadLibraryData(env, user.id);
+  const reading = data.library.find((e) => e.status === "reading") ?? null;
+  const firstName = (profile.displayName ?? profile.username).split(/\s+/)[0];
+  return {
+    firstName,
+    greeting: timeOfDay(new Date().getUTCHours()),
+    reading,
+    streak: data.streak,
+  };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(600, 86400);
-}
-
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
-  return buildMeta({
-    title: "Foxing",
-    description:
-      "Foxing is a reading home for the classics: read free, track what you finish, and follow the conversations around great books.",
-    origin: data?.origin ?? "",
-    pathname: location.pathname,
-  });
+export function meta() {
+  return [{ title: "Home | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { botm, books, total, posts } = loaderData;
+  const { firstName, greeting, reading, streak } = loaderData;
 
   return (
     <PageShell>
-      {/* Hero */}
-      <Container className="pb-6 pt-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <Eyebrow className="mb-4">A reading home for the classics</Eyebrow>
-          <h1 className="font-display text-5xl leading-[1.05] sm:text-6xl">
-            Read the classics. Keep the record.
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-secondary">
-            {total.toLocaleString()} books, free to read. Track what you finish, mark the passages
-            that stay with you, and follow the picks worth reading.
-          </p>
-          <div className="mx-auto mt-8 max-w-xl">
-            <SearchBox />
-          </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-            <Button to="/books">Browse the library</Button>
-            <Button to="/awards" variant="secondary">
-              Award winners
-            </Button>
-          </div>
+      <Container className="flex flex-col gap-8">
+        <h1 className="font-display text-3xl sm:text-4xl">
+          Good {greeting}, {firstName}.
+        </h1>
+
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+          <ContinueReadingCard reading={reading} />
+          <StreakCard streak={streak} />
         </div>
       </Container>
-
-      {/* This month */}
-      {botm?.book ? (
-        <Container className="mt-16">
-          <article className="grid gap-6 rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)] sm:items-center sm:p-8">
-            <div className="mx-auto w-full max-w-[160px]">
-              <Link to={`/books/${botm.book.slug}`}>
-                <CoverImage
-                  src={botm.book.coverUrl}
-                  alt={`${botm.book.title} by ${botm.book.author}`}
-                  fallbackLabel={botm.book.title}
-                  sizes="160px"
-                />
-              </Link>
-            </div>
-            <div>
-              <Eyebrow>Book of the Month</Eyebrow>
-              <h2 className="mt-2 font-display text-2xl leading-tight">
-                <Link to={`/books/${botm.book.slug}`} className="hover:text-brand-text">
-                  {botm.book.title}
-                </Link>
-              </h2>
-              <p className="mt-1 font-ui text-secondary">{botm.book.author}</p>
-              {botm.curatorNote ? (
-                <p className="mt-3 line-clamp-2 font-body text-secondary">{botm.curatorNote}</p>
-              ) : null}
-              <Link
-                to="/book-of-the-month"
-                className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
-              >
-                Why this book
-              </Link>
-            </div>
-          </article>
-        </Container>
-      ) : null}
-
-      {/* From the shelves */}
-      <Container className="mt-16">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-display text-2xl">From the shelves</h2>
-          <Link to="/books" className="font-ui text-sm text-brand-text hover:underline">
-            See all
-          </Link>
-        </div>
-        <BookGrid>
-          {books.slice(0, 10).map((b, i) => (
-            <BookCard key={b.slug} book={b} priority={i < 6} />
-          ))}
-        </BookGrid>
-      </Container>
-
-      {/* From the Journal */}
-      {posts.length > 0 ? (
-        <Container className="mt-16">
-          <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-display text-2xl">From the Journal</h2>
-            <Link to="/journal" className="font-ui text-sm text-brand-text hover:underline">
-              All essays
-            </Link>
-          </div>
-          <div className="grid gap-6 sm:grid-cols-3">
-            {posts.map((p) => (
-              <Link
-                key={p.slug}
-                to={`/journal/${p.slug}`}
-                className="group rounded-card border border-border-subtle bg-surface p-5 shadow-card-sm transition-shadow hover:shadow-card-md"
-              >
-                <h3 className="font-display text-lg leading-snug text-primary group-hover:text-brand-text">
-                  {p.title}
-                </h3>
-                {p.excerpt ? (
-                  <p className="mt-2 line-clamp-3 font-body text-secondary">{p.excerpt}</p>
-                ) : null}
-              </Link>
-            ))}
-          </div>
-        </Container>
-      ) : null}
     </PageShell>
+  );
+}
+
+function ContinueReadingCard({ reading }: { reading: Entry | null }) {
+  if (!reading) {
+    return (
+      <section className="flex flex-col justify-center rounded-hero border border-dashed border-border-subtle bg-surface p-8 text-center">
+        <Eyebrow className="mb-2">Continue reading</Eyebrow>
+        <p className="font-display text-xl text-primary">Nothing in progress</p>
+        <p className="mx-auto mt-2 max-w-sm text-secondary">
+          Start a book and it shows up here with your progress.
+        </p>
+        <div className="mt-5">
+          <Button to="/books">Browse the library</Button>
+        </div>
+      </section>
+    );
+  }
+
+  const progress = Math.max(0, Math.min(100, Math.round(reading.progressPct)));
+  return (
+    <section className="grid gap-6 rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm sm:grid-cols-[minmax(0,132px)_minmax(0,1fr)] sm:items-center sm:p-8">
+      <div className="mx-auto w-full max-w-[132px]">
+        <Link to={`/books/${reading.slug}`}>
+          <CoverImage
+            src={reading.coverUrl}
+            alt={`${reading.title} by ${reading.author}`}
+            fallbackLabel={reading.title}
+            sizes="132px"
+          />
+        </Link>
+      </div>
+      <div>
+        <Eyebrow>Continue reading</Eyebrow>
+        <h2 className="mt-2 font-display text-2xl leading-tight">
+          <Link to={`/books/${reading.slug}`} className="hover:text-brand-text">
+            {reading.title}
+          </Link>
+        </h2>
+        <p className="mt-1 font-ui text-secondary">{reading.author}</p>
+        <div
+          className="mt-4 h-1.5 overflow-hidden rounded-full bg-sunken"
+          role="progressbar"
+          aria-valuenow={progress}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Reading progress"
+        >
+          <div
+            className="h-full rounded-full bg-[color:var(--brand-ui)]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <p className="mt-1.5 font-mono text-xs text-tertiary">{progress}% read</p>
+        <div className="mt-5">
+          <Button to={`/books/${reading.slug}`} variant="secondary">
+            Open book
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function StreakCard({ streak }: { streak: Streak | null }) {
+  const s = streak ?? { currentStreak: 0, longestStreak: 0, totalBooksFinished: 0 };
+  const subtext =
+    s.currentStreak === 0
+      ? "Open a book to start a streak."
+      : "Read today to keep it going.";
+
+  return (
+    <aside className="flex flex-col rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm">
+      <Eyebrow className="mb-3">Reading streak</Eyebrow>
+      <p className="font-display text-3xl leading-none">
+        {s.currentStreak}
+        <span className="ml-1.5 font-ui text-base text-secondary">
+          {s.currentStreak === 1 ? "day" : "days"}
+        </span>
+      </p>
+      <p className="mt-2 font-ui text-sm text-secondary">{subtext}</p>
+      <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-border-subtle pt-4 text-center">
+        <div>
+          <dd className="font-display text-xl text-primary">{s.longestStreak}</dd>
+          <dt className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
+            longest
+          </dt>
+        </div>
+        <div>
+          <dd className="font-display text-xl text-primary">{s.totalBooksFinished}</dd>
+          <dt className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
+            finished
+          </dt>
+        </div>
+      </dl>
+    </aside>
   );
 }

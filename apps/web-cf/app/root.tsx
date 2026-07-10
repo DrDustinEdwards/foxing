@@ -1,6 +1,17 @@
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
+import { cloudflareContext } from "./context";
+import { getNavUser } from "./lib/nav.server";
+
+// Resolve the signed-in nav identity once per request; the shell reads it via
+// useRouteLoaderData("root"). Returns null for anonymous requests, keeping the
+// server-rendered HTML signed-out (and edge-cacheable).
+export async function loader({ context, request }: Route.LoaderArgs) {
+  const { env } = context.get(cloudflareContext);
+  const navUser = await getNavUser(env, request);
+  return { navUser };
+}
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
