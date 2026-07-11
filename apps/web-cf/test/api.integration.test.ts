@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { createApi } from "@foxing/api";
-import { createDb, schema } from "@foxing/core";
+import { billing, createDb, schema } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
 
 // A stub session resolver: the Worker normally injects a Better Auth-backed one.
@@ -17,6 +17,11 @@ const api = createApi({
     async function* unused() {
       throw new Error("not used in this suite");
     },
+  // Not used in this suite; the not-configured stub satisfies ApiDeps without keys.
+  resolveBilling: () => ({
+    client: billing.notConfiguredBilling(),
+    prices: { monthly: "", annual: "" },
+  }),
 });
 
 // The bare api app serves routes at the root (/me, /u/:username); the Worker mounts

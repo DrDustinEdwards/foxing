@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { createApi } from "@foxing/api";
-import { companion, companionRepo, createDb, schema } from "@foxing/core";
+import { billing, companion, companionRepo, createDb, schema } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
 
 // Companion route: API-contract layer only (status codes, SSE stream shape), tested
@@ -116,6 +116,10 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
         return id ? { id, email: `${id}@example.com` } : null;
       },
       resolveCompanionCaller: () => caller,
+      resolveBilling: () => ({
+        client: billing.notConfiguredBilling(),
+        prices: { monthly: "", annual: "" },
+      }),
     });
   }
 
