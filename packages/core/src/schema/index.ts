@@ -9,3 +9,4 @@ export * from "./clubs";
 export * from "./social";
 export * from "./platform";
 export * from "./companion";
+export * from "./billing";
