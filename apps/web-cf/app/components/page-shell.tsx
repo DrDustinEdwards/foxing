@@ -1,18 +1,28 @@
+import { useState } from "react";
 import { Link, NavLink, useRouteLoaderData } from "react-router";
 import { cn } from "~/lib/cn";
 import type { loader as RootLoader } from "~/root";
 import { CommandPalette } from "./command-palette";
 import { AccountMenu } from "./nav/account-menu";
 import { BooksMenu } from "./nav/books-menu";
+import { MobileDrawer } from "./nav/mobile-drawer";
+import { primaryItemClass } from "./nav/nav-styles";
+import { PicksMenu } from "./nav/picks-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { Container } from "./ui";
 
-// Public catalog links shown to everyone. "Books" opens a dropdown (BooksMenu); the
-// rest are plain links. Home/Library are signed-in only and live in the secondary bar.
-const PRIMARY_LINKS = [
-  { to: "/awards", label: "Awards" },
+// Primary desktop nav (md+): Books and Celebrity Picks are mega-menus; Journal is a plain
+// link. Awards and Book of the Month are reached through the mega-menus, not standalone
+// entries. Clubs (Phase 5) and People (Phase 6) are omitted until their routes exist.
+const PRIMARY_LINKS = [{ to: "/journal", label: "Journal" }];
+
+// Compact horizontal-scroll primary nav for small screens, where the mega-menus collapse
+// to plain links. Every entry is a real route.
+const MOBILE_PRIMARY = [
+  { to: "/books", label: "Books" },
   { to: "/picks", label: "Celebrity Picks" },
   { to: "/book-of-the-month", label: "Book of the Month" },
+  { to: "/awards", label: "Awards" },
   { to: "/journal", label: "Journal" },
 ];
 
@@ -33,12 +43,13 @@ function Wordmark({ to }: { to: string }) {
   );
 }
 
+// Desktop-only signed-out actions; mobile signed-out users reach these through the drawer.
 function SignedOutActions() {
   return (
-    <>
+    <div className="hidden items-center gap-2 md:flex">
       <Link
         to="/login"
-        className="hidden rounded-cover px-3 py-2 font-ui text-sm font-medium text-secondary transition-colors hover:text-primary sm:inline-flex"
+        className="inline-flex rounded-cover px-3 py-2 font-ui text-sm font-medium text-secondary transition-colors hover:text-primary"
       >
         Sign in
       </Link>
@@ -48,7 +59,7 @@ function SignedOutActions() {
       >
         Join free
       </Link>
-    </>
+    </div>
   );
 }
 
@@ -80,23 +91,84 @@ function SecondaryAuthBar() {
 export function SiteNav() {
   const data = useRouteLoaderData<typeof RootLoader>("root");
   const user = data?.navUser ?? null;
+  const menu = data?.navMenu ?? { featuredClubs: [], botm: null };
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border-subtle bg-base/85 backdrop-blur-md">
-      <Container className="flex h-16 items-center justify-between gap-4">
-        <Wordmark to={user ? "/home" : "/"} />
-        <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-          <BooksMenu />
-          {PRIMARY_LINKS.map((item) => (
+    <>
+      <header className="sticky top-0 z-40 border-b border-border-subtle bg-base/85 backdrop-blur-md">
+        <Container className="flex h-16 items-center justify-between gap-4">
+          <Wordmark to={user ? "/home" : "/"} />
+          <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
+            <BooksMenu />
+            <PicksMenu featuredClubs={menu.featuredClubs} botm={menu.botm} />
+            {PRIMARY_LINKS.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) => primaryItemClass(isActive)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Search the catalog"
+              title="Search (Ctrl+K)"
+              onClick={() => window.dispatchEvent(new CustomEvent("foxing:search-open"))}
+              className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
+                <path
+                  d="m20 20-3.2-3.2"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+            <ThemeToggle />
+            {user ? (
+              <AccountMenu user={user} />
+            ) : (
+              <>
+                <SignedOutActions />
+                <button
+                  type="button"
+                  aria-label="Open menu"
+                  aria-expanded={drawerOpen}
+                  onClick={() => setDrawerOpen(true)}
+                  className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover md:hidden"
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path
+                      d="M4 7h16M4 12h16M4 17h16"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
+        </Container>
+        {/* Compact primary nav for small screens; the mega-menus collapse to plain links. */}
+        <nav
+          aria-label="Primary (compact)"
+          className="flex gap-1 overflow-x-auto border-t border-border-subtle px-4 py-2 md:hidden"
+        >
+          {MOBILE_PRIMARY.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
                 cn(
-                  "rounded-full px-3 py-1.5 font-ui text-sm transition-colors",
-                  isActive
-                    ? "bg-brand-subtle text-brand-subtle-text"
-                    : "text-secondary hover:bg-hover",
+                  "whitespace-nowrap rounded-full px-3 py-1 font-ui text-sm",
+                  isActive ? "bg-brand-subtle text-brand-subtle-text" : "text-secondary",
                 )
               }
             >
@@ -104,62 +176,22 @@ export function SiteNav() {
             </NavLink>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Search the catalog"
-            title="Search (Ctrl+K)"
-            onClick={() => window.dispatchEvent(new CustomEvent("foxing:search-open"))}
-            className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
-              <path
-                d="m20 20-3.2-3.2"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-              />
-            </svg>
-          </button>
-          <ThemeToggle />
-          {user ? <AccountMenu user={user} /> : <SignedOutActions />}
+        {/* Desktop secondary bar sits under the header; the mobile one is fixed to the
+            bottom of the viewport (rendered outside the sticky header, below). */}
+        {user ? (
+          <div className="hidden md:block">
+            <SecondaryAuthBar />
+          </div>
+        ) : null}
+      </header>
+      {user ? (
+        <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
+          <SecondaryAuthBar />
         </div>
-      </Container>
-      {/* Compact primary nav for small screens. Books is a plain link here. */}
-      <nav
-        aria-label="Primary (compact)"
-        className="flex gap-1 overflow-x-auto border-t border-border-subtle px-4 py-2 md:hidden"
-      >
-        <NavLink
-          to="/books"
-          className={({ isActive }) =>
-            cn(
-              "whitespace-nowrap rounded-full px-3 py-1 font-ui text-sm",
-              isActive ? "bg-brand-subtle text-brand-subtle-text" : "text-secondary",
-            )
-          }
-        >
-          Books
-        </NavLink>
-        {PRIMARY_LINKS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "whitespace-nowrap rounded-full px-3 py-1 font-ui text-sm",
-                isActive ? "bg-brand-subtle text-brand-subtle-text" : "text-secondary",
-              )
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
-      </nav>
-      {user ? <SecondaryAuthBar /> : null}
+      ) : null}
+      {user ? null : <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />}
       <CommandPalette />
-    </header>
+    </>
   );
 }
 
@@ -244,8 +276,11 @@ function FooterCol({
   );
 }
 
-/** Full page frame: skip link, sticky nav, main landmark, footer. */
+/** Full page frame: skip link, sticky nav, main landmark, footer. Signed-in pages get
+ *  extra bottom padding on mobile so the fixed secondary bar never covers content. */
 export function PageShell({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData<typeof RootLoader>("root");
+  const signedIn = Boolean(data?.navUser);
   return (
     <>
       <a
@@ -255,7 +290,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
         Skip to content
       </a>
       <SiteNav />
-      <main id="main" className="min-h-[60dvh] py-10">
+      <main id="main" className={cn("min-h-[60dvh] py-10", signedIn && "pb-24 md:pb-10")}>
         {children}
       </main>
       <SiteFooter />

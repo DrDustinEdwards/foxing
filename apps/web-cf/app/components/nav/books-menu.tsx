@@ -4,14 +4,12 @@
 // in the core query layer.
 import { useRef, useState } from "react";
 import { Link } from "react-router";
-import { cn } from "~/lib/cn";
+import { primaryItemClass } from "./nav-styles";
 import { useDismiss, useRovingMenu } from "./use-menu";
 
 const BOOKS_BROWSE = [
   { to: "/books", label: "All books" },
   { to: "/awards", label: "Award winners" },
-  { to: "/book-of-the-month", label: "Book of the Month" },
-  { to: "/picks", label: "Celebrity picks" },
 ];
 const BOOKS_ERAS = [
   { slug: "pre-1800", label: "Before 1800" },
@@ -34,10 +32,7 @@ export function BooksMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-full px-3 py-1.5 font-ui text-sm transition-colors",
-          open ? "bg-brand-subtle text-brand-subtle-text" : "text-secondary hover:bg-hover",
-        )}
+        className={primaryItemClass(open, "gap-1")}
       >
         Books
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -55,9 +50,9 @@ export function BooksMenu() {
               <p className="mb-2.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
                 Browse
               </p>
-              <ul className="space-y-0.5">
+              <ul role="none" className="space-y-0.5">
                 {BOOKS_BROWSE.map((item) => (
-                  <li key={item.to}>
+                  <li role="none" key={item.to}>
                     <Link
                       to={item.to}
                       role="menuitem"
