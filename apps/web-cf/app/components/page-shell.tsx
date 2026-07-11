@@ -16,11 +16,12 @@ const PRIMARY_LINKS = [
   { to: "/journal", label: "Journal" },
 ];
 
-// Signed-in app bar. Only routes that exist today; later slices (Feed, Diary, Clubs,
-// People) append entries here.
+// Signed-in app bar. Only routes that exist today; later slices (Feed, Diary, People)
+// append entries here.
 const SECONDARY_LINKS = [
   { to: "/home", label: "Home" },
   { to: "/library", label: "Library" },
+  { to: "/clubs", label: "Clubs" },
 ];
 
 function Wordmark({ to }: { to: string }) {
