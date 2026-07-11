@@ -22,4 +22,11 @@ test.describe("app shell (signed in)", () => {
     await expect(page.getByRole("menuitem", { name: /your library/i })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: /settings/i })).toBeVisible();
   });
+
+  test("the account menu shows the subscription tier badge", async ({ page }) => {
+    await page.goto("/home");
+    await page.getByRole("button", { name: /account menu/i }).click();
+    // The e2e account is free tier (billing is Phase 4b); the badge must still render.
+    await expect(page.getByRole("menu").getByText(/^(free|plus)$/i)).toBeVisible();
+  });
 });
