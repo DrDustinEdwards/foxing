@@ -12,3 +12,5 @@ export type { LibraryEntry, UserBook, CustomShelf, ReadingGoal, ReadingStreak } 
 
 export * as companionRepo from "./companion";
 export type { CompanionThread, CompanionMessageRow, BookAiCacheRow } from "./companion";
+
+export * as billingRepo from "./billing";

@@ -42,6 +42,67 @@ export async function updateProfile(
   return row ?? null;
 }
 
+// --- Billing (Phase 4b). The Stripe webhook is the only writer of these fields. ---
+
+export async function getProfileByStripeCustomerId(
+  db: Db,
+  stripeCustomerId: string,
+): Promise<Profile | null> {
+  const rows = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.stripeCustomerId, stripeCustomerId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+/** Link a Foxing user to its Stripe customer (from checkout.session.completed). */
+export async function setStripeCustomerId(
+  db: Db,
+  userId: string,
+  stripeCustomerId: string,
+): Promise<void> {
+  await db
+    .update(profiles)
+    .set({ stripeCustomerId, updatedAt: new Date() })
+    .where(eq(profiles.id, userId));
+}
+
+export type SubscriptionState = {
+  tier: "free" | "plus";
+  status: string;
+  periodEnd: Date | null;
+};
+
+/** Project the subscription onto the profile: tier + status + renewal/trial end. */
+export async function setSubscriptionState(
+  db: Db,
+  userId: string,
+  state: SubscriptionState,
+): Promise<void> {
+  await db
+    .update(profiles)
+    .set({
+      subscriptionTier: state.tier,
+      subscriptionStatus: state.status,
+      subscriptionPeriodEnd: state.periodEnd,
+      updatedAt: new Date(),
+    })
+    .where(eq(profiles.id, userId));
+}
+
+/** Record the dunning status (invoice.payment_failed) without changing tier. */
+export async function setSubscriptionStatus(
+  db: Db,
+  userId: string,
+  status: string,
+): Promise<void> {
+  await db
+    .update(profiles)
+    .set({ subscriptionStatus: status, updatedAt: new Date() })
+    .where(eq(profiles.id, userId));
+}
+
 export function toPublicProfile(p: Profile): PublicProfile {
   return {
     username: p.username,

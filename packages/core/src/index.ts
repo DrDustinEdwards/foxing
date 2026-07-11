@@ -11,3 +11,5 @@ export * from "./domain";
 export * from "./config";
 export * as companion from "./companion";
 export type * from "./companion";
+export * as billing from "./billing";
+export type * from "./billing";

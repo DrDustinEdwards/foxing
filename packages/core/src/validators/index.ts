@@ -6,3 +6,6 @@ export * from "./library";
 
 export * as companionValidators from "./companion";
 export * from "./companion";
+
+export * as billingValidators from "./billing";
+export * from "./billing";
