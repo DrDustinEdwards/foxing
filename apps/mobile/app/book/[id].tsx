@@ -201,8 +201,8 @@ export default function BookDetail() {
       .select('rating')
       .eq('book_id', bookRow.id)
       .not('rating', 'is', null)
-    const nums = (ratings ?? []).map((r) => (r as { rating: number }).rating)
-    setAvgRating(nums.length > 0 ? nums.reduce((a, b) => a + b, 0) / nums.length : null)
+    const nums = (ratings ?? []).map((r: any) => (r as { rating: number }).rating)
+    setAvgRating(nums.length > 0 ? nums.reduce((a: number, b: number) => a + b, 0) / nums.length : null)
     const { count: rc } = await supabase
       .from('user_books')
       .select('id', { count: 'exact', head: true })
@@ -362,7 +362,7 @@ export default function BookDetail() {
             if (typeof book.series_order === 'number') {
               q = q.gt('series_order', book.series_order)
             }
-            q.then(({ data: nextRow }) => {
+            q.then(({ data: nextRow }: any) => {
               const next = ((nextRow ?? [])[0] as
                 | { id: string; title: string; author: string }
                 | undefined)

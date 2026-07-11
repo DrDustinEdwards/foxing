@@ -50,7 +50,7 @@ export default function MyListsScreen() {
         description: string | null
         is_public: boolean
         like_count: number | null
-      }>) ?? []
+      }>)
     const ids = listRows.map((l) => l.id)
     const counts = new Map<string, number>()
     if (ids.length > 0) {

@@ -151,7 +151,7 @@ async function loadCompare(
       .from('books')
       .select('id, title, author, cover_url')
       .in('id', shared.slice(0, 5))
-    sharedBooks = ((data ?? []) as BookSummary[]) ?? []
+    sharedBooks = (data ?? []) as BookSummary[]
   }
   return {
     viewer: { profile: viewerProfile, stats: viewerStats },

@@ -1,5 +1,13 @@
 import * as Sentry from '@sentry/react-native'
-import type { PostgrestError } from '@supabase/supabase-js'
+// Local shape for a Postgres/PostgREST-style error. Supabase was removed; the
+// data layer now returns errors from /api/v1, but the fields we report are the
+// same. See lib/supabase.ts.
+type PostgrestError = {
+  message: string
+  code?: string
+  details?: string | null
+  hint?: string | null
+}
 
 /**
  * Surface a Supabase mutation error to Sentry instead of swallowing it.

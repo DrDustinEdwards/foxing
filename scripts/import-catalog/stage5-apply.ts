@@ -1,5 +1,5 @@
 // Stage 5: Apply generated SQL files to D1 via wrangler d1 execute --remote.
-// Runs wrangler from apps/web-cf/ (where wrangler.jsonc lives).
+// Runs wrangler from apps/web/ (where wrangler.jsonc lives).
 // Run: pnpm tsx scripts/import-catalog/stage5-apply.ts
 
 import { readdirSync, existsSync } from 'node:fs'
@@ -7,7 +7,7 @@ import { resolve } from 'node:path'
 import { spawn } from 'node:child_process'
 
 const SQL_DIR = resolve(process.cwd(), 'scripts/import-catalog/sql')
-const WEB_CF_DIR = resolve(process.cwd(), 'apps/web-cf')
+const WEB_CF_DIR = resolve(process.cwd(), 'apps/web')
 const D1_DB = 'foxing'
 
 function applyFile(sqlFile: string): Promise<void> {

@@ -2,7 +2,7 @@
 // Answers the four pre-transform uncertainties and writes reports/probe-report.json.
 //
 // Run: pnpm tsx scripts/import-catalog/stage0-probe.ts
-// Requires SUPABASE_DB_URL in apps/web-cf/.dev.vars
+// Requires SUPABASE_DB_URL in apps/web/.dev.vars
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'

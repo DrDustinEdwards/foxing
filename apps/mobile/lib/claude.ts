@@ -67,7 +67,7 @@ async function callAiCompanion(action: Action, payload: unknown): Promise<string
   const startedAt = Date.now()
   console.log('[claude] →', action, summarize(payload))
 
-  const { data, error } = await supabase.functions.invoke<{ result?: string; error?: string }>(
+  const { data, error } = await supabase.functions.invoke(
     'ai-companion',
     { body: { action, payload } },
   )

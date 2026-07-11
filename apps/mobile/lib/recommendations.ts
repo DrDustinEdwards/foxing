@@ -116,7 +116,7 @@ async function collectHistory(userId: string): Promise<{
 // directly to /book/[id] when we already have the work.
 export async function getAIRecommendations(userId: string): Promise<RecommendedBook[]> {
   const history = await collectHistory(userId)
-  const { data, error } = await supabase.functions.invoke<{ result?: string; error?: string }>(
+  const { data, error } = await supabase.functions.invoke(
     'ai-companion',
     { body: { action: 'recommendations', payload: history } },
   )
@@ -171,7 +171,7 @@ export async function refreshReadingPersonality(userId: string): Promise<string 
   if (history.finishedBooks.length === 0 && history.highlightSamples.length === 0) {
     return null // nothing to base it on yet
   }
-  const { data, error } = await supabase.functions.invoke<{ result?: string; error?: string }>(
+  const { data, error } = await supabase.functions.invoke(
     'ai-companion',
     { body: { action: 'reading_personality', payload: history } },
   )

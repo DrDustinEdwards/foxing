@@ -41,7 +41,7 @@ async function callAction<T = string>(
   payload: Record<string, unknown>,
   parser?: (raw: string) => T,
 ): Promise<T> {
-  const { data, error } = await supabase.functions.invoke<{ result?: string; error?: string }>(
+  const { data, error } = await supabase.functions.invoke(
     'ai-companion',
     { body: { action, payload } },
   )

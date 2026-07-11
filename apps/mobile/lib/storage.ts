@@ -23,7 +23,7 @@ async function epubExistsInBucket(gutenbergId: number): Promise<boolean> {
     console.log('[storage] list failed', error.message)
     return false
   }
-  return data?.some((f) => f.name === name) ?? false
+  return data?.some((f: any) => f.name === name) ?? false
 }
 
 export async function ensureEpubInStorage(gutenbergId: number): Promise<string | null> {
