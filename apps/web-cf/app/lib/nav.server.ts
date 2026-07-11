@@ -11,6 +11,7 @@ export interface NavUser {
   displayName: string;
   avatarUrl: string | null;
   subscriptionTier: "free" | "plus";
+  isAdmin: boolean;
   stats: {
     booksThisYear: number;
     dayStreak: number;
@@ -40,6 +41,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
     displayName: profile.displayName ?? profile.username,
     avatarUrl: profile.avatarUrl,
     subscriptionTier: profile.subscriptionTier === "plus" ? "plus" : "free",
+    isAdmin: profile.isAdmin,
     stats: {
       booksThisYear,
       dayStreak: streak?.currentStreak ?? 0,
