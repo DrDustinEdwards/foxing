@@ -9,3 +9,6 @@ export * from "./companion";
 
 export * as billingValidators from "./billing";
 export * from "./billing";
+
+export * as clubValidators from "./clubs";
+export * from "./clubs";

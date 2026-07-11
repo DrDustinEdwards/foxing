@@ -81,6 +81,134 @@ const handlers: EventHandlers = {
       ],
     };
   },
+
+  // -- Clubs (Phase 5). Recipient lists are passed IN the payload: handlers stay pure
+  // (no DB reads), so the domain layer loads active members and hands them here.
+
+  "club.member.joined": (_actor, payload) => {
+    const { clubId, clubName } = payload as { clubId: string; clubName: string };
+    return {
+      activity: { type: "joined_club", targetId: clubId, data: { clubName }, visibility: "public" },
+    };
+  },
+
+  "club.join.requested": (_actor, payload) => {
+    const { clubName, ownerId } = payload as { clubName: string; ownerId: string };
+    return {
+      notifications: [
+        {
+          userId: ownerId,
+          type: "club_request",
+          title: "New join request",
+          body: `Someone asked to join ${clubName}.`,
+        },
+      ],
+    };
+  },
+
+  "club.member.approved": (actor, payload) => {
+    const { clubId, clubName } = payload as { clubId: string; clubName: string };
+    return {
+      activity: { type: "joined_club", targetId: clubId, data: { clubName }, visibility: "public" },
+      notifications: [
+        {
+          userId: actor.userId,
+          type: "club_approval",
+          title: "Request approved",
+          body: `You are now a member of ${clubName}.`,
+        },
+      ],
+    };
+  },
+
+  "club.thread.announced": (_actor, payload) => {
+    const { recipientIds, clubName, threadTitle, threadId } = payload as {
+      recipientIds: string[];
+      clubName: string;
+      threadTitle: string;
+      threadId: string;
+    };
+    return {
+      notifications: recipientIds.map((userId) => ({
+        userId,
+        type: "announcement" as const,
+        title: `New announcement in ${clubName}`,
+        body: threadTitle,
+        data: { threadId },
+      })),
+    };
+  },
+
+  "club.post.created": (_actor, payload) => {
+    const { notify, threadId, threadTitle } = payload as {
+      notify: { userId: string; type: "thread_reply" | "post_reply" }[];
+      threadId: string;
+      threadTitle: string;
+    };
+    return {
+      notifications: notify.map((n) => ({
+        userId: n.userId,
+        type: n.type,
+        title: n.type === "thread_reply" ? "New reply in your thread" : "Someone replied to you",
+        body: threadTitle,
+        data: { threadId },
+      })),
+    };
+  },
+
+  "club.poll.created": (_actor, payload) => {
+    const { recipientIds, clubName, pollTitle, pollId } = payload as {
+      recipientIds: string[];
+      clubName: string;
+      pollTitle: string;
+      pollId: string;
+    };
+    return {
+      notifications: recipientIds.map((userId) => ({
+        userId,
+        type: "poll" as const,
+        title: `New poll in ${clubName}`,
+        body: pollTitle,
+        data: { pollId },
+      })),
+    };
+  },
+
+  "club.poll.closed": (_actor, payload) => {
+    const { recipientIds, pollId, pollTitle, result } = payload as {
+      recipientIds: string[];
+      pollId: string;
+      pollTitle: string;
+      result: unknown;
+    };
+    return {
+      notifications: recipientIds.map((userId) => ({
+        userId,
+        type: "poll" as const,
+        title: "Poll closed",
+        body: pollTitle,
+        data: { pollId, result },
+      })),
+    };
+  },
+
+  "club.meeting.created": (_actor, payload) => {
+    const { recipientIds, clubName, meetingTitle, meetingId } = payload as {
+      recipientIds: string[];
+      clubName: string;
+      meetingTitle: string;
+      meetingId: string;
+    };
+    return {
+      notifications: recipientIds.map((userId) => ({
+        userId,
+        type: "meeting_reminder" as const,
+        title: `New meeting in ${clubName}`,
+        body: meetingTitle,
+        data: { meetingId },
+      })),
+    };
+  },
 };
 
 export async function emit(
