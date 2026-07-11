@@ -209,6 +209,93 @@ const handlers: EventHandlers = {
       })),
     };
   },
+
+  // -- Social (Phase 6). Diary events carry the ENTRY's own visibility (private entries
+  // emit no event at all, so the domain never calls these for a private entry). The feed
+  // resolver later filters by that stored visibility per viewer.
+
+  "follow.created": (_actor, payload) => {
+    // Notification to the followed user; there is no feed activity for a follow (the
+    // followed user sees it as a new_follower item, sourced from notifications).
+    const { followingId } = payload as { followingId: string; followerName?: string };
+    return {
+      notifications: [
+        {
+          userId: followingId,
+          type: "new_follower",
+          title: "New follower",
+          body: "Someone started following you.",
+        },
+      ],
+    };
+  },
+
+  "diary.rated": (_actor, payload) => {
+    const { bookId, title, ratingHalf, visibility, diaryId } = payload as {
+      bookId: string;
+      title: string;
+      ratingHalf: number;
+      visibility: string;
+      diaryId: string;
+    };
+    return {
+      activity: {
+        type: "rated",
+        bookId,
+        targetId: diaryId,
+        data: { title, ratingHalf },
+        visibility,
+      },
+    };
+  },
+
+  "diary.reviewed": (_actor, payload) => {
+    const { bookId, title, ratingHalf, visibility, diaryId } = payload as {
+      bookId: string;
+      title: string;
+      ratingHalf: number | null;
+      visibility: string;
+      diaryId: string;
+    };
+    return {
+      activity: {
+        type: "reviewed",
+        bookId,
+        targetId: diaryId,
+        data: { title, ratingHalf },
+        visibility,
+      },
+    };
+  },
+
+  "list.created": (_actor, payload) => {
+    // Only public lists reach here (the domain skips the emit for private lists).
+    const { listId, title } = payload as { listId: string; title: string };
+    return {
+      activity: { type: "list_created", targetId: listId, data: { title }, visibility: "public" },
+    };
+  },
+
+  "reaction.created": (_actor, payload) => {
+    // Notification to the target owner (never self; the domain drops self-reactions).
+    const { ownerId, targetType, targetId, kind } = payload as {
+      ownerId: string;
+      targetType: string;
+      targetId: string;
+      kind: string;
+    };
+    return {
+      notifications: [
+        {
+          userId: ownerId,
+          type: "reaction",
+          title: "New reaction",
+          body: null,
+          data: { targetType, targetId, kind },
+        },
+      ],
+    };
+  },
 };
 
 export async function emit(

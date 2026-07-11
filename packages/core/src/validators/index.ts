@@ -12,3 +12,6 @@ export * from "./billing";
 
 export * as clubValidators from "./clubs";
 export * from "./clubs";
+
+export * as socialValidators from "./social";
+export * from "./social";

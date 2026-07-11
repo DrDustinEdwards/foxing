@@ -171,6 +171,7 @@ export const activityTypeValues = tuple([
   "goal_met",
   "badge_earned",
   "joined_club",
+  "list_created",
   "profile_onboarded",
 ] as const);
 export const activityType = z.enum(activityTypeValues);

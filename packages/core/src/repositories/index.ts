@@ -27,3 +27,15 @@ export type {
   ClubMeetingRsvp,
   ClubScheduleRow,
 } from "./clubs";
+
+export * as socialRepo from "./social";
+export type { ReadingList, ReadingListBook, ActivityEvent } from "./social";
+
+export * as diaryRepo from "./diary";
+export type { DiaryEntry } from "./diary";
+
+export * as reactionsRepo from "./reactions";
+export type { Reaction } from "./reactions";
+
+export * as recapRepo from "./recap";
+export type { FinishedBook } from "./recap";
