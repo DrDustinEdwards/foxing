@@ -9,7 +9,9 @@ import * as Linking from 'expo-linking'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
 import { ReaderProvider } from '@epubjs-react-native/core'
-import { Session } from '@supabase/supabase-js'
+// Minimal local shape for the auth session. Supabase was removed; the shim in
+// lib/supabase.ts returns `any`, so this only needs to cover what we read.
+type Session = { access_token: string; refresh_token: string; user: { id: string } | null }
 import { IconContext } from 'phosphor-react-native'
 import {
   Fraunces_300Light,
@@ -136,12 +138,12 @@ function RootLayout() {
   }, [])
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       setSession(session)
       setAuthLoading(false)
     })
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
       setSession(session)
     })
 

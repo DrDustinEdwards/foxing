@@ -1,16 +1,32 @@
-import path from 'node:path'
-import { defineConfig } from 'vitest/config'
+import path from "node:path";
+import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-pool-workers";
+import { defineConfig } from "vitest/config";
 
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@': path.resolve(import.meta.dirname),
-      // db-write.ts guards against client bundling; tests run in node.
-      'server-only': path.resolve(import.meta.dirname, 'test/server-only-stub.ts'),
+// API integration tests run in workerd (miniflare) against a local D1 with the real
+// migrations applied, so the profiles round trip is exercised end to end in CI.
+// pool-workers v0.18 (vitest 4) exposes the runtime as a Vite plugin, not a pool.
+export default defineConfig(async () => {
+  const migrations = await readD1Migrations(
+    path.resolve(__dirname, "../../packages/core/migrations"),
+  );
+
+  return {
+    plugins: [
+      cloudflareTest({
+        miniflare: {
+          compatibilityDate: "2026-07-01",
+          compatibilityFlags: ["nodejs_compat"],
+          d1Databases: ["DB"],
+          kvNamespaces: ["APP_KV"],
+          bindings: { TEST_MIGRATIONS: migrations },
+        },
+      }),
+    ],
+    test: {
+      // Only the workerd integration tests under test/. The Playwright specs in e2e/
+      // are a separate runner (default vitest globs would otherwise grab e2e/*.spec.ts).
+      include: ["test/**/*.test.ts"],
+      setupFiles: ["./test/apply-migrations.ts"],
     },
-  },
-  test: {
-    environment: 'node',
-    include: ['test/**/*.test.ts'],
-  },
-})
+  };
+});

@@ -5,12 +5,12 @@
     "includes": [
       "packages/core/**",
       "packages/api/**",
-      "apps/web-cf/**",
+      "apps/web/**",
       "!**/build/**",
       "!**/.react-router/**",
       "!**/worker-configuration.d.ts",
       "!**/*.gen.ts",
-      "!apps/web-cf/app/app.css"
+      "!apps/web/app/app.css"
     ]
   },
   "formatter": {

@@ -616,7 +616,7 @@ export default function Reader() {
           .select('subscription_tier')
           .eq('id', user.id)
           .maybeSingle()
-          .then(({ data: prof }) => {
+          .then(({ data: prof }: any) => {
             if (!mounted) return
             const t = (prof as { subscription_tier: string | null } | null)?.subscription_tier
             setSubscriptionTier(t === 'plus' ? 'plus' : 'free')

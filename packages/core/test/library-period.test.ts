@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { periodRange } from "../src/repositories/library";
 
 // periodRange is the pure date math behind books-goal progress. The D1-backed
-// count + event emission are covered by the API integration tests in apps/web-cf.
+// count + event emission are covered by the API integration tests in apps/web.
 describe("periodRange", () => {
   it("year: whole calendar year, half-open", () => {
     const { start, end } = periodRange("year", 2026);

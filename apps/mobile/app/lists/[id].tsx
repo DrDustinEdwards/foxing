@@ -137,7 +137,7 @@ export default function ListDetailScreen() {
         title: string
         author: string
         cover_url: string | null
-      }>) ?? [],
+      }>),
     )
   }, [])
 

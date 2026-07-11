@@ -15,7 +15,7 @@
     "build:web": "pnpm --filter web build",
     "type-check": "pnpm --filter mobile exec tsc --noEmit && pnpm --filter web exec tsc --noEmit",
     "lint": "turbo lint",
-    "lint:cf": "biome check packages/core packages/api apps/web-cf"
+    "lint:cf": "biome check packages/core packages/api apps/web"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",

@@ -4,7 +4,7 @@
 import { resolve } from 'node:path'
 import { execSync } from 'node:child_process'
 
-const WEB_CF_DIR = resolve(process.cwd(), 'apps/web-cf')
+const WEB_CF_DIR = resolve(process.cwd(), 'apps/web')
 const D1_DB = 'foxing'
 
 interface D1JsonResult {

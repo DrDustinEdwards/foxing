@@ -61,7 +61,7 @@ export default function BuddyReadInviteScreen() {
       .select('id, title, author, cover_url')
       .ilike('title', `%${q.trim()}%`)
       .limit(10)
-    setBookResults(((data ?? []) as BookHit[]) ?? [])
+    setBookResults((data ?? []) as BookHit[])
   }, [])
 
   const searchFriends = useCallback(
@@ -88,7 +88,7 @@ export default function BuddyReadInviteScreen() {
         .in('id', followingIds)
         .or(`display_name.ilike.${term},username.ilike.${term}`)
         .limit(10)
-      setFriendResults(((data ?? []) as FriendHit[]) ?? [])
+      setFriendResults((data ?? []) as FriendHit[])
     },
     [userId],
   )

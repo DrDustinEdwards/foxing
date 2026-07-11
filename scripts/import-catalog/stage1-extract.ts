@@ -1,7 +1,7 @@
 // Stage 1: Extract all source tables from Postgres, transform to D1-ready rows,
 // save to reports/extracted.json.
 // Run: pnpm tsx scripts/import-catalog/stage1-extract.ts
-// Requires SUPABASE_DB_URL in apps/web-cf/.dev.vars
+// Requires SUPABASE_DB_URL in apps/web/.dev.vars
 
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'

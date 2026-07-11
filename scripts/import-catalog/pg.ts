@@ -1,5 +1,5 @@
 // Postgres connection pool for the import pipeline.
-// Reads SUPABASE_DB_URL from apps/web-cf/.dev.vars.
+// Reads SUPABASE_DB_URL from apps/web/.dev.vars.
 import { Pool } from 'pg'
 import { loadDevVars, requireVar } from './devvars.ts'
 

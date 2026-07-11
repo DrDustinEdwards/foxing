@@ -65,10 +65,7 @@ export default function FindNextBookScreen() {
     setBusy(true)
     setError(null)
     try {
-      const { data, error: err } = await supabase.functions.invoke<{
-        result?: string
-        error?: string
-      }>('ai-companion', {
+      const { data, error: err } = await supabase.functions.invoke('ai-companion', {
         body: {
           action: 'recommendations',
           payload: { mood, length, era },

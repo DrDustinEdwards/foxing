@@ -318,13 +318,13 @@ export default function FeedScreen() {
 
     const channel = supabase
       .channel('feed-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'highlights' }, (p) =>
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'highlights' }, (p: any) =>
         handleInsert('highlights', p.new as Record<string, unknown>),
       )
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_books' }, (p) =>
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'user_books' }, (p: any) =>
         handleInsert('user_books', p.new as Record<string, unknown>),
       )
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'follows' }, (p) =>
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'follows' }, (p: any) =>
         handleInsert('follows', p.new as Record<string, unknown>),
       )
       .subscribe()

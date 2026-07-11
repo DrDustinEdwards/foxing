@@ -35,7 +35,6 @@
 // and on a 429 we wait RATE_LIMIT_BACKOFF_MS and retry the failing book
 // once before marking it failed.
 
-import { createClient } from '@supabase/supabase-js'
 import { Buffer } from 'node:buffer'
 import { readFile, writeFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
@@ -347,18 +346,13 @@ async function scrapeFullCatalog(): Promise<SeBook[]> {
 // Supabase wipe + upload
 // =====================================================================
 
-function makeAdminClient() {
-  const url = process.env.SUPABASE_URL
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !key) {
-    console.error(
-      '[seed] missing env: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required',
-    )
-    process.exit(2)
-  }
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  })
+function makeAdminClient(): any {
+  // Supabase was removed from the Foxing stack. This seeder targeted the
+  // retired Supabase storage + Postgres backend; port it to the Cloudflare
+  // /api/v1 admin surface (D1 + R2) before running a non-dry-run seed.
+  throw new Error(
+    'makeAdminClient: Supabase backend removed. Port this seeder to the Cloudflare /api/v1 admin surface.',
+  )
 }
 
 type AdminClient = ReturnType<typeof makeAdminClient>
@@ -386,8 +380,8 @@ async function wipeAll(supabase: AdminClient) {
       if (!data || data.length === 0) break
 
       const fileNames = data
-        .filter((f) => f.id !== null)
-        .map((f) => `${prefix}${f.name}`)
+        .filter((f: any) => f.id !== null)
+        .map((f: any) => `${prefix}${f.name}`)
 
       if (fileNames.length === 0) break
 

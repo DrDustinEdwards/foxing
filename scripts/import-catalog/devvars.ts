@@ -1,10 +1,10 @@
-// Parses apps/web-cf/.dev.vars (KEY="value" format) into a plain object.
+// Parses apps/web/.dev.vars (KEY="value" format) into a plain object.
 // Values are never logged or returned to callers as strings in error output.
 import { readFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 export function loadDevVars(filePath?: string): Record<string, string> {
-  const p = filePath ?? resolve(process.cwd(), 'apps/web-cf/.dev.vars')
+  const p = filePath ?? resolve(process.cwd(), 'apps/web/.dev.vars')
   if (!existsSync(p)) return {}
   const lines = readFileSync(p, 'utf-8').split('\n')
   const vars: Record<string, string> = {}
@@ -30,7 +30,7 @@ export function requireVar(vars: Record<string, string>, key: string): string {
   const val = vars[key] ?? process.env[key] ?? ''
   if (!val) {
     console.error(`[import-catalog] Missing required variable: ${key}`)
-    console.error(`  Add ${key}="" to apps/web-cf/.dev.vars and re-run.`)
+    console.error(`  Add ${key}="" to apps/web/.dev.vars and re-run.`)
     process.exit(1)
   }
   return val
