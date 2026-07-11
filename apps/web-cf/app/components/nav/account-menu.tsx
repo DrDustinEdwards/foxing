@@ -8,6 +8,22 @@ import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 import { useDismiss, useRovingMenu } from "./use-menu";
 
+function TierBadge({ tier }: { tier: "free" | "plus" }) {
+  const isPlus = tier === "plus";
+  return (
+    <span
+      className={cn(
+        "shrink-0 rounded-full px-1.5 py-0.5 font-mono text-[0.625rem] uppercase tracking-[0.08em]",
+        isPlus
+          ? "bg-brand-subtle text-brand-subtle-text"
+          : "border border-border-subtle text-tertiary",
+      )}
+    >
+      {isPlus ? "Plus" : "Free"}
+    </span>
+  );
+}
+
 export function AccountMenu({ user }: { user: NavUser }) {
   const [open, setOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -48,8 +64,9 @@ export function AccountMenu({ user }: { user: NavUser }) {
           <div className="flex items-center gap-3 border-b border-border-subtle bg-sunken px-4 py-3">
             <Avatar src={user.avatarUrl} name={user.displayName} size="md" />
             <div className="min-w-0">
-              <p className="truncate font-ui text-sm font-medium text-primary">
-                {user.displayName}
+              <p className="flex items-center gap-1.5 font-ui text-sm font-medium text-primary">
+                <span className="truncate">{user.displayName}</span>
+                <TierBadge tier={user.subscriptionTier} />
               </p>
               <p className="truncate font-mono text-xs text-tertiary">@{user.username}</p>
             </div>
@@ -82,7 +99,15 @@ export function AccountMenu({ user }: { user: NavUser }) {
               onClick={() => setOpen(false)}
               className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
             >
-              Profile
+              Your profile
+            </Link>
+            <Link
+              to={`/u/${user.username}`}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
+            >
+              Public profile
             </Link>
             <Link
               to="/settings"
