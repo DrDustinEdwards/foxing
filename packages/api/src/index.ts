@@ -2,10 +2,13 @@
 // packages/core. The Worker injects resolveSession (Better Auth) via createApi.
 import { Hono } from "hono";
 import { errorHandler } from "./error";
+import { companionDepsMw } from "./middleware/companion-deps";
 import { contextMw } from "./middleware/context";
 import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
+import { companionRoutes } from "./routes/companion";
+import { companionOpsRoutes } from "./routes/companion-ops";
 import { libraryRoutes } from "./routes/library";
 import { profileRoutes } from "./routes/profiles";
 import type { ApiDeps, Env } from "./types";
@@ -20,10 +23,13 @@ export function createApi(deps: ApiDeps) {
   app.use("*", contextMw);
   app.use("*", sessionMw(deps));
   app.use("*", profileMw);
+  app.use("*", companionDepsMw(deps));
 
   app.route("/", profileRoutes);
   app.route("/", libraryRoutes);
   app.route("/", accountRoutes);
+  app.route("/", companionRoutes);
+  app.route("/", companionOpsRoutes);
 
   return app;
 }

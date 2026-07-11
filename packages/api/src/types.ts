@@ -1,6 +1,6 @@
 // Hono environment for the mounted API. Bindings are bare (DB, APP_KV, rate
 // limiters) per capsid/conventions.md; Variables carry the resolved request context.
-import type { Db, Profile } from "@foxing/core";
+import type { CompanionCaller, Db, Profile } from "@foxing/core";
 
 export type Bindings = {
   DB: D1Database;
@@ -8,6 +8,7 @@ export type Bindings = {
   // Workers rate-limiting bindings (spec-cf-api middleware pipeline).
   AUTH_RL: RateLimit;
   WRITE_RL: RateLimit;
+  COMPANION_RL: RateLimit;
 };
 
 export type SessionUser = { id: string; email: string };
@@ -17,12 +18,18 @@ export type Variables = {
   db: Db;
   session: SessionUser | null;
   profile: Profile | null;
+  streamCompanion: CompanionCaller;
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
 
-// The Worker injects how to resolve a Better Auth session, keeping this package
-// free of an auth-provider dependency (thin routes, testable pipeline).
+// The Worker injects how to resolve a Better Auth session, keeping this package free
+// of an auth-provider dependency (thin routes, testable pipeline). resolveCompanionCaller
+// follows the same shape (a function of the per-request Bindings, not a value built at
+// module scope, since secrets are only reachable per-request): the Worker builds the
+// real Anthropic-backed caller from env.ANTHROPIC_API_KEY; tests inject a stub with no
+// network call and no key.
 export type ApiDeps = {
   resolveSession: (req: Request, env: Bindings) => Promise<SessionUser | null>;
+  resolveCompanionCaller: (env: Bindings) => CompanionCaller;
 };
