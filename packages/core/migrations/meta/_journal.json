@@ -15,6 +15,13 @@
       "when": 1783776891351,
       "tag": "0001_high_scarecrow",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1783787536603,
+      "tag": "0002_brief_lord_hawal",
+      "breakpoints": true
     }
   ]
 }
