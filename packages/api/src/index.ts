@@ -13,8 +13,11 @@ import { billingRoutes } from "./routes/billing";
 import { clubRoutes } from "./routes/clubs";
 import { companionRoutes } from "./routes/companion";
 import { companionOpsRoutes } from "./routes/companion-ops";
+import { diaryRoutes } from "./routes/diary";
 import { libraryRoutes } from "./routes/library";
 import { profileRoutes } from "./routes/profiles";
+import { reactionRoutes } from "./routes/reactions";
+import { socialRoutes } from "./routes/social";
 import { stripeWebhookRoutes } from "./routes/webhooks-stripe";
 import type { ApiDeps, Env } from "./types";
 
@@ -40,6 +43,9 @@ export function createApi(deps: ApiDeps) {
   app.route("/", billingRoutes);
   app.route("/", stripeWebhookRoutes);
   app.route("/", clubRoutes);
+  app.route("/", socialRoutes);
+  app.route("/", diaryRoutes);
+  app.route("/", reactionRoutes);
 
   return app;
 }
