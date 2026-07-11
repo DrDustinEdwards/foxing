@@ -9,3 +9,6 @@ export type * from "./catalog";
 
 export * as libraryRepo from "./library";
 export type { LibraryEntry, UserBook, CustomShelf, ReadingGoal, ReadingStreak } from "./library";
+
+export * as companionRepo from "./companion";
+export type { CompanionThread, CompanionMessageRow, BookAiCacheRow } from "./companion";
