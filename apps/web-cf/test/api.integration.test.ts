@@ -10,6 +10,13 @@ const api = createApi({
     const id = req.headers.get("x-test-user");
     return id ? { id, email: `${id}@example.com` } : null;
   },
+  // This suite never calls /companion; a stub that errors if invoked is enough to
+  // satisfy ApiDeps without a network call or a key.
+  resolveCompanionCaller: () =>
+    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
+    async function* unused() {
+      throw new Error("not used in this suite");
+    },
 });
 
 // The bare api app serves routes at the root (/me, /u/:username); the Worker mounts
