@@ -14,3 +14,16 @@ export * as companionRepo from "./companion";
 export type { CompanionThread, CompanionMessageRow, BookAiCacheRow } from "./companion";
 
 export * as billingRepo from "./billing";
+
+export * as clubsRepo from "./clubs";
+export type {
+  Club,
+  ClubMember,
+  ClubThread,
+  ClubPost,
+  ClubPoll,
+  ClubPollVote,
+  ClubMeeting,
+  ClubMeetingRsvp,
+  ClubScheduleRow,
+} from "./clubs";

@@ -118,9 +118,11 @@ export const clubMemberStatusValues = tuple([
   "left",
 ] as const);
 export const clubMemberStatus = z.enum(clubMemberStatusValues);
+export type ClubMemberStatus = z.infer<typeof clubMemberStatus>;
 
 export const clubMemberRoleValues = tuple(["owner", "moderator", "member"] as const);
 export const clubMemberRole = z.enum(clubMemberRoleValues);
+export type ClubMemberRole = z.infer<typeof clubMemberRole>;
 
 export const clubThreadTypeValues = tuple(["discussion", "announcement"] as const);
 export const clubThreadType = z.enum(clubThreadTypeValues);
