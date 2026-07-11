@@ -16,6 +16,7 @@ import type { Db } from "../db";
 import {
   account,
   activityEvents,
+  announcements,
   annotations,
   books,
   closeFriends,
@@ -168,9 +169,10 @@ export const USER_SCOPED_TABLE_NAMES: ReadonlySet<string> = new Set(
  *    basics travel with the export via the caller's session; `account` holds the
  *    password hash and is never exported. These are removed by deleteAccount.
  *  - Public content the user contributed or authored (catalog books via added_by,
- *    journal posts + versions via author_id / saved_by). These outlive the account:
- *    their FK is ON DELETE SET NULL, so deleting the user nulls the attribution and
- *    the content stays. They are not personal data to erase or export per-user.
+ *    journal posts + versions via author_id / saved_by, admin announcements via
+ *    created_by). These outlive the account: their FK is ON DELETE SET NULL, so
+ *    deleting the user nulls the attribution and the content stays. They are not
+ *    personal data to erase or export per-user.
  */
 export const ACCOUNT_EXPORT_EXCLUDED: ReadonlySet<string> = new Set([
   getTableName(user),
@@ -180,6 +182,7 @@ export const ACCOUNT_EXPORT_EXCLUDED: ReadonlySet<string> = new Set([
   getTableName(books),
   getTableName(journalPosts),
   getTableName(journalPostVersions),
+  getTableName(announcements),
 ]);
 
 /** GDPR export: every user-owned table as JSON, keyed by ACCOUNT_EXPORT_KEYS. */

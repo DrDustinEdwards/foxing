@@ -11,6 +11,7 @@ import {
   readingGoals,
   readingStreaks,
   userBooks,
+  vocabulary,
 } from "../schema";
 import type { CreateGoalInput, CreateShelfInput } from "../validators/library";
 
@@ -121,6 +122,45 @@ export async function listLibrary(db: Db, userId: string): Promise<LibraryEntry[
     .innerJoin(books, eq(userBooks.bookId, books.id))
     .where(eq(userBooks.userId, userId))
     .orderBy(desc(userBooks.updatedAt));
+}
+
+/** Currently-reading books for a user, newest activity first. Powers the profile
+ *  "currently reading" strip; the caller decides whether progress visibility allows it. */
+export async function listCurrentlyReading(
+  db: Db,
+  userId: string,
+  limit = 6,
+): Promise<LibraryEntry[]> {
+  return db
+    .select({
+      bookId: userBooks.bookId,
+      status: userBooks.status,
+      progressPct: userBooks.progressPct,
+      updatedAt: userBooks.updatedAt,
+      title: books.title,
+      author: books.author,
+      slug: books.slug,
+      coverUrl: books.coverUrl,
+    })
+    .from(userBooks)
+    .innerJoin(books, eq(userBooks.bookId, books.id))
+    .where(and(eq(userBooks.userId, userId), eq(userBooks.status, "reading")))
+    .orderBy(desc(userBooks.updatedAt))
+    .limit(limit);
+}
+
+// --- Vocabulary ------------------------------------------------------------
+
+export type VocabularyEntry = typeof vocabulary.$inferSelect;
+
+/** A user's saved words, newest first. Backs the /vocabulary page. */
+export async function listVocabulary(db: Db, userId: string): Promise<VocabularyEntry[]> {
+  return db
+    .select()
+    .from(vocabulary)
+    .where(eq(vocabulary.userId, userId))
+    .orderBy(desc(vocabulary.lookedUpAt))
+    .limit(500);
 }
 
 // --- Custom shelves --------------------------------------------------------
