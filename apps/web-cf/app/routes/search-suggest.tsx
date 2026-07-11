@@ -13,7 +13,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     : [[], []];
   return Response.json(
     {
-      books: books.map((b) => ({ slug: b.slug, title: b.title, author: b.author })),
+      books: books.map((b) => ({ id: b.id, slug: b.slug, title: b.title, author: b.author })),
       authors: authors.map((a) => ({
         slug: a.authorSlug,
         name: a.author,

@@ -63,6 +63,24 @@ export default function Me({ loaderData }: Route.ComponentProps) {
           </div>
         </header>
 
+        <nav className="flex flex-wrap gap-2" aria-label="Your Foxing shortcuts">
+          {[
+            { to: `/u/${profile.username}`, label: "Public profile" },
+            { to: "/diary/new", label: "Log a book" },
+            { to: "/feed", label: "Feed" },
+            { to: "/people", label: "People" },
+            { to: `/u/${profile.username}/recap/${new Date().getUTCFullYear()}`, label: "Year in reading" },
+          ].map((l) => (
+            <Link
+              key={l.to}
+              to={l.to}
+              className="rounded-cover border border-border-subtle px-3 py-1.5 font-ui text-sm text-secondary transition hover:border-border-interactive hover:text-primary"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
+
         {profile.bio ? (
           <p className="max-w-2xl font-body text-lg text-secondary">{profile.bio}</p>
         ) : null}
