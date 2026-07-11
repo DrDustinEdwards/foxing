@@ -1,12 +1,20 @@
 // Profiles repository. All profile data access goes through here so an org/classroom
 // tenancy layer (Foxing Edu) can be added later without touching call sites.
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import type { Db } from "../db";
 import { profiles } from "../schema";
 import type { UpdateMeInput } from "../validators/profile";
 
 export type Profile = typeof profiles.$inferSelect;
 export type NewProfile = typeof profiles.$inferInsert;
+
+/** Minimal identity for rendering an actor in a feed / follower list. */
+export type ProfileSummary = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+};
 
 /** Public projection of a profile, honoring the owner's visibility later. */
 export type PublicProfile = Pick<
@@ -22,6 +30,27 @@ export async function getProfileById(db: Db, userId: string): Promise<Profile | 
 export async function getProfileByUsername(db: Db, username: string): Promise<Profile | null> {
   const rows = await db.select().from(profiles).where(eq(profiles.username, username)).limit(1);
   return rows[0] ?? null;
+}
+
+/** Batch identity lookup for a set of user ids, keyed by id. Users without a profile
+ *  row are simply absent from the map. */
+export async function getProfileSummaries(
+  db: Db,
+  ids: string[],
+): Promise<Map<string, ProfileSummary>> {
+  const map = new Map<string, ProfileSummary>();
+  if (ids.length === 0) return map;
+  const rows = await db
+    .select({
+      id: profiles.id,
+      username: profiles.username,
+      displayName: profiles.displayName,
+      avatarUrl: profiles.avatarUrl,
+    })
+    .from(profiles)
+    .where(inArray(profiles.id, ids));
+  for (const r of rows) map.set(r.id, r);
+  return map;
 }
 
 export async function createProfile(db: Db, values: NewProfile): Promise<Profile> {
