@@ -1,6 +1,7 @@
 {
   // Copy to wrangler.jsonc (gitignored) and fill in real IDs.
-  // Secrets (BETTER_AUTH_SECRET, TURNSTILE_SECRET_KEY) are set via `wrangler secret put`, never here.
+  // Secrets (BETTER_AUTH_SECRET, TURNSTILE_SECRET_KEY, ANTHROPIC_API_KEY) are set via
+  // `wrangler secret put`, never here.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "foxing",
   "main": "./workers/app.ts",
@@ -19,9 +20,18 @@
   "kv_namespaces": [{ "binding": "APP_KV", "id": "<KV_NAMESPACE_ID>" }],
   "ratelimits": [
     { "name": "AUTH_RL", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
-    { "name": "WRITE_RL", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } }
+    { "name": "WRITE_RL", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
+    { "name": "COMPANION_RL", "namespace_id": "1003", "simple": { "limit": 20, "period": 60 } }
   ],
   "send_email": [{ "name": "EMAIL" }],
+  // Phase 4a: the companion cache pipeline. Cron finds catalog books missing a cached
+  // action and enqueues one message per book; the queue consumer generates and writes
+  // book_ai_cache rows. See packages/core/src/companion/cache-generator.ts.
+  "queues": {
+    "producers": [{ "queue": "foxing-companion-cache", "binding": "COMPANION_CACHE_QUEUE" }],
+    "consumers": [{ "queue": "foxing-companion-cache", "max_batch_size": 5, "max_retries": 3 }]
+  },
+  "triggers": { "crons": ["0 8 * * *"] },
   "vars": {
     "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",
     "EMAIL_FROM": "hello@foxing.app",
@@ -29,6 +39,9 @@
     "TURNSTILE_SITE_KEY": "",
     // Affiliate tags applied to buy links at render (public, not secret). Blank = no tag.
     "AMAZON_ASSOC_TAG": "",
-    "BOOKSHOP_AFFILIATE_ID": ""
+    "BOOKSHOP_AFFILIATE_ID": "",
+    // How many catalog books the daily cron enqueues for cache generation. Small on
+    // purpose (Phase 4a proof scope); raise once real cost-per-book is measured.
+    "COMPANION_CACHE_BATCH_SIZE": "20"
   }
 }

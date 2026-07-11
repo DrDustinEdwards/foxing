@@ -4,6 +4,7 @@
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
 import { AppError, createApi, rateLimit } from "@foxing/api";
+import { catalogRepo, companion, createDb } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext } from "../app/context";
@@ -49,6 +50,19 @@ const api = createApi({
     const session = await getAuth(env as unknown as Env).api.getSession({ headers: req.headers });
     if (!session?.user) return null;
     return { id: session.user.id, email: session.user.email };
+  },
+  // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
+  // other route works normally; only an actual companion call fails, cleanly, until
+  // `wrangler secret put ANTHROPIC_API_KEY` runs.
+  resolveCompanionCaller: (env) => {
+    const apiKey = (env as unknown as Env).ANTHROPIC_API_KEY;
+    if (apiKey) return companion.createAnthropicCaller(apiKey);
+    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
+    return async function* missingKey() {
+      throw new Error(
+        "ANTHROPIC_API_KEY is not configured. Run: wrangler secret put ANTHROPIC_API_KEY",
+      );
+    };
   },
 });
 
@@ -139,4 +153,61 @@ app.all("*", async (c) => {
   return res;
 });
 
-export default app;
+// Phase 4a companion cache pipeline. Cron finds catalog books missing a cached action
+// and enqueues one message per book; the queue consumer generates the 4 free-cached
+// actions for that book and writes book_ai_cache. Both reuse the same core functions
+// the manual proof script and the admin ops route call (one generation code path).
+type CacheJobMessage = { bookId: string };
+
+async function scheduled(
+  _event: ScheduledController,
+  env: Env,
+  ctx: ExecutionContext,
+): Promise<void> {
+  const db = createDb(env.DB);
+  const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
+  const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
+  for (const book of books) {
+    ctx.waitUntil(env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage));
+  }
+}
+
+async function queue(
+  batch: MessageBatch<CacheJobMessage>,
+  env: Env,
+  _ctx: ExecutionContext,
+): Promise<void> {
+  const db = createDb(env.DB);
+  const caller = env.ANTHROPIC_API_KEY
+    ? companion.createAnthropicCaller(env.ANTHROPIC_API_KEY)
+    : null;
+
+  for (const message of batch.messages) {
+    if (!caller) {
+      // No key yet: retry later rather than dropping the job or generating nothing.
+      message.retry();
+      continue;
+    }
+    try {
+      const book = await catalogRepo.getBookById(db, message.body.bookId);
+      if (!book) {
+        message.ack(); // the book no longer exists; nothing to retry
+        continue;
+      }
+      await companion.generateCachedActionsForBook(db, caller, {
+        id: book.id,
+        title: book.title,
+        author: book.author,
+        description: book.description,
+        publicationYear: book.publicationYear,
+        subjects: book.subjects,
+      });
+      message.ack();
+    } catch (err) {
+      console.error(`[companion-cache] failed for book ${message.body.bookId}`, err);
+      message.retry();
+    }
+  }
+}
+
+export default { fetch: app.fetch, scheduled, queue };
