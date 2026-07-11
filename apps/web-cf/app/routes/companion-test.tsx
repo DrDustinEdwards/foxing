@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { catalogRepo, companion } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
+import { Paywall } from "~/components/paywall";
 import { Container, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { loaderBase } from "~/lib/loader.server";
@@ -30,6 +31,7 @@ export function meta() {
 
 export default function CompanionTest({ loaderData }: Route.ComponentProps) {
   const { isAdmin, tier, actions, books } = loaderData;
+  const [paywallOpen, setPaywallOpen] = useState(false);
   return (
     <PageShell>
       <Container className="max-w-3xl">
@@ -40,16 +42,25 @@ export default function CompanionTest({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         <PageHeader eyebrow="Phase 4a" title="Companion test" />
-        <RunAction actions={actions} books={books} />
+        <RunAction actions={actions} books={books} onPlusRequired={() => setPaywallOpen(true)} />
         {isAdmin ? <CacheBatch /> : null}
       </Container>
+      <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </PageShell>
   );
 }
 
 type BookOption = { id: string; slug: string; title: string; author: string };
 
-function RunAction({ actions, books }: { actions: string[]; books: BookOption[] }) {
+function RunAction({
+  actions,
+  books,
+  onPlusRequired,
+}: {
+  actions: string[];
+  books: BookOption[];
+  onPlusRequired: () => void;
+}) {
   const [action, setAction] = useState(actions[0] ?? "");
   const [bookId, setBookId] = useState(books[0]?.id ?? "");
   const [message, setMessage] = useState("What do you think of this book?");
@@ -78,8 +89,14 @@ function RunAction({ actions, books }: { actions: string[]; books: BookOption[] 
 
       if (!res.ok || !res.body) {
         const body = (await res.json().catch(() => null)) as {
-          error?: { message?: string };
+          error?: { code?: string; message?: string };
         } | null;
+        // A free user hitting a Plus action: open the paywall, the intended surface,
+        // rather than only printing an error string.
+        if (res.status === 403 && body?.error?.code === "plus_required") {
+          onPlusRequired();
+          return;
+        }
         setError(body?.error?.message ?? `Request failed (${res.status}).`);
         return;
       }
