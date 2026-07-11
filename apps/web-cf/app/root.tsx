@@ -2,15 +2,15 @@ import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
-import { getNavUser } from "./lib/nav.server";
+import { getNavMenu, getNavUser } from "./lib/nav.server";
 
-// Resolve the signed-in nav identity once per request; the shell reads it via
-// useRouteLoaderData("root"). Returns null for anonymous requests, keeping the
-// server-rendered HTML signed-out (and edge-cacheable).
+// Resolve the signed-in nav identity plus the public mega-menu data once per request;
+// the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous
+// requests, keeping the server-rendered HTML signed-out (and edge-cacheable).
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const navUser = await getNavUser(env, request);
-  return { navUser };
+  const [navUser, navMenu] = await Promise.all([getNavUser(env, request), getNavMenu(env)]);
+  return { navUser, navMenu };
 }
 
 export const links: Route.LinksFunction = () => [
