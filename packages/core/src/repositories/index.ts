@@ -39,3 +39,12 @@ export type { Reaction } from "./reactions";
 
 export * as recapRepo from "./recap";
 export type { FinishedBook } from "./recap";
+
+export * as syncRepo from "./sync";
+export type { SyncAdapter } from "./sync";
+
+export * as pushRepo from "./push";
+export type { PushToken, DeliveryContext } from "./push";
+
+export * as notificationsRepo from "./notifications";
+export type { Notification } from "./notifications";

@@ -37,7 +37,7 @@
     "producers": [{ "queue": "foxing-companion-cache", "binding": "COMPANION_CACHE_QUEUE" }],
     "consumers": [{ "queue": "foxing-companion-cache", "max_batch_size": 5, "max_retries": 3 }]
   },
-  "triggers": { "crons": ["0 8 * * *"] },
+  "triggers": { "crons": ["0 8 * * *", "*/5 * * * *"] },
   "vars": {
     "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",
     "EMAIL_FROM": "hello@foxing.app",

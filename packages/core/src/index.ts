@@ -13,3 +13,5 @@ export * as companion from "./companion";
 export type * from "./companion";
 export * as billing from "./billing";
 export type * from "./billing";
+export * as push from "./push";
+export type * from "./push";

@@ -16,9 +16,11 @@ import { companionOpsRoutes } from "./routes/companion-ops";
 import { diaryRoutes } from "./routes/diary";
 import { libraryRoutes } from "./routes/library";
 import { profileRoutes } from "./routes/profiles";
+import { pushRoutes } from "./routes/push";
 import { reactionRoutes } from "./routes/reactions";
 import { socialRoutes } from "./routes/social";
 import { stripeWebhookRoutes } from "./routes/webhooks-stripe";
+import { syncRoutes } from "./routes/sync";
 import type { ApiDeps, Env } from "./types";
 
 export function createApi(deps: ApiDeps) {
@@ -46,6 +48,8 @@ export function createApi(deps: ApiDeps) {
   app.route("/", socialRoutes);
   app.route("/", diaryRoutes);
   app.route("/", reactionRoutes);
+  app.route("/", syncRoutes);
+  app.route("/", pushRoutes);
 
   return app;
 }
