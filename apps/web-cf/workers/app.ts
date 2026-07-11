@@ -10,6 +10,7 @@ import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext } from "../app/context";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth } from "../app/lib/auth.server";
+import { ClubRoom } from "./club-room";
 
 // Public catalog surfaces are anonymous and safe to cache at the edge. Segment
 // prefixes match the path or any child (/books, /books/x), not lookalikes (/booksy).
@@ -79,6 +80,25 @@ const api = createApi({
       };
     }
     return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
+  },
+  // The live layer (Phase 5). One ClubRoom Durable Object per club; the API calls
+  // broadcast() only AFTER a write commits to D1 (write -> commit -> notify), and
+  // connect() forwards a membership-checked upgrade to that club's object. The DO
+  // never writes D1.
+  resolveHub: (env) => {
+    const ns = (env as unknown as Env).CLUB_ROOM;
+    return {
+      async broadcast(clubId, message) {
+        await ns.getByName(clubId).broadcast(message);
+      },
+      async connect(clubId, userId, request) {
+        // Pass the verified user id on the URL; new Request(url, request) preserves the
+        // WebSocket upgrade so the ClubRoom can accept it.
+        const url = new URL(request.url);
+        url.searchParams.set("uid", userId);
+        return ns.getByName(clubId).fetch(new Request(url, request));
+      },
+    };
   },
 });
 
@@ -225,5 +245,9 @@ async function queue(
     }
   }
 }
+
+// The ClubRoom Durable Object class must be a named export of the Worker's entry module
+// so the runtime can instantiate it for the CLUB_ROOM binding.
+export { ClubRoom } from "./club-room";
 
 export default { fetch: app.fetch, scheduled, queue };
