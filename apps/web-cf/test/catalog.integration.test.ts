@@ -1,5 +1,6 @@
 import { env } from "cloudflare:test";
 import { catalogRepo, createDb, schema } from "@foxing/core";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 // Catalog reads against a real local D1 (miniflare), so the FTS5 triggers and the
@@ -49,6 +50,19 @@ async function seed() {
       subjects: ["fiction"],
     },
   ]);
+  // Award only the (cover-bearing) Karamazov, so the starter set has one true row.
+  const [karamazov] = await d
+    .select({ id: schema.books.id })
+    .from(schema.books)
+    .where(eq(schema.books.slug, "the-brothers-karamazov-dostoyevsky"));
+  await d.insert(schema.bookAwards).values({
+    bookId: karamazov.id,
+    awardSlug: "nobel-prize",
+    awardName: "Nobel Prize in Literature",
+    year: 1880,
+    distinction: "winner",
+    scope: "international",
+  });
 }
 
 describe("catalog search", () => {
@@ -73,6 +87,44 @@ describe("catalog search", () => {
     const res = await catalogRepo.searchCatalog(db(), "Community");
     expect(res.books).toHaveLength(0);
   });
+
+  it("narrows results by the era filter without losing the FTS match", async () => {
+    const inEra = await catalogRepo.searchCatalog(db(), "pride", { era: "1800-1849" });
+    expect(inEra.books.map((b) => b.slug)).toEqual(["pride-and-prejudice-austen"]);
+    const outOfEra = await catalogRepo.searchCatalog(db(), "pride", { era: "pre-1800" });
+    expect(outOfEra.books).toHaveLength(0);
+    expect(outOfEra.total).toBe(0);
+  });
+
+  it("narrows results by the genre (subject) filter", async () => {
+    const romance = await catalogRepo.searchCatalog(db(), "pride", { subject: "romance" });
+    expect(romance.books.map((b) => b.slug)).toEqual(["pride-and-prejudice-austen"]);
+    const philosophy = await catalogRepo.searchCatalog(db(), "pride", { subject: "philosophy" });
+    expect(philosophy.books).toHaveLength(0);
+  });
+});
+
+describe("author search + starter set", () => {
+  beforeEach(async () => {
+    await db().delete(schema.books);
+    await seed();
+  });
+
+  it("finds catalog authors by name substring, ranked by book count", async () => {
+    const hits = await catalogRepo.searchAuthors(db(), "austen");
+    expect(hits).toEqual([{ author: "Jane Austen", authorSlug: "jane-austen", bookCount: 1 }]);
+  });
+
+  it("never surfaces community authors", async () => {
+    const hits = await catalogRepo.searchAuthors(db(), "some author");
+    expect(hits).toHaveLength(0);
+  });
+
+  it("returns award-winning, cover-bearing catalog books as the starter set", async () => {
+    const starters = await catalogRepo.listStarterBooks(db(), 6);
+    // Only Karamazov has both a cover and an award in the seed; Pride has neither.
+    expect(starters.map((b) => b.slug)).toEqual(["the-brothers-karamazov-dostoyevsky"]);
+  });
 });
 
 describe("catalog browse + detail", () => {
@@ -95,5 +147,111 @@ describe("catalog browse + detail", () => {
   it("resolves a book by slug, including community books (noindex pages)", async () => {
     const community = await catalogRepo.getBookBySlug(db(), "a-modern-community-title");
     expect(community?.sourceType).toBe("community");
+  });
+});
+
+describe("today's pick (botm -> staff pick fallback)", () => {
+  beforeEach(async () => {
+    await db().delete(schema.books);
+    await db().delete(schema.bookOfTheMonth);
+    await seed();
+  });
+
+  it("returns null when neither an published BOTM nor a staff pick exists", async () => {
+    expect(await catalogRepo.getTodaysPick(db())).toBeNull();
+  });
+
+  it("falls back to a staff pick when BOTM is unpublished", async () => {
+    const d = db();
+    const [pride] = await d
+      .select({ id: schema.books.id })
+      .from(schema.books)
+      .where(eq(schema.books.slug, "pride-and-prejudice-austen"));
+    await d
+      .update(schema.books)
+      .set({ isStaffPick: true, staffPickNote: "A perfect first classic." })
+      .where(eq(schema.books.id, pride.id));
+
+    const pick = await catalogRepo.getTodaysPick(d);
+    expect(pick?.source).toBe("staff");
+    expect(pick?.book.slug).toBe("pride-and-prejudice-austen");
+    expect(pick?.note).toBe("A perfect first classic.");
+  });
+
+  it("prefers a published BOTM over a staff pick", async () => {
+    const d = db();
+    const [karamazov] = await d
+      .select({ id: schema.books.id })
+      .from(schema.books)
+      .where(eq(schema.books.slug, "the-brothers-karamazov-dostoyevsky"));
+    const [pride] = await d
+      .select({ id: schema.books.id })
+      .from(schema.books)
+      .where(eq(schema.books.slug, "pride-and-prejudice-austen"));
+    await d.update(schema.books).set({ isStaffPick: true }).where(eq(schema.books.id, pride.id));
+    await d.insert(schema.bookOfTheMonth).values({
+      bookId: karamazov.id,
+      year: 2026,
+      month: 7,
+      isPublished: true,
+      curatorNote: "The month's pick.",
+    });
+
+    const pick = await catalogRepo.getTodaysPick(d);
+    expect(pick?.source).toBe("botm");
+    expect(pick?.book.slug).toBe("the-brothers-karamazov-dostoyevsky");
+  });
+});
+
+describe("journal tags + archive", () => {
+  beforeEach(async () => {
+    await db().delete(schema.journalPosts);
+    await db()
+      .insert(schema.journalPosts)
+      .values([
+        {
+          title: "On Dostoyevsky",
+          slug: "on-dostoyevsky",
+          content: "...",
+          excerpt: "A close reading.",
+          tags: ["russian-literature", "philosophy"],
+          isPublished: true,
+          publishedAt: new Date("2026-01-15"),
+        },
+        {
+          title: "Austen's Wit",
+          slug: "austens-wit",
+          content: "...",
+          excerpt: "On comedy of manners.",
+          tags: ["romance"],
+          isPublished: true,
+          publishedAt: new Date("2026-02-01"),
+        },
+        {
+          title: "Draft in progress",
+          slug: "draft-in-progress",
+          content: "...",
+          tags: ["romance"],
+          isPublished: false,
+        },
+      ]);
+  });
+
+  it("counts tags across published posts only", async () => {
+    const tags = await catalogRepo.listTags(db());
+    expect(tags).toEqual(
+      expect.arrayContaining([
+        { tag: "russian-literature", count: 1 },
+        { tag: "philosophy", count: 1 },
+        { tag: "romance", count: 1 },
+      ]),
+    );
+  });
+
+  it("lists published posts by tag, newest first, excluding drafts", async () => {
+    const result = await catalogRepo.listPostsByTag(db(), "romance");
+    expect(result.posts.map((p) => p.slug)).toEqual(["austens-wit"]);
+    expect(result.posts[0].publishedAt).toBeInstanceOf(Date);
+    expect(result.posts[0].publishedAt?.toISOString().slice(0, 10)).toBe("2026-02-01");
   });
 });

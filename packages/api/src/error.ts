@@ -1,4 +1,5 @@
 // Error envelope: every failure returns { error: { code, message, details? } }.
+import { DomainError } from "@foxing/core";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
@@ -21,6 +22,11 @@ export const errors = {
   conflict: (message: string) => new AppError(409, "conflict", message),
   rateLimited: () => new AppError(429, "rate_limited", "Too many requests."),
   validation: (details: unknown) => new AppError(422, "validation", "Invalid request.", details),
+  planRequired: () => new AppError(403, "plus_required", "This is a Foxing Plus feature."),
+  quotaExceeded: (resetsAt: string) =>
+    new AppError(429, "quota", "Daily AI usage limit reached.", { resets_at: resetsAt }),
+  serviceUnavailable: (message = "Temporarily unavailable.") =>
+    new AppError(503, "unavailable", message),
 };
 
 export function errorHandler(err: Error, c: Context) {
@@ -29,6 +35,10 @@ export function errorHandler(err: Error, c: Context) {
       { error: { code: err.code, message: err.message, details: err.details } },
       err.status as never,
     );
+  }
+  // Core domain errors (authorization, not-found, conflicts) carry their own status.
+  if (err instanceof DomainError) {
+    return c.json({ error: { code: err.code, message: err.message } }, err.status as never);
   }
   if (err instanceof ZodError) {
     return c.json(

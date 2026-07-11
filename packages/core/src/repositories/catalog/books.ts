@@ -135,6 +135,12 @@ export async function getBookBySlug(db: Db, slug: string): Promise<Book | null> 
   return rows[0] ?? null;
 }
 
+/** Full book detail by id. Same resolution rules as getBookBySlug. */
+export async function getBookById(db: Db, id: string): Promise<Book | null> {
+  const rows = await db.select().from(books).where(eq(books.id, id)).limit(1);
+  return rows[0] ?? null;
+}
+
 /** Books by ids, returned in the order the ids were given (for FTS result ordering). */
 export async function getBooksByIds(db: Db, ids: string[]): Promise<BookCard[]> {
   if (ids.length === 0) return [];
@@ -189,6 +195,78 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
       epubUrl: r.epub_url,
     }),
   );
+}
+
+/**
+ * Curated starter set for onboarding: award-winning catalog books with a cover,
+ * readable ones first so the eventual "Read now" works. Deterministic order (most
+ * awarded, then title) so the handoff is stable across sessions.
+ */
+export async function listStarterBooks(db: Db, limit = 6): Promise<BookCard[]> {
+  const rows = await db.all<{
+    id: string;
+    slug: string;
+    title: string;
+    author: string;
+    author_slug: string | null;
+    cover_url: string | null;
+    publication_year: number | null;
+    epub_url: string | null;
+  }>(sql`
+    SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url,
+           b.publication_year, b.epub_url
+    FROM books b
+    JOIN book_awards ba ON ba.book_id = b.id
+    WHERE b.source_type = 'catalog' AND b.cover_url IS NOT NULL
+    GROUP BY b.id
+    ORDER BY (b.epub_url IS NOT NULL) DESC, COUNT(ba.id) DESC, b.title ASC
+    LIMIT ${limit}
+  `);
+  return rows.map((r) =>
+    toCard({
+      id: r.id,
+      slug: r.slug,
+      title: r.title,
+      author: r.author,
+      authorSlug: r.author_slug,
+      coverUrl: r.cover_url,
+      publicationYear: r.publication_year,
+      epubUrl: r.epub_url,
+    }),
+  );
+}
+
+/**
+ * Catalog books missing at least one of the given cached-generator actions
+ * (book_ai_cache), oldest-updated first. Used by the companion cache Cron/Queue to
+ * pick a small batch instead of scanning the whole catalog. Action names are passed
+ * in rather than imported, so this repository stays decoupled from the companion
+ * registry.
+ */
+export async function findBooksNeedingCache(
+  db: Db,
+  actionNames: readonly string[],
+  limit: number,
+): Promise<Book[]> {
+  const actionsList = sql.join(
+    actionNames.map((a) => sql`${a}`),
+    sql`, `,
+  );
+  const rows = await db
+    .select()
+    .from(books)
+    .where(
+      and(
+        eq(books.sourceType, "catalog"),
+        sql`(
+          SELECT COUNT(*) FROM book_ai_cache
+          WHERE book_ai_cache.book_id = ${books.id} AND book_ai_cache.action IN (${actionsList})
+        ) < ${actionNames.length}`,
+      ),
+    )
+    .orderBy(asc(books.updatedAt))
+    .limit(limit);
+  return rows;
 }
 
 /** Distinct author slugs across the catalog, for the sitemap. */

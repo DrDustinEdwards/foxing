@@ -1,6 +1,6 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import { journalPosts } from "../../schema";
 
@@ -95,4 +95,71 @@ export async function listRssPosts(db: Db, limit = 30): Promise<JournalPost[]> {
     .where(eq(journalPosts.isPublished, true))
     .orderBy(desc(journalPosts.publishedAt))
     .limit(limit);
+}
+
+export type JournalTag = { tag: string; count: number };
+
+/** Distinct tags across published posts, for the tag index and archive filters. */
+export async function listTags(db: Db): Promise<JournalTag[]> {
+  const rows = await db.all<{ tag: string; count: number }>(sql`
+    SELECT je.value AS tag, COUNT(*) AS count
+    FROM journal_posts, json_each(journal_posts.tags) je
+    WHERE journal_posts.is_published = 1 AND je.value IS NOT NULL AND je.value != ''
+    GROUP BY je.value
+    ORDER BY count DESC, tag ASC
+  `);
+  return rows.map((r) => ({ tag: r.tag, count: Number(r.count) }));
+}
+
+/** Published posts carrying one tag, newest first. */
+export async function listPostsByTag(
+  db: Db,
+  tag: string,
+  opts: { page?: number; pageSize?: number } = {},
+): Promise<JournalListResult> {
+  const page = Math.max(1, opts.page ?? 1);
+  const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 24));
+  const where = sql`journal_posts.is_published = 1
+    AND EXISTS (SELECT 1 FROM json_each(journal_posts.tags) je WHERE je.value = ${tag})`;
+
+  const rows = await db.all<{
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    cover_image_url: string | null;
+    cover_image_alt: string | null;
+    tags: string;
+    featured: number;
+    published_at: number | null;
+    reading_time_minutes: number | null;
+  }>(sql`
+    SELECT slug, title, excerpt, cover_image_url, cover_image_alt, tags, featured,
+           published_at, reading_time_minutes
+    FROM journal_posts
+    WHERE ${where}
+    ORDER BY featured DESC, published_at DESC
+    LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+  `);
+  const [{ n }] = await db.all<{ n: number }>(sql`
+    SELECT COUNT(*) AS n FROM journal_posts WHERE ${where}
+  `);
+  const total = Number(n);
+
+  return {
+    posts: rows.map((r) => ({
+      slug: r.slug,
+      title: r.title,
+      excerpt: r.excerpt,
+      coverImageUrl: r.cover_image_url,
+      coverImageAlt: r.cover_image_alt,
+      tags: JSON.parse(r.tags) as string[],
+      featured: !!r.featured,
+      publishedAt: r.published_at ? new Date(r.published_at) : null,
+      readingTimeMinutes: r.reading_time_minutes,
+    })),
+    total,
+    page,
+    pageSize,
+    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+  };
 }

@@ -47,6 +47,11 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
           title="The Journal"
           lede="Essays on the books in the library, and the ideas inside them."
         />
+        <p className="-mt-6 mb-10">
+          <Link to="/journal/archive" className="font-ui text-sm text-brand-text hover:underline">
+            All articles
+          </Link>
+        </p>
 
         {result.posts.length === 0 ? (
           <EmptyState title="Nothing published yet" body="The first essays are on the way." />
