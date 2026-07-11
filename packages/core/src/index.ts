@@ -9,3 +9,5 @@ export * from "./repositories";
 export * from "./events";
 export * from "./domain";
 export * from "./config";
+export * as companion from "./companion";
+export type * from "./companion";
