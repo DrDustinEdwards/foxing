@@ -32,6 +32,35 @@ export default [
   route("lists/:id", "routes/list-detail.tsx"),
   route("lists/:id/edit", "routes/list-edit.tsx"),
 
+  // Personal app surfaces (signed-in). Notifications, vocabulary, commonplace/highlights
+  // aggregates, lists index, stats. Gated in-loader by requireProfile.
+  route("notifications", "routes/notifications.tsx"),
+  route("vocabulary", "routes/vocabulary.tsx"),
+  route("commonplace", "routes/commonplace.tsx"),
+  route("highlights", "routes/highlights.tsx"),
+  route("lists", "routes/lists.tsx"),
+  route("stats", "routes/stats.tsx"),
+
+  // Admin (operator-only, gated on profiles.is_admin in every loader). Reads run
+  // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
+  route("admin", "routes/admin.tsx"),
+  route("admin/book-of-month", "routes/admin-botm.tsx"),
+  route("admin/celebrity-picks", "routes/admin-picks.tsx"),
+  route("admin/books", "routes/admin-books.tsx"),
+  route("admin/clubs", "routes/admin-clubs.tsx"),
+  route("admin/users", "routes/admin-users.tsx"),
+  route("admin/users/:id", "routes/admin-user-detail.tsx"),
+  route("admin/journal", "routes/admin-journal.tsx"),
+  route("admin/journal/new", "routes/admin-journal-new.tsx"),
+  route("admin/journal/:id", "routes/admin-journal-edit.tsx"),
+  route("admin/notifications", "routes/admin-notifications.tsx"),
+  route("admin/content", "routes/admin-content.tsx"),
+  route("admin/analytics", "routes/admin-analytics.tsx"),
+
+  // Content pages (static, edge-cached).
+  route("guide", "routes/guide.tsx"),
+  route("app-guide", "routes/app-guide.tsx"),
+
   // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
   route("companion-test", "routes/companion-test.tsx"),
 
