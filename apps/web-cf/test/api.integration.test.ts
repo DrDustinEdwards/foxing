@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { createApi } from "@foxing/api";
 import { billing, createDb, schema } from "@foxing/core";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 // A stub session resolver: the Worker normally injects a Better Auth-backed one.
@@ -101,5 +102,51 @@ describe("profiles API (web -> api -> core -> D1)", () => {
       body: JSON.stringify({ username: "taken" }),
     });
     expect(res.status).toBe(409);
+  });
+
+  it("persists visibility prefs through PATCH /me/visibility", async () => {
+    await seedUser("u_vis");
+    const db = createDb(env.DB);
+    await db.insert(schema.profiles).values({
+      id: "u_vis",
+      username: "visuser",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const res = await call("/me/visibility", {
+      method: "PATCH",
+      headers: { "x-test-user": "u_vis", "content-type": "application/json" },
+      body: JSON.stringify({ profile: "private", progress: "public", defaultAnnotation: "friends" }),
+    });
+    expect(res.status).toBe(200);
+
+    const [row] = await db
+      .select({ visibility: schema.profiles.visibility })
+      .from(schema.profiles)
+      .where(eq(schema.profiles.id, "u_vis"));
+    expect(row.visibility).toEqual({
+      profile: "private",
+      progress: "public",
+      defaultAnnotation: "friends",
+    });
+  });
+
+  it("rejects an invalid visibility value", async () => {
+    await seedUser("u_vis2");
+    const db = createDb(env.DB);
+    await db.insert(schema.profiles).values({
+      id: "u_vis2",
+      username: "visuser2",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const res = await call("/me/visibility", {
+      method: "PATCH",
+      headers: { "x-test-user": "u_vis2", "content-type": "application/json" },
+      body: JSON.stringify({ profile: "everyone" }),
+    });
+    expect(res.status).toBe(422);
   });
 });
