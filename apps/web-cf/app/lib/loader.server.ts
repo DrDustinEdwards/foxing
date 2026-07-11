@@ -6,9 +6,10 @@ import type { RouterContextProvider } from "react-router";
 import { cloudflareContext } from "~/context";
 
 export function loaderBase(context: Readonly<RouterContextProvider>, request: Request) {
-  const { env } = context.get(cloudflareContext);
+  const { env, ctx } = context.get(cloudflareContext);
   return {
     env,
+    ctx,
     db: createDb(env.DB),
     origin: new URL(request.url).origin,
   };

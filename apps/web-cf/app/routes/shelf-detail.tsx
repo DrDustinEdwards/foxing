@@ -1,0 +1,60 @@
+import { Link, redirect } from "react-router";
+import { BookCard, BookGrid } from "~/components/book-card";
+import { PageShell } from "~/components/page-shell";
+import { Container, Eyebrow } from "~/components/ui";
+import { cloudflareContext } from "~/context";
+import { getAuth } from "~/lib/auth.server";
+import { loadShelfDetail } from "~/lib/library.server";
+import { requireProfileForUser } from "~/lib/profile.server";
+import type { Route } from "./+types/shelf-detail";
+
+export async function loader({ context, request, params }: Route.LoaderArgs) {
+  const { env } = context.get(cloudflareContext);
+  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  if (!session?.user) throw redirect(`/login?redirect=/shelves/${params.id}`);
+  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
+  const detail = await loadShelfDetail(env, session.user.id, params.id);
+  if (!detail) throw new Response("Not found", { status: 404 });
+  return detail;
+}
+
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: loaderData ? `${loaderData.shelf.name} | Foxing` : "Shelf | Foxing" },
+    { name: "robots", content: "noindex" },
+  ];
+}
+
+export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
+  const { shelf, books } = loaderData;
+  return (
+    <PageShell>
+      <Container>
+        <Link to="/library" className="font-ui text-sm text-tertiary hover:text-brand-text">
+          All shelves
+        </Link>
+        <h1 className="mt-2 font-display text-4xl">{shelf.name}</h1>
+        {shelf.description ? (
+          <p className="mt-2 max-w-prose font-body text-secondary">{shelf.description}</p>
+        ) : null}
+
+        <div className="mt-8">
+          <Eyebrow className="mb-4">
+            {books.length} {books.length === 1 ? "book" : "books"}
+          </Eyebrow>
+          {books.length === 0 ? (
+            <p className="font-ui text-sm text-tertiary">
+              Add books to this shelf from any book page.
+            </p>
+          ) : (
+            <BookGrid>
+              {books.map((b) => (
+                <BookCard key={b.slug} book={b} />
+              ))}
+            </BookGrid>
+          )}
+        </div>
+      </Container>
+    </PageShell>
+  );
+}

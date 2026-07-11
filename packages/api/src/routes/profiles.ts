@@ -2,7 +2,13 @@
 // GET /u/:username) plus onboarding, which fires the profile.onboarded emission.
 // Handlers stay thin: validate, call a core function, return.
 import { Hono } from "hono";
-import { onboardInput, onboardProfile, profilesRepo, updateMeInput } from "@foxing/core";
+import {
+  onboardInput,
+  onboardProfile,
+  profilesRepo,
+  updateMeInput,
+  visibilityPrefsInput,
+} from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
@@ -34,6 +40,15 @@ profileRoutes.patch("/me", rateLimit("write"), async (c) => {
   const patch = await parseJson(c, updateMeInput);
   const profile = await profilesRepo.updateProfile(c.get("db"), session.id, patch);
   return c.json({ profile });
+});
+
+// PATCH /me/visibility - set the profile/progress/default-annotation visibility prefs.
+profileRoutes.patch("/me/visibility", rateLimit("write"), async (c) => {
+  const session = requireSession(c);
+  if (!c.get("profile")) throw errors.notFound("Onboard before editing your settings.");
+  const prefs = await parseJson(c, visibilityPrefsInput);
+  await profilesRepo.setVisibilityPrefs(c.get("db"), session.id, prefs);
+  return c.json({ ok: true });
 });
 
 // GET /u/:username - public, visibility-aware projection.

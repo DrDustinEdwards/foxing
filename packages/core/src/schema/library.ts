@@ -44,6 +44,10 @@ export const profiles = sqliteTable("profiles", {
   languagePreference: text("language_preference"),
   themePreference: text("theme_preference"),
   subscriptionTier: text("subscription_tier").notNull().default("free"), // free | plus
+  // Stripe billing (Phase 4b). The webhook is the single writer of these + tier.
+  stripeCustomerId: text("stripe_customer_id"),
+  subscriptionStatus: text("subscription_status"), // Stripe status: active|trialing|past_due|canceled|...
+  subscriptionPeriodEnd: ts("subscription_period_end"), // current period end (renewal / trial end)
   visibility: json<VisibilityPrefs>("visibility"),
   notificationPrefs: json<NotificationPrefs>("notification_prefs"),
   isAdmin: bool("is_admin").notNull().default(false),
@@ -178,8 +182,14 @@ export const vocabulary = sqliteTable(
     mastered: bool("mastered").notNull().default(false),
     lookedUpAt: ts("looked_up_at").notNull(),
     createdAt: createdAt(),
+    // Nullable so the additive migration needs no backfill default (SQLite forbids a
+    // NOT NULL ADD COLUMN without one). Sync coalesces null -> created_at for LWW/pull.
+    updatedAt: ts("updated_at"),
   },
-  (t) => [index("vocabulary_user_idx").on(t.userId)],
+  (t) => [
+    index("vocabulary_user_idx").on(t.userId),
+    index("vocabulary_updated_idx").on(t.userId, t.updatedAt),
+  ],
 );
 
 export const badges = sqliteTable("badges", {

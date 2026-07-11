@@ -1,7 +1,8 @@
-// Platform (3 tables) + push_tokens (Phase 7). notifications written only by core
-// event handlers. admin_audit_log records every admin/operator write.
+// Platform (4 tables) + push_tokens (Phase 7). notifications written only by core
+// event handlers. admin_audit_log records every admin/operator write. announcements
+// is the admin-managed site-content surface (the legacy /admin/content home).
 import { sqliteTable, text, index, primaryKey } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, json, ts } from "./_helpers";
+import { bool, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 
 export const notifications = sqliteTable(
@@ -37,6 +38,28 @@ export const reports = sqliteTable(
     createdAt: createdAt(),
   },
   (t) => [index("reports_status_idx").on(t.status)],
+);
+
+// Site content / announcements, managed from /admin/content. An announcement is live
+// when is_active AND now is within [starts_at, ends_at] (null bounds = open-ended).
+// Placement selects the surface: banner (site-wide strip), home, or journal.
+export const announcements = sqliteTable(
+  "announcements",
+  {
+    id: idPk(),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    placement: text("placement").notNull().default("banner"), // banner | home | journal
+    linkUrl: text("link_url"),
+    linkLabel: text("link_label"),
+    isActive: bool("is_active").notNull().default(false),
+    startsAt: ts("starts_at"),
+    endsAt: ts("ends_at"),
+    createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index("announcements_active_idx").on(t.isActive, t.placement)],
 );
 
 export const adminAuditLog = sqliteTable("admin_audit_log", {
