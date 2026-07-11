@@ -132,6 +132,18 @@ export async function setSubscriptionStatus(
     .where(eq(profiles.id, userId));
 }
 
+/** Set the notification_prefs json (Phase 7 push/in-app category + quiet-hours prefs). */
+export async function setNotificationPrefs(
+  db: Db,
+  userId: string,
+  prefs: Profile["notificationPrefs"],
+): Promise<void> {
+  await db
+    .update(profiles)
+    .set({ notificationPrefs: prefs, updatedAt: new Date() })
+    .where(eq(profiles.id, userId));
+}
+
 export function toPublicProfile(p: Profile): PublicProfile {
   return {
     username: p.username,

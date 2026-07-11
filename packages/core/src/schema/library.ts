@@ -182,8 +182,14 @@ export const vocabulary = sqliteTable(
     mastered: bool("mastered").notNull().default(false),
     lookedUpAt: ts("looked_up_at").notNull(),
     createdAt: createdAt(),
+    // Nullable so the additive migration needs no backfill default (SQLite forbids a
+    // NOT NULL ADD COLUMN without one). Sync coalesces null -> created_at for LWW/pull.
+    updatedAt: ts("updated_at"),
   },
-  (t) => [index("vocabulary_user_idx").on(t.userId)],
+  (t) => [
+    index("vocabulary_user_idx").on(t.userId),
+    index("vocabulary_updated_idx").on(t.userId, t.updatedAt),
+  ],
 );
 
 export const badges = sqliteTable("badges", {

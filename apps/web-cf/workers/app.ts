@@ -4,7 +4,7 @@
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
 import { AppError, createApi, rateLimit } from "@foxing/api";
-import { billing, catalogRepo, companion, createDb } from "@foxing/core";
+import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext } from "../app/context";
@@ -70,7 +70,12 @@ const api = createApi({
   // routes answer 503 cleanly, and everything else works.
   resolveBilling: (env) => {
     const e = env as unknown as Env;
-    if (e.STRIPE_SECRET_KEY && e.STRIPE_WEBHOOK_SECRET && e.STRIPE_PRICE_MONTHLY && e.STRIPE_PRICE_ANNUAL) {
+    if (
+      e.STRIPE_SECRET_KEY &&
+      e.STRIPE_WEBHOOK_SECRET &&
+      e.STRIPE_PRICE_MONTHLY &&
+      e.STRIPE_PRICE_ANNUAL
+    ) {
       return {
         client: billing.createStripeBilling({
           secretKey: e.STRIPE_SECRET_KEY,
@@ -195,11 +200,39 @@ app.all("*", async (c) => {
 // the manual proof script and the admin ops route call (one generation code path).
 type CacheJobMessage = { bookId: string };
 
+// Phase 7 push delivery sweep. Runs on a frequent cron: it push-delivers notifications
+// created since the last sweep (deduped in KV), gated per user by category prefs + quiet
+// hours (domain/push). Kept off the notification write path so core stays binding-free;
+// the cadence trades a little latency for that decoupling. In-app notifications are
+// unaffected. Requires the frequent cron in wrangler.jsonc triggers.
+const PUSH_SWEEP_CRON = "*/5 * * * *";
+const PUSH_SWEEP_LOOKBACK_MS = 10 * 60 * 1000;
+
+async function runPushSweep(env: Env): Promise<void> {
+  const db = createDb(env.DB);
+  const kv = env.APP_KV;
+  const now = Date.now();
+  const lastRaw = await kv.get("push:last_sweep");
+  const since = lastRaw ? Number(lastRaw) : now - PUSH_SWEEP_LOOKBACK_MS;
+  try {
+    await push.sweepPushDeliveries(db, { fetchImpl: fetch, nowUtcMs: now, kv }, since);
+  } finally {
+    await kv.put("push:last_sweep", String(now));
+  }
+}
+
 async function scheduled(
-  _event: ScheduledController,
+  event: ScheduledController,
   env: Env,
   ctx: ExecutionContext,
 ): Promise<void> {
+  // Frequent cron: deliver queued push notifications.
+  if (event.cron === PUSH_SWEEP_CRON) {
+    ctx.waitUntil(runPushSweep(env));
+    return;
+  }
+
+  // Daily cron: enqueue catalog books needing cached AI generation.
   const db = createDb(env.DB);
   const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
   const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);

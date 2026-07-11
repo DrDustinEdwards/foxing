@@ -15,6 +15,14 @@ export * as diaryDomain from "./diary";
 export * as reactionsDomain from "./reactions";
 export * as recapDomain from "./recap";
 export type { Recap, RecapBook } from "./recap";
+
+export * as syncDomain from "./sync";
+export { resolveSyncOp } from "./sync";
+export type { SyncDecision, SyncOpResult, SyncPull } from "./sync";
+
+export * as pushDomain from "./push";
+export { shouldDeliverPush } from "./push";
+export type { NotificationPrefs, PushDecision, PushCategory } from "./push";
 export * as membership from "./membership";
 export * as pollResult from "./poll-result";
 export {
