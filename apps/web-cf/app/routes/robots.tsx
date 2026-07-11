@@ -9,6 +9,7 @@ Allow: /
 Disallow: /me
 Disallow: /onboarding
 Disallow: /search
+Disallow: /companion-test
 
 Sitemap: ${absoluteUrl(origin, "/sitemap.xml")}
 `;

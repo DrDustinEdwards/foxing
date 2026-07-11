@@ -14,6 +14,9 @@ export default [
   route("library", "routes/library.tsx"),
   route("shelves/:id", "routes/shelf-detail.tsx"),
 
+  // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
+  route("companion-test", "routes/companion-test.tsx"),
+
   // Public catalog (edge SSR + Cache API). Slugs for SEO (mobile uses ids).
   route("books", "routes/books.tsx"),
   route("books/:slug", "routes/book-detail.tsx"),
