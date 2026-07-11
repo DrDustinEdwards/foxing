@@ -14,6 +14,13 @@ export default [
   route("library", "routes/library.tsx"),
   route("shelves/:id", "routes/shelf-detail.tsx"),
 
+  // Clubs (Phase 5). List + create (Plus-gated) + detail with the live layer + threads.
+  route("clubs", "routes/clubs.tsx"),
+  route("clubs/new", "routes/club-new.tsx"),
+  route("clubs/:slug", "routes/club-detail.tsx"),
+  route("clubs/:slug/t/:threadId", "routes/club-thread.tsx"),
+  route("join/:code", "routes/join-code.tsx"),
+
   // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
   route("companion-test", "routes/companion-test.tsx"),
 
