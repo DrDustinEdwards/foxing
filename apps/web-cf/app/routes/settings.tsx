@@ -4,6 +4,7 @@
 // Every write shows a visible pending + role=alert error, never a silent no-op.
 import { useState } from "react";
 import { PageShell } from "~/components/page-shell";
+import { Paywall } from "~/components/paywall";
 import { cloudflareContext } from "~/context";
 import { authClient } from "~/lib/auth-client";
 import { requireProfile } from "~/lib/profile.server";
@@ -18,6 +19,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     displayName: profile.displayName ?? "",
     bio: profile.bio ?? "",
     favoriteGenres: (profile.favoriteGenres ?? []).join(", "),
+    tier: profile.subscriptionTier === "plus" ? ("plus" as const) : ("free" as const),
+    subscriptionStatus: profile.subscriptionStatus,
+    periodEndLabel: profile.subscriptionPeriodEnd
+      ? new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(profile.subscriptionPeriodEnd)
+      : null,
   };
 }
 
@@ -26,18 +32,104 @@ export function meta() {
 }
 
 export default function Settings({ loaderData }: Route.ComponentProps) {
+  const [paywallOpen, setPaywallOpen] = useState(false);
   return (
     <PageShell>
       <Container className="max-w-2xl">
         <PageHeader eyebrow="Account" title="Settings" />
         <div className="space-y-8">
           <ProfileSection initial={loaderData} />
+          <BillingSection
+            tier={loaderData.tier}
+            status={loaderData.subscriptionStatus}
+            periodEndLabel={loaderData.periodEndLabel}
+            onUpgrade={() => setPaywallOpen(true)}
+          />
           <PasswordSection />
           <DataSection />
           <DangerSection />
         </div>
       </Container>
+      <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </PageShell>
+  );
+}
+
+function BillingSection({
+  tier,
+  status,
+  periodEndLabel,
+  onUpgrade,
+}: {
+  tier: "free" | "plus";
+  status: string | null;
+  periodEndLabel: string | null;
+  onUpgrade: () => void;
+}) {
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const isPlus = tier === "plus";
+
+  async function manage() {
+    setPending(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/v1/billing/portal", { method: "POST" });
+      const body = (await res.json().catch(() => null)) as {
+        url?: string;
+        error?: { message?: string };
+      } | null;
+      if (res.ok && body?.url) {
+        window.location.assign(body.url);
+        return;
+      }
+      setError(body?.error?.message ?? `Could not open billing (${res.status}).`);
+    } catch {
+      setError("Could not reach billing. Check your connection and try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Card title="Plan">
+      {isPlus ? (
+        <div className="space-y-3">
+          <p className="font-ui text-sm text-secondary">
+            You are on <span className="font-medium text-primary">Foxing Plus</span>
+            {status ? ` (${status})` : ""}.
+            {periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
+          </p>
+          <button
+            type="button"
+            onClick={manage}
+            disabled={pending}
+            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
+          >
+            {pending ? "Opening..." : "Manage billing"}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <p className="font-ui text-sm text-secondary">
+            You are on the <span className="font-medium text-primary">Free</span> plan. Plus adds
+            the AI reading companion, unlimited clubs, and more.
+          </p>
+          <button
+            type="button"
+            onClick={onUpgrade}
+            className="rounded-md bg-brand-ui px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:opacity-90"
+          >
+            Upgrade to Plus
+          </button>
+        </div>
+      )}
+      {error ? (
+        <p className="mt-3 font-ui text-sm text-error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </Card>
   );
 }
 

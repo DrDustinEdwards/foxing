@@ -4,7 +4,7 @@
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
 import { AppError, createApi, rateLimit } from "@foxing/api";
-import { catalogRepo, companion, createDb } from "@foxing/core";
+import { billing, catalogRepo, companion, createDb } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext } from "../app/context";
@@ -63,6 +63,22 @@ const api = createApi({
         "ANTHROPIC_API_KEY is not configured. Run: wrangler secret put ANTHROPIC_API_KEY",
       );
     };
+  },
+  // Stripe secrets + price ids are not set yet (Phase 4b gate). When all four are
+  // present the real client is used; otherwise the not-configured stub makes billing
+  // routes answer 503 cleanly, and everything else works.
+  resolveBilling: (env) => {
+    const e = env as unknown as Env;
+    if (e.STRIPE_SECRET_KEY && e.STRIPE_WEBHOOK_SECRET && e.STRIPE_PRICE_MONTHLY && e.STRIPE_PRICE_ANNUAL) {
+      return {
+        client: billing.createStripeBilling({
+          secretKey: e.STRIPE_SECRET_KEY,
+          webhookSecret: e.STRIPE_WEBHOOK_SECRET,
+        }),
+        prices: { monthly: e.STRIPE_PRICE_MONTHLY, annual: e.STRIPE_PRICE_ANNUAL },
+      };
+    }
+    return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
   },
 });
 
