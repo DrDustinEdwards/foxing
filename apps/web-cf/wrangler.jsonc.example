@@ -18,6 +18,12 @@
     }
   ],
   "kv_namespaces": [{ "binding": "APP_KV", "id": "<KV_NAMESPACE_ID>" }],
+  // Phase 5 live layer: one ClubRoom Durable Object per club (fan-out only, never writes
+  // D1). See workers/club-room.ts.
+  "durable_objects": {
+    "bindings": [{ "name": "CLUB_ROOM", "class_name": "ClubRoom" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ClubRoom"] }],
   "ratelimits": [
     { "name": "AUTH_RL", "namespace_id": "1001", "simple": { "limit": 5, "period": 60 } },
     { "name": "WRITE_RL", "namespace_id": "1002", "simple": { "limit": 60, "period": 60 } },
