@@ -21,7 +21,9 @@ const PRIMARY_LINKS = [
 const SECONDARY_LINKS = [
   { to: "/home", label: "Home" },
   { to: "/library", label: "Library" },
+  { to: "/feed", label: "Feed" },
   { to: "/clubs", label: "Clubs" },
+  { to: "/people", label: "People" },
 ];
 
 function Wordmark({ to }: { to: string }) {

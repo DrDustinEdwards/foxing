@@ -21,6 +21,17 @@ export default [
   route("clubs/:slug/t/:threadId", "routes/club-thread.tsx"),
   route("join/:code", "routes/join-code.tsx"),
 
+  // Social (Phase 6). Feed, people/close-friends, public profiles, diary, lists, recap.
+  route("feed", "routes/feed.tsx"),
+  route("people", "routes/people.tsx"),
+  route("u/:username", "routes/u-profile.tsx"),
+  route("u/:username/recap/:year", "routes/recap.tsx"),
+  route("diary/new", "routes/diary-new.tsx"),
+  route("diary/:id/edit", "routes/diary-edit.tsx"),
+  route("lists/new", "routes/list-new.tsx"),
+  route("lists/:id", "routes/list-detail.tsx"),
+  route("lists/:id/edit", "routes/list-edit.tsx"),
+
   // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
   route("companion-test", "routes/companion-test.tsx"),
 
@@ -49,6 +60,7 @@ export default [
 
   // SEO + share surfaces.
   route("og/book/:slug", "routes/og-book.tsx"),
+  route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
   route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),
