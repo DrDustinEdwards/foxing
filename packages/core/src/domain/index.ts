@@ -1,6 +1,8 @@
 export * from "./account";
 export * from "./onboarding";
 export * from "./text";
+export * as annotationsDomain from "./annotations";
+export { resolveDefaultAnnotationVisibility } from "./annotations";
 export * as libraryDomain from "./library";
 export { changeBookStatus } from "./library";
 

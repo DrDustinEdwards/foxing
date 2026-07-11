@@ -8,7 +8,17 @@ export * as catalogRepo from "./catalog";
 export type * from "./catalog";
 
 export * as libraryRepo from "./library";
-export type { LibraryEntry, UserBook, CustomShelf, ReadingGoal, ReadingStreak } from "./library";
+export type {
+  LibraryEntry,
+  UserBook,
+  CustomShelf,
+  ReadingGoal,
+  ReadingStreak,
+  VocabularyEntry,
+} from "./library";
+
+export * as annotationsRepo from "./annotations";
+export type { Annotation, AnnotationCard } from "./annotations";
 
 export * as companionRepo from "./companion";
 export type { CompanionThread, CompanionMessageRow, BookAiCacheRow } from "./companion";
@@ -48,3 +58,15 @@ export type { PushToken, DeliveryContext } from "./push";
 
 export * as notificationsRepo from "./notifications";
 export type { Notification } from "./notifications";
+
+export * as adminRepo from "./admin";
+export type {
+  AdminStats,
+  AdminUserRow,
+  AdminBookRow,
+  AdminBotmRow,
+  AdminPickRow,
+  AdminClubRow,
+  Announcement,
+  AuditRow,
+} from "./admin";
