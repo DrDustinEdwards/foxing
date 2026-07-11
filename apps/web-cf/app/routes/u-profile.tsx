@@ -75,6 +75,7 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
     diary,
     lists,
     activity,
+    currentlyReading,
     signedIn,
   } = loaderData;
   const name = profile.displayName ?? profile.username;
@@ -132,6 +133,40 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             </div>
           )}
         </header>
+
+        {currentlyReading.length > 0 ? (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-2xl">Currently reading</h2>
+            <ul className="flex flex-wrap gap-4">
+              {currentlyReading.map((b) => (
+                <li key={b.bookId} className="w-32">
+                  <Link to={`/books/${b.slug}`} className="group block">
+                    <span className="block overflow-hidden rounded-cover border border-border-subtle bg-sunken">
+                      {b.coverUrl ? (
+                        <img
+                          src={b.coverUrl}
+                          alt=""
+                          className="aspect-[2/3] w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <span className="flex aspect-[2/3] w-full items-center justify-center px-2 text-center font-ui text-xs text-tertiary">
+                          {b.title}
+                        </span>
+                      )}
+                    </span>
+                    <span className="mt-1.5 block truncate font-ui text-xs text-primary group-hover:text-brand-text">
+                      {b.title}
+                    </span>
+                    <span className="block truncate font-mono text-[0.65rem] text-tertiary">
+                      {Math.round(b.progressPct)}% read
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
           <div className="flex flex-col gap-6">

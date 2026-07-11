@@ -7,6 +7,7 @@ import {
   catalogRepo,
   createDb,
   diaryRepo,
+  libraryRepo,
   profilesRepo,
   recapDomain,
   socialDomain,
@@ -92,6 +93,12 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
   // profile-level gate coarse; per-section prefs refine what the owner sees of others).
   if (!isOwner && profileVis !== "public") return null;
 
+  // Currently-reading is gated on the owner's progress visibility (a public/private
+  // toggle in settings). Private means only the owner sees it. This is the read-side
+  // consumption of profiles.visibility.progress, which settings writes.
+  const progressVis = profile.visibility?.progress ?? "public";
+  const showProgress = isOwner || progressVis !== "private";
+
   const allowed = await socialDomain.visibleVisibilitiesFor(db, profile.id, viewerId);
   const [
     diary,
@@ -102,6 +109,7 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     isFollowing,
     viewer,
     closeFriendIds,
+    currentlyReading,
   ] = await Promise.all([
     diaryRepo.listEntriesForUser(db, profile.id, allowed, { limit: 30 }),
     socialRepo.listListsForUser(db, profile.id, { publicOnly: !isOwner }),
@@ -111,6 +119,9 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     viewerId ? socialRepo.isFollowing(db, viewerId, profile.id) : Promise.resolve(false),
     viewerId ? profilesRepo.getProfileById(db, viewerId) : Promise.resolve(null),
     viewerId ? socialRepo.listCloseFriendIds(db, viewerId) : Promise.resolve([] as string[]),
+    showProgress
+      ? libraryRepo.listCurrentlyReading(db, profile.id, 6)
+      : Promise.resolve([] as Awaited<ReturnType<typeof libraryRepo.listCurrentlyReading>>),
   ]);
 
   // Overlay diary entries with their book card.
@@ -133,6 +144,15 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     viewerHasAsCloseFriend: closeFriendIds.includes(profile.id),
     followerCount,
     followingCount,
+    // Empty when progress is private and the viewer is not the owner.
+    currentlyReading: currentlyReading.map((b) => ({
+      bookId: b.bookId,
+      title: b.title,
+      author: b.author,
+      slug: b.slug,
+      coverUrl: b.coverUrl,
+      progressPct: b.progressPct,
+    })),
     diary: diary.map((d) => ({
       id: d.id,
       bookId: d.bookId,

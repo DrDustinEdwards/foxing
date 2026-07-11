@@ -14,7 +14,17 @@ import { ClubRoom } from "./club-room";
 
 // Public catalog surfaces are anonymous and safe to cache at the edge. Segment
 // prefixes match the path or any child (/books, /books/x), not lookalikes (/booksy).
-const PUBLIC_EXACT = new Set(["/", "/sitemap.xml", "/robots.txt", "/privacy", "/terms"]);
+const PUBLIC_EXACT = new Set([
+  "/",
+  "/sitemap.xml",
+  "/robots.txt",
+  "/privacy",
+  "/terms",
+  "/about",
+  "/features",
+  "/guide",
+  "/app-guide",
+]);
 const PUBLIC_PREFIXES = [
   "/books",
   "/authors",

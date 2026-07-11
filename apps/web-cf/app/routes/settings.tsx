@@ -1,6 +1,7 @@
 // Account settings (auth-gated, noindex): profile fields, plan, visibility, appearance,
 // close friends, password, data export, and account deletion. Every write shows a visible
 // pending + role=alert error, never a silent no-op.
+import { pushDomain } from "@foxing/core";
 import { useState } from "react";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
@@ -22,6 +23,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const isPlus = profile.subscriptionTier === "plus";
   const vis = profile.visibility ?? {};
   const closeFriends = await loadCloseFriends(env, user.id);
+  // Effective notification prefs: each category's stored override, or its quiet default.
+  const notifPrefs = profile.notificationPrefs ?? null;
+  const notifications = {
+    categories: Object.fromEntries(
+      pushDomain.PUSH_CATEGORIES.map((cat) => [cat, pushDomain.categoryEnabled(cat, notifPrefs)]),
+    ) as Record<(typeof pushDomain.PUSH_CATEGORIES)[number], boolean>,
+    quietHours: notifPrefs?.quietHours ?? null,
+  };
   return {
     username: profile.username,
     displayName: profile.displayName ?? "",
@@ -49,6 +58,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       displayName: p.displayName ?? p.username,
       avatarUrl: p.avatarUrl,
     })),
+    notifications,
   };
 }
 
@@ -71,6 +81,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
             onUpgrade={() => setPaywallOpen(true)}
           />
           <VisibilitySection initial={loaderData.visibility} />
+          <NotificationsSection initial={loaderData.notifications} />
           <AppearanceSection />
           <CloseFriendsSection friends={loaderData.closeFriends} isPlus={loaderData.isPlus} />
           <PasswordSection />
@@ -293,6 +304,127 @@ function ToggleRow({
         />
       </button>
     </div>
+  );
+}
+
+const NOTIFICATION_LABELS: Record<string, { label: string; subtext: string }> = {
+  streak: { label: "Reading streak reminders", subtext: "A nudge when your streak is at risk." },
+  club_replies: { label: "Club replies", subtext: "When someone replies to you in a club." },
+  meetings: { label: "Club meetings", subtext: "Reminders before a club meeting." },
+  announcements: { label: "Foxing announcements", subtext: "Occasional product news." },
+  follows: { label: "New followers", subtext: "When a reader follows you." },
+  reactions: { label: "Reactions", subtext: "When someone reacts to your activity." },
+  club_activity: { label: "Club activity", subtext: "New posts and polls in your clubs." },
+  club_admin: { label: "Club admin", subtext: "Role changes and approvals in clubs you run." },
+  milestones: { label: "Reading milestones", subtext: "When you hit a reading milestone." },
+};
+
+function NotificationsSection({
+  initial,
+}: {
+  initial: { categories: Record<string, boolean>; quietHours: { start: string; end: string } | null };
+}) {
+  const [categories, setCategories] = useState(initial.categories);
+  const [quietOn, setQuietOn] = useState(Boolean(initial.quietHours));
+  const [start, setStart] = useState(initial.quietHours?.start ?? "22:00");
+  const [end, setEnd] = useState(initial.quietHours?.end ?? "07:00");
+  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<"saved" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setPending(true);
+    setStatus(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/v1/me/notification-prefs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          categories,
+          quietHours: quietOn ? { start, end } : null,
+        }),
+      });
+      if (!res.ok) {
+        setError("Could not save your notification settings. Try again.");
+        return;
+      }
+      setStatus("saved");
+    } catch {
+      setError("Could not save your settings. Check your connection and try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Card title="Notifications">
+      <form onSubmit={save} className="space-y-4">
+        <p className="font-ui text-sm text-secondary">
+          Choose which push notifications the mobile app sends you. Quiet hours pause them
+          overnight in your timezone.
+        </p>
+        <div className="space-y-3">
+          {Object.keys(NOTIFICATION_LABELS).map((cat) => (
+            <ToggleRow
+              key={cat}
+              checked={categories[cat] ?? false}
+              onChange={(on) => setCategories((c) => ({ ...c, [cat]: on }))}
+              label={NOTIFICATION_LABELS[cat].label}
+              subtext={NOTIFICATION_LABELS[cat].subtext}
+            />
+          ))}
+        </div>
+        <ToggleRow
+          checked={quietOn}
+          onChange={setQuietOn}
+          label="Quiet hours"
+          subtext="Pause notifications between these times."
+        />
+        {quietOn ? (
+          <div className="flex items-center gap-3">
+            <label className="font-ui text-sm text-secondary">
+              From
+              <input
+                type="time"
+                value={start}
+                onChange={(e) => setStart(e.target.value)}
+                className={`${inputClass} mt-1`}
+              />
+            </label>
+            <label className="font-ui text-sm text-secondary">
+              To
+              <input
+                type="time"
+                value={end}
+                onChange={(e) => setEnd(e.target.value)}
+                className={`${inputClass} mt-1`}
+              />
+            </label>
+          </div>
+        ) : null}
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
+          >
+            {pending ? "Saving..." : "Save notifications"}
+          </button>
+          {status === "saved" ? (
+            <span className="font-ui text-sm text-tertiary" role="status">
+              Saved.
+            </span>
+          ) : null}
+        </div>
+        {error ? (
+          <p className="font-ui text-sm text-error" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </form>
+    </Card>
   );
 }
 
