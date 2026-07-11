@@ -1,6 +1,6 @@
 // Hono environment for the mounted API. Bindings are bare (DB, APP_KV, rate
 // limiters) per capsid/conventions.md; Variables carry the resolved request context.
-import type { CompanionCaller, Db, Profile } from "@foxing/core";
+import type { BillingClient, BillingPriceConfig, CompanionCaller, Db, Profile } from "@foxing/core";
 
 export type Bindings = {
   DB: D1Database;
@@ -19,6 +19,7 @@ export type Variables = {
   session: SessionUser | null;
   profile: Profile | null;
   streamCompanion: CompanionCaller;
+  billing: { client: BillingClient; prices: BillingPriceConfig };
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -32,4 +33,8 @@ export type Env = { Bindings: Bindings; Variables: Variables };
 export type ApiDeps = {
   resolveSession: (req: Request, env: Bindings) => Promise<SessionUser | null>;
   resolveCompanionCaller: (env: Bindings) => CompanionCaller;
+  // Same per-request shape (secrets are only reachable via env): the Worker builds the
+  // real Stripe client + price ids from its secrets; when they are unset it returns the
+  // not-configured stub (methods throw BillingNotConfiguredError) so routes 503 cleanly.
+  resolveBilling: (env: Bindings) => { client: BillingClient; prices: BillingPriceConfig };
 };

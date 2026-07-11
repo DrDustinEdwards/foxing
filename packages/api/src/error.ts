@@ -24,6 +24,8 @@ export const errors = {
   planRequired: () => new AppError(403, "plus_required", "This is a Foxing Plus feature."),
   quotaExceeded: (resetsAt: string) =>
     new AppError(429, "quota", "Daily AI usage limit reached.", { resets_at: resetsAt }),
+  serviceUnavailable: (message = "Temporarily unavailable.") =>
+    new AppError(503, "unavailable", message),
 };
 
 export function errorHandler(err: Error, c: Context) {
