@@ -1,6 +1,22 @@
 // Hono environment for the mounted API. Bindings are bare (DB, APP_KV, rate
 // limiters) per capsid/conventions.md; Variables carry the resolved request context.
-import type { BillingClient, BillingPriceConfig, CompanionCaller, Db, Profile } from "@foxing/core";
+import type {
+  BillingClient,
+  BillingPriceConfig,
+  CompanionCaller,
+  Db,
+  LiveMessage,
+  Profile,
+} from "@foxing/core";
+
+// The live-layer seam (Phase 5). The Worker builds this from the ClubRoom Durable
+// Object namespace; tests inject a no-op. `broadcast` is called AFTER a write commits
+// to D1 (write -> commit -> notify); `connect` upgrades a membership-checked request to
+// the club's ClubRoom WebSocket. The DO is fan-out only and never writes D1.
+export type ClubLiveHub = {
+  broadcast: (clubId: string, message: LiveMessage | LiveMessage[]) => Promise<void>;
+  connect: (clubId: string, userId: string, request: Request) => Promise<Response>;
+};
 
 export type Bindings = {
   DB: D1Database;
@@ -20,6 +36,7 @@ export type Variables = {
   profile: Profile | null;
   streamCompanion: CompanionCaller;
   billing: { client: BillingClient; prices: BillingPriceConfig };
+  hub: ClubLiveHub;
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -37,4 +54,8 @@ export type ApiDeps = {
   // real Stripe client + price ids from its secrets; when they are unset it returns the
   // not-configured stub (methods throw BillingNotConfiguredError) so routes 503 cleanly.
   resolveBilling: (env: Bindings) => { client: BillingClient; prices: BillingPriceConfig };
+  // Same per-request shape: the Worker builds the hub from the ClubRoom DO namespace.
+  // Optional: when absent, createApi supplies a no-op hub so non-club callers (and the
+  // pre-Phase-5 integration suites) run without a Durable Object binding.
+  resolveHub?: (env: Bindings) => ClubLiveHub;
 };

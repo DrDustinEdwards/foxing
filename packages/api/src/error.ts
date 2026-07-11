@@ -1,4 +1,5 @@
 // Error envelope: every failure returns { error: { code, message, details? } }.
+import { DomainError } from "@foxing/core";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { ZodError } from "zod";
@@ -34,6 +35,10 @@ export function errorHandler(err: Error, c: Context) {
       { error: { code: err.code, message: err.message, details: err.details } },
       err.status as never,
     );
+  }
+  // Core domain errors (authorization, not-found, conflicts) carry their own status.
+  if (err instanceof DomainError) {
+    return c.json({ error: { code: err.code, message: err.message } }, err.status as never);
   }
   if (err instanceof ZodError) {
     return c.json(

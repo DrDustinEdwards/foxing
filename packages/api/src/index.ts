@@ -5,10 +5,12 @@ import { errorHandler } from "./error";
 import { billingDepsMw } from "./middleware/billing-deps";
 import { companionDepsMw } from "./middleware/companion-deps";
 import { contextMw } from "./middleware/context";
+import { hubDepsMw } from "./middleware/hub-deps";
 import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
 import { billingRoutes } from "./routes/billing";
+import { clubRoutes } from "./routes/clubs";
 import { companionRoutes } from "./routes/companion";
 import { companionOpsRoutes } from "./routes/companion-ops";
 import { libraryRoutes } from "./routes/library";
@@ -28,6 +30,7 @@ export function createApi(deps: ApiDeps) {
   app.use("*", profileMw);
   app.use("*", companionDepsMw(deps));
   app.use("*", billingDepsMw(deps));
+  app.use("*", hubDepsMw(deps.resolveHub));
 
   app.route("/", profileRoutes);
   app.route("/", libraryRoutes);
@@ -36,10 +39,11 @@ export function createApi(deps: ApiDeps) {
   app.route("/", companionOpsRoutes);
   app.route("/", billingRoutes);
   app.route("/", stripeWebhookRoutes);
+  app.route("/", clubRoutes);
 
   return app;
 }
 
 export { errors, AppError } from "./error";
 export { rateLimit } from "./middleware/rate-limit";
-export type { ApiDeps, Bindings, Env, SessionUser, Variables } from "./types";
+export type { ApiDeps, Bindings, ClubLiveHub, Env, SessionUser, Variables } from "./types";
