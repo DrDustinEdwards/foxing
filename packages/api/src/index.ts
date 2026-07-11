@@ -9,6 +9,7 @@ import { hubDepsMw } from "./middleware/hub-deps";
 import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
+import { adminRoutes } from "./routes/admin";
 import { billingRoutes } from "./routes/billing";
 import { clubRoutes } from "./routes/clubs";
 import { companionRoutes } from "./routes/companion";
@@ -50,6 +51,7 @@ export function createApi(deps: ApiDeps) {
   app.route("/", reactionRoutes);
   app.route("/", syncRoutes);
   app.route("/", pushRoutes);
+  app.route("/", adminRoutes);
 
   return app;
 }
