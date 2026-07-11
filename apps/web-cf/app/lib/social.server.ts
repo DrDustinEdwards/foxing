@@ -184,6 +184,15 @@ export async function loadPeople(env: Env, viewerId: string) {
   };
 }
 
+/** Just the viewer's close friends, resolved to summaries. Used by the settings section,
+ *  which lists + removes; adding new close friends happens on /people (follow-graph aware). */
+export async function loadCloseFriends(env: Env, viewerId: string): Promise<ProfileSummary[]> {
+  const db = createDb(env.DB);
+  const ids = await socialRepo.listCloseFriendIds(db, viewerId);
+  const summaries = await profilesRepo.getProfileSummaries(db, ids);
+  return ids.map((id) => summaries.get(id)).filter(Boolean) as ProfileSummary[];
+}
+
 // -- List detail ------------------------------------------------------------
 
 export async function loadListDetail(env: Env, listId: string, viewerId: string | null) {

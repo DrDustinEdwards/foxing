@@ -144,6 +144,19 @@ export async function setNotificationPrefs(
     .where(eq(profiles.id, userId));
 }
 
+/** Set the visibility json (profile / progress / default-annotation prefs). The client
+ *  sends the full object, so this is a plain replace like setNotificationPrefs. */
+export async function setVisibilityPrefs(
+  db: Db,
+  userId: string,
+  prefs: Profile["visibility"],
+): Promise<void> {
+  await db
+    .update(profiles)
+    .set({ visibility: prefs, updatedAt: new Date() })
+    .where(eq(profiles.id, userId));
+}
+
 export function toPublicProfile(p: Profile): PublicProfile {
   return {
     username: p.username,

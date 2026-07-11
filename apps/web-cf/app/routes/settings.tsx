@@ -1,29 +1,54 @@
-// Account settings (auth-gated, noindex). Scope is deliberately four things and
-// nothing else: profile fields, password change, data export, and account deletion.
-// Visibility / appearance / close-friends settings arrive with their own slices.
-// Every write shows a visible pending + role=alert error, never a silent no-op.
+// Account settings (auth-gated, noindex): profile fields, plan, visibility, appearance,
+// close friends, password, data export, and account deletion. Every write shows a visible
+// pending + role=alert error, never a silent no-op.
 import { useState } from "react";
+import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
+import { Avatar } from "~/components/ui";
+import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
+import { ThemeToggle } from "~/components/theme-toggle";
 import { cloudflareContext } from "~/context";
 import { authClient } from "~/lib/auth-client";
+import { cn } from "~/lib/cn";
 import { requireProfile } from "~/lib/profile.server";
+import { loadCloseFriends } from "~/lib/social.server";
 import { Container, PageHeader } from "~/components/ui";
 import type { Route } from "./+types/settings";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const { profile } = await requireProfile(env, request);
+  const { user, profile } = await requireProfile(env, request);
+  const isPlus = profile.subscriptionTier === "plus";
+  const vis = profile.visibility ?? {};
+  const closeFriends = await loadCloseFriends(env, user.id);
   return {
     username: profile.username,
     displayName: profile.displayName ?? "",
     bio: profile.bio ?? "",
     favoriteGenres: (profile.favoriteGenres ?? []).join(", "),
-    tier: profile.subscriptionTier === "plus" ? ("plus" as const) : ("free" as const),
+    tier: isPlus ? ("plus" as const) : ("free" as const),
+    isPlus,
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd
       ? new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(profile.subscriptionPeriodEnd)
       : null,
+    visibility: {
+      profile: vis.profile === "private" ? ("private" as const) : ("public" as const),
+      progress: vis.progress === "private" ? ("private" as const) : ("public" as const),
+      defaultAnnotation:
+        vis.defaultAnnotation === "friends"
+          ? ("friends" as const)
+          : vis.defaultAnnotation === "public"
+            ? ("public" as const)
+            : ("private" as const),
+    },
+    closeFriends: closeFriends.map((p) => ({
+      id: p.id,
+      username: p.username,
+      displayName: p.displayName ?? p.username,
+      avatarUrl: p.avatarUrl,
+    })),
   };
 }
 
@@ -45,6 +70,9 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
             periodEndLabel={loaderData.periodEndLabel}
             onUpgrade={() => setPaywallOpen(true)}
           />
+          <VisibilitySection initial={loaderData.visibility} />
+          <AppearanceSection />
+          <CloseFriendsSection friends={loaderData.closeFriends} isPlus={loaderData.isPlus} />
           <PasswordSection />
           <DataSection />
           <DangerSection />
@@ -129,6 +157,212 @@ function BillingSection({
           {error}
         </p>
       ) : null}
+    </Card>
+  );
+}
+
+type VisibilityValues = {
+  profile: "public" | "private";
+  progress: "public" | "private";
+  defaultAnnotation: "private" | "friends" | "public";
+};
+
+function VisibilitySection({ initial }: { initial: VisibilityValues }) {
+  const [profile, setProfile] = useState(initial.profile);
+  const [progress, setProgress] = useState(initial.progress);
+  const [defaultAnnotation, setDefaultAnnotation] = useState(initial.defaultAnnotation);
+  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<"saved" | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function save(event: React.FormEvent) {
+    event.preventDefault();
+    setPending(true);
+    setStatus(null);
+    setError(null);
+    try {
+      const res = await fetch("/api/v1/me/visibility", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile, progress, defaultAnnotation }),
+      });
+      if (!res.ok) {
+        setError("Could not save your visibility settings. Try again.");
+        return;
+      }
+      setStatus("saved");
+    } catch {
+      setError("Could not save your settings. Check your connection and try again.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Card title="Visibility">
+      <form onSubmit={save} className="space-y-4">
+        <ToggleRow
+          checked={profile === "public"}
+          onChange={(on) => setProfile(on ? "public" : "private")}
+          label="Public profile"
+          subtext="Let other readers find your profile, library, and reviews. When off, only you can see it."
+        />
+        <ToggleRow
+          checked={progress === "public"}
+          onChange={(on) => setProgress(on ? "public" : "private")}
+          label="Share reading progress"
+          subtext="Show what you are currently reading on your profile."
+        />
+        <label className="block">
+          <span className="mb-1 block font-ui text-sm text-secondary">
+            Default highlight and note audience
+          </span>
+          <select
+            value={defaultAnnotation}
+            onChange={(e) =>
+              setDefaultAnnotation(e.target.value as VisibilityValues["defaultAnnotation"])
+            }
+            className={inputClass}
+          >
+            <option value="private">Private (only me)</option>
+            <option value="friends">Close friends</option>
+            <option value="public">Public</option>
+          </select>
+          <span className="mt-1 block font-ui text-xs text-tertiary">
+            New highlights and notes start with this audience. You can change any one when you make it.
+          </span>
+        </label>
+        <div className="flex items-center gap-3">
+          <button
+            type="submit"
+            disabled={pending}
+            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
+          >
+            {pending ? "Saving..." : "Save visibility"}
+          </button>
+          {status === "saved" ? (
+            <span className="font-ui text-sm text-tertiary" role="status">
+              Saved.
+            </span>
+          ) : null}
+        </div>
+        {error ? (
+          <p className="font-ui text-sm text-error" role="alert">
+            {error}
+          </p>
+        ) : null}
+      </form>
+    </Card>
+  );
+}
+
+function ToggleRow({
+  checked,
+  onChange,
+  label,
+  subtext,
+}: {
+  checked: boolean;
+  onChange: (next: boolean) => void;
+  label: string;
+  subtext: string;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-4 rounded-md border border-border-subtle bg-base p-3">
+      <div className="flex flex-col">
+        <span className="font-ui text-sm font-medium text-primary">{label}</span>
+        <span className="font-ui text-xs text-tertiary">{subtext}</span>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        aria-label={label}
+        onClick={() => onChange(!checked)}
+        className={cn(
+          "relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors",
+          checked ? "bg-brand-ui" : "bg-border-strong",
+        )}
+      >
+        <span
+          aria-hidden="true"
+          className={cn(
+            "inline-block h-5 w-5 transform rounded-full bg-surface shadow-sm transition-transform",
+            checked ? "translate-x-[22px]" : "translate-x-0.5",
+          )}
+        />
+      </button>
+    </div>
+  );
+}
+
+function AppearanceSection() {
+  return (
+    <Card title="Appearance">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-col">
+          <span className="font-ui text-sm font-medium text-primary">Theme</span>
+          <span className="font-ui text-xs text-tertiary">
+            Switch between light and dark. Your choice is remembered on this device.
+          </span>
+        </div>
+        <ThemeToggle />
+      </div>
+    </Card>
+  );
+}
+
+function CloseFriendsSection({
+  friends,
+  isPlus,
+}: {
+  friends: Array<{ id: string; username: string; displayName: string; avatarUrl: string | null }>;
+  isPlus: boolean;
+}) {
+  return (
+    <Card title="Close friends">
+      <p className="font-ui text-sm text-secondary">
+        Close friends see your friends-only reviews and activity. Curating this list is part of
+        Foxing Plus.
+      </p>
+      {friends.length === 0 ? (
+        <p className="mt-4 font-ui text-sm text-tertiary">
+          No close friends yet. Add readers you follow from{" "}
+          <Link to="/people" className="text-brand-text hover:underline">
+            People
+          </Link>
+          .
+        </p>
+      ) : (
+        <ul className="mt-4 flex flex-col gap-2">
+          {friends.map((f) => (
+            <li
+              key={f.id}
+              className="flex items-center justify-between gap-3 rounded-md border border-border-subtle bg-base px-3 py-2"
+            >
+              <Link to={`/u/${f.username}`} className="flex min-w-0 items-center gap-3">
+                <Avatar src={f.avatarUrl} name={f.displayName} size="sm" />
+                <span className="min-w-0">
+                  <span className="block truncate font-ui text-sm font-medium text-primary">
+                    {f.displayName}
+                  </span>
+                  <span className="block truncate font-mono text-xs text-tertiary">
+                    @{f.username}
+                  </span>
+                </span>
+              </Link>
+              <CloseFriendToggle userId={f.id} initialClose isPlus={isPlus} />
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-4 font-ui text-sm text-tertiary">
+        Add close friends from{" "}
+        <Link to="/people" className="text-brand-text hover:underline">
+          People
+        </Link>
+        , where you can pick from the readers you follow.
+      </p>
     </Card>
   );
 }

@@ -32,3 +32,17 @@ export const updateMeInput = z
   })
   .partial();
 export type UpdateMeInput = z.infer<typeof updateMeInput>;
+
+// profiles.visibility json prefs. profile/progress are binary (the resolver treats any
+// non-"public" value as hidden); defaultAnnotation seeds a new annotation's audience and
+// matches the annotation visibility ladder (no "club" -- that is contextual, not a default).
+export const profileVisibility = z.enum(["public", "private"]);
+export const annotationDefaultVisibility = z.enum(["private", "friends", "public"]);
+export const visibilityPrefsInput = z
+  .object({
+    profile: profileVisibility,
+    progress: profileVisibility,
+    defaultAnnotation: annotationDefaultVisibility,
+  })
+  .partial();
+export type VisibilityPrefsInput = z.infer<typeof visibilityPrefsInput>;
