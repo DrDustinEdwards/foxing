@@ -8,6 +8,17 @@ import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 import { useDismiss, useRovingMenu } from "./use-menu";
 
+// Personal reading surfaces, grouped in the account menu (the secondary bar holds the
+// primary four: Home, Library, Feed, People).
+const PERSONAL_LINKS = [
+  { to: "/notifications", label: "Notifications" },
+  { to: "/lists", label: "Your lists" },
+  { to: "/highlights", label: "Highlights" },
+  { to: "/commonplace", label: "Commonplace" },
+  { to: "/vocabulary", label: "Vocabulary" },
+  { to: "/stats", label: "Reading stats" },
+];
+
 function TierBadge({ tier }: { tier: "free" | "plus" }) {
   const isPlus = tier === "plus";
   return (
@@ -109,6 +120,21 @@ export function AccountMenu({ user }: { user: NavUser }) {
             >
               Public profile
             </Link>
+          </div>
+          <div className="border-t border-border-subtle py-1">
+            {PERSONAL_LINKS.map((l) => (
+              <Link
+                key={l.to}
+                to={l.to}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
+              >
+                {l.label}
+              </Link>
+            ))}
+          </div>
+          <div className="border-t border-border-subtle py-1">
             <Link
               to="/settings"
               role="menuitem"
@@ -117,6 +143,16 @@ export function AccountMenu({ user }: { user: NavUser }) {
             >
               Settings
             </Link>
+            {user.isAdmin ? (
+              <Link
+                to="/admin"
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
+              >
+                Admin dashboard
+              </Link>
+            ) : null}
           </div>
           <div className="border-t border-border-subtle py-1">
             <button
