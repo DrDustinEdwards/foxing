@@ -44,6 +44,10 @@ export const profiles = sqliteTable("profiles", {
   languagePreference: text("language_preference"),
   themePreference: text("theme_preference"),
   subscriptionTier: text("subscription_tier").notNull().default("free"), // free | plus
+  // Stripe billing (Phase 4b). The webhook is the single writer of these + tier.
+  stripeCustomerId: text("stripe_customer_id"),
+  subscriptionStatus: text("subscription_status"), // Stripe status: active|trialing|past_due|canceled|...
+  subscriptionPeriodEnd: ts("subscription_period_end"), // current period end (renewal / trial end)
   visibility: json<VisibilityPrefs>("visibility"),
   notificationPrefs: json<NotificationPrefs>("notification_prefs"),
   isAdmin: bool("is_admin").notNull().default(false),
