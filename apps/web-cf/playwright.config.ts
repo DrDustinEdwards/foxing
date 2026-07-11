@@ -21,9 +21,11 @@ export default defineConfig({
   },
   projects: [
     { name: "setup", testMatch: /auth\.setup\.ts/, use: { ...devices["Desktop Chrome"] } },
+    // The Plus account setup (club specs need Plus to create a club).
+    { name: "setup-plus", testMatch: /auth-plus\.setup\.ts/, use: { ...devices["Desktop Chrome"] } },
     {
       name: "public",
-      testIgnore: ["**/auth.setup.ts", "**/authed/**"],
+      testIgnore: ["**/auth.setup.ts", "**/auth-plus.setup.ts", "**/authed/**", "**/authed-plus/**"],
       use: { ...devices["Desktop Chrome"] },
     },
     {
@@ -31,6 +33,12 @@ export default defineConfig({
       testDir: "./e2e/authed",
       use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/user.json" },
       dependencies: ["setup"],
+    },
+    {
+      name: "authed-plus",
+      testDir: "./e2e/authed-plus",
+      use: { ...devices["Desktop Chrome"], storageState: "e2e/.auth/plus.json" },
+      dependencies: ["setup-plus"],
     },
   ],
 });
