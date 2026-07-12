@@ -1,7 +1,7 @@
 // Library repository: shelf state (user_books), custom shelves, reading goals,
 // and streak reads. All queries are user-scoped. Status writes go through
 // domain/library.changeBookStatus (which also emits); this module is data access.
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import type { UserBookStatus } from "../enums";
 import {
@@ -11,6 +11,7 @@ import {
   readingGoals,
   readingStreaks,
   userBooks,
+  userFavorites,
   vocabulary,
 } from "../schema";
 import type { CreateGoalInput, CreateShelfInput } from "../validators/library";
@@ -122,6 +123,86 @@ export async function listLibrary(db: Db, userId: string): Promise<LibraryEntry[
     .innerJoin(books, eq(userBooks.bookId, books.id))
     .where(eq(userBooks.userId, userId))
     .orderBy(desc(userBooks.updatedAt));
+}
+
+export interface ProfileBook {
+  bookId: string;
+  title: string;
+  author: string;
+  slug: string;
+  coverUrl: string | null;
+}
+
+/** Count of finished books. Powers the profile "Books read" stat tile. */
+export async function countFinishedBooks(db: Db, userId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(userBooks)
+    .where(and(eq(userBooks.userId, userId), eq(userBooks.status, "finished")));
+  return Number(row?.n ?? 0);
+}
+
+/** The user's favorite books (user_favorites), ordered, for the profile cover row. */
+export async function listFavoriteBooks(
+  db: Db,
+  userId: string,
+  limit = 5,
+): Promise<ProfileBook[]> {
+  return db
+    .select({
+      bookId: userFavorites.bookId,
+      title: books.title,
+      author: books.author,
+      slug: books.slug,
+      coverUrl: books.coverUrl,
+    })
+    .from(userFavorites)
+    .innerJoin(books, eq(userFavorites.bookId, books.id))
+    .where(eq(userFavorites.userId, userId))
+    .orderBy(asc(userFavorites.position))
+    .limit(limit);
+}
+
+/** Recently finished books, newest first, for the public profile library preview. */
+export async function listFinishedBooks(
+  db: Db,
+  userId: string,
+  limit = 8,
+): Promise<ProfileBook[]> {
+  return db
+    .select({
+      bookId: userBooks.bookId,
+      title: books.title,
+      author: books.author,
+      slug: books.slug,
+      coverUrl: books.coverUrl,
+    })
+    .from(userBooks)
+    .innerJoin(books, eq(userBooks.bookId, books.id))
+    .where(and(eq(userBooks.userId, userId), eq(userBooks.status, "finished")))
+    .orderBy(desc(userBooks.updatedAt))
+    .limit(limit);
+}
+
+export interface PublicShelf {
+  id: string;
+  name: string;
+  bookCount: number;
+}
+
+/** Public custom shelves with book counts, for the profile shelves grid. */
+export async function listPublicShelves(db: Db, userId: string): Promise<PublicShelf[]> {
+  const rows = await db
+    .select({
+      id: customShelves.id,
+      name: customShelves.name,
+      bookCount: sql<number>`count(${customShelfBooks.bookId})`,
+    })
+    .from(customShelves)
+    .leftJoin(customShelfBooks, eq(customShelfBooks.shelfId, customShelves.id))
+    .where(and(eq(customShelves.userId, userId), eq(customShelves.isPublic, true)))
+    .groupBy(customShelves.id);
+  return rows.map((r) => ({ id: r.id, name: r.name, bookCount: Number(r.bookCount) }));
 }
 
 /** Currently-reading books for a user, newest activity first. Powers the profile

@@ -75,6 +75,8 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
   const [book, setBook] = useState<{ id: string; title: string; author: string } | null>(null);
   const [category, setCategory] = useState("");
   const [curatorNote, setCuratorNote] = useState("");
+  const [bookshopUrl, setBookshopUrl] = useState("");
+  const [amazonUrl, setAmazonUrl] = useState("");
   const [publish, setPublish] = useState(false);
   const { pending, error, setError, run } = useAdminAction({ onDone });
 
@@ -92,6 +94,8 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           month,
           category: category.trim() || null,
           curatorNote: curatorNote.trim() || null,
+          bookshopUrl: bookshopUrl.trim() || null,
+          amazonUrl: amazonUrl.trim() || null,
           isPublished: publish,
         },
       },
@@ -101,6 +105,8 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
       setBook(null);
       setCategory("");
       setCuratorNote("");
+      setBookshopUrl("");
+      setAmazonUrl("");
       setPublish(false);
     }
   }
@@ -154,6 +160,28 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
             value={curatorNote}
             onChange={(e) => setCuratorNote(e.target.value)}
             rows={3}
+            className={adminInputClass}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block font-ui text-sm text-secondary">
+            Bookshop.org link (optional)
+          </span>
+          <input
+            type="url"
+            value={bookshopUrl}
+            onChange={(e) => setBookshopUrl(e.target.value)}
+            placeholder="https://bookshop.org/..."
+            className={adminInputClass}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block font-ui text-sm text-secondary">Amazon link (optional)</span>
+          <input
+            type="url"
+            value={amazonUrl}
+            onChange={(e) => setAmazonUrl(e.target.value)}
+            placeholder="https://www.amazon.com/..."
             className={adminInputClass}
           />
         </label>

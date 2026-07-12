@@ -10,6 +10,7 @@ import { FollowButton } from "~/components/social/follow-button";
 import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
+import { ldJson } from "~/lib/seo";
 import { loadPublicProfile } from "~/lib/social.server";
 import type { Route } from "./+types/u-profile";
 
@@ -19,12 +20,39 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const viewerId = session?.user?.id ?? null;
   const data = await loadPublicProfile(env, params.username, viewerId);
   if (!data) throw new Response("Not found", { status: 404 });
-  return { ...data, signedIn: !!viewerId };
+  return { ...data, signedIn: !!viewerId, origin: new URL(request.url).origin };
 }
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   const name = data?.profile.displayName ?? data?.profile.username ?? "Reader";
-  return [{ title: `${name} | Foxing` }, { name: "description", content: `${name} on Foxing.` }];
+  const base = [
+    { title: `${name} | Foxing` },
+    { name: "description", content: `${name} on Foxing.` },
+  ];
+  if (data && !data.isPrivate) {
+    return [
+      ...base,
+      ldJson({
+        "@context": "https://schema.org",
+        "@type": "ProfilePage",
+        mainEntity: {
+          "@type": "Person",
+          name,
+          alternateName: `@${data.profile.username}`,
+          url: `${data.origin}/u/${data.profile.username}`,
+          ...(data.profile.avatarUrl ? { image: data.profile.avatarUrl } : {}),
+          ...(data.profile.bio ? { description: data.profile.bio } : {}),
+        },
+      }),
+    ];
+  }
+  return base;
+}
+
+// The current calendar year, for the "year in reading" recap link. Computed at
+// render (module scope would freeze it into the build).
+function currentYear(): number {
+  return new Date().getUTCFullYear();
 }
 
 function Stars({ ratingHalf }: { ratingHalf: number | null }) {
@@ -64,6 +92,9 @@ function activityLabel(type: string, data: Record<string, unknown>): string {
 }
 
 export default function UProfile({ loaderData }: Route.ComponentProps) {
+  if (loaderData.isPrivate) {
+    return <PrivateProfile profile={loaderData.profile} />;
+  }
   const {
     profile,
     isOwner,
@@ -72,6 +103,12 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
     viewerHasAsCloseFriend,
     followerCount,
     followingCount,
+    booksRead,
+    highlightCount,
+    favorites,
+    publicShelves,
+    finishedBooks,
+    publicHighlights,
     diary,
     lists,
     activity,
@@ -92,14 +129,12 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
               {profile.bio ? (
                 <p className="mt-3 max-w-xl font-body text-secondary">{profile.bio}</p>
               ) : null}
-              <div className="mt-3 flex gap-4 font-ui text-sm text-secondary">
-                <span>
-                  <span className="font-semibold text-primary">{followerCount}</span> followers
-                </span>
-                <span>
-                  <span className="font-semibold text-primary">{followingCount}</span> following
-                </span>
-              </div>
+              <dl className="mt-4 flex flex-wrap gap-6">
+                <StatTile label="Books read" value={booksRead} />
+                <StatTile label="Highlights" value={highlightCount} />
+                <StatTile label="Followers" value={followerCount} />
+                <StatTile label="Following" value={followingCount} />
+              </dl>
               {profile.favoriteGenres.length > 0 ? (
                 <div className="mt-3 flex flex-wrap gap-2">
                   {profile.favoriteGenres.slice(0, 6).map((g) => (
@@ -107,6 +142,12 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
                   ))}
                 </div>
               ) : null}
+              <Link
+                to={`/u/${profile.username}/recap/${currentYear()}`}
+                className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
+              >
+                {currentYear()} in reading
+              </Link>
             </div>
           </div>
           {isOwner ? (
@@ -133,6 +174,13 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             </div>
           )}
         </header>
+
+        {favorites.length > 0 ? (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-2xl">Favorite books</h2>
+            <ProfileCovers books={favorites} />
+          </section>
+        ) : null}
 
         {currentlyReading.length > 0 ? (
           <section className="flex flex-col gap-4">
@@ -162,6 +210,75 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
                       {Math.round(b.progressPct)}% read
                     </span>
                   </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {finishedBooks.length > 0 ? (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-2xl">Library</h2>
+              {isOwner ? (
+                <Link to="/library" className="font-ui text-sm text-brand-text hover:underline">
+                  Manage library
+                </Link>
+              ) : null}
+            </div>
+            <ProfileCovers books={finishedBooks} />
+          </section>
+        ) : null}
+
+        {publicHighlights.length > 0 ? (
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-2xl">Highlights</h2>
+              {isOwner ? (
+                <Link to="/highlights" className="font-ui text-sm text-brand-text hover:underline">
+                  All highlights
+                </Link>
+              ) : null}
+            </div>
+            <ul className="flex flex-col gap-3">
+              {publicHighlights.map((h) => (
+                <li
+                  key={h.id}
+                  className="rounded-card border border-border-subtle bg-surface p-4"
+                >
+                  {h.selectedText ? (
+                    <blockquote className="font-body text-secondary">"{h.selectedText}"</blockquote>
+                  ) : null}
+                  {h.bookTitle ? (
+                    <p className="mt-2 font-mono text-xs text-tertiary">
+                      {h.bookSlug ? (
+                        <Link to={`/books/${h.bookSlug}`} className="hover:text-brand-text">
+                          {h.bookTitle}
+                        </Link>
+                      ) : (
+                        h.bookTitle
+                      )}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {publicShelves.length > 0 ? (
+          <section className="flex flex-col gap-4">
+            <h2 className="font-display text-2xl">Shelves</h2>
+            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {publicShelves.map((s) => (
+                <li
+                  key={s.id}
+                  className="rounded-cover border border-border-subtle bg-surface px-4 py-3"
+                >
+                  <p className="font-ui text-sm font-medium text-primary">{s.name}</p>
+                  <p className="mt-0.5 font-mono text-xs text-tertiary">
+                    {s.bookCount} {s.bookCount === 1 ? "book" : "books"}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -265,6 +382,80 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             </div>
           </div>
         </section>
+      </Container>
+    </PageShell>
+  );
+}
+
+function StatTile({ label, value }: { label: string; value: number }) {
+  return (
+    <div>
+      <dd className="font-display text-2xl leading-none text-primary">{value}</dd>
+      <dt className="mt-1 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
+        {label}
+      </dt>
+    </div>
+  );
+}
+
+type CoverBook = {
+  bookId: string;
+  title: string;
+  author: string;
+  slug: string;
+  coverUrl: string | null;
+};
+
+function ProfileCovers({ books }: { books: CoverBook[] }) {
+  return (
+    <ul className="flex flex-wrap gap-4">
+      {books.map((b) => (
+        <li key={b.bookId} className="w-28">
+          <Link to={`/books/${b.slug}`} className="group block">
+            <span className="block overflow-hidden rounded-cover border border-border-subtle bg-sunken">
+              {b.coverUrl ? (
+                <img
+                  src={b.coverUrl}
+                  alt={`${b.title} by ${b.author}`}
+                  className="aspect-[2/3] w-full object-cover"
+                  loading="lazy"
+                />
+              ) : (
+                <span className="flex aspect-[2/3] w-full items-center justify-center px-2 text-center font-ui text-xs text-tertiary">
+                  {b.title}
+                </span>
+              )}
+            </span>
+            <span className="mt-1.5 block truncate font-ui text-xs text-primary group-hover:text-brand-text">
+              {b.title}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// Branded notice for a private profile: confirms the account exists without leaking
+// any of its content. Replaces the hard 404 the rebuild had.
+function PrivateProfile({
+  profile,
+}: {
+  profile: { username: string; displayName: string | null; avatarUrl: string | null };
+}) {
+  const name = profile.displayName ?? profile.username;
+  return (
+    <PageShell>
+      <Container className="flex flex-col items-center gap-5 py-16 text-center">
+        <Avatar src={profile.avatarUrl} name={name} size="lg" />
+        <div>
+          <h1 className="font-display text-3xl">{name}</h1>
+          <p className="mt-1 font-mono text-sm text-tertiary">@{profile.username}</p>
+        </div>
+        <EmptyState
+          title="This profile is private"
+          body="This reader keeps their library, reviews, and activity to themselves."
+        />
       </Container>
     </PageShell>
   );
