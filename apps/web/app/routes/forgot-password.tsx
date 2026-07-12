@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { AuthLink, AuthShell, AuthSubmit, Field } from "~/components/auth-shell";
 
 export function meta() {
   return [{ title: "Forgot password - Foxing" }];
@@ -29,37 +29,28 @@ export default function ForgotPassword() {
 
   if (done) {
     return (
-      <main>
-        <h1>Check your inbox</h1>
-        <p>
-          If that address is registered, we sent a reset link. Check your spam folder if you don't
-          see it within a few minutes.
+      <AuthShell
+        title="Check your inbox"
+        subtitle="If that address is registered, we sent a reset link. Check your spam folder if you don't see it within a few minutes."
+        footer={<AuthLink to="/login">Back to sign in</AuthLink>}
+      >
+        <p className="font-ui text-sm text-secondary">
+          The link expires shortly, so open it soon.
         </p>
-        <p>
-          <Link to="/login">Back to sign in</Link>
-        </p>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main>
-      <h1>Forgot your password?</h1>
-      <p>Enter your email and we'll send a reset link.</p>
-      <form onSubmit={onSubmit}>
-        <p>
-          <label>
-            Email
-            <input name="email" type="email" required autoComplete="email" />
-          </label>
-        </p>
-        <button type="submit" disabled={pending}>
-          {pending ? "Sending..." : "Send reset link"}
-        </button>
+    <AuthShell
+      title="Forgot your password?"
+      subtitle="Enter your email and we'll send a reset link."
+      footer={<AuthLink to="/login">Back to sign in</AuthLink>}
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field label="Email" name="email" type="email" required autoComplete="email" />
+        <AuthSubmit pending={pending}>{pending ? "Sending..." : "Send reset link"}</AuthSubmit>
       </form>
-      <p>
-        <Link to="/login">Back to sign in</Link>
-      </p>
-    </main>
+    </AuthShell>
   );
 }

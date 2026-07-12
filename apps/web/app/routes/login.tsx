@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { AuthLink, AuthShell, AuthSubmit, Field } from "~/components/auth-shell";
 import { signIn } from "~/lib/auth-client";
 
 export function meta() {
@@ -31,35 +32,44 @@ export default function Login() {
   }
 
   return (
-    <main>
-      <h1>Sign in</h1>
+    <AuthShell
+      title="Sign in"
+      subtitle="Welcome back to Foxing."
+      footer={
+        <>
+          New to Foxing? <AuthLink to="/signup">Create an account</AuthLink>
+        </>
+      }
+    >
       {passwordReset ? (
-        <p role="status">Password updated. Sign in with your new password.</p>
+        <p
+          role="status"
+          className="mb-4 rounded-md border border-border-subtle bg-sunken px-3 py-2 font-ui text-sm text-secondary"
+        >
+          Password updated. Sign in with your new password.
+        </p>
       ) : null}
-      <form onSubmit={onSubmit}>
-        <p>
-          <label>
-            Email
-            <input name="email" type="email" required autoComplete="email" />
-          </label>
-        </p>
-        <p>
-          <label>
-            Password
-            <input name="password" type="password" required autoComplete="current-password" />
-          </label>
-        </p>
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={pending}>
-          {pending ? "Signing in..." : "Sign in"}
-        </button>
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field label="Email" name="email" type="email" required autoComplete="email" />
+        <div>
+          <Field
+            label="Password"
+            name="password"
+            type="password"
+            required
+            autoComplete="current-password"
+          />
+          <div className="mt-1.5 text-right">
+            <AuthLink to="/forgot-password">Forgot your password?</AuthLink>
+          </div>
+        </div>
+        {error ? (
+          <p role="alert" className="font-ui text-sm text-error">
+            {error}
+          </p>
+        ) : null}
+        <AuthSubmit pending={pending}>{pending ? "Signing in..." : "Sign in"}</AuthSubmit>
       </form>
-      <p>
-        <Link to="/forgot-password">Forgot your password?</Link>
-      </p>
-      <p>
-        <Link to="/signup">Create an account</Link>
-      </p>
-    </main>
+    </AuthShell>
   );
 }
