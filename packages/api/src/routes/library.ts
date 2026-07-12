@@ -10,6 +10,7 @@ import {
   libraryRepo,
   setStatusInput,
   shelfBookInput,
+  updateGoalInput,
 } from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -113,6 +114,14 @@ libraryRoutes.post("/goals", rateLimit("write"), async (c) => {
   const input = await parseJson(c, createGoalInput);
   const goal = await libraryRepo.createGoal(c.get("db"), session.id, input);
   return c.json({ goal }, 201);
+});
+
+libraryRoutes.patch("/goals/:id", rateLimit("write"), async (c) => {
+  const session = requireSession(c);
+  const input = await parseJson(c, updateGoalInput);
+  const goal = await libraryRepo.updateGoal(c.get("db"), session.id, c.req.param("id"), input);
+  if (!goal) throw errors.notFound("Goal not found.");
+  return c.json({ goal });
 });
 
 libraryRoutes.delete("/goals/:id", rateLimit("write"), async (c) => {

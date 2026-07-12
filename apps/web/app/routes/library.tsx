@@ -11,6 +11,7 @@ import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
+import { goalPeriodLabel, isoWeek } from "~/lib/goals";
 import type { GoalRow, Shelf, Streak } from "~/lib/library.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
@@ -31,37 +32,6 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
   paused: "No paused books.",
   abandoned: "No abandoned books.",
 };
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
-// ISO week number (weeks start Monday; week 1 holds the year's first Thursday),
-// matching core periodRange so the client and the progress query agree.
-function isoWeek(d: Date): number {
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  date.setUTCDate(date.getUTCDate() - ((date.getUTCDay() + 6) % 7) + 3);
-  const firstThursday = new Date(Date.UTC(date.getUTCFullYear(), 0, 4));
-  firstThursday.setUTCDate(firstThursday.getUTCDate() - ((firstThursday.getUTCDay() + 6) % 7) + 3);
-  return 1 + Math.round((date.getTime() - firstThursday.getTime()) / (7 * 86_400_000));
-}
-
-function goalPeriodLabel(goal: GoalRow["goal"]): string {
-  if (goal.periodType === "month" && goal.month) return `${MONTHS[goal.month - 1]} ${goal.year}`;
-  if (goal.periodType === "week" && goal.week) return `week ${goal.week}, ${goal.year}`;
-  return `${goal.year}`;
-}
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
