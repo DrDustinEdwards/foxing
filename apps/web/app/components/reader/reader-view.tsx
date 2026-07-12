@@ -1187,7 +1187,7 @@ function TypographyControls({
           aria-label="Scroll mode"
           onClick={() => onChange({ scroll: !settings.scroll })}
           className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-            settings.scroll ? "bg-brand-ui" : "bg-border-strong"
+            settings.scroll ? "bg-[color:var(--brand-ui)]" : "bg-border-strong"
           }`}
         >
           <span
@@ -1212,7 +1212,8 @@ function TypographyControls({
                 // Selected: a brand fill with on-brand text, which reads clearly on
                 // every reading canvas. The old bg-selected token is a site light
                 // tint, invisible under the panel's inherited (light) text in dark.
-                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:border-brand-ui aria-pressed:bg-brand-ui aria-pressed:text-on-brand"
+                // Arbitrary values (not bg-brand-ui, which is not a mapped token).
+                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:border-[color:var(--brand-ui)] aria-pressed:bg-[color:var(--brand-ui)] aria-pressed:text-[color:var(--text-on-brand)]"
               >
                 {n}
               </button>
