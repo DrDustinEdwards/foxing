@@ -23,6 +23,9 @@ export function getAuth(env: Env) {
   return betterAuth({
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
+    // Both the live domain and the workers.dev preview must be accepted so auth works
+    // on each. baseURL covers one; trustedOrigins lists both explicitly.
+    trustedOrigins: ["https://foxing.app", "https://foxing.dustin-edwards.workers.dev"],
     database: drizzleAdapter(db, {
       provider: "sqlite",
       schema,
