@@ -1029,7 +1029,9 @@ function SidePanel({
         aria-label={title}
       >
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
-          <h2 className="font-display text-lg">{title}</h2>
+          {/* text-inherit so the reading-canvas color wins over the global h2 rule
+              (var(--text-primary)), which would be near-black on a dark panel. */}
+          <h2 className="font-display text-lg text-inherit">{title}</h2>
           <button
             type="button"
             onClick={onClose}
