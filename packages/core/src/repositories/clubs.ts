@@ -3,7 +3,7 @@
 // called in-process from web/mobile loaders; writes are called by the API layer after
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER
 // these commit -- this file never touches a Durable Object.
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, like, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import type { Db } from "../db";
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
@@ -50,6 +50,25 @@ function slugify(name: string): string {
 }
 
 // -- Clubs ------------------------------------------------------------------
+
+/** Public clubs matching a name query, for the command palette's federated search.
+ *  Only PUBLIC clubs with a slug are returned, so this is safe on the anonymous suggest
+ *  endpoint (private clubs never surface here). */
+export async function searchClubs(
+  db: Db,
+  query: string,
+  limit = 4,
+): Promise<{ slug: string; name: string }[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const term = `%${q.replace(/[%_]/g, "")}%`;
+  const rows = await db
+    .select({ slug: clubs.slug, name: clubs.name })
+    .from(clubs)
+    .where(and(like(clubs.name, term), eq(clubs.visibility, "public"), isNotNull(clubs.slug)))
+    .limit(limit);
+  return rows.filter((r): r is { slug: string; name: string } => r.slug != null);
+}
 
 export async function createClub(
   db: Db,
