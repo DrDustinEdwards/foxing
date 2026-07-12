@@ -6,7 +6,7 @@
 // default in core means web and mobile seed the same audience.
 import type { Db } from "../db";
 import * as annotationsRepo from "../repositories/annotations";
-import type { NewAnnotation } from "../repositories/annotations";
+import type { Annotation, NewAnnotation } from "../repositories/annotations";
 import type { Profile } from "../repositories/profiles";
 
 export type AnnotationVisibility = "private" | "friends" | "public";
@@ -20,12 +20,14 @@ export function resolveDefaultAnnotationVisibility(profile: Profile): Annotation
 
 /** Create an annotation for a user, seeding its visibility from their default when the
  *  caller does not specify one. userId is taken from the profile, never trusted from
- *  input. The reader calls this so a new highlight inherits the reader's chosen default. */
+ *  input. The reader calls this so a new highlight inherits the reader's chosen default.
+ *  Returns the full row (the reader reconciles its local state against it); a
+ *  client-supplied id and normalized-text derivation are handled in the repo insert. */
 export async function createAnnotation(
   db: Db,
   profile: Profile,
   input: Omit<NewAnnotation, "userId" | "visibility"> & { visibility?: AnnotationVisibility },
-): Promise<string> {
+): Promise<Annotation> {
   const visibility = input.visibility ?? resolveDefaultAnnotationVisibility(profile);
   return annotationsRepo.createAnnotation(db, { ...input, userId: profile.id, visibility });
 }

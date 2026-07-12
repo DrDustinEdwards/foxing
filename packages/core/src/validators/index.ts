@@ -4,6 +4,9 @@ export * from "./profile";
 export * as libraryValidators from "./library";
 export * from "./library";
 
+export * as annotationValidators from "./annotation";
+export * from "./annotation";
+
 export * as companionValidators from "./companion";
 export * from "./companion";
 

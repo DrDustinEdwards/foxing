@@ -14,6 +14,7 @@ import {
   userFavorites,
   vocabulary,
 } from "../schema";
+import type { SaveProgressInput } from "../validators/annotation";
 import type { CreateGoalInput, CreateShelfInput, UpdateGoalInput } from "../validators/library";
 
 export type UserBook = typeof userBooks.$inferSelect;
@@ -43,6 +44,46 @@ export async function getUserBook(
     .where(and(eq(userBooks.userId, userId), eq(userBooks.bookId, bookId)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** Save reading position. First write starts the book (status 'reading',
+ *  started_at now); later writes update progress and never downgrade status
+ *  (a want-to-read row becomes reading once the reader opens it). Keyed on the
+ *  unique (user_id, book_id). */
+export async function upsertProgress(
+  db: Db,
+  userId: string,
+  input: SaveProgressInput,
+): Promise<UserBook> {
+  const now = new Date();
+  const existing = await getUserBook(db, userId, input.bookId);
+
+  if (!existing) {
+    const [row] = await db
+      .insert(userBooks)
+      .values({
+        userId,
+        bookId: input.bookId,
+        status: "reading",
+        progress: input.locator,
+        progressPct: input.progressPct,
+        startedAt: now,
+      })
+      .returning();
+    return row;
+  }
+
+  const [row] = await db
+    .update(userBooks)
+    .set({
+      progress: input.locator,
+      progressPct: input.progressPct,
+      status: existing.status === "want" ? "reading" : existing.status,
+      updatedAt: now,
+    })
+    .where(and(eq(userBooks.userId, userId), eq(userBooks.bookId, input.bookId)))
+    .returning();
+  return row;
 }
 
 /** Timestamp to set for a status transition (others are left untouched). */
