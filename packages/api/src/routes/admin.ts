@@ -2,7 +2,7 @@
 // gated by requireAdmin); this router holds only the mutations, each gated on
 // profiles.is_admin and wrapped in an admin_audit_log entry (actor + source ip). Every
 // write returns a plain result; the admin UI surfaces a visible error on non-2xx.
-import { adminRepo } from "@foxing/core";
+import { adminRepo, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { z } from "zod";
@@ -43,6 +43,51 @@ adminRoutes.post("/admin/users/:id/suspend", rateLimit("write"), async (c) => {
   const { suspended } = await parseJson(c, z.object({ suspended: z.boolean() }));
   await adminRepo.setUserSuspended(c.get("db"), id, suspended);
   await audit(c, suspended ? "user.suspend" : "user.unsuspend", { id });
+  return c.json({ ok: true });
+});
+
+adminRoutes.post("/admin/users/:id/tier", rateLimit("write"), async (c) => {
+  requireAdmin(c);
+  const id = c.req.param("id");
+  const { tier } = await parseJson(c, z.object({ tier: z.enum(["free", "plus"]) }));
+  await adminRepo.setUserTier(c.get("db"), id, tier);
+  await audit(c, "user.tier", { id, tier });
+  return c.json({ ok: true });
+});
+
+adminRoutes.post("/admin/users/:id/admin", rateLimit("write"), async (c) => {
+  const admin = requireAdmin(c);
+  const id = c.req.param("id");
+  const { on } = await parseJson(c, onOff);
+  // Guard against locking yourself out by revoking your own admin here.
+  if (!on && id === admin.id) throw errors.validation({ id: "You cannot revoke your own admin." });
+  await adminRepo.setUserAdmin(c.get("db"), id, on);
+  await audit(c, on ? "user.grant_admin" : "user.revoke_admin", { id });
+  return c.json({ ok: true });
+});
+
+adminRoutes.post("/admin/users/:id/notify", rateLimit("write"), async (c) => {
+  requireAdmin(c);
+  const id = c.req.param("id");
+  const input = await parseJson(
+    c,
+    z.object({ title: z.string().min(1).max(200), body: z.string().max(2000).nullable().optional() }),
+  );
+  await adminRepo.notifyUser(c.get("db"), id, {
+    type: "system",
+    title: input.title,
+    body: input.body ?? null,
+  });
+  await audit(c, "user.notify", { id, title: input.title });
+  return c.json({ ok: true });
+});
+
+adminRoutes.delete("/admin/users/:id", rateLimit("write"), async (c) => {
+  const admin = requireAdmin(c);
+  const id = c.req.param("id");
+  if (id === admin.id) throw errors.validation({ id: "Delete your own account from settings." });
+  await deleteAccount(c.get("db"), id);
+  await audit(c, "user.delete", { id });
   return c.json({ ok: true });
 });
 

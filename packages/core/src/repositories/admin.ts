@@ -10,16 +10,22 @@ import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import type { Db } from "../db";
 import {
   adminAuditLog,
+  annotations,
   announcements,
   bookOfTheMonth,
   books,
+  clubMembers,
   clubs,
+  diaryEntries,
   externalBookClubPicks,
   externalBookClubs,
   journalPosts,
   journalPostVersions,
   notifications,
   profiles,
+  session,
+  user,
+  userBooks,
 } from "../schema";
 
 async function countWhere(db: Db, table: SQLiteTable, where?: SQL): Promise<number> {
@@ -154,7 +160,34 @@ export async function listUsers(
 
 export async function getUserDetail(db: Db, id: string) {
   const [row] = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
-  return row ?? null;
+  if (!row) return null;
+  // Email lives on the Better Auth user row, not the profile. Last-active is the most
+  // recent session start (a good-enough proxy without a dedicated column).
+  const [authRow] = await db.select({ email: user.email }).from(user).where(eq(user.id, id)).limit(1);
+  const [lastSession] = await db
+    .select({ createdAt: session.createdAt })
+    .from(session)
+    .where(eq(session.userId, id))
+    .orderBy(desc(session.createdAt))
+    .limit(1);
+  return { ...row, email: authRow?.email ?? null, lastActiveAt: lastSession?.createdAt ?? null };
+}
+
+export type UserActivityStats = {
+  booksFinished: number;
+  highlights: number;
+  clubsJoined: number;
+  diaryEntries: number;
+};
+
+export async function getUserActivityStats(db: Db, id: string): Promise<UserActivityStats> {
+  const [booksFinished, highlights, clubsJoined, diary] = await Promise.all([
+    countWhere(db, userBooks, and(eq(userBooks.userId, id), eq(userBooks.status, "finished"))),
+    countWhere(db, annotations, and(eq(annotations.userId, id), eq(annotations.type, "highlight"))),
+    countWhere(db, clubMembers, eq(clubMembers.userId, id)),
+    countWhere(db, diaryEntries, eq(diaryEntries.userId, id)),
+  ]);
+  return { booksFinished, highlights, clubsJoined, diaryEntries: diary };
 }
 
 export async function setUserSuspended(db: Db, id: string, suspended: boolean): Promise<void> {
@@ -162,6 +195,32 @@ export async function setUserSuspended(db: Db, id: string, suspended: boolean): 
     .update(profiles)
     .set({ isSuspended: suspended, updatedAt: new Date() })
     .where(eq(profiles.id, id));
+}
+
+export async function setUserTier(db: Db, id: string, tier: "free" | "plus"): Promise<void> {
+  await db
+    .update(profiles)
+    .set({ subscriptionTier: tier, updatedAt: new Date() })
+    .where(eq(profiles.id, id));
+}
+
+export async function setUserAdmin(db: Db, id: string, isAdmin: boolean): Promise<void> {
+  await db.update(profiles).set({ isAdmin, updatedAt: new Date() }).where(eq(profiles.id, id));
+}
+
+/** Send one notification to a single user (admin-directed). */
+export async function notifyUser(
+  db: Db,
+  userId: string,
+  input: { type: string; title: string; body?: string | null },
+): Promise<void> {
+  await db.insert(notifications).values({
+    userId,
+    type: input.type,
+    title: input.title,
+    body: input.body ?? null,
+    createdAt: new Date(),
+  });
 }
 
 // ---- Books --------------------------------------------------------------------
