@@ -477,7 +477,12 @@ export function ReaderView(props: ReaderViewProps) {
         </Link>
         <div className="min-w-0 flex-1 truncate text-center text-sm">
           <span className="font-display">{book.title}</span>
-          {chapter ? <span className="text-tertiary"> {"·"} {chapter}</span> : null}
+          {chapter ? (
+            <span className="text-[color-mix(in_srgb,currentColor_60%,transparent)]">
+              {" "}
+              {"·"} {chapter}
+            </span>
+          ) : null}
         </div>
         <ChromeButton
           onClick={() => setPanel(panel === "toc" ? null : "toc")}
@@ -536,7 +541,7 @@ export function ReaderView(props: ReaderViewProps) {
 
       {/* Bottom progress scrubber */}
       <footer className="border-t border-border-subtle px-4 py-2" style={{ background: canvas.bg }}>
-        <label className="flex items-center gap-3 text-xs text-tertiary">
+        <label className="flex items-center gap-3 text-xs text-[color-mix(in_srgb,currentColor_60%,transparent)]">
           <span className="tabular-nums" aria-hidden>
             {pct.toFixed(0)}%
           </span>
@@ -765,7 +770,10 @@ function ChromeButton({
       onClick={onClick}
       aria-label={label}
       aria-pressed={pressed}
-      className="rounded-md border border-border-subtle px-3 py-1 text-sm hover:bg-hover aria-pressed:bg-selected"
+      // Border/hover/pressed derive from currentColor (the reading theme's text)
+      // so the button always contrasts with its canvas; the old site tokens
+      // (border-subtle/hover/selected) went dark-on-dark on the dark reading canvas.
+      className="rounded-md border border-[color-mix(in_srgb,currentColor_32%,transparent)] px-3 py-1 text-sm hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] aria-pressed:bg-[color-mix(in_srgb,currentColor_20%,transparent)]"
     >
       {children}
     </button>

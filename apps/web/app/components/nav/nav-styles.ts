@@ -14,7 +14,10 @@ export function primaryItemClass(active: boolean, extra?: string): string {
     BASE,
     active
       ? "text-primary after:scale-x-100"
-      : "text-secondary hover:text-primary after:scale-x-0 hover:after:scale-x-100",
+      : // In dark mode text-secondary (#c4ae96) reads as a dim tan on the near-black
+        // header; lift inactive items to full-strength there (the brand underline still
+        // marks the active item). Light/sepia keep the secondary tone for hierarchy.
+        "text-secondary dark:text-primary hover:text-primary after:scale-x-0 hover:after:scale-x-100",
     extra,
   );
 }
