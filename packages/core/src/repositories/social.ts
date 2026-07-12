@@ -8,6 +8,7 @@ import { nanoid } from "nanoid";
 import type { Db } from "../db";
 import {
   activityEvents,
+  books,
   closeFriends,
   follows,
   notifications,
@@ -190,6 +191,38 @@ export async function listListsForUser(
     ? and(eq(readingLists.userId, userId), eq(readingLists.isPublic, true))
     : eq(readingLists.userId, userId);
   return db.select().from(readingLists).where(where).orderBy(desc(readingLists.updatedAt));
+}
+
+export interface ListSummary {
+  listId: string;
+  bookCount: number;
+  covers: string[]; // up to four cover urls, in list order, for a preview stack
+}
+
+/** Per-list book count and a few preview covers for the owner's lists index. One pass over
+ *  the list's books (scoped to the owner via the reading_lists join), grouped in memory. */
+export async function listSummariesForUser(db: Db, userId: string): Promise<ListSummary[]> {
+  const rows = await db
+    .select({ listId: readingListBooks.listId, coverUrl: books.coverUrl })
+    .from(readingListBooks)
+    .innerJoin(
+      readingLists,
+      and(eq(readingLists.id, readingListBooks.listId), eq(readingLists.userId, userId)),
+    )
+    .innerJoin(books, eq(books.id, readingListBooks.bookId))
+    .orderBy(readingListBooks.listId, readingListBooks.position, readingListBooks.addedAt);
+
+  const map = new Map<string, { bookCount: number; covers: string[] }>();
+  for (const r of rows) {
+    let e = map.get(r.listId);
+    if (!e) {
+      e = { bookCount: 0, covers: [] };
+      map.set(r.listId, e);
+    }
+    e.bookCount += 1;
+    if (r.coverUrl && e.covers.length < 4) e.covers.push(r.coverUrl);
+  }
+  return [...map.entries()].map(([listId, v]) => ({ listId, ...v }));
 }
 
 export async function listBooks(db: Db, listId: string): Promise<ReadingListBook[]> {
