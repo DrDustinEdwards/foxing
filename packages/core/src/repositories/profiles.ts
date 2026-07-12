@@ -1,6 +1,6 @@
 // Profiles repository. All profile data access goes through here so an org/classroom
 // tenancy layer (Foxing Edu) can be added later without touching call sites.
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, like, or, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { profiles } from "../schema";
 import type { UpdateMeInput } from "../validators/profile";
@@ -51,6 +51,35 @@ export async function getProfileSummaries(
     .where(inArray(profiles.id, ids));
   for (const r of rows) map.set(r.id, r);
   return map;
+}
+
+/** Public profiles matching a query (username or display name), for the command
+ *  palette's federated search. Only PUBLIC profiles are returned (null visibility
+ *  defaults to public), so this is safe to serve on the anonymous, edge-cached suggest
+ *  endpoint. */
+export async function searchProfiles(
+  db: Db,
+  query: string,
+  limit = 4,
+): Promise<ProfileSummary[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+  const term = `%${q.replace(/[%_]/g, "")}%`;
+  return db
+    .select({
+      id: profiles.id,
+      username: profiles.username,
+      displayName: profiles.displayName,
+      avatarUrl: profiles.avatarUrl,
+    })
+    .from(profiles)
+    .where(
+      and(
+        or(like(profiles.username, term), like(profiles.displayName, term)),
+        sql`coalesce(json_extract(${profiles.visibility}, '$.profile'), 'public') = 'public'`,
+      ),
+    )
+    .limit(limit);
 }
 
 export async function createProfile(db: Db, values: NewProfile): Promise<Profile> {

@@ -234,6 +234,15 @@ export async function listCurrentlyReading(
 
 export type VocabularyEntry = typeof vocabulary.$inferSelect;
 
+/** Count of words not yet mastered. Powers the account menu "N words to master" line. */
+export async function countVocabularyToMaster(db: Db, userId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(vocabulary)
+    .where(and(eq(vocabulary.userId, userId), eq(vocabulary.mastered, false)));
+  return Number(row?.n ?? 0);
+}
+
 /** A user's saved words, newest first. Backs the /vocabulary page. */
 export async function listVocabulary(db: Db, userId: string): Promise<VocabularyEntry[]> {
   return db
