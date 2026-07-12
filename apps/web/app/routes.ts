@@ -44,6 +44,7 @@ export default [
   route("diary", "routes/diary.tsx"),
   route("goals", "routes/goals.tsx"),
   route("year/:year?", "routes/year.tsx"),
+  route("find-next-book", "routes/find-next-book.tsx"),
 
   // Admin (operator-only, gated on profiles.is_admin in every loader). Reads run
   // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.

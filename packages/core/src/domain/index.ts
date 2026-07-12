@@ -18,6 +18,17 @@ export * as reactionsDomain from "./reactions";
 export * as recapDomain from "./recap";
 export type { Recap, RecapBook } from "./recap";
 
+export * as recommendationsDomain from "./recommendations";
+export { getRecommendations, rankCandidates, parseAiSelection } from "./recommendations";
+export type {
+  Recommendation,
+  RecommendationSet,
+  RecDeps,
+  RecKv,
+  RankSignals,
+  RankedRec,
+} from "./recommendations";
+
 export * as syncDomain from "./sync";
 export { resolveSyncOp } from "./sync";
 export type { SyncDecision, SyncOpResult, SyncPull } from "./sync";

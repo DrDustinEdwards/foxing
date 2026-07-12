@@ -99,6 +99,30 @@ export async function listEntriesForUser(
   return rows.filter((r) => allowedVisibilities.includes(r.visibility));
 }
 
+export interface RatedSignalBook {
+  bookId: string;
+  title: string;
+  author: string;
+  subjects: string[] | null;
+  ratingHalf: number | null;
+}
+
+/** Rated diary entries with the book's author + subjects, for the recommender's
+ *  behaviour signals ("because you rated X highly"). */
+export async function listRatedForSignals(db: Db, userId: string): Promise<RatedSignalBook[]> {
+  return db
+    .select({
+      bookId: diaryEntries.bookId,
+      title: books.title,
+      author: books.author,
+      subjects: books.subjects,
+      ratingHalf: diaryEntries.ratingHalf,
+    })
+    .from(diaryEntries)
+    .innerJoin(books, eq(books.id, diaryEntries.bookId))
+    .where(and(eq(diaryEntries.userId, userId), isNotNull(diaryEntries.ratingHalf)));
+}
+
 /** The latest entry for a (user, book) pair. Drives the profile/book-page rating. */
 export async function latestEntryForBook(
   db: Db,
