@@ -230,6 +230,39 @@ export async function listCurrentlyReading(
     .limit(limit);
 }
 
+// --- Recommendation signals ------------------------------------------------
+
+/** Every book id in the user's library (any status). The exclusion set for
+ *  recommendations: never recommend a book they already track. */
+export async function listOwnedBookIds(db: Db, userId: string): Promise<string[]> {
+  const rows = await db
+    .select({ bookId: userBooks.bookId })
+    .from(userBooks)
+    .where(eq(userBooks.userId, userId));
+  return rows.map((r) => r.bookId);
+}
+
+export interface ReadSignalBook {
+  bookId: string;
+  title: string;
+  author: string;
+  subjects: string[] | null;
+}
+
+/** Finished books with the fields the recommender scores on (author + subjects). */
+export async function listFinishedForSignals(db: Db, userId: string): Promise<ReadSignalBook[]> {
+  return db
+    .select({
+      bookId: userBooks.bookId,
+      title: books.title,
+      author: books.author,
+      subjects: books.subjects,
+    })
+    .from(userBooks)
+    .innerJoin(books, eq(books.id, userBooks.bookId))
+    .where(and(eq(userBooks.userId, userId), eq(userBooks.status, "finished")));
+}
+
 // --- Vocabulary ------------------------------------------------------------
 
 export type VocabularyEntry = typeof vocabulary.$inferSelect;

@@ -1,9 +1,9 @@
 // Catalog book reads. Every public query is hard-scoped to source_type='catalog';
 // community books never appear on the browse/search/sitemap surface (spec-cf-schema
 // rev 3). Readability is derived (catalog AND epub_url present), never a column.
-import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import type { Db } from "../../db";
-import { books } from "../../schema";
+import { bookAwards, books } from "../../schema";
 import { resolveEra, resolveLength } from "./facets";
 
 export type Book = typeof books.$inferSelect;
@@ -267,6 +267,121 @@ export async function findBooksNeedingCache(
     .orderBy(asc(books.updatedAt))
     .limit(limit);
   return rows;
+}
+
+// --- Recommendation candidates (Find next book) ----------------------------
+// The candidate pool is catalog + readable (epub present) + has a cover, so every
+// recommended book can be opened and shows a cover. Owned books are excluded by the
+// caller in-memory (the exclusion set is per-user and small). subjects/rating/staff-pick
+// come along so the ranker can score without a second fetch.
+
+export interface RecCandidate {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  authorSlug: string | null;
+  coverUrl: string | null;
+  publicationYear: number | null;
+  subjects: string[] | null;
+  weightedRating: number | null;
+  ratingCount: number;
+  isStaffPick: boolean;
+}
+
+const REC_COLUMNS = {
+  id: books.id,
+  slug: books.slug,
+  title: books.title,
+  author: books.author,
+  authorSlug: books.authorSlug,
+  coverUrl: books.coverUrl,
+  publicationYear: books.publicationYear,
+  subjects: books.subjects,
+  weightedRating: books.weightedRating,
+  ratingCount: books.ratingCount,
+  isStaffPick: books.isStaffPick,
+} as const;
+
+const readableCatalog = and(
+  eq(books.sourceType, "catalog"),
+  isNotNull(books.epubUrl),
+  isNotNull(books.coverUrl),
+);
+
+/** Top readable catalog books by rating, the always-available base pool. */
+export function listRecCandidatesByRating(db: Db, limit = 400): Promise<RecCandidate[]> {
+  return db
+    .select(REC_COLUMNS)
+    .from(books)
+    .where(readableCatalog)
+    .orderBy(sql`${books.weightedRating} DESC NULLS LAST`, desc(books.ratingCount), asc(books.title))
+    .limit(limit);
+}
+
+/** Readable catalog books by any of the given authors (case-insensitive), so behaviour
+ *  signals like "more from this author" always have candidates in the pool. */
+export function listRecCandidatesByAuthors(
+  db: Db,
+  authors: string[],
+  limit = 150,
+): Promise<RecCandidate[]> {
+  const list = authors.map((a) => a.toLowerCase()).filter(Boolean).slice(0, 40);
+  if (list.length === 0) return Promise.resolve([]);
+  const inList = sql.join(
+    list.map((a) => sql`${a}`),
+    sql`, `,
+  );
+  return db
+    .select(REC_COLUMNS)
+    .from(books)
+    .where(and(readableCatalog, sql`lower(${books.author}) IN (${inList})`))
+    .orderBy(sql`${books.weightedRating} DESC NULLS LAST`, asc(books.title))
+    .limit(limit);
+}
+
+/** Readable catalog books whose subjects overlap any of the given genres
+ *  (case-insensitive), so favourite/behaviour genres always have candidates. */
+export function listRecCandidatesBySubjects(
+  db: Db,
+  subjects: string[],
+  limit = 200,
+): Promise<RecCandidate[]> {
+  const list = [...new Set(subjects.map((s) => s.toLowerCase()).filter(Boolean))].slice(0, 40);
+  if (list.length === 0) return Promise.resolve([]);
+  const inList = sql.join(
+    list.map((s) => sql`${s}`),
+    sql`, `,
+  );
+  return db
+    .select(REC_COLUMNS)
+    .from(books)
+    .where(
+      and(
+        readableCatalog,
+        sql`EXISTS (SELECT 1 FROM json_each(${books.subjects}) je WHERE lower(je.value) IN (${inList}))`,
+      ),
+    )
+    .orderBy(sql`${books.weightedRating} DESC NULLS LAST`, desc(books.ratingCount), asc(books.title))
+    .limit(limit);
+}
+
+/** Which of the given book ids are award winners (for the "Award winner" reason). */
+export async function listAwardWinnerIds(db: Db, bookIds: string[]): Promise<string[]> {
+  if (bookIds.length === 0) return [];
+  // D1 caps a query at 100 bound variables ("too many SQL variables"), so chunk the IN
+  // list. The recommendation pool can be several hundred ids; a flat inArray would 500.
+  const CHUNK = 90;
+  const found = new Set<string>();
+  for (let i = 0; i < bookIds.length; i += CHUNK) {
+    const chunk = bookIds.slice(i, i + CHUNK);
+    const rows = await db
+      .selectDistinct({ bookId: bookAwards.bookId })
+      .from(bookAwards)
+      .where(inArray(bookAwards.bookId, chunk));
+    for (const r of rows) found.add(r.bookId);
+  }
+  return [...found];
 }
 
 /** Distinct author slugs across the catalog, for the sitemap. */
