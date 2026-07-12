@@ -19,7 +19,7 @@ export const DEFAULT_SETTINGS: ReaderSettings = {
   fontSize: 1,
   lineHeight: 1.5,
   margin: 40,
-  columns: 2,
+  columns: 1,
   scroll: false,
 };
 
