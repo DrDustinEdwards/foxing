@@ -158,8 +158,6 @@ export function ReaderView(props: ReaderViewProps) {
             onReady: () => {
               if (destroyed) return;
               setStatus("ready");
-              setToc(engineRef.current?.toc ?? []);
-              reapplyHighlights(annotationsRef.current, initial.theme);
             },
           },
         };
@@ -170,6 +168,11 @@ export function ReaderView(props: ReaderViewProps) {
         }
         engineRef.current = engine;
         setToc(engine.toc);
+        // Render the user's saved highlights/notes now that engineRef is set:
+        // applyHighlights goes through engineRef, and onReady fires from inside
+        // createEngine (before this assignment), so re-applying here is what makes
+        // saved annotations reappear on reload.
+        reapplyHighlights(annotationsRef.current, settingsRef.current.theme);
       } catch (e) {
         if (destroyed) return;
         setStatus("error");

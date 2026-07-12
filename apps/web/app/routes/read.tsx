@@ -11,7 +11,7 @@ import { ReaderView, type ReaderAnnotation } from "~/components/reader/reader-vi
 import type { Route } from "./+types/read";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db, env } = loaderBase(context, request);
+  const { db, env, origin } = loaderBase(context, request);
   const book = await catalogRepo.getBookBySlug(db, params.slug);
   if (!book || !catalogRepo.isReadable(book)) throw new Response("Not found", { status: 404 });
 
@@ -39,7 +39,11 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   return {
     book: { id: book.id, slug: book.slug, title: book.title, author: book.author },
-    manifestUrl: `/reader-assets/${book.slug}/manifest.json`,
+    // Absolute (not root-relative) so the navigator's baseURL -> the <base href> it
+    // injects into each blob-URL content frame is absolute. Relative resource URLs
+    // (images, the epub's own CSS) do not resolve against an opaque blob: base, so a
+    // root-relative manifest URL leaves internal images broken.
+    manifestUrl: `${origin}/reader-assets/${book.slug}/manifest.json`,
     signedIn: !!userId,
     loginHref: `/login?redirect=${encodeURIComponent(`/read/${book.slug}`)}`,
     annotations,
