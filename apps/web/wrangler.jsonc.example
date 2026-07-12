@@ -18,6 +18,8 @@
     }
   ],
   "kv_namespaces": [{ "binding": "APP_KV", "id": "<KV_NAMESPACE_ID>" }],
+  // Reader assets (exploded RWPM) and all media live in the foxing-epubs R2 bucket.
+  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "foxing-epubs" }],
   // Phase 5 live layer: one ClubRoom Durable Object per club (fan-out only, never writes
   // D1). See workers/club-room.ts.
   "durable_objects": {
