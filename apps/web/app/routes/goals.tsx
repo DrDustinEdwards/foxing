@@ -2,12 +2,13 @@
 // via loadGoals (mirrors GET /goals); writes go to /api/v1/goals from the browser and the
 // page revalidates. Books-type goals show progress against finishes in their period.
 // Active goals (their period covers today) are separated from past ones.
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { goalPeriodLabel, isoWeek } from "~/lib/goals";
+import { goalPacing, goalPeriodLabel, isoWeek, periodElapsedFraction } from "~/lib/goals";
 import type { GoalRow } from "~/lib/library.server";
 import { loadGoals } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
@@ -55,7 +56,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="flex flex-col gap-3">
               {active.map((g) => (
-                <GoalItem key={g.goal.id} row={g} onChanged={refresh} />
+                <GoalItem key={g.goal.id} row={g} active now={now} onChanged={refresh} />
               ))}
             </ul>
           )}
@@ -66,7 +67,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
             <h2 className="font-display text-2xl text-primary">Past</h2>
             <ul className="flex flex-col gap-3">
               {past.map((g) => (
-                <GoalItem key={g.goal.id} row={g} onChanged={refresh} />
+                <GoalItem key={g.goal.id} row={g} active={false} now={now} onChanged={refresh} />
               ))}
             </ul>
           </section>
@@ -76,13 +77,62 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function GoalItem({ row, onChanged }: { row: GoalRow; onChanged: () => void }) {
+// A small status pill: success (reached / on track) or neutral (behind). Inline SVG check,
+// no icon library. Uses the semantic success tokens so it reads in light and dark.
+function GoalBadge({ tone, children }: { tone: "success" | "neutral"; children: ReactNode }) {
+  const cls =
+    tone === "success"
+      ? "bg-[color:var(--success-bg)] text-[color:var(--success)]"
+      : "bg-sunken text-secondary";
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-[0.06em] ${cls}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  );
+}
+
+function GoalItem({
+  row,
+  active,
+  now,
+  onChanged,
+}: {
+  row: GoalRow;
+  active: boolean;
+  now: Date;
+  onChanged: () => void;
+}) {
   const { goal, progress } = row;
   const [editing, setEditing] = useState(false);
   const [target, setTarget] = useState(goal.target);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pct = Math.min(100, goal.target > 0 ? (progress / goal.target) * 100 : 0);
+  const complete = goal.target > 0 && progress >= goal.target;
+  const pacing =
+    active && !complete
+      ? goalPacing(progress, goal.target, periodElapsedFraction(goal.periodType, now))
+      : null;
 
   async function save() {
     setPending(true);
@@ -122,10 +172,25 @@ function GoalItem({ row, onChanged }: { row: GoalRow; onChanged: () => void }) {
   }
 
   return (
-    <li className="rounded-card border border-border-subtle bg-surface p-4">
+    <li
+      className={`rounded-card border bg-surface p-4 ${
+        complete ? "border-[color:var(--success)]" : "border-border-subtle"
+      }`}
+    >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-ui text-sm text-primary">
-          {goal.target} {goal.type} in {goalPeriodLabel(goal)}
+        <span className="flex flex-wrap items-center gap-2 font-ui text-sm text-primary">
+          <span>
+            {goal.target} {goal.type} in {goalPeriodLabel(goal)}
+          </span>
+          {complete ? (
+            <GoalBadge tone="success">
+              <CheckIcon /> Goal reached
+            </GoalBadge>
+          ) : pacing?.onTrack ? (
+            <GoalBadge tone="success">On track</GoalBadge>
+          ) : pacing ? (
+            <GoalBadge tone="neutral">Behind by {pacing.behind}</GoalBadge>
+          ) : null}
         </span>
         <div className="flex shrink-0 items-center gap-3">
           <button
@@ -154,7 +219,9 @@ function GoalItem({ row, onChanged }: { row: GoalRow; onChanged: () => void }) {
         aria-label={`${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
       >
         <div
-          className="h-full rounded-full bg-[color:var(--brand-ui)]"
+          className={`h-full rounded-full ${
+            complete ? "bg-[color:var(--success)]" : "bg-[color:var(--brand-ui)]"
+          }`}
           style={{ width: `${pct}%` }}
         />
       </div>
