@@ -9,18 +9,23 @@ import type { loader as RootLoader } from "~/root";
 
 type BookHit = { slug: string; title: string; author: string };
 type AuthorHit = { slug: string; name: string; bookCount: number };
+type PersonHit = { username: string; displayName: string };
+type ClubHit = { slug: string; name: string };
 
 const RECENT_KEY = "foxing:recent-searches";
 const RECENT_MAX = 6;
 
+// GO TO quick links. Public entries show to everyone; the signed-in set is appended for
+// authed users. Every target is a real route (Quotes is cut and never appears).
 const PUBLIC_LINKS = [
-  { to: "/books", label: "Browse all books" },
-  { to: "/awards", label: "Literary awards" },
+  { to: "/books", label: "Browse books" },
+  { to: "/clubs", label: "Reading clubs" },
   { to: "/picks", label: "Celebrity picks" },
-  { to: "/book-of-the-month", label: "Book of the Month" },
-  { to: "/journal", label: "The Journal" },
+  { to: "/journal", label: "Journal" },
 ];
 const SIGNED_IN_LINKS = [
+  { to: "/lists", label: "Reading lists" },
+  { to: "/people", label: "Readers" },
   { to: "/home", label: "Home" },
   { to: "/library", label: "Your library" },
   { to: "/settings", label: "Settings" },
@@ -59,6 +64,8 @@ export function CommandPalette() {
   const [recent, setRecent] = useState<string[]>([]);
   const [books, setBooks] = useState<BookHit[]>([]);
   const [authors, setAuthors] = useState<AuthorHit[]>([]);
+  const [people, setPeople] = useState<PersonHit[]>([]);
+  const [clubs, setClubs] = useState<ClubHit[]>([]);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abort = useRef<AbortController | null>(null);
 
@@ -87,6 +94,8 @@ export function CommandPalette() {
       setQuery("");
       setBooks([]);
       setAuthors([]);
+      setPeople([]);
+      setClubs([]);
       setRecent(readRecent());
     }
   }, [open]);
@@ -98,6 +107,8 @@ export function CommandPalette() {
     if (q.length < 2) {
       setBooks([]);
       setAuthors([]);
+      setPeople([]);
+      setClubs([]);
       return;
     }
     timer.current = setTimeout(async () => {
@@ -107,9 +118,16 @@ export function CommandPalette() {
         const res = await fetch(`/search/suggest?q=${encodeURIComponent(q)}`, {
           signal: abort.current.signal,
         });
-        const data = (await res.json()) as { books: BookHit[]; authors: AuthorHit[] };
+        const data = (await res.json()) as {
+          books: BookHit[];
+          authors: AuthorHit[];
+          people?: PersonHit[];
+          clubs?: ClubHit[];
+        };
         setBooks(data.books ?? []);
         setAuthors(data.authors ?? []);
+        setPeople(data.people ?? []);
+        setClubs(data.clubs ?? []);
       } catch {
         /* aborted or offline: keep the last results */
       }
@@ -158,7 +176,7 @@ export function CommandPalette() {
         <Command.Input
           value={query}
           onValueChange={setQuery}
-          placeholder="Search titles and authors"
+          placeholder="Search books, people, clubs..."
           className="w-full bg-transparent py-3.5 font-ui text-base text-primary outline-none placeholder:text-tertiary"
         />
       </div>
@@ -220,6 +238,43 @@ export function CommandPalette() {
           </Command.Group>
         ) : null}
 
+        {typing && people.length > 0 ? (
+          <Command.Group
+            heading="People"
+            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
+          >
+            {people.map((p) => (
+              <Command.Item
+                key={p.username}
+                value={`person:${p.username}`}
+                onSelect={() => go(`/u/${p.username}`)}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 data-[selected=true]:bg-hover"
+              >
+                <span className="truncate font-ui text-sm text-primary">{p.displayName}</span>
+                <span className="truncate font-mono text-xs text-tertiary">@{p.username}</span>
+              </Command.Item>
+            ))}
+          </Command.Group>
+        ) : null}
+
+        {typing && clubs.length > 0 ? (
+          <Command.Group
+            heading="Clubs"
+            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
+          >
+            {clubs.map((c) => (
+              <Command.Item
+                key={c.slug}
+                value={`club:${c.slug}`}
+                onSelect={() => go(`/clubs/${c.slug}`)}
+                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 data-[selected=true]:bg-hover"
+              >
+                <span className="truncate font-ui text-sm text-primary">{c.name}</span>
+              </Command.Item>
+            ))}
+          </Command.Group>
+        ) : null}
+
         {!typing && recent.length > 0 ? (
           <Command.Group
             heading="Recent"
@@ -256,6 +311,15 @@ export function CommandPalette() {
           </Command.Group>
         ) : null}
       </Command.List>
+
+      <div className="flex items-center justify-end gap-3 border-t border-border-subtle px-4 py-2 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
+        <span>
+          <kbd className="font-mono">Enter</kbd> to open
+        </span>
+        <span>
+          <kbd className="font-mono">Esc</kbd> to close
+        </span>
+      </div>
     </Command.Dialog>
   );
 }

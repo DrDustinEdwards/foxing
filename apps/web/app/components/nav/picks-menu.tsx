@@ -1,13 +1,14 @@
-// Celebrity Picks dropdown. Featured clubs come from the root loader (listExternalClubs),
-// so the menu renders server-side with no client fetch. The BOTM card only appears when a
-// published Book of the Month exists (getCurrentBotm is published-only), so it self-omits
-// today. Legacy's "This month's picks" link is gated out: /picks/YYYY/MM has no route in
-// this build, and the zero-dead-links rule forbids shipping it.
+// Celebrity Picks dropdown. Opens on hover with a keyboard-focus + click fallback (legacy
+// behaviour). Featured clubs come from the root loader (listExternalClubs), so the menu
+// renders server-side with no client fetch. The BOTM card only appears when a published
+// Book of the Month exists (getCurrentBotm is published-only). "This month's picks" points
+// at /book-of-the-month (a real route that shows the current pick or an empty state);
+// legacy's /picks/YYYY/MM archive has no route here, so it is not linked.
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import type { NavBotm, NavFeaturedClub } from "~/lib/nav.server";
 import { primaryItemClass } from "./nav-styles";
-import { useDismiss, useRovingMenu } from "./use-menu";
+import { useDismiss, useHoverMenu, useRovingMenu } from "./use-menu";
 
 export function PicksMenu({
   featuredClubs,
@@ -20,9 +21,10 @@ export function PicksMenu({
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(ref, open, () => setOpen(false));
   useRovingMenu(ref, open);
+  const hover = useHoverMenu(setOpen);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" {...hover}>
       <button
         type="button"
         aria-haspopup="menu"
@@ -76,14 +78,22 @@ export function PicksMenu({
               </ul>
             </>
           ) : null}
-          <div className="mt-3 border-t border-border-subtle pt-3">
+          <div className="mt-3 flex items-center justify-between gap-2 border-t border-border-subtle pt-3">
             <Link
               to="/picks"
               role="menuitem"
               onClick={() => setOpen(false)}
-              className="block rounded-md px-2 py-1.5 font-ui text-sm text-brand-text transition-colors hover:bg-hover"
+              className="rounded-md px-2 py-1.5 font-ui text-sm text-brand-text transition-colors hover:bg-hover"
             >
               View all picks
+            </Link>
+            <Link
+              to="/book-of-the-month"
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="rounded-md px-2 py-1.5 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
+            >
+              This month's pick
             </Link>
           </div>
         </div>

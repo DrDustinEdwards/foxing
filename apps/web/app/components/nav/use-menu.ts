@@ -1,6 +1,42 @@
 // Shared behaviour for the header dropdown menus (Books, Account). Extracted from
 // page-shell so later slices reuse the same open/dismiss + keyboard contract.
-import { useEffect } from "react";
+import { type FocusEvent, useEffect, useRef } from "react";
+
+/**
+ * Hover-to-open with keyboard-focus fallback for the primary mega-menus (Books,
+ * Celebrity Picks), matching legacy behaviour. Returns handlers for the wrapper that
+ * holds both the trigger and the menu:
+ *  - pointer enter opens immediately; pointer leave closes after a short delay so a
+ *    diagonal move from trigger to menu across the small gap does not flicker it shut.
+ *  - focus entering the wrapper opens it (keyboard/tab users); focus leaving closes it.
+ * Click still toggles (the trigger is a real <button>) and Escape/outside-click close
+ * via useDismiss, so the menu is fully operable without a pointer.
+ */
+export function useHoverMenu(setOpen: (open: boolean) => void) {
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clear = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  };
+  useEffect(() => clear, []);
+  return {
+    onMouseEnter: () => {
+      clear();
+      setOpen(true);
+    },
+    onMouseLeave: () => {
+      clear();
+      timer.current = setTimeout(() => setOpen(false), 120);
+    },
+    onFocus: () => {
+      clear();
+      setOpen(true);
+    },
+    onBlur: (event: FocusEvent<HTMLElement>) => {
+      if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
+    },
+  };
+}
 
 /** Dismiss an open menu on outside pointerdown or Escape. */
 export function useDismiss(

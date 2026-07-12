@@ -1,11 +1,13 @@
-// Books dropdown. Browse items are real routes; era chips map to /books?era= filters
-// that ship today (genre/era/length; mood is null in data, so omitted). The era list
-// mirrors core ERA_BUCKETS (facets.ts), kept local so the client bundle does not pull
-// in the core query layer.
+// Books dropdown. Opens on hover with a keyboard-focus + click fallback (legacy
+// behaviour). Browse items are real routes; era chips map to /books?era= filters that
+// ship today. By Mood + the 10 mood/theme chips are CUT until mood_tags is populated
+// (all catalog books are '[]' today; generating them needs ANTHROPIC_API_KEY as a Worker
+// secret, which is not set). The era list mirrors core ERA_BUCKETS (facets.ts), kept
+// local so the client bundle does not pull in the core query layer.
 import { useRef, useState } from "react";
 import { Link } from "react-router";
 import { primaryItemClass } from "./nav-styles";
-import { useDismiss, useRovingMenu } from "./use-menu";
+import { useDismiss, useHoverMenu, useRovingMenu } from "./use-menu";
 
 const BOOKS_BROWSE = [
   { to: "/books", label: "All books" },
@@ -24,9 +26,10 @@ export function BooksMenu() {
   const ref = useRef<HTMLDivElement>(null);
   useDismiss(ref, open, () => setOpen(false));
   useRovingMenu(ref, open);
+  const hover = useHoverMenu(setOpen);
 
   return (
-    <div ref={ref} className="relative">
+    <div ref={ref} className="relative" {...hover}>
       <button
         type="button"
         aria-haspopup="menu"

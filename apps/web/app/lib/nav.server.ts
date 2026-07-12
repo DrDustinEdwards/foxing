@@ -17,6 +17,7 @@ export interface NavUser {
     dayStreak: number;
     highlights: number;
   };
+  vocabularyToMaster: number;
 }
 
 /** The signed-in nav identity, or null for anonymous / not-yet-onboarded users.
@@ -31,9 +32,10 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
   if (!profile) return null;
 
   const year = new Date().getUTCFullYear();
-  const [streak, booksThisYear] = await Promise.all([
+  const [streak, booksThisYear, vocabularyToMaster] = await Promise.all([
     libraryRepo.getStreak(db, session.user.id),
     libraryRepo.countFinishedInPeriod(db, session.user.id, { periodType: "year", year }),
+    libraryRepo.countVocabularyToMaster(db, session.user.id),
   ]);
 
   return {
@@ -47,6 +49,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
       dayStreak: streak?.currentStreak ?? 0,
       highlights: streak?.totalHighlights ?? 0,
     },
+    vocabularyToMaster,
   };
 }
 
