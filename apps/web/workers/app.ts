@@ -41,6 +41,24 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+// Legacy path 301s. SEO best practice: new names win, old names one-hop to them,
+// internal links already point at the new names. Every target below is a live
+// route that is never itself redirected, so there are no chains.
+//   celebrity picks: /book-clubs[/:slug] -> /picks[/:slug]
+//   auth renames:    /sign-in -> /login, /sign-up -> /signup
+//   profile subpages consolidated onto /u/:username (recap stays live)
+function legacyRedirectTarget(pathname: string): string | null {
+  if (pathname === "/sign-in") return "/login";
+  if (pathname === "/sign-up") return "/signup";
+  if (pathname === "/book-clubs") return "/picks";
+  if (pathname.startsWith("/book-clubs/")) {
+    return `/picks/${pathname.slice("/book-clubs/".length)}`;
+  }
+  const sub = pathname.match(/^\/u\/([^/]+)\/(.+)$/);
+  if (sub && !sub[2].startsWith("recap/")) return `/u/${sub[1]}`;
+  return null;
+}
+
 // Injected at build time (vite define). Namespaces the edge cache per deploy.
 declare const __CACHE_VERSION__: string;
 
@@ -174,6 +192,15 @@ app.route("/api/v1", api);
 app.all("*", async (c) => {
   const req = c.req.raw;
   const url = new URL(req.url);
+  // Legacy path 301s (GET navigations only). Preserve the query string; one hop.
+  if (req.method === "GET") {
+    const target = legacyRedirectTarget(url.pathname);
+    if (target) {
+      const dest = new URL(target, url.origin);
+      dest.search = url.search;
+      return c.redirect(dest.toString(), 301);
+    }
+  }
   // Cache anonymous GETs on public paths. A Better Auth session cookie means the
   // request may be personalized later, so bypass the cache to stay correct.
   const authed = (req.headers.get("Cookie") ?? "").includes("better-auth");

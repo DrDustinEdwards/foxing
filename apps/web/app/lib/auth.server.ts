@@ -42,6 +42,23 @@ export function getAuth(env: Env) {
         await sendVerificationEmail(env, user.email, url);
       },
     },
+    user: {
+      // Email change requires confirmation. The link goes to the current address so
+      // the account owner approves the switch; the new address takes effect on click.
+      changeEmail: {
+        enabled: true,
+        sendChangeEmailVerification: async ({
+          user,
+          url,
+        }: {
+          user: { email: string };
+          newEmail: string;
+          url: string;
+        }) => {
+          await sendVerificationEmail(env, user.email, url);
+        },
+      },
+    },
     plugins,
   });
 }
