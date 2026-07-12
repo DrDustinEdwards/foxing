@@ -67,18 +67,20 @@ export const annotationVisibilityValues = tuple(["private", "friends", "club", "
 export const annotationVisibility = z.enum(annotationVisibilityValues);
 export type AnnotationVisibility = z.infer<typeof annotationVisibility>;
 
-// The 7 semantic highlight colors (highlight type only).
-// NOTE: reconcile these names against design-system.md before the Phase 3 reader.
+// The 7 semantic highlight colors (highlight type only). Canonical names from
+// design-system.md ("Annotation Highlight Colors": --hl-* tokens); identical to
+// the mobile palette keys so annotations.color round-trips web <-> mobile.
 export const highlightColorValues = tuple([
+  "amber",
+  "auburn",
   "yellow",
-  "green",
-  "blue",
-  "pink",
+  "sage",
+  "cobalt",
+  "crimson",
   "purple",
-  "orange",
-  "red",
 ] as const);
 export const highlightColor = z.enum(highlightColorValues);
+export type HighlightColor = z.infer<typeof highlightColor>;
 
 // reactions.target_type
 export const reactionTargetValues = tuple([

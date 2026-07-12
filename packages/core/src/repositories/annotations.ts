@@ -1,12 +1,18 @@
-// Annotations read/write data access. The reader (Phase 3, unmerged) writes highlights,
-// notes, and bookmarks through the domain layer; these aggregate reads back the
-// /highlights and /commonplace pages, and createAnnotation is the single insert the
-// write path uses (so the default-visibility rule lives in one place: domain/annotations).
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+// Annotations read/write data access. The reader writes highlights, notes, and
+// bookmarks through the domain layer; these aggregate reads back the /highlights
+// and /commonplace pages, and createAnnotation is the single insert the write path
+// uses (so the default-visibility rule lives in one place: domain/annotations).
+// The reader read/write helpers (listForReader, update, delete) are user-scoped so
+// an org/classroom tenancy layer can wrap them later without touching call sites.
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
+import { normalizeText } from "../domain/text";
 import { annotations, books } from "../schema";
+import type { UpdateAnnotationInput } from "../validators/annotation";
 
 export type Annotation = typeof annotations.$inferSelect;
+
+const READER_TYPES = ["highlight", "note", "bookmark"] as const;
 
 /** Count of a user's public highlights, for the public profile "Highlights" stat.
  *  Public-only so the number never reveals private annotations. */
@@ -109,6 +115,9 @@ export async function listPublicHighlights(
 }
 
 export type NewAnnotation = {
+  // Client-generatable so the reader (and mobile offline sync) can insert
+  // idempotently: same id -> same row from any client, no dupes on replay.
+  id?: string | null;
   userId: string;
   type: string;
   bookId?: string | null;
@@ -125,17 +134,26 @@ export type NewAnnotation = {
   parentId?: string | null;
 };
 
-export async function createAnnotation(db: Db, input: NewAnnotation): Promise<string> {
+/** The single annotation insert. Returns the full row so the reader can reconcile
+ *  its local state. normalized_text is the popular-highlights aggregation key: when
+ *  the caller does not supply it, it is derived from the selected text (or the
+ *  locator's highlighted text), so re-anchoring survives duplicate phrases (R1). */
+export async function createAnnotation(db: Db, input: NewAnnotation): Promise<Annotation> {
+  const anchorText =
+    input.selectedText ??
+    (input.locator as { text?: { highlight?: string } } | null | undefined)?.text?.highlight ??
+    null;
   const [row] = await db
     .insert(annotations)
     .values({
+      ...(input.id ? { id: input.id } : {}),
       userId: input.userId,
       type: input.type,
       bookId: input.bookId ?? null,
       clubId: input.clubId ?? null,
       locator: input.locator ?? null,
       selectedText: input.selectedText ?? null,
-      normalizedText: input.normalizedText ?? null,
+      normalizedText: input.normalizedText ?? (anchorText ? normalizeText(anchorText) : null),
       body: input.body ?? null,
       color: input.color ?? null,
       chapter: input.chapter ?? null,
@@ -144,6 +162,52 @@ export async function createAnnotation(db: Db, input: NewAnnotation): Promise<st
       containsSpoilers: input.containsSpoilers ?? false,
       parentId: input.parentId ?? null,
     })
+    .returning();
+  return row;
+}
+
+/** Every annotation a signed-in reader owns for one book (highlights, notes,
+ *  bookmarks), oldest first. Top-level only (threaded replies are a club concern). */
+export async function listForReader(db: Db, userId: string, bookId: string): Promise<Annotation[]> {
+  return db
+    .select()
+    .from(annotations)
+    .where(
+      and(
+        eq(annotations.userId, userId),
+        eq(annotations.bookId, bookId),
+        inArray(annotations.type, READER_TYPES as unknown as string[]),
+      ),
+    )
+    .orderBy(asc(annotations.createdAt));
+}
+
+/** Ownership-scoped update (body/color/visibility/pin/spoiler). Returns null if
+ *  the row is not the caller's. */
+export async function updateAnnotation(
+  db: Db,
+  userId: string,
+  input: UpdateAnnotationInput,
+): Promise<Annotation | null> {
+  const patch: Partial<Annotation> = { updatedAt: new Date() };
+  if (input.body !== undefined) patch.body = input.body;
+  if (input.color !== undefined) patch.color = input.color;
+  if (input.visibility !== undefined) patch.visibility = input.visibility;
+  if (input.isPinned !== undefined) patch.isPinned = input.isPinned;
+  if (input.containsSpoilers !== undefined) patch.containsSpoilers = input.containsSpoilers;
+
+  const [row] = await db
+    .update(annotations)
+    .set(patch)
+    .where(and(eq(annotations.id, input.id), eq(annotations.userId, userId)))
+    .returning();
+  return row ?? null;
+}
+
+export async function deleteAnnotation(db: Db, userId: string, id: string): Promise<boolean> {
+  const rows = await db
+    .delete(annotations)
+    .where(and(eq(annotations.id, id), eq(annotations.userId, userId)))
     .returning({ id: annotations.id });
-  return row.id;
+  return rows.length > 0;
 }
