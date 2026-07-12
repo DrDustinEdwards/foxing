@@ -14,7 +14,7 @@ import {
   userFavorites,
   vocabulary,
 } from "../schema";
-import type { CreateGoalInput, CreateShelfInput } from "../validators/library";
+import type { CreateGoalInput, CreateShelfInput, UpdateGoalInput } from "../validators/library";
 
 export type UserBook = typeof userBooks.$inferSelect;
 export type CustomShelf = typeof customShelves.$inferSelect;
@@ -369,6 +369,21 @@ export async function createGoal(
     })
     .returning();
   return row;
+}
+
+/** Retarget a goal the caller owns. Returns the updated row, or null if not theirs. */
+export async function updateGoal(
+  db: Db,
+  userId: string,
+  goalId: string,
+  patch: UpdateGoalInput,
+): Promise<ReadingGoal | null> {
+  const [row] = await db
+    .update(readingGoals)
+    .set({ target: patch.target, ...(patch.type ? { type: patch.type } : {}) })
+    .where(and(eq(readingGoals.id, goalId), eq(readingGoals.userId, userId)))
+    .returning();
+  return row ?? null;
 }
 
 export async function deleteGoal(db: Db, userId: string, goalId: string): Promise<boolean> {

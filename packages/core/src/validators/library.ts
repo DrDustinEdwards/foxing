@@ -38,3 +38,11 @@ export const createGoalInput = z
     path: ["week"],
   });
 export type CreateGoalInput = z.infer<typeof createGoalInput>;
+
+// Editing a goal changes only its target (its period is intrinsic; to move the period
+// you delete and recreate). Type is optional so a books/pages goal can be retargeted.
+export const updateGoalInput = z.object({
+  target: z.number().int().positive(),
+  type: goalType.optional(),
+});
+export type UpdateGoalInput = z.infer<typeof updateGoalInput>;
