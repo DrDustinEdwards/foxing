@@ -11,6 +11,7 @@ import {
   setStatusInput,
   shelfBookInput,
   updateGoalInput,
+  updateVocabularyInput,
 } from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -129,6 +130,21 @@ libraryRoutes.delete("/goals/:id", rateLimit("write"), async (c) => {
   const ok = await libraryRepo.deleteGoal(c.get("db"), session.id, c.req.param("id"));
   if (!ok) throw errors.notFound("Goal not found.");
   return c.json({ ok });
+});
+
+// --- Vocabulary ------------------------------------------------------------
+
+libraryRoutes.patch("/vocabulary/:id", rateLimit("write"), async (c) => {
+  const session = requireSession(c);
+  const { mastered } = await parseJson(c, updateVocabularyInput);
+  const entry = await libraryRepo.setVocabularyMastered(
+    c.get("db"),
+    session.id,
+    c.req.param("id"),
+    mastered,
+  );
+  if (!entry) throw errors.notFound("Word not found.");
+  return c.json({ entry });
 });
 
 // --- Streaks ---------------------------------------------------------------

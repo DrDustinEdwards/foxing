@@ -312,6 +312,21 @@ export async function listVocabulary(db: Db, userId: string): Promise<Vocabulary
     .limit(500);
 }
 
+/** Toggle a saved word mastered / not (scoped to the owner). Null when it is not theirs. */
+export async function setVocabularyMastered(
+  db: Db,
+  userId: string,
+  id: string,
+  mastered: boolean,
+): Promise<VocabularyEntry | null> {
+  const [row] = await db
+    .update(vocabulary)
+    .set({ mastered, updatedAt: new Date() })
+    .where(and(eq(vocabulary.id, id), eq(vocabulary.userId, userId)))
+    .returning();
+  return row ?? null;
+}
+
 // --- Custom shelves --------------------------------------------------------
 
 export async function listShelves(db: Db, userId: string): Promise<CustomShelf[]> {
