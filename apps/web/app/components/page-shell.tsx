@@ -51,6 +51,31 @@ function Wordmark({ to }: { to: string }) {
   );
 }
 
+// Header notification entry point (signed-in only). Links to /notifications; no count is
+// shown because there is no unread-count source wired yet, and a fake badge is worse than
+// none. Legacy placed a bell here between search and the avatar.
+function NotificationBell() {
+  return (
+    <Link
+      to="/notifications"
+      aria-label="Notifications"
+      title="Notifications"
+      className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover hover:text-primary"
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path
+          d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path d="M10 20a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      </svg>
+    </Link>
+  );
+}
+
 // Desktop-only signed-out actions; mobile signed-out users reach these through the drawer.
 function SignedOutActions() {
   return (
@@ -138,6 +163,7 @@ export function SiteNav() {
                 />
               </svg>
             </button>
+            {user ? <NotificationBell /> : null}
             <ThemeToggle />
             {user ? (
               <AccountMenu user={user} />

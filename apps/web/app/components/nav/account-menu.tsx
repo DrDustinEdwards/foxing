@@ -8,19 +8,45 @@ import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 import { useDismiss, useRovingMenu } from "./use-menu";
 
-// Personal reading surfaces, grouped in the account menu (the secondary bar holds the
-// primary four: Home, Library, Feed, People).
-const PERSONAL_LINKS = [
-  { to: "/notifications", label: "Notifications" },
-  { to: "/diary", label: "Diary" },
-  { to: "/lists", label: "Your lists" },
-  { to: "/highlights", label: "Highlights" },
-  { to: "/commonplace", label: "Commonplace" },
-  { to: "/vocabulary", label: "Vocabulary" },
-  { to: "/goals", label: "Reading goals" },
+// Personal reading surfaces, grouped in the account menu to the legacy structure. The
+// secondary bar holds the primary four (Home, Library, Feed, People); notifications have
+// their own header bell. Every entry is a real route (buddy reads, saved, and find-next-
+// book are cut and do not appear). Vocabulary carries a live "N words to master" line.
+const READING_LINKS = [
   { to: "/stats", label: "Reading stats" },
+  { to: "/goals", label: "Reading goals" },
   { to: "/year", label: "Year in reading" },
 ];
+const COLLECTION_LINKS = [
+  { to: "/lists", label: "Your lists" },
+  { to: "/diary", label: "Diary" },
+  { to: "/highlights", label: "Highlights" },
+  { to: "/commonplace", label: "Commonplace" },
+];
+
+function MenuLink({
+  to,
+  label,
+  subtitle,
+  onNavigate,
+}: {
+  to: string;
+  label: string;
+  subtitle?: string;
+  onNavigate: () => void;
+}) {
+  return (
+    <Link
+      to={to}
+      role="menuitem"
+      onClick={onNavigate}
+      className="flex items-center justify-between gap-2 px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
+    >
+      <span>{label}</span>
+      {subtitle ? <span className="font-mono text-[0.6875rem] text-tertiary">{subtitle}</span> : null}
+    </Link>
+  );
+}
 
 function TierBadge({ tier }: { tier: "free" | "plus" }) {
   const isPlus = tier === "plus";
@@ -99,62 +125,40 @@ export function AccountMenu({ user }: { user: NavUser }) {
             ))}
           </dl>
           <div className="py-1">
-            <Link
-              to="/library"
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
-            >
-              Your library
-            </Link>
-            <Link
-              to="/me"
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
-            >
-              Your profile
-            </Link>
-            <Link
+            <MenuLink to="/library" label="Your library" onNavigate={() => setOpen(false)} />
+            <MenuLink
               to={`/u/${user.username}`}
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
-            >
-              Public profile
-            </Link>
+              label="Profile"
+              onNavigate={() => setOpen(false)}
+            />
           </div>
           <div className="border-t border-border-subtle py-1">
-            {PERSONAL_LINKS.map((l) => (
-              <Link
-                key={l.to}
-                to={l.to}
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
-              >
-                {l.label}
-              </Link>
+            {READING_LINKS.map((l) => (
+              <MenuLink key={l.to} to={l.to} label={l.label} onNavigate={() => setOpen(false)} />
+            ))}
+            <MenuLink
+              to="/vocabulary"
+              label="Vocabulary"
+              subtitle={
+                user.vocabularyToMaster > 0
+                  ? `${user.vocabularyToMaster} ${user.vocabularyToMaster === 1 ? "word" : "words"} to master`
+                  : undefined
+              }
+              onNavigate={() => setOpen(false)}
+            />
+          </div>
+          <div className="border-t border-border-subtle py-1">
+            <p className="px-4 pb-1 pt-1.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
+              Collections
+            </p>
+            {COLLECTION_LINKS.map((l) => (
+              <MenuLink key={l.to} to={l.to} label={l.label} onNavigate={() => setOpen(false)} />
             ))}
           </div>
           <div className="border-t border-border-subtle py-1">
-            <Link
-              to="/settings"
-              role="menuitem"
-              onClick={() => setOpen(false)}
-              className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
-            >
-              Settings
-            </Link>
+            <MenuLink to="/settings" label="Settings" onNavigate={() => setOpen(false)} />
             {user.isAdmin ? (
-              <Link
-                to="/admin"
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className="block px-4 py-2 font-ui text-sm text-secondary transition-colors hover:bg-hover hover:text-brand-text"
-              >
-                Admin dashboard
-              </Link>
+              <MenuLink to="/admin" label="Admin dashboard" onNavigate={() => setOpen(false)} />
             ) : null}
           </div>
           <div className="border-t border-border-subtle py-1">
