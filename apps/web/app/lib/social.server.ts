@@ -4,6 +4,7 @@
 // server-side in core (socialDomain.getFeed / visibleVisibilitiesFor); the loader never
 // re-implements it. Kept React-free so the shapes are unit/integration testable.
 import {
+  annotationsRepo,
   catalogRepo,
   createDb,
   diaryRepo,
@@ -89,9 +90,18 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
 
   const profileVis = profile.visibility?.profile ?? "public";
   const isOwner = viewerId === profile.id;
-  // A non-public profile is hidden from everyone but its owner (Phase 6 keeps the
-  // profile-level gate coarse; per-section prefs refine what the owner sees of others).
-  if (!isOwner && profileVis !== "public") return null;
+  // A non-public profile shows a branded "private" notice to everyone but its owner,
+  // with just enough identity to confirm the account exists. Full data stays hidden.
+  if (!isOwner && profileVis !== "public") {
+    return {
+      isPrivate: true as const,
+      profile: {
+        username: profile.username,
+        displayName: profile.displayName,
+        avatarUrl: profile.avatarUrl,
+      },
+    };
+  }
 
   // Currently-reading is gated on the owner's progress visibility (a public/private
   // toggle in settings). Private means only the owner sees it. This is the read-side
@@ -110,6 +120,12 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     viewer,
     closeFriendIds,
     currentlyReading,
+    booksRead,
+    highlightCount,
+    favorites,
+    publicShelves,
+    finishedBooks,
+    publicHighlights,
   ] = await Promise.all([
     diaryRepo.listEntriesForUser(db, profile.id, allowed, { limit: 30 }),
     socialRepo.listListsForUser(db, profile.id, { publicOnly: !isOwner }),
@@ -122,6 +138,12 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     showProgress
       ? libraryRepo.listCurrentlyReading(db, profile.id, 6)
       : Promise.resolve([] as Awaited<ReturnType<typeof libraryRepo.listCurrentlyReading>>),
+    libraryRepo.countFinishedBooks(db, profile.id),
+    annotationsRepo.countPublicHighlights(db, profile.id),
+    libraryRepo.listFavoriteBooks(db, profile.id, 5),
+    libraryRepo.listPublicShelves(db, profile.id),
+    libraryRepo.listFinishedBooks(db, profile.id, 8),
+    annotationsRepo.listPublicHighlights(db, profile.id, 6),
   ]);
 
   // Overlay diary entries with their book card.
@@ -129,6 +151,7 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
   const diaryBookMap = new Map(diaryBooks.map((b) => [b.id, b]));
 
   return {
+    isPrivate: false as const,
     profile: {
       id: profile.id,
       username: profile.username,
@@ -144,6 +167,17 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     viewerHasAsCloseFriend: closeFriendIds.includes(profile.id),
     followerCount,
     followingCount,
+    booksRead,
+    highlightCount,
+    favorites,
+    publicShelves,
+    finishedBooks,
+    publicHighlights: publicHighlights.map((h) => ({
+      id: h.id,
+      selectedText: h.selectedText,
+      bookTitle: h.bookTitle,
+      bookSlug: h.bookSlug,
+    })),
     // Empty when progress is private and the viewer is not the owner.
     currentlyReading: currentlyReading.map((b) => ({
       bookId: b.bookId,
