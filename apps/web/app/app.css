@@ -304,3 +304,18 @@
 .cover-img[data-loaded="true"] {
   background-image: none !important;
 }
+
+/*
+  Reader engine frame sizing. @readium/navigator tags its content iframes with
+  .readium-navigator-iframe but ships no CSS and never sets their size, so without
+  this they fall back to the intrinsic 300x150 and ReadiumCSS lays the book out in
+  that 300px viewport (narrow left-column bug). Fill the (centered, max-width)
+  reader container so the book paginates across the real reading width.
+*/
+.readium-navigator-iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}

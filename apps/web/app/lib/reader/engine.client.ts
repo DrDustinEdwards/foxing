@@ -214,7 +214,19 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
     console.warn("[reader] initial submitPreferences failed", e);
   }
 
+  // The content frame's ReadiumCSS computes its column geometry once, from the
+  // iframe's inner width. Our CSS sizes .readium-navigator-iframe to fill the
+  // (centered, max-width) container, but a freshly-loaded frame can run that
+  // one-shot compute before the fill width is painted, leaving the book laid out
+  // in the intrinsic 300px. Nudging the navigator's resize recomputes against the
+  // real width; it is a no-op once geometry already matches.
+  const forceRelayout = () => {
+    const rh = (nav as unknown as { resizeHandler?: () => Promise<void> }).resizeHandler;
+    if (typeof rh === "function") rh.call(nav).catch(() => {});
+  };
+
   listeners.onReady();
+  requestAnimationFrame(() => requestAnimationFrame(forceRelayout));
 
   const findByProgression = (fraction: number): ReadiumLocator => {
     const clamped = Math.max(0, Math.min(1, fraction));
@@ -262,6 +274,10 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
     },
     applySettings: async (next: ReaderSettings) => {
       await nav.submitPreferences(toEpubPreferences(next) as never);
+      // Column-count / scroll / font changes shift the geometry; recompute against
+      // the container's current width. Deferred a frame so the container's new
+      // max-width (which tracks the column count) is committed before we measure.
+      requestAnimationFrame(forceRelayout);
     },
     currentLocator: () => {
       try {

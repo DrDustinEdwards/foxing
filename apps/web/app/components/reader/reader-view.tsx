@@ -444,7 +444,15 @@ export function ReaderView(props: ReaderViewProps) {
           className="absolute right-0 top-0 z-[5] h-full w-[12%] cursor-e-resize bg-transparent"
         />
 
-        <div ref={containerRef} data-testid="reader-container" className="h-full w-full" />
+        {/* The engine iframe fills this box (see .readium-navigator-iframe in app.css),
+            so it defines the reading column: centered, capped at a comfortable measure
+            (~single 40rem column, wider for two-column mode). */}
+        <div
+          ref={containerRef}
+          data-testid="reader-container"
+          className="relative mx-auto h-full w-full"
+          style={{ maxWidth: !settings.scroll && settings.columns === 2 ? "64rem" : "40rem" }}
+        />
       </div>
 
       {/* Bottom progress scrubber */}
