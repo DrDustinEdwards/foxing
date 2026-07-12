@@ -143,7 +143,7 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
                 </div>
               ) : null}
               <Link
-                to={`/u/${profile.username}/recap/${currentYear()}`}
+                to={isOwner ? "/year" : `/u/${profile.username}/recap/${currentYear()}`}
                 className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
               >
                 {currentYear()} in reading

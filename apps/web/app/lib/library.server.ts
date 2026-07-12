@@ -73,6 +73,32 @@ export async function loadShelfDetail(
   };
 }
 
+/** The reader's goals with progress, for the dedicated /goals page. Mirrors the GET
+ *  /goals handler (books-type goals count finishes in the period). */
+export async function loadGoals(env: Env, userId: string): Promise<GoalRow[]> {
+  const db = createDb(env.DB);
+  const goalRows = await libraryRepo.listGoals(db, userId);
+  const goals = await Promise.all(
+    goalRows.map(async (goal) => ({
+      goal,
+      progress:
+        goal.type === "books" ? await libraryRepo.countFinishedInPeriod(db, userId, goal) : 0,
+    })),
+  );
+  return goals.map(({ goal, progress }) => ({
+    goal: {
+      id: goal.id,
+      type: goal.type,
+      target: goal.target,
+      periodType: goal.periodType,
+      year: goal.year,
+      month: goal.month,
+      week: goal.week,
+    },
+    progress,
+  }));
+}
+
 export async function loadLibraryData(env: Env, userId: string): Promise<LibraryData> {
   const db = createDb(env.DB);
   const [library, shelves, goalRows, streak] = await Promise.all([

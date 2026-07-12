@@ -33,13 +33,17 @@ export default [
   route("lists/:id/edit", "routes/list-edit.tsx"),
 
   // Personal app surfaces (signed-in). Notifications, vocabulary, commonplace/highlights
-  // aggregates, lists index, stats. Gated in-loader by requireProfile.
+  // aggregates, lists index, stats, diary index, goals, own year-in-reading. Gated
+  // in-loader by requireProfile.
   route("notifications", "routes/notifications.tsx"),
   route("vocabulary", "routes/vocabulary.tsx"),
   route("commonplace", "routes/commonplace.tsx"),
   route("highlights", "routes/highlights.tsx"),
   route("lists", "routes/lists.tsx"),
   route("stats", "routes/stats.tsx"),
+  route("diary", "routes/diary.tsx"),
+  route("goals", "routes/goals.tsx"),
+  route("year/:year?", "routes/year.tsx"),
 
   // Admin (operator-only, gated on profiles.is_admin in every loader). Reads run
   // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
