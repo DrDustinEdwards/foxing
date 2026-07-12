@@ -1,6 +1,6 @@
 name: CI (cf rebuild)
 
-# Scoped to the new Cloudflare workspaces; legacy ci.yml is untouched.
+# Scoped to the Cloudflare workspaces (packages/core, packages/api, apps/web).
 on:
   push:
     branches: [main]
