@@ -172,6 +172,65 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) => {
 
 app.route("/api/v1", api);
 
+// Exploded Readium reader assets (RWPM manifest + resources + position list),
+// served same-origin from the MEDIA R2 bucket under reader/<slug>/... Same-origin
+// means the ts-toolkit HttpFetcher needs no CORS. X-Robots-Tag: noindex keeps the
+// duplicate book text out of search indexes (the canonical page is /books/:slug).
+// Immutable long cache + edge Cache API: first hit streams from R2, the rest are
+// CDN hits with no Worker R2 read.
+const READER_ASSET_CONTENT_TYPES: Record<string, string> = {
+  xhtml: "application/xhtml+xml",
+  html: "text/html",
+  htm: "text/html",
+  css: "text/css",
+  js: "text/javascript",
+  json: "application/json",
+  xml: "application/xml",
+  ncx: "application/x-dtbncx+xml",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  png: "image/png",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  webp: "image/webp",
+  avif: "image/avif",
+  otf: "font/otf",
+  ttf: "font/ttf",
+  woff: "font/woff",
+  woff2: "font/woff2",
+};
+
+app.get("/reader-assets/*", async (c) => {
+  const url = new URL(c.req.url);
+  const rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
+  // Guard against traversal; keys are always reader/<slug>/<path>.
+  if (!rest || rest.includes("..")) return c.notFound();
+  const key = `reader/${rest}`;
+
+  const cache = edgeCache();
+  const cacheKey = new Request(url.toString(), { method: "GET" });
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached;
+
+  const obj = await c.env.MEDIA.get(key);
+  if (!obj) return c.notFound();
+
+  const ext = rest.split(".").pop()?.toLowerCase() ?? "";
+  const contentType =
+    obj.httpMetadata?.contentType ?? READER_ASSET_CONTENT_TYPES[ext] ?? "application/octet-stream";
+
+  const res = new Response(obj.body, {
+    headers: {
+      "Content-Type": contentType,
+      "Cache-Control": "public, max-age=31536000, immutable",
+      "X-Robots-Tag": "noindex",
+      ETag: obj.httpEtag,
+    },
+  });
+  c.executionCtx.waitUntil(cache.put(cacheKey, res.clone()));
+  return res;
+});
+
 app.all("*", async (c) => {
   const req = c.req.raw;
   const url = new URL(req.url);
