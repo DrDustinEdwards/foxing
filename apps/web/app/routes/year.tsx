@@ -2,6 +2,8 @@
 // recap aggregation that powers the public /u/:username/recap/:year, targeted by user id
 // so it is always the viewer's own. /year shows the current year; /year/:year picks one.
 // A year picker links between years. The shareable public version lives on the profile.
+import { createDb, libraryRepo } from "@foxing/core";
+import type { RecapBook } from "@foxing/core";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
@@ -14,6 +16,22 @@ export function meta() {
   return [{ title: "Your year in reading | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
+const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
@@ -25,6 +43,30 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   }
   const data = await loadRecap(env, { userId: user.id }, year, user.id);
   if (!data) throw new Response("Not found", { status: 404 });
+
+  // The finish dates + subjects for the selected year power the month strip and genre
+  // spread (same query the stats page uses). Finished on the recap's finishedAt basis.
+  const db = createDb(env.DB);
+  const finishedBooks = await libraryRepo.listFinishedInRangeForStats(
+    db,
+    user.id,
+    Date.UTC(year, 0, 1),
+    Date.UTC(year + 1, 0, 1),
+  );
+  const monthly = Array<number>(12).fill(0);
+  const genreCounts = new Map<string, number>();
+  for (const b of finishedBooks) {
+    if (b.finishedAt) monthly[b.finishedAt.getUTCMonth()] += 1;
+    for (const s of b.subjects ?? []) {
+      const name = s.trim();
+      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
+    }
+  }
+  const genres = [...genreCounts.entries()]
+    .map(([name, value]) => ({ name, value }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
   // Year picker spans this year back six, always including the selected one.
   const years = new Set<number>([year]);
   for (let y = thisYear; y >= thisYear - 6; y--) years.add(y);
@@ -33,12 +75,16 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     displayName: data.displayName,
     username: data.username,
     year,
+    monthly,
+    genres,
     years: [...years].sort((a, b) => b - a),
   };
 }
 
 export default function Year({ loaderData }: Route.ComponentProps) {
-  const { recap, year, years, username } = loaderData;
+  const { recap, year, years, username, monthly, genres } = loaderData;
+  const firstBook = recap.finished[0];
+  const lastBook = recap.finished[recap.finished.length - 1];
   const stats = [
     { label: "books finished", value: recap.booksFinished },
     { label: "words read", value: recap.totalWords ? recap.totalWords.toLocaleString() : "0" },
@@ -88,6 +134,31 @@ export default function Year({ loaderData }: Route.ComponentProps) {
               ))}
             </section>
 
+            {monthly.some((n) => n > 0) ? (
+              <section className="flex flex-col gap-4">
+                <h2 className="font-display text-2xl">Your reading months</h2>
+                <div className="rounded-card border border-border-subtle bg-surface p-5">
+                  <MonthStrip monthly={monthly} year={year} />
+                </div>
+              </section>
+            ) : null}
+
+            {genres.length > 0 ? (
+              <section className="flex flex-col gap-4">
+                <h2 className="font-display text-2xl">Genre spread</h2>
+                <div className="rounded-card border border-border-subtle bg-surface p-5">
+                  <GenreSpread genres={genres} />
+                </div>
+              </section>
+            ) : null}
+
+            {firstBook && lastBook && recap.finished.length >= 2 ? (
+              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Bookend label={`First finish of ${year}`} book={firstBook} />
+                <Bookend label={`Latest finish of ${year}`} book={lastBook} />
+              </section>
+            ) : null}
+
             {recap.topBooks.length > 0 ? (
               <section className="flex flex-col gap-4">
                 <h2 className="font-display text-2xl">Top books</h2>
@@ -126,5 +197,91 @@ export default function Year({ loaderData }: Route.ComponentProps) {
         </p>
       </Container>
     </PageShell>
+  );
+}
+
+// Books finished per month of the year: inline SVG bars over a subtle baseline. Same shape
+// as the stats page's monthly view, kept local so /year stays self-contained.
+function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
+  const max = Math.max(1, ...monthly);
+  const colW = 24;
+  const barW = 12;
+  const plotH = 56;
+  const baseY = 64;
+  const width = colW * 12;
+  return (
+    <svg
+      viewBox={`0 0 ${width} 84`}
+      className="h-24 w-full"
+      role="img"
+      aria-label={`Books finished each month of ${year}`}
+      preserveAspectRatio="xMidYMid meet"
+    >
+      <line x1="0" y1={baseY} x2={width} y2={baseY} className="stroke-border-subtle" strokeWidth="1" />
+      {monthly.map((count, i) => {
+        const h = count > 0 ? Math.max(3, (count / max) * plotH) : 0;
+        const x = i * colW + (colW - barW) / 2;
+        return (
+          <g key={MONTH_NAMES[i]}>
+            {h > 0 ? (
+              <rect x={x} y={baseY - h} width={barW} height={h} rx="2" className="fill-brand">
+                <title>{`${MONTH_NAMES[i]}: ${count} book${count === 1 ? "" : "s"}`}</title>
+              </rect>
+            ) : null}
+            <text
+              x={i * colW + colW / 2}
+              y="78"
+              textAnchor="middle"
+              className="fill-tertiary font-mono"
+              fontSize="9"
+            >
+              {MONTHS[i]}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+// Top genres of the year as labelled horizontal bars, widths relative to the most-read.
+function GenreSpread({ genres }: { genres: Array<{ name: string; value: number }> }) {
+  const max = Math.max(1, ...genres.map((g) => g.value));
+  return (
+    <ul className="flex flex-col gap-3">
+      {genres.map((g) => {
+        const pct = Math.max(4, (g.value / max) * 100);
+        return (
+          <li
+            key={g.name}
+            className="grid grid-cols-[6rem_1fr_2rem] items-center gap-3"
+            title={`${g.name}: ${g.value} book${g.value === 1 ? "" : "s"}`}
+          >
+            <span className="truncate font-ui text-sm capitalize text-secondary">{g.name}</span>
+            <svg viewBox="0 0 100 6" preserveAspectRatio="none" className="h-1.5 w-full" aria-hidden="true">
+              <rect x="0" y="0" width="100" height="6" rx="3" className="fill-brand-subtle" />
+              <rect x="0" y="0" width={pct} height="6" rx="3" className="fill-brand" />
+            </svg>
+            <span className="text-right font-mono text-xs text-tertiary">{g.value}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+// The first and latest finish of the year, a small celebratory pair of bookends.
+function Bookend({ label, book }: { label: string; book: RecapBook }) {
+  return (
+    <div className="rounded-card border border-border-subtle bg-surface p-4">
+      <p className="font-mono text-[0.65rem] uppercase tracking-wide text-tertiary">{label}</p>
+      <Link
+        to={`/books/${book.slug}`}
+        className="mt-1 block font-display text-lg text-primary hover:text-brand-text"
+      >
+        {book.title}
+      </Link>
+      <p className="mt-0.5 font-ui text-sm text-secondary">{book.author}</p>
+    </div>
   );
 }
