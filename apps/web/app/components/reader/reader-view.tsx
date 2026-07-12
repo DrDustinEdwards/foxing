@@ -4,12 +4,13 @@
 // keyboard nav, and annotations (7-color highlights, notes, bookmarks). Writes go
 // to /api/v1 (annotations + progress) from the browser and surface every failure;
 // anonymous readers can read fully and are prompted to sign in for personal features.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import type { HighlightColor } from "@foxing/core";
 import { highlightColorValues } from "@foxing/core";
 import type {
   CreateEngineOptions,
+  DecorationRect,
   ReaderEngine,
   SelectionPayload,
   TocEntry,
@@ -96,10 +97,8 @@ export function ReaderView(props: ReaderViewProps) {
   const currentLocatorRef = useRef<Locator | null>(initialLocator);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Last position we actually persisted (seeded with the restored one), so we never
-  // re-save an unchanged position. A ms timestamp of the last in-text highlight tap,
-  // so a stray word-selection from the same tap can't immediately close the popover.
+  // re-save an unchanged position.
   const lastSavedRef = useRef<Locator | null>(initialLocator);
-  const lastActivationRef = useRef(0);
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
@@ -112,6 +111,9 @@ export function ReaderView(props: ReaderViewProps) {
   const [selection, setSelection] = useState<SelectionPayload | null>(null);
   const [noteDraft, setNoteDraft] = useState<{ color: HighlightColor; text: string } | null>(null);
   const [editing, setEditing] = useState<ReaderAnnotation | null>(null);
+  // Viewport-space rect of the tapped highlight, so the popover anchors to the
+  // passage. Null when opened from the Contents list (then it floats bottom-center).
+  const [editAnchor, setEditAnchor] = useState<DecorationRect | null>(null);
   const [signInPrompt, setSignInPrompt] = useState(false);
   // Personal-feature writes (highlights, notes, bookmarks, progress) go to /api/v1
   // and never swallow a failure: saving drives a role="status" indicator, writeError
@@ -131,6 +133,7 @@ export function ReaderView(props: ReaderViewProps) {
         id: a.id,
         locator: a.locator as Locator,
         color: (a.color as HighlightColor) ?? "amber",
+        hasNote: !!(a.body && a.body.trim()),
       }));
     engineRef.current?.applyHighlights(specs, theme);
   }, []);
@@ -164,21 +167,32 @@ export function ReaderView(props: ReaderViewProps) {
               if (signedIn) scheduleSave(loc);
             },
             onSelection: (payload) => {
-              // Tapping a highlight can also register a word-selection in some
-              // engines, which would immediately close the note popover we just
-              // opened. Ignore a selection that lands right after an activation.
-              if (Date.now() - lastActivationRef.current < 500) return;
               setEditing(null);
+              setEditAnchor(null);
               setSelection(payload);
             },
-            onDecorationActivated: (id) => {
-              lastActivationRef.current = Date.now();
+            onDecorationActivated: (id, rect) => {
               const found = annotationsRef.current.find((a) => a.id === id);
-              if (found) {
-                setSelection(null);
-                setEditing(found);
-                clearNativeSelection();
-              }
+              if (!found) return;
+              setSelection(null);
+              // The rect arrives in device pixels relative to the content frame's
+              // viewport (the injectable scales by devicePixelRatio and the navigator
+              // forwards it as-is). Convert to CSS pixels and offset by the frame's
+              // position so the fixed popover lands on the passage.
+              const iframe = containerRef.current?.querySelector("iframe");
+              const fr = iframe?.getBoundingClientRect();
+              const dpr = window.devicePixelRatio || 1;
+              setEditAnchor(
+                rect && fr
+                  ? {
+                      top: fr.top + rect.top / dpr,
+                      left: fr.left + rect.left / dpr,
+                      width: rect.width / dpr,
+                      height: rect.height / dpr,
+                    }
+                  : null,
+              );
+              setEditing(found);
             },
             onReady: () => {
               if (destroyed) return;
@@ -404,6 +418,7 @@ export function ReaderView(props: ReaderViewProps) {
         return next;
       });
       setEditing(null);
+      setEditAnchor(null);
     },
     [apiWrite, reapplyHighlights],
   );
@@ -420,6 +435,7 @@ export function ReaderView(props: ReaderViewProps) {
   const openMark = useCallback((a: ReaderAnnotation) => {
     if (a.locator) engineRef.current?.goToLocator(a.locator);
     setPanel(null);
+    setEditAnchor(null);
     setEditing(a);
   }, []);
 
@@ -548,14 +564,18 @@ export function ReaderView(props: ReaderViewProps) {
         />
       ) : null}
 
-      {/* Edit popover for an existing highlight/note */}
+      {/* Edit popover for an existing highlight/note, anchored to the tapped passage */}
       {editing ? (
         <EditPopover
           annotation={editing}
+          anchor={editAnchor}
           onColor={(c) => patchAnnotation(editing.id, { color: c })}
           onSaveNote={(body) => patchAnnotation(editing.id, { body: body || null })}
           onDelete={() => deleteAnnotation(editing.id)}
-          onClose={() => setEditing(null)}
+          onClose={() => {
+            setEditing(null);
+            setEditAnchor(null);
+          }}
         />
       ) : null}
 
@@ -832,20 +852,74 @@ function NoteComposer({
 
 function EditPopover({
   annotation,
+  anchor,
   onColor,
   onSaveNote,
   onDelete,
   onClose,
 }: {
   annotation: ReaderAnnotation;
+  anchor: DecorationRect | null;
   onColor: (c: HighlightColor) => void;
   onSaveNote: (body: string) => void;
   onDelete: () => void;
   onClose: () => void;
 }) {
   const [body, setBody] = useState(annotation.body ?? "");
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // Anchor to the tapped passage: centered under it, flipped above when there is
+  // no room below, clamped to the viewport. Measured post-render so the popover's
+  // real size is used; hidden until measured to avoid a flash at the origin.
+  useLayoutEffect(() => {
+    if (!anchor || !ref.current) {
+      setPos(null);
+      return;
+    }
+    const pad = 8;
+    const el = ref.current;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const centerX = anchor.left + anchor.width / 2;
+    const left = Math.max(pad, Math.min(centerX - w / 2, window.innerWidth - w - pad));
+    const below = anchor.top + anchor.height + pad;
+    const top = below + h + pad <= window.innerHeight ? below : Math.max(pad, anchor.top - h - pad);
+    setPos({ top, left });
+  }, [anchor, body]);
+
+  const anchored = anchor != null;
   return (
-    <div className="fixed bottom-16 left-1/2 z-20 w-[min(28rem,90vw)] -translate-x-1/2 rounded-card border border-border-subtle bg-surface p-3 shadow-lg">
+    <>
+      <button
+        type="button"
+        aria-label="Close note"
+        className="fixed inset-0 z-20 bg-transparent"
+        onClick={onClose}
+      />
+      <div
+        ref={ref}
+        role="dialog"
+        aria-label="Edit annotation"
+        className={`z-30 w-[min(28rem,90vw)] rounded-card border border-border-subtle bg-surface p-3 shadow-lg ${
+          anchored ? "fixed" : "fixed bottom-16 left-1/2 -translate-x-1/2"
+        }`}
+        style={
+          anchored
+            ? pos
+              ? { top: pos.top, left: pos.left }
+              : { top: 0, left: 0, visibility: "hidden" }
+            : undefined
+        }
+      >
       <div className="mb-2 flex items-center gap-1.5">
         {highlightColorValues.map((c) => (
           <button
@@ -895,7 +969,8 @@ function EditPopover({
           </button>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

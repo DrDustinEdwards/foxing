@@ -41,8 +41,19 @@ export function tintFor(color: HighlightColor, theme: "light" | "sepia" | "dark"
   return HL_TINTS[theme === "dark" ? "dark" : "lightish"][color];
 }
 
+// The fill for a highlight/note. isActive makes it a click/tap target in-frame:
+// the ts-toolkit Decorator hit-tests the text range on pointerup and reports the
+// activation (with a rect) back to the navigator, which is what opens the popover.
 export function decorationStyleFor(color: HighlightColor, theme: "light" | "sepia" | "dark") {
-  return { type: "highlight", tint: tintFor(color, theme) };
+  return { type: "highlight", tint: tintFor(color, theme), isActive: true };
+}
+
+// The in-text "has a note" indicator: an outline box around the passage, drawn as a
+// second, non-active decoration (so it never competes with the fill for the click).
+// Outline + layout:bounds always renders via the DOM overlay (the CSS Highlight API
+// only does background fills), so it shows on browsers that use native highlights.
+export function noteOutlineStyleFor(color: HighlightColor, theme: "light" | "sepia" | "dark") {
+  return { type: "outline", tint: tintFor(color, theme), layout: "bounds", isActive: false };
 }
 
 export interface SelectionContext {
