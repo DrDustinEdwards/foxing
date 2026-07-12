@@ -1,6 +1,7 @@
 // Signed-in dashboard at /home. Reads run in-process via core (loadLibraryData);
 // the shell (nav, secondary bar) comes from the root loader. Anonymous visitors are
 // sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -17,15 +18,34 @@ function timeOfDay(hour: number): string {
   return "evening";
 }
 
+// The hour in the user's saved timezone, or null when unset/invalid so the client
+// can fall back to the visitor's local hour. Avoids the UTC greeting bug.
+function hourInZone(tz: string | null): number | null {
+  if (!tz) return null;
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: tz,
+      hour: "numeric",
+      hour12: false,
+    }).format(new Date());
+    const n = Number.parseInt(parts, 10);
+    return Number.isFinite(n) ? n % 24 : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user, profile } = await requireProfile(env, request);
   const data = await loadLibraryData(env, user.id);
   const reading = data.library.find((e) => e.status === "reading") ?? null;
   const firstName = (profile.displayName ?? profile.username).split(/\s+/)[0];
+  const tzHour = hourInZone(profile.timezone);
   return {
     firstName,
-    greeting: timeOfDay(new Date().getUTCHours()),
+    greeting: timeOfDay(tzHour ?? new Date().getUTCHours()),
+    hasTimezone: tzHour !== null,
     reading,
     streak: data.streak,
   };
@@ -36,7 +56,13 @@ export function meta() {
 }
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { firstName, greeting, reading, streak } = loaderData;
+  const { firstName, reading, streak, hasTimezone } = loaderData;
+  // Server greeting uses the saved timezone. Without one it is a UTC guess, so
+  // correct to the visitor's actual local hour after hydration.
+  const [greeting, setGreeting] = useState(loaderData.greeting);
+  useEffect(() => {
+    if (!hasTimezone) setGreeting(timeOfDay(new Date().getHours()));
+  }, [hasTimezone]);
 
   return (
     <PageShell>

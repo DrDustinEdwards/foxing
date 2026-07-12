@@ -7,8 +7,10 @@ import {
   onboardProfile,
   profilesRepo,
   updateMeInput,
+  username as usernameSchema,
   visibilityPrefsInput,
 } from "@foxing/core";
+import { z } from "zod";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
@@ -39,6 +41,29 @@ profileRoutes.patch("/me", rateLimit("write"), async (c) => {
   if (!c.get("profile")) throw errors.notFound("Onboard before editing your profile.");
   const patch = await parseJson(c, updateMeInput);
   const profile = await profilesRepo.updateProfile(c.get("db"), session.id, patch);
+  return c.json({ profile });
+});
+
+// GET /me/username-available?username=foo - live availability check for the username
+// picker. Session-gated so it is not an open enumeration endpoint. The user's own
+// current username counts as available.
+profileRoutes.get("/me/username-available", async (c) => {
+  requireSession(c);
+  const parsed = usernameSchema.safeParse(c.req.query("username") ?? "");
+  if (!parsed.success) return c.json({ available: false });
+  const existing = await profilesRepo.getProfileByUsername(c.get("db"), parsed.data);
+  const mine = c.get("profile")?.username;
+  return c.json({ available: !existing || existing.username === mine });
+});
+
+// PATCH /me/username - change the current user's username (unique, format-checked).
+profileRoutes.patch("/me/username", rateLimit("write"), async (c) => {
+  const session = requireSession(c);
+  if (!c.get("profile")) throw errors.notFound("Onboard before editing your profile.");
+  const { username } = await parseJson(c, z.object({ username: usernameSchema }));
+  const existing = await profilesRepo.getProfileByUsername(c.get("db"), username);
+  if (existing && existing.id !== session.id) throw errors.conflict("That username is taken.");
+  const profile = await profilesRepo.updateUsername(c.get("db"), session.id, username);
   return c.json({ profile });
 });
 

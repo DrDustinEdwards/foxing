@@ -71,6 +71,21 @@ export async function updateProfile(
   return row ?? null;
 }
 
+/** Change the username. Callers must check uniqueness first (getProfileByUsername);
+ *  this is the write only. Format is validated at the API boundary. */
+export async function updateUsername(
+  db: Db,
+  userId: string,
+  username: string,
+): Promise<Profile | null> {
+  const [row] = await db
+    .update(profiles)
+    .set({ username, updatedAt: new Date() })
+    .where(eq(profiles.id, userId))
+    .returning();
+  return row ?? null;
+}
+
 // --- Billing (Phase 4b). The Stripe webhook is the only writer of these fields. ---
 
 export async function getProfileByStripeCustomerId(

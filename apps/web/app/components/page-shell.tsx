@@ -11,11 +11,12 @@ import { PicksMenu } from "./nav/picks-menu";
 import { ThemeToggle } from "./theme-toggle";
 import { Container } from "./ui";
 
-// Primary desktop nav (md+): Books and Celebrity Picks are mega-menus; Clubs and Journal
-// are plain links. Awards and Book of the Month are reached through the mega-menus, not
-// standalone entries. People lives in the signed-in secondary bar.
+// Primary desktop nav (md+): Books and Celebrity Picks are mega-menus; Clubs, People,
+// and Journal are plain links. Awards and Book of the Month are reached through the
+// mega-menus, not standalone entries. People also appears in the signed-in secondary bar.
 const PRIMARY_LINKS = [
   { to: "/clubs", label: "Clubs" },
+  { to: "/people", label: "People" },
   { to: "/journal", label: "Journal" },
 ];
 
@@ -204,7 +205,7 @@ export function SiteNav() {
 export function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-border-subtle bg-sunken">
-      <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-5">
+      <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-6">
         <div className="sm:col-span-2 lg:col-span-1">
           <Wordmark to="/" />
           <p className="mt-2 font-body text-base italic text-tertiary">reading, together.</p>
@@ -232,6 +233,15 @@ export function SiteFooter() {
             { to: "/picks", label: "Celebrity picks" },
             { to: "/book-of-the-month", label: "Book of the Month" },
             { to: "/journal", label: "The Journal" },
+            { to: "/lists", label: "Reading lists" },
+          ]}
+        />
+        <FooterCol
+          title="Using Foxing"
+          links={[
+            { to: "/features", label: "What Foxing does" },
+            { to: "/guide", label: "Web guide" },
+            { to: "/app-guide", label: "App guide" },
           ]}
         />
         <FooterCol
