@@ -10,6 +10,7 @@ import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
 import { adminRoutes } from "./routes/admin";
+import { annotationRoutes } from "./routes/annotations";
 import { billingRoutes } from "./routes/billing";
 import { clubRoutes } from "./routes/clubs";
 import { companionRoutes } from "./routes/companion";
@@ -40,6 +41,7 @@ export function createApi(deps: ApiDeps) {
 
   app.route("/", profileRoutes);
   app.route("/", libraryRoutes);
+  app.route("/", annotationRoutes);
   app.route("/", accountRoutes);
   app.route("/", companionRoutes);
   app.route("/", companionOpsRoutes);
