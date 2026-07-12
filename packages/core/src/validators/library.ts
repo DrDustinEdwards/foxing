@@ -46,3 +46,9 @@ export const updateGoalInput = z.object({
   type: goalType.optional(),
 });
 export type UpdateGoalInput = z.infer<typeof updateGoalInput>;
+
+// A saved word is toggled mastered / not-mastered from the vocabulary page.
+export const updateVocabularyInput = z.object({
+  mastered: z.boolean(),
+});
+export type UpdateVocabularyInput = z.infer<typeof updateVocabularyInput>;
