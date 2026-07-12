@@ -263,6 +263,32 @@ export async function listFinishedForSignals(db: Db, userId: string): Promise<Re
     .where(and(eq(userBooks.userId, userId), eq(userBooks.status, "finished")));
 }
 
+export interface FinishedStatBook {
+  finishedAt: Date | null;
+  subjects: string[] | null;
+}
+
+/** Finished books in a half-open time window, carrying the two fields the stats charts
+ *  need: the finish date (monthly-books view) and subjects (genre breakdown). */
+export async function listFinishedInRangeForStats(
+  db: Db,
+  userId: string,
+  startMs: number,
+  endMs: number,
+): Promise<FinishedStatBook[]> {
+  return db
+    .select({ finishedAt: userBooks.finishedAt, subjects: books.subjects })
+    .from(userBooks)
+    .innerJoin(books, eq(books.id, userBooks.bookId))
+    .where(
+      and(
+        eq(userBooks.userId, userId),
+        eq(userBooks.status, "finished"),
+        sql`${userBooks.finishedAt} >= ${startMs} AND ${userBooks.finishedAt} < ${endMs}`,
+      ),
+    );
+}
+
 // --- Vocabulary ------------------------------------------------------------
 
 export type VocabularyEntry = typeof vocabulary.$inferSelect;
