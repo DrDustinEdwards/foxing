@@ -64,6 +64,20 @@ const COLOR_MEANING: Record<HighlightColor, string> = {
   purple: "Disagree",
 };
 
+// Two locators point at the same reading position when they share a resource and
+// their progression matches within a hair. Used to skip redundant progress saves,
+// which otherwise fire (and flash "Saving...") for the position we just restored.
+function samePosition(a: Locator | null, b: Locator | null): boolean {
+  if (!a || !b || a.href !== b.href) return false;
+  return Math.abs(progressionOf(a) - progressionOf(b)) < 1e-4;
+}
+
+function progressionOf(loc: Locator): number {
+  const l = loc.locations ?? {};
+  const v = typeof l.totalProgression === "number" ? l.totalProgression : l.progression;
+  return typeof v === "number" ? v : 0;
+}
+
 function loadSettings(): ReaderSettings {
   if (typeof localStorage === "undefined") return DEFAULT_SETTINGS;
   try {
@@ -81,6 +95,11 @@ export function ReaderView(props: ReaderViewProps) {
   const engineRef = useRef<ReaderEngine | null>(null);
   const currentLocatorRef = useRef<Locator | null>(initialLocator);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Last position we actually persisted (seeded with the restored one), so we never
+  // re-save an unchanged position. A ms timestamp of the last in-text highlight tap,
+  // so a stray word-selection from the same tap can't immediately close the popover.
+  const lastSavedRef = useRef<Locator | null>(initialLocator);
+  const lastActivationRef = useRef(0);
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
@@ -145,14 +164,20 @@ export function ReaderView(props: ReaderViewProps) {
               if (signedIn) scheduleSave(loc);
             },
             onSelection: (payload) => {
+              // Tapping a highlight can also register a word-selection in some
+              // engines, which would immediately close the note popover we just
+              // opened. Ignore a selection that lands right after an activation.
+              if (Date.now() - lastActivationRef.current < 500) return;
               setEditing(null);
               setSelection(payload);
             },
             onDecorationActivated: (id) => {
+              lastActivationRef.current = Date.now();
               const found = annotationsRef.current.find((a) => a.id === id);
               if (found) {
                 setSelection(null);
                 setEditing(found);
+                clearNativeSelection();
               }
             },
             onReady: () => {
@@ -223,6 +248,10 @@ export function ReaderView(props: ReaderViewProps) {
     (loc: Locator) => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
       saveTimer.current = setTimeout(() => {
+        // Don't re-persist the position we already saved (the restore navigation
+        // re-emits it, which would flash "Saving..." on every reload for nothing).
+        if (samePosition(loc, lastSavedRef.current)) return;
+        lastSavedRef.current = loc;
         void apiWrite(`/books/${book.id}/progress`, {
           method: "PUT",
           body: { locator: loc, progressPct: progressPctFromLocator(loc) },
@@ -381,6 +410,18 @@ export function ReaderView(props: ReaderViewProps) {
 
   const canvas = READING_CANVAS[settings.theme];
   const bookmarks = annotations.filter((a) => a.type === "bookmark");
+  // Persistent list of highlights + notes: the reliable way to see which passages
+  // carry a note and to reopen one (the in-text tap works too, but this is always
+  // available). Clicking an entry jumps to it and opens its edit/delete popover.
+  const marks = annotations.filter(
+    (a) => (a.type === "highlight" || a.type === "note") && a.locator,
+  );
+
+  const openMark = useCallback((a: ReaderAnnotation) => {
+    if (a.locator) engineRef.current?.goToLocator(a.locator);
+    setPanel(null);
+    setEditing(a);
+  }, []);
 
   return (
     <div
@@ -561,6 +602,44 @@ export function ReaderView(props: ReaderViewProps) {
                       aria-label="Remove bookmark"
                     >
                       Remove
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {marks.length > 0 ? (
+            <div className="mt-6">
+              <h3 className="mb-2 text-xs uppercase tracking-wider text-tertiary">
+                Highlights & notes
+              </h3>
+              <ul className="flex flex-col gap-1">
+                {marks.map((a) => (
+                  <li key={a.id}>
+                    <button
+                      type="button"
+                      className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left hover:bg-hover"
+                      onClick={() => openMark(a)}
+                    >
+                      <span
+                        className="mt-1 h-3 w-3 flex-none rounded-full border border-border-default"
+                        style={{
+                          background: tintFor((a.color as HighlightColor) ?? "amber", "light"),
+                        }}
+                        aria-hidden
+                      />
+                      <span className="min-w-0 flex-1">
+                        {a.selectedText ? (
+                          <span className="line-clamp-2 text-sm">{a.selectedText}</span>
+                        ) : null}
+                        {a.body ? (
+                          <span className="mt-0.5 flex items-start gap-1 text-xs text-tertiary">
+                            <span className="rounded bg-hover px-1 font-medium">Note</span>
+                            <span className="line-clamp-2">{a.body}</span>
+                          </span>
+                        ) : null}
+                      </span>
                     </button>
                   </li>
                 ))}

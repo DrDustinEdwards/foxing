@@ -220,13 +220,22 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
   // one-shot compute before the fill width is painted, leaving the book laid out
   // in the intrinsic 300px. Nudging the navigator's resize recomputes against the
   // real width; it is a no-op once geometry already matches.
-  const forceRelayout = () => {
+  const forceRelayout = (): Promise<void> => {
     const rh = (nav as unknown as { resizeHandler?: () => Promise<void> }).resizeHandler;
-    if (typeof rh === "function") rh.call(nav).catch(() => {});
+    return typeof rh === "function" ? rh.call(nav).catch(() => {}) : Promise.resolve();
   };
 
   listeners.onReady();
-  requestAnimationFrame(() => requestAnimationFrame(forceRelayout));
+  // Recompute geometry against the real width, then snap back to the saved
+  // locator. The relayout re-paginates the resource, which can shift the saved
+  // progression onto a neighboring page (it was landing a page early), so we
+  // re-navigate afterward to land on the exact saved page.
+  requestAnimationFrame(() =>
+    requestAnimationFrame(async () => {
+      await forceRelayout();
+      if (initialLocator) nav.go(initial, false, () => {});
+    }),
+  );
 
   const findByProgression = (fraction: number): ReadiumLocator => {
     const clamped = Math.max(0, Math.min(1, fraction));
