@@ -5,18 +5,30 @@
 import { HttpFetcher, Locator as ReadiumLocator, Manifest, Publication } from "@readium/shared";
 import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
 import type { HighlightColor } from "@foxing/core";
-import { decorationStyleFor } from "./locator";
+import { decorationStyleFor, noteOutlineStyleFor } from "./locator";
 import type { Locator, SelectionContext } from "./locator";
 import type { ReaderSettings, ReaderTheme } from "./settings";
 import { initialEpubPreferences, toEpubPreferences } from "./settings";
 
 const CONTEXT_CHARS = 40;
 const ANNOTATION_GROUP = "annotations";
+// A second group, drawn but never registered for activation, that carries the
+// "has a note" outline. Keeping it separate means the fill in ANNOTATION_GROUP is
+// the sole click target, so a tap always resolves to one annotation.
+const NOTE_GROUP = "annotation-notes";
+
+export interface DecorationRect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 export interface HighlightSpec {
   id: string;
   locator: Locator;
   color: HighlightColor;
+  hasNote: boolean;
 }
 
 export interface SelectionPayload {
@@ -29,7 +41,9 @@ export interface SelectionPayload {
 export interface EngineListeners {
   onPosition: (locator: Locator) => void;
   onSelection: (payload: SelectionPayload) => void;
-  onDecorationActivated: (id: string) => void;
+  // rect is the activated highlight's bounds in navigator-container CSS pixels,
+  // so the popover can be anchored to the passage instead of floating bottom-center.
+  onDecorationActivated: (id: string, rect: DecorationRect | null) => void;
   onReady: () => void;
 }
 
@@ -200,8 +214,11 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
   await nav.load();
 
   nav.registerDecorationObserver(ANNOTATION_GROUP, {
-    onDecorationActivated: (event: { decoration: { id: string } }) => {
-      listeners.onDecorationActivated(event.decoration.id);
+    onDecorationActivated: (event: {
+      decoration: { id: string };
+      rect?: DecorationRect;
+    }) => {
+      listeners.onDecorationActivated(event.decoration.id, event.rect ?? null);
       return true;
     },
   } as never);
@@ -274,12 +291,22 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
     goToTotalProgression: (fraction: number) =>
       nav.go(findByProgression(fraction), false, () => {}),
     applyHighlights: (specs: HighlightSpec[], theme: ReaderTheme) => {
-      const decorations = specs.map((s) => ({
+      const fills = specs.map((s) => ({
         id: s.id,
         locator: ReadiumLocator.deserialize(s.locator) ?? s.locator,
         style: decorationStyleFor(s.color, theme),
       }));
-      nav.applyDecorations(decorations as never, ANNOTATION_GROUP);
+      nav.applyDecorations(fills as never, ANNOTATION_GROUP);
+      // The note outline is a separate group so it stays purely visual; the fill
+      // above is what a tap resolves to.
+      const notes = specs
+        .filter((s) => s.hasNote)
+        .map((s) => ({
+          id: s.id,
+          locator: ReadiumLocator.deserialize(s.locator) ?? s.locator,
+          style: noteOutlineStyleFor(s.color, theme),
+        }));
+      nav.applyDecorations(notes as never, NOTE_GROUP);
     },
     applySettings: async (next: ReaderSettings) => {
       await nav.submitPreferences(toEpubPreferences(next) as never);
