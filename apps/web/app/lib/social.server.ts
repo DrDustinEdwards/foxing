@@ -215,6 +215,46 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
   };
 }
 
+// -- Own diary --------------------------------------------------------------
+
+export type OwnDiaryEntry = {
+  id: string;
+  bookId: string;
+  book: { title: string; slug: string; coverUrl: string | null } | null;
+  ratingHalf: number | null;
+  review: string | null;
+  containsSpoilers: boolean;
+  visibility: string;
+  logDate: number | null;
+};
+
+/** The signed-in reader's own reading log, newest-logged first, all visibilities (it is
+ *  theirs). Reuses the same diary query + book overlay the public profile uses. */
+export async function loadOwnDiary(env: Env, userId: string): Promise<OwnDiaryEntry[]> {
+  const db = createDb(env.DB);
+  const entries = await diaryRepo.listEntriesForUser(
+    db,
+    userId,
+    ["private", "friends", "public"],
+    { limit: 100 },
+  );
+  const books = await catalogRepo.getBooksByIds(db, [...new Set(entries.map((e) => e.bookId))]);
+  const bookMap = new Map(books.map((b) => [b.id, b]));
+  return entries.map((d) => {
+    const b = bookMap.get(d.bookId);
+    return {
+      id: d.id,
+      bookId: d.bookId,
+      book: b ? { title: b.title, slug: b.slug, coverUrl: b.coverUrl } : null,
+      ratingHalf: d.ratingHalf,
+      review: d.review,
+      containsSpoilers: d.containsSpoilers,
+      visibility: d.visibility,
+      logDate: d.logDate?.getTime() ?? null,
+    };
+  });
+}
+
 // -- People (follow discovery) ----------------------------------------------
 
 export async function loadPeople(env: Env, viewerId: string) {

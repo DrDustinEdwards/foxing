@@ -12,11 +12,14 @@ import { useDismiss, useRovingMenu } from "./use-menu";
 // primary four: Home, Library, Feed, People).
 const PERSONAL_LINKS = [
   { to: "/notifications", label: "Notifications" },
+  { to: "/diary", label: "Diary" },
   { to: "/lists", label: "Your lists" },
   { to: "/highlights", label: "Highlights" },
   { to: "/commonplace", label: "Commonplace" },
   { to: "/vocabulary", label: "Vocabulary" },
+  { to: "/goals", label: "Reading goals" },
   { to: "/stats", label: "Reading stats" },
+  { to: "/year", label: "Year in reading" },
 ];
 
 function TierBadge({ tier }: { tier: "free" | "plus" }) {

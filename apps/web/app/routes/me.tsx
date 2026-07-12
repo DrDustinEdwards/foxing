@@ -69,7 +69,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
             { to: "/diary/new", label: "Log a book" },
             { to: "/feed", label: "Feed" },
             { to: "/people", label: "People" },
-            { to: `/u/${profile.username}/recap/${new Date().getUTCFullYear()}`, label: "Year in reading" },
+            { to: "/year", label: "Year in reading" },
           ].map((l) => (
             <Link
               key={l.to}

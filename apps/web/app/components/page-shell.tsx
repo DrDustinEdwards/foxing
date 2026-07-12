@@ -31,11 +31,12 @@ const MOBILE_PRIMARY = [
   { to: "/journal", label: "Journal" },
 ];
 
-// Signed-in app bar: the viewer's personal surfaces. Clubs sits in the primary nav; Diary
-// is omitted here (no index route -- only diary/new and diary/:id/edit exist).
+// Signed-in app bar: the viewer's personal surfaces. Clubs sits in the primary nav. The
+// rest of the personal surfaces (goals, lists, stats, year) live in the account menu.
 const SECONDARY_LINKS = [
   { to: "/home", label: "Home" },
   { to: "/library", label: "Library" },
+  { to: "/diary", label: "Diary" },
   { to: "/feed", label: "Feed" },
   { to: "/people", label: "People" },
 ];
