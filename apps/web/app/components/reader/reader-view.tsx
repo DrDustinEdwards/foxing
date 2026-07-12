@@ -79,6 +79,19 @@ function progressionOf(loc: Locator): number {
   return typeof v === "number" ? v : 0;
 }
 
+// The engine keeps a pool of content frames (current, prev, next); only one is
+// shown at a time, the rest are hidden (visibility:hidden, opacity:0). Activation
+// rects are relative to the shown frame, so anchor against that one.
+function visibleFrame(container: HTMLElement | null): HTMLIFrameElement | null {
+  if (!container) return null;
+  const frames = Array.from(container.querySelectorAll("iframe"));
+  return (
+    frames.find((f) => f.style.visibility !== "hidden" && f.style.opacity !== "0") ??
+    frames[0] ??
+    null
+  );
+}
+
 function loadSettings(): ReaderSettings {
   if (typeof localStorage === "undefined") return DEFAULT_SETTINGS;
   try {
@@ -164,6 +177,10 @@ export function ReaderView(props: ReaderViewProps) {
               setPct(progressPctFromLocator(loc));
               if (typeof loc.title === "string") setChapter(loc.title);
               setSelection(null);
+              // Turning the page moves away from the anchored passage, so close its
+              // popover rather than leaving it floating over unrelated text.
+              setEditing(null);
+              setEditAnchor(null);
               if (signedIn) scheduleSave(loc);
             },
             onSelection: (payload) => {
@@ -178,8 +195,10 @@ export function ReaderView(props: ReaderViewProps) {
               // The rect arrives in device pixels relative to the content frame's
               // viewport (the injectable scales by devicePixelRatio and the navigator
               // forwards it as-is). Convert to CSS pixels and offset by the frame's
-              // position so the fixed popover lands on the passage.
-              const iframe = containerRef.current?.querySelector("iframe");
+              // position so the fixed popover lands on the passage. The engine keeps a
+              // pool of frames; pick the shown one (the others are hidden), never the
+              // first in DOM order.
+              const iframe = visibleFrame(containerRef.current);
               const fr = iframe?.getBoundingClientRect();
               const dpr = window.devicePixelRatio || 1;
               setEditAnchor(
@@ -541,6 +560,7 @@ export function ReaderView(props: ReaderViewProps) {
       {/* Selection toolbar (bottom-center; robust across paginated/scroll) */}
       {selection && !noteDraft ? (
         <SelectionToolbar
+          canvas={canvas}
           onColor={(c) => highlightSelection(c)}
           onNote={() => setNoteDraft({ color: "amber", text: "" })}
           onDismiss={() => {
@@ -554,6 +574,7 @@ export function ReaderView(props: ReaderViewProps) {
       {noteDraft ? (
         <NoteComposer
           draft={noteDraft}
+          canvas={canvas}
           onChange={setNoteDraft}
           onSave={() => highlightSelection(noteDraft.color, noteDraft.text.trim() || undefined)}
           onCancel={() => {
@@ -569,6 +590,7 @@ export function ReaderView(props: ReaderViewProps) {
         <EditPopover
           annotation={editing}
           anchor={editAnchor}
+          canvas={canvas}
           onColor={(c) => patchAnnotation(editing.id, { color: c })}
           onSaveNote={(body) => patchAnnotation(editing.id, { body: body || null })}
           onDelete={() => deleteAnnotation(editing.id)}
@@ -580,7 +602,7 @@ export function ReaderView(props: ReaderViewProps) {
       ) : null}
 
       {panel === "toc" ? (
-        <SidePanel title="Contents" onClose={() => setPanel(null)}>
+        <SidePanel title="Contents" onClose={() => setPanel(null)} canvas={canvas}>
           <nav aria-label="Table of contents">
             <ul className="flex flex-col gap-0.5">
               {toc.map((t) => (
@@ -670,7 +692,7 @@ export function ReaderView(props: ReaderViewProps) {
       ) : null}
 
       {panel === "type" ? (
-        <SidePanel title="Text settings" onClose={() => setPanel(null)}>
+        <SidePanel title="Text settings" onClose={() => setPanel(null)} canvas={canvas}>
           <TypographyControls settings={settings} onChange={updateSettings} />
         </SidePanel>
       ) : null}
@@ -754,16 +776,19 @@ function SelectionToolbar({
   onColor,
   onNote,
   onDismiss,
+  canvas,
 }: {
   onColor: (c: HighlightColor) => void;
   onNote: () => void;
   onDismiss: () => void;
+  canvas: { bg: string; text: string };
 }) {
   return (
     <div
       role="toolbar"
       aria-label="Highlight selection"
-      className="fixed bottom-16 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border-subtle bg-surface px-3 py-2 shadow-md"
+      className="fixed bottom-16 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border-subtle px-3 py-2 shadow-md"
+      style={{ background: canvas.bg, color: canvas.text }}
     >
       {highlightColorValues.map((c) => (
         <button
@@ -801,14 +826,19 @@ function NoteComposer({
   onChange,
   onSave,
   onCancel,
+  canvas,
 }: {
   draft: { color: HighlightColor; text: string };
   onChange: (d: { color: HighlightColor; text: string }) => void;
   onSave: () => void;
   onCancel: () => void;
+  canvas: { bg: string; text: string };
 }) {
   return (
-    <div className="fixed bottom-16 left-1/2 z-20 w-[min(28rem,90vw)] -translate-x-1/2 rounded-card border border-border-subtle bg-surface p-3 shadow-lg">
+    <div
+      className="fixed bottom-16 left-1/2 z-20 w-[min(28rem,90vw)] -translate-x-1/2 rounded-card border border-border-subtle p-3 shadow-lg"
+      style={{ background: canvas.bg, color: canvas.text }}
+    >
       <div className="mb-2 flex items-center gap-1.5">
         {highlightColorValues.map((c) => (
           <button
@@ -853,6 +883,7 @@ function NoteComposer({
 function EditPopover({
   annotation,
   anchor,
+  canvas,
   onColor,
   onSaveNote,
   onDelete,
@@ -860,6 +891,7 @@ function EditPopover({
 }: {
   annotation: ReaderAnnotation;
   anchor: DecorationRect | null;
+  canvas: { bg: string; text: string };
   onColor: (c: HighlightColor) => void;
   onSaveNote: (body: string) => void;
   onDelete: () => void;
@@ -897,27 +929,23 @@ function EditPopover({
   }, [anchor, body]);
 
   const anchored = anchor != null;
+  // No full-screen backdrop: it would intercept every reader click and read as a
+  // frozen page. The popover closes on Close, Escape, a page turn, or opening
+  // another annotation, so reading interaction is never blocked.
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Close note"
-        className="fixed inset-0 z-20 bg-transparent"
-        onClick={onClose}
-      />
       <div
         ref={ref}
         role="dialog"
         aria-label="Edit annotation"
-        className={`z-30 w-[min(28rem,90vw)] rounded-card border border-border-subtle bg-surface p-3 shadow-lg ${
+        className={`z-30 w-[min(28rem,90vw)] rounded-card border border-border-subtle p-3 shadow-lg ${
           anchored ? "fixed" : "fixed bottom-16 left-1/2 -translate-x-1/2"
         }`}
         style={
           anchored
             ? pos
-              ? { top: pos.top, left: pos.left }
-              : { top: 0, left: 0, visibility: "hidden" }
-            : undefined
+              ? { top: pos.top, left: pos.left, background: canvas.bg, color: canvas.text }
+              : { top: 0, left: 0, visibility: "hidden", background: canvas.bg, color: canvas.text }
+            : { background: canvas.bg, color: canvas.text }
         }
       >
       <div className="mb-2 flex items-center gap-1.5">
@@ -934,7 +962,7 @@ function EditPopover({
         ))}
       </div>
       {annotation.selectedText ? (
-        <p className="mb-2 max-h-20 overflow-auto text-sm italic text-secondary">
+        <p className="mb-2 max-h-20 overflow-auto text-sm italic opacity-70">
           “{annotation.selectedText}”
         </p>
       ) : null}
@@ -969,8 +997,7 @@ function EditPopover({
           </button>
         </div>
       </div>
-      </div>
-    </>
+    </div>
   );
 }
 
@@ -978,10 +1005,12 @@ function SidePanel({
   title,
   children,
   onClose,
+  canvas,
 }: {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
+  canvas: { bg: string; text: string };
 }) {
   return (
     <>
@@ -992,7 +1021,11 @@ function SidePanel({
         onClick={onClose}
       />
       <aside
-        className="fixed right-0 top-0 z-30 flex h-full w-[min(22rem,90vw)] flex-col border-l border-border-subtle bg-surface"
+        // Themed with the reading canvas (not site tokens): the reader root sets an
+        // inline text color per reading theme, so a site-surface panel would show
+        // light text on a light panel in dark theme.
+        className="fixed right-0 top-0 z-30 flex h-full w-[min(22rem,90vw)] flex-col border-l border-border-subtle"
+        style={{ background: canvas.bg, color: canvas.text }}
         aria-label={title}
       >
         <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
@@ -1151,11 +1184,15 @@ function TypographyControls({
           aria-checked={settings.scroll}
           aria-label="Scroll mode"
           onClick={() => onChange({ scroll: !settings.scroll })}
-          className="h-6 w-11 rounded-full border border-border-default transition-colors aria-checked:bg-[color:var(--toggle-on)]"
+          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+            settings.scroll ? "bg-brand-ui" : "bg-border-strong"
+          }`}
         >
           <span
-            className="block h-5 w-5 rounded-full bg-surface shadow-sm transition-transform"
-            style={{ transform: settings.scroll ? "translateX(1.25rem)" : "translateX(1px)" }}
+            aria-hidden="true"
+            className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow-sm transition-transform ${
+              settings.scroll ? "translate-x-[22px]" : "translate-x-0.5"
+            }`}
           />
         </button>
       </div>
