@@ -1209,7 +1209,10 @@ function TypographyControls({
                 type="button"
                 aria-pressed={settings.columns === n}
                 onClick={() => onChange({ columns: n as 1 | 2 })}
-                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:bg-selected"
+                // Selected: a brand fill with on-brand text, which reads clearly on
+                // every reading canvas. The old bg-selected token is a site light
+                // tint, invisible under the panel's inherited (light) text in dark.
+                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:border-brand-ui aria-pressed:bg-brand-ui aria-pressed:text-on-brand"
               >
                 {n}
               </button>
