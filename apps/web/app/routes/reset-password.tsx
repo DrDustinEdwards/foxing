@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { useNavigate, useSearchParams } from "react-router";
+import { AuthLink, AuthShell, AuthSubmit, Field } from "~/components/auth-shell";
 import { authClient } from "~/lib/auth-client";
 
 export function meta() {
@@ -19,17 +20,19 @@ export default function ResetPassword() {
     // bad, so the retry copy differs. Both cases route back to request a fresh link.
     const interrupted = linkError === "unavailable";
     return (
-      <main>
-        <h1>{interrupted ? "We couldn't verify that link" : "Link expired or invalid"}</h1>
-        <p>
-          {interrupted
+      <AuthShell
+        title={interrupted ? "We couldn't verify that link" : "Link expired or invalid"}
+        subtitle={
+          interrupted
             ? "Something interrupted the check. Request a new link and try again."
-            : "This reset link is missing or has expired."}
+            : "This reset link is missing or has expired."
+        }
+        footer={<AuthLink to="/forgot-password">Request a new reset link</AuthLink>}
+      >
+        <p className="font-ui text-sm text-secondary">
+          Reset links are single-use and expire quickly for security.
         </p>
-        <p>
-          <Link to="/forgot-password">Request a new reset link</Link>
-        </p>
-      </main>
+      </AuthShell>
     );
   }
 
@@ -54,38 +57,31 @@ export default function ResetPassword() {
   }
 
   return (
-    <main>
-      <h1>Set a new password</h1>
-      <form onSubmit={onSubmit}>
-        <p>
-          <label>
-            New password
-            <input
-              name="password"
-              type="password"
-              minLength={8}
-              required
-              autoComplete="new-password"
-            />
-          </label>
-        </p>
-        <p>
-          <label>
-            Confirm new password
-            <input
-              name="confirm"
-              type="password"
-              minLength={8}
-              required
-              autoComplete="new-password"
-            />
-          </label>
-        </p>
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={pending}>
-          {pending ? "Saving..." : "Set new password"}
-        </button>
+    <AuthShell title="Set a new password" subtitle="Choose a password you don't use elsewhere.">
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field
+          label="New password"
+          name="password"
+          type="password"
+          minLength={8}
+          required
+          autoComplete="new-password"
+        />
+        <Field
+          label="Confirm new password"
+          name="confirm"
+          type="password"
+          minLength={8}
+          required
+          autoComplete="new-password"
+        />
+        {error ? (
+          <p role="alert" className="font-ui text-sm text-error">
+            {error}
+          </p>
+        ) : null}
+        <AuthSubmit pending={pending}>{pending ? "Saving..." : "Set new password"}</AuthSubmit>
       </form>
-    </main>
+    </AuthShell>
   );
 }

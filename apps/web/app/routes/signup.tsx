@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { AuthLink, AuthShell, AuthSubmit, Field } from "~/components/auth-shell";
 import { TurnstileWidget } from "~/components/turnstile";
 import { cloudflareContext } from "~/context";
 import { signUp } from "~/lib/auth-client";
@@ -57,52 +57,48 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
 
   if (done) {
     return (
-      <main>
-        <h1>Check your email</h1>
-        <p>We sent a link to confirm your address. Open it to finish setting up your account.</p>
-      </main>
+      <AuthShell
+        title="Check your email"
+        subtitle="We sent a link to confirm your address. Open it to finish setting up your account."
+      >
+        <p className="font-ui text-sm text-secondary">
+          You can close this tab once you have confirmed.
+        </p>
+      </AuthShell>
     );
   }
 
   return (
-    <main>
-      <h1>Create your account</h1>
-      <form onSubmit={onSubmit}>
-        <p>
-          <label>
-            Name
-            <input name="name" required autoComplete="name" />
-          </label>
-        </p>
-        <p>
-          <label>
-            Email
-            <input name="email" type="email" required autoComplete="email" />
-          </label>
-        </p>
-        <p>
-          <label>
-            Password
-            <input
-              name="password"
-              type="password"
-              minLength={8}
-              required
-              autoComplete="new-password"
-            />
-          </label>
-        </p>
+    <AuthShell
+      title="Create your account"
+      subtitle="Track what you read and join the conversation."
+      footer={
+        <>
+          Already have an account? <AuthLink to="/login">Sign in</AuthLink>
+        </>
+      }
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <Field label="Name" name="name" required autoComplete="name" />
+        <Field label="Email" name="email" type="email" required autoComplete="email" />
+        <Field
+          label="Password"
+          name="password"
+          type="password"
+          minLength={8}
+          required
+          autoComplete="new-password"
+        />
         {turnstile.enabled ? (
           <TurnstileWidget siteKey={turnstile.siteKey} onToken={setCaptchaToken} />
         ) : null}
-        {error ? <p role="alert">{error}</p> : null}
-        <button type="submit" disabled={pending}>
-          {pending ? "Creating..." : "Create account"}
-        </button>
+        {error ? (
+          <p role="alert" className="font-ui text-sm text-error">
+            {error}
+          </p>
+        ) : null}
+        <AuthSubmit pending={pending}>{pending ? "Creating..." : "Create account"}</AuthSubmit>
       </form>
-      <p>
-        <Link to="/login">Already have an account?</Link>
-      </p>
-    </main>
+    </AuthShell>
   );
 }
