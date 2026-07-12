@@ -1,7 +1,7 @@
 # CLAUDE.md -- Foxing Monorepo
 ## Read this at the start of every Claude Code session.
 ## Always-on rules only. Reference material lives in the Foxing Vault.
-## Path-scoped CLAUDE.md files auto-load under apps/web/app/api/, apps/web/app/admin/, and apps/mobile/.
+## Path-scoped CLAUDE.md files auto-load from their directory. apps/mobile/ has one.
 
 ---
 
@@ -41,7 +41,7 @@ Touch only what you must. Clean up only your own mess.
 Define verifiable success criteria before starting multi-step tasks.
 
 Transform vague tasks into checks tied to real outputs:
-  "Fix the cache issue" -> "Public pages return x-vercel-cache: HIT on second request"
+  "Fix the cache issue" -> "Public pages return cf-cache-status: HIT on second request"
   "Fix the bug"        -> "The specific error no longer appears in logs"
   "Refactor X"         -> "npx tsc --noEmit passes; behavior is identical"
 
@@ -77,12 +77,19 @@ Foxing is a reading app + web platform. Letterboxd for books.
 Monorepo: github.com/DrDustinEdwards/foxing
 
   apps/mobile/    -- Expo React Native reader (SDK 56 / RN 0.85.3)
-  apps/web/       -- Next.js 14 web platform (foxing.app)
+  apps/web/       -- React Router v7 web platform on Cloudflare Workers (foxing.app)
+  packages/core/  -- @foxing/core Drizzle schema, repositories, domain logic
+  packages/api/   -- @foxing/api Hono routes (the /api/v1 surface)
   packages/types/ -- @foxing/types shared interfaces
   packages/utils/ -- @foxing/utils shared helpers
 
-Supabase project: ekjpsuewrkvqzbuteurc
-Web deploy: Vercel (auto-deploys on push to main), domain: foxing.app
+Web stack: Cloudflare Workers + D1 (SQLite) + R2 + KV, React Router v7 (framework mode).
+Web deploy: `npm run deploy` from apps/web (react-router build + wrangler deploy).
+  Promotes straight to production. Pushing to main does NOT deploy.
+Domain: foxing.app.
+
+Supabase project ekjpsuewrkvqzbuteurc is retained ONLY for the mobile ai-companion
+edge function (see COMMANDS). The web platform does not use Supabase.
 
 Storage: Cloudflare R2 (all new uploads, not Supabase).
   foxing-covers, foxing-epubs, foxing-avatars, foxing-journal-images
@@ -95,20 +102,30 @@ Storage: Cloudflare R2 (all new uploads, not Supabase).
 Always run from the right directory:
   Mobile: cd apps/mobile
   Web:    cd apps/web
-  Install / types / utils: repo root
+  Install / core / api / types / utils: repo root
 
-Supabase CLI -- always from repo root (supabase/ lives there):
-  npx supabase functions deploy [name] --project-ref ekjpsuewrkvqzbuteurc
+Web deploy (Cloudflare Workers):
+  cd apps/web && npm run deploy   (react-router build + wrangler deploy)
+  Promotes to production. Pushing to main does NOT deploy.
+
+Web Worker secrets (production env):
+  cd apps/web && npx wrangler secret put KEY
+  Local dev env: apps/web/.dev.vars (gitignored). Never Vercel.
+
+D1 database migrations (web):
+  Author with drizzle-kit in packages/core (migrations in packages/core/migrations);
+  apply to D1 with wrangler. Never Supabase MCP.
+
+Web type check before every push:
+  cd apps/web && npm run type-check   (react-router typegen + tsc --noEmit)
+
+Supabase CLI -- ONLY for the retained mobile ai-companion edge function (intentional,
+do NOT consolidate; there is no root supabase/ directory):
+  ai-companion deploys from apps/mobile/supabase/functions (run the CLI from apps/mobile).
+    The mobile tree holds the live AI backend.
+  npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc
   npx supabase secrets set KEY=value --project-ref ekjpsuewrkvqzbuteurc
-
-Edge function deploy split (intentional, do NOT consolidate):
-  ai-companion deploys from apps/mobile/supabase/functions (run the CLI
-    from apps/mobile). The mobile tree holds the live AI backend.
-  All other functions deploy from root supabase/functions.
   Never delete apps/mobile/supabase or merge the two trees.
-
-Web build check before every push:
-  cd apps/web && npx tsc --noEmit
 
 ---
 
@@ -138,10 +155,12 @@ Web build check before every push:
    /book-clubs         -- celebrity picks (Oprah, Reese, etc.)
    /book-of-the-month  -- Foxing's own monthly pick
 
-7. `npx tsc --noEmit` must pass before every git push. No exceptions.
+7. Type check must pass before every git push. No exceptions. Web:
+   `cd apps/web && npm run type-check` (react-router typegen + tsc --noEmit).
 
-8. Never read, display, log, or reference the contents of .env files.
-   Env vars live in Vercel only.
+8. Never read, display, log, or reference the contents of env files.
+   Web env vars live in Cloudflare Worker secrets (production) and
+   apps/web/.dev.vars (local dev, gitignored). Never Vercel.
 
 9. No emoji in UI, copy, badges, or code.
    Two exceptions: the fox emoji in nav/footer/auth/admin, and emoji
@@ -155,8 +174,9 @@ Web build check before every push:
     `apps/web/`. Single terminal per task. Never run two Claude Code
     sessions simultaneously.
 
-12. DB migrations via Supabase MCP `apply_migration` only.
-    Never run raw DDL in `execute_sql`.
+12. Web D1 migrations are authored with drizzle-kit in packages/core and
+    applied with wrangler. Never Supabase MCP; never hand-run raw DDL
+    against production.
 
 13. Two tiers only: free and plus. Never reference any other tier name
     in code, copy, or schema.
