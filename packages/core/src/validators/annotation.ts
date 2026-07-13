@@ -50,8 +50,10 @@ export const createAnnotationInput = z
     chapter: z.string().max(500).optional(),
     // Optional (no default) so an unspecified audience is resolved from the
     // reader's default-annotation preference in domain/annotations.createAnnotation.
-    // Personal reader annotations are never club-scoped.
-    visibility: z.enum(["private", "friends", "public"]).optional(),
+    // 'club' is an EXPOSURE (share-to-club): the annotation stays personal (club_id
+    // NULL), and which clubs see it is derived at read time from the author's active
+    // current-read clubs. Personal annotations never carry a club_id.
+    visibility: z.enum(["private", "friends", "club", "public"]).optional(),
     containsSpoilers: z.boolean().optional(),
   })
   .refine((v) => v.type !== "highlight" || !!v.color, {
@@ -60,11 +62,32 @@ export const createAnnotationInput = z
   });
 export type CreateAnnotationInput = z.infer<typeof createAnnotationInput>;
 
+/** Passage discussion write (type='comment'). Always club-scoped (club_id) and
+ *  book-scoped (book_id, so the reader resolver finds it), anchored either to a passage
+ *  (locator) or to a highlight/comment it replies to (parentId). visibility is not
+ *  accepted: a comment's audience is its club, resolved from club_id, never a personal
+ *  visibility. Active club membership is enforced in the domain, not here. */
+export const createPassageCommentInput = z
+  .object({
+    id: z.string().min(1).max(64).optional(),
+    clubId: z.string().min(1),
+    bookId: z.string().min(1),
+    body: z.string().min(1).max(20000),
+    locator: locator.nullable().optional(),
+    parentId: z.string().min(1).optional(),
+    containsSpoilers: z.boolean().optional(),
+  })
+  .refine((v) => !!v.parentId || !!v.locator, {
+    message: "a comment needs a passage locator or a parent to reply to",
+    path: ["locator"],
+  });
+export type CreatePassageCommentInput = z.infer<typeof createPassageCommentInput>;
+
 export const updateAnnotationInput = z.object({
   id: z.string().min(1),
   body: z.string().max(20000).nullable().optional(),
   color: highlightColor.optional(),
-  visibility: z.enum(["private", "friends", "public"]).optional(),
+  visibility: z.enum(["private", "friends", "club", "public"]).optional(),
   isPinned: z.boolean().optional(),
   containsSpoilers: z.boolean().optional(),
 });

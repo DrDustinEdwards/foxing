@@ -3,6 +3,18 @@ export * from "./onboarding";
 export * from "./text";
 export * as annotationsDomain from "./annotations";
 export { resolveDefaultAnnotationVisibility } from "./annotations";
+export * as readerAnnotationsDomain from "./reader-annotations";
+export { loadReaderAnnotations, computeGate, annotationPct } from "./reader-annotations";
+export type {
+  ReaderAnnotationsResult,
+  ResolvedOther,
+  ResolvedComment,
+  ReaderMine,
+  PopularHighlight,
+  OtherLayer,
+  Gate,
+  LoadReaderAnnotationsOptions,
+} from "./reader-annotations";
 export * as libraryDomain from "./library";
 export { changeBookStatus } from "./library";
 

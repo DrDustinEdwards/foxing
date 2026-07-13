@@ -7,7 +7,9 @@ import {
   annotationsDomain,
   annotationsRepo,
   createAnnotationInput,
+  createPassageCommentInput,
   libraryRepo,
+  loadReaderAnnotations,
   saveProgressInput,
   updateAnnotationInput,
 } from "@foxing/core";
@@ -18,6 +20,38 @@ import type { Env } from "../types";
 
 export const annotationRoutes = new Hono<Env>();
 
+// The reader social layers for one book: the viewer's own annotations, the entitled
+// club/friend/public annotations of OTHERS (each tagged with the layer that admitted
+// it), the club passage discussion, and the popular-highlights aggregation. Session is
+// optional: anonymous readers resolve to public + popular only. All entitlement is
+// resolved server-side in core; the client only toggles which returned layers it shows.
+// ?layers= trims the payload (mine,club,friend,public,popular,comments); ?progressGate=off
+// skips the automatic ahead-of-you gate (the manual spoiler flag always applies).
+annotationRoutes.get("/books/:id/annotations", async (c) => {
+  const session = c.get("session");
+  const progressGate = c.req.query("progressGate") !== "off";
+  const result = await loadReaderAnnotations(c.get("db"), session?.id ?? null, c.req.param("id"), {
+    progressGate,
+  });
+
+  const layersParam = c.req.query("layers");
+  if (!layersParam) return c.json(result);
+
+  const wanted = new Set(
+    layersParam
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean),
+  );
+  return c.json({
+    viewerProgressPct: result.viewerProgressPct,
+    mine: wanted.has("mine") ? result.mine : [],
+    others: result.others.filter((o) => wanted.has(o.layer)),
+    comments: wanted.has("comments") ? result.comments : [],
+    popular: wanted.has("popular") ? result.popular : [],
+  });
+});
+
 // Create a highlight/note/bookmark. Body carries the bookId; visibility is optional
 // and, when absent, resolved from the reader's default-annotation preference in core.
 annotationRoutes.post("/annotations", rateLimit("write"), async (c) => {
@@ -26,6 +60,16 @@ annotationRoutes.post("/annotations", rateLimit("write"), async (c) => {
   if (!profile) throw errors.forbidden("Complete your profile to save annotations.");
   const input = await parseJson(c, createAnnotationInput);
   const annotation = await annotationsDomain.createAnnotation(c.get("db"), profile, input);
+  return c.json({ annotation }, 201);
+});
+
+// Create a passage comment (reply to a highlight, or a comment on a passage). Always
+// club-scoped; core enforces active membership of that club BEFORE inserting, so a
+// non-member's post is rejected 403 and never reaches the table.
+annotationRoutes.post("/annotations/comments", rateLimit("write"), async (c) => {
+  const session = requireSession(c);
+  const input = await parseJson(c, createPassageCommentInput);
+  const annotation = await annotationsDomain.createPassageComment(c.get("db"), session.id, input);
   return c.json({ annotation }, 201);
 });
 

@@ -2,11 +2,14 @@
 // like tables. Phase 6 wires reading_list + diary_entry targets (list likes, review
 // likes). Owner resolution (for the reaction notification) is done here so the domain
 // can notify the target's author without knowing each table's shape.
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
-import { diaryEntries, reactions, readingLists } from "../schema";
+import { annotations, diaryEntries, reactions, readingLists } from "../schema";
 
 export type Reaction = typeof reactions.$inferSelect;
+
+// D1 caps a query at 100 bound variables; keep IN lists under it.
+const CHUNK = 90;
 
 export async function addReaction(
   db: Db,
@@ -101,5 +104,72 @@ export async function resolveTargetOwner(
       .limit(1);
     return row?.owner ?? null;
   }
+  if (targetType === "annotation") {
+    const [row] = await db
+      .select({ owner: annotations.userId })
+      .from(annotations)
+      .where(eq(annotations.id, targetId))
+      .limit(1);
+    return row?.owner ?? null;
+  }
   return null;
+}
+
+export type LikeSummary = { likeCount: number; likedByMe: boolean };
+
+/** Per-target 'like' counts plus whether the viewer liked each, for a set of targets of
+ *  one type (e.g. the reader's others' annotations). Returns a map keyed by target id;
+ *  a target with no likes is simply absent. One grouped read + one membership read, both
+ *  chunked, so the reader popover never issues a query per annotation. */
+export async function likeSummary(
+  db: Db,
+  targetType: string,
+  targetIds: string[],
+  viewerId: string | null,
+): Promise<Map<string, LikeSummary>> {
+  const out = new Map<string, LikeSummary>();
+  if (targetIds.length === 0) return out;
+
+  for (const chunk of chunkIds(targetIds)) {
+    const counts = await db
+      .select({ targetId: reactions.targetId, n: sql<number>`count(*)` })
+      .from(reactions)
+      .where(
+        and(
+          eq(reactions.targetType, targetType),
+          eq(reactions.kind, "like"),
+          inArray(reactions.targetId, chunk),
+        ),
+      )
+      .groupBy(reactions.targetId);
+    for (const r of counts) out.set(r.targetId, { likeCount: Number(r.n), likedByMe: false });
+  }
+
+  if (viewerId) {
+    for (const chunk of chunkIds(targetIds)) {
+      const mine = await db
+        .select({ targetId: reactions.targetId })
+        .from(reactions)
+        .where(
+          and(
+            eq(reactions.targetType, targetType),
+            eq(reactions.kind, "like"),
+            eq(reactions.userId, viewerId),
+            inArray(reactions.targetId, chunk),
+          ),
+        );
+      for (const r of mine) {
+        const cur = out.get(r.targetId) ?? { likeCount: 0, likedByMe: false };
+        out.set(r.targetId, { ...cur, likedByMe: true });
+      }
+    }
+  }
+
+  return out;
+}
+
+function chunkIds(ids: string[]): string[][] {
+  const out: string[][] = [];
+  for (let i = 0; i < ids.length; i += CHUNK) out.push(ids.slice(i, i + CHUNK));
+  return out;
 }
