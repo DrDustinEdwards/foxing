@@ -46,7 +46,7 @@ const FAQ_SCHEMA = {
       name: "Is Foxing free to use?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Yes. The Foxing reader and all 1,400+ classic books are completely free. Foxing Plus ($12.99/month) adds unlimited AI companion features, book clubs, and full reading stats. A 7-day free trial is available.",
+        text: "Yes. The complete reading and social product is free: the reader, all 1,400+ classic books, tracking and stats, and the entire clubs layer (unlimited clubs, discussions, and shared annotations). Foxing Plus ($12.99/month) adds the AI reading companion. A 7-day free trial is available.",
       },
     },
     {
@@ -212,8 +212,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             Read the classics. Finally understand them.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-secondary">
-            Read free on the web today. The iOS and Android apps are on the way, with your
-            library, highlights, and streak carried across.
+            Read free on the web today. The iOS and Android apps are on the way, with your library,
+            highlights, and streak carried across.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Button to="/signup">Join free on web</Button>

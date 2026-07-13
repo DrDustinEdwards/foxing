@@ -53,8 +53,8 @@ async function requireModerator(
 }
 
 // -- Club CRUD --------------------------------------------------------------
-// Create-gating (Plus) is enforced in the API route, which holds the tier. Everything
-// below is membership/role authorization, which is domain logic.
+// Clubs are free: no tier gate on creation. Everything below is membership/role
+// authorization, which is domain logic (Plus gates the AI companion, never clubs).
 
 export async function createClub(
   db: Db,
@@ -86,7 +86,10 @@ export async function updateClub(
   if (currentBookId !== undefined && currentBookId !== null) {
     // Pick an existing book (catalog or community). Search-to-add a new community book
     // is deferred (see deferred-items.md).
-    const [exists] = await db.select({ id: books.id }).from(books).where(eq(books.id, currentBookId));
+    const [exists] = await db
+      .select({ id: books.id })
+      .from(books)
+      .where(eq(books.id, currentBookId));
     if (!exists) throw domainErrors.notFound("Book not found.");
     await clubsRepo.setCurrentBook(db, clubId, currentBookId);
   }
@@ -112,11 +115,7 @@ export async function deleteClub(db: Db, actor: EventActor, clubId: string): Pro
   await clubsRepo.deleteClub(db, clubId);
 }
 
-export async function rotateInviteCode(
-  db: Db,
-  actor: EventActor,
-  clubId: string,
-): Promise<string> {
+export async function rotateInviteCode(db: Db, actor: EventActor, clubId: string): Promise<string> {
   await requireModerator(db, clubId, actor.userId);
   return clubsRepo.rotateJoinCode(db, clubId);
 }
@@ -196,10 +195,15 @@ export async function approveMember(
   const member = await clubsRepo.setMemberStatus(db, clubId, targetUserId, "active", {
     joinedAt: new Date(),
   });
-  await emit(db, "club.member.approved", { userId: targetUserId }, {
-    clubId,
-    clubName: club.name,
-  });
+  await emit(
+    db,
+    "club.member.approved",
+    { userId: targetUserId },
+    {
+      clubId,
+      clubName: club.name,
+    },
+  );
   return member as clubsRepo.ClubMember;
 }
 
@@ -286,7 +290,9 @@ export async function setMemberRole(
   const actorM = await requireActive(db, clubId, actor.userId);
   const target = await clubsRepo.getMembership(db, clubId, targetUserId);
   if (!target) throw domainErrors.notFound("That member is not in this club.");
-  if (!membership.canSetRole(actorM.role as ClubMemberRole, target.role as ClubMemberRole, newRole)) {
+  if (
+    !membership.canSetRole(actorM.role as ClubMemberRole, target.role as ClubMemberRole, newRole)
+  ) {
     throw domainErrors.forbidden("Only the owner can change roles.");
   }
   const member = await clubsRepo.setMemberRole(db, clubId, targetUserId, newRole);
@@ -352,7 +358,8 @@ export async function createPost(
   let parentAuthorId: string | null = null;
   if (input.parentPostId) {
     const parent = await clubsRepo.getPostById(db, input.parentPostId);
-    if (!parent || parent.threadId !== threadId) throw domainErrors.notFound("Parent post not found.");
+    if (!parent || parent.threadId !== threadId)
+      throw domainErrors.notFound("Parent post not found.");
     parentAuthorId = parent.authorId;
   }
 
@@ -361,7 +368,8 @@ export async function createPost(
   // Notify the thread author (thread_reply) and the parent-post author (post_reply),
   // deduped and never the actor themselves.
   const notify: { userId: string; type: "thread_reply" | "post_reply" }[] = [];
-  if (thread.authorId !== actor.userId) notify.push({ userId: thread.authorId, type: "thread_reply" });
+  if (thread.authorId !== actor.userId)
+    notify.push({ userId: thread.authorId, type: "thread_reply" });
   if (parentAuthorId && parentAuthorId !== actor.userId && parentAuthorId !== thread.authorId) {
     notify.push({ userId: parentAuthorId, type: "post_reply" });
   }

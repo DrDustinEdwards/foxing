@@ -120,15 +120,14 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     }
   });
 
-  it("create-gating: free -> 403 plus_required, plus -> 201", async () => {
+  it("clubs are free: both free and plus users can create (201)", async () => {
     await seedUser("free_user", "free");
     await seedUser("plus_user", "plus");
 
     const free = await call("/clubs", { method: "POST", user: "free_user", body: { name: "X" } });
-    expect(free.status).toBe(403);
-    expect(((await free.json()) as { error: { code: string } }).error.code).toBe("plus_required");
+    expect(free.status).toBe(201);
 
-    const plus = await call("/clubs", { method: "POST", user: "plus_user", body: { name: "X" } });
+    const plus = await call("/clubs", { method: "POST", user: "plus_user", body: { name: "Y" } });
     expect(plus.status).toBe(201);
   });
 
@@ -171,7 +170,10 @@ describe("clubs API (web -> api -> core -> D1)", () => {
       .select()
       .from(schema.notifications)
       .where(
-        and(eq(schema.notifications.userId, "owner3"), eq(schema.notifications.type, "club_request")),
+        and(
+          eq(schema.notifications.userId, "owner3"),
+          eq(schema.notifications.type, "club_request"),
+        ),
       );
     expect(ownerNotifs).toHaveLength(1);
 
@@ -202,7 +204,10 @@ describe("clubs API (web -> api -> core -> D1)", () => {
       .select()
       .from(schema.activityEvents)
       .where(
-        and(eq(schema.activityEvents.userId, "req_user"), eq(schema.activityEvents.type, "joined_club")),
+        and(
+          eq(schema.activityEvents.userId, "req_user"),
+          eq(schema.activityEvents.type, "joined_club"),
+        ),
       );
     expect(joinedActivity).toHaveLength(1);
   });
@@ -213,7 +218,10 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     const { body } = await createClub("owner4");
     const oldCode = body.club.joinCode;
 
-    const rotate = await call(`/clubs/${body.club.id}/invite-code`, { method: "POST", user: "owner4" });
+    const rotate = await call(`/clubs/${body.club.id}/invite-code`, {
+      method: "POST",
+      user: "owner4",
+    });
     const { joinCode: newCode } = (await rotate.json()) as { joinCode: string };
     expect(newCode).not.toBe(oldCode);
 
@@ -253,7 +261,10 @@ describe("clubs API (web -> api -> core -> D1)", () => {
       .select()
       .from(schema.notifications)
       .where(
-        and(eq(schema.notifications.userId, "owner5"), eq(schema.notifications.type, "thread_reply")),
+        and(
+          eq(schema.notifications.userId, "owner5"),
+          eq(schema.notifications.type, "thread_reply"),
+        ),
       );
     expect(reply).toHaveLength(1);
   });
@@ -282,8 +293,16 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     );
     const { poll } = (await pollRes.json()) as { poll: { id: string } };
 
-    await call(`/polls/${poll.id}/vote`, { method: "POST", user: "owner6", body: { ranks: ["o1"] } }, hub);
-    await call(`/polls/${poll.id}/vote`, { method: "POST", user: "voter6", body: { ranks: ["o1"] } }, hub);
+    await call(
+      `/polls/${poll.id}/vote`,
+      { method: "POST", user: "owner6", body: { ranks: ["o1"] } },
+      hub,
+    );
+    await call(
+      `/polls/${poll.id}/vote`,
+      { method: "POST", user: "voter6", body: { ranks: ["o1"] } },
+      hub,
+    );
     const tallyMsg = sent.at(-1)?.message[0];
     expect(tallyMsg?.t).toBe("tally");
     if (tallyMsg?.t === "tally") expect(tallyMsg.tallies.o1).toBe(2);

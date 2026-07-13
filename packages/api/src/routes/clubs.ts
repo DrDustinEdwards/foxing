@@ -138,8 +138,8 @@ clubRoutes.get("/join/:code", async (c) => {
 
 clubRoutes.post("/clubs", rateLimit("write"), async (c) => {
   const { session } = actorOf(c);
-  // Create-gating: creating a club is Plus. Joining/posting/polls stay free.
-  if (c.get("profile")?.subscriptionTier !== "plus") throw errors.planRequired();
+  // Clubs are free: creating, joining, posting, polls, and inline passage comments are
+  // all part of the free social product. Plus gates the AI companion, never clubs.
   const input = await parseJson(c, createClubInput);
   const club = await clubsDomain.createClub(c.get("db"), session.id, input);
   return c.json({ club }, 201);
@@ -197,7 +197,10 @@ clubRoutes.post("/clubs/:id/members/:userId/approve", rateLimit("write"), async 
 
 clubRoutes.post("/clubs/:id/members/:userId/ban", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  const reason = (await c.req.raw.clone().json().catch(() => ({}))) as { reason?: string };
+  const reason = (await c.req.raw
+    .clone()
+    .json()
+    .catch(() => ({}))) as { reason?: string };
   const member = await clubsDomain.banMember(
     c.get("db"),
     actor,
@@ -306,7 +309,11 @@ clubRoutes.post("/polls/:id/vote", rateLimit("write"), async (c) => {
 
 clubRoutes.post("/polls/:id/close", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  const { clubId, result, live } = await clubsDomain.closePoll(c.get("db"), actor, c.req.param("id"));
+  const { clubId, result, live } = await clubsDomain.closePoll(
+    c.get("db"),
+    actor,
+    c.req.param("id"),
+  );
   await notify(c, clubId, live);
   return c.json({ result });
 });
