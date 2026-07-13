@@ -48,6 +48,22 @@ export function decorationStyleFor(color: HighlightColor, theme: "light" | "sepi
   return { type: "highlight", tint: tintFor(color, theme), isActive: true };
 }
 
+// Another reader's annotation: an underline in the AUTHOR's color, kept a click target
+// (isActive) so a tap opens their attribution popover, but visually distinct from your
+// own solid fill so the two layers never read the same. Underline (not fill) is the
+// "someone else marked this" signal.
+export function otherDecorationStyleFor(color: HighlightColor, theme: "light" | "sepia" | "dark") {
+  return { type: "underline", tint: tintFor(color, theme), isActive: true };
+}
+
+// The popular-highlights layer: a faint underline shared by many readers, non-active
+// (never a click target) so it stays ambient and never competes with your own or others'
+// tappable decorations.
+export function popularDecorationStyleFor(theme: "light" | "sepia" | "dark") {
+  const tint = theme === "dark" ? "#3A3A3A" : "#D8D2C4";
+  return { type: "underline", tint, isActive: false };
+}
+
 // The in-text "has a note" indicator: an outline box around the passage, drawn as a
 // second, non-active decoration (so it never competes with the fill for the click).
 // Outline + layout:bounds always renders via the DOM overlay (the CSS Highlight API

@@ -5,7 +5,12 @@
 import { HttpFetcher, Locator as ReadiumLocator, Manifest, Publication } from "@readium/shared";
 import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
 import type { HighlightColor } from "@foxing/core";
-import { decorationStyleFor, noteOutlineStyleFor } from "./locator";
+import {
+  decorationStyleFor,
+  noteOutlineStyleFor,
+  otherDecorationStyleFor,
+  popularDecorationStyleFor,
+} from "./locator";
 import type { Locator, SelectionContext } from "./locator";
 import type { ReaderSettings, ReaderTheme } from "./settings";
 import { initialEpubPreferences, toEpubPreferences } from "./settings";
@@ -16,6 +21,9 @@ const ANNOTATION_GROUP = "annotations";
 // "has a note" outline. Keeping it separate means the fill in ANNOTATION_GROUP is
 // the sole click target, so a tap always resolves to one annotation.
 const NOTE_GROUP = "annotation-notes";
+// The popular-highlights ambient underline. Its own non-active group so it never
+// competes with your own or others' tappable decorations for a click.
+const POPULAR_GROUP = "popular-highlights";
 
 export interface DecorationRect {
   top: number;
@@ -29,6 +37,14 @@ export interface HighlightSpec {
   locator: Locator;
   color: HighlightColor;
   hasNote: boolean;
+  // "mine" renders a solid fill (your own); "other" renders an underline in the author's
+  // color (someone else's shared annotation). Both stay tappable.
+  ownership: "mine" | "other";
+}
+
+export interface PopularSpec {
+  id: string;
+  locator: Locator;
 }
 
 export interface SelectionPayload {
@@ -68,6 +84,7 @@ export interface ReaderEngine {
   goToLocator: (locator: Locator) => void;
   goToTotalProgression: (fraction: number) => void;
   applyHighlights: (specs: HighlightSpec[], theme: ReaderTheme) => void;
+  applyPopular: (specs: PopularSpec[], theme: ReaderTheme) => void;
   applySettings: (settings: ReaderSettings) => Promise<void>;
   currentLocator: () => Locator | null;
   destroy: () => Promise<void>;
@@ -214,10 +231,7 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
   await nav.load();
 
   nav.registerDecorationObserver(ANNOTATION_GROUP, {
-    onDecorationActivated: (event: {
-      decoration: { id: string };
-      rect?: DecorationRect;
-    }) => {
+    onDecorationActivated: (event: { decoration: { id: string }; rect?: DecorationRect }) => {
       listeners.onDecorationActivated(event.decoration.id, event.rect ?? null);
       return true;
     },
@@ -291,22 +305,36 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
     goToTotalProgression: (fraction: number) =>
       nav.go(findByProgression(fraction), false, () => {}),
     applyHighlights: (specs: HighlightSpec[], theme: ReaderTheme) => {
-      const fills = specs.map((s) => ({
+      // One activatable group holds both layers so a tap resolves to exactly one id;
+      // your own render as a solid fill, others as an underline in the author's color.
+      const marks = specs.map((s) => ({
         id: s.id,
         locator: ReadiumLocator.deserialize(s.locator) ?? s.locator,
-        style: decorationStyleFor(s.color, theme),
+        style:
+          s.ownership === "other"
+            ? otherDecorationStyleFor(s.color, theme)
+            : decorationStyleFor(s.color, theme),
       }));
-      nav.applyDecorations(fills as never, ANNOTATION_GROUP);
-      // The note outline is a separate group so it stays purely visual; the fill
-      // above is what a tap resolves to.
+      nav.applyDecorations(marks as never, ANNOTATION_GROUP);
+      // The note outline is a separate group so it stays purely visual; the mark above
+      // is what a tap resolves to. Only your own notes get the outline (others' notes
+      // read through the underline + attribution popover).
       const notes = specs
-        .filter((s) => s.hasNote)
+        .filter((s) => s.hasNote && s.ownership === "mine")
         .map((s) => ({
           id: s.id,
           locator: ReadiumLocator.deserialize(s.locator) ?? s.locator,
           style: noteOutlineStyleFor(s.color, theme),
         }));
       nav.applyDecorations(notes as never, NOTE_GROUP);
+    },
+    applyPopular: (specs: PopularSpec[], theme: ReaderTheme) => {
+      const marks = specs.map((s) => ({
+        id: s.id,
+        locator: ReadiumLocator.deserialize(s.locator) ?? s.locator,
+        style: popularDecorationStyleFor(theme),
+      }));
+      nav.applyDecorations(marks as never, POPULAR_GROUP);
     },
     applySettings: async (next: ReaderSettings) => {
       await nav.submitPreferences(toEpubPreferences(next) as never);
