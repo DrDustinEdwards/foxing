@@ -3,11 +3,17 @@
 // position. The reader itself mounts client-only (ts-toolkit touches the DOM),
 // so the route renders a shell and the ReaderView lazy-loads the engine. Anonymous
 // readers can read fully; annotating/bookmarking/progress prompt sign-in.
-import { annotationsRepo, catalogRepo, libraryRepo } from "@foxing/core";
+import { catalogRepo, libraryRepo, loadReaderAnnotations, readerSocialRepo } from "@foxing/core";
 import { getAuth } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
-import { ReaderView, type ReaderAnnotation } from "~/components/reader/reader-view";
+import {
+  ReaderView,
+  type ReaderAnnotation,
+  type ReaderComment,
+  type ReaderOther,
+  type ReaderPopular,
+} from "~/components/reader/reader-view";
 import type { Route } from "./+types/read";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -18,22 +24,35 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const session = await getAuth(env).api.getSession({ headers: request.headers });
   const userId = session?.user?.id ?? null;
 
-  let annotations: ReaderAnnotation[] = [];
+  // One in-process resolution: the viewer's own annotations (MINE), the entitled
+  // club/friend/public annotations of OTHERS, the club passage discussion, and the
+  // popular-highlights layer. Same core function the mobile API calls, so web and mobile
+  // resolve identically. Anonymous readers get public + popular only.
+  const [resolved, shareableClubs] = await Promise.all([
+    loadReaderAnnotations(db, userId, book.id),
+    userId
+      ? readerSocialRepo.shareableClubsForBook(db, userId, book.id)
+      : Promise.resolve<{ id: string; name: string }[]>([]),
+  ]);
+
+  const annotations: ReaderAnnotation[] = resolved.mine.map((a) => ({
+    id: a.id,
+    type: a.type as ReaderAnnotation["type"],
+    locator: (a.locator as Locator | null) ?? null,
+    selectedText: a.selectedText,
+    body: a.body,
+    color: a.color,
+    chapter: a.chapter,
+  }));
+  const others = resolved.others as unknown as ReaderOther[];
+  const comments = resolved.comments as unknown as ReaderComment[];
+  const popular = resolved.popular as unknown as ReaderPopular[];
+
+  // Saved reading position comes from the same resolution's viewer progress; the reader
+  // component seeds its scrubber and progress gate from it.
   let initialLocator: Locator | null = null;
   if (userId) {
-    const [rows, userBook] = await Promise.all([
-      annotationsRepo.listForReader(db, userId, book.id),
-      libraryRepo.getUserBook(db, userId, book.id),
-    ]);
-    annotations = rows.map((a) => ({
-      id: a.id,
-      type: a.type as ReaderAnnotation["type"],
-      locator: (a.locator as Locator | null) ?? null,
-      selectedText: a.selectedText,
-      body: a.body,
-      color: a.color,
-      chapter: a.chapter,
-    }));
+    const userBook = await libraryRepo.getUserBook(db, userId, book.id);
     initialLocator = (userBook?.progress as Locator | null) ?? null;
   }
 
@@ -47,6 +66,11 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     signedIn: !!userId,
     loginHref: `/login?redirect=${encodeURIComponent(`/read/${book.slug}`)}`,
     annotations,
+    others,
+    comments,
+    popular,
+    shareableClubs,
+    viewerProgressPct: resolved.viewerProgressPct,
     initialLocator,
   };
 }
