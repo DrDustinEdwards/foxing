@@ -39,7 +39,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     bio: profile.bio ?? "",
     favoriteGenres: (profile.favoriteGenres ?? []).join(", "),
     tier: isPlus ? ("plus" as const) : ("free" as const),
-    isPlus,
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd
       ? new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(
@@ -89,7 +88,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <VisibilitySection initial={loaderData.visibility} />
           <NotificationsSection initial={loaderData.notifications} />
           <AppearanceSection />
-          <CloseFriendsSection friends={loaderData.closeFriends} isPlus={loaderData.isPlus} />
+          <CloseFriendsSection friends={loaderData.closeFriends} />
           <PasswordSection />
           <DataSection />
           {loaderData.isAdmin ? <AdminSection /> : null}
@@ -456,16 +455,13 @@ function AppearanceSection() {
 
 function CloseFriendsSection({
   friends,
-  isPlus,
 }: {
   friends: Array<{ id: string; username: string; displayName: string; avatarUrl: string | null }>;
-  isPlus: boolean;
 }) {
   return (
     <Card title="Close friends">
       <p className="font-ui text-sm text-secondary">
-        Close friends see your friends-only reviews and activity. Curating this list is part of
-        Foxing Plus.
+        Close friends see your friends-only reviews, activity, and shared annotations.
       </p>
       {friends.length === 0 ? (
         <p className="mt-4 font-ui text-sm text-tertiary">
@@ -493,7 +489,7 @@ function CloseFriendsSection({
                   </span>
                 </span>
               </Link>
-              <CloseFriendToggle userId={f.id} initialClose isPlus={isPlus} />
+              <CloseFriendToggle userId={f.id} initialClose />
             </li>
           ))}
         </ul>

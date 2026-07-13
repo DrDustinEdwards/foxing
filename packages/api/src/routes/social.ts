@@ -1,4 +1,4 @@
-// Social endpoints (Phase 6): follows, close friends (Plus), reading lists, the
+// Social endpoints (Phase 6): follows, close friends, reading lists, the
 // activity feed, and Year in Reading recap. Handlers stay thin: guard the session,
 // validate, call the core social/recap domain (which authorizes, commits, and emits),
 // return. Feed visibility resolves entirely server-side in core -- the client is never
@@ -40,19 +40,18 @@ socialRoutes.delete("/follows/:userId", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// -- Close friends (Plus; the friends-only visibility audience) -------------
+// -- Close friends (free; the friends-only visibility audience) -------------
+// A social / privacy control, not a Plus feature: it is the audience for friends-only
+// diary entries, activity, and shared annotations, all part of the free social layer.
 
 socialRoutes.put("/close-friends/:userId", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  if (c.get("profile")?.subscriptionTier !== "plus") throw errors.planRequired();
   await socialDomain.addCloseFriend(c.get("db"), actor, c.req.param("userId"));
   return c.json({ ok: true }, 201);
 });
 
 socialRoutes.delete("/close-friends/:userId", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  // Removing is allowed regardless of current tier (a lapsed user must be able to clean
-  // up their list); only granting new access is Plus.
   await socialDomain.removeCloseFriend(c.get("db"), actor, c.req.param("userId"));
   return c.json({ ok: true });
 });

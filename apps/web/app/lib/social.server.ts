@@ -117,7 +117,6 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     followerCount,
     followingCount,
     isFollowing,
-    viewer,
     closeFriendIds,
     currentlyReading,
     booksRead,
@@ -133,7 +132,6 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     socialRepo.countFollowers(db, profile.id),
     socialRepo.countFollowing(db, profile.id),
     viewerId ? socialRepo.isFollowing(db, viewerId, profile.id) : Promise.resolve(false),
-    viewerId ? profilesRepo.getProfileById(db, viewerId) : Promise.resolve(null),
     viewerId ? socialRepo.listCloseFriendIds(db, viewerId) : Promise.resolve([] as string[]),
     showProgress
       ? libraryRepo.listCurrentlyReading(db, profile.id, 6)
@@ -163,7 +161,6 @@ export async function loadPublicProfile(env: Env, username: string, viewerId: st
     },
     isOwner,
     isFollowing,
-    viewerIsPlus: viewer?.subscriptionTier === "plus",
     viewerHasAsCloseFriend: closeFriendIds.includes(profile.id),
     followerCount,
     followingCount,
@@ -232,12 +229,9 @@ export type OwnDiaryEntry = {
  *  theirs). Reuses the same diary query + book overlay the public profile uses. */
 export async function loadOwnDiary(env: Env, userId: string): Promise<OwnDiaryEntry[]> {
   const db = createDb(env.DB);
-  const entries = await diaryRepo.listEntriesForUser(
-    db,
-    userId,
-    ["private", "friends", "public"],
-    { limit: 100 },
-  );
+  const entries = await diaryRepo.listEntriesForUser(db, userId, ["private", "friends", "public"], {
+    limit: 100,
+  });
   const books = await catalogRepo.getBooksByIds(db, [...new Set(entries.map((e) => e.bookId))]);
   const bookMap = new Map(books.map((b) => [b.id, b]));
   return entries.map((d) => {

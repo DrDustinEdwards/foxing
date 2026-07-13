@@ -318,8 +318,8 @@ describe("social API (web -> api -> core -> D1)", () => {
     await seedUser("carol");
     await seedBook("b2");
     await call("/follows/alice", { method: "PUT", user: "carol" });
-    // Alice adds carol as a close friend (alice would need Plus in the route; here we
-    // write the edge directly to isolate the resolver from the tier gate).
+    // Alice adds carol as a close friend (free); the edge is written directly here to
+    // isolate the feed resolver from the write path.
     await db().insert(schema.closeFriends).values({ userId: "alice", friendId: "carol" });
     await call("/diary", {
       method: "POST",

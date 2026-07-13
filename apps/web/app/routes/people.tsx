@@ -1,7 +1,7 @@
-// People at /people: the follow graph (who you follow, who follows you) and the Plus
-// close-friends management surface. Following/followers are free; curating close friends
-// (the audience for your friends-only content) is Plus. Reads run in-process; toggles
-// write to /api/v1.
+// People at /people: the follow graph (who you follow, who follows you) and the
+// close-friends management surface. Following/followers and curating close friends
+// (the audience for your friends-only content) are all free. Reads run in-process;
+// toggles write to /api/v1.
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
@@ -14,10 +14,9 @@ import type { Route } from "./+types/people";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const { user, profile } = await requireProfile(env, request);
+  const { user } = await requireProfile(env, request);
   const people = await loadPeople(env, user.id);
   return {
-    isPlus: profile.subscriptionTier === "plus",
     following: people.following.map((p) => ({ ...p, isClose: people.closeFriendIds.has(p.id) })),
     followers: people.followers,
     closeFriends: people.closeFriends,
@@ -51,7 +50,7 @@ function Row({
 }
 
 export default function People({ loaderData }: Route.ComponentProps) {
-  const { isPlus, following, followers, closeFriends } = loaderData;
+  const { following, followers, closeFriends } = loaderData;
 
   return (
     <PageShell>
@@ -73,7 +72,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
             <ul className="flex flex-col gap-2">
               {following.map((p) => (
                 <Row key={p.id} p={p}>
-                  <CloseFriendToggle userId={p.id} initialClose={p.isClose} isPlus={isPlus} />
+                  <CloseFriendToggle userId={p.id} initialClose={p.isClose} />
                 </Row>
               ))}
             </ul>
@@ -98,8 +97,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
         <section className="flex flex-col gap-4">
           <h2 className="font-display text-2xl">Close friends</h2>
           <p className="font-ui text-sm text-secondary">
-            Close friends see your friends-only reviews and activity. Curating this list is part of
-            Foxing Plus.
+            Close friends see your friends-only reviews, activity, and shared annotations.
           </p>
           {closeFriends.length === 0 ? (
             <p className="font-ui text-sm text-tertiary">
@@ -109,7 +107,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
             <ul className="flex flex-col gap-2">
               {closeFriends.map((p) => (
                 <Row key={p.id} p={p}>
-                  <CloseFriendToggle userId={p.id} initialClose isPlus={isPlus} />
+                  <CloseFriendToggle userId={p.id} initialClose />
                 </Row>
               ))}
             </ul>
