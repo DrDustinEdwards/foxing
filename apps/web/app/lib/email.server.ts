@@ -23,6 +23,28 @@ export async function sendPasswordResetEmail(env: Env, to: string, url: string):
   }
 }
 
+export async function sendMagicLinkEmail(env: Env, to: string, url: string): Promise<void> {
+  try {
+    await env.EMAIL.send({
+      to,
+      from: { email: env.EMAIL_FROM, name: "Foxing" },
+      subject: "Your Foxing sign-in link",
+      text: `Sign in to Foxing:\n\n${url}\n\nThis link expires in 10 minutes and can be used once. If you did not request it, ignore this message.`,
+      html: [
+        "<p>Sign in to Foxing:</p>",
+        `<p><a href="${url}">Sign in</a></p>`,
+        "<p>This link expires in 10 minutes and can be used once. If you did not request it, ignore this message.</p>",
+      ].join(""),
+    });
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    console.error(
+      `EMAIL.send failed: code=${e.code ?? "unknown"} message=${e.message ?? String(err)}`,
+    );
+    throw err;
+  }
+}
+
 export async function sendVerificationEmail(env: Env, to: string, url: string): Promise<void> {
   try {
     await env.EMAIL.send({

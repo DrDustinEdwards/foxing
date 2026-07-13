@@ -2,15 +2,25 @@
 // Email/password with verification via the Email Sending binding; Turnstile is
 // wired but only enforced when TURNSTILE_ENABLED=true and a secret is set.
 import { createDb, schema } from "@foxing/core";
-import { betterAuth } from "better-auth";
+import { type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { captcha } from "better-auth/plugins";
-import { sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
+import { captcha, magicLink } from "better-auth/plugins";
+import { sendMagicLinkEmail, sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
 
 export function getAuth(env: Env) {
   const db = createDb(env.DB);
 
-  const plugins = [];
+  // Passwordless sign-in link. A magic link inherently proves control of the address,
+  // so the created user is email-verified; a new user (no profile row yet) lands on
+  // /onboarding, an existing one on /me. Same send path as verification/reset.
+  const plugins: BetterAuthPlugin[] = [
+    magicLink({
+      expiresIn: 60 * 10,
+      sendMagicLink: async ({ email, url }) => {
+        await sendMagicLinkEmail(env, email, url);
+      },
+    }),
+  ];
   if (String(env.TURNSTILE_ENABLED) === "true" && env.TURNSTILE_SECRET_KEY) {
     plugins.push(
       captcha({
@@ -37,6 +47,21 @@ export function getAuth(env: Env) {
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendPasswordResetEmail(env, user.email, url);
+      },
+    },
+    socialProviders: {
+      google: {
+        clientId: env.GOOGLE_CLIENT_ID,
+        clientSecret: env.GOOGLE_CLIENT_SECRET,
+      },
+    },
+    account: {
+      // A Google sign-in whose (Google-verified) email matches an existing verified
+      // account links into that row instead of duplicating it. trustedProviders lets
+      // Google's email_verified claim stand as ownership proof for the link.
+      accountLinking: {
+        enabled: true,
+        trustedProviders: ["google"],
       },
     },
     emailVerification: {

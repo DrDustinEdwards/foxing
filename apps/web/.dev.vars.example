@@ -3,3 +3,6 @@
 BETTER_AUTH_SECRET=""
 # Only needed when TURNSTILE_ENABLED=true
 TURNSTILE_SECRET_KEY=""
+# Google OAuth (Continue with Google). Callback: <BETTER_AUTH_URL>/api/auth/callback/google
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""

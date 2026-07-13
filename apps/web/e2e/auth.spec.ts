@@ -19,9 +19,24 @@ test.describe("auth flows", () => {
     await expect(page.getByRole("link", { name: /request a new reset link/i })).toBeVisible();
   });
 
-  test("login page has forgot password link", async ({ page }) => {
+  test("login offers Google, magic link, and a revealable password form", async ({ page }) => {
     await page.goto("/login");
+    // Consumer-standard hierarchy: Google on top, then the magic-link option, with the
+    // password form collapsed behind a reveal link.
+    await expect(page.getByRole("button", { name: /continue with google/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /email me a sign-in link/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: /forgot your password/i })).toHaveCount(0);
+
+    await page.getByRole("button", { name: /use a password instead/i }).click();
     await expect(page.getByRole("link", { name: /forgot your password/i })).toBeVisible();
+  });
+
+  test("magic-link request always shows the neutral check-your-email state", async ({ page }) => {
+    await page.goto("/login");
+    // Enumeration-safe: the same confirmation shows whether or not the address exists.
+    await page.getByLabel("Email").fill("nobody-magic@example.com");
+    await page.getByRole("button", { name: /email me a sign-in link/i }).click();
+    await expect(page.getByText(/check your email for a sign-in link/i)).toBeVisible();
   });
 
   // REGRESSION (2026-07-09): a real reset succeeded end to end, but the following
@@ -36,7 +51,10 @@ test.describe("auth flows", () => {
   // a raw 500 / "Something went wrong" screen.
   test("failed sign-in renders a handled error, not a 500", async ({ page }) => {
     await page.goto("/login");
-    await page.getByLabel("Email").fill("nobody-regression@example.com");
+    await page.getByRole("button", { name: /use a password instead/i }).click();
+    // Two Email fields once the password form is revealed (magic link + password); the
+    // password form's is the last one in the DOM.
+    await page.getByLabel("Email").last().fill("nobody-regression@example.com");
     await page.getByLabel("Password").fill("wrong-password-123");
     await page.getByRole("button", { name: /^sign in$/i }).click();
 

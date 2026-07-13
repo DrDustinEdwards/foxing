@@ -9,7 +9,9 @@ import { expect, test as setup } from "@playwright/test";
 // Fails loudly when creds are missing: a skipped social suite is how a broken moat ships.
 async function signIn(page: import("@playwright/test").Page, email: string, password: string) {
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  // Reveal the collapsed password form, then target its Email (the last of two inputs).
+  await page.getByRole("button", { name: /use a password instead/i }).click();
+  await page.getByLabel("Email").last().fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /^sign in$/i }).click();
   await expect(page).not.toHaveURL(/\/login/);

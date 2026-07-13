@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { AuthLink, AuthShell, AuthSubmit, Field } from "~/components/auth-shell";
+import {
+  AuthDivider,
+  AuthLink,
+  AuthShell,
+  AuthSubmit,
+  Field,
+  GoogleButton,
+  MagicLinkForm,
+  RevealLink,
+} from "~/components/auth-shell";
 import { TurnstileWidget } from "~/components/turnstile";
 import { cloudflareContext } from "~/context";
 import { signUp } from "~/lib/auth-client";
@@ -24,6 +33,7 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState("");
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -78,27 +88,37 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
         </>
       }
     >
-      <form onSubmit={onSubmit} className="space-y-4">
-        <Field label="Name" name="name" required autoComplete="name" />
-        <Field label="Email" name="email" type="email" required autoComplete="email" />
-        <Field
-          label="Password"
-          name="password"
-          type="password"
-          minLength={8}
-          required
-          autoComplete="new-password"
-        />
-        {turnstile.enabled ? (
-          <TurnstileWidget siteKey={turnstile.siteKey} onToken={setCaptchaToken} />
-        ) : null}
-        {error ? (
-          <p role="alert" className="font-ui text-sm text-error">
-            {error}
-          </p>
-        ) : null}
-        <AuthSubmit pending={pending}>{pending ? "Creating..." : "Create account"}</AuthSubmit>
-      </form>
+      <div className="space-y-4">
+        <GoogleButton />
+        <AuthDivider />
+        <MagicLinkForm />
+
+        {showPassword ? (
+          <form onSubmit={onSubmit} className="space-y-4 border-t border-border-subtle pt-4">
+            <Field label="Name" name="name" required autoComplete="name" />
+            <Field label="Email" name="email" type="email" required autoComplete="email" />
+            <Field
+              label="Password"
+              name="password"
+              type="password"
+              minLength={8}
+              required
+              autoComplete="new-password"
+            />
+            {turnstile.enabled ? (
+              <TurnstileWidget siteKey={turnstile.siteKey} onToken={setCaptchaToken} />
+            ) : null}
+            {error ? (
+              <p role="alert" className="font-ui text-sm text-error">
+                {error}
+              </p>
+            ) : null}
+            <AuthSubmit pending={pending}>{pending ? "Creating..." : "Create account"}</AuthSubmit>
+          </form>
+        ) : (
+          <RevealLink onClick={() => setShowPassword(true)}>Use a password instead</RevealLink>
+        )}
+      </div>
     </AuthShell>
   );
 }

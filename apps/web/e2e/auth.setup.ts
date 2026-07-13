@@ -23,7 +23,10 @@ setup("sign in through the visible login form", async ({ page }) => {
   }
 
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  // Password sign-in is collapsed behind a reveal link (Google + magic link lead). Open
+  // it, then target the password form's Email (the last of the two email inputs).
+  await page.getByRole("button", { name: /use a password instead/i }).click();
+  await page.getByLabel("Email").last().fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /^sign in$/i }).click();
 

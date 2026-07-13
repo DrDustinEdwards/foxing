@@ -3,6 +3,9 @@
 interface Env {
   BETTER_AUTH_SECRET: string;
   TURNSTILE_SECRET_KEY?: string;
+  // Google OAuth (set as Worker secrets). Required for the "Continue with Google" flow.
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
   // Not yet set (Phase 4a precheck, 2026-07-10): companion routes fall back to a
   // caller that errors cleanly until `wrangler secret put ANTHROPIC_API_KEY` runs.
   ANTHROPIC_API_KEY?: string;
