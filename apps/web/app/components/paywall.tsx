@@ -15,13 +15,15 @@ const PLANS: Record<Plan, { label: string; price: string; note: string }> = {
   monthly: { label: "Monthly", price: "$12.99/month", note: "" },
 };
 
+// Plus is the AI reading companion. Everything social (clubs, passage comments, shared
+// annotations) is free, so the paywall sells the AI, never clubs.
 const FEATURES = [
-  "AI reading companion: word lookups, passage analysis, and chat",
+  "AI reading companion: instant word lookups, passage analysis, and chat",
   "AI Deep Dive: character arcs, symbolism, and criticism digests",
-  "Semantic scene search and AI discussion questions",
-  "Unlimited book clubs, with inline passage comments",
+  "Character maps and AI-generated discussion questions",
+  "Semantic scene search across the whole book",
+  "AI recommendations with reasoning, and your reading personality",
   "Quote card image export",
-  "Year in Reading, on demand",
 ];
 
 export function Paywall({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -100,7 +102,9 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
         <p className="flex items-center gap-2 font-display text-2xl font-semibold">
           <span aria-hidden="true">🦊</span> Foxing Plus
         </p>
-        <p className="mt-1 font-body text-base italic text-on-dark/70">reading, together.</p>
+        <p className="mt-1 font-body text-base italic text-on-dark/70">
+          your AI reading companion.
+        </p>
 
         <ul className="mt-5 space-y-2">
           {FEATURES.map((f) => (

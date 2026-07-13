@@ -1,10 +1,11 @@
 import { expect, test as setup } from "@playwright/test";
 
-// Sign-in fixture for the PLUS e2e account (club specs need Plus to create a club).
-// Same real-login approach as auth.setup.ts: type into the visible form, save the
-// resulting session for the authed-plus project. Separate account + storage from the
-// free e2e user so the paywall specs stay honest. Fails loudly if creds are missing;
-// it never skips (a skipped signed-in suite is how a broken flow shipped last time).
+// Sign-in fixture for the PLUS e2e account (used by the live-layer club spec and, in the
+// social gate, as club owner A). Clubs are free now, so Plus is not required to create
+// one; this account simply provides a stable owner session. Same real-login approach as
+// auth.setup.ts: type into the visible form, save the resulting session for the
+// authed-plus project. Fails loudly if creds are missing; it never skips (a skipped
+// signed-in suite is how a broken flow shipped last time).
 const STORAGE = "e2e/.auth/plus.json";
 
 setup("sign in the plus account through the visible login form", async ({ page }) => {

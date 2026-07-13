@@ -42,7 +42,9 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     isPlus,
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd
-      ? new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(profile.subscriptionPeriodEnd)
+      ? new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(
+          profile.subscriptionPeriodEnd,
+        )
       : null,
     visibility: {
       profile: vis.profile === "private" ? ("private" as const) : ("public" as const),
@@ -141,8 +143,7 @@ function BillingSection({
         <div className="space-y-3">
           <p className="font-ui text-sm text-secondary">
             You are on <span className="font-medium text-primary">Foxing Plus</span>
-            {status ? ` (${status})` : ""}.
-            {periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
+            {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
           </p>
           <button
             type="button"
@@ -156,8 +157,8 @@ function BillingSection({
       ) : (
         <div className="space-y-3">
           <p className="font-ui text-sm text-secondary">
-            You are on the <span className="font-medium text-primary">Free</span> plan. Plus adds
-            the AI reading companion, unlimited clubs, and more.
+            You are on the <span className="font-medium text-primary">Free</span> plan. Clubs and
+            the whole social layer are free. Plus adds the AI reading companion.
           </p>
           <button
             type="button"
@@ -245,7 +246,8 @@ function VisibilitySection({ initial }: { initial: VisibilityValues }) {
             <option value="public">Public</option>
           </select>
           <span className="mt-1 block font-ui text-xs text-tertiary">
-            New highlights and notes start with this audience. You can change any one when you make it.
+            New highlights and notes start with this audience. You can change any one when you make
+            it.
           </span>
         </label>
         <div className="flex items-center gap-3">
@@ -327,7 +329,10 @@ const NOTIFICATION_LABELS: Record<string, { label: string; subtext: string }> = 
 function NotificationsSection({
   initial,
 }: {
-  initial: { categories: Record<string, boolean>; quietHours: { start: string; end: string } | null };
+  initial: {
+    categories: Record<string, boolean>;
+    quietHours: { start: string; end: string } | null;
+  };
 }) {
   const [categories, setCategories] = useState(initial.categories);
   const [quietOn, setQuietOn] = useState(Boolean(initial.quietHours));
@@ -367,8 +372,8 @@ function NotificationsSection({
     <Card title="Notifications">
       <form onSubmit={save} className="space-y-4">
         <p className="font-ui text-sm text-secondary">
-          Choose which push notifications the mobile app sends you. Quiet hours pause them
-          overnight in your timezone.
+          Choose which push notifications the mobile app sends you. Quiet hours pause them overnight
+          in your timezone.
         </p>
         <div className="space-y-3">
           {Object.keys(NOTIFICATION_LABELS).map((cat) => (
@@ -519,7 +524,11 @@ const inputClass =
 // Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;
 
-function ProfileSection({ initial }: { initial: { displayName: string; bio: string; favoriteGenres: string } }) {
+function ProfileSection({
+  initial,
+}: {
+  initial: { displayName: string; bio: string; favoriteGenres: string };
+}) {
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [bio, setBio] = useState(initial.bio);
   const [genres, setGenres] = useState(initial.favoriteGenres);
@@ -935,8 +944,8 @@ function DataSection() {
   return (
     <Card title="Your data">
       <p className="font-ui text-sm text-secondary">
-        Download a JSON archive of everything tied to your account: your profile, library,
-        reading history, highlights, notes, and goals.
+        Download a JSON archive of everything tied to your account: your profile, library, reading
+        history, highlights, notes, and goals.
       </p>
       <a
         href="/api/v1/account/export"
