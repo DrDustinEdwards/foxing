@@ -20,6 +20,9 @@ export type {
 export * as annotationsRepo from "./annotations";
 export type { Annotation, AnnotationCard } from "./annotations";
 
+export * as readerSocialRepo from "./reader-social";
+export type { AuthorRef, SocialAnnotationRow, PopularRow } from "./reader-social";
+
 export * as companionRepo from "./companion";
 export type { CompanionThread, CompanionMessageRow, BookAiCacheRow } from "./companion";
 
