@@ -99,7 +99,6 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
     profile,
     isOwner,
     isFollowing,
-    viewerIsPlus,
     viewerHasAsCloseFriend,
     followerCount,
     followingCount,
@@ -165,11 +164,7 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
                 signedIn={signedIn}
               />
               {signedIn ? (
-                <CloseFriendToggle
-                  userId={profile.id}
-                  initialClose={viewerHasAsCloseFriend}
-                  isPlus={viewerIsPlus}
-                />
+                <CloseFriendToggle userId={profile.id} initialClose={viewerHasAsCloseFriend} />
               ) : null}
             </div>
           )}
@@ -242,10 +237,7 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             </div>
             <ul className="flex flex-col gap-3">
               {publicHighlights.map((h) => (
-                <li
-                  key={h.id}
-                  className="rounded-card border border-border-subtle bg-surface p-4"
-                >
+                <li key={h.id} className="rounded-card border border-border-subtle bg-surface p-4">
                   {h.selectedText ? (
                     <blockquote className="font-body text-secondary">"{h.selectedText}"</blockquote>
                   ) : null}

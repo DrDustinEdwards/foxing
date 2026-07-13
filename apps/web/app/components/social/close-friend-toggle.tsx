@@ -1,19 +1,16 @@
-// Close-friends toggle (Plus). Adds/removes a user from the viewer's close-friends list
-// via PUT/DELETE /close-friends/:userId. This list is the audience for the viewer's
-// friends-only diary entries and activity. Free users see the Plus gate (a 403
-// plus_required from the API also surfaces its message). Failed writes show a visible
-// error.
+// Close-friends toggle. Adds/removes a user from the viewer's close-friends list via
+// PUT/DELETE /close-friends/:userId. This list is the audience for the viewer's
+// friends-only diary entries, activity, and shared annotations. It is a free social /
+// privacy control (not a Plus feature). Failed writes show a visible error.
 import { useState } from "react";
 import { useApiWrite } from "~/hooks/use-api-write";
 
 export function CloseFriendToggle({
   userId,
   initialClose,
-  isPlus,
 }: {
   userId: string;
   initialClose: boolean;
-  isPlus: boolean;
 }) {
   const { write, error, pending } = useApiWrite();
   const [isClose, setIsClose] = useState(initialClose);
@@ -22,14 +19,6 @@ export function CloseFriendToggle({
     const next = !isClose;
     const res = await write(`/close-friends/${userId}`, { method: next ? "PUT" : "DELETE" });
     if (res.ok) setIsClose(next);
-  }
-
-  if (!isPlus && !isClose) {
-    return (
-      <span className="font-mono text-[0.6rem] uppercase tracking-wide text-tertiary">
-        Close friends is Plus
-      </span>
-    );
   }
 
   return (
