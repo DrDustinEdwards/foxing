@@ -20,7 +20,9 @@ setup("sign in the plus account through the visible login form", async ({ page }
   }
 
   await page.goto("/login");
-  await page.getByLabel("Email").fill(email);
+  // Reveal the collapsed password form, then target its Email (the last of two inputs).
+  await page.getByRole("button", { name: /use a password instead/i }).click();
+  await page.getByLabel("Email").last().fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /^sign in$/i }).click();
 
