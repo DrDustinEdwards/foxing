@@ -2,28 +2,28 @@ import { useEffect, useState } from "react";
 
 /**
  * Attribute-driven light/dark toggle. The no-flash script in root.tsx sets the
- * initial data-mode before paint; this only reflects and flips it after hydration.
+ * initial data-theme before paint; this only reflects and flips it after hydration.
  */
 export function ThemeToggle() {
-  const [mode, setMode] = useState<"light" | "dark" | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark" | null>(null);
 
   useEffect(() => {
-    const current = document.documentElement.getAttribute("data-mode");
-    setMode(current === "dark" ? "dark" : "light");
+    const current = document.documentElement.getAttribute("data-theme");
+    setTheme(current === "dark" ? "dark" : "light");
   }, []);
 
   function toggle() {
-    const next = mode === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-mode", next);
+    const next = theme === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
     try {
-      localStorage.setItem("foxing-mode", next);
+      localStorage.setItem("foxing-theme", next);
     } catch {
       /* storage unavailable, in-memory toggle still works */
     }
-    setMode(next);
+    setTheme(next);
   }
 
-  const isDark = mode === "dark";
+  const isDark = theme === "dark";
   return (
     <button
       type="button"
@@ -31,7 +31,7 @@ export function ThemeToggle() {
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover"
     >
-      {/* Sun / moon, inline SVG (no icon libraries on web). */}
+      {/* Sun / moon, inline SVG. */}
       {isDark ? (
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="12" cy="12" r="4.2" stroke="currentColor" strokeWidth="1.6" />
