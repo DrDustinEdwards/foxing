@@ -2,17 +2,17 @@
 
 /*
   Foxing design system, wired for Tailwind v4 (CSS-first).
-  Raw tokens live in [data-mode] blocks (source of truth: foxing/design-system.md);
+  Raw tokens live in [data-theme] blocks (source of truth: foxing/design-system.md);
   @theme maps them to utilities so `bg-surface`, `text-primary`, `font-display`,
-  `border-subtle`, `rounded-card` respond to the active mode at runtime.
-  Dark mode is attribute-driven ([data-mode="dark"]), not media-driven.
+  `border-subtle`, `rounded-card` respond to the active theme at runtime.
+  Dark mode is attribute-driven ([data-theme="dark"]), not media-driven.
 */
 
-@custom-variant dark (&:where([data-mode="dark"], [data-mode="dark"] *));
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 /* -- Raw tokens ---------------------------------------------------------- */
 
-[data-mode="light"] {
+[data-theme="light"] {
   --bg-base: #faf6ee;
   --bg-surface: #ffffff;
   --bg-elevated: #ffffff;
@@ -67,7 +67,7 @@
   color-scheme: light;
 }
 
-[data-mode="dark"] {
+[data-theme="dark"] {
   --bg-base: #16100b;
   --bg-surface: #1f1710;
   --bg-elevated: #2a1f16;
@@ -229,10 +229,10 @@
 }
 
 @media (prefers-contrast: more) {
-  [data-mode="light"] {
+  [data-theme="light"] {
     --text-tertiary: #443122;
   }
-  [data-mode="dark"] {
+  [data-theme="dark"] {
     --text-tertiary: #b9a492;
   }
 }
