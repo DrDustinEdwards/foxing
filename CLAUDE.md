@@ -9,13 +9,17 @@ Path-scoped CLAUDE.md files auto-load from their directory. `apps/mobile/` has o
 Foxing is a reading app + web platform. Letterboxd for books. Domain: foxing.app.
 
   apps/mobile/    Expo React Native reader (SDK 56 / RN 0.85.3)
-  apps/web/       React Router v7 web platform on Cloudflare Workers
+  apps/web/       React Router v8 web platform on Cloudflare Workers
   packages/core/  @foxing/core Drizzle schema, repositories, domain logic
   packages/api/   @foxing/api Hono routes (the /api/v1 surface)
   packages/types/ @foxing/types shared interfaces
   packages/utils/ @foxing/utils shared helpers
 
-Web stack: Cloudflare Workers + D1 + R2 + KV, React Router v7 (framework mode).
+Web stack: Cloudflare Workers + D1 + R2 + KV, React Router v8 (framework mode).
+
+This is a **pnpm + turborepo monorepo** (package.json: packageManager pnpm@11.1.2, deps use workspace:*). Use pnpm for everything at the root; npm will fail on the workspace protocol. Node 24 (.nvmrc / engines).
+
+**Git submodule:** `apps/mobile/libs/foliate-js` (johnfactotum/foliate-js, per .gitmodules). Clone with `git clone --recurse-submodules`, or run `git submodule update --init` after a plain clone, or the mobile reader silently gets an empty library.
 
 Supabase project ekjpsuewrkvqzbuteurc is retained ONLY for the mobile ai-companion edge function. The web platform does not use Supabase. Storage is Cloudflare R2 for all new uploads: foxing-covers, foxing-epubs, foxing-avatars, foxing-journal-images. Use `uploadToR2()` from `apps/web/lib/r2.ts`.
 
@@ -24,7 +28,7 @@ Supabase project ekjpsuewrkvqzbuteurc is retained ONLY for the mobile ai-compani
 Start: read `capsid/conventions.md`, then `foxing/core.md`.
 End: write a `session-YYYY-MM-DD.md` episodic (type `episodic`, under ~2KB) to the foxing namespace.
 
-Deeper context in the typed docs: `foxing/decisions.md`, `foxing/design-system.md` (read before any design work), `foxing/context.md`, and the rest of the namespace.
+Deeper context in the typed docs: `foxing/decisions.md`, `foxing/design-system.md` (read before any design work; selectors are data-theme as of 2026-07-16), `foxing/context.md`, and the rest of the namespace.
 
 ## Hooks (deterministic enforcement)
 
@@ -37,12 +41,13 @@ Active hooks:
 
 Mobile-only sessions: the Stop hook's tsc step is expected to noop or warn because it runs against `apps/web/`. Not a blocker.
 
-## Commands
+## Commands (per package.json; root commands are pnpm/turbo)
 
-Always run from the right directory. Mobile: `cd apps/mobile`. Web: `cd apps/web`. Install and packages: repo root.
+Always run from the right directory. Mobile: `cd apps/mobile`. Web: `cd apps/web`. Install from repo root: `pnpm install`.
 
-- Web deploy: `cd apps/web && npm run deploy` (react-router build + wrangler deploy). Promotes straight to production. Pushing to main does NOT deploy.
-- Web type check before every push: `cd apps/web && npm run type-check` (react-router typegen + tsc --noEmit).
+- Root: `pnpm dev:web`, `pnpm dev:mobile`, `pnpm build:web`, `pnpm type-check` (both apps), `pnpm lint` (turbo), `pnpm lint:cf` (biome on core/api/web).
+- Web deploy: `cd apps/web && pnpm run deploy` (react-router build + wrangler deploy). Promotes straight to production. Pushing to main does NOT deploy.
+- Web type check before every push: `cd apps/web && pnpm run type-check` (react-router typegen + tsc --noEmit).
 - Web Worker secrets: `cd apps/web && npx wrangler secret put KEY`. Local dev env: `apps/web/.dev.vars` (gitignored). Never Vercel.
 - D1 migrations (web): author with drizzle-kit in `packages/core` (migrations in `packages/core/migrations`), apply with wrangler. Never Supabase MCP; never hand-run raw DDL against production.
 - Supabase CLI, ONLY for the retained mobile ai-companion edge function (intentional, do NOT consolidate; there is no root `supabase/` directory). Deploys from `apps/mobile/supabase/functions`, run the CLI from `apps/mobile`:
@@ -58,7 +63,7 @@ Always run from the right directory. Mobile: `cd apps/mobile`. Web: `cd apps/web
 4. Three distinct book club spaces, never mix them:
    `/clubs` user reading clubs; `/book-clubs` celebrity picks (Oprah, Reese); `/book-of-the-month` Foxing's own monthly pick.
 5. Two tiers only: free and plus. Never reference any other tier name in code, copy, or schema.
-6. Cover images go to R2 bucket `foxing-covers` via `uploadToR2('covers', ...)`. Never store third-party image URLs as `cover_url`; always download and store. See the `covers` skill for lookup order and stub detection.
+6. Cover images go to R2 bucket `foxing-covers` via `uploadToR2('covers', ...)`. Never store third-party image URLs as `cover_url`; always download and store.
 7. Card components use two variants only, never invent new hover patterns:
    content: `border-border-subtle` -> `border-border-interactive` on hover, title -> `brand-text`
    entity: `shadow-sm` -> `shadow-md` on hover, border stays subtle
@@ -67,10 +72,4 @@ Always run from the right directory. Mobile: `cd apps/mobile`. Web: `cd apps/web
 9. Icon exception: mobile uses `phosphor-react-native` exclusively. NOT `@phosphor-icons/react-native`; that package does not exist on npm.
 10. Web tasks: do NOT touch `apps/mobile/`. Mobile tasks: do NOT touch `apps/web/`. Single terminal per task. Never run two Claude Code sessions simultaneously.
 
-## Skills (load on demand)
-
-Task-specific context lives in `.claude/skills/`, loaded only when relevant.
-
-  covers  cover image lookup order, stub detection, storage rules
-  botm    Book of the Month admin workflow
-  picks   celebrity picks automation spec
+(An earlier version of this file advertised `.claude/skills/` entries named covers, botm, and picks. That directory does not exist in this repo; the cover lookup order and admin workflows live in the Capsid foxing namespace docs. Do not reference repo skills until the directory actually exists.)
