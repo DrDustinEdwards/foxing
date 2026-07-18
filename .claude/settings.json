@@ -1,12 +1,21 @@
 {
   "hooks": {
-    "PostToolUse": [
+    "PreToolUse": [
       {
-        "matcher": "Edit|Write",
+        "matcher": "Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "bash -c 'file=$(jq -r '\\''.tool_input.file_path // empty'\\'' 2>/dev/null); if [ -n \"$file\" ] && echo \"$file\" | grep -qE '\\''\\.(tsx|ts)$'\\''; then if grep -q '\\'' — '\\'' \"$file\" 2>/dev/null; then echo \"ERROR: em dash found in $file — remove it before continuing\"; exit 1; fi; fi'"
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/no-em-dash.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/scoped-git-add.sh\""
           }
         ]
       }
@@ -36,6 +45,7 @@
   },
   "permissions": {
     "allow": [
+      "Bash(pnpm *)",
       "Bash(npm run *)",
       "Bash(npx tsc *)",
       "Bash(npx wrangler types*)",
@@ -45,21 +55,25 @@
       "Bash(npx vitest *)",
       "Bash(git show *)",
       "Bash(git log *)",
-      "Bash(git branch*)"
+      "Bash(git branch*)",
+      "Bash(git submodule update --init*)"
     ],
     "ask": [
       "Bash(git push *)",
       "Bash(npm run deploy*)",
+      "Bash(pnpm run deploy*)",
       "Bash(npx wrangler deploy*)",
       "Bash(npx wrangler d1 migrations apply*)",
       "Bash(npx wrangler d1 execute *DELETE*)",
       "Bash(npx wrangler d1 execute *DROP*)",
-      "Bash(npx wrangler secret*)"
+      "Bash(npx wrangler secret*)",
+      "Bash(npx supabase functions deploy*)"
     ],
     "deny": [
       "Bash(rm -rf *)",
       "Read(./.env*)",
-      "Read(./.dev.vars)"
+      "Read(./.dev.vars)",
+      "Read(./apps/web/.dev.vars)"
     ]
   },
   "defaultMode": "acceptEdits"
