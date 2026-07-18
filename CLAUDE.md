@@ -34,10 +34,11 @@ Deeper context in the typed docs: `foxing/decisions.md`, `foxing/design-system.m
 
 CLAUDE.md is guidance. Hooks are deterministic. Do not modify `.claude/settings.json` without explicit instruction.
 
-Active hooks:
-- Em dash check after every file edit (PostToolUse). KNOWN WEAKNESS: PostToolUse cannot block a write that already landed, and the check depends on jq. The tested blocking replacement (PreToolUse, python3) lives in the foxhound repo at `.claude/hooks/no-em-dash.sh`; adopt it here during the plugin rollout.
-- `tsc --noEmit` before every session end (Stop, runs in `apps/web/`)
-- dustin-workflow rules on SessionStart
+Active hooks (standard portfolio shape as of 2026-07-17):
+- `.claude/hooks/no-em-dash.sh` (PreToolUse on Write/Edit): blocks em/en dashes before the write lands. python3, exit 2.
+- `.claude/hooks/scoped-git-add.sh` (PreToolUse on Bash): blocks unscoped git adds.
+- Stop hook: `tsc --noEmit` in `apps/web/` before session end.
+- Notification hook on idle.
 
 Mobile-only sessions: the Stop hook's tsc step is expected to noop or warn because it runs against `apps/web/`. Not a blocker.
 
