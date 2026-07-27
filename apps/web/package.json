@@ -9,7 +9,7 @@
     "preview": "npm run build && vite preview",
     "deploy": "npm run build && wrangler deploy",
     "typegen": "wrangler types",
-    "type-check": "react-router typegen && tsc --noEmit",
+    "type-check": "wrangler types && react-router typegen && tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
     "seed": "node ./scripts/seed.mjs"
