@@ -203,7 +203,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                         {a.awardName}
                       </Link>
                       <span className="text-tertiary">
-                        {a.year ? ` — ${a.year}` : ""} · {a.distinction}
+                        {a.year ? `, ${a.year}` : ""} · {a.distinction}
                       </span>
                     </li>
                   ))}

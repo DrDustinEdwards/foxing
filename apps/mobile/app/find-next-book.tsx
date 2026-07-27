@@ -32,15 +32,15 @@ const MOODS = [
 
 const LENGTHS: Array<{ id: 'short' | 'medium' | 'long'; label: string; sub: string }> = [
   { id: 'short', label: 'Short', sub: 'Under 2 hours' },
-  { id: 'medium', label: 'Medium', sub: '2–5 hours' },
+  { id: 'medium', label: 'Medium', sub: '2-5 hours' },
   { id: 'long', label: 'Long', sub: '5+ hours' },
 ]
 
 const ERAS: Array<{ id: string; label: string }> = [
   { id: 'any', label: 'Anytime' },
   { id: 'pre1900', label: 'Pre-1900' },
-  { id: '1900-1950', label: '1900–1950' },
-  { id: '1950-2000', label: '1950–2000' },
+  { id: '1900-1950', label: '1900-1950' },
+  { id: '1950-2000', label: '1950-2000' },
 ]
 
 interface Recommendation {
