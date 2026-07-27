@@ -13,7 +13,7 @@
     "dev:mobile": "pnpm --filter mobile start",
     "dev:web": "pnpm --filter web dev",
     "build:web": "pnpm --filter web build",
-    "type-check": "pnpm --filter mobile exec tsc --noEmit && pnpm --filter web exec tsc --noEmit",
+    "type-check": "pnpm --filter mobile exec tsc --noEmit && pnpm --filter web run type-check",
     "lint": "turbo lint",
     "lint:cf": "biome check packages/core packages/api apps/web"
   },
