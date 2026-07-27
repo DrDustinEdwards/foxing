@@ -196,7 +196,7 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
   const usernameMessage = () => {
     switch (usernameStatus) {
       case 'invalid':
-        return { text: '3–20 lowercase letters, numbers, underscores', color: colors.error }
+        return { text: '3 to 20 lowercase letters, numbers, underscores', color: colors.error }
       case 'checking':
         return { text: 'Checking…', color: colors.textTertiary }
       case 'available':

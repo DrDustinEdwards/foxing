@@ -25,13 +25,13 @@ module.exports = {
       {
         // Catches em dash in any string literal — UI copy, comments
         // converted to template literals, log messages, error text.
-        selector: "Literal[value=/—/]",
-        message: 'Em dash not allowed. Use a comma, period, or colon instead. See ai-writing-tells.md.',
+        selector: "Literal[value=/—|–/]",
+        message: 'Em dash and en dash not allowed. Use a comma, period, colon, or a plain hyphen for ranges. See ai-writing-tells.md.',
       },
       {
         // Also catches em dash inside template literal quasi text.
-        selector: "TemplateElement[value.raw=/—/]",
-        message: 'Em dash not allowed. Use a comma, period, or colon instead. See ai-writing-tells.md.',
+        selector: "TemplateElement[value.raw=/—|–/]",
+        message: 'Em dash and en dash not allowed. Use a comma, period, colon, or a plain hyphen for ranges. See ai-writing-tells.md.',
       },
     ],
   },

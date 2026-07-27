@@ -34,8 +34,8 @@ const ERAS = [
 ]
 const LENGTHS: Array<{ label: string; value: string }> = [
   { label: 'Short story (<50pp)', value: 'short' },
-  { label: 'Novella (50–150)', value: 'novella' },
-  { label: 'Novel (150–400)', value: 'novel' },
+  { label: 'Novella (50-150)', value: 'novella' },
+  { label: 'Novel (150-400)', value: 'novel' },
   { label: 'Long novel (400+)', value: 'long' },
 ]
 const THEMES = [

@@ -147,7 +147,7 @@ export default function CommonplaceScreen() {
           ? `${e.book.title}${e.book.author ? ` by ${e.book.author}` : ''}`
           : e.book_title ?? 'Unknown book'
         const noteLine = e.note ? `\nNote: ${e.note}` : ''
-        return `${e.passage_text}\n— ${book}${noteLine}`
+        return `${e.passage_text}\n- ${book}${noteLine}`
       })
       .join('\n\n')
     try {
