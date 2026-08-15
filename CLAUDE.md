@@ -55,6 +55,34 @@ Always run from the right directory. Mobile: `cd apps/mobile`. Web: `cd apps/web
   `npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc`
   Never delete `apps/mobile/supabase` or merge the two trees.
 
+## Backup: the whole-database export does not work here
+
+`npx wrangler d1 export foxing` FAILS: `D1 Export error: cannot export databases with Virtual Tables (fts5)`, exit 1, no file written. This database has two FTS5 virtual tables, so the one command anyone reaches for in a recovery is not available, and the journal prose has no second copy in git. Export per table, data only, hand-written content first:
+
+```
+npx wrangler d1 export foxing --remote --no-schema --table journal_posts --output export-journal_posts.sql
+npx wrangler d1 export foxing --remote --no-schema --table annotations --output export-annotations.sql
+npx wrangler d1 export foxing --remote --no-schema --table profiles --output export-profiles.sql
+npx wrangler d1 export foxing --remote --no-schema --table books --output export-books.sql
+```
+
+`journal_posts` is original prose that exists nowhere else, and is the one that matters most. `annotations` is user-written marginalia and `profiles` is hand-authored. `books` is reconstructible in principle, but refetching thousands of rows from a rate-limited external book API is slow enough that it is worth exporting anyway.
+
+Everything else (the club, reading-list, social and notification tables, plus `journal_post_versions`, `diary_entries`, `vocabulary` and `announcements`) was empty as of 2026-08-17. **Check counts rather than trusting that list**: this app has a lot of tables that are empty today and will not be empty after the next feature ships. `user`, `account`, `session` and `verification` are Better Auth's and regenerate on login. `d1_migrations` is rebuilt by running migrations, and `_cf_KV` and `sqlite_sequence` are internals.
+
+**Never export** `annotations_fts`, `books_fts`, or any `_config`, `_content`, `_data`, `_docsize` or `_idx` shadow table. They are derived data, they are what makes the whole-database export fail, and restoring them corrupts the index.
+
+Restore in order: apply `packages/core/migrations` first, since the exports were taken with `--no-schema` and carry no schema; then the per-table data files. Importing `books` and `annotations` fires the `books_fts_ai` and `annotations_fts_ai` triggers, which refill the search index on the way in; the rebuild below is the repair if the index is ever damaged rather than the thing that restores it.
+
+```
+INSERT INTO books_fts (books_fts) VALUES ('rebuild');
+INSERT INTO annotations_fts (annotations_fts) VALUES ('rebuild');
+```
+
+**Check that each export file actually contains INSERT rows.** An empty export still writes a file and still exits 0, so a "the file exists" check passes over nothing.
+
+Full version, with row counts and the two FTS5 traps that make a naive integrity check useless: Capsid namespace `foxing`, path `protocol-backup.md`.
+
 ## Hard rules
 
 1. No hardcoded strings in metadata. All metadata uses the `lib/metadata.ts` builders.
