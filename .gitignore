@@ -50,3 +50,8 @@ apps/web/.cache/
 scripts/import-catalog/sql/
 scripts/import-catalog/reports/
 apps/web/e2e/.auth/
+
+# The holdout suite is pulled here by improve-score.yml and must NEVER be committed:
+# a hidden test set in the repo is one the attempt path can read, which defeats the
+# measurement entirely.
+.improve-holdout/
