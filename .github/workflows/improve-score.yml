@@ -72,15 +72,19 @@ jobs:
           pnpm --filter web run type-check
 
       # vitest's JSON reporter writes a jest-shaped summary file; counts come from
-      # it, never from parsing the terminal summary, whose "Tests N passed" line is
-      # wrapped in ANSI colour codes that broke the old regex. || true so a failing
-      # core suite still lets the web suite run and report.
+      # it, never from parsing the terminal summary. THE FLAGS GO THROUGH pnpm
+      # exec, not through the test script: `pnpm --filter X test -- <flags>`
+      # forwards the literal `--` too, and vitest reads everything after `--` as
+      # filename filters, so the reporter flags never reached it and no report
+      # file was written (measured 2026-09-06, shakedown c01: 134 tests green,
+      # test_pass_rate null). || true so a failing core suite still lets the web
+      # suite run and report.
       - name: Test
         id: test
         continue-on-error: true
         run: |
-          pnpm --filter @foxing/core test -- --reporter=json --outputFile="$GITHUB_WORKSPACE/test-report-core.json" || true
-          pnpm --filter web test -- --reporter=json --outputFile="$GITHUB_WORKSPACE/test-report-web.json" || true
+          pnpm --filter @foxing/core exec vitest run --reporter=json --outputFile="$GITHUB_WORKSPACE/test-report-core.json" || true
+          pnpm --filter web exec vitest run --reporter=json --outputFile="$GITHUB_WORKSPACE/test-report-web.json" || true
 
       - name: Measure
         id: measure
@@ -89,13 +93,15 @@ jobs:
           set -uo pipefail
           BUILD_PASSES=0; [ "${{ steps.build.outcome }}" = "success" ] && BUILD_PASSES=1
           # Sum both suites' JSON reports; "" (-> null) when neither was written.
+          # numPassedTests over numTotalTests, so skipped and pending tests count
+          # against the rate instead of vanishing from the denominator.
           RATE=$(node -e '
             const fs=require("fs");
-            let p=0,f=0,seen=0;
+            let p=0,t=0;
             for(const file of ["test-report-core.json","test-report-web.json"]){
-              try{const r=JSON.parse(fs.readFileSync(file,"utf8"));p+=r.numPassedTests||0;f+=r.numFailedTests||0;seen+=1;}catch{}
+              try{const r=JSON.parse(fs.readFileSync(file,"utf8"));p+=r.numPassedTests||0;t+=r.numTotalTests||0;}catch{}
             }
-            process.stdout.write(seen>0&&p+f>0?String(p/(p+f)):"");
+            process.stdout.write(t>0?String(p/t):"");
           ')
           if pnpm run lint:cf > lint-output.txt 2>&1; then LINT_COUNT=0; else LINT_COUNT=$(grep -cE "^(.*)(lint|assist|format)/" lint-output.txt || true); [ "${LINT_COUNT}" = "0" ] && LINT_COUNT=""; fi
           BUNDLE_BYTES=$(pnpm --filter web build > /dev/null 2>&1 && du -sb apps/web/build 2>/dev/null | cut -f1 || echo "")
