@@ -71,11 +71,16 @@ jobs:
           pnpm --filter @foxing/api exec tsc --noEmit
           pnpm --filter web run type-check
 
+      # vitest's JSON reporter writes a jest-shaped summary file; counts come from
+      # it, never from parsing the terminal summary, whose "Tests N passed" line is
+      # wrapped in ANSI colour codes that broke the old regex. || true so a failing
+      # core suite still lets the web suite run and report.
       - name: Test
         id: test
         continue-on-error: true
         run: |
-          { pnpm --filter @foxing/core test; pnpm --filter web test; } 2>&1 | tee test-output.txt
+          pnpm --filter @foxing/core test -- --reporter=json --outputFile="$GITHUB_WORKSPACE/test-report-core.json" || true
+          pnpm --filter web test -- --reporter=json --outputFile="$GITHUB_WORKSPACE/test-report-web.json" || true
 
       - name: Measure
         id: measure
@@ -83,15 +88,14 @@ jobs:
         run: |
           set -uo pipefail
           BUILD_PASSES=0; [ "${{ steps.build.outcome }}" = "success" ] && BUILD_PASSES=1
-          # Sum every vitest "Tests N passed/failed" summary across the two runs.
+          # Sum both suites' JSON reports; "" (-> null) when neither was written.
           RATE=$(node -e '
             const fs=require("fs");
-            try {
-              const t=fs.readFileSync("test-output.txt","utf8");
-              const lines=[...t.matchAll(/^\s*Tests\s+(.+)$/gm)];
-              if(!lines.length){process.stdout.write("");}
-              else{let p=0,f=0;for(const m of lines){p+=Number(/(\d+) passed/.exec(m[1])?.[1]??"0");f+=Number(/(\d+) failed/.exec(m[1])?.[1]??"0");}process.stdout.write(p+f>0?String(p/(p+f)):"");}
-            } catch { process.stdout.write(""); }
+            let p=0,f=0,seen=0;
+            for(const file of ["test-report-core.json","test-report-web.json"]){
+              try{const r=JSON.parse(fs.readFileSync(file,"utf8"));p+=r.numPassedTests||0;f+=r.numFailedTests||0;seen+=1;}catch{}
+            }
+            process.stdout.write(seen>0&&p+f>0?String(p/(p+f)):"");
           ')
           if pnpm run lint:cf > lint-output.txt 2>&1; then LINT_COUNT=0; else LINT_COUNT=$(grep -cE "^(.*)(lint|assist|format)/" lint-output.txt || true); [ "${LINT_COUNT}" = "0" ] && LINT_COUNT=""; fi
           BUNDLE_BYTES=$(pnpm --filter web build > /dev/null 2>&1 && du -sb apps/web/build 2>/dev/null | cut -f1 || echo "")
@@ -178,13 +182,21 @@ jobs:
           fi
 
       # R2 holdout secrets are env ON THIS STEP ONLY; no attempt code runs here.
+      # The aws CLI reads only the AWS_* names, so the secrets are mapped onto
+      # them (R2_ACCESS_KEY_ID was invisible to it: every sync failed with
+      # "Unable to locate credentials" and the holdout scored 0). Checksums are
+      # when_required because R2 rejects the CRC headers newer aws CLIs send by
+      # default.
       - name: Pull the holdout suite
         id: holdout
         continue-on-error: true
         env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.IMPROVE_HOLDOUT_R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.IMPROVE_HOLDOUT_R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_REQUEST_CHECKSUM_CALCULATION: when_required
+          AWS_RESPONSE_CHECKSUM_VALIDATION: when_required
           R2_ACCOUNT_ID: ${{ secrets.IMPROVE_HOLDOUT_R2_ACCOUNT_ID }}
-          R2_ACCESS_KEY_ID: ${{ secrets.IMPROVE_HOLDOUT_R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.IMPROVE_HOLDOUT_R2_SECRET_ACCESS_KEY }}
           IMPROVE_NAMESPACE: ${{ vars.IMPROVE_NAMESPACE }}
         run: |
           set -euo pipefail
