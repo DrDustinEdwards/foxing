@@ -1,63 +1,42 @@
-# CLAUDE.md -- Foxing Monorepo
+# CLAUDE.md - Foxing monorepo
 
-Portfolio-wide rules live in Capsid, not here. Read `capsid/conventions.md` first, then `foxing/core.md`. This file holds only what is true of this repo.
+Foxing is a reading app and web platform ("Letterboxd for books") at foxing.app.
 
-Path-scoped CLAUDE.md files auto-load from their directory. `apps/mobile/` has one.
+## Rules that come first
 
-## What this is
+- The portfolio rules are in Capsid: `capsid/conventions.md`. Read it with this file and `foxing/core.md`. Where they disagree, conventions wins. Rulings for Foxing go in `foxing/decisions.md`; read `foxing/design-system.md` before design work.
+- Path-scoped CLAUDE.md files load from their directory; `apps/mobile/` has one.
+- This namespace also maps DrDustinEdwards/foxing-admin-mcp (label `admin-mcp`): the old admin MCP, Next.js on Vercel, to be tested and then rebuilt on Cloudflare or retired.
 
-Foxing is a reading app + web platform. Letterboxd for books. Domain: foxing.app.
+## Layout
 
-  apps/mobile/    Expo React Native reader (SDK 56 / RN 0.85.3)
-  apps/web/       React Router v8 web platform on Cloudflare Workers
-  packages/core/  @foxing/core Drizzle schema, repositories, domain logic
-  packages/api/   @foxing/api Hono routes (the /api/v1 surface)
-  packages/types/ @foxing/types shared interfaces
-  packages/utils/ @foxing/utils shared helpers
+    apps/mobile/    Expo React Native reader
+    apps/web/       React Router 8 web platform on Cloudflare Workers
+    packages/core/  @foxing/core: Drizzle schema, repositories, domain logic
+    packages/api/   @foxing/api: Hono routes (the /api/v1 surface)
+    packages/types/ @foxing/types: shared interfaces
+    packages/utils/ @foxing/utils: shared helpers
 
-Web stack: Cloudflare Workers + D1 + R2 + KV, React Router v8 (framework mode).
+Web stack: Workers, D1, R2, KV, React Router 8 framework mode. A pnpm and turborepo monorepo (`workspace:*` dependencies): use pnpm at the root; npm fails on the workspace protocol. Node 24.
 
-This is a **pnpm + turborepo monorepo** (package.json: packageManager pnpm@11.1.2, deps use workspace:*). Use pnpm for everything at the root; npm will fail on the workspace protocol. Node 24 (.nvmrc / engines).
+**Git submodule:** `apps/mobile/libs/foliate-js`. Clone with `--recurse-submodules` or run `git submodule update --init`, or the mobile reader silently gets an empty library.
 
-**Git submodule:** `apps/mobile/libs/foliate-js` (johnfactotum/foliate-js, per .gitmodules). Clone with `git clone --recurse-submodules`, or run `git submodule update --init` after a plain clone, or the mobile reader silently gets an empty library.
+Supabase project `ekjpsuewrkvqzbuteurc` is kept ONLY for the mobile ai-companion edge function; the web platform does not use Supabase. All new uploads go to R2 (foxing-covers, foxing-epubs, foxing-avatars, foxing-journal-images) through `uploadToR2()` in `apps/web/lib/r2.ts`.
 
-Supabase project ekjpsuewrkvqzbuteurc is retained ONLY for the mobile ai-companion edge function. The web platform does not use Supabase. Storage is Cloudflare R2 for all new uploads: foxing-covers, foxing-epubs, foxing-avatars, foxing-journal-images. Use `uploadToR2()` from `apps/web/lib/r2.ts`.
+## Commands
 
-## Session ritual
-
-Start: read `capsid/conventions.md`, then `foxing/core.md`.
-End: write a `session-YYYY-MM-DD.md` episodic (type `episodic`, under ~2KB) to the foxing namespace.
-
-Deeper context in the typed docs: `foxing/decisions.md`, `foxing/design-system.md` (read before any design work; selectors are data-theme as of 2026-07-16), `foxing/context.md`, and the rest of the namespace.
-
-## Hooks (deterministic enforcement)
-
-CLAUDE.md is guidance. Hooks are deterministic. Do not modify `.claude/settings.json` without explicit instruction.
-
-Active hooks (standard portfolio shape as of 2026-07-17):
-- `.claude/hooks/no-em-dash.sh` (PreToolUse on Write/Edit): blocks em/en dashes before the write lands. python3, exit 2.
-- `.claude/hooks/scoped-git-add.sh` (PreToolUse on Bash): blocks unscoped git adds.
-- Stop hook: `tsc --noEmit` in `apps/web/` before session end.
-- Notification hook on idle.
-
-Mobile-only sessions: the Stop hook's tsc step is expected to noop or warn because it runs against `apps/web/`. Not a blocker.
-
-## Commands (per package.json; root commands are pnpm/turbo)
-
-Always run from the right directory. Mobile: `cd apps/mobile`. Web: `cd apps/web`. Install from repo root: `pnpm install`.
-
-- Root: `pnpm dev:web`, `pnpm dev:mobile`, `pnpm build:web`, `pnpm type-check` (both apps), `pnpm lint` (turbo), `pnpm lint:cf` (biome on core/api/web).
-- Web deploy: `cd apps/web && pnpm run deploy` (react-router build + wrangler deploy). Promotes straight to production. Pushing to main does NOT deploy.
-- Web type check before every push: `cd apps/web && pnpm run type-check` (react-router typegen + tsc --noEmit).
-- Web Worker secrets: `cd apps/web && npx wrangler secret put KEY`. Local dev env: `apps/web/.dev.vars` (gitignored). Never Vercel.
-- D1 migrations (web): author with drizzle-kit in `packages/core` (migrations in `packages/core/migrations`), apply with wrangler. Never Supabase MCP; never hand-run raw DDL against production.
-- Supabase CLI, ONLY for the retained mobile ai-companion edge function (intentional, do NOT consolidate; there is no root `supabase/` directory). Deploys from `apps/mobile/supabase/functions`, run the CLI from `apps/mobile`:
-  `npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc`
-  Never delete `apps/mobile/supabase` or merge the two trees.
+Run from the right directory: mobile in `apps/mobile`, web in `apps/web`; install with `pnpm install` at the root.
+- Root: `pnpm dev:web`, `pnpm dev:mobile`, `pnpm build:web`, `pnpm type-check` (both apps), `pnpm lint`, `pnpm lint:cf`.
+- Web typecheck before a push: `cd apps/web && pnpm run type-check`.
+- Web deploy: `cd apps/web && pnpm run deploy` promotes straight to production. Pushing to main does not deploy.
+- Secrets: `cd apps/web && npx wrangler secret put KEY`. Local env: `apps/web/.dev.vars` (gitignored).
+- D1 migrations: author with drizzle-kit in `packages/core` (`packages/core/migrations`), apply with wrangler. Never Supabase MCP, never hand-run DDL against production.
+- Supabase CLI only for the mobile ai-companion function, from `apps/mobile`: `npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc`. Never delete `apps/mobile/supabase` or merge the two trees.
+- Private repo: CI shares Dustin's free monthly minutes, so heavy runs happen locally, one at a time.
 
 ## Backup: the whole-database export does not work here
 
-`npx wrangler d1 export foxing` FAILS: `D1 Export error: cannot export databases with Virtual Tables (fts5)`, exit 1, no file written. This database has two FTS5 virtual tables, so the one command anyone reaches for in a recovery is not available, and the journal prose has no second copy in git. Export per table, data only, hand-written content first:
+`npx wrangler d1 export foxing` fails on the two FTS5 tables. Export per table, data only, hand-written content first:
 
 ```
 npx wrangler d1 export foxing --remote --no-schema --table journal_posts --output export-journal_posts.sql
@@ -66,39 +45,17 @@ npx wrangler d1 export foxing --remote --no-schema --table profiles --output exp
 npx wrangler d1 export foxing --remote --no-schema --table books --output export-books.sql
 ```
 
-`journal_posts` is original prose that exists nowhere else, and is the one that matters most. `annotations` is user-written marginalia and `profiles` is hand-authored. `books` is reconstructible in principle, but refetching thousands of rows from a rate-limited external book API is slow enough that it is worth exporting anyway.
-
-Everything else (the club, reading-list, social and notification tables, plus `journal_post_versions`, `diary_entries`, `vocabulary` and `announcements`) was empty as of 2026-08-17. **Check counts rather than trusting that list**: this app has a lot of tables that are empty today and will not be empty after the next feature ships. `user`, `account`, `session` and `verification` are Better Auth's and regenerate on login. `d1_migrations` is rebuilt by running migrations, and `_cf_KV` and `sqlite_sequence` are internals.
-
-**Never export** `annotations_fts`, `books_fts`, or any `_config`, `_content`, `_data`, `_docsize` or `_idx` shadow table. They are derived data, they are what makes the whole-database export fail, and restoring them corrupts the index.
-
-Restore in order: apply `packages/core/migrations` first, since the exports were taken with `--no-schema` and carry no schema; then the per-table data files. Importing `books` and `annotations` fires the `books_fts_ai` and `annotations_fts_ai` triggers, which refill the search index on the way in; the rebuild below is the repair if the index is ever damaged rather than the thing that restores it.
-
-```
-INSERT INTO books_fts (books_fts) VALUES ('rebuild');
-INSERT INTO annotations_fts (annotations_fts) VALUES ('rebuild');
-```
-
-**Check that each export file actually contains INSERT rows.** An empty export still writes a file and still exits 0, so a "the file exists" check passes over nothing.
-
-Full version, with row counts and the two FTS5 traps that make a naive integrity check useless: Capsid namespace `foxing`, path `protocol-backup.md`.
+`journal_posts` is original prose that exists nowhere else. Check counts on the other tables rather than trusting a list; Better Auth's tables regenerate on login. Never export `annotations_fts`, `books_fts` or any FTS shadow table. Restore: apply `packages/core/migrations`, then the data files (the FTS triggers refill the index on import; `INSERT INTO books_fts (books_fts) VALUES ('rebuild');` and the same for `annotations_fts` repair it). Check each export file actually contains INSERT rows. Full version: `foxing/protocol-backup.md` in Capsid. A nightly per-table backup job (d1-dump) is queued to replace this by hand.
 
 ## Hard rules
 
-1. No hardcoded strings in metadata. All metadata uses the `lib/metadata.ts` builders.
-2. All affiliate links: `rel="sponsored noopener noreferrer"`. Bookshop.org always before Amazon.
-3. URL patterns, never confuse these:
-   `/book/[slug]` not `/book/[id]`; `/author/jane-austen` not `/author/Jane%20Austen`; `/clubs/[slug]` not `/clubs/[uuid]`.
-4. Three distinct book club spaces, never mix them:
-   `/clubs` user reading clubs; `/book-clubs` celebrity picks (Oprah, Reese); `/book-of-the-month` Foxing's own monthly pick.
-5. Two tiers only: free and plus. Never reference any other tier name in code, copy, or schema.
-6. Cover images go to R2 bucket `foxing-covers` via `uploadToR2('covers', ...)`. Never store third-party image URLs as `cover_url`; always download and store.
-7. Card components use two variants only, never invent new hover patterns:
-   content: `border-border-subtle` -> `border-border-interactive` on hover, title -> `brand-text`
-   entity: `shadow-sm` -> `shadow-md` on hover, border stays subtle
-   Import from `components/ui/card.tsx`. Never hand-roll card hover behavior.
-8. Emoji exceptions (the canon bans emoji by default): the fox emoji in nav/footer/auth/admin, and emoji inside the reactions feature, which is user content, not chrome.
-9. Icon exception: mobile uses `phosphor-react-native` exclusively. NOT `@phosphor-icons/react-native`; that package does not exist on npm.
-10. Web tasks: do NOT touch `apps/mobile/`. Mobile tasks: do NOT touch `apps/web/`. Single terminal per task. Never run two Claude Code sessions simultaneously.
-
-(An earlier version of this file advertised `.claude/skills/` entries named covers, botm, and picks. That directory does not exist in this repo; the cover lookup order and admin workflows live in the Capsid foxing namespace docs. Do not reference repo skills until the directory actually exists.)
+1. No hardcoded strings in metadata; all metadata uses the `lib/metadata.ts` builders.
+2. Affiliate links carry `rel="sponsored noopener noreferrer"`. Bookshop.org always before Amazon.
+3. URL patterns: `/book/[slug]` not `/book/[id]`; `/author/jane-austen` not `/author/Jane%20Austen`; `/clubs/[slug]` not `/clubs/[uuid]`.
+4. Three separate club spaces, never mixed: `/clubs` user reading clubs; `/book-clubs` celebrity picks; `/book-of-the-month` Foxing's own pick.
+5. Two tiers only: free and plus. No other tier name in code, copy or schema.
+6. Covers go to R2 bucket `foxing-covers` via `uploadToR2('covers', ...)`; never store a third-party image URL as `cover_url`.
+7. Cards use two variants from `components/ui/card.tsx` (content: border change and brand title on hover; entity: shadow change on hover); never hand-roll card hover. This is the current default until Foxing moves to Capsomer, which owns card behaviour after that.
+8. Emoji exceptions to the portfolio ban: the fox emoji in nav, footer, auth and admin, and emoji inside the reactions feature (user content).
+9. Mobile icons: `phosphor-react-native` only (`@phosphor-icons/react-native` does not exist on npm).
+10. Web tasks never touch `apps/mobile/`; mobile tasks never touch `apps/web/`.
