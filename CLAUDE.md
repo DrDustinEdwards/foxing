@@ -28,7 +28,7 @@ Supabase project `ekjpsuewrkvqzbuteurc` is kept ONLY for the mobile ai-companion
 Run from the right directory: mobile in `apps/mobile`, web in `apps/web`; install with `pnpm install` at the root.
 - Root: `pnpm dev:web`, `pnpm dev:mobile`, `pnpm build:web`, `pnpm type-check` (both apps), `pnpm lint`, `pnpm lint:cf`.
 - Web typecheck before a push: `cd apps/web && pnpm run type-check`.
-- Web deploy: `cd apps/web && pnpm run deploy` promotes straight to production. Pushing to main does not deploy.
+- Web deploy: `cd apps/web && pnpm run deploy` promotes straight to production. Merging to main does not deploy.
 - Secrets: `cd apps/web && npx wrangler secret put KEY`. Local env: `apps/web/.dev.vars` (gitignored).
 - D1 migrations: author with drizzle-kit in `packages/core` (`packages/core/migrations`), apply with wrangler. Never Supabase MCP, never hand-run DDL against production.
 - Supabase CLI only for the mobile ai-companion function, from `apps/mobile`: `npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc`. Never delete `apps/mobile/supabase` or merge the two trees.
@@ -56,6 +56,5 @@ npx wrangler d1 export foxing --remote --no-schema --table books --output export
 5. Two tiers only: free and plus. No other tier name in code, copy or schema.
 6. Covers go to R2 bucket `foxing-covers` via `uploadToR2('covers', ...)`; never store a third-party image URL as `cover_url`.
 7. Cards use two variants from `components/ui/card.tsx` (content: border change and brand title on hover; entity: shadow change on hover); never hand-roll card hover. This is the current default until Foxing moves to Capsomer, which owns card behaviour after that.
-8. Emoji exceptions to the portfolio ban: the fox emoji in nav, footer, auth and admin, and emoji inside the reactions feature (user content).
-9. Mobile icons: `phosphor-react-native` only (`@phosphor-icons/react-native` does not exist on npm).
-10. Web tasks never touch `apps/mobile/`; mobile tasks never touch `apps/web/`.
+8. Mobile icons: `phosphor-react-native` only (`@phosphor-icons/react-native` does not exist on npm).
+9. Web tasks never touch `apps/mobile/`; mobile tasks never touch `apps/web/`.
