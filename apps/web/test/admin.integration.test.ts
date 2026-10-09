@@ -162,6 +162,9 @@ describe("admin role changes: preview then perform", () => {
   it("a single request cannot grant admin: it returns a preview and changes nothing", async () => {
     const res = await post("/admin/users/reader/admin", "admin", { on: true });
     expect(res.status).toBe(200);
+    expect((await profileOf("reader")).isAdmin).toBe(false);
+    expect(await auditRows("user.grant_admin")).toHaveLength(0);
+
     const body = (await res.json()) as Preview;
     expect(body.preview.target.username).toBe("reader");
     expect(body.preview.kind).toBe("admin");
@@ -169,9 +172,6 @@ describe("admin role changes: preview then perform", () => {
     expect(body.preview.to).toBe(true);
     expect(body.preview.summary).toContain("@reader gains admin");
     expect(body.confirm.token).toMatch(/^[0-9a-f]{64}$/);
-
-    expect((await profileOf("reader")).isAdmin).toBe(false);
-    expect(await auditRows("user.grant_admin")).toHaveLength(0);
   });
 
   it("grants admin with the confirmation token and records the actor", async () => {
