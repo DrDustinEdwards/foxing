@@ -58,3 +58,6 @@ apps/web/e2e/.auth/
 
 # Project MCP config: carries a driver bearer token
 .mcp.json
+
+# jscpd's JSON report (pnpm check:jscpd)
+.jscpd-report/
