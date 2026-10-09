@@ -50,6 +50,7 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
 
   // Live tallies: seed from the loader, then let the socket update them in place.
   const [liveTallies, setLiveTallies] = useState<Record<string, Record<string, number>>>({});
+  // biome-ignore lint/correctness/useExhaustiveDependencies: club.id is the trigger, not an input. The route component stays mounted when the slug changes, so this drops the previous club's tallies.
   useEffect(() => {
     setLiveTallies({});
   }, [club.id]);
