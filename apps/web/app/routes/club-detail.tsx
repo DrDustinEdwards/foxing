@@ -382,6 +382,7 @@ function PollsSection({
           />
           {Array.from({ length: optionCount }, (_, i) => (
             <input
+              // biome-ignore lint/suspicious/noArrayIndexKey: options are only appended, never removed or reordered, and the field name opt{i} is positional too.
               key={i}
               name={`opt${i}`}
               required={i < 2}

@@ -475,6 +475,7 @@ function ActivityHeatmap({
           col.map((count, d) =>
             count === null ? null : (
               <rect
+                // biome-ignore lint/suspicious/noArrayIndexKey: a fixed grid of week columns by weekday rows; a cell is identified by its position.
                 key={`${w}-${d}`}
                 x={w * PITCH}
                 y={d * PITCH}
