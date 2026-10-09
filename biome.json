@@ -21,9 +21,23 @@
   },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": { "recommended": true },
+    "domains": { "types": "recommended" }
   },
   "assist": {
     "actions": { "source": { "organizeImports": "off" } }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "packages/core/src/**",
+        "packages/api/src/**",
+        "apps/web/workers/**",
+        "apps/web/app/**/*.server.ts"
+      ],
+      "linter": {
+        "rules": { "nursery": { "noFloatingPromises": "error" } }
+      }
+    }
+  ]
 }
