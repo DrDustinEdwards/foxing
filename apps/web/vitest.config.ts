@@ -13,7 +13,11 @@ export default defineConfig(async () => {
   return {
     plugins: [
       cloudflareTest({
+        // A test-only entry that exports the ClubRoom class, so the CLUB_ROOM binding
+        // below is a real Durable Object (the app entry pulls in the React Router build).
+        main: "./test/club-room-entry.ts",
         miniflare: {
+          durableObjects: { CLUB_ROOM: "ClubRoom" },
           compatibilityDate: "2026-07-01",
           compatibilityFlags: ["nodejs_compat"],
           d1Databases: ["DB"],

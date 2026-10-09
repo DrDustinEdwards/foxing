@@ -4,6 +4,7 @@
 // every real write goes through /api/v1, which fans out over this socket after the D1
 // commit. So this hook never sends data, it only listens.
 import { useEffect, useRef, useState } from "react";
+import { PING_FRAME } from "../lib/club-live-protocol";
 
 type ServerMessage =
   | { t: "presence"; users: string[] }
@@ -61,9 +62,10 @@ export function useClubLive(clubId: string | null, handlers: ClubLiveHandlers) {
       }
     };
 
-    // Keepalive so idle sockets are not reaped; the DO answers with {t:'pong'}.
+    // Keepalive so idle sockets are not reaped; the runtime answers with {t:'pong'}
+    // through the ClubRoom's auto-response, without waking the object.
     const ping = window.setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ t: "ping" }));
+      if (ws.readyState === WebSocket.OPEN) ws.send(PING_FRAME);
     }, 30_000);
 
     return () => {
