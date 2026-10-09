@@ -1,0 +1,68 @@
+name: Page weight (warn-only)
+
+# JavaScript and CSS weight per route of apps/web (gzip), from a production build,
+# compared with scripts/no-bloat/baseline.json. WARN-ONLY (capsid decisions,
+# 2026-10-01, "no bloat, as a standing plan"): the report step is continue-on-error,
+# so a heavier route never fails the job and never blocks a merge. The step exits
+# 1 when a route grew past the threshold and 2 when it could not run (see Outcome).
+#
+# Separate from ci-cf.yml so it runs while that workflow's Lint (biome) step is
+# red on main. The paths are what the web client bundle is built from: apps/web
+# (minus its tests), the workspace packages it imports, and the lockfile.
+on:
+  pull_request:
+    paths:
+      - "apps/web/**"
+      - "packages/core/**"
+      - "packages/api/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "scripts/no-bloat/page-weight.mjs"
+      - "scripts/no-bloat/baseline.json"
+      - ".github/workflows/page-weight.yml"
+      - "!apps/web/test/**"
+      - "!apps/web/e2e/**"
+      - "!**/*.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: page-weight-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      # Same pinned actions as ci-cf.yml.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # wrangler.jsonc is gitignored; the Cloudflare Vite plugin needs a config
+      # present to build. Placeholder ids are fine: nothing is deployed.
+      - name: Stage wrangler config
+        run: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc
+      # continue-on-error here too: a broken build is ci-cf.yml's to report. The
+      # report step then exits 2 (no build) and says so.
+      - name: Build web
+        id: build
+        continue-on-error: true
+        run: pnpm build:web
+      - name: Page weight (warn-only)
+        id: weight
+        continue-on-error: true
+        run: pnpm run check:page-weight
+      - name: Outcome
+        if: always()
+        run: |
+          echo "build step: ${{ steps.build.outcome }} (warn-only; the job continues)"
+          echo "page-weight step: ${{ steps.weight.outcome }} (warn-only; the job continues)"
