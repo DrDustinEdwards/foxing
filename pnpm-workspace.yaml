@@ -11,6 +11,7 @@ overrides:
 # That subdep is legitimate, so allow exotic sub-deps for the workspace.
 blockExoticSubdeps: false
 allowBuilds:
+  '@dustinedwards/d1-dump': true
   '@sentry/cli': true
   dtrace-provider: true
   esbuild: true

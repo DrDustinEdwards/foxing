@@ -263,6 +263,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@dustinedwards/d1-dump':
+        specifier: github:DrDustinEdwards/d1-dump#v0.4.1
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -1217,6 +1220,12 @@ packages:
 
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
+
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced':
+    resolution: {gitHosted: true, integrity: sha512-oUO0gnsKwFVZV7t4KuWq6bRQL6KmG4Ojjimo0AKpEHfhvygBkK3Aq1FYgaXiYPvqiru47+AQkOgpnEr/Wwb/ag==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced}
+    version: 0.4.1
+    engines: {node: '>=24.14.1'}
+    hasBin: true
 
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
@@ -7697,6 +7706,8 @@ snapshots:
       zod: 3.25.76
 
   '@drizzle-team/brocli@0.10.2': {}
+
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced': {}
 
   '@egjs/hammerjs@2.0.17':
     dependencies:
