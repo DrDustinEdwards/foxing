@@ -36,7 +36,11 @@ Run from the right directory: mobile in `apps/mobile`, web in `apps/web`; instal
 
 ## Backup: the whole-database export does not work here
 
-`npx wrangler d1 export foxing` fails on the two FTS5 tables. Export per table, data only, hand-written content first:
+`npx wrangler d1 export foxing` fails on the two FTS5 tables.
+
+**Nightly:** the Worker's `17 3 * * *` cron runs `runBackup` (`apps/web/app/lib/backup.server.ts`), a d1-dump of every table as JSON into the `foxing-backups` R2 bucket (binding `BACKUPS`) under `backups/json/<run id>/`. It leaves out `session`, `verification`, `account` and `push_tokens` (live credentials; reasons in `app/lib/backup-checks.ts`, the list checked against the schema by `test/backup.integration.test.ts`). A run that fails its checks gets no `_complete.json` and fails the cron invocation. `GET /health` reports the newest complete dump as `backup: { last_ok, age_hours, warning? }`, warning past 26 hours. Retention is d1-dump's default (14 daily, 8 weekly, 6 monthly). Restore and the restore drill: the d1-dump README.
+
+**By hand**, until the first nightly dump is confirmed: export per table, data only, hand-written content first:
 
 ```
 npx wrangler d1 export foxing --remote --no-schema --table journal_posts --output export-journal_posts.sql
@@ -45,7 +49,7 @@ npx wrangler d1 export foxing --remote --no-schema --table profiles --output exp
 npx wrangler d1 export foxing --remote --no-schema --table books --output export-books.sql
 ```
 
-`journal_posts` is original prose that exists nowhere else. Check counts on the other tables rather than trusting a list; Better Auth's tables regenerate on login. Never export `annotations_fts`, `books_fts` or any FTS shadow table. Restore: apply `packages/core/migrations`, then the data files (the FTS triggers refill the index on import; `INSERT INTO books_fts (books_fts) VALUES ('rebuild');` and the same for `annotations_fts` repair it). Check each export file actually contains INSERT rows. Full version: `foxing/protocol-backup.md` in Capsid. A nightly per-table backup job (d1-dump) is queued to replace this by hand.
+`journal_posts` is original prose that exists nowhere else. Check counts on the other tables rather than trusting a list; Better Auth's tables regenerate on login. Never export `annotations_fts`, `books_fts` or any FTS shadow table. Restore: apply `packages/core/migrations`, then the data files (the FTS triggers refill the index on import; `INSERT INTO books_fts (books_fts) VALUES ('rebuild');` and the same for `annotations_fts` repair it). Check each export file actually contains INSERT rows. Full version: `foxing/protocol-backup.md` in Capsid.
 
 ## Hard rules
 
