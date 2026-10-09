@@ -1,0 +1,341 @@
+{
+  "_comment": "No-bloat reference numbers, measured on origin/main dc1368f with this PR's config (foxing/baseline.md in Capsid). The CI checks warn above these. Update in the PR that intends the change.",
+  "knip": {
+    "commit": "dc1368f",
+    "counts": {
+      "files": 8,
+      "dependencies": 8,
+      "devDependencies": 5,
+      "unlisted": 0,
+      "unresolved": 0,
+      "binaries": 0,
+      "exports": 34,
+      "types": 23,
+      "nsExports": 0,
+      "nsTypes": 0,
+      "enumMembers": 0,
+      "namespaceMembers": 0,
+      "duplicates": 0
+    }
+  },
+  "jscpd": {
+    "commit": "dc1368f",
+    "sources": 509,
+    "lines": 98691,
+    "clones": 438,
+    "percentage": 5.6844
+  },
+  "pageWeight": {
+    "commit": "dc1368f",
+    "totals": {
+      "jsGzip": 514140,
+      "cssGzip": 10296
+    },
+    "routes": {
+      "routes/books": {
+        "js": 233956,
+        "css": 10296
+      },
+      "routes/read": {
+        "js": 205424,
+        "css": 10296
+      },
+      "routes/settings": {
+        "js": 143907,
+        "css": 10296
+      },
+      "routes/marketing": {
+        "js": 142543,
+        "css": 10296
+      },
+      "routes/search": {
+        "js": 142349,
+        "css": 10296
+      },
+      "routes/book-detail": {
+        "js": 141369,
+        "css": 10296
+      },
+      "routes/u-profile": {
+        "js": 141228,
+        "css": 10296
+      },
+      "routes/find-next-book": {
+        "js": 140742,
+        "css": 10296
+      },
+      "routes/library": {
+        "js": 140719,
+        "css": 10296
+      },
+      "routes/club-detail": {
+        "js": 140365,
+        "css": 10296
+      },
+      "routes/companion-test": {
+        "js": 139862,
+        "css": 10296
+      },
+      "routes/admin-botm": {
+        "js": 139732,
+        "css": 10296
+      },
+      "routes/admin-user-detail": {
+        "js": 139421,
+        "css": 10296
+      },
+      "routes/goals": {
+        "js": 139328,
+        "css": 10296
+      },
+      "routes/admin-content": {
+        "js": 139029,
+        "css": 10296
+      },
+      "routes/admin-picks": {
+        "js": 138940,
+        "css": 10296
+      },
+      "routes/admin-books": {
+        "js": 138920,
+        "css": 10296
+      },
+      "routes/admin-journal-edit": {
+        "js": 138871,
+        "css": 10296
+      },
+      "routes/award-detail": {
+        "js": 138855,
+        "css": 10296
+      },
+      "routes/author": {
+        "js": 138839,
+        "css": 10296
+      },
+      "routes/botm": {
+        "js": 138741,
+        "css": 10296
+      },
+      "routes/guide": {
+        "js": 138715,
+        "css": 10296
+      },
+      "routes/pick-club": {
+        "js": 138665,
+        "css": 10296
+      },
+      "routes/app-guide": {
+        "js": 138658,
+        "css": 10296
+      },
+      "routes/diary-new": {
+        "js": 138634,
+        "css": 10296
+      },
+      "routes/admin-clubs": {
+        "js": 138626,
+        "css": 10296
+      },
+      "routes/diary": {
+        "js": 138616,
+        "css": 10296
+      },
+      "routes/admin-journal-new": {
+        "js": 138579,
+        "css": 10296
+      },
+      "routes/admin-users": {
+        "js": 138576,
+        "css": 10296
+      },
+      "routes/admin-journal": {
+        "js": 138549,
+        "css": 10296
+      },
+      "routes/privacy": {
+        "js": 138533,
+        "css": 10296
+      },
+      "routes/admin-notifications": {
+        "js": 138523,
+        "css": 10296
+      },
+      "routes/people": {
+        "js": 138486,
+        "css": 10296
+      },
+      "routes/list-detail": {
+        "js": 138471,
+        "css": 10296
+      },
+      "routes/features": {
+        "js": 138459,
+        "css": 10296
+      },
+      "routes/journal": {
+        "js": 138298,
+        "css": 10296
+      },
+      "routes/terms": {
+        "js": 138140,
+        "css": 10296
+      },
+      "routes/home": {
+        "js": 138061,
+        "css": 10296
+      },
+      "routes/club-thread": {
+        "js": 138021,
+        "css": 10296
+      },
+      "routes/diary-edit": {
+        "js": 138012,
+        "css": 10296
+      },
+      "routes/year": {
+        "js": 137909,
+        "css": 10296
+      },
+      "routes/journal-tag": {
+        "js": 137894,
+        "css": 10296
+      },
+      "routes/journal-archive": {
+        "js": 137862,
+        "css": 10296
+      },
+      "routes/shelf-detail": {
+        "js": 137766,
+        "css": 10296
+      },
+      "routes/journal-post": {
+        "js": 137761,
+        "css": 10296
+      },
+      "routes/admin": {
+        "js": 137721,
+        "css": 10296
+      },
+      "routes/list-edit": {
+        "js": 137719,
+        "css": 10296
+      },
+      "routes/list-new": {
+        "js": 137677,
+        "css": 10296
+      },
+      "routes/admin-analytics": {
+        "js": 137661,
+        "css": 10296
+      },
+      "routes/highlights": {
+        "js": 137643,
+        "css": 10296
+      },
+      "routes/picks": {
+        "js": 137561,
+        "css": 10296
+      },
+      "routes/stats": {
+        "js": 137553,
+        "css": 10296
+      },
+      "routes/about": {
+        "js": 137490,
+        "css": 10296
+      },
+      "routes/awards": {
+        "js": 137471,
+        "css": 10296
+      },
+      "routes/vocabulary": {
+        "js": 137280,
+        "css": 10296
+      },
+      "routes/commonplace": {
+        "js": 137198,
+        "css": 10296
+      },
+      "routes/club-new": {
+        "js": 137180,
+        "css": 10296
+      },
+      "routes/lists": {
+        "js": 137116,
+        "css": 10296
+      },
+      "routes/join-code": {
+        "js": 137081,
+        "css": 10296
+      },
+      "routes/notifications": {
+        "js": 136956,
+        "css": 10296
+      },
+      "routes/me": {
+        "js": 136954,
+        "css": 10296
+      },
+      "routes/feed": {
+        "js": 136909,
+        "css": 10296
+      },
+      "routes/recap": {
+        "js": 136876,
+        "css": 10296
+      },
+      "routes/clubs": {
+        "js": 136696,
+        "css": 10296
+      },
+      "routes/signup": {
+        "js": 116024,
+        "css": 10296
+      },
+      "routes/login": {
+        "js": 115706,
+        "css": 10296
+      },
+      "routes/reset-password": {
+        "js": 115677,
+        "css": 10296
+      },
+      "routes/forgot-password": {
+        "js": 115500,
+        "css": 10296
+      },
+      "routes/onboarding": {
+        "js": 105331,
+        "css": 10296
+      },
+      "routes/journal-rss": {
+        "js": 102242,
+        "css": 10296
+      },
+      "routes/search-suggest": {
+        "js": 102242,
+        "css": 10296
+      },
+      "routes/og-book": {
+        "js": 102242,
+        "css": 10296
+      },
+      "routes/og-recap": {
+        "js": 102242,
+        "css": 10296
+      },
+      "routes/sitemap": {
+        "js": 102242,
+        "css": 10296
+      },
+      "routes/robots": {
+        "js": 102242,
+        "css": 10296
+      },
+      "routes/indexnow-key": {
+        "js": 102242,
+        "css": 10296
+      }
+    }
+  }
+}
