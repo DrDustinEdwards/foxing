@@ -1,4 +1,11 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
+import type {
+  ContentDoc,
+  Diff,
+  ErrorBody,
+  RevisionList,
+  WriteResult,
+} from "@dustinedwards/site-api";
 import { runConformance } from "@dustinedwards/site-api/conformance";
 import { createApi } from "@foxing/api";
 import { adminRepo, billing, createDb, schema } from "@foxing/core";
@@ -71,6 +78,11 @@ async function call(path: string, init: RequestInit = {}, e: Env = testEnv()): P
   const res = await app.fetch(new Request(`${ORIGIN}${path}`, init), e, ctx);
   await waitOnExecutionContext(ctx);
   return res;
+}
+
+/** A response body, read as the type the contract gives it. */
+async function body<T = ErrorBody>(res: Response | Promise<Response>): Promise<T> {
+  return (await (await res).json()) as T;
 }
 
 const withKey = (init: RequestInit = {}, key = KEY): RequestInit => ({
@@ -227,7 +239,7 @@ describe("PLANT: the wrong key", () => {
   it("refuses everything while the site key is unset", async () => {
     const res = await call(`${PREFIX}/meta`, withKey(), testEnv({ CARREL_SITE_KEY: undefined }));
     expect(res.status).toBe(503);
-    expect((await res.json()).error).toBe("not-configured");
+    expect((await body(res)).error).toBe("not-configured");
   });
 });
 
@@ -285,7 +297,7 @@ describe("PLANT: an unknown route", () => {
       await seedPost("a-post");
       const res = await call(path, withKey({ method }));
       expect(res.status).toBe(404);
-      expect((await res.json()).error).toBe("not-found");
+      expect((await body(res)).error).toBe("not-found");
       expect(await auditRows()).toEqual([]);
     });
   }
@@ -319,7 +331,7 @@ describe("Carrel site API: the Journal adapter", () => {
       }),
     );
     expect(created.status).toBe(200);
-    const draft = await created.json();
+    const draft = await body<WriteResult>(created);
     expect(draft).toMatchObject({ id: "new-essay", status: "draft", changeId: "ch-create" });
 
     const row = await adminRepo.getJournalBySlug(db(), "new-essay");
@@ -338,7 +350,7 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(published.status).toBe(200);
     expect(await published.json()).toMatchObject({ status: "published", changeId: "ch-publish" });
 
-    const doc = await (await call(`${PREFIX}/content/new-essay`, withKey())).json();
+    const doc = await body<ContentDoc>(call(`${PREFIX}/content/new-essay`, withKey()));
     expect(doc).toMatchObject({ status: "published", path: "/journal/new-essay", kind: "journal" });
     expect(doc.publishedAt).not.toBeNull();
     expect(doc.source).toBe(source("A new essay", "Body *one*."));
@@ -367,13 +379,12 @@ describe("Carrel site API: the Journal adapter", () => {
     // A save to a live post keeps it live.
     expect(await saved.json()).toMatchObject({ status: "published" });
 
-    const revisions = (await (await call(`${PREFIX}/content/edited/revisions`, withKey())).json())
-      .items;
+    const revisions = (
+      await body<RevisionList>(call(`${PREFIX}/content/edited/revisions`, withKey()))
+    ).items;
     expect(revisions).toHaveLength(2);
     const earlier = revisions[1].version;
-    const diff = await (
-      await call(`${PREFIX}/content/edited/diff?from=${earlier}`, withKey())
-    ).json();
+    const diff = await body<Diff>(call(`${PREFIX}/content/edited/diff?from=${earlier}`, withKey()));
     expect(diff.patch).toContain("-Original body.");
     expect(diff.patch).toContain("+Edited body.");
   });
@@ -384,7 +395,7 @@ describe("Carrel site API: the Journal adapter", () => {
       json("PUT", { source: source("T"), expectedVersion: null, changeId: "ch-bad" }),
     );
     expect(bad.status).toBe(422);
-    expect((await bad.json()).message).toContain("the id (slug)");
+    expect((await body(bad)).message).toContain("the id (slug)");
 
     const post = await seedPost("dated");
     const schedule = await call(
