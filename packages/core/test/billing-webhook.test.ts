@@ -57,7 +57,12 @@ describe("interpretStripeEvent", () => {
       type: "customer.subscription.updated",
       object: { customer: "cus_1", status: "past_due" },
     });
-    expect(pastDue).toMatchObject({ op: "sync", tier: "free", status: "past_due", periodEnd: null });
+    expect(pastDue).toMatchObject({
+      op: "sync",
+      tier: "free",
+      status: "past_due",
+      periodEnd: null,
+    });
   });
 
   it("treats subscription.deleted as canceled -> free regardless of the object status", () => {

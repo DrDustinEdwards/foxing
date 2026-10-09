@@ -121,9 +121,7 @@ function MenuLink({
         <span className="block font-ui text-sm text-secondary transition-colors group-hover:text-brand-text">
           {label}
         </span>
-        {sublabel ? (
-          <span className="block font-ui text-xs text-tertiary">{sublabel}</span>
-        ) : null}
+        {sublabel ? <span className="block font-ui text-xs text-tertiary">{sublabel}</span> : null}
       </span>
     </Link>
   );

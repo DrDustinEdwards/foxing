@@ -5,7 +5,12 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { Link, useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-clubs";
@@ -103,7 +108,11 @@ function ClubRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(`/clubs/${club.id}/verify`, { body: { on: !club.isVerified } }, "Could not update")
+              run(
+                `/clubs/${club.id}/verify`,
+                { body: { on: !club.isVerified } },
+                "Could not update",
+              )
             }
           >
             {club.isVerified ? "Unverify" : "Verify"}

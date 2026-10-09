@@ -32,7 +32,10 @@ export function meta({ loaderData }: Route.MetaArgs) {
 function ErrorText({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p className="mt-2 rounded-md border border-danger/50 bg-danger-subtle px-3 py-1.5 font-ui text-xs text-danger-text" role="alert">
+    <p
+      className="mt-2 rounded-md border border-danger/50 bg-danger-subtle px-3 py-1.5 font-ui text-xs text-danger-text"
+      role="alert"
+    >
       {error}
     </p>
   );
@@ -71,9 +74,7 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
               {isMember && connected ? (
                 <span className="ml-3 inline-flex items-center gap-1.5 text-brand-text">
                   <span aria-hidden="true" className="h-2 w-2 rounded-full bg-brand-ui" />
-                  <span aria-live="polite">
-                    {presence.length} here now
-                  </span>
+                  <span aria-live="polite">{presence.length} here now</span>
                 </span>
               ) : null}
             </p>
@@ -92,7 +93,12 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
         {isMember ? (
           <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
             <div className="space-y-10">
-              <ThreadsSection clubId={club.id} slug={club.slug ?? ""} threads={threads} onChange={refresh} />
+              <ThreadsSection
+                clubId={club.id}
+                slug={club.slug ?? ""}
+                threads={threads}
+                onChange={refresh}
+              />
               <PollsSection
                 clubId={club.id}
                 polls={polls}
@@ -250,7 +256,10 @@ function ThreadsSection({
       </div>
 
       {open ? (
-        <form onSubmit={create} className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-4">
+        <form
+          onSubmit={create}
+          className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-4"
+        >
           <input
             name="title"
             required
@@ -359,7 +368,10 @@ function PollsSection({
       </div>
 
       {open ? (
-        <form onSubmit={create} className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-4">
+        <form
+          onSubmit={create}
+          className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-4"
+        >
           <input
             name="title"
             required
@@ -407,7 +419,10 @@ function PollsSection({
             const live = liveTallies[poll.id] ?? tallies;
             const total = Object.values(live).reduce((a, b) => a + b, 0);
             return (
-              <div key={poll.id} className="rounded-card border border-border-subtle bg-surface p-4">
+              <div
+                key={poll.id}
+                className="rounded-card border border-border-subtle bg-surface p-4"
+              >
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-ui font-medium text-primary">{poll.title}</p>
                   {poll.isClosed ? (
@@ -445,7 +460,10 @@ function PollsSection({
                             style={{ width: `${pct}%` }}
                           />
                           <span className="relative z-10">{opt.label}</span>
-                          <span className="relative z-10 tabular-nums text-tertiary" aria-live="polite">
+                          <span
+                            className="relative z-10 tabular-nums text-tertiary"
+                            aria-live="polite"
+                          >
                             {count}
                           </span>
                         </button>
@@ -506,7 +524,10 @@ function MeetingsSection({
         </button>
       </div>
       {open ? (
-        <form onSubmit={create} className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-3">
+        <form
+          onSubmit={create}
+          className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-3"
+        >
           <input
             name="title"
             required
@@ -618,7 +639,10 @@ function ScheduleSection({
         </ul>
       )}
       {canModerate ? (
-        <form onSubmit={add} className="mt-3 space-y-2 rounded-card border border-dashed border-border-subtle p-3">
+        <form
+          onSubmit={add}
+          className="mt-3 space-y-2 rounded-card border border-dashed border-border-subtle p-3"
+        >
           <input
             name="chapter"
             required

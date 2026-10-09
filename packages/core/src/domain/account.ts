@@ -79,17 +79,15 @@ function byColumn(key: string, table: SQLiteTable, column: SQLiteColumn): Entry 
 }
 
 /** Rows the user is on either side of (follows: follower or following). */
-function byEitherColumn(
-  key: string,
-  table: SQLiteTable,
-  a: SQLiteColumn,
-  b: SQLiteColumn,
-): Entry {
+function byEitherColumn(key: string, table: SQLiteTable, a: SQLiteColumn, b: SQLiteColumn): Entry {
   return {
     key,
     tableName: getTableName(table),
     select: (db, userId) =>
-      db.select().from(table).where(or(eq(a, userId), eq(b, userId))),
+      db
+        .select()
+        .from(table)
+        .where(or(eq(a, userId), eq(b, userId))),
     del: async (db, userId) => {
       await db.delete(table).where(or(eq(a, userId), eq(b, userId)));
     },
@@ -110,7 +108,11 @@ function byParent(
   return {
     key,
     tableName: getTableName(table),
-    select: (db, userId) => db.select().from(table).where(inArray(fk, parent(db, userId))),
+    select: (db, userId) =>
+      db
+        .select()
+        .from(table)
+        .where(inArray(fk, parent(db, userId))),
     del: async (db, userId) => {
       await db.delete(table).where(inArray(fk, parent(db, userId)));
     },
@@ -119,9 +121,30 @@ function byParent(
 
 // Ordered child-first so explicit deletes never orphan a grandchild.
 const REGISTRY: Entry[] = [
-  byParent("customShelfBooks", customShelfBooks, customShelfBooks.shelfId, customShelves, customShelves.id, customShelves.userId),
-  byParent("readingListBooks", readingListBooks, readingListBooks.listId, readingLists, readingLists.id, readingLists.userId),
-  byParent("companionMessages", companionMessages, companionMessages.threadId, companionThreads, companionThreads.id, companionThreads.userId),
+  byParent(
+    "customShelfBooks",
+    customShelfBooks,
+    customShelfBooks.shelfId,
+    customShelves,
+    customShelves.id,
+    customShelves.userId,
+  ),
+  byParent(
+    "readingListBooks",
+    readingListBooks,
+    readingListBooks.listId,
+    readingLists,
+    readingLists.id,
+    readingLists.userId,
+  ),
+  byParent(
+    "companionMessages",
+    companionMessages,
+    companionMessages.threadId,
+    companionThreads,
+    companionThreads.id,
+    companionThreads.userId,
+  ),
   byColumn("clubPollVotes", clubPollVotes, clubPollVotes.userId),
   byColumn("clubMeetingRsvps", clubMeetingRsvps, clubMeetingRsvps.userId),
   byColumn("clubPosts", clubPosts, clubPosts.authorId),

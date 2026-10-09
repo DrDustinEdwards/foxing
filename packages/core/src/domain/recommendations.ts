@@ -202,7 +202,12 @@ export function parseAiSelection(
 function buildSignals(
   favoriteGenres: string[],
   finished: Array<{ title: string; author: string; subjects: string[] | null }>,
-  rated: Array<{ title: string; author: string; subjects: string[] | null; ratingHalf: number | null }>,
+  rated: Array<{
+    title: string;
+    author: string;
+    subjects: string[] | null;
+    ratingHalf: number | null;
+  }>,
 ): RankSignals {
   const authors = new Set<string>();
   const behaviorGenres = new Map<string, string>(); // lower -> display
@@ -345,10 +350,7 @@ async function aiOverlay(
 
   // Record the settled cost against the daily quota (best effort).
   const cost = estimateCostCents("fast", inputTokens, outputTokens);
-  const resetTtl = Math.max(
-    60,
-    Math.ceil((Date.parse(quotaResetsAt(now)) - now.getTime()) / 1000),
-  );
+  const resetTtl = Math.max(60, Math.ceil((Date.parse(quotaResetsAt(now)) - now.getTime()) / 1000));
   await kv.put(qkey, JSON.stringify(addUsage(quota, cost)), { expirationTtl: resetTtl });
 
   const selection = parseAiSelection(text, allowed);
@@ -373,10 +375,7 @@ async function aiOverlay(
 
 /** Resolve a cached [{bookId, reason}] against the current candidate pool (drops any
  *  book that is now owned/gone). Null if too little survives to fill a page. */
-function resolveCached(
-  cached: string,
-  byId: Map<string, RankedRec>,
-): Recommendation[] | null {
+function resolveCached(cached: string, byId: Map<string, RankedRec>): Recommendation[] | null {
   try {
     const parsed = JSON.parse(cached) as Array<{ bookId: string; reason: string }>;
     if (!Array.isArray(parsed)) return null;

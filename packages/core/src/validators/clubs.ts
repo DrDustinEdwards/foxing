@@ -55,7 +55,11 @@ export type SetRoleInput = z.infer<typeof setRoleInput>;
 
 export const muteMemberInput = z.object({
   // minutes from now; omit or 0 to unmute.
-  minutes: z.number().int().min(0).max(60 * 24 * 365),
+  minutes: z
+    .number()
+    .int()
+    .min(0)
+    .max(60 * 24 * 365),
 });
 export type MuteMemberInput = z.infer<typeof muteMemberInput>;
 

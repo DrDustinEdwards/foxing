@@ -87,7 +87,10 @@ export default function ClubThread({ loaderData }: Route.ComponentProps) {
               className="mt-1.5 w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
             />
             {error ? (
-              <p className="mt-2 rounded-md border border-danger/50 bg-danger-subtle px-3 py-1.5 font-ui text-xs text-danger-text" role="alert">
+              <p
+                className="mt-2 rounded-md border border-danger/50 bg-danger-subtle px-3 py-1.5 font-ui text-xs text-danger-text"
+                role="alert"
+              >
                 {error}
               </p>
             ) : null}

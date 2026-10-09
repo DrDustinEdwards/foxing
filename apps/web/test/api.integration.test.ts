@@ -117,7 +117,11 @@ describe("profiles API (web -> api -> core -> D1)", () => {
     const res = await call("/me/visibility", {
       method: "PATCH",
       headers: { "x-test-user": "u_vis", "content-type": "application/json" },
-      body: JSON.stringify({ profile: "private", progress: "public", defaultAnnotation: "friends" }),
+      body: JSON.stringify({
+        profile: "private",
+        progress: "public",
+        defaultAnnotation: "friends",
+      }),
     });
     expect(res.status).toBe(200);
 

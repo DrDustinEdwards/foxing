@@ -70,7 +70,12 @@ function NotificationBell() {
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <path d="M10 20a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+        <path
+          d="M10 20a2 2 0 0 0 4 0"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+        />
       </svg>
     </Link>
   );

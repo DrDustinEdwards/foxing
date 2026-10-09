@@ -34,9 +34,7 @@ export default function ForgotPassword() {
         subtitle="If that address is registered, we sent a reset link. Check your spam folder if you don't see it within a few minutes."
         footer={<AuthLink to="/login">Back to sign in</AuthLink>}
       >
-        <p className="font-ui text-sm text-secondary">
-          The link expires shortly, so open it soon.
-        </p>
+        <p className="font-ui text-sm text-secondary">The link expires shortly, so open it soon.</p>
       </AuthShell>
     );
   }

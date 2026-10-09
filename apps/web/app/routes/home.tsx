@@ -144,9 +144,7 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
 function StreakCard({ streak }: { streak: Streak | null }) {
   const s = streak ?? { currentStreak: 0, longestStreak: 0, totalBooksFinished: 0 };
   const subtext =
-    s.currentStreak === 0
-      ? "Open a book to start a streak."
-      : "Read today to keep it going.";
+    s.currentStreak === 0 ? "Open a book to start a streak." : "Read today to keep it going.";
 
   return (
     <aside className="flex flex-col rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm">

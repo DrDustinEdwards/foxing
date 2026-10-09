@@ -78,8 +78,13 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
   });
 
   // Group the filtered entries under their book.
-  const groups: Array<{ key: string; label: string; author: string | null; slug: string | null; items: Entry[] }> =
-    [];
+  const groups: Array<{
+    key: string;
+    label: string;
+    author: string | null;
+    slug: string | null;
+    items: Entry[];
+  }> = [];
   const groupIndex = new Map<string, number>();
   for (const e of filtered) {
     const k = bookKey(e);
@@ -87,7 +92,13 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
     if (i === undefined) {
       i = groups.length;
       groupIndex.set(k, i);
-      groups.push({ key: k, label: bookLabelOf(e), author: e.bookAuthor, slug: e.bookSlug, items: [] });
+      groups.push({
+        key: k,
+        label: bookLabelOf(e),
+        author: e.bookAuthor,
+        slug: e.bookSlug,
+        items: [],
+      });
     }
     groups[i].items.push(e);
   }

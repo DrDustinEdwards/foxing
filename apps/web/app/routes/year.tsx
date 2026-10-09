@@ -98,7 +98,11 @@ export default function Year({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container className="max-w-3xl flex flex-col gap-8">
-        <PageHeader eyebrow={`Year in Reading ${year}`} title="Your reading year" className="mb-0" />
+        <PageHeader
+          eyebrow={`Year in Reading ${year}`}
+          title="Your reading year"
+          className="mb-0"
+        />
 
         <nav aria-label="Choose a year" className="flex flex-wrap gap-2">
           {years.map((y) => (
@@ -187,10 +191,7 @@ export default function Year({ loaderData }: Route.ComponentProps) {
 
         <p className="font-ui text-sm text-tertiary">
           Want to share this?{" "}
-          <Link
-            to={`/u/${username}/recap/${year}`}
-            className="text-brand-text hover:underline"
-          >
+          <Link to={`/u/${username}/recap/${year}`} className="text-brand-text hover:underline">
             View the public version
           </Link>
           .
@@ -217,7 +218,14 @@ function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
       aria-label={`Books finished each month of ${year}`}
       preserveAspectRatio="xMidYMid meet"
     >
-      <line x1="0" y1={baseY} x2={width} y2={baseY} className="stroke-border-subtle" strokeWidth="1" />
+      <line
+        x1="0"
+        y1={baseY}
+        x2={width}
+        y2={baseY}
+        className="stroke-border-subtle"
+        strokeWidth="1"
+      />
       {monthly.map((count, i) => {
         const h = count > 0 ? Math.max(3, (count / max) * plotH) : 0;
         const x = i * colW + (colW - barW) / 2;
@@ -258,7 +266,12 @@ function GenreSpread({ genres }: { genres: Array<{ name: string; value: number }
             title={`${g.name}: ${g.value} book${g.value === 1 ? "" : "s"}`}
           >
             <span className="truncate font-ui text-sm capitalize text-secondary">{g.name}</span>
-            <svg viewBox="0 0 100 6" preserveAspectRatio="none" className="h-1.5 w-full" aria-hidden="true">
+            <svg
+              viewBox="0 0 100 6"
+              preserveAspectRatio="none"
+              className="h-1.5 w-full"
+              aria-hidden="true"
+            >
               <rect x="0" y="0" width="100" height="6" rx="3" className="fill-brand-subtle" />
               <rect x="0" y="0" width={pct} height="6" rx="3" className="fill-brand" />
             </svg>

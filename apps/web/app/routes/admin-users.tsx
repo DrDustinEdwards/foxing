@@ -4,7 +4,12 @@
 import { adminRepo, createDb } from "@foxing/core";
 import { Link, useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-users";
@@ -98,7 +103,9 @@ function UserRow({
               </span>
             )}
           </p>
-          <p className="truncate font-ui text-sm text-tertiary">{user.displayName ?? "No name set"}</p>
+          <p className="truncate font-ui text-sm text-tertiary">
+            {user.displayName ?? "No name set"}
+          </p>
         </div>
         <div className="flex shrink-0 gap-2">
           <AdminButton

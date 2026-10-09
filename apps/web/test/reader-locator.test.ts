@@ -30,11 +30,15 @@ describe("enrichSelectionLocator (R1/R2)", () => {
   });
 
   it("R2: merges the current reading position's locations", () => {
-    const out = enrichSelectionLocator(base, { before: "x", after: "y" }, {
-      progression: 0.4,
-      position: 9,
-      totalProgression: 0.27,
-    });
+    const out = enrichSelectionLocator(
+      base,
+      { before: "x", after: "y" },
+      {
+        progression: 0.4,
+        position: 9,
+        totalProgression: 0.27,
+      },
+    );
     expect(out.locations?.progression).toBe(0.4);
     expect(out.locations?.position).toBe(9);
     expect(out.locations?.totalProgression).toBe(0.27);
@@ -51,10 +55,14 @@ describe("enrichSelectionLocator (R1/R2)", () => {
 
 describe("progressPctFromLocator", () => {
   it("derives a 0..100 percentage from totalProgression", () => {
-    expect(progressPctFromLocator({ href: "a", type: "t", locations: { totalProgression: 0.276 } })).toBe(27.6);
+    expect(
+      progressPctFromLocator({ href: "a", type: "t", locations: { totalProgression: 0.276 } }),
+    ).toBe(27.6);
     expect(progressPctFromLocator({ href: "a", type: "t", locations: {} })).toBe(0);
     expect(progressPctFromLocator(null)).toBe(0);
-    expect(progressPctFromLocator({ href: "a", type: "t", locations: { totalProgression: 1 } })).toBe(100);
+    expect(
+      progressPctFromLocator({ href: "a", type: "t", locations: { totalProgression: 1 } }),
+    ).toBe(100);
   });
 });
 
@@ -68,7 +76,12 @@ describe("tintFor", () => {
 
 describe("toEpubPreferences", () => {
   it("clamps out-of-range typography and maps theme colors", () => {
-    const prefs = toEpubPreferences({ ...DEFAULT_SETTINGS, theme: "dark", fontSize: 9, lineHeight: 0.1 });
+    const prefs = toEpubPreferences({
+      ...DEFAULT_SETTINGS,
+      theme: "dark",
+      fontSize: 9,
+      lineHeight: 0.1,
+    });
     expect(prefs.fontSize).toBeLessThanOrEqual(1.8);
     expect(prefs.lineHeight).toBeGreaterThanOrEqual(1.2);
     expect(prefs.backgroundColor).toBe("#1A1410");
@@ -76,7 +89,11 @@ describe("toEpubPreferences", () => {
   });
 
   it("forces one column in scroll mode", () => {
-    expect(toEpubPreferences({ ...DEFAULT_SETTINGS, scroll: true, columns: 2 }).columnCount).toBe(1);
-    expect(toEpubPreferences({ ...DEFAULT_SETTINGS, scroll: false, columns: 2 }).columnCount).toBe(2);
+    expect(toEpubPreferences({ ...DEFAULT_SETTINGS, scroll: true, columns: 2 }).columnCount).toBe(
+      1,
+    );
+    expect(toEpubPreferences({ ...DEFAULT_SETTINGS, scroll: false, columns: 2 }).columnCount).toBe(
+      2,
+    );
   });
 });

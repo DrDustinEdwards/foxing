@@ -147,10 +147,7 @@ describe("admin user-detail operator mutations", () => {
     const res = await call("/admin/users/reader", "admin", { method: "DELETE" });
     expect(res.status).toBe(200);
     const db = createDb(env.DB);
-    const [gone] = await db
-      .select()
-      .from(schema.profiles)
-      .where(eq(schema.profiles.id, "reader"));
+    const [gone] = await db.select().from(schema.profiles).where(eq(schema.profiles.id, "reader"));
     expect(gone).toBeUndefined();
   });
 

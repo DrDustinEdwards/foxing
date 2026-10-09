@@ -22,10 +22,7 @@ import type { LiveMessage } from "@foxing/core";
 
 type Attachment = { userId: string };
 
-type ServerMessage =
-  | LiveMessage
-  | { t: "presence"; users: string[] }
-  | { t: "pong" };
+type ServerMessage = LiveMessage | { t: "presence"; users: string[] } | { t: "pong" };
 
 export class ClubRoom extends DurableObject {
   /** Upgrade a membership-checked request (the API already verified it) to a socket. */
@@ -90,7 +87,9 @@ export class ClubRoom extends DurableObject {
     const sockets = this.ctx.getWebSockets().filter((ws) => ws !== excluding);
     const users = [
       ...new Set(
-        sockets.map((ws) => (ws.deserializeAttachment() as Attachment | null)?.userId).filter(Boolean),
+        sockets
+          .map((ws) => (ws.deserializeAttachment() as Attachment | null)?.userId)
+          .filter(Boolean),
       ),
     ] as string[];
     const payload: ServerMessage = { t: "presence", users };

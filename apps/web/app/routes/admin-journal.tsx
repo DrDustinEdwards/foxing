@@ -31,7 +31,9 @@ export default function AdminJournal({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
+          <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
+            Admin
+          </p>
           <h1 className="font-display text-3xl text-primary">Journal</h1>
         </div>
         <Link
@@ -96,7 +98,11 @@ function JournalRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(`/journal/${post.id}/publish`, { body: { on: !post.isPublished } }, "Could not update")
+              run(
+                `/journal/${post.id}/publish`,
+                { body: { on: !post.isPublished } },
+                "Could not update",
+              )
             }
           >
             {post.isPublished ? "Unpublish" : "Publish"}

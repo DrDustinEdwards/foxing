@@ -484,7 +484,9 @@ function ActivityHeatmap({
                 className={count === 0 ? "fill-brand-subtle" : "fill-brand"}
                 fillOpacity={count === 0 ? 1 : intensity(count)}
               >
-                {count > 0 ? <title>{`${count} book${count === 1 ? "" : "s"} finished`}</title> : null}
+                {count > 0 ? (
+                  <title>{`${count} book${count === 1 ? "" : "s"} finished`}</title>
+                ) : null}
               </rect>
             ),
           ),

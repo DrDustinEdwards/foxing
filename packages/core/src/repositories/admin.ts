@@ -29,10 +29,7 @@ import {
 } from "../schema";
 
 async function countWhere(db: Db, table: SQLiteTable, where?: SQL): Promise<number> {
-  const [row] = await db
-    .select({ n: sql<number>`count(*)` })
-    .from(table)
-    .where(where);
+  const [row] = await db.select({ n: sql<number>`count(*)` }).from(table).where(where);
   return row?.n ?? 0;
 }
 
@@ -148,9 +145,7 @@ export async function listUsers(
     })
     .from(profiles)
     .where(
-      q
-        ? or(like(profiles.username, `%${q}%`), like(profiles.displayName, `%${q}%`))
-        : undefined,
+      q ? or(like(profiles.username, `%${q}%`), like(profiles.displayName, `%${q}%`)) : undefined,
     )
     .orderBy(desc(profiles.createdAt))
     .limit(limit)
@@ -163,7 +158,11 @@ export async function getUserDetail(db: Db, id: string) {
   if (!row) return null;
   // Email lives on the Better Auth user row, not the profile. Last-active is the most
   // recent session start (a good-enough proxy without a dedicated column).
-  const [authRow] = await db.select({ email: user.email }).from(user).where(eq(user.id, id)).limit(1);
+  const [authRow] = await db
+    .select({ email: user.email })
+    .from(user)
+    .where(eq(user.id, id))
+    .limit(1);
   const [lastSession] = await db
     .select({ createdAt: session.createdAt })
     .from(session)
@@ -268,7 +267,10 @@ export type BookMetaPatch = {
 };
 
 export async function updateBookAdmin(db: Db, id: string, patch: BookMetaPatch): Promise<void> {
-  await db.update(books).set({ ...patch, updatedAt: new Date() }).where(eq(books.id, id));
+  await db
+    .update(books)
+    .set({ ...patch, updatedAt: new Date() })
+    .where(eq(books.id, id));
 }
 
 export async function setBookStaffPick(
@@ -537,7 +539,7 @@ export async function setJournalPublished(db: Db, id: string, on: boolean): Prom
     .set({
       isPublished: on,
       // First publish stamps published_at; unpublishing keeps the original stamp.
-      publishedAt: on && !current?.publishedAt ? new Date() : current?.publishedAt ?? null,
+      publishedAt: on && !current?.publishedAt ? new Date() : (current?.publishedAt ?? null),
       updatedAt: new Date(),
     })
     .where(eq(journalPosts.id, id));
