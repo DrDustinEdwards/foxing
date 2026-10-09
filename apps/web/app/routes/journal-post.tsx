@@ -1,5 +1,6 @@
 import { catalogRepo } from "@foxing/core";
 import { marked } from "marked";
+import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
@@ -13,7 +14,9 @@ function fmtDate(d: Date | null): string | null {
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, origin } = loaderBase(context, request);
-  const post = await catalogRepo.getPostBySlug(db, params.slug);
+  // The Carrel preview sets an unsaved post in-process; an ordinary request never has one.
+  const post =
+    context.get(journalPreviewContext) ?? (await catalogRepo.getPostBySlug(db, params.slug));
   if (!post) throw new Response("Not found", { status: 404 });
 
   // Journal content is trusted, admin-authored Markdown (CMS). Render at the edge.
