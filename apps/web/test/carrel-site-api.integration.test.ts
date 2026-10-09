@@ -222,7 +222,7 @@ describe("PLANT: the wrong key", () => {
 });
 
 describe("PLANT: a stale expectedVersion", () => {
-  it("refuses a save, a publish and an unpublish, and writes nothing", async () => {
+  it("refuses a save, a publish and a create over an existing id, and writes nothing", async () => {
     const post = await seedPost("stale-target");
     const current = String(post.updatedAt.getTime());
     const stale = String(post.updatedAt.getTime() - 1);
