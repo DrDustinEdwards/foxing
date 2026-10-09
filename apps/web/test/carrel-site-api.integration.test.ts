@@ -89,7 +89,12 @@ const db = () => createDb(env.DB);
 async function seedPost(slug: string, opts: { isPublished?: boolean } = {}) {
   const id = await adminRepo.createJournalPost(
     db(),
-    { title: `Title ${slug}`, slug, content: "Original body.", isPublished: opts.isPublished ?? false },
+    {
+      title: `Title ${slug}`,
+      slug,
+      content: "Original body.",
+      isPublished: opts.isPublished ?? false,
+    },
     null,
   );
   const row = await adminRepo.getJournalById(db(), id);
@@ -105,14 +110,16 @@ async function auditRows() {
 }
 
 async function seedAdmin(id: string) {
-  await db().insert(schema.user).values({
-    id,
-    name: "Admin",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  await db()
+    .insert(schema.user)
+    .values({
+      id,
+      name: "Admin",
+      email: `${id}@example.com`,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   await db().insert(schema.profiles).values({
     id,
     username: id,
@@ -186,7 +193,10 @@ describe("PLANT: the key against an admin route", () => {
     // An admin exists, so a key that leaked into the session path would have someone to act as.
     await seedAdmin("owner");
     const post = await seedPost("admin-target");
-    const publish = await call(`/api/v1/admin/journal/${post.id}/publish`, json("POST", { on: true }));
+    const publish = await call(
+      `/api/v1/admin/journal/${post.id}/publish`,
+      json("POST", { on: true }),
+    );
     expect(publish.status).toBe(401);
     const edit = await call(`/api/v1/admin/journal/${post.id}`, json("PATCH", { title: "Taken" }));
     expect(edit.status).toBe(401);
@@ -289,7 +299,11 @@ describe("Carrel site API: the rate limit", () => {
       testEnv({ CARREL_RATE_LIMIT: { limit: async () => ({ success: false }) } }),
     );
     expect(limited.status).toBe(429);
-    const unbound = await call(`${PREFIX}/meta`, withKey(), testEnv({ CARREL_RATE_LIMIT: undefined }));
+    const unbound = await call(
+      `${PREFIX}/meta`,
+      withKey(),
+      testEnv({ CARREL_RATE_LIMIT: undefined }),
+    );
     expect(unbound.status).toBe(503);
   });
 });
@@ -298,14 +312,23 @@ describe("Carrel site API: the Journal adapter", () => {
   it("creates a draft, first-publishes it, and records Carrel's changeId", async () => {
     const created = await call(
       `${PREFIX}/content/new-essay/draft`,
-      json("PUT", { source: source("A new essay", "Body *one*."), expectedVersion: null, changeId: "ch-create" }),
+      json("PUT", {
+        source: source("A new essay", "Body *one*."),
+        expectedVersion: null,
+        changeId: "ch-create",
+      }),
     );
     expect(created.status).toBe(200);
     const draft = await created.json();
     expect(draft).toMatchObject({ id: "new-essay", status: "draft", changeId: "ch-create" });
 
     const row = await adminRepo.getJournalBySlug(db(), "new-essay");
-    expect(row).toMatchObject({ title: "A new essay", content: "Body *one*.", tags: ["essays"], authorId: null });
+    expect(row).toMatchObject({
+      title: "A new essay",
+      content: "Body *one*.",
+      tags: ["essays"],
+      authorId: null,
+    });
     expect(row?.isPublished).toBe(false);
 
     const published = await call(
@@ -334,16 +357,23 @@ describe("Carrel site API: the Journal adapter", () => {
     const post = await seedPost("edited", { isPublished: true });
     const saved = await call(
       `${PREFIX}/content/edited/draft`,
-      json("PUT", { source: source("Edited title", "Edited body."), expectedVersion: String(post.updatedAt.getTime()), changeId: "ch-edit" }),
+      json("PUT", {
+        source: source("Edited title", "Edited body."),
+        expectedVersion: String(post.updatedAt.getTime()),
+        changeId: "ch-edit",
+      }),
     );
     expect(saved.status).toBe(200);
     // A save to a live post keeps it live.
     expect(await saved.json()).toMatchObject({ status: "published" });
 
-    const revisions = (await (await call(`${PREFIX}/content/edited/revisions`, withKey())).json()).items;
+    const revisions = (await (await call(`${PREFIX}/content/edited/revisions`, withKey())).json())
+      .items;
     expect(revisions).toHaveLength(2);
     const earlier = revisions[1].version;
-    const diff = await (await call(`${PREFIX}/content/edited/diff?from=${earlier}`, withKey())).json();
+    const diff = await (
+      await call(`${PREFIX}/content/edited/diff?from=${earlier}`, withKey())
+    ).json();
     expect(diff.patch).toContain("-Original body.");
     expect(diff.patch).toContain("+Edited body.");
   });
@@ -387,7 +417,9 @@ describe("the admin Journal write functions after the shared guard change", () =
     await seedAdmin("admin");
     const post = await seedPost("admin-edit");
     // No guard: the admin routes pass none.
-    expect(await adminRepo.updateJournalPost(db(), post.id, { title: "By admin" }, "admin")).toBe(true);
+    expect(await adminRepo.updateJournalPost(db(), post.id, { title: "By admin" }, "admin")).toBe(
+      true,
+    );
     expect(await adminRepo.setJournalPublished(db(), post.id, true)).toBe(true);
     const after = await adminRepo.getJournalById(db(), post.id);
     expect(after).toMatchObject({ title: "By admin", isPublished: true });

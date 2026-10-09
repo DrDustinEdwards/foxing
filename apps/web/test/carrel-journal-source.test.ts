@@ -22,7 +22,14 @@ const full: JournalFields = {
 describe("journal source mapping", () => {
   it("round-trips every field, including a --- rule inside the body", () => {
     expect(sourceToJournal(journalToSource(full))).toEqual(full);
-    const empty = { ...full, excerpt: null, coverImageUrl: null, coverImageAlt: null, tags: [], featured: false };
+    const empty = {
+      ...full,
+      excerpt: null,
+      coverImageUrl: null,
+      coverImageAlt: null,
+      tags: [],
+      featured: false,
+    };
     expect(sourceToJournal(journalToSource(empty))).toEqual(empty);
   });
 
