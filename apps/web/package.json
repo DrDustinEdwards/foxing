@@ -15,6 +15,7 @@
     "seed": "node ./scripts/seed.mjs"
   },
   "dependencies": {
+    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.2.0",
     "@foxing/api": "workspace:*",
     "@foxing/core": "workspace:*",
     "@readium/navigator": "^2.6.1",
