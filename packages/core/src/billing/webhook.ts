@@ -14,7 +14,13 @@ export type BillingIntent =
   // at the new subscription so the route can fetch its live status/period.
   | { op: "link"; userId: string; customerId: string; subscriptionId: string | null }
   // customer.subscription.*: project the subscription's status onto tier/status/period.
-  | { op: "sync"; customerId: string; tier: "free" | "plus"; status: string; periodEnd: number | null }
+  | {
+      op: "sync";
+      customerId: string;
+      tier: "free" | "plus";
+      status: string;
+      periodEnd: number | null;
+    }
   // invoice.payment_failed: record the dunning status without dropping tier (Stripe
   // retries; an eventual .deleted/.updated is what actually cancels).
   | { op: "status"; customerId: string; status: string }

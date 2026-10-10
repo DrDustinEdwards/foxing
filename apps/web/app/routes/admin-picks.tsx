@@ -6,7 +6,12 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { Link, useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-picks";
@@ -43,10 +48,7 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
         <AdminCard title="Curator">
           <ul className="flex flex-wrap gap-1">
             <li>
-              <Link
-                to="/admin/celebrity-picks"
-                className={filterClass(!clubId)}
-              >
+              <Link to="/admin/celebrity-picks" className={filterClass(!clubId)}>
                 All
               </Link>
             </li>
@@ -113,7 +115,9 @@ function PickRow({
           </p>
           <p className="truncate font-ui text-sm text-tertiary">
             {pick.bookTitle ?? "No book"}
-            {pick.pickYear ? ` · ${pick.pickMonth ? `${pick.pickMonth}/` : ""}${pick.pickYear}` : ""}
+            {pick.pickYear
+              ? ` · ${pick.pickMonth ? `${pick.pickMonth}/` : ""}${pick.pickYear}`
+              : ""}
             {pick.category ? ` · ${pick.category}` : ""}
           </p>
         </div>
@@ -124,7 +128,11 @@ function PickRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(`/picks/${pick.id}/publish`, { body: { on: !pick.isPublished } }, "Could not update")
+              run(
+                `/picks/${pick.id}/publish`,
+                { body: { on: !pick.isPublished } },
+                "Could not update",
+              )
             }
           >
             {pick.isPublished ? "Unpublish" : "Publish"}
@@ -168,11 +176,20 @@ function PickEdit({
     <div className="mt-3 space-y-3 rounded-md border border-border-subtle bg-sunken p-4">
       <label className="block">
         <span className="mb-1 block font-ui text-sm text-secondary">Category</span>
-        <input value={category} onChange={(e) => setCategory(e.target.value)} className={adminInputClass} />
+        <input
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className={adminInputClass}
+        />
       </label>
       <label className="block">
         <span className="mb-1 block font-ui text-sm text-secondary">Notes</span>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className={adminInputClass} />
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={3}
+          className={adminInputClass}
+        />
       </label>
       <label className="block">
         <span className="mb-1 block font-ui text-sm text-secondary">Curator quote</span>

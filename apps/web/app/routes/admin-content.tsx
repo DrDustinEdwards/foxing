@@ -5,7 +5,12 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-content";
@@ -99,7 +104,11 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
       <div className="space-y-4">
         <label className="block">
           <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className={adminInputClass} />
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={adminInputClass}
+          />
         </label>
         <label className="block">
           <span className="mb-1 block font-ui text-sm text-secondary">Body (optional)</span>
@@ -127,7 +136,11 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="mb-1 block font-ui text-sm text-secondary">Link URL (optional)</span>
-            <input value={linkUrl} onChange={(e) => setLinkUrl(e.target.value)} className={adminInputClass} />
+            <input
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              className={adminInputClass}
+            />
           </label>
           <label className="block">
             <span className="mb-1 block font-ui text-sm text-secondary">Link label (optional)</span>
@@ -139,7 +152,11 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
           </label>
         </div>
         <label className="flex items-center gap-2 font-ui text-sm text-secondary">
-          <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={isActive}
+            onChange={(e) => setIsActive(e.target.checked)}
+          />
           Active immediately
         </label>
         <AdminButton variant="primary" pending={pending} onClick={create}>
@@ -198,7 +215,9 @@ function AnnouncementRow({
             <AdminButton
               variant="danger"
               pending={pending}
-              onClick={() => run(`/announcements/${row.id}`, { method: "DELETE" }, "Could not delete")}
+              onClick={() =>
+                run(`/announcements/${row.id}`, { method: "DELETE" }, "Could not delete")
+              }
             >
               Confirm delete
             </AdminButton>

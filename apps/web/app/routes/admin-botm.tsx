@@ -6,7 +6,12 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { BookPicker } from "~/components/admin/book-picker";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";

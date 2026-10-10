@@ -1,0 +1,65 @@
+name: No-bloat report (warn-only)
+
+# Knip (unused files, exports, dependencies) and jscpd (duplicated code) on every
+# pull request that touches source. WARN-ONLY (capsid decisions, 2026-10-01, "no
+# bloat, as a standing plan"): each check step is continue-on-error, so a finding
+# never fails the job and never blocks a merge. Each check prints a summary to the
+# log and the job summary, with the count of files it read and the numbers in
+# scripts/no-bloat/baseline.json as the reference. Exit codes of the check steps:
+# 0 at or under the baseline, 1 above it, 2 could not run (see the Outcome step).
+#
+# Separate from ci-cf.yml on purpose, so it runs while that workflow's Lint (biome)
+# step is red on main. The paths cover every workspace Knip and jscpd read, mobile
+# included; docs-only changes do not trigger it.
+on:
+  pull_request:
+    paths:
+      - "apps/**"
+      - "packages/**"
+      - "scripts/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "knip.jsonc"
+      - ".jscpd.json"
+      - "improve/holdout/**"
+      - ".github/workflows/no-bloat.yml"
+      - "!**/*.md"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: no-bloat-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # Same pinned actions as ci-cf.yml.
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      # No lifecycle scripts: Knip reads sources and configs, and jscpd's binary
+      # comes from an optional dependency, so neither needs a postinstall.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Knip (warn-only)
+        id: knip
+        continue-on-error: true
+        run: pnpm run check:knip
+      - name: jscpd (warn-only)
+        id: jscpd
+        continue-on-error: true
+        run: pnpm run check:jscpd
+      - name: Outcome
+        if: always()
+        run: |
+          echo "knip step: ${{ steps.knip.outcome }} (warn-only; the job continues)"
+          echo "jscpd step: ${{ steps.jscpd.outcome }} (warn-only; the job continues)"

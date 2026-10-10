@@ -8,7 +8,10 @@ import { expect, test } from "@playwright/test";
 // Uses the plus storageState for both contexts (same account, two connections). That is
 // enough to prove cross-connection fan-out; presence dedupes to one user by design.
 test.describe("clubs live layer (signed in, plus)", () => {
-  test("live posts and live poll tallies fan out across two contexts", async ({ page, browser }) => {
+  test("live posts and live poll tallies fan out across two contexts", async ({
+    page,
+    browser,
+  }) => {
     const suffix = Date.now().toString(36);
 
     // --- Context A: create a club -----------------------------------------

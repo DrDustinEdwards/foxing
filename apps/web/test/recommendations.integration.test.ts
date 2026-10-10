@@ -30,18 +30,16 @@ async function seedUser(id: string, tier: "free" | "plus", favoriteGenres: strin
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-  await db()
-    .insert(schema.profiles)
-    .values({
-      id,
-      username: id,
-      displayName: id,
-      favoriteGenres,
-      subscriptionTier: tier,
-      onboardedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
+  await db().insert(schema.profiles).values({
+    id,
+    username: id,
+    displayName: id,
+    favoriteGenres,
+    subscriptionTier: tier,
+    onboardedAt: new Date(),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
 }
 
 interface BookSeed {
@@ -93,7 +91,12 @@ describe("getRecommendations - data tiers (no AI)", () => {
     for (let i = 0; i < 12; i++) {
       await seedBook({ id: `b${i}`, rating: 2 + (i % 4), ratingCount: 5 + i });
     }
-    await seedBook({ id: "shelley-extra", author: "Mary Shelley", subjects: ["Gothic"], rating: 3 });
+    await seedBook({
+      id: "shelley-extra",
+      author: "Mary Shelley",
+      subjects: ["Gothic"],
+      rating: 3,
+    });
     await seedBook({ id: "no-epub", epub: false }); // must never be a candidate
     await seedBook({ id: "community", sourceType: "community" }); // must never be a candidate
   });
@@ -115,16 +118,14 @@ describe("getRecommendations - data tiers (no AI)", () => {
 
   it("never recommends a book already in the reader's library (any status)", async () => {
     await seedUser("owner", "free", null);
-    await db()
-      .insert(schema.userBooks)
-      .values({
-        id: "ub1",
-        userId: "owner",
-        bookId: "b3",
-        status: "want",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+    await db().insert(schema.userBooks).values({
+      id: "ub1",
+      userId: "owner",
+      bookId: "b3",
+      status: "want",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     const set = await getRecommendations(db(), "owner", { caller: null, kv: env.APP_KV });
     expect(set.recommendations.map((r) => r.bookId)).not.toContain("b3");
   });
@@ -133,16 +134,14 @@ describe("getRecommendations - data tiers (no AI)", () => {
     await seedUser("hist", "free", null);
     // Finished a Mary Shelley book -> she becomes a favourite author. That finished book
     // is owned (excluded); her *other* catalog book should surface with an author reason.
-    await db()
-      .insert(schema.userBooks)
-      .values({
-        id: "ub-fin",
-        userId: "hist",
-        bookId: "b0",
-        status: "finished",
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+    await db().insert(schema.userBooks).values({
+      id: "ub-fin",
+      userId: "hist",
+      bookId: "b0",
+      status: "finished",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
     await db()
       .update(schema.books)
       .set({ author: "Mary Shelley" })
@@ -168,7 +167,11 @@ describe("getRecommendations - null genres + large pool (D1 param-cap regression
     await clearAll();
     // 250 readable catalog books -> the 400-cap pool spans several 90-id chunks.
     for (let i = 0; i < 250; i++) {
-      await seedBook({ id: `p${String(i).padStart(3, "0")}`, rating: 2 + (i % 4), ratingCount: 1 + i });
+      await seedBook({
+        id: `p${String(i).padStart(3, "0")}`,
+        rating: 2 + (i % 4),
+        ratingCount: 1 + i,
+      });
     }
     // Awards scattered across the id range so hits land in more than one chunk.
     for (const i of [5, 95, 140, 205, 245]) {

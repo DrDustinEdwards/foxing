@@ -9,7 +9,10 @@ import { beforeEach, describe, expect, it } from "vitest";
 // the user to plus. This is the seam the Worker fills with the real client in prod.
 type BillingEventLite = Awaited<ReturnType<BillingClient["verifyWebhook"]>>;
 
-function stubBilling(event?: BillingEventLite): { client: BillingClient; prices: { monthly: string; annual: string } } {
+function stubBilling(event?: BillingEventLite): {
+  client: BillingClient;
+  prices: { monthly: string; annual: string };
+} {
   return {
     prices: { monthly: "price_monthly", annual: "price_annual" },
     client: {

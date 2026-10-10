@@ -1,0 +1,25 @@
+{
+  "path": ["."],
+  "format": ["typescript", "tsx", "javascript", "jsx", "css"],
+  "ignore": [
+    "**/node_modules/**",
+    "**/build/**",
+    "**/dist/**",
+    "**/.react-router/**",
+    "**/.wrangler/**",
+    "**/.expo/**",
+    "**/worker-configuration.d.ts",
+    "**/*.gen.ts",
+    "apps/mobile/libs/**",
+    "apps/mobile/assets/foliate/**",
+    "packages/core/migrations/**",
+    "improve/**",
+    ".claude/**",
+    ".github/**",
+    ".jscpd-report/**"
+  ],
+  "minTokens": 50,
+  "reporters": ["console", "json"],
+  "output": ".jscpd-report",
+  "noTips": true
+}

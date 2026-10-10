@@ -114,12 +114,7 @@ function RecCard({ rec }: { rec: Recommendation }) {
           {rec.reason}
         </p>
         <div className="mt-auto pt-3">
-          <BookStatusControl
-            bookId={rec.bookId}
-            currentStatus={null}
-            signedIn
-            loginHref="/login"
-          />
+          <BookStatusControl bookId={rec.bookId} currentStatus={null} signedIn loginHref="/login" />
         </div>
       </div>
     </div>

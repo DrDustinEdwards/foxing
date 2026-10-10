@@ -28,7 +28,9 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: loaderData ? `Admin · @${loaderData.user.username} | Foxing` : "Admin · User | Foxing" },
+    {
+      title: loaderData ? `Admin · @${loaderData.user.username} | Foxing` : "Admin · User | Foxing",
+    },
     { name: "robots", content: "noindex" },
   ];
 }
@@ -177,14 +179,20 @@ function OperatorControls({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(`/users/${userId}/tier`, { body: { tier: isPlus ? "free" : "plus" } }, "Could not update")
+              run(
+                `/users/${userId}/tier`,
+                { body: { tier: isPlus ? "free" : "plus" } },
+                "Could not update",
+              )
             }
           >
             {isPlus ? "Downgrade to Free" : "Upgrade to Plus"}
           </AdminButton>
           <AdminButton
             pending={pending}
-            onClick={() => run(`/users/${userId}/admin`, { body: { on: !isAdmin } }, "Could not update")}
+            onClick={() =>
+              run(`/users/${userId}/admin`, { body: { on: !isAdmin } }, "Could not update")
+            }
           >
             {isAdmin ? "Revoke admin" : "Grant admin"}
           </AdminButton>
@@ -208,7 +216,11 @@ function OperatorControls({
             className={adminInputClass}
           />
           <div className="flex items-center gap-3">
-            <AdminButton pending={pending} disabled={title.trim().length === 0} onClick={sendNotification}>
+            <AdminButton
+              pending={pending}
+              disabled={title.trim().length === 0}
+              onClick={sendNotification}
+            >
               Send to @{username}
             </AdminButton>
             {notifySent ? (

@@ -475,6 +475,7 @@ function ActivityHeatmap({
           col.map((count, d) =>
             count === null ? null : (
               <rect
+                // biome-ignore lint/suspicious/noArrayIndexKey: a fixed grid of week columns by weekday rows; a cell is identified by its position.
                 key={`${w}-${d}`}
                 x={w * PITCH}
                 y={d * PITCH}
@@ -484,7 +485,9 @@ function ActivityHeatmap({
                 className={count === 0 ? "fill-brand-subtle" : "fill-brand"}
                 fillOpacity={count === 0 ? 1 : intensity(count)}
               >
-                {count > 0 ? <title>{`${count} book${count === 1 ? "" : "s"} finished`}</title> : null}
+                {count > 0 ? (
+                  <title>{`${count} book${count === 1 ? "" : "s"} finished`}</title>
+                ) : null}
               </rect>
             ),
           ),

@@ -184,11 +184,7 @@ export async function countFinishedBooks(db: Db, userId: string): Promise<number
 }
 
 /** The user's favorite books (user_favorites), ordered, for the profile cover row. */
-export async function listFavoriteBooks(
-  db: Db,
-  userId: string,
-  limit = 5,
-): Promise<ProfileBook[]> {
+export async function listFavoriteBooks(db: Db, userId: string, limit = 5): Promise<ProfileBook[]> {
   return db
     .select({
       bookId: userFavorites.bookId,
@@ -205,11 +201,7 @@ export async function listFavoriteBooks(
 }
 
 /** Recently finished books, newest first, for the public profile library preview. */
-export async function listFinishedBooks(
-  db: Db,
-  userId: string,
-  limit = 8,
-): Promise<ProfileBook[]> {
+export async function listFinishedBooks(db: Db, userId: string, limit = 8): Promise<ProfileBook[]> {
   return db
     .select({
       bookId: userBooks.bookId,

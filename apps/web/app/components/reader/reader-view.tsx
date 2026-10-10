@@ -764,7 +764,7 @@ export function ReaderView(props: ReaderViewProps) {
         role="group"
         aria-label="Reading layers"
       >
-        <span className="text-[color-mix(in_srgb,currentColor_55%,transparent)]">Layers</span>
+        <span className="text-[color-mix(in_srgb,currentColor_70%,transparent)]">Layers</span>
         <LayerChip label="Mine" on={layers.mine} onClick={() => toggleLayer("mine")} />
         <LayerChip
           label="My clubs"
@@ -1099,10 +1099,10 @@ function LayerChip({
       type="button"
       aria-pressed={on}
       onClick={onClick}
-      className="rounded-full border border-[color-mix(in_srgb,currentColor_28%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] aria-pressed:border-[color:var(--brand-ui)] aria-pressed:bg-[color:var(--brand-ui)] aria-pressed:text-[color:var(--text-on-brand)]"
+      className="rounded-full border border-[color-mix(in_srgb,currentColor_28%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] aria-pressed:border-[color:var(--border-brand)] aria-pressed:bg-[color:var(--brand-subtle)] aria-pressed:text-[color:var(--brand-subtle-text)]"
     >
       {label}
-      {count ? <span className="ml-1 opacity-70 tabular-nums">{count}</span> : null}
+      {count ? <span className="ml-1 tabular-nums">{count}</span> : null}
     </button>
   );
 }
@@ -1362,7 +1362,7 @@ function SelectionToolbar({
           type="button"
           aria-pressed={share}
           onClick={() => setShare((s) => !s)}
-          className="rounded-full px-2 py-1 text-sm hover:bg-hover aria-pressed:bg-[color:var(--brand-ui)] aria-pressed:text-[color:var(--text-on-brand)]"
+          className="rounded-full px-2 py-1 text-sm hover:bg-hover aria-pressed:bg-[color:var(--brand-subtle)] aria-pressed:text-[color:var(--brand-subtle-text)]"
         >
           Share to club
         </button>
@@ -1497,7 +1497,7 @@ function EditPopover({
     const below = anchor.top + anchor.height + pad;
     const top = below + h + pad <= window.innerHeight ? below : Math.max(pad, anchor.top - h - pad);
     setPos({ top, left });
-  }, [anchor, body]);
+  }, [anchor]);
 
   const anchored = anchor != null;
   // No full-screen backdrop: it would intercept every reader click and read as a
@@ -1780,11 +1780,12 @@ function TypographyControls({
                 type="button"
                 aria-pressed={settings.columns === n}
                 onClick={() => onChange({ columns: n as 1 | 2 })}
-                // Selected: a brand fill with on-brand text, which reads clearly on
-                // every reading canvas. The old bg-selected token is a site light
-                // tint, invisible under the panel's inherited (light) text in dark.
-                // Arbitrary values (not bg-brand-ui, which is not a mapped token).
-                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:border-[color:var(--brand-ui)] aria-pressed:bg-[color:var(--brand-ui)] aria-pressed:text-[color:var(--text-on-brand)]"
+                // Selected: the brand-subtle fill with its own text colour, so it
+                // reads on every reading canvas (the panel's inherited text is not
+                // used). White on brand-ui is 3.76:1, under WCAG AA for this size.
+                // The old bg-selected token is a site light tint, invisible under the
+                // panel's inherited (light) text in dark.
+                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:border-[color:var(--border-brand)] aria-pressed:bg-[color:var(--brand-subtle)] aria-pressed:text-[color:var(--brand-subtle-text)]"
               >
                 {n}
               </button>

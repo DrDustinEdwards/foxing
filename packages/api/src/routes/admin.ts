@@ -71,7 +71,10 @@ adminRoutes.post("/admin/users/:id/notify", rateLimit("write"), async (c) => {
   const id = c.req.param("id");
   const input = await parseJson(
     c,
-    z.object({ title: z.string().min(1).max(200), body: z.string().max(2000).nullable().optional() }),
+    z.object({
+      title: z.string().min(1).max(200),
+      body: z.string().max(2000).nullable().optional(),
+    }),
   );
   await adminRepo.notifyUser(c.get("db"), id, {
     type: "system",

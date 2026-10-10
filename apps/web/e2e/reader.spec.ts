@@ -17,7 +17,9 @@ async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
         let max = 0;
         for (const f of page.frames()) {
           if (!f.url().startsWith("blob:")) continue;
-          const len = await f.evaluate(() => document.body?.innerText?.trim().length ?? 0).catch(() => 0);
+          const len = await f
+            .evaluate(() => document.body?.innerText?.trim().length ?? 0)
+            .catch(() => 0);
           max = Math.max(max, len);
         }
         return max;
@@ -59,7 +61,9 @@ test.describe("reader", () => {
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .exclude('[data-testid="reader-container"]')
       .analyze();
-    const serious = results.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+    const serious = results.violations.filter(
+      (v) => v.impact === "serious" || v.impact === "critical",
+    );
     expect(serious).toEqual([]);
   });
 });

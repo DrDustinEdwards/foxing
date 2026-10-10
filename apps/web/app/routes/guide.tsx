@@ -17,7 +17,8 @@ export function headers(): HeadersInit {
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return buildMeta({
     title: "Using Foxing on the web",
-    description: "How to find books, track your reading, join clubs, and follow other readers on foxing.app.",
+    description:
+      "How to find books, track your reading, join clubs, and follow other readers on foxing.app.",
     origin: data?.origin ?? "",
     pathname: location.pathname,
   });

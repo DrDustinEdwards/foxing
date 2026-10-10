@@ -315,7 +315,11 @@ export function listRecCandidatesByRating(db: Db, limit = 400): Promise<RecCandi
     .select(REC_COLUMNS)
     .from(books)
     .where(readableCatalog)
-    .orderBy(sql`${books.weightedRating} DESC NULLS LAST`, desc(books.ratingCount), asc(books.title))
+    .orderBy(
+      sql`${books.weightedRating} DESC NULLS LAST`,
+      desc(books.ratingCount),
+      asc(books.title),
+    )
     .limit(limit);
 }
 
@@ -326,7 +330,10 @@ export function listRecCandidatesByAuthors(
   authors: string[],
   limit = 150,
 ): Promise<RecCandidate[]> {
-  const list = authors.map((a) => a.toLowerCase()).filter(Boolean).slice(0, 40);
+  const list = authors
+    .map((a) => a.toLowerCase())
+    .filter(Boolean)
+    .slice(0, 40);
   if (list.length === 0) return Promise.resolve([]);
   const inList = sql.join(
     list.map((a) => sql`${a}`),
@@ -362,7 +369,11 @@ export function listRecCandidatesBySubjects(
         sql`EXISTS (SELECT 1 FROM json_each(${books.subjects}) je WHERE lower(je.value) IN (${inList}))`,
       ),
     )
-    .orderBy(sql`${books.weightedRating} DESC NULLS LAST`, desc(books.ratingCount), asc(books.title))
+    .orderBy(
+      sql`${books.weightedRating} DESC NULLS LAST`,
+      desc(books.ratingCount),
+      asc(books.title),
+    )
     .limit(limit);
 }
 

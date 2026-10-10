@@ -4,7 +4,12 @@
 // and a visible error on failure.
 import { useState } from "react";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-notifications";
@@ -68,7 +73,11 @@ export default function AdminNotifications() {
           </p>
           <label className="block">
             <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} className={adminInputClass} />
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className={adminInputClass}
+            />
           </label>
           <label className="block">
             <span className="mb-1 block font-ui text-sm text-secondary">Body (optional)</span>

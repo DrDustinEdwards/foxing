@@ -9,7 +9,7 @@ test.describe("app shell", () => {
   test('"/" stays the marketing page for anonymous visitors', async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole("heading", { name: /read the classics/i })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /read the classics/i })).toBeVisible();
   });
 
   test("anonymous nav shows Sign in and Join free, not an avatar menu", async ({ page }) => {
@@ -50,9 +50,9 @@ test.describe("app shell", () => {
 
     const hrefs = new Set<string>();
     async function collect(scope: ReturnType<typeof page.locator>) {
-      for (const href of await scope.locator("a[href]").evaluateAll((els) =>
-        els.map((e) => e.getAttribute("href") ?? ""),
-      )) {
+      for (const href of await scope
+        .locator("a[href]")
+        .evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""))) {
         // Internal paths only; skip anchors, mailto, and external URLs.
         if (href.startsWith("/") && !href.startsWith("//")) hrefs.add(href);
       }

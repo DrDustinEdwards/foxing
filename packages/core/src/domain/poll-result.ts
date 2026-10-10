@@ -89,10 +89,7 @@ export function computePlurality(
 
 /** Instant-runoff winner. Eliminates the fewest-first-choice option each round and
  *  redistributes its ballots until one option holds a majority of active ballots. */
-export function computeIrv(
-  optionIds: readonly string[],
-  ballots: readonly Ballot[],
-): PollResult {
+export function computeIrv(optionIds: readonly string[], ballots: readonly Ballot[]): PollResult {
   const remaining = new Set(optionIds);
   const rounds: PollResult["rounds"] = [];
 
@@ -138,7 +135,5 @@ export function computePollResult(
   optionIds: readonly string[],
   ballots: readonly Ballot[],
 ): PollResult {
-  return pollType === "irv"
-    ? computeIrv(optionIds, ballots)
-    : computePlurality(optionIds, ballots);
+  return pollType === "irv" ? computeIrv(optionIds, ballots) : computePlurality(optionIds, ballots);
 }

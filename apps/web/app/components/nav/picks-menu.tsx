@@ -29,7 +29,7 @@ export function PicksMenu({
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => setOpen(true)}
         className={primaryItemClass(open, "gap-1")}
       >
         Celebrity Picks
