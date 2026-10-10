@@ -111,7 +111,6 @@ export default function SettingsScreen() {
   const [busy, setBusy] = useState(false)
   const [userPrefs, setUserPrefsState] = useState<UserPrefs>(DEFAULT_USER_PREFS)
   const [calibratedWpm, setCalibratedWpmState] = useState<number | null>(null)
-  const [isAdmin, setIsAdmin] = useState(false)
   // New accessibility prefs (TTS speed, high contrast, reduce motion).
   // Stored as plain AsyncStorage so we don't have to widen UserPrefs.
   const [highContrast, setHighContrast] = useState(false)
@@ -130,14 +129,13 @@ export default function SettingsScreen() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('is_public, progress_is_public, is_admin')
+          .select('is_public, progress_is_public')
           .eq('id', user.id)
           .maybeSingle()
         const p = profile as
           | {
               is_public: boolean | string | null
               progress_is_public: boolean | null
-              is_admin: boolean | null
             }
           | null
         if (p) {
@@ -147,7 +145,6 @@ export default function SettingsScreen() {
           if (typeof v === 'string') setVisibility((v as ProfileVisibility) ?? 'public')
           else setVisibility(v === false ? 'private' : 'public')
           setProgressPublic(p.progress_is_public !== false)
-          setIsAdmin(p.is_admin === true)
         }
       }
 
@@ -761,27 +758,6 @@ export default function SettingsScreen() {
             onPress={() => router.push('/close-friends' as never)}
           />
         </Section>
-
-        {isAdmin ? (
-          <Section title="Admin">
-            <LinkRow
-              label="Feature flags"
-              onPress={() => router.push('/admin/flags' as never)}
-            />
-            <LinkRow
-              label="Grant verified badge"
-              onPress={() => router.push('/admin/verify' as never)}
-            />
-            <LinkRow
-              label="Catalog management"
-              onPress={() => router.push('/admin/catalog' as never)}
-            />
-            <LinkRow
-              label="Reports queue"
-              onPress={() => router.push('/admin/reports' as never)}
-            />
-          </Section>
-        ) : null}
 
         <Section title="About">
           <View className="px-3 py-3 border-t" style={{ borderTopColor: colors.borderSubtle }}>
