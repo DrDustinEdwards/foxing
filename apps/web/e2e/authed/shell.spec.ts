@@ -16,10 +16,10 @@ test.describe("app shell (signed in)", () => {
     await expect(header.getByRole("link", { name: /^sign in$/i })).toHaveCount(0);
   });
 
-  test("the account menu opens Settings and Your library", async ({ page }) => {
+  test("the account menu opens Settings and Stats", async ({ page }) => {
     await page.goto("/home");
     await page.getByRole("button", { name: /account menu/i }).click();
-    await expect(page.getByRole("menuitem", { name: /your library/i })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: /^stats$/i })).toBeVisible();
     await expect(page.getByRole("menuitem", { name: /settings/i })).toBeVisible();
   });
 

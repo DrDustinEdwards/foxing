@@ -9,8 +9,10 @@ import { type FocusEvent, useEffect, useRef } from "react";
  *  - pointer enter opens immediately; pointer leave closes after a short delay so a
  *    diagonal move from trigger to menu across the small gap does not flicker it shut.
  *  - focus entering the wrapper opens it (keyboard/tab users); focus leaving closes it.
- * Click still toggles (the trigger is a real <button>) and Escape/outside-click close
- * via useDismiss, so the menu is fully operable without a pointer.
+ * Click opens and never toggles: pointer enter and focus have already opened the menu
+ * by the time a click (or a tap, or Enter after Tab) lands on the trigger, so a toggle
+ * would shut it again at once. Escape, outside click, pointer leave and focus leaving
+ * close it (useDismiss and the handlers below), so it stays fully operable.
  */
 export function useHoverMenu(setOpen: (open: boolean) => void) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);

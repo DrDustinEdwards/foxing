@@ -466,7 +466,7 @@ function CloseFriendsSection({
       {friends.length === 0 ? (
         <p className="mt-4 font-ui text-sm text-tertiary">
           No close friends yet. Add readers you follow from{" "}
-          <Link to="/people" className="text-brand-text hover:underline">
+          <Link to="/people" className="text-brand-text underline underline-offset-2">
             People
           </Link>
           .
@@ -496,7 +496,7 @@ function CloseFriendsSection({
       )}
       <p className="mt-4 font-ui text-sm text-tertiary">
         Add close friends from{" "}
-        <Link to="/people" className="text-brand-text hover:underline">
+        <Link to="/people" className="text-brand-text underline underline-offset-2">
           People
         </Link>
         , where you can pick from the readers you follow.
