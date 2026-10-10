@@ -19,12 +19,22 @@
 // notify each shard. Nothing about D1-as-truth changes.
 import { DurableObject } from "cloudflare:workers";
 import type { LiveMessage } from "@foxing/core";
+import { PING_FRAME, PONG_FRAME } from "../app/lib/club-live-protocol";
 
 type Attachment = { userId: string };
 
 type ServerMessage = LiveMessage | { t: "presence"; users: string[] } | { t: "pong" };
 
 export class ClubRoom extends DurableObject {
+  constructor(ctx: DurableObjectState, env: Cloudflare.Env) {
+    super(ctx, env);
+    // The runtime answers the keepalive ping itself, so an idle room stays hibernated
+    // instead of waking every 30 s per socket (Workers best practices: use
+    // setWebSocketAutoResponse for ping/pong). webSocketMessage below still answers a
+    // ping that does not match the exact frame.
+    ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair(PING_FRAME, PONG_FRAME));
+  }
+
   /** Upgrade a membership-checked request (the API already verified it) to a socket. */
   override async fetch(request: Request): Promise<Response> {
     if (request.headers.get("Upgrade") !== "websocket") {
