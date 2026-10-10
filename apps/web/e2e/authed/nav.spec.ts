@@ -17,7 +17,10 @@ test.describe("header nav (signed in)", () => {
 
   test("the notification bell links to /notifications", async ({ page }) => {
     await page.goto("/home", { waitUntil: "networkidle" });
-    await page.getByRole("link", { name: /notifications/i }).first().click();
+    await page
+      .getByRole("link", { name: /notifications/i })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/notifications$/);
   });
 
@@ -29,11 +32,13 @@ test.describe("header nav (signed in)", () => {
 
     // Collect every real destination the menu exposes, then visit each and assert the
     // server did not answer 404. Sign out is a button, not a link, so it is excluded.
-    const hrefs = await menu.getByRole("menuitem").evaluateAll((els) =>
-      els
-        .map((e) => (e as HTMLAnchorElement).getAttribute("href"))
-        .filter((h): h is string => !!h && h.startsWith("/")),
-    );
+    const hrefs = await menu
+      .getByRole("menuitem")
+      .evaluateAll((els) =>
+        els
+          .map((e) => (e as HTMLAnchorElement).getAttribute("href"))
+          .filter((h): h is string => !!h && h.startsWith("/")),
+      );
     expect(hrefs.length).toBeGreaterThan(5);
 
     for (const href of hrefs) {

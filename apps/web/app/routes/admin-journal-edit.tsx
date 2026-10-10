@@ -5,7 +5,12 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { Link, useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, useAdminAction } from "~/components/admin/admin-form";
+import {
+  AdminButton,
+  AdminError,
+  adminInputClass,
+  useAdminAction,
+} from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-journal-edit";
@@ -20,7 +25,11 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: loaderData ? `Admin · Edit ${loaderData.post.title} | Foxing` : "Admin · Edit post | Foxing" },
+    {
+      title: loaderData
+        ? `Admin · Edit ${loaderData.post.title} | Foxing`
+        : "Admin · Edit post | Foxing",
+    },
     { name: "robots", content: "noindex" },
   ];
 }
@@ -114,11 +123,19 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
           <div className="space-y-4">
             <label className="block">
               <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} className={adminInputClass} />
+              <input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className={adminInputClass}
+              />
             </label>
             <label className="block">
               <span className="mb-1 block font-ui text-sm text-secondary">Slug</span>
-              <input value={slug} onChange={(e) => setSlug(e.target.value)} className={adminInputClass} />
+              <input
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                className={adminInputClass}
+              />
               <span className="mt-1 block font-ui text-xs text-tertiary">
                 Lowercase letters, numbers, and hyphens only.
               </span>
@@ -142,7 +159,9 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Cover image URL (optional)</span>
+              <span className="mb-1 block font-ui text-sm text-secondary">
+                Cover image URL (optional)
+              </span>
               <input
                 value={coverImageUrl}
                 onChange={(e) => setCoverImageUrl(e.target.value)}
@@ -150,7 +169,9 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Cover image alt (optional)</span>
+              <span className="mb-1 block font-ui text-sm text-secondary">
+                Cover image alt (optional)
+              </span>
               <input
                 value={coverImageAlt}
                 onChange={(e) => setCoverImageAlt(e.target.value)}
@@ -158,11 +179,21 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Tags (comma separated)</span>
-              <input value={tags} onChange={(e) => setTags(e.target.value)} className={adminInputClass} />
+              <span className="mb-1 block font-ui text-sm text-secondary">
+                Tags (comma separated)
+              </span>
+              <input
+                value={tags}
+                onChange={(e) => setTags(e.target.value)}
+                className={adminInputClass}
+              />
             </label>
             <label className="flex items-center gap-2 font-ui text-sm text-secondary">
-              <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={featured}
+                onChange={(e) => setFeatured(e.target.checked)}
+              />
               Featured
             </label>
             <AdminButton variant="primary" pending={save.pending} onClick={onSave}>

@@ -72,7 +72,9 @@ function yearOf(entry: OwnDiaryEntry): string {
 function sortEntries(list: OwnDiaryEntry[], order: SortOrder): OwnDiaryEntry[] {
   const copy = [...list];
   if (order === "rating") {
-    copy.sort((a, b) => (b.ratingHalf ?? -1) - (a.ratingHalf ?? -1) || (b.logDate ?? 0) - (a.logDate ?? 0));
+    copy.sort(
+      (a, b) => (b.ratingHalf ?? -1) - (a.ratingHalf ?? -1) || (b.logDate ?? 0) - (a.logDate ?? 0),
+    );
   } else {
     // Nulls last for both directions.
     copy.sort((a, b) => {
@@ -187,7 +189,10 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
             </div>
 
             {shown.length === 0 ? (
-              <EmptyState title="No entries match those filters." body="Try widening the filters." />
+              <EmptyState
+                title="No entries match those filters."
+                body="Try widening the filters."
+              />
             ) : (
               <div className="flex flex-col gap-8">
                 {groups.map((g) => (

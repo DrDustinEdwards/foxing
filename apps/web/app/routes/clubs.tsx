@@ -23,7 +23,11 @@ export function meta() {
   return [{ title: "Book clubs | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
-function ClubRow({ club }: { club: { slug: string | null; name: string; description: string | null } }) {
+function ClubRow({
+  club,
+}: {
+  club: { slug: string | null; name: string; description: string | null };
+}) {
   return (
     <Link
       to={`/clubs/${club.slug}`}
@@ -54,7 +58,9 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
         </div>
 
         <section className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-[0.14em] text-tertiary">Your clubs</h2>
+          <h2 className="font-mono text-xs uppercase tracking-[0.14em] text-tertiary">
+            Your clubs
+          </h2>
           {mine.length === 0 ? (
             <div className="mt-4 rounded-card border border-dashed border-border-subtle bg-surface p-8 text-center">
               <p className="font-ui text-sm text-tertiary">

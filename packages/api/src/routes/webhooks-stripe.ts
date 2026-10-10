@@ -4,7 +4,13 @@
 // billing is private. Mounted inside the normal pipeline: session/profile resolve to
 // null harmlessly, and it is deliberately NOT rate-limited (Stripe retries).
 import { Hono } from "hono";
-import { type BillingClient, type BillingIntent, billing, billingRepo, profilesRepo } from "@foxing/core";
+import {
+  type BillingClient,
+  type BillingIntent,
+  billing,
+  billingRepo,
+  profilesRepo,
+} from "@foxing/core";
 import type { Db } from "@foxing/core";
 import { errors } from "../error";
 import type { Env } from "../types";

@@ -77,7 +77,9 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
                   {audit.map((a) => (
                     <tr key={a.id}>
                       <td className="py-2 pr-4 font-mono text-xs text-secondary">{a.action}</td>
-                      <td className="py-2 pr-4 font-ui text-xs text-secondary">{a.actor ?? "System"}</td>
+                      <td className="py-2 pr-4 font-ui text-xs text-secondary">
+                        {a.actor ?? "System"}
+                      </td>
                       <td className="whitespace-nowrap py-2 font-mono text-xs text-tertiary">
                         {fmt.format(a.performedAt)}
                       </td>

@@ -17,7 +17,8 @@ export function headers(): HeadersInit {
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return buildMeta({
     title: "Using the Foxing app",
-    description: "How the Foxing mobile app works: reading offline, highlights and notes, vocabulary, sync, and notifications.",
+    description:
+      "How the Foxing mobile app works: reading offline, highlights and notes, vocabulary, sync, and notifications.",
     origin: data?.origin ?? "",
     pathname: location.pathname,
   });
@@ -55,8 +56,8 @@ export default function AppGuide() {
         <Section id="reading" eyebrow="Reading" heading="Reading offline">
           <Prose>
             Open a book from your library and it downloads to your device in a few seconds. Once it
-            is on your device, it reads offline, with no connection needed. Your place is saved every
-            time you leave the reader, so you return to exactly where you left off.
+            is on your device, it reads offline, with no connection needed. Your place is saved
+            every time you leave the reader, so you return to exactly where you left off.
           </Prose>
           <FeatureList
             items={[
@@ -99,16 +100,16 @@ export default function AppGuide() {
           <Prose>
             Your account is the same everywhere. Reading position, shelves, highlights, and
             vocabulary sync between your phone and foxing.app. Changes you make offline are queued
-            and sync the next time you have a connection, so a book you start on the web continues on
-            the app, and the reverse.
+            and sync the next time you have a connection, so a book you start on the web continues
+            on the app, and the reverse.
           </Prose>
         </Section>
 
         <Section id="notifications" eyebrow="Notifications" heading="Notifications">
           <Prose>
-            Push notifications keep you current on the reading you care about: replies in your clubs,
-            new followers, and reminders tied to your reading goals. Turn them on or off from the app
-            settings.
+            Push notifications keep you current on the reading you care about: replies in your
+            clubs, new followers, and reminders tied to your reading goals. Turn them on or off from
+            the app settings.
           </Prose>
         </Section>
 

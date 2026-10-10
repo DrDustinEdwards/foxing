@@ -50,9 +50,9 @@ test.describe("app shell", () => {
 
     const hrefs = new Set<string>();
     async function collect(scope: ReturnType<typeof page.locator>) {
-      for (const href of await scope.locator("a[href]").evaluateAll((els) =>
-        els.map((e) => e.getAttribute("href") ?? ""),
-      )) {
+      for (const href of await scope
+        .locator("a[href]")
+        .evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""))) {
         // Internal paths only; skip anchors, mailto, and external URLs.
         if (href.startsWith("/") && !href.startsWith("//")) hrefs.add(href);
       }

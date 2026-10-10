@@ -48,7 +48,9 @@ const SWATCH: Record<string, string> = {
 function ColorDot({ color }: { color: string | null }) {
   const hex = color ? SWATCH[color.toLowerCase()] : undefined;
   if (!hex) {
-    return <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-border-strong" />;
+    return (
+      <span aria-hidden="true" className="h-2.5 w-2.5 shrink-0 rounded-full bg-border-strong" />
+    );
   }
   return (
     <span
@@ -114,8 +116,13 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
   });
 
   // Group the filtered highlights under their book.
-  const groups: Array<{ key: string; label: string; author: string | null; slug: string | null; items: Highlight[] }> =
-    [];
+  const groups: Array<{
+    key: string;
+    label: string;
+    author: string | null;
+    slug: string | null;
+    items: Highlight[];
+  }> = [];
   const groupIndex = new Map<string, number>();
   for (const h of filtered) {
     const k = bookKey(h);
@@ -123,7 +130,13 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
     if (i === undefined) {
       i = groups.length;
       groupIndex.set(k, i);
-      groups.push({ key: k, label: bookLabelOf(h), author: h.bookAuthor, slug: h.bookSlug, items: [] });
+      groups.push({
+        key: k,
+        label: bookLabelOf(h),
+        author: h.bookAuthor,
+        slug: h.bookSlug,
+        items: [],
+      });
     }
     groups[i].items.push(h);
   }
@@ -219,7 +232,9 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
                             </blockquote>
                           </div>
                           {h.chapter ? (
-                            <p className="mt-3 pl-[22px] font-ui text-xs text-tertiary">{h.chapter}</p>
+                            <p className="mt-3 pl-[22px] font-ui text-xs text-tertiary">
+                              {h.chapter}
+                            </p>
                           ) : null}
                         </li>
                       ))}

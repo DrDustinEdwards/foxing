@@ -18,9 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user, profile } = await requireProfile(env, request);
   const streak = await libraryRepo.getStreak(createDb(env.DB), user.id);
   const joined = profile.createdAt
-    ? new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(
-        profile.createdAt,
-      )
+    ? new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(profile.createdAt)
     : null;
   return {
     email: user.email,
@@ -58,7 +56,9 @@ export default function Me({ loaderData }: Route.ComponentProps) {
             <h1 className="font-display text-3xl sm:text-4xl">{name}</h1>
             <p className="mt-1 font-mono text-sm text-tertiary">@{profile.username}</p>
             {joined ? (
-              <p className="mt-2 font-ui text-sm text-secondary">Reading on Foxing since {joined}</p>
+              <p className="mt-2 font-ui text-sm text-secondary">
+                Reading on Foxing since {joined}
+              </p>
             ) : null}
           </div>
         </header>

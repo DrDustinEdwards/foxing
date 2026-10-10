@@ -1497,7 +1497,7 @@ function EditPopover({
     const below = anchor.top + anchor.height + pad;
     const top = below + h + pad <= window.innerHeight ? below : Math.max(pad, anchor.top - h - pad);
     setPos({ top, left });
-  }, [anchor, body]);
+  }, [anchor]);
 
   const anchored = anchor != null;
   // No full-screen backdrop: it would intercept every reader click and read as a

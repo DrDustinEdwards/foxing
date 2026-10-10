@@ -86,7 +86,9 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
               {audit.map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-3 py-2">
                   <span className="font-mono text-xs text-secondary">{a.action}</span>
-                  <span className="font-mono text-xs text-tertiary">{fmt.format(a.performedAt)}</span>
+                  <span className="font-mono text-xs text-tertiary">
+                    {fmt.format(a.performedAt)}
+                  </span>
                 </li>
               ))}
             </ul>

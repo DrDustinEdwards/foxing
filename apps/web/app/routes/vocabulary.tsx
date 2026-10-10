@@ -113,7 +113,13 @@ function FilterTab({
 function WordItem({
   word,
 }: {
-  word: { id: string; word: string; definition: string; contextSentence: string | null; mastered: boolean };
+  word: {
+    id: string;
+    word: string;
+    definition: string;
+    contextSentence: string | null;
+    mastered: boolean;
+  };
 }) {
   const revalidator = useRevalidator();
   const [pending, setPending] = useState(false);

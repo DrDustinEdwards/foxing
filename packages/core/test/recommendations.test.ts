@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RecCandidate } from "../src/repositories";
-import {
-  parseAiSelection,
-  rankCandidates,
-  type RankSignals,
-} from "../src/domain/recommendations";
+import { parseAiSelection, rankCandidates, type RankSignals } from "../src/domain/recommendations";
 
 function cand(over: Partial<RecCandidate> & { id: string }): RecCandidate {
   return {
@@ -106,11 +102,7 @@ describe("rankCandidates - tier 2 (behaviour) boosting", () => {
 
   it("boosts a genre the reader actually reads with a behaviour reason", () => {
     const signals: RankSignals = { ...NO_SIGNALS, behaviorGenres: ["Gothic"] };
-    const ranked = rankCandidates(
-      [cand({ id: "g", subjects: ["Gothic"] })],
-      signals,
-      new Set(),
-    );
+    const ranked = rankCandidates([cand({ id: "g", subjects: ["Gothic"] })], signals, new Set());
     expect(ranked[0].reason).toBe("More Gothic, which you read");
   });
 });

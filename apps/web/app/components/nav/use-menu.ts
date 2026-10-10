@@ -18,7 +18,14 @@ export function useHoverMenu(setOpen: (open: boolean) => void) {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
   };
-  useEffect(() => clear, []);
+  // Unmount only: drop a pending close timer. Reads the ref directly so the effect
+  // does not depend on `clear`, which is a new function every render.
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    [],
+  );
   return {
     onMouseEnter: () => {
       clear();

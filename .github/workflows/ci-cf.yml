@@ -9,12 +9,18 @@ on:
       - "packages/api/**"
       - "apps/web/**"
       - ".github/workflows/ci-cf.yml"
+      # Lint config and the lint:cf script decide what the Lint (biome) step checks.
+      - "biome.json"
+      - "package.json"
   pull_request:
     paths:
       - "packages/core/**"
       - "packages/api/**"
       - "apps/web/**"
       - ".github/workflows/ci-cf.yml"
+      # Lint config and the lint:cf script decide what the Lint (biome) step checks.
+      - "biome.json"
+      - "package.json"
 
 jobs:
   check:

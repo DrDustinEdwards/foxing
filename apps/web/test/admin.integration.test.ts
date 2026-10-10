@@ -106,10 +106,7 @@ describe("admin write surface gate + audit log", () => {
     const res = await post("/admin/users/reader/suspend", "reader", { suspended: true });
     expect(res.status).toBe(403);
     const db = createDb(env.DB);
-    const [row] = await db
-      .select()
-      .from(schema.profiles)
-      .where(eq(schema.profiles.id, "reader"));
+    const [row] = await db.select().from(schema.profiles).where(eq(schema.profiles.id, "reader"));
     expect(row.isSuspended).toBe(false);
   });
 });

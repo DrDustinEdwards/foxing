@@ -43,13 +43,13 @@ export default function Terms() {
           </Section>
 
           <Section heading="Who can use Foxing">
-            You must be at least 13 years old. If the law where you live sets a higher minimum
-            age for consenting to data processing, you must meet that age instead.
+            You must be at least 13 years old. If the law where you live sets a higher minimum age
+            for consenting to data processing, you must meet that age instead.
           </Section>
 
           <Section heading="Your account">
-            You are responsible for what happens under your account. One human per account. We
-            can suspend accounts that break these terms.
+            You are responsible for what happens under your account. One human per account. We can
+            suspend accounts that break these terms.
           </Section>
 
           <Section heading="Content you post">
@@ -64,8 +64,8 @@ export default function Terms() {
           </Section>
 
           <Section heading="AI output">
-            When AI summaries or analysis are available, they are provided as-is and can be
-            wrong. Do not treat them as the last word on a book.
+            When AI summaries or analysis are available, they are provided as-is and can be wrong.
+            Do not treat them as the last word on a book.
           </Section>
 
           <Section heading="Paid plans">
@@ -75,8 +75,8 @@ export default function Terms() {
           </Section>
 
           <Section heading="Termination">
-            You can delete your account whenever you like. We can terminate accounts that abuse
-            the service or violate the law.
+            You can delete your account whenever you like. We can terminate accounts that abuse the
+            service or violate the law.
           </Section>
 
           <Section heading="No warranty">

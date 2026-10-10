@@ -68,7 +68,12 @@ export async function loadClubDetail(env: Env, slug: string, userId: string | nu
   };
 }
 
-export async function loadThreadDetail(env: Env, slug: string, threadId: string, userId: string | null) {
+export async function loadThreadDetail(
+  env: Env,
+  slug: string,
+  threadId: string,
+  userId: string | null,
+) {
   const db = createDb(env.DB);
   const club = await clubsRepo.getClubBySlug(db, slug);
   if (!club) return null;

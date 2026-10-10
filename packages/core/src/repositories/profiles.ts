@@ -57,11 +57,7 @@ export async function getProfileSummaries(
  *  palette's federated search. Only PUBLIC profiles are returned (null visibility
  *  defaults to public), so this is safe to serve on the anonymous, edge-cached suggest
  *  endpoint. */
-export async function searchProfiles(
-  db: Db,
-  query: string,
-  limit = 4,
-): Promise<ProfileSummary[]> {
+export async function searchProfiles(db: Db, query: string, limit = 4): Promise<ProfileSummary[]> {
   const q = query.trim();
   if (q.length < 2) return [];
   const term = `%${q.replace(/[%_]/g, "")}%`;
@@ -165,11 +161,7 @@ export async function setSubscriptionState(
 }
 
 /** Record the dunning status (invoice.payment_failed) without changing tier. */
-export async function setSubscriptionStatus(
-  db: Db,
-  userId: string,
-  status: string,
-): Promise<void> {
+export async function setSubscriptionStatus(db: Db, userId: string, status: string): Promise<void> {
   await db
     .update(profiles)
     .set({ subscriptionStatus: status, updatedAt: new Date() })

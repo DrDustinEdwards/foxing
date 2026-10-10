@@ -13,14 +13,16 @@ async function seedUser(
   id: string,
   opts: { visibility?: Record<string, string>; displayName?: string } = {},
 ) {
-  await db().insert(schema.user).values({
-    id,
-    name: "Test",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  await db()
+    .insert(schema.user)
+    .values({
+      id,
+      name: "Test",
+      email: `${id}@example.com`,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
   await db()
     .insert(schema.profiles)
     .values({
@@ -102,11 +104,13 @@ describe("account-menu vocabulary count", () => {
       lookedUpAt: new Date(),
       createdAt: new Date(),
     };
-    await db().insert(schema.vocabulary).values([
-      { ...base, id: "v1", word: "one", mastered: false },
-      { ...base, id: "v2", word: "two", mastered: false },
-      { ...base, id: "v3", word: "three", mastered: true },
-    ]);
+    await db()
+      .insert(schema.vocabulary)
+      .values([
+        { ...base, id: "v1", word: "one", mastered: false },
+        { ...base, id: "v2", word: "two", mastered: false },
+        { ...base, id: "v3", word: "three", mastered: true },
+      ]);
     expect(await libraryRepo.countVocabularyToMaster(db(), "learner")).toBe(2);
   });
 });
