@@ -7,6 +7,7 @@ export const contextMw = createMiddleware<Env>(async (c, next) => {
   const requestId = crypto.randomUUID();
   c.set("requestId", requestId);
   c.set("db", createDb(c.env.DB));
+  c.set("viaOperator", false);
   c.header("x-request-id", requestId);
   await next();
 });

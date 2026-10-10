@@ -284,3 +284,165 @@ describe("admin role changes: preview then perform", () => {
     expect(await auditRows("user.suspend")).toHaveLength(1);
   });
 });
+
+// The operator bearer (middleware/operator.ts): the admin MCP Worker sends the token and
+// names the acting admin. The token alone grants nothing; the named actor must be a
+// current, unsuspended admin, read from D1 on each request.
+const OPERATOR_TOKEN = "test-operator-token";
+const operatorEnv = { ...env, ADMIN_OPERATOR_TOKEN: OPERATOR_TOKEN };
+
+const operatorCall = (
+  pathname: string,
+  opts: { token?: string; actor?: string; method?: string; body?: unknown; envOverride?: object },
+) =>
+  api.fetch(
+    new Request(`https://test.local${pathname}`, {
+      method: opts.method ?? "GET",
+      headers: {
+        ...(opts.token !== undefined ? { Authorization: `Bearer ${opts.token}` } : {}),
+        ...(opts.actor ? { "X-Foxing-Admin-Id": opts.actor } : {}),
+        ...(opts.body !== undefined ? { "Content-Type": "application/json" } : {}),
+      },
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    }),
+    (opts.envOverride ?? operatorEnv) as never,
+  );
+
+type Page<T> = { items: T[]; has_more: boolean; next_offset: number | null };
+
+describe("admin operator bearer", () => {
+  beforeEach(async () => {
+    const db = createDb(env.DB);
+    await db.delete(schema.adminAuditLog);
+    await db.delete(schema.profiles);
+    await db.delete(schema.user);
+    await seedUser("admin", { isAdmin: true });
+    await seedUser("reader", { isAdmin: false });
+  });
+
+  it("lets the operator read as a named admin", async () => {
+    const res = await operatorCall("/admin/users", { token: OPERATOR_TOKEN, actor: "admin" });
+    expect(res.status).toBe(200);
+    const page = (await res.json()) as Page<{ id: string }>;
+    expect(page.items.map((u) => u.id).sort()).toEqual(["admin", "reader"]);
+    expect(page.has_more).toBe(false);
+  });
+
+  it("refuses a wrong token with 401", async () => {
+    const res = await operatorCall("/admin/users", { token: "not-the-token", actor: "admin" });
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses every bearer when the token is not configured", async () => {
+    const res = await operatorCall("/admin/users", {
+      token: OPERATOR_TOKEN,
+      actor: "admin",
+      envOverride: env,
+    });
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses a valid token with no acting admin named", async () => {
+    const res = await operatorCall("/admin/users", { token: OPERATOR_TOKEN });
+    expect(res.status).toBe(401);
+  });
+
+  it("refuses a valid token acting as a non-admin or an unknown user", async () => {
+    const asReader = await operatorCall("/admin/users", { token: OPERATOR_TOKEN, actor: "reader" });
+    expect(asReader.status).toBe(403);
+    const asNobody = await operatorCall("/admin/users", { token: OPERATOR_TOKEN, actor: "ghost" });
+    expect(asNobody.status).toBe(403);
+  });
+
+  it("refuses a suspended admin, reads included", async () => {
+    const db = createDb(env.DB);
+    await db
+      .update(schema.profiles)
+      .set({ isSuspended: true })
+      .where(eq(schema.profiles.id, "admin"));
+    const res = await operatorCall("/admin/stats", { token: OPERATOR_TOKEN, actor: "admin" });
+    expect(res.status).toBe(403);
+  });
+
+  it("does not authenticate routes outside /admin", async () => {
+    const res = await operatorCall("/account/export", { token: OPERATOR_TOKEN, actor: "admin" });
+    expect(res.status).toBe(401);
+  });
+
+  it("audits an operator write under the acting admin, marked via operator", async () => {
+    const suspend = (body: object) =>
+      operatorCall("/admin/users/reader/suspend", {
+        token: OPERATOR_TOKEN,
+        actor: "admin",
+        method: "POST",
+        body,
+      });
+    // Suspend is a role change, so the operator previews first and performs with the token.
+    const preview = await suspend({ suspended: true });
+    expect(preview.status).toBe(200);
+    const { token } = ((await preview.json()) as Preview).confirm;
+    const res = await suspend({ suspended: true, confirm: token });
+    expect(res.status).toBe(200);
+    const db = createDb(env.DB);
+    const [audit] = await db.select().from(schema.adminAuditLog);
+    expect(audit.action).toBe("user.suspend");
+    expect(audit.actor).toBe("admin");
+    expect(audit.params).toEqual({ id: "reader", from: false, to: true, via: "operator" });
+  });
+
+  it("pages a list with has_more and next_offset", async () => {
+    const first = await operatorCall("/admin/users?limit=1", {
+      token: OPERATOR_TOKEN,
+      actor: "admin",
+    });
+    const page1 = (await first.json()) as Page<{ id: string }>;
+    expect(page1.items).toHaveLength(1);
+    expect(page1.has_more).toBe(true);
+    expect(page1.next_offset).toBe(1);
+
+    const second = await operatorCall("/admin/users?limit=1&offset=1", {
+      token: OPERATOR_TOKEN,
+      actor: "admin",
+    });
+    const page2 = (await second.json()) as Page<{ id: string }>;
+    expect(page2.items).toHaveLength(1);
+    expect(page2.has_more).toBe(false);
+    expect(page2.next_offset).toBeNull();
+    expect(page2.items[0].id).not.toBe(page1.items[0].id);
+  });
+
+  it("answers 404 for an unknown user and 422 for a bad limit", async () => {
+    const missing = await operatorCall("/admin/users/ghost", {
+      token: OPERATOR_TOKEN,
+      actor: "admin",
+    });
+    expect(missing.status).toBe(404);
+    const bad = await operatorCall("/admin/users?limit=500", {
+      token: OPERATOR_TOKEN,
+      actor: "admin",
+    });
+    expect(bad.status).toBe(422);
+  });
+});
+
+describe("admin reads with a cookie session", () => {
+  beforeEach(async () => {
+    const db = createDb(env.DB);
+    await db.delete(schema.profiles);
+    await db.delete(schema.user);
+    await seedUser("admin", { isAdmin: true });
+    await seedUser("reader", { isAdmin: false });
+  });
+
+  it("serves an admin and refuses a reader and an anonymous caller", async () => {
+    const get = (user: string | null) =>
+      call("/admin/users/reader", { headers: user ? { "x-test-user": user } : {} });
+    const asAdmin = await get("admin");
+    expect(asAdmin.status).toBe(200);
+    const body = (await asAdmin.json()) as { user: { id: string }; activity: unknown };
+    expect(body.user.id).toBe("reader");
+    expect(body.activity).toBeTruthy();
+    expect((await get("reader")).status).toBe(403);
+    expect((await get(null)).status).toBe(401);
+  });
+});

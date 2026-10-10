@@ -6,6 +6,7 @@ import { billingDepsMw } from "./middleware/billing-deps";
 import { companionDepsMw } from "./middleware/companion-deps";
 import { contextMw } from "./middleware/context";
 import { hubDepsMw } from "./middleware/hub-deps";
+import { operatorMw } from "./middleware/operator";
 import { profileMw } from "./middleware/profile";
 import { sessionMw } from "./middleware/session";
 import { accountRoutes } from "./routes/account";
@@ -32,8 +33,11 @@ export function createApi(deps: ApiDeps) {
 
   // Middleware pipeline (spec-cf-api order): request id + db, session, profile.
   // Rate limit + zod validate apply per-route. Public reads skip auth naturally.
+  // The operator bearer sits between session and profile, and only on /admin/*, so
+  // its actor gets the same profile checks as a cookie session.
   app.use("*", contextMw);
   app.use("*", sessionMw(deps));
+  app.use("/admin/*", operatorMw);
   app.use("*", profileMw);
   app.use("*", companionDepsMw(deps));
   app.use("*", billingDepsMw(deps));
