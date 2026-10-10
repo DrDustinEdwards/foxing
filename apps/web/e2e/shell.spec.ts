@@ -9,7 +9,7 @@ test.describe("app shell", () => {
   test('"/" stays the marketing page for anonymous visitors', async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveURL(/\/$/);
-    await expect(page.getByRole("heading", { name: /read the classics/i })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1, name: /read the classics/i })).toBeVisible();
   });
 
   test("anonymous nav shows Sign in and Join free, not an avatar menu", async ({ page }) => {

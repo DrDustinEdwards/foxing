@@ -39,7 +39,7 @@ test.describe("search depth", () => {
     const dialog = page.getByRole("dialog", { name: /search foxing/i });
     await expect(dialog).toBeVisible();
 
-    await page.getByPlaceholder("Search titles and authors").fill(query);
+    await dialog.getByRole("combobox").fill(query);
     await expect(dialog.getByRole("option").first()).toBeVisible();
 
     await page.keyboard.press("Escape");
