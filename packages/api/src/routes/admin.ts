@@ -221,7 +221,8 @@ adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
 
 // ---- Journal ------------------------------------------------------------------
 
-const journalInput = z.object({
+// Exported for the Carrel site API, which validates every save against the same rules.
+export const journalInput = z.object({
   title: z.string().min(1).max(500),
   slug: z
     .string()

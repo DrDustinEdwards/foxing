@@ -92,3 +92,16 @@ export function getAuth(env: Env) {
 }
 
 export type Auth = ReturnType<typeof getAuth>;
+
+/**
+ * The signed-in user behind an /api/v1 request, from the Better Auth session cookie; null when
+ * there is none. The Worker's createApi resolveSession, and the Carrel key isolation tests.
+ */
+export async function sessionUserFromRequest(
+  req: Request,
+  env: Env,
+): Promise<{ id: string; email: string } | null> {
+  const session = await getAuth(env).api.getSession({ headers: req.headers });
+  if (!session?.user) return null;
+  return { id: session.user.id, email: session.user.email };
+}

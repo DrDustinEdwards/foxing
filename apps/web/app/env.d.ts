@@ -15,6 +15,9 @@ interface Env {
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_MONTHLY?: string;
   STRIPE_PRICE_ANNUAL?: string;
+  // Carrel's site API key (app/lib/carrel/site-api.server.ts). Unset or under 32 characters,
+  // /api/carrel/v1 refuses every request with 503 not-configured.
+  CARREL_SITE_KEY?: string;
 }
 
 // The React Router vite plugin supplies this virtual module at build time.
