@@ -60,14 +60,21 @@ describe("imports", () => {
     const dir = new URL("../src/", import.meta.url);
     const files = readdirSync(dir).filter((f) => f.endsWith(".ts"));
     assert.ok(files.length >= 9, `read ${files.length} source files`);
+    let read = 0;
     for (const file of files) {
       const source = readFileSync(new URL(file, dir), "utf8");
-      const specifiers = [...source.matchAll(/from\s+"([^"]+)"/g)].map((m) => m[1]);
+      // from "x", a bare import "x", and a dynamic import("x").
+      const specifiers = [
+        ...source.matchAll(/(?:\bfrom\s+|\bimport\s*\(?\s*)["']([^"']+)["']/g),
+      ].map((m) => m[1]);
+      read += specifiers.length;
       for (const spec of specifiers) {
         assert.ok(!spec.startsWith("@foxing/"), `${file} imports ${spec}`);
         assert.ok(!spec.startsWith("../"), `${file} imports ${spec}`);
       }
     }
+    // Pair the check with what it read, so "no violations" cannot mean "nothing read".
+    assert.ok(read >= 20, `read only ${read} import specifiers`);
   });
 });
 
