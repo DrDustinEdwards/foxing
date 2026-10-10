@@ -1,8 +1,10 @@
-// Admin write surface. Reads run in-process from the RR admin loaders (adminRepo,
-// gated by requireAdmin); this router holds only the mutations, each gated on
-// profiles.is_admin and wrapped in an admin_audit_log entry (actor + source ip). Every
-// write returns a plain result; the admin UI surfaces a visible error on non-2xx. Role
-// and permission changes (suspend, tier, admin) are preview then perform; see below.
+// Admin surface. Callers are a signed-in admin (cookie session) or the admin MCP
+// Worker (operator bearer naming the acting admin, middleware/operator.ts); both pass
+// the same requireAdmin check. Reads wrap adminRepo and page with limit and offset.
+// Every mutation is gated on profiles.is_admin and wrapped in an admin_audit_log entry
+// (actor + source ip, plus via: "operator" for bearer calls). Every write returns a
+// plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
+// changes (suspend, tier, admin) are preview then perform; see below.
 import { adminRepo, type Db, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
@@ -21,12 +23,13 @@ import type { Env, SessionUser } from "../types";
 
 export const adminRoutes = new Hono<Env>();
 
-// Session + is_admin gate. Suspended admins are already blocked from writes by
-// profileMw; this adds the operator check on top.
+// Session + is_admin gate. profileMw already blocks a suspended account's writes;
+// this also keeps a suspended admin out of the admin reads.
 function requireAdmin(c: Context<Env>): SessionUser {
   const session = requireSession(c);
   const profile = c.get("profile");
   if (!profile?.isAdmin) throw errors.forbidden("Admin only.");
+  if (profile.isSuspended) throw errors.forbidden("Account suspended.");
   return session;
 }
 
@@ -35,13 +38,120 @@ function requireAdmin(c: Context<Env>): SessionUser {
 async function audit(c: Context<Env>, action: string, params: Record<string, unknown>) {
   await adminRepo.writeAuditLog(c.get("db"), {
     action,
-    params,
+    params: c.get("viaOperator") ? { ...params, via: "operator" } : params,
     actor: c.get("session")?.id ?? null,
     sourceIp: c.req.header("CF-Connecting-IP") ?? null,
   });
 }
 
 const onOff = z.object({ on: z.boolean() });
+
+// ---- Reads --------------------------------------------------------------------
+
+const MAX_PAGE = 50;
+
+const pageQuery = z.object({
+  q: z.string().trim().max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(MAX_PAGE).default(20),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+function parseQuery<S extends z.ZodTypeAny>(c: Context<Env>, schema: S): z.infer<S> {
+  const result = schema.safeParse(c.req.query());
+  if (!result.success) throw errors.validation(result.error.flatten());
+  return result.data;
+}
+
+// Ask the repository for one row past the page to learn whether another page exists.
+async function page<T>(
+  query: { limit: number; offset: number },
+  fetch: (limit: number, offset: number) => Promise<T[]>,
+) {
+  const rows = await fetch(query.limit + 1, query.offset);
+  const hasMore = rows.length > query.limit;
+  return {
+    items: rows.slice(0, query.limit),
+    has_more: hasMore,
+    next_offset: hasMore ? query.offset + query.limit : null,
+  };
+}
+
+adminRoutes.get("/admin/stats", async (c) => {
+  requireAdmin(c);
+  return c.json(await adminRepo.getAdminStats(c.get("db")));
+});
+
+adminRoutes.get("/admin/users", async (c) => {
+  requireAdmin(c);
+  const query = parseQuery(c, pageQuery);
+  return c.json(
+    await page(query, (limit, offset) =>
+      adminRepo.listUsers(c.get("db"), { q: query.q, limit, offset }),
+    ),
+  );
+});
+
+adminRoutes.get("/admin/users/:id", async (c) => {
+  requireAdmin(c);
+  const id = c.req.param("id");
+  const db = c.get("db");
+  const user = await adminRepo.getUserDetail(db, id);
+  if (!user) throw errors.notFound("No user with that id.");
+  return c.json({ user, activity: await adminRepo.getUserActivityStats(db, id) });
+});
+
+adminRoutes.get("/admin/books", async (c) => {
+  requireAdmin(c);
+  const query = parseQuery(c, pageQuery);
+  return c.json(
+    await page(query, (limit, offset) =>
+      adminRepo.listBooksAdmin(c.get("db"), { q: query.q, limit, offset }),
+    ),
+  );
+});
+
+adminRoutes.get("/admin/clubs", async (c) => {
+  requireAdmin(c);
+  const query = parseQuery(c, pageQuery);
+  return c.json(
+    await page(query, (limit, offset) =>
+      adminRepo.listClubsAdmin(c.get("db"), { q: query.q, limit, offset }),
+    ),
+  );
+});
+
+// One row per month, so the whole list is small; no paging.
+adminRoutes.get("/admin/botm", async (c) => {
+  requireAdmin(c);
+  return c.json({ items: await adminRepo.listBotmAdmin(c.get("db")) });
+});
+
+adminRoutes.get("/admin/botm/:id", async (c) => {
+  requireAdmin(c);
+  const botm = await adminRepo.getBotm(c.get("db"), c.req.param("id"));
+  if (!botm) throw errors.notFound("No Book of the Month entry with that id.");
+  return c.json(botm);
+});
+
+adminRoutes.get("/admin/pick-clubs", async (c) => {
+  requireAdmin(c);
+  return c.json({ items: await adminRepo.listPickClubsAdmin(c.get("db")) });
+});
+
+// listPicksAdmin returns the newest 200; filter by club_id to see one club's history.
+adminRoutes.get("/admin/picks", async (c) => {
+  requireAdmin(c);
+  const { club_id } = parseQuery(c, z.object({ club_id: z.string().min(1).max(100).optional() }));
+  return c.json({ items: await adminRepo.listPicksAdmin(c.get("db"), club_id) });
+});
+
+adminRoutes.get("/admin/audit-log", async (c) => {
+  requireAdmin(c);
+  const query = parseQuery(c, pageQuery.omit({ q: true }));
+  return c.json(
+    await page(query, (limit, offset) => adminRepo.listAuditLog(c.get("db"), limit, offset)),
+  );
+});
 
 // ---- Users --------------------------------------------------------------------
 

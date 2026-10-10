@@ -107,12 +107,13 @@ export async function writeAuditLog(db: Db, entry: AuditEntry): Promise<void> {
 
 export type AuditRow = typeof adminAuditLog.$inferSelect;
 
-export async function listAuditLog(db: Db, limit = 50): Promise<AuditRow[]> {
+export async function listAuditLog(db: Db, limit = 50, offset = 0): Promise<AuditRow[]> {
   return db
     .select()
     .from(adminAuditLog)
     .orderBy(desc(adminAuditLog.performedAt))
-    .limit(Math.min(limit, 200));
+    .limit(Math.min(limit, 200))
+    .offset(offset);
 }
 
 // ---- Users --------------------------------------------------------------------
@@ -151,6 +152,20 @@ export async function listUsers(
     .limit(limit)
     .offset(opts.offset ?? 0);
   return rows;
+}
+
+/** The account behind an operator call's named actor (api operator bearer). Only the
+ *  id and email: whether it may act is decided from its profile, per request. */
+export async function getOperatorActor(
+  db: Db,
+  id: string,
+): Promise<{ id: string; email: string } | null> {
+  const [row] = await db
+    .select({ id: user.id, email: user.email })
+    .from(user)
+    .where(eq(user.id, id))
+    .limit(1);
+  return row ?? null;
 }
 
 export async function getUserDetail(db: Db, id: string) {

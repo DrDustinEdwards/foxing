@@ -25,6 +25,9 @@ export type Bindings = {
   AUTH_RL: RateLimit;
   WRITE_RL: RateLimit;
   COMPANION_RL: RateLimit;
+  // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
+  // every bearer request to /admin/* is refused (operator.ts).
+  ADMIN_OPERATOR_TOKEN?: string;
 };
 
 export type SessionUser = { id: string; email: string };
@@ -33,6 +36,8 @@ export type Variables = {
   requestId: string;
   db: Db;
   session: SessionUser | null;
+  // True when the session was resolved from the operator bearer, not a cookie.
+  viaOperator: boolean;
   profile: Profile | null;
   streamCompanion: CompanionCaller;
   billing: { client: BillingClient; prices: BillingPriceConfig };
