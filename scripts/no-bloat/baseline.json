@@ -9,7 +9,7 @@
       "unlisted": 0,
       "unresolved": 0,
       "binaries": 0,
-      "exports": 33,
+      "exports": 34,
       "types": 23,
       "nsExports": 0,
       "nsTypes": 0,
@@ -23,7 +23,7 @@
     "sources": 509,
     "lines": 98691,
     "clones": 438,
-    "percentage": 5.5
+    "percentage": 5.6844
   },
   "pageWeight": {
     "commit": "dc1368f",
@@ -45,7 +45,7 @@
         "css": 10296
       },
       "routes/marketing": {
-        "js": 122543,
+        "js": 142543,
         "css": 10296
       },
       "routes/search": {
