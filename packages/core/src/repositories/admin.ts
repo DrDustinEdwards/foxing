@@ -189,22 +189,76 @@ export async function getUserActivityStats(db: Db, id: string): Promise<UserActi
   return { booksFinished, highlights, clubsJoined, diaryEntries: diary };
 }
 
-export async function setUserSuspended(db: Db, id: string, suspended: boolean): Promise<void> {
-  await db
+/** The role and permission state an admin change previews and then guards on. */
+export type UserRoleState = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  isAdmin: boolean;
+  isSuspended: boolean;
+  tier: string;
+};
+
+export async function getUserRoleState(db: Db, id: string): Promise<UserRoleState | null> {
+  const [row] = await db
+    .select({
+      id: profiles.id,
+      username: profiles.username,
+      displayName: profiles.displayName,
+      isAdmin: profiles.isAdmin,
+      isSuspended: profiles.isSuspended,
+      tier: profiles.subscriptionTier,
+    })
+    .from(profiles)
+    .where(eq(profiles.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+// The three role setters write only while the row still holds `from`, the value the
+// admin saw in the preview, and return whether a row changed. Counted with RETURNING,
+// not meta.changes, which triggers can inflate.
+
+export async function setUserSuspended(
+  db: Db,
+  id: string,
+  suspended: boolean,
+  from: boolean,
+): Promise<boolean> {
+  const rows = await db
     .update(profiles)
     .set({ isSuspended: suspended, updatedAt: new Date() })
-    .where(eq(profiles.id, id));
+    .where(and(eq(profiles.id, id), eq(profiles.isSuspended, from)))
+    .returning({ id: profiles.id });
+  return rows.length > 0;
 }
 
-export async function setUserTier(db: Db, id: string, tier: "free" | "plus"): Promise<void> {
-  await db
+export async function setUserTier(
+  db: Db,
+  id: string,
+  tier: "free" | "plus",
+  from: string,
+): Promise<boolean> {
+  const rows = await db
     .update(profiles)
     .set({ subscriptionTier: tier, updatedAt: new Date() })
-    .where(eq(profiles.id, id));
+    .where(and(eq(profiles.id, id), eq(profiles.subscriptionTier, from)))
+    .returning({ id: profiles.id });
+  return rows.length > 0;
 }
 
-export async function setUserAdmin(db: Db, id: string, isAdmin: boolean): Promise<void> {
-  await db.update(profiles).set({ isAdmin, updatedAt: new Date() }).where(eq(profiles.id, id));
+export async function setUserAdmin(
+  db: Db,
+  id: string,
+  isAdmin: boolean,
+  from: boolean,
+): Promise<boolean> {
+  const rows = await db
+    .update(profiles)
+    .set({ isAdmin, updatedAt: new Date() })
+    .where(and(eq(profiles.id, id), eq(profiles.isAdmin, from)))
+    .returning({ id: profiles.id });
+  return rows.length > 0;
 }
 
 /** Send one notification to a single user (admin-directed). */

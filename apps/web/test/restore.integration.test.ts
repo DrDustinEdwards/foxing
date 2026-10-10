@@ -97,28 +97,8 @@ describe("admin user-detail operator mutations", () => {
     await seedUser("reader", { tier: "free" });
   });
 
-  it("changes a user's tier and audits it", async () => {
-    const res = await call("/admin/users/reader/tier", "admin", {
-      method: "POST",
-      body: JSON.stringify({ tier: "plus" }),
-    });
-    expect(res.status).toBe(200);
-    const db = createDb(env.DB);
-    const [row] = await db
-      .select({ tier: schema.profiles.subscriptionTier })
-      .from(schema.profiles)
-      .where(eq(schema.profiles.id, "reader"));
-    expect(row?.tier).toBe("plus");
-    const audit = await db.select().from(schema.adminAuditLog);
-    expect(audit.some((a) => a.action === "user.tier")).toBe(true);
-  });
-
-  it("grants and revokes admin, but blocks self-demotion", async () => {
-    const grant = await call("/admin/users/reader/admin", "admin", {
-      method: "POST",
-      body: JSON.stringify({ on: true }),
-    });
-    expect(grant.status).toBe(200);
+  // Tier and admin changes are preview then perform, covered in admin.integration.test.ts.
+  it("blocks self-demotion", async () => {
     const self = await call("/admin/users/admin/admin", "admin", {
       method: "POST",
       body: JSON.stringify({ on: false }),
