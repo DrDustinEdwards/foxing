@@ -1,0 +1,70 @@
+{
+  // Copy to wrangler.jsonc (gitignored) and fill in the ids. Foxing Admin, its own Worker.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "foxing-admin-mcp",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+
+  // global_fetch_strictly_public: the OAuth provider fetches a Client ID
+  // Metadata Document (CIMD) from the client's URL. At this compatibility date
+  // nodejs_compat is on by default, which the MCP SDK needs.
+  "compatibility_flags": ["global_fetch_strictly_public"],
+
+  "observability": { "enabled": true },
+
+  // ADDRESS. Until the cutover this Worker answers only on workers.dev, so it
+  // can be verified while admin-mcp.foxing.app still serves the Vercel server.
+  // At cutover (a step for Dustin, listed in the PR): add
+  //   "routes": [{ "pattern": "admin-mcp.foxing.app", "custom_domain": true }]
+  // set "workers_dev": false, and change PUBLIC_ORIGIN to https://admin-mcp.foxing.app.
+  "workers_dev": true,
+
+  // Non-secret.
+  // PUBLIC_ORIGIN: this server's own origin; every access token is bound to
+  //   PUBLIC_ORIGIN + /mcp (RFC 8707). Unset serves nothing.
+  // SITE_ORIGIN: the URL the foxing Worker sees over the FOXING binding.
+  // ADMIN_GITHUB_LOGIN: the one GitHub account let in. Prefer the NUMERIC id: a
+  //   login can be renamed and claimed by someone else, an id cannot.
+  // FOXING_ADMIN_ID: the Foxing user id the admin API acts as. The API re-reads
+  //   that account's is_admin and suspension on every call.
+  // DCR_REDIRECT_URIS: the exact allowlist for dynamically registered clients
+  //   (rule 13), comma separated. Empty refuses every registration.
+  "vars": {
+    "PUBLIC_ORIGIN": "https://foxing-admin-mcp.YOUR_SUBDOMAIN.workers.dev",
+    "SITE_ORIGIN": "https://foxing.app",
+    "ADMIN_GITHUB_LOGIN": "YOUR_NUMERIC_GITHUB_ID",
+    "FOXING_ADMIN_ID": "YOUR_FOXING_USER_ID",
+    "DCR_REDIRECT_URIS": "https://vertexaisearch.cloud.google.com/oauth-redirect"
+  },
+
+  // THE ONLY ROUTE TO FOXING: a service binding to the foxing Worker. Still HTTP,
+  // still the operator bearer, still the admin API's checks and rate limit.
+  "services": [{ "binding": "FOXING", "service": "foxing" }],
+
+  // BINDINGS ARE AN ALLOWLIST (test/wrapper.test.ts derives it from this block).
+  // No D1, no R2, no Stripe key, no binding of any kind that reaches Foxing's
+  // data: the only path is HTTP to /api/v1/admin over FOXING.
+  "kv_namespaces": [
+    {
+      // Token and grant storage for the OAuth provider. Its own namespace.
+      "binding": "OAUTH_KV",
+      "id": "YOUR_OAUTH_KV_ID"
+    }
+  ],
+
+  "durable_objects": {
+    "bindings": [
+      // The rate limiter: synchronous SQLite, src/rate-limit.ts.
+      { "name": "MCP_RATE_LIMIT", "class_name": "McpRateLimit" },
+      // The append-only tool-call log, rule 12.4, src/audit-log.ts.
+      { "name": "TOOL_CALL_LOG", "class_name": "ToolCallLog" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["McpRateLimit", "ToolCallLog"] }]
+
+  // Secrets, set with `npx wrangler secret put`, never committed:
+  //   ADMIN_OPERATOR_TOKEN  the API leg. Same value as the foxing Worker's
+  //                         ADMIN_OPERATOR_TOKEN. At least 32 characters.
+  //   GITHUB_CLIENT_ID      the GitHub OAuth App used for sign-in.
+  //   GITHUB_CLIENT_SECRET  ditto.
+}

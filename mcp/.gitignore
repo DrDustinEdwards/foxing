@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.wrangler/
+wrangler.jsonc
+worker-configuration.d.ts
+*.tsbuildinfo
+.dev.vars

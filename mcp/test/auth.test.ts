@@ -1,0 +1,68 @@
+import assert from "node:assert/strict";
+import { describe, test } from "node:test";
+
+import { authorizeCall, callerName, isAdminUser } from "../src/auth.ts";
+import { allowedRedirects, registrationRefusal } from "../src/registration.ts";
+
+const props = { id: 1001, login: "drdustinedwards", name: null };
+
+describe("isAdminUser", () => {
+  test("matches the numeric id exactly, or the login case-insensitively", () => {
+    assert.equal(isAdminUser({ ADMIN_GITHUB_LOGIN: "1001" }, props), true);
+    assert.equal(isAdminUser({ ADMIN_GITHUB_LOGIN: "1002" }, props), false);
+    assert.equal(isAdminUser({ ADMIN_GITHUB_LOGIN: "DrDustinEdwards" }, props), true);
+  });
+
+  test("an unset administrator admits nobody", () => {
+    assert.equal(isAdminUser({}, props), false);
+    assert.equal(isAdminUser({ ADMIN_GITHUB_LOGIN: "  " }, props), false);
+  });
+});
+
+describe("authorizeCall", () => {
+  const env = { ADMIN_GITHUB_LOGIN: "1001" };
+
+  test("the administrator with the scope passes", () => {
+    assert.equal(authorizeCall(env, { kind: "admin", props, scopes: ["foxing.read"] }, "foxing.read"), null);
+  });
+
+  test("a read-only grant is refused a write, naming how to fix it", () => {
+    const why = authorizeCall(env, { kind: "admin", props, scopes: ["foxing.read"] }, "foxing.write");
+    assert.match(why ?? "", /read access only/);
+  });
+
+  test("an unset administrator refuses even a grant that once passed", () => {
+    const why = authorizeCall({}, { kind: "admin", props, scopes: ["foxing.read"] }, "foxing.read");
+    assert.match(why ?? "", /does not belong/);
+  });
+
+  test("no caller is refused", () => {
+    assert.match(authorizeCall(env, undefined, "foxing.read") ?? "", /no caller identity/);
+  });
+
+  test("the audit name never carries a credential", () => {
+    assert.equal(callerName({ kind: "admin", props, scopes: [] }), "github:drdustinedwards");
+  });
+});
+
+describe("registrationRefusal (tightened DCR, rule 13)", () => {
+  const allowed = "https://a.example/cb, https://b.example/cb";
+
+  test("an empty allowlist refuses every registration", () => {
+    assert.match(registrationRefusal("", { redirect_uris: ["https://a.example/cb"] }) ?? "", /closed/);
+    assert.deepEqual(allowedRedirects(undefined), []);
+  });
+
+  test("every redirect URI must be listed exactly", () => {
+    assert.equal(registrationRefusal(allowed, { redirect_uris: ["https://a.example/cb"] }), null);
+    assert.match(
+      registrationRefusal(allowed, { redirect_uris: ["https://a.example/cb", "https://a.example/cb2"] }) ?? "",
+      /not allowlisted/,
+    );
+    assert.match(registrationRefusal(allowed, { redirect_uris: ["https://a.example/"] }) ?? "", /not allowlisted/);
+  });
+
+  test("a registration with no redirect URI is refused", () => {
+    assert.match(registrationRefusal(allowed, {}) ?? "", /at least one/);
+  });
+});
