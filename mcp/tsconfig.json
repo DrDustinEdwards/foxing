@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "composite": true,
     "isolatedModules": true,
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true
   },
   "include": ["src/**/*.ts", "worker-configuration.d.ts"]
 }

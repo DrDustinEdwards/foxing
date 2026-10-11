@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "typecheck": "wrangler types && tsc -b",
-    "test": "node --experimental-transform-types --import ./test/resolve-ts.mjs --test \"test/**/*.test.ts\"",
+    "test": "node --import ./test/resolve-ts.mjs --test \"test/**/*.test.ts\"",
     "build": "wrangler deploy --dry-run --outdir=dist"
   },
   "dependencies": {

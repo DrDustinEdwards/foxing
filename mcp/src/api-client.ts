@@ -43,12 +43,14 @@ export interface ApiCallResult {
 }
 
 export class ApiLegError extends Error {
-  constructor(
-    message: string,
-    readonly kind: "unconfigured" | "unreachable" | "malformed",
-  ) {
+  readonly kind: "unconfigured" | "unreachable" | "malformed";
+
+  // A plain field, not a parameter property: Node runs these files by stripping
+  // types only, which cannot erase a parameter property.
+  constructor(message: string, kind: ApiLegError["kind"]) {
     super(message);
     this.name = "ApiLegError";
+    this.kind = kind;
   }
 }
 
