@@ -269,6 +269,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@dustinedwards/d1-dump':
+        specifier: github:DrDustinEdwards/d1-dump#v0.4.1
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced
       '@dustinedwards/site-api':
         specifier: github:DrDustinEdwards/site-api#v0.2.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2
@@ -1228,6 +1231,11 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced':
+    resolution: {gitHosted: true, integrity: sha512-oUO0gnsKwFVZV7t4KuWq6bRQL6KmG4Ojjimo0AKpEHfhvygBkK3Aq1FYgaXiYPvqiru47+AQkOgpnEr/Wwb/ag==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced}
+    version: 0.4.1
+    engines: {node: '>=24.14.1'}
+    hasBin: true
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
     resolution: {gitHosted: true, integrity: sha512-u+6wfPLoscWrsFBpq5w/iRyTaD9zHm37B+RlRZuU8v1Xi0QQqjNJwzfFiqJked+bK5ANEuMHw1BcJ2vuNNQOhg==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2}
     version: 0.2.0
@@ -8054,6 +8062,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced': {}
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
     dependencies:
       diff: 9.0.0

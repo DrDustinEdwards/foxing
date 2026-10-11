@@ -14,6 +14,7 @@ import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { ClubRoom } from "./club-room";
+import { runBackup } from "../app/lib/backup.server";
 
 // Public catalog surfaces are anonymous and safe to cache at the edge. Segment
 // prefixes match the path or any child (/books, /books/x), not lookalikes (/booksy).
@@ -289,6 +290,9 @@ type CacheJobMessage = { bookId: string };
 const PUSH_SWEEP_CRON = "*/5 * * * *";
 const PUSH_SWEEP_LOOKBACK_MS = 10 * 60 * 1000;
 
+// Nightly D1 backup into R2 (app/lib/backup.server.ts). Must match wrangler.jsonc triggers.
+const BACKUP_CRON = "17 3 * * *";
+
 async function runPushSweep(env: Env): Promise<void> {
   const db = createDb(env.DB);
   const kv = env.APP_KV;
@@ -307,6 +311,19 @@ async function scheduled(
   env: Env,
   ctx: ExecutionContext,
 ): Promise<void> {
+  // Nightly cron: dump D1 to the BACKUPS bucket. Awaited, not handed to waitUntil, so a
+  // failed dump fails this invocation (Cron Events shows it) after the log line below, and
+  // /health's backup age grows toward its 26 hour warning. Never swallowed.
+  if (event.cron === BACKUP_CRON) {
+    try {
+      await runBackup(env);
+    } catch (err) {
+      console.error(JSON.stringify({ event: "backup_failed", error: String(err) }));
+      throw err;
+    }
+    return;
+  }
+
   // Frequent cron: deliver queued push notifications.
   if (event.cron === PUSH_SWEEP_CRON) {
     ctx.waitUntil(runPushSweep(env));

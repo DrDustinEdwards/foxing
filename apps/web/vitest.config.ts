@@ -22,6 +22,8 @@ export default defineConfig(async () => {
           compatibilityFlags: ["nodejs_compat"],
           d1Databases: ["DB"],
           kvNamespaces: ["APP_KV"],
+          // The nightly backup's bucket (app/lib/backup.server.ts), empty and local.
+          r2Buckets: ["BACKUPS"],
           bindings: { TEST_MIGRATIONS: migrations },
         },
       }),

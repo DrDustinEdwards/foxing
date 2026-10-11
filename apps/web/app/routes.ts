@@ -102,4 +102,7 @@ export default [
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
   route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),
+
+  // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).
+  route("health", "routes/health.ts"),
 ] satisfies RouteConfig;

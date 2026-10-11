@@ -19,7 +19,12 @@
   ],
   "kv_namespaces": [{ "binding": "APP_KV", "id": "<KV_NAMESPACE_ID>" }],
   // Reader assets (exploded RWPM) and all media live in the foxing-epubs R2 bucket.
-  "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "foxing-epubs" }],
+  // Nightly D1 dumps (app/lib/backup.server.ts) go to their own private bucket, never to a
+  // bucket served on a public domain.
+  "r2_buckets": [
+    { "binding": "MEDIA", "bucket_name": "foxing-epubs" },
+    { "binding": "BACKUPS", "bucket_name": "foxing-backups" }
+  ],
   // Phase 5 live layer: one ClubRoom Durable Object per club (fan-out only, never writes
   // D1). See workers/club-room.ts.
   "durable_objects": {
@@ -42,7 +47,8 @@
     "producers": [{ "queue": "foxing-companion-cache", "binding": "COMPANION_CACHE_QUEUE" }],
     "consumers": [{ "queue": "foxing-companion-cache", "max_batch_size": 5, "max_retries": 3 }]
   },
-  "triggers": { "crons": ["0 8 * * *", "*/5 * * * *"] },
+  // 0 8: companion cache. */5: push sweep. 17 3: nightly D1 backup (workers/app.ts).
+  "triggers": { "crons": ["0 8 * * *", "*/5 * * * *", "17 3 * * *"] },
   "vars": {
     "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",
     "EMAIL_FROM": "hello@foxing.app",
