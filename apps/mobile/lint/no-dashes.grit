@@ -1,0 +1,15 @@
+// Em dash and en dash ban for mobile copy (Foxing voice guidelines).
+// Flags string literals, template literal text, JSX text and JSX attribute
+// strings that contain U+2014 or U+2013. Comments are not checked.
+// Runs through `biome lint` in apps/mobile (see biome.json there).
+language js
+
+or {
+  JsStringLiteralExpression(),
+  JsTemplateChunkElement(),
+  JsxText(),
+  JsxString()
+} as $s where {
+  $s <: r".*[\x{2013}\x{2014}].*",
+  register_diagnostic(span=$s, message="Em dash and en dash not allowed. Use a comma, period, colon, or a plain hyphen for ranges.")
+}

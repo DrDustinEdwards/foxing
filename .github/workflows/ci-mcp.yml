@@ -1,0 +1,40 @@
+name: CI (admin MCP)
+
+# The Foxing Admin MCP Worker in mcp/: its own package and lockfile, so its own job.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "mcp/**"
+      - ".github/workflows/ci-mcp.yml"
+  pull_request:
+    paths:
+      - "mcp/**"
+      - ".github/workflows/ci-mcp.yml"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+      - run: npm ci
+      # wrangler.jsonc is gitignored; typegen and the dry-run build need one.
+      - name: Stage wrangler config
+        run: cp wrangler.jsonc.example wrangler.jsonc
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Tests
+        run: npm test
+      # Typecheck is not a build: the dry run bundles, so a runtime dependency
+      # missing from package.json fails here.
+      - name: Build (dry run, no deploy)
+        run: npm run build

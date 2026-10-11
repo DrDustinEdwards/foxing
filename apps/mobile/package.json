@@ -9,7 +9,8 @@
     "web": "expo start --web",
     "build": "pnpm dlx eas-cli@18.12.3 build",
     "update": "pnpm dlx eas-cli@18.12.3 update",
-    "postinstall": "node scripts/patch-readium.mjs"
+    "postinstall": "node scripts/patch-readium.mjs",
+    "lint": "biome lint ."
   },
   "dependencies": {
     "@epubjs-react-native/core": "^1.4.7",

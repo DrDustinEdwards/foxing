@@ -1,7 +1,8 @@
 // Admin: User detail. Full profile for one reader plus operator controls: suspend,
 // change tier, grant/revoke admin, send a notification, and delete the account. Reads
 // run in-process via adminRepo; every write goes to /api/v1/admin/users/:id/* with an
-// audit-log entry and a visible pending + role=alert error.
+// audit-log entry and a visible pending + role=alert error. Suspend, tier and admin
+// open a confirmation showing the server's preview before anything changes.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { Link, useNavigate, useRevalidator } from "react-router";
@@ -12,6 +13,7 @@ import {
   adminInputClass,
   useAdminAction,
 } from "~/components/admin/admin-form";
+import { useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-user-detail";
@@ -61,7 +63,7 @@ function StatTile({ label, value }: { label: string; value: number }) {
 export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
   const { user, stats } = loaderData;
   const revalidator = useRevalidator();
-  const { pending, error, run } = useAdminAction({ onDone: () => revalidator.revalidate() });
+  const suspend = useRoleChange({ onDone: () => revalidator.revalidate() });
   const genres = user.favoriteGenres?.length ? user.favoriteGenres.join(", ") : "None set";
 
   return (
@@ -78,12 +80,12 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
         action={
           <AdminButton
             variant={user.isSuspended ? "default" : "danger"}
-            pending={pending}
+            pending={suspend.pending}
             onClick={() =>
-              run(
+              suspend.request(
                 `/users/${user.id}/suspend`,
-                { body: { suspended: !user.isSuspended } },
-                "Could not update",
+                { suspended: !user.isSuspended },
+                user.isSuspended ? "Unsuspend" : "Suspend",
               )
             }
           >
@@ -108,7 +110,8 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
           </Field>
           <Field label="Joined">{fmtDate.format(user.createdAt)}</Field>
         </div>
-        <AdminError error={error} />
+        <AdminError error={suspend.error} />
+        {suspend.dialog}
       </AdminCard>
 
       <div className="mt-6">
@@ -148,6 +151,8 @@ function OperatorControls({
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   const { pending, error, run } = useAdminAction({ onDone: () => revalidator.revalidate() });
+  const tier = useRoleChange({ onDone: () => revalidator.revalidate() });
+  const admin = useRoleChange({ onDone: () => revalidator.revalidate() });
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [notifySent, setNotifySent] = useState(false);
@@ -175,27 +180,36 @@ function OperatorControls({
   return (
     <AdminCard title="Operator controls">
       <div className="space-y-6">
-        <div className="flex flex-wrap gap-3">
-          <AdminButton
-            pending={pending}
-            onClick={() =>
-              run(
-                `/users/${userId}/tier`,
-                { body: { tier: isPlus ? "free" : "plus" } },
-                "Could not update",
-              )
-            }
-          >
-            {isPlus ? "Downgrade to Free" : "Upgrade to Plus"}
-          </AdminButton>
-          <AdminButton
-            pending={pending}
-            onClick={() =>
-              run(`/users/${userId}/admin`, { body: { on: !isAdmin } }, "Could not update")
-            }
-          >
-            {isAdmin ? "Revoke admin" : "Grant admin"}
-          </AdminButton>
+        <div>
+          <div className="flex flex-wrap gap-3">
+            <AdminButton
+              pending={tier.pending}
+              onClick={() =>
+                tier.request(
+                  `/users/${userId}/tier`,
+                  { tier: isPlus ? "free" : "plus" },
+                  isPlus ? "Downgrade to Free" : "Upgrade to Plus",
+                )
+              }
+            >
+              {isPlus ? "Downgrade to Free" : "Upgrade to Plus"}
+            </AdminButton>
+            <AdminButton
+              pending={admin.pending}
+              onClick={() =>
+                admin.request(
+                  `/users/${userId}/admin`,
+                  { on: !isAdmin },
+                  isAdmin ? "Revoke admin" : "Grant admin",
+                )
+              }
+            >
+              {isAdmin ? "Revoke admin" : "Grant admin"}
+            </AdminButton>
+          </div>
+          <AdminError error={tier.error ?? admin.error} />
+          {tier.dialog}
+          {admin.dialog}
         </div>
 
         <div className="space-y-2 border-t border-border-subtle pt-5">

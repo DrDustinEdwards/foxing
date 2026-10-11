@@ -1,15 +1,12 @@
 // Admin: Users. Search by username/display name and suspend/unsuspend accounts.
-// Read-only list in-process via adminRepo; the suspend toggle writes to
-// /api/v1/admin/users/:id/suspend with a visible error on failure.
+// Read-only list in-process via adminRepo; the suspend toggle opens a confirmation with
+// the server's preview, then writes to /api/v1/admin/users/:id/suspend with the token,
+// with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { Link, useRevalidator } from "react-router";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import {
-  AdminButton,
-  AdminError,
-  adminInputClass,
-  useAdminAction,
-} from "~/components/admin/admin-form";
+import { AdminButton, AdminError, adminInputClass } from "~/components/admin/admin-form";
+import { useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-users";
@@ -82,7 +79,7 @@ function UserRow({
   user: Route.ComponentProps["loaderData"]["users"][number];
   onDone: () => void;
 }) {
-  const { pending, error, run } = useAdminAction({ onDone });
+  const suspend = useRoleChange({ onDone });
 
   return (
     <li className="py-3">
@@ -110,12 +107,12 @@ function UserRow({
         <div className="flex shrink-0 gap-2">
           <AdminButton
             variant={user.isSuspended ? "default" : "danger"}
-            pending={pending}
+            pending={suspend.pending}
             onClick={() =>
-              run(
+              suspend.request(
                 `/users/${user.id}/suspend`,
-                { body: { suspended: !user.isSuspended } },
-                "Could not update",
+                { suspended: !user.isSuspended },
+                user.isSuspended ? "Unsuspend" : "Suspend",
               )
             }
           >
@@ -129,7 +126,8 @@ function UserRow({
           </Link>
         </div>
       </div>
-      <AdminError error={error} />
+      <AdminError error={suspend.error} />
+      {suspend.dialog}
     </li>
   );
 }

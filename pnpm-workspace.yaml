@@ -12,6 +12,7 @@ overrides:
 blockExoticSubdeps: false
 allowBuilds:
   '@dustinedwards/d1-dump': true
+  '@dustinedwards/site-api': true
   '@sentry/cli': true
   dtrace-provider: true
   esbuild: true

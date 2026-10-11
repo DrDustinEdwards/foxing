@@ -272,6 +272,9 @@ importers:
       '@dustinedwards/d1-dump':
         specifier: github:DrDustinEdwards/d1-dump#v0.4.1
         version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced
+      '@dustinedwards/site-api':
+        specifier: github:DrDustinEdwards/site-api#v0.2.0
+        version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -1233,6 +1236,10 @@ packages:
     version: 0.4.1
     engines: {node: '>=24.14.1'}
     hasBin: true
+  '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
+    resolution: {gitHosted: true, integrity: sha512-u+6wfPLoscWrsFBpq5w/iRyTaD9zHm37B+RlRZuU8v1Xi0QQqjNJwzfFiqJked+bK5ANEuMHw1BcJ2vuNNQOhg==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2}
+    version: 0.2.0
+    engines: {node: '>=24.14.1'}
 
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
@@ -4322,6 +4329,10 @@ packages:
   didyoumean@1.2.2:
     resolution: {integrity: sha512-gxtyfqMg7GKyhQmb056K7M3xszy/myH8w+B4RT+QXBQsvAOdc3XymqDDPHx1BgPgsdAA5SIifona89YtRATDzw==}
 
+  diff@9.0.0:
+    resolution: {integrity: sha512-svtcdpS8CgJyqAjEQIXdb3OjhFVVYjzGAPO8WGCmRbrml64SPw/jJD4GoE98aR7r25A0XcgrK3F02yw9R/vhQw==}
+    engines: {node: '>=0.3.1'}
+
   dlv@1.1.3:
     resolution: {integrity: sha512-+HlytyjlPKnIG8XuRG8WvmBP8xs8P71y+SKKS6ZXWoEgLuePxtDoUEiH7WkdePWrQ5JBpE6aoVqfZfJUQkjXwA==}
 
@@ -6510,7 +6521,7 @@ packages:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
   thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
+    resolution: {gitHosted: true, integrity: sha512-IvrDqCQTJ11Sb5L4ZQZDEaiWPlttFTZK56rZJp1LolxccBFK3WOK4GfyOpg+Z0IIPl7fBsaxdoRaVUNafHCi/g==, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
     version: 1.0.0
 
   throat@5.0.0:
@@ -7010,6 +7021,9 @@ packages:
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
   zxing-wasm@3.0.3:
     resolution: {integrity: sha512-DdOn/G5F+qvZELWeO5ZFFwcN611TfMybxPV0LUUoutUmiH2t47MZSB7gLV9O9YLhvudBdnzQNAoFOu4Xz8eOrQ==}
@@ -8049,6 +8063,10 @@ snapshots:
   '@drizzle-team/brocli@0.10.2': {}
 
   '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced': {}
+  '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
+    dependencies:
+      diff: 9.0.0
+      zod: 4.6.5
 
   '@egjs/hammerjs@2.0.17':
     dependencies:
@@ -10736,6 +10754,8 @@ snapshots:
   detect-node-es@1.1.0: {}
 
   didyoumean@1.2.2: {}
+
+  diff@9.0.0: {}
 
   dlv@1.1.3: {}
 
@@ -13479,6 +13499,8 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.4.3: {}
+
+  zod@4.6.5: {}
 
   zxing-wasm@3.0.3(@types/emscripten@1.41.5):
     dependencies:

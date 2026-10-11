@@ -107,12 +107,13 @@ export async function writeAuditLog(db: Db, entry: AuditEntry): Promise<void> {
 
 export type AuditRow = typeof adminAuditLog.$inferSelect;
 
-export async function listAuditLog(db: Db, limit = 50): Promise<AuditRow[]> {
+export async function listAuditLog(db: Db, limit = 50, offset = 0): Promise<AuditRow[]> {
   return db
     .select()
     .from(adminAuditLog)
     .orderBy(desc(adminAuditLog.performedAt))
-    .limit(Math.min(limit, 200));
+    .limit(Math.min(limit, 200))
+    .offset(offset);
 }
 
 // ---- Users --------------------------------------------------------------------
@@ -153,6 +154,20 @@ export async function listUsers(
   return rows;
 }
 
+/** The account behind an operator call's named actor (api operator bearer). Only the
+ *  id and email: whether it may act is decided from its profile, per request. */
+export async function getOperatorActor(
+  db: Db,
+  id: string,
+): Promise<{ id: string; email: string } | null> {
+  const [row] = await db
+    .select({ id: user.id, email: user.email })
+    .from(user)
+    .where(eq(user.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
 export async function getUserDetail(db: Db, id: string) {
   const [row] = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
   if (!row) return null;
@@ -189,22 +204,76 @@ export async function getUserActivityStats(db: Db, id: string): Promise<UserActi
   return { booksFinished, highlights, clubsJoined, diaryEntries: diary };
 }
 
-export async function setUserSuspended(db: Db, id: string, suspended: boolean): Promise<void> {
-  await db
+/** The role and permission state an admin change previews and then guards on. */
+export type UserRoleState = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  isAdmin: boolean;
+  isSuspended: boolean;
+  tier: string;
+};
+
+export async function getUserRoleState(db: Db, id: string): Promise<UserRoleState | null> {
+  const [row] = await db
+    .select({
+      id: profiles.id,
+      username: profiles.username,
+      displayName: profiles.displayName,
+      isAdmin: profiles.isAdmin,
+      isSuspended: profiles.isSuspended,
+      tier: profiles.subscriptionTier,
+    })
+    .from(profiles)
+    .where(eq(profiles.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+// The three role setters write only while the row still holds `from`, the value the
+// admin saw in the preview, and return whether a row changed. Counted with RETURNING,
+// not meta.changes, which triggers can inflate.
+
+export async function setUserSuspended(
+  db: Db,
+  id: string,
+  suspended: boolean,
+  from: boolean,
+): Promise<boolean> {
+  const rows = await db
     .update(profiles)
     .set({ isSuspended: suspended, updatedAt: new Date() })
-    .where(eq(profiles.id, id));
+    .where(and(eq(profiles.id, id), eq(profiles.isSuspended, from)))
+    .returning({ id: profiles.id });
+  return rows.length > 0;
 }
 
-export async function setUserTier(db: Db, id: string, tier: "free" | "plus"): Promise<void> {
-  await db
+export async function setUserTier(
+  db: Db,
+  id: string,
+  tier: "free" | "plus",
+  from: string,
+): Promise<boolean> {
+  const rows = await db
     .update(profiles)
     .set({ subscriptionTier: tier, updatedAt: new Date() })
-    .where(eq(profiles.id, id));
+    .where(and(eq(profiles.id, id), eq(profiles.subscriptionTier, from)))
+    .returning({ id: profiles.id });
+  return rows.length > 0;
 }
 
-export async function setUserAdmin(db: Db, id: string, isAdmin: boolean): Promise<void> {
-  await db.update(profiles).set({ isAdmin, updatedAt: new Date() }).where(eq(profiles.id, id));
+export async function setUserAdmin(
+  db: Db,
+  id: string,
+  isAdmin: boolean,
+  from: boolean,
+): Promise<boolean> {
+  const rows = await db
+    .update(profiles)
+    .set({ isAdmin, updatedAt: new Date() })
+    .where(and(eq(profiles.id, id), eq(profiles.isAdmin, from)))
+    .returning({ id: profiles.id });
+  return rows.length > 0;
 }
 
 /** Send one notification to a single user (admin-directed). */
@@ -444,7 +513,26 @@ export async function deleteClubAdmin(db: Db, id: string): Promise<void> {
 
 // ---- Journal ------------------------------------------------------------------
 
-export async function listJournalAdmin(db: Db) {
+export type JournalAdminQuery = {
+  limit?: number;
+  offset?: number;
+  /** Published or not; omitted lists both. */
+  published?: boolean;
+  /** Matches title or slug, case-insensitively. */
+  q?: string;
+};
+
+export async function listJournalAdmin(db: Db, query: JournalAdminQuery = {}) {
+  const where: SQL[] = [];
+  if (query.published !== undefined) where.push(eq(journalPosts.isPublished, query.published));
+  if (query.q) {
+    const pattern = `%${query.q.toLowerCase()}%`;
+    const match = or(
+      like(sql`lower(${journalPosts.title})`, pattern),
+      like(journalPosts.slug, pattern),
+    );
+    if (match) where.push(match);
+  }
   return db
     .select({
       id: journalPosts.id,
@@ -457,8 +545,10 @@ export async function listJournalAdmin(db: Db) {
       tags: journalPosts.tags,
     })
     .from(journalPosts)
-    .orderBy(desc(journalPosts.updatedAt))
-    .limit(200);
+    .where(where.length ? and(...where) : undefined)
+    .orderBy(desc(journalPosts.updatedAt), desc(journalPosts.id))
+    .limit(query.limit ?? 200)
+    .offset(query.offset ?? 0);
 }
 
 export async function getJournalById(db: Db, id: string) {
@@ -483,10 +573,29 @@ export type JournalInput = {
   isPublished?: boolean;
 };
 
+/** Optimistic concurrency for a journal write: the write lands only while updated_at still holds this. */
+export type JournalWriteGuard = { expectedUpdatedAt?: Date };
+
+/**
+ * The updated_at a write stamps: now, but always past the stored one, so two writes in the same
+ * millisecond still leave different versions and a stale expectedUpdatedAt can never match again.
+ */
+function nextUpdatedAt(stored: Date | null | undefined): Date {
+  const now = Date.now();
+  return new Date(stored ? Math.max(now, stored.getTime() + 1) : now);
+}
+
+function journalRow(id: string, guard: JournalWriteGuard): SQL {
+  const byId = eq(journalPosts.id, id);
+  if (!guard.expectedUpdatedAt) return byId;
+  return and(byId, eq(journalPosts.updatedAt, guard.expectedUpdatedAt)) as SQL;
+}
+
+/** authorId is null for a post created outside a user session (the Carrel site API). */
 export async function createJournalPost(
   db: Db,
   input: JournalInput,
-  authorId: string,
+  authorId: string | null,
 ): Promise<string> {
   const published = input.isPublished ?? false;
   const [row] = await db
@@ -508,41 +617,93 @@ export async function createJournalPost(
   return row.id;
 }
 
+/**
+ * Saves a journal post, snapshotting the text it replaces into journal_post_versions first.
+ * savedBy is null for a save made outside a user session (the Carrel site API). Returns false,
+ * having written nothing, when the post does not exist or the guard's updated_at is stale.
+ */
 export async function updateJournalPost(
   db: Db,
   id: string,
   input: Partial<JournalInput>,
-  savedBy: string,
-): Promise<void> {
-  // Snapshot the current version before overwriting, mirroring the legacy version history.
+  savedBy: string | null,
+  guard: JournalWriteGuard = {},
+): Promise<boolean> {
   const current = await getJournalById(db, id);
-  if (current) {
-    await db.insert(journalPostVersions).values({
+  if (!current) return false;
+  if (
+    guard.expectedUpdatedAt &&
+    current.updatedAt.getTime() !== guard.expectedUpdatedAt.getTime()
+  ) {
+    return false;
+  }
+  // Snapshot the current version before overwriting, mirroring the legacy version history.
+  const [snapshot] = await db
+    .insert(journalPostVersions)
+    .values({
       postId: id,
       title: current.title,
       content: current.content,
       excerpt: current.excerpt,
       savedAt: new Date(),
       savedBy,
-    });
-  }
-  await db
+    })
+    .returning({ id: journalPostVersions.id });
+  const updated = await db
     .update(journalPosts)
-    .set({ ...input, updatedAt: new Date() })
-    .where(eq(journalPosts.id, id));
+    .set({ ...input, updatedAt: nextUpdatedAt(current.updatedAt) })
+    .where(journalRow(id, guard))
+    .returning({ id: journalPosts.id });
+  if (updated.length === 0) {
+    // Another write landed between the read and this one: the snapshot describes nothing.
+    await db.delete(journalPostVersions).where(eq(journalPostVersions.id, snapshot.id));
+    return false;
+  }
+  return true;
 }
 
-export async function setJournalPublished(db: Db, id: string, on: boolean): Promise<void> {
+/**
+ * Publishes or unpublishes a journal post. Returns false, having written nothing, when the post
+ * does not exist or the guard's updated_at is stale.
+ */
+export async function setJournalPublished(
+  db: Db,
+  id: string,
+  on: boolean,
+  guard: JournalWriteGuard = {},
+): Promise<boolean> {
   const current = await getJournalById(db, id);
-  await db
+  if (!current) return false;
+  const updated = await db
     .update(journalPosts)
     .set({
       isPublished: on,
       // First publish stamps published_at; unpublishing keeps the original stamp.
-      publishedAt: on && !current?.publishedAt ? new Date() : (current?.publishedAt ?? null),
-      updatedAt: new Date(),
+      publishedAt: on && !current.publishedAt ? new Date() : (current.publishedAt ?? null),
+      updatedAt: nextUpdatedAt(current.updatedAt),
     })
-    .where(eq(journalPosts.id, id));
+    .where(journalRow(id, guard))
+    .returning({ id: journalPosts.id });
+  return updated.length > 0;
+}
+
+/** The text a post held before each save, newest first. */
+export async function listJournalVersions(db: Db, postId: string, limit = 50) {
+  return db
+    .select()
+    .from(journalPostVersions)
+    .where(eq(journalPostVersions.postId, postId))
+    .orderBy(desc(journalPostVersions.savedAt), desc(journalPostVersions.id))
+    .limit(limit);
+}
+
+export async function getJournalVersion(db: Db, postId: string, versionId: string) {
+  const [row] = await db
+    .select()
+    .from(journalPostVersions)
+    .where(and(eq(journalPostVersions.postId, postId), eq(journalPostVersions.id, versionId)))
+    .limit(1);
+  return row ?? null;
 }
 
 // ---- Broadcast notifications --------------------------------------------------

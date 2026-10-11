@@ -16,6 +16,7 @@ Foxing is a reading app and web platform ("Letterboxd for books") at foxing.app.
     packages/api/   @foxing/api: Hono routes (the /api/v1 surface)
     packages/types/ @foxing/types: shared interfaces
     packages/utils/ @foxing/utils: shared helpers
+    mcp/            Foxing Admin MCP: own Worker, npm package
 
 Web stack: Workers, D1, R2, KV, React Router 8 framework mode. A pnpm and turborepo monorepo (`workspace:*` dependencies): use pnpm at the root; npm fails on the workspace protocol. Node 24.
 

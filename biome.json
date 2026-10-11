@@ -10,7 +10,8 @@
       "!**/.react-router/**",
       "!**/worker-configuration.d.ts",
       "!**/*.gen.ts",
-      "!apps/web/app/app.css"
+      "!apps/web/app/app.css",
+      "!!apps/mobile"
     ]
   },
   "formatter": {
@@ -21,9 +22,23 @@
   },
   "linter": {
     "enabled": true,
-    "rules": { "recommended": true }
+    "rules": { "recommended": true },
+    "domains": { "types": "recommended" }
   },
   "assist": {
     "actions": { "source": { "organizeImports": "off" } }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "packages/core/src/**",
+        "packages/api/src/**",
+        "apps/web/workers/**",
+        "apps/web/app/**/*.server.ts"
+      ],
+      "linter": {
+        "rules": { "nursery": { "noFloatingPromises": "error" } }
+      }
+    }
+  ]
 }

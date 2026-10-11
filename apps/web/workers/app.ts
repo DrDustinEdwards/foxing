@@ -1,4 +1,5 @@
 // Single Worker entry. Hono is the root fetch handler and delegates:
+//   /api/carrel/v1/* -> Carrel's site API over the Journal (app/lib/carrel)
 //   /api/auth/*  -> Better Auth
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
@@ -9,7 +10,8 @@ import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext } from "../app/context";
 import { edgeCache } from "../app/lib/cache.server";
-import { getAuth } from "../app/lib/auth.server";
+import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
+import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { ClubRoom } from "./club-room";
 import { runBackup } from "../app/lib/backup.server";
@@ -59,11 +61,7 @@ const reactRouterHandler = createRequestHandler(
 );
 
 const api = createApi({
-  resolveSession: async (req, env) => {
-    const session = await getAuth(env as unknown as Env).api.getSession({ headers: req.headers });
-    if (!session?.user) return null;
-    return { id: session.user.id, email: session.user.email };
-  },
+  resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
   // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
   // other route works normally; only an actual companion call fails, cleanly, until
   // `wrangler secret put ANTHROPIC_API_KEY` runs.
@@ -120,6 +118,10 @@ const api = createApi({
 });
 
 const app = new Hono<{ Bindings: Env }>();
+
+// Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
+// every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
+mountCarrel(app, reactRouterHandler);
 
 // The wired AUTH_RL class (5/min/IP). Applied to credential submissions below.
 const authLimiter = rateLimit("auth");
