@@ -8,7 +8,7 @@
 import type { ApiEnv } from "./api-client";
 import type { AuditEnv } from "./audit-log";
 import { isAdminUser, SCOPE_READ, type Props } from "./auth";
-import type { GitHubEnv } from "./github-handler";
+import type { LoginEnv } from "./login-handler";
 import { handleMcp, MCP_ROUTE } from "./mcp-handler";
 import { checkRateLimit, type RateLimitEnv } from "./rate-limit";
 
@@ -16,7 +16,7 @@ export interface Env
   extends Partial<ApiEnv>,
     Partial<RateLimitEnv>,
     Partial<AuditEnv>,
-    Omit<GitHubEnv, "OAUTH_PROVIDER"> {
+    Omit<LoginEnv, "OAUTH_PROVIDER"> {
   OAUTH_KV: KVNamespace;
   /** The one public origin. Every access token is bound to its /mcp (RFC 8707). */
   PUBLIC_ORIGIN?: string;
@@ -59,7 +59,7 @@ export const apiHandler = {
         403,
       );
     }
-    const limit = await checkRateLimit(env, `admin:${props.id}`);
+    const limit = await checkRateLimit(env, `admin:${props.email.toLowerCase()}`);
     if (!limit.allowed) {
       return refuse(
         "Rate limited. This server allows 30 requests per 60 seconds. The Foxing admin API applies its own limit as well.",

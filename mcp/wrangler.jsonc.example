@@ -23,8 +23,9 @@
   // PUBLIC_ORIGIN: this server's own origin; every access token is bound to
   //   PUBLIC_ORIGIN + /mcp (RFC 8707). Unset serves nothing.
   // SITE_ORIGIN: the URL the foxing Worker sees over the FOXING binding.
-  // ADMIN_GITHUB_LOGIN: the one GitHub account let in. Prefer the NUMERIC id: a
-  //   login can be renamed and claimed by someone else, an id cannot.
+  // ACCESS_TEAM_DOMAIN: the Cloudflare Access team, https://<team>.cloudflareaccess.com,
+  //   the same team Capsid and Carrel sign in through.
+  // ADMIN_EMAIL: the one email let in, as Access verifies it at sign-in.
   // FOXING_ADMIN_ID: the Foxing user id the admin API acts as. The API re-reads
   //   that account's is_admin and suspension on every call.
   // DCR_REDIRECT_URIS: the exact allowlist for dynamically registered clients
@@ -32,7 +33,8 @@
   "vars": {
     "PUBLIC_ORIGIN": "https://foxing-admin-mcp.YOUR_SUBDOMAIN.workers.dev",
     "SITE_ORIGIN": "https://foxing.app",
-    "ADMIN_GITHUB_LOGIN": "YOUR_NUMERIC_GITHUB_ID",
+    "ACCESS_TEAM_DOMAIN": "https://YOUR_TEAM.cloudflareaccess.com",
+    "ADMIN_EMAIL": "admin@example.com",
     "FOXING_ADMIN_ID": "YOUR_FOXING_USER_ID",
     "DCR_REDIRECT_URIS": "https://vertexaisearch.cloud.google.com/oauth-redirect"
   },
@@ -65,6 +67,7 @@
   // Secrets, set with `npx wrangler secret put`, never committed:
   //   ADMIN_OPERATOR_TOKEN  the API leg. Same value as the foxing Worker's
   //                         ADMIN_OPERATOR_TOKEN. At least 32 characters.
-  //   GITHUB_CLIENT_ID      the GitHub OAuth App used for sign-in.
-  //   GITHUB_CLIENT_SECRET  ditto.
+  //   ACCESS_SAAS_CLIENT_ID      the Access for SaaS (OIDC) app used for sign-in,
+  //                              with redirect URL PUBLIC_ORIGIN + /callback.
+  //   ACCESS_SAAS_CLIENT_SECRET  ditto.
 }

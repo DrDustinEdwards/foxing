@@ -83,7 +83,7 @@ describe("the security floor (rule 12)", () => {
   test("PLANT 12.4: an allowed call is logged before and after", async () => {
     await call("foxing_get_health");
     assert.deepEqual(log.rows.map((r) => r.phase), ["started", "finished"]);
-    assert.equal(log.rows[0].caller, "github:drdustinedwards");
+    assert.equal(log.rows[0].caller, "access:admin@example.com");
   });
 
   test("PLANT 12.4: when the log cannot be written, no request is sent", async () => {
