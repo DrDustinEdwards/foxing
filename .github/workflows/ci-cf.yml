@@ -127,6 +127,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm --filter web exec playwright test
+      # Print the same error contexts into the log, which a session can read when the
+      # artifact's storage host is out of its reach.
+      - name: Print e2e error context
+        if: failure()
+        working-directory: apps/web
+        run: find test-results -name error-context.md -print -exec cat {} \; || true
       # Keep each failing test's error context (the page's accessibility snapshot at the
       # failure), so a failure against the live site can be read from the run. Only those
       # files: a trace records the e2e accounts' session cookies.

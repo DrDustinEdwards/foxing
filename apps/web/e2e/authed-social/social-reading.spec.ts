@@ -19,6 +19,9 @@ const TOC_ENTRY = 2;
 // A paragraph of real prose rather than a heading, a byline or a one-line title.
 const MIN_WORDS = 8;
 
+// Where a reader taps a passage: on its first line, a little in from the left.
+const TAP = { x: 40, y: 8 };
+
 // Readium renders each resource into a blob-URL iframe. Wait until one holds real prose.
 async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
   await expect
@@ -39,57 +42,23 @@ async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
     .toBeGreaterThan(minChars);
 }
 
-// The content frame the reader is showing. Readium keeps a pool of resource frames
-// (prev/current/next) and hides all but the current one, the same rule the reader's own
-// visibleFrame() uses, so the first blob frame in DOM order is often not the page shown.
-async function shownContentFrame(page: Page): Promise<Frame | null> {
-  for (const handle of await page.locator("iframe").elementHandles()) {
-    const shown = await handle.evaluate(
-      (el) =>
-        (el as HTMLElement).style.visibility !== "hidden" &&
-        (el as HTMLElement).style.opacity !== "0",
-    );
-    if (!shown) continue;
-    const frame = await handle.contentFrame();
-    if (frame?.url().startsWith("blob:")) return frame;
-  }
-  return null;
-}
-
 // Find a paragraph lying wholly on the page the reader is showing: the first one of real
-// prose, or the one whose text is `text`. Readium paginates with CSS columns, so a
-// paragraph on another page sits outside the frame's viewport. Turns pages with the
-// visible Next page control until one is found.
+// prose, or the one whose text is `text`. Readium keeps a pool of resource frames
+// (prev/current/next) and paginates each with CSS columns, so a paragraph can sit in a
+// frame that is not the one shown, or on another page of the shown frame. A paragraph
+// counts only when the main page hit-tests its centre and its tap point to its own
+// iframe, the same check a real click makes. Turns pages with the visible Next page
+// control until one is found, looking a few times per page since a turn lands its frame
+// with a short fade.
 async function findParagraph(
   page: Page,
   text?: string,
 ): Promise<{ frame: Frame; index: number; text: string }> {
   for (let turn = 0; turn < 8; turn++) {
-    const frame = await shownContentFrame(page);
-    if (frame) {
-      const hit = await frame
-        .evaluate(
-          ({ minWords, want }) => {
-            const ps = Array.from(document.querySelectorAll("p"));
-            const index = ps.findIndex((p) => {
-              const body = (p.textContent ?? "").replace(/\s+/g, " ").trim();
-              if (want ? body !== want : body.split(" ").length < minWords) return false;
-              const r = p.getBoundingClientRect();
-              return (
-                r.width > 0 &&
-                r.left >= 0 &&
-                r.top >= 0 &&
-                r.right <= window.innerWidth &&
-                r.bottom <= window.innerHeight
-              );
-            });
-            if (index < 0) return null;
-            return { index, text: (ps[index].textContent ?? "").replace(/\s+/g, " ").trim() };
-          },
-          { minWords: MIN_WORDS, want: text },
-        )
-        .catch(() => null);
-      if (hit) return { frame, ...hit };
+    for (let look = 0; look < 3; look++) {
+      const hit = await paragraphOnTop(page, text);
+      if (hit) return hit;
+      await page.waitForTimeout(500);
     }
     await page.getByRole("button", { name: "Next page" }).click();
     await waitForRenderedText(page);
@@ -99,6 +68,56 @@ async function findParagraph(
       ? `the shared passage never showed on this reader's page: "${text.slice(0, 60)}"`
       : "no paragraph of prose on the reader's first pages",
   );
+}
+
+async function paragraphOnTop(
+  page: Page,
+  text?: string,
+): Promise<{ frame: Frame; index: number; text: string } | null> {
+  for (const handle of await page.locator("iframe").elementHandles()) {
+    const frame = await handle.contentFrame();
+    if (!frame?.url().startsWith("blob:")) continue;
+    const candidates = await frame
+      .evaluate(
+        ({ minWords, want, tap }) => {
+          const found: { index: number; text: string; points: [number, number][] }[] = [];
+          Array.from(document.querySelectorAll("p")).forEach((p, index) => {
+            const body = (p.textContent ?? "").replace(/\s+/g, " ").trim();
+            if (want ? body !== want : body.split(" ").length < minWords) return;
+            const r = p.getBoundingClientRect();
+            const inside =
+              r.width > 0 &&
+              r.left >= 0 &&
+              r.top >= 0 &&
+              r.right <= window.innerWidth &&
+              r.bottom <= window.innerHeight;
+            if (!inside) return;
+            const points: [number, number][] = [
+              [r.left + r.width / 2, r.top + r.height / 2],
+              [r.left + tap.x, r.top + tap.y],
+            ];
+            if (points.every(([x, y]) => p.contains(document.elementFromPoint(x, y)))) {
+              found.push({ index, text: body, points });
+            }
+          });
+          return found;
+        },
+        { minWords: MIN_WORDS, want: text, tap: TAP },
+      )
+      .catch(() => []);
+    for (const c of candidates) {
+      const onTop = await handle.evaluate((node, points) => {
+        const el = node as HTMLElement;
+        const r = el.getBoundingClientRect();
+        const scale = r.width / (el.offsetWidth || r.width || 1);
+        return points.every(
+          ([x, y]) => document.elementFromPoint(r.left + x * scale, r.top + y * scale) === el,
+        );
+      }, c.points);
+      if (onTop) return { frame, index: c.index, text: c.text };
+    }
+  }
+  return null;
 }
 
 // Open the book and jump to the shared chapter through the visible Contents list.
@@ -122,10 +141,7 @@ async function openReader(browser: Browser, storageState: string): Promise<Page>
 // are drawn with the CSS Custom Highlight API (no DOM element to click), and the reader
 // resolves a tap inside a highlighted range to that annotation.
 async function tapParagraph(frame: Frame, index: number): Promise<void> {
-  await frame
-    .locator("p")
-    .nth(index)
-    .click({ position: { x: 40, y: 8 } });
+  await frame.locator("p").nth(index).click({ position: TAP });
 }
 
 test.describe("social reading: three-account gate", () => {

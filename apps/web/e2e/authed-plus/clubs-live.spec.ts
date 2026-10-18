@@ -32,6 +32,8 @@ test.describe("clubs live layer (signed in, plus)", () => {
     page,
     browser,
   }) => {
+    // Two contexts against the live site, each waiting on its socket: past the default 30s.
+    test.setTimeout(90_000);
     const suffix = Date.now().toString(36);
 
     // --- Context A: create a club -----------------------------------------
