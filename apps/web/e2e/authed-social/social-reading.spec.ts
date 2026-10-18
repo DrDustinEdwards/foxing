@@ -106,9 +106,10 @@ async function paragraphOnTop(
       )
       .catch(() => []);
     for (const c of candidates) {
-      const onTop = await handle.evaluate((el, points) => {
+      const onTop = await handle.evaluate((node, points) => {
+        const el = node as HTMLElement;
         const r = el.getBoundingClientRect();
-        const scale = r.width / ((el as HTMLElement).offsetWidth || r.width || 1);
+        const scale = r.width / (el.offsetWidth || r.width || 1);
         return points.every(
           ([x, y]) => document.elementFromPoint(r.left + x * scale, r.top + y * scale) === el,
         );
