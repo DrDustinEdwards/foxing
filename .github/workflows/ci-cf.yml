@@ -118,4 +118,8 @@ jobs:
           # account it provisions per run, same mechanism as scripts/seed-e2e-user.mjs.
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: pnpm --filter web exec playwright test
+        # Only the projects whose accounts exist in CI. The club and social-reading
+        # projects (authed-plus, authed-social) need the E2E_PLUS_* and E2E_B_*/E2E_C_*
+        # accounts (scripts/seed-e2e-plus-user.mjs, seed-e2e-social.mjs); add them here
+        # with those secrets once the accounts are seeded.
+        run: pnpm --filter web exec playwright test --project=public --project=authed
