@@ -270,8 +270,8 @@ importers:
   apps/web:
     dependencies:
       '@dustinedwards/d1-dump':
-        specifier: github:DrDustinEdwards/d1-dump#v0.4.1
-        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced
+        specifier: github:DrDustinEdwards/d1-dump#v0.4.2
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f
       '@dustinedwards/site-api':
         specifier: github:DrDustinEdwards/site-api#v0.2.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2
@@ -1231,11 +1231,12 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced':
-    resolution: {gitHosted: true, integrity: sha512-oUO0gnsKwFVZV7t4KuWq6bRQL6KmG4Ojjimo0AKpEHfhvygBkK3Aq1FYgaXiYPvqiru47+AQkOgpnEr/Wwb/ag==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced}
-    version: 0.4.1
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f':
+    resolution: {gitHosted: true, integrity: sha512-DqPp3KrTWxZRqyTzuXW/MM1cdLoWTlIkfwq57LiA6e/LMhlTDmPlQMdhrlm/nbFD5bJFSYTlJwNAcOemZX+P2A==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f}
+    version: 0.4.2
     engines: {node: '>=24.14.1'}
     hasBin: true
+
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
     resolution: {gitHosted: true, integrity: sha512-u+6wfPLoscWrsFBpq5w/iRyTaD9zHm37B+RlRZuU8v1Xi0QQqjNJwzfFiqJked+bK5ANEuMHw1BcJ2vuNNQOhg==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2}
     version: 0.2.0
@@ -6521,7 +6522,7 @@ packages:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
   thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
-    resolution: {gitHosted: true, integrity: sha512-IvrDqCQTJ11Sb5L4ZQZDEaiWPlttFTZK56rZJp1LolxccBFK3WOK4GfyOpg+Z0IIPl7fBsaxdoRaVUNafHCi/g==, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
     version: 1.0.0
 
   throat@5.0.0:
@@ -8062,7 +8063,8 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/71f5e9d0ed44291340db07c9cd8961c88469eced': {}
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f': {}
+
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
     dependencies:
       diff: 9.0.0
@@ -9541,9 +9543,7 @@ snapshots:
       metro-runtime: 0.84.4
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.85.3': {}
 
