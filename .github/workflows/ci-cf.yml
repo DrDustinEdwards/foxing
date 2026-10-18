@@ -113,6 +113,14 @@ jobs:
           PLAYWRIGHT_BASE_URL: ${{ vars.BETTER_AUTH_URL }}
           E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
           E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          # The Plus account (club specs) and accounts B and C (social-reading gate),
+          # seeded once via apps/web/scripts/seed-e2e-plus-user.mjs and seed-e2e-social.mjs.
+          E2E_PLUS_EMAIL: ${{ secrets.E2E_PLUS_EMAIL }}
+          E2E_PLUS_PASSWORD: ${{ secrets.E2E_PLUS_PASSWORD }}
+          E2E_B_EMAIL: ${{ secrets.E2E_B_EMAIL }}
+          E2E_B_PASSWORD: ${{ secrets.E2E_B_PASSWORD }}
+          E2E_C_EMAIL: ${{ secrets.E2E_C_EMAIL }}
+          E2E_C_PASSWORD: ${{ secrets.E2E_C_PASSWORD }}
           # The ephemeral-account onboarding spec (e2e/onboarding-flow.spec.ts) shells
           # out to `wrangler d1 execute --remote` to flip email_verified on the fresh
           # account it provisions per run, same mechanism as scripts/seed-e2e-user.mjs.
