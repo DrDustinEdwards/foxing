@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { type Page, type WebSocket, expect, test } from "@playwright/test";
 
 // THE DURABLE OBJECT GATE. A Plus user creates a club, starts a thread, posts, and runs
 // a poll -- then a SECOND browser context on the same club proves the live layer: a post
@@ -7,6 +7,26 @@ import { expect, test } from "@playwright/test";
 //
 // Uses the plus storageState for both contexts (same account, two connections). That is
 // enough to prove cross-connection fan-out; presence dedupes to one user by design.
+
+// Navigate, then wait until the page's club socket is live. A page renders from the
+// server before it hydrates and opens its socket, so a write made in that window commits
+// before this page is listening and never reaches it. The ClubRoom sends a presence frame
+// to every socket it accepts, so the first frame received means the room has this page.
+async function gotoLive(page: Page, url: string): Promise<void> {
+  let live = false;
+  const onSocket = (ws: WebSocket) => {
+    if (new URL(ws.url()).pathname.endsWith("/live")) {
+      ws.once("framereceived", () => {
+        live = true;
+      });
+    }
+  };
+  page.on("websocket", onSocket);
+  await page.goto(url);
+  await expect.poll(() => live, { message: "the club live socket never opened" }).toBe(true);
+  page.off("websocket", onSocket);
+}
+
 test.describe("clubs live layer (signed in, plus)", () => {
   test("live posts and live poll tallies fan out across two contexts", async ({
     page,
@@ -32,10 +52,10 @@ test.describe("clubs live layer (signed in, plus)", () => {
     // --- Context B: second connection to the same thread ------------------
     const ctxB = await browser.newContext({ storageState: "e2e/.auth/plus.json" });
     const pageB = await ctxB.newPage();
-    await pageB.goto(threadUrl);
+    await gotoLive(pageB, threadUrl);
     await expect(pageB.getByRole("heading", { name: /opening chapter/i })).toBeVisible();
 
-    // A posts; B should see it arrive live (no manual reload).
+    // A posts; B, already listening, should see it arrive live (no manual reload).
     const postText = `live-post-${suffix}`;
     await page.getByLabel("Add a reply").fill(postText);
     await page.getByRole("button", { name: /^post reply$/i }).click();
@@ -52,7 +72,7 @@ test.describe("clubs live layer (signed in, plus)", () => {
     await page.getByRole("button", { name: /^create poll$/i }).click();
     await expect(page.getByRole("button", { name: /Middlemarch/ })).toBeVisible();
 
-    await pageB.goto(clubUrl);
+    await gotoLive(pageB, clubUrl);
     await expect(pageB.getByRole("button", { name: /Middlemarch/ })).toBeVisible();
 
     // A votes; B's tally for that option should update live to 1.

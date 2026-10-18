@@ -25,9 +25,13 @@ async function handleFromMe(page: Page): Promise<string> {
 async function logReview(page: Page, reviewText: string, visibility: string) {
   await page.goto("/diary/new");
   await page.getByLabel(/find the book to log/i).fill("the");
-  // The suggestion list renders result buttons; click the first real one.
-  const firstResult = page.getByRole("button").filter({ hasText: /\w/ }).first();
-  await firstResult.click();
+  // Pick the first suggestion from the picker's own result list (the page header has
+  // buttons of its own, so "the first button on the page" is never a suggestion).
+  await page
+    .getByRole("list", { name: /matching books/i })
+    .getByRole("button")
+    .first()
+    .click();
   await expect(page.getByText(/^Logging/)).toBeVisible();
 
   await page.getByLabel(/^Review$/i).fill(reviewText);
@@ -41,6 +45,8 @@ test.describe("social feed visibility (two real users)", () => {
     page,
     browser,
   }) => {
+    // Two signed-in users, three diary entries and five profile visits.
+    test.setTimeout(90_000);
     const stamp = Date.now().toString(36);
     const publicReview = `public review ${stamp}`;
     const friendsReview = `friends review ${stamp}`;
@@ -54,8 +60,24 @@ test.describe("social feed visibility (two real users)", () => {
     const aUsername = await handleFromMe(pageA); // free follower
     expect(aUsername).not.toBe(bUsername);
 
-    // A follows B from B's profile.
+    // Both accounts persist across runs, so start from the state this gate assumes: A
+    // does not follow B yet, and A is not B's close friend. Undo either through the same
+    // visible toggles if an earlier run left it set.
+    await page.goto(`/u/${aUsername}`);
+    const closeFriend = page.getByRole("button", { name: /^(add close friend|close friend)$/i });
+    if ((await closeFriend.innerText()).trim().toLowerCase() === "close friend") {
+      await closeFriend.click();
+    }
+    await expect(page.getByRole("button", { name: /^add close friend$/i })).toBeVisible();
+
     await pageA.goto(`/u/${bUsername}`);
+    const follow = pageA.getByRole("button", { name: /^(follow|following)$/i });
+    if ((await follow.innerText()).trim().toLowerCase() === "following") {
+      await follow.click();
+      await expect(pageA.getByRole("button", { name: /^follow$/i })).toBeVisible();
+    }
+
+    // A follows B from B's profile.
     await pageA.getByRole("button", { name: /^follow$/i }).click();
     await expect(pageA.getByRole("button", { name: /^following$/i })).toBeVisible();
 

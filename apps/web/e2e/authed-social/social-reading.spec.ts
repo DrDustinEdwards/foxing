@@ -1,4 +1,4 @@
-import { type Browser, type Page, expect, test } from "@playwright/test";
+import { type Browser, type Frame, type Page, expect, test } from "@playwright/test";
 
 // THE THREE-ACCOUNT GATE for the social reading moat. Three real browser sessions, each
 // signed in through the visible login form (no minted tokens, no header sessions):
@@ -11,6 +11,13 @@ import { type Browser, type Page, expect, test } from "@playwright/test";
 // scripts/seed-e2e-social.mjs; every interaction UNDER TEST here is a real click/type on
 // a visible control, per the e2e rule.
 const SLUG = process.env.E2E_BOOK_SLUG ?? "said-the-fisherman-pickthall";
+
+// The Contents entry all three readers open, so each lands on the same page of the same
+// chapter (same device profile, default settings) and can find A's passage there.
+const TOC_ENTRY = 2;
+
+// A paragraph of real prose rather than a heading, a byline or a one-line title.
+const MIN_WORDS = 8;
 
 // Readium renders each resource into a blob-URL iframe. Wait until one holds real prose.
 async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
@@ -32,61 +39,141 @@ async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
     .toBeGreaterThan(minChars);
 }
 
-// Select a paragraph in the visible content frame by triple-clicking it. This is a real
-// user gesture (not a synthetic Selection): it fires the reader's textSelected, which
-// opens the SelectionToolbar.
-async function selectAParagraph(page: Page): Promise<void> {
-  const frame = page.frames().find((f) => f.url().startsWith("blob:"));
-  if (!frame) throw new Error("no content frame");
-  const p = frame.locator("p", { hasText: /\w{40,}/ }).first();
-  await p.scrollIntoViewIfNeeded();
-  await p.click({ clickCount: 3 });
+// The content frame the reader is showing. Readium keeps a pool of resource frames
+// (prev/current/next) and hides all but the current one, the same rule the reader's own
+// visibleFrame() uses, so the first blob frame in DOM order is often not the page shown.
+async function shownContentFrame(page: Page): Promise<Frame | null> {
+  for (const handle of await page.locator("iframe").elementHandles()) {
+    const shown = await handle.evaluate(
+      (el) =>
+        (el as HTMLElement).style.visibility !== "hidden" &&
+        (el as HTMLElement).style.opacity !== "0",
+    );
+    if (!shown) continue;
+    const frame = await handle.contentFrame();
+    if (frame?.url().startsWith("blob:")) return frame;
+  }
+  return null;
 }
 
+// Find a paragraph lying wholly on the page the reader is showing: the first one of real
+// prose, or the one whose text is `text`. Readium paginates with CSS columns, so a
+// paragraph on another page sits outside the frame's viewport. Turns pages with the
+// visible Next page control until one is found.
+async function findParagraph(
+  page: Page,
+  text?: string,
+): Promise<{ frame: Frame; index: number; text: string }> {
+  for (let turn = 0; turn < 8; turn++) {
+    const frame = await shownContentFrame(page);
+    if (frame) {
+      const hit = await frame
+        .evaluate(
+          ({ minWords, want }) => {
+            const ps = Array.from(document.querySelectorAll("p"));
+            const index = ps.findIndex((p) => {
+              const body = (p.textContent ?? "").replace(/\s+/g, " ").trim();
+              if (want ? body !== want : body.split(" ").length < minWords) return false;
+              const r = p.getBoundingClientRect();
+              return (
+                r.width > 0 &&
+                r.left >= 0 &&
+                r.top >= 0 &&
+                r.right <= window.innerWidth &&
+                r.bottom <= window.innerHeight
+              );
+            });
+            if (index < 0) return null;
+            return { index, text: (ps[index].textContent ?? "").replace(/\s+/g, " ").trim() };
+          },
+          { minWords: MIN_WORDS, want: text },
+        )
+        .catch(() => null);
+      if (hit) return { frame, ...hit };
+    }
+    await page.getByRole("button", { name: "Next page" }).click();
+    await waitForRenderedText(page);
+  }
+  throw new Error(
+    text
+      ? `the shared passage never showed on this reader's page: "${text.slice(0, 60)}"`
+      : "no paragraph of prose on the reader's first pages",
+  );
+}
+
+// Open the book and jump to the shared chapter through the visible Contents list.
 async function openReader(browser: Browser, storageState: string): Promise<Page> {
   const ctx = await browser.newContext({ storageState });
   const page = await ctx.newPage();
   await page.goto(`/read/${SLUG}`);
   await waitForRenderedText(page);
+  await expect(page.getByRole("status")).toHaveCount(0);
+  await page.getByRole("button", { name: "Contents" }).click();
+  const toc = page.getByRole("navigation", { name: /table of contents/i });
+  await expect(toc).toBeVisible();
+  const entries = toc.getByRole("button");
+  await entries.nth(Math.min(TOC_ENTRY, (await entries.count()) - 1)).click();
+  await expect(toc).toHaveCount(0);
+  await waitForRenderedText(page);
   return page;
+}
+
+// Tap a passage the way a reader does: a single click on its first line. Decorations
+// are drawn with the CSS Custom Highlight API (no DOM element to click), and the reader
+// resolves a tap inside a highlighted range to that annotation.
+async function tapParagraph(frame: Frame, index: number): Promise<void> {
+  await frame
+    .locator("p")
+    .nth(index)
+    .click({ position: { x: 40, y: 8 } });
 }
 
 test.describe("social reading: three-account gate", () => {
   test("A shares to club, B sees + replies, C never sees it", async ({ browser }) => {
+    // Three signed-in readers, each opening a book and paging to a chapter.
+    test.setTimeout(150_000);
+
     // --- A: share a highlight to the club via the visible control -------------
     const a = await openReader(browser, "e2e/.auth/plus.json");
-    await selectAParagraph(a);
+    const passage = await findParagraph(a);
+    // A triple-click is a real user gesture (not a synthetic Selection): it fires the
+    // reader's textSelected, which opens the SelectionToolbar.
+    await passage.frame.locator("p").nth(passage.index).click({ clickCount: 3 });
     const toolbar = a.getByRole("toolbar", { name: /highlight selection/i });
     await expect(toolbar).toBeVisible();
     // The "Share to club" toggle only renders when this book is a current read of one of
     // your active clubs -- the seed guarantees it for A.
-    await a.getByRole("button", { name: /share to club/i }).click();
+    await toolbar.getByRole("button", { name: /share to club/i }).click();
     // Any color commits the highlight; with the toggle on it is saved club-visible.
     await toolbar
       .getByRole("button", { name: /highlight:/i })
       .first()
       .click();
-    // The write surfaces through the visible saving/idle indicator, never swallowed.
+    // The write surfaces through the visible saving indicator, never swallowed: wait for
+    // it to settle, then confirm no error took its place.
+    await expect(toolbar).toHaveCount(0);
+    await expect(a.getByText(/^Saving/)).toHaveCount(0);
     await expect(a.getByText(/could not/i)).toHaveCount(0);
 
     // --- B: enable the club layer, see A attributed, reply --------------------
     const b = await openReader(browser, "e2e/.auth/social-b.json");
-    await b.getByRole("button", { name: /^my clubs$/i }).click();
-    // A's shared passage renders as an other-reader decoration; tapping it opens the
-    // attribution popover. Poll a reload in case the layer needs the fresh resolution.
+    // The chip's name carries the count of club annotations after the label.
+    await b.getByRole("button", { name: /^my clubs/i }).click();
+    const bPassage = await findParagraph(b, passage.text);
+    // Tapping A's shared passage opens the attribution popover. Poll the tap, since the
+    // layer draws once the toggle's redraw lands.
     const attribution = b.getByRole("dialog", { name: /annotation by/i });
     await expect
       .poll(
         async () => {
-          const frame = b.frames().find((f) => f.url().startsWith("blob:"));
-          const mark = frame?.locator("[data-readium-decoration], mark, u").first();
-          if (mark && (await mark.count())) await mark.click().catch(() => {});
-          return attribution.isVisible().catch(() => false);
+          if (!(await attribution.isVisible())) {
+            await tapParagraph(bPassage.frame, bPassage.index).catch(() => {});
+          }
+          return attribution.isVisible();
         },
         { timeout: 20_000, intervals: [1000, 2000] },
       )
       .toBe(true);
-    await expect(attribution).toBeVisible();
 
     // Reply via the visible composer in the popover.
     const replyText = `reply-${Date.now().toString(36)}`;
@@ -96,13 +183,14 @@ test.describe("social reading: three-account gate", () => {
 
     // --- C: never sees A's club highlight, in ANY layer (the hard gate) -------
     const c = await openReader(browser, "e2e/.auth/social-c.json");
+    // A non-member has no club annotations at all: the chip carries no count.
+    await expect(c.getByRole("button", { name: "My clubs", exact: true })).toBeVisible();
     // Turn on every social layer C can: a non-member must still see nothing of the club.
-    await c.getByRole("button", { name: /^my clubs$/i }).click();
-    await c.getByRole("button", { name: /^everyone$/i }).click();
-    // No attribution popover can ever open for C: there is no other-reader decoration.
-    const cFrame = c.frames().find((f) => f.url().startsWith("blob:"));
-    const cMarks = cFrame?.locator("[data-readium-decoration]");
-    if (cMarks) expect(await cMarks.count()).toBe(0);
+    await c.getByRole("button", { name: /^my clubs/i }).click();
+    await c.getByRole("button", { name: /^everyone/i }).click();
+    // Tapping the very passage A shared opens no attribution popover for C.
+    const cPassage = await findParagraph(c, passage.text);
+    await tapParagraph(cPassage.frame, cPassage.index);
     await expect(c.getByRole("dialog", { name: /annotation by/i })).toHaveCount(0);
     // And C cannot see B's reply text anywhere on the page.
     await expect(c.getByText(replyText)).toHaveCount(0);

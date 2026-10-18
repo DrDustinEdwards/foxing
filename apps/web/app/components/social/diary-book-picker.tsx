@@ -46,7 +46,7 @@ export function DiaryBookPicker() {
         />
       </label>
       {results.length > 0 ? (
-        <ul className="mt-2 flex flex-col gap-1">
+        <ul aria-label="Matching books" className="mt-2 flex flex-col gap-1">
           {results.map((b) => (
             <li key={b.slug}>
               <button
