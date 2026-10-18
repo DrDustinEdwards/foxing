@@ -127,3 +127,13 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: pnpm --filter web exec playwright test
+      # Keep each failing test's error context (the page's accessibility snapshot at the
+      # failure), so a failure against the live site can be read from the run. Only those
+      # files: a trace records the e2e accounts' session cookies.
+      - name: Upload e2e error context
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: e2e-test-results
+          path: apps/web/test-results/**/error-context.md
+          retention-days: 7
