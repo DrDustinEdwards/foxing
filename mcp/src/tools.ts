@@ -38,7 +38,7 @@ import {
   type Scope,
 } from "./auth";
 
-export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & { ADMIN_GITHUB_LOGIN?: string };
+export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & { ADMIN_EMAIL?: string };
 
 /** The MCP content shape a tool returns. */
 export type ToolOutput = {

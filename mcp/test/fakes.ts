@@ -7,7 +7,7 @@ import type { Caller } from "../src/auth.ts";
 import type { ToolEnv } from "../src/tools.ts";
 
 export const TOKEN = "t".repeat(40);
-export const ADMIN_GITHUB_ID = 1001;
+export const ADMIN_EMAIL = "admin@example.com";
 export const FOXING_ADMIN_ID = "admin-user";
 
 export type Sent = { method: string; url: URL; headers: Headers; body: unknown };
@@ -71,18 +71,18 @@ export function freshEnv(foxing: FakeFoxing, log: FakeLog): ToolEnv {
     SITE_ORIGIN: "https://foxing.app",
     ADMIN_OPERATOR_TOKEN: TOKEN,
     FOXING_ADMIN_ID,
-    ADMIN_GITHUB_LOGIN: String(ADMIN_GITHUB_ID),
+    ADMIN_EMAIL,
     TOOL_CALL_LOG: log.binding,
   };
 }
 
-const adminProps = { id: ADMIN_GITHUB_ID, login: "drdustinedwards", name: null };
+const adminProps = { email: ADMIN_EMAIL };
 
 export const WRITER: Caller = { kind: "admin", props: adminProps, scopes: ["foxing.read", "foxing.write"] };
 export const READER: Caller = { kind: "admin", props: adminProps, scopes: ["foxing.read"] };
-/** A grant for a GitHub account that is not the administrator. */
+/** A grant for an email that is not the administrator. */
 export const STRANGER: Caller = {
   kind: "admin",
-  props: { id: 2002, login: "someone-else", name: null },
+  props: { email: "someone-else@example.com" },
   scopes: ["foxing.read", "foxing.write"],
 };

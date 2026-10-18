@@ -13,7 +13,7 @@
  *   /mcp                   the provider validates the access token, then
  *                          apiHandler checks the audience, re-checks the
  *                          administrator, rate limits and hands off
- *   /authorize /callback   consent and the GitHub sign-in, github-handler.ts
+ *   /authorize /callback   consent and the Cloudflare Access sign-in, login-handler.ts
  *   /register              rate limited per address, then the provider, which
  *                          refuses any redirect URI not allowlisted exactly
  *   /token, /.well-known/* the provider
@@ -24,7 +24,7 @@ import OAuthProvider from "@cloudflare/workers-oauth-provider";
 
 import { apiHandler, publicOrigin, refuse, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
-import { defaultHandler } from "./github-handler";
+import { defaultHandler } from "./login-handler";
 import { MCP_ROUTE } from "./mcp-handler";
 import { checkRateLimit } from "./rate-limit";
 import { registrationRefusal } from "./registration";
@@ -70,7 +70,7 @@ function providerFor(env: Env): OAuthProvider<Env> {
       clientIdMetadataDocumentEnabled: true,
       // Tightened DCR for Grok and Gemini, which still require RFC 7591 as of
       // 2026-10-09: exact redirect URIs only, rate limited before the provider
-      // sees it, and a registration grants nothing (consent, GitHub and
+      // sees it, and a registration grants nothing (consent, Access and
       // isAdminUser still decide). Remove when they support CIMD, at the latest
       // when the specification removes DCR.
       clientRegistrationEndpoint: "/register",

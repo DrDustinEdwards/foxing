@@ -100,11 +100,11 @@ describe("apiHandler", () => {
     assert.match(await response.text(), /not issued for Foxing Admin/);
   });
 
-  test("PLANT 12.1: a grant for another GitHub account is refused at the door", async () => {
+  test("PLANT 12.1: a grant for another email is refused at the door", async () => {
     const response = await apiHandler.fetch(
       request(),
       env(),
-      ctxWith(`${ORIGIN}/mcp`, { id: 2002, login: "someone-else", name: null }),
+      ctxWith(`${ORIGIN}/mcp`, { email: "someone-else@example.com" }),
     );
     assert.equal(response.status, 403);
     assert.match(await response.text(), /does not belong to its administrator/);

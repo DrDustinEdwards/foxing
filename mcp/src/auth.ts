@@ -8,11 +8,10 @@
  * Free of MCP and OAuth imports so the grant logic is testable on its own.
  */
 
-/** The GitHub identity carried on an OAuth grant, set at consent time. */
+/** The Cloudflare Access identity carried on an OAuth grant, set at sign-in. */
 export interface Props extends Record<string, unknown> {
-  id: number;
-  login: string;
-  name: string | null;
+  /** The verified email from the Access ID token. */
+  email: string;
   /** The scopes the administrator granted on the consent page. */
   scopes?: string[];
 }
@@ -31,27 +30,23 @@ export type Scope = (typeof SCOPES)[number];
 /** Who is making one tool call, as the request boundary established it. Never read from the request. */
 export type Caller = { kind: "admin"; props: Props; scopes: readonly string[] };
 
-/** The audit name of a caller: the GitHub login, never a credential. */
+/** The audit name of a caller: the signed-in email, never a credential. */
 export function callerName(caller: Caller): string {
-  return `github:${caller.props.login}`;
+  return `access:${caller.props.email}`;
 }
 
 /**
  * Is this grant the single administrator's?
  *
- * `ADMIN_GITHUB_LOGIN` takes a login or an immutable numeric GitHub user id.
- * Prefer the id: a login can be renamed and then claimed by someone else.
+ * `ADMIN_EMAIL` is the one email let in, compared without case. The email is
+ * the one Cloudflare Access verified at sign-in, as in Capsid and Carrel.
  *
  * Fails CLOSED: an unset or blank value admits nobody.
  */
-export function isAdminUser(
-  env: { ADMIN_GITHUB_LOGIN?: string },
-  user: { id: number | string; login: string },
-): boolean {
-  const admin = (env.ADMIN_GITHUB_LOGIN ?? "").trim();
-  if (!admin) return false;
-  if (/^\d+$/.test(admin)) return String(user.id) === admin;
-  return user.login.toLowerCase() === admin.toLowerCase();
+export function isAdminUser(env: { ADMIN_EMAIL?: string }, user: { email?: unknown }): boolean {
+  const admin = (env.ADMIN_EMAIL ?? "").trim().toLowerCase();
+  if (!admin || typeof user.email !== "string") return false;
+  return user.email.trim().toLowerCase() === admin;
 }
 
 /**
@@ -67,7 +62,7 @@ export function isAdminUser(
  * Returns null when the call may proceed, or the refusal to show the caller.
  */
 export function authorizeCall(
-  env: { ADMIN_GITHUB_LOGIN?: string },
+  env: { ADMIN_EMAIL?: string },
   caller: Caller | undefined,
   scope: Scope,
 ): string | null {

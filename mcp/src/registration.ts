@@ -10,7 +10,8 @@
  * every registration.
  *
  * Registration still grants nothing. A registered client can only send the
- * administrator to the consent page, and from there to GitHub and isAdminUser.
+ * administrator to the consent page, and from there to Cloudflare Access
+ * and isAdminUser.
  */
 
 /** The allowlist, parsed from the comma-separated var. */
