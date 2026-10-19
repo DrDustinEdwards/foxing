@@ -19,8 +19,12 @@ const TOC_ENTRY = 2;
 // A paragraph of real prose rather than a heading, a byline or a one-line title.
 const MIN_WORDS = 8;
 
-// Where a reader taps a passage: on its first line, a little in from the left.
-const TAP = { x: 40, y: 8 };
+// Where a reader taps a passage: on its first line, across the middle of the page. Readium
+// turns the page for a click in the outer quarter of either side that no highlight
+// consumes, so a tap near the left edge that lands before a layer is drawn goes back a
+// page instead of reaching the passage.
+const TAP_LINE = 8;
+type Passage = { frame: Frame; index: number; text: string; tap: { x: number; y: number } };
 
 // Readium renders each resource into a blob-URL iframe. Wait until one holds real prose.
 async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
@@ -50,11 +54,7 @@ async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
 // iframe, the same check a real click makes. Turns pages with the visible Next page
 // control until one is found, looking a few times per page since a turn lands its frame
 // with a short fade.
-async function findParagraph(
-  page: Page,
-  text?: string,
-  unmarked = false,
-): Promise<{ frame: Frame; index: number; text: string }> {
+async function findParagraph(page: Page, text?: string, unmarked = false): Promise<Passage> {
   for (let turn = 0; turn < 8; turn++) {
     for (let look = 0; look < 3; look++) {
       const hit = await paragraphOnTop(page, text, unmarked);
@@ -75,13 +75,13 @@ async function paragraphOnTop(
   page: Page,
   text: string | undefined,
   unmarked: boolean,
-): Promise<{ frame: Frame; index: number; text: string } | null> {
+): Promise<Passage | null> {
   for (const handle of await page.locator("iframe").elementHandles()) {
     const frame = await handle.contentFrame();
     if (!frame?.url().startsWith("blob:")) continue;
     const candidates = await frame
       .evaluate(
-        ({ minWords, want, tap, unmarked }) => {
+        ({ minWords, want, line, unmarked }) => {
           // The reader draws highlights with the CSS Custom Highlight API, so a passage
           // this reader already marked is one that a highlight range in this frame touches.
           const marked = (p: Element) =>
@@ -93,7 +93,12 @@ async function paragraphOnTop(
                 return range.intersectsNode(p);
               }),
             );
-          const found: { index: number; text: string; points: [number, number][] }[] = [];
+          const found: {
+            index: number;
+            text: string;
+            tap: { x: number; y: number };
+            points: [number, number][];
+          }[] = [];
           Array.from(document.querySelectorAll("p")).forEach((p, index) => {
             const body = (p.textContent ?? "").replace(/\s+/g, " ").trim();
             if (want ? body !== want : body.split(" ").length < minWords) return;
@@ -108,15 +113,20 @@ async function paragraphOnTop(
             if (!inside) return;
             const points: [number, number][] = [
               [r.left + r.width / 2, r.top + r.height / 2],
-              [r.left + tap.x, r.top + tap.y],
+              [r.left + r.width / 2, r.top + Math.min(line, r.height / 2)],
             ];
             if (points.every(([x, y]) => p.contains(document.elementFromPoint(x, y)))) {
-              found.push({ index, text: body, points });
+              found.push({
+                index,
+                text: body,
+                tap: { x: r.width / 2, y: Math.min(line, r.height / 2) },
+                points,
+              });
             }
           });
           return found;
         },
-        { minWords: MIN_WORDS, want: text, tap: TAP, unmarked },
+        { minWords: MIN_WORDS, want: text, line: TAP_LINE, unmarked },
       )
       .catch(() => []);
     for (const c of candidates) {
@@ -128,7 +138,7 @@ async function paragraphOnTop(
           ([x, y]) => document.elementFromPoint(r.left + x * scale, r.top + y * scale) === el,
         );
       }, c.points);
-      if (onTop) return { frame, index: c.index, text: c.text };
+      if (onTop) return { frame, index: c.index, text: c.text, tap: c.tap };
     }
   }
   return null;
@@ -154,18 +164,18 @@ async function openReader(browser: Browser, storageState: string): Promise<Page>
 // Tap a passage the way a reader does: a single click on its first line. Decorations
 // are drawn with the CSS Custom Highlight API (no DOM element to click), and the reader
 // resolves a tap inside a highlighted range to that annotation.
-async function tapParagraph(frame: Frame, index: number): Promise<void> {
-  await frame.locator("p").nth(index).click({ position: TAP });
+async function tapParagraph(passage: Passage): Promise<void> {
+  await passage.frame.locator("p").nth(passage.index).click({ position: passage.tap });
 }
 
 // Tap a marked passage until its popover opens. Poll the tap, since a layer draws its
 // highlights once the reader's redraw lands.
-async function tapOpen(frame: Frame, index: number, popover: Locator): Promise<void> {
+async function tapOpen(passage: Passage, popover: Locator): Promise<void> {
   await expect
     .poll(
       async () => {
         if (!(await popover.isVisible())) {
-          await tapParagraph(frame, index).catch(() => {});
+          await tapParagraph(passage).catch(() => {});
         }
         return popover.isVisible();
       },
@@ -211,7 +221,7 @@ test.describe("social reading: three-account gate", () => {
     const bPassage = await findParagraph(b, passage.text);
     // Tapping A's shared passage opens the attribution popover.
     const attribution = b.getByRole("dialog", { name: /annotation by/i });
-    await tapOpen(bPassage.frame, bPassage.index, attribution);
+    await tapOpen(bPassage, attribution);
 
     // Reply via the visible composer in the popover.
     const replyText = `reply-${Date.now().toString(36)}`;
@@ -228,7 +238,7 @@ test.describe("social reading: three-account gate", () => {
     await c.getByRole("button", { name: /^everyone/i }).click();
     // Tapping the very passage A shared opens no attribution popover for C.
     const cPassage = await findParagraph(c, passage.text);
-    await tapParagraph(cPassage.frame, cPassage.index);
+    await tapParagraph(cPassage);
     await expect(c.getByRole("dialog", { name: /annotation by/i })).toHaveCount(0);
     // And C cannot see B's reply text anywhere on the page.
     await expect(c.getByText(replyText)).toHaveCount(0);
@@ -237,7 +247,7 @@ test.describe("social reading: three-account gate", () => {
     // The accounts persist across runs, so leave A's page unmarked for the next one.
     const own = await findParagraph(a, passage.text);
     const edit = a.getByRole("dialog", { name: /edit annotation/i });
-    await tapOpen(own.frame, own.index, edit);
+    await tapOpen(own, edit);
     await edit.getByRole("button", { name: /^delete$/i }).click();
     await expect(edit).toHaveCount(0);
     await expect(a.getByText(/could not/i)).toHaveCount(0);
