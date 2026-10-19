@@ -22,7 +22,6 @@ on:
       - "pnpm-workspace.yaml"
       - "knip.jsonc"
       - ".jscpd.json"
-      - "improve/holdout/**"
       - ".github/workflows/no-bloat.yml"
       - "!**/*.md"
 

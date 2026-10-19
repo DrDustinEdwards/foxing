@@ -13,11 +13,8 @@
 //   the expo-router app/ directory, so app/**/* is listed here by hand.
 // The other plugins that enable (vite, vitest, playwright, drizzle and the rest)
 // keep their defaults.
-// The holdout imports list (improve/holdout/*/imports.txt) is applied by the
-// preprocessor: a name on it counts as used (conventions 3.6).
 {
   "$schema": "https://unpkg.com/knip@6.38.0/schema.json",
-  "preprocessor": "./scripts/no-bloat/knip-holdout.mjs",
   "workspaces": {
     ".": {
       "entry": ["scripts/**/*.{ts,mjs}"],

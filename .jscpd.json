@@ -13,7 +13,6 @@
     "apps/mobile/libs/**",
     "apps/mobile/assets/foliate/**",
     "packages/core/migrations/**",
-    "improve/**",
     ".claude/**",
     ".github/**",
     ".jscpd-report/**"
