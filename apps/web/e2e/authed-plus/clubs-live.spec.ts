@@ -33,14 +33,20 @@ test.describe("clubs live layer (signed in, plus)", () => {
     browser,
   }) => {
     // Two contexts against the live site, each waiting on its socket: past the default 30s.
-    test.setTimeout(90_000);
+    test.setTimeout(60_000);
     const suffix = Date.now().toString(36);
 
     // --- Context A: create a club -----------------------------------------
     await page.goto("/clubs/new");
     await page.getByLabel("Club name").fill(`Live Club ${suffix}`);
     await page.getByRole("button", { name: /^create club$/i }).click();
+    // "/clubs/new" itself matches a club URL, so wait for the new club's own page before
+    // keeping its address.
+    await expect(
+      page.getByRole("heading", { level: 1, name: `Live Club ${suffix}` }),
+    ).toBeVisible();
     await expect(page).toHaveURL(/\/clubs\/[a-z0-9-]+$/);
+    await expect(page).not.toHaveURL(/\/clubs\/new$/);
     const clubUrl = page.url();
 
     // Start a thread and open it.
