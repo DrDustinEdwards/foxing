@@ -19,19 +19,29 @@ function runD1(sql: string): string {
   );
 }
 
+// The live site throttles credential POSTs (sign-in, sign-up) to 5 a minute per address
+// (AUTH_RL in workers/app.ts), and the setup projects' four sign-ins come from the same
+// runner in the same minute. A throttled attempt waits for the window to move on.
+const THROTTLE_WAIT = 20_000;
+
 async function provisionVerifiedAccount(baseURL: string) {
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const email = `e2e-onboard-${stamp}@foxing.app`;
   const password = `Onb0ard-${Math.random().toString(36).slice(2, 10)}!`;
   const origin = new URL(baseURL).origin;
 
-  const signup = await fetch(new URL("/api/auth/sign-up/email", baseURL), {
-    method: "POST",
-    headers: { "content-type": "application/json", origin },
-    body: JSON.stringify({ name: "E2E Onboard", email, password }),
-  });
-  if (!signup.ok) {
-    throw new Error(`Ephemeral sign-up failed: ${signup.status} ${await signup.text()}`);
+  let signup: Response | null = null;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    signup = await fetch(new URL("/api/auth/sign-up/email", baseURL), {
+      method: "POST",
+      headers: { "content-type": "application/json", origin },
+      body: JSON.stringify({ name: "E2E Onboard", email, password }),
+    });
+    if (signup.status !== 429) break;
+    await new Promise((resolve) => setTimeout(resolve, THROTTLE_WAIT));
+  }
+  if (!signup?.ok) {
+    throw new Error(`Ephemeral sign-up failed: ${signup?.status} ${await signup?.text()}`);
   }
 
   // D1's read replica can lag behind the just-committed sign-up row (documented in
@@ -60,21 +70,24 @@ test.describe("onboarding (ephemeral account)", () => {
     page,
     baseURL,
   }) => {
-    test.setTimeout(60_000);
+    // Room for a throttled sign-up and sign-in to each wait out the window.
+    test.setTimeout(180_000);
     const base = baseURL ?? "https://foxing.dustin-edwards.workers.dev";
     const { email, password } = await provisionVerifiedAccount(base);
 
     // Sign in through the visible form -- the only supported way into an authed
-    // session anywhere in this repo.
-    await page.goto("/login");
-    // Reveal the collapsed password form, then target its Email (the last of two inputs).
-    await page.getByRole("button", { name: /use a password instead/i }).click();
-    await page.getByLabel("Email").last().fill(email);
-    await page.getByLabel("Password").fill(password);
-    await page.getByRole("button", { name: /^sign in$/i }).click();
-
+    // session anywhere in this repo. A throttled attempt shows "Sign in failed", so try
+    // again from a fresh form once the window has moved on, as a reader would.
     // A fresh account has no profile; /me's loader redirects it to /onboarding.
-    await expect(page).toHaveURL(/\/onboarding/);
+    await expect(async () => {
+      await page.goto("/login");
+      // Reveal the collapsed password form, then target its Email (the last of two inputs).
+      await page.getByRole("button", { name: /use a password instead/i }).click();
+      await page.getByLabel("Email").last().fill(email);
+      await page.getByLabel("Password").fill(password);
+      await page.getByRole("button", { name: /^sign in$/i }).click();
+      await expect(page).toHaveURL(/\/onboarding/);
+    }).toPass({ intervals: [THROTTLE_WAIT], timeout: 90_000 });
 
     // The label's accessible name includes the helper text ("Username Letters,
     // numbers, and underscores."), so match a prefix, not the full string.
