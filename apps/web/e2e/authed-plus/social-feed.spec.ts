@@ -60,9 +60,18 @@ test.describe("social feed visibility (two real users)", () => {
     const aUsername = await handleFromMe(pageA); // free follower
     expect(aUsername).not.toBe(bUsername);
 
-    // Both accounts persist across runs, so start from the state this gate assumes: A
-    // does not follow B yet, and A is not B's close friend. Undo either through the same
-    // visible toggles if an earlier run left it set.
+    // Both accounts persist across runs, so start from the state this gate assumes: A's
+    // profile is public (a private one hides B's close-friend control), A does not follow
+    // B yet, and A is not B's close friend. Set each through the same visible controls if
+    // an earlier run left it otherwise.
+    await pageA.goto("/settings");
+    const publicProfile = pageA.getByRole("switch", { name: /public profile/i });
+    if ((await publicProfile.getAttribute("aria-checked")) !== "true") {
+      await publicProfile.click();
+      await pageA.getByRole("button", { name: /save visibility/i }).click();
+      await expect(pageA.getByRole("status").filter({ hasText: /saved/i })).toBeVisible();
+    }
+
     await page.goto(`/u/${aUsername}`);
     const closeFriend = page.getByRole("button", { name: /^(add close friend|close friend)$/i });
     if ((await closeFriend.innerText()).trim().toLowerCase() === "close friend") {
