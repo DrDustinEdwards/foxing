@@ -161,12 +161,14 @@ export function withSecurityHeaders(response: Response, request: Request): Respo
       nonce = current;
     }
   }
-  const reader = html && isReaderPath(new URL(request.url).pathname);
+  const url = new URL(request.url);
+  const reader = html && isReaderPath(url.pathname);
   headers.set(
     "Content-Security-Policy",
     reader ? readerContentSecurityPolicy(nonce) : contentSecurityPolicy(nonce),
   );
-  headers.set("Reporting-Endpoints", `${CSP_ENDPOINT_NAME}="${CSP_REPORT_PATH}"`);
+  // Absolute, because Reporting-Endpoints ignores a relative endpoint (as in Carrel and dustinedwards.info).
+  headers.set("Reporting-Endpoints", `${CSP_ENDPOINT_NAME}="${url.origin}${CSP_REPORT_PATH}"`);
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 
