@@ -2,7 +2,7 @@
 // community books never appear on the browse/search/sitemap surface (spec-cf-schema
 // rev 3). Readability is derived (catalog AND epub_url present), never a column.
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
-import type { Db } from "../../db";
+import { chunked, type Db } from "../../db";
 import { bookAwards, books } from "../../schema";
 import { resolveEra, resolveLength } from "./facets";
 
@@ -380,12 +380,10 @@ export function listRecCandidatesBySubjects(
 /** Which of the given book ids are award winners (for the "Award winner" reason). */
 export async function listAwardWinnerIds(db: Db, bookIds: string[]): Promise<string[]> {
   if (bookIds.length === 0) return [];
-  // D1 caps a query at 100 bound variables ("too many SQL variables"), so chunk the IN
-  // list. The recommendation pool can be several hundred ids; a flat inArray would 500.
-  const CHUNK = 90;
+  // The recommendation pool can be several hundred ids; a flat inArray would pass D1's
+  // bound-parameter limit (db.ts) and 500.
   const found = new Set<string>();
-  for (let i = 0; i < bookIds.length; i += CHUNK) {
-    const chunk = bookIds.slice(i, i + CHUNK);
+  for (const chunk of chunked(bookIds)) {
     const rows = await db
       .selectDistinct({ bookId: bookAwards.bookId })
       .from(bookAwards)

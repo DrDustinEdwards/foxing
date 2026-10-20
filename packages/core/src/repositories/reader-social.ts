@@ -6,16 +6,8 @@
 // alone returned. The domain layer (domain/reader-annotations) composes these and
 // applies the courtesy spoiler/progress gate; it never widens what the SQL admits.
 import { and, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import { annotations, clubBooks, clubMembers, clubs, closeFriends, profiles } from "../schema";
-
-// D1 caps a query at 100 bound variables. Keep every IN list under that.
-const CHUNK = 90;
-function chunked<T>(items: T[]): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += CHUNK) out.push(items.slice(i, i + CHUNK));
-  return out;
-}
 
 // Only highlights and notes carry a reader decoration; bookmarks and commonplace are
 // never part of another reader's layer.

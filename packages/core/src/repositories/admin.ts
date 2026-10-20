@@ -5,9 +5,9 @@
 // wrapped in an audit-log entry at the route layer. Suspension/admin flags live on
 // profiles; club verification lives on clubs.is_verified. No new columns beyond the
 // additive announcements table.
-import { and, desc, eq, like, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, like, or, sql, type SQL } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
-import type { Db } from "../db";
+import { chunked, rowsPerInsert, type Db } from "../db";
 import {
   adminAuditLog,
   annotations,
@@ -709,7 +709,7 @@ export async function getJournalVersion(db: Db, postId: string, versionId: strin
 // ---- Broadcast notifications --------------------------------------------------
 
 /** Insert one notification per onboarded user. Returns how many were written. Chunked
- *  so a large audience never exceeds D1's bound-parameter limit. */
+ *  so a large audience never exceeds D1's bound-parameter limit (db.ts). */
 export async function broadcastNotification(
   db: Db,
   input: { type: string; title: string; body?: string | null },
@@ -726,9 +726,12 @@ export async function broadcastNotification(
     body: input.body ?? null,
     createdAt: now,
   }));
-  const CHUNK = 200;
-  for (let i = 0; i < rows.length; i += CHUNK) {
-    await db.insert(notifications).values(rows.slice(i, i + CHUNK));
+  // Eight columns a row, each a bound parameter: twelve rows an INSERT.
+  for (const chunk of chunked(
+    rows,
+    rowsPerInsert(Object.keys(getTableColumns(notifications)).length),
+  )) {
+    await db.insert(notifications).values(chunk);
   }
   return rows.length;
 }
