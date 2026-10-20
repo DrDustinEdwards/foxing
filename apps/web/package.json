@@ -17,7 +17,7 @@
   "dependencies": {
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.4.2",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.2.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.3.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.4.0",
     "@foxing/api": "workspace:*",
     "@foxing/core": "workspace:*",
     "@readium/navigator": "^2.6.1",
