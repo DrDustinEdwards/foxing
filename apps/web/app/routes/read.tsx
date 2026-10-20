@@ -75,6 +75,19 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   };
 }
 
+// The reader is its own document: its Content-Security-Policy differs from the rest of the site's
+// (workers/security-headers.ts, readerContentSecurityPolicy) and a policy is fixed when a document
+// loads. So a client-side navigation here from another page becomes a full page load, whatever
+// link led here. Not run on the first load (no hydrate flag), which already has the reader's
+// policy; a revalidation on the reader itself goes to the server loader as usual.
+export async function clientLoader({ request, serverLoader }: Route.ClientLoaderArgs) {
+  if (window.location.pathname !== new URL(request.url).pathname) {
+    window.location.assign(request.url);
+    return new Promise<never>(() => {});
+  }
+  return serverLoader();
+}
+
 export function meta({ loaderData }: Route.MetaArgs) {
   const title = loaderData ? `Reading ${loaderData.book.title}` : "Reader";
   // Reader is a private surface; keep it out of search indexes.

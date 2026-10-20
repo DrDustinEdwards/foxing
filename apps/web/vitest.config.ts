@@ -11,6 +11,17 @@ export default defineConfig(async () => {
   );
 
   return {
+    // The Worker entry (workers/app.ts) reads a per-build cache id and the React Router build;
+    // the security-headers test runs it against a stub build of the real root and server entry.
+    define: { __CACHE_VERSION__: JSON.stringify("test") },
+    resolve: {
+      alias: [
+        {
+          find: "virtual:react-router/server-build",
+          replacement: path.resolve(__dirname, "test/server-build.stub.ts"),
+        },
+      ],
+    },
     plugins: [
       cloudflareTest({
         // A test-only entry that exports the ClubRoom class, so the CLUB_ROOM binding
@@ -23,7 +34,8 @@ export default defineConfig(async () => {
           d1Databases: ["DB"],
           kvNamespaces: ["APP_KV"],
           // The nightly backup's bucket (app/lib/backup.server.ts), empty and local.
-          r2Buckets: ["BACKUPS"],
+          // MEDIA: the reader assets bucket the Worker entry binds (empty here).
+          r2Buckets: ["BACKUPS", "MEDIA"],
           bindings: { TEST_MIGRATIONS: migrations },
         },
       }),

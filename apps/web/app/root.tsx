@@ -3,6 +3,7 @@ import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
+import { useNonce } from "./lib/nonce";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
 // the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous
@@ -33,6 +34,8 @@ export const links: Route.LinksFunction = () => [
 const NO_FLASH = `(function(){try{var t=localStorage.getItem("foxing-theme");if(!t){var old=localStorage.getItem("foxing-mode");if(old==="dark"||old==="light"){t=old;localStorage.setItem("foxing-theme",t);localStorage.removeItem("foxing-mode");}}if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  // The CSP nonce (workers/security-headers.ts) for every script this document renders.
+  const nonce = useNonce();
   return (
     <html lang="en" data-theme="light">
       <head>
@@ -40,14 +43,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#faf6ee" />
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static no-flash theme script */}
-        <script dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
         <Meta />
-        <Links />
+        <Links nonce={nonce} />
       </head>
       <body>
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
