@@ -3,7 +3,7 @@ import { Link, redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
-import { buildMeta } from "~/lib/seo";
+import { buildMeta, journalTagPath } from "~/lib/seo";
 import type { Route } from "./+types/journal-tag";
 
 function tagLabel(tag: string): string {
@@ -89,7 +89,7 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
           <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-4">
             {result.page > 1 ? (
               <Link
-                to={`/journal/tag/${tag}?page=${result.page - 1}`}
+                to={`${journalTagPath(tag)}?page=${result.page - 1}`}
                 rel="prev"
                 className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
               >
@@ -101,7 +101,7 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
             </span>
             {result.page < result.pageCount ? (
               <Link
-                to={`/journal/tag/${tag}?page=${result.page + 1}`}
+                to={`${journalTagPath(tag)}?page=${result.page + 1}`}
                 rel="next"
                 className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
               >

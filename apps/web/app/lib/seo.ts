@@ -14,6 +14,22 @@ export function absoluteUrl(origin: string, path: string): string {
   return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
+/** Text made safe for XML (sitemap, RSS): element content and attribute values alike. */
+export function xmlEscape(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
+}
+
+/** A journal tag's page. Tags are free text, so the segment is encoded: a space or "&" in a
+ *  tag would otherwise break the link and the sitemap. */
+export function journalTagPath(tag: string): string {
+  return `/journal/tag/${encodeURIComponent(tag)}`;
+}
+
 type MetaInput = {
   title: string;
   description?: string;
