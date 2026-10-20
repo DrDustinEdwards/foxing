@@ -3,13 +3,10 @@
 // likes). Owner resolution (for the reaction notification) is done here so the domain
 // can notify the target's author without knowing each table's shape.
 import { and, eq, inArray, sql } from "drizzle-orm";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import { annotations, diaryEntries, reactions, readingLists } from "../schema";
 
 export type Reaction = typeof reactions.$inferSelect;
-
-// D1 caps a query at 100 bound variables; keep IN lists under it.
-const CHUNK = 90;
 
 export async function addReaction(
   db: Db,
@@ -130,7 +127,7 @@ export async function likeSummary(
   const out = new Map<string, LikeSummary>();
   if (targetIds.length === 0) return out;
 
-  for (const chunk of chunkIds(targetIds)) {
+  for (const chunk of chunked(targetIds)) {
     const counts = await db
       .select({ targetId: reactions.targetId, n: sql<number>`count(*)` })
       .from(reactions)
@@ -146,7 +143,7 @@ export async function likeSummary(
   }
 
   if (viewerId) {
-    for (const chunk of chunkIds(targetIds)) {
+    for (const chunk of chunked(targetIds)) {
       const mine = await db
         .select({ targetId: reactions.targetId })
         .from(reactions)
@@ -165,11 +162,5 @@ export async function likeSummary(
     }
   }
 
-  return out;
-}
-
-function chunkIds(ids: string[]): string[][] {
-  const out: string[][] = [];
-  for (let i = 0; i < ids.length; i += CHUNK) out.push(ids.slice(i, i + CHUNK));
   return out;
 }

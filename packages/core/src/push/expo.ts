@@ -3,6 +3,11 @@
 // can prune them. The fetch is injected so the queue consumer passes the Worker's fetch
 // and tests pass a stub. Message building + ticket parsing are pure and unit-testable.
 
+import { chunked } from "../db";
+
+/** Expo accepts at most 100 messages per push request. */
+const EXPO_BATCH = 100;
+
 export type ExpoMessage = {
   to: string;
   title: string;
@@ -31,12 +36,6 @@ export function buildExpoMessages(
   }));
 }
 
-function chunk<T>(items: T[], size: number): T[][] {
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
-}
-
 /** Tokens whose ticket came back DeviceNotRegistered, aligned by index to the messages
  *  that were sent. Expo returns tickets in request order. */
 export function deadTokensFromTickets(messages: ExpoMessage[], tickets: ExpoTicket[]): string[] {
@@ -59,7 +58,7 @@ export async function sendExpoPush(
   fetchImpl: typeof fetch,
 ): Promise<ExpoTicket[]> {
   const tickets: ExpoTicket[] = [];
-  for (const batch of chunk(messages, 100)) {
+  for (const batch of chunked(messages, EXPO_BATCH)) {
     try {
       const res = await fetchImpl(EXPO_PUSH_URL, {
         method: "POST",
