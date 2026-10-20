@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader, TagPill } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
-import { buildMeta } from "~/lib/seo";
+import { buildMeta, journalTagPath } from "~/lib/seo";
 import type { Route } from "./+types/journal-archive";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -48,7 +48,7 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
         {tags.length > 0 ? (
           <div className="mb-10 flex flex-wrap gap-2">
             {tags.map((t) => (
-              <TagPill key={t.tag} to={`/journal/tag/${t.tag}`}>
+              <TagPill key={t.tag} to={journalTagPath(t.tag)}>
                 {t.tag.replace(/-/g, " ")} &middot; {t.count}
               </TagPill>
             ))}

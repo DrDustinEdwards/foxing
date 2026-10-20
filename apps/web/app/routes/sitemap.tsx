@@ -1,13 +1,13 @@
 import { catalogRepo } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
-import { absoluteUrl } from "~/lib/seo";
+import { absoluteUrl, journalTagPath, xmlEscape } from "~/lib/seo";
 import { loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
 
 type Url = { loc: string; lastmod?: string; priority?: string };
 
 function urlTag(origin: string, u: Url): string {
-  return `  <url><loc>${absoluteUrl(origin, u.loc)}</loc>${
+  return `  <url><loc>${xmlEscape(absoluteUrl(origin, u.loc))}</loc>${
     u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""
   }${u.priority ? `<priority>${u.priority}</priority>` : ""}</url>`;
 }
@@ -51,7 +51,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       lastmod: p.updatedAt.toISOString().slice(0, 10),
       priority: "0.6",
     })),
-    ...tags.map((t) => ({ loc: `/journal/tag/${t.tag}`, priority: "0.4" })),
+    ...tags.map((t) => ({ loc: journalTagPath(t.tag), priority: "0.4" })),
   ];
 
   // IndexNow: ping only when the URL set actually changed since the last sitemap
