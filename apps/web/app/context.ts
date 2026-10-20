@@ -15,3 +15,9 @@ export const cloudflareContext = createContext<CloudflareContext>();
  * draft through its own loader and markup. Null on every ordinary request.
  */
 export const journalPreviewContext = createContext<JournalPost | null>(null);
+
+/**
+ * This request's Content-Security-Policy nonce (workers/security-headers.ts, cspNonceFor), for the
+ * server entry and the root Layout to put on every script they render. Unset outside a page render.
+ */
+export const cspNonceContext = createContext<string | undefined>(undefined);

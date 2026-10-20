@@ -2,21 +2,30 @@
 // Its presence tells React Router the runtime is not Node.
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter } from "react-router";
-import type { EntryContext } from "react-router";
+import type { EntryContext, RouterContextProvider } from "react-router";
 import { isbot } from "isbot";
+import { cspNonceContext } from "./context";
+import { NonceContext } from "./lib/nonce";
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
+  loadContext: RouterContextProvider,
 ) {
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
+  // The request's CSP nonce (workers/security-headers.ts): on React's streaming scripts, React
+  // Router's hydration scripts and, through NonceContext, every script the root Layout renders.
+  const nonce = loadContext.get(cspNonceContext);
 
   const body = await renderToReadableStream(
-    <ServerRouter context={routerContext} url={request.url} />,
+    <NonceContext.Provider value={nonce}>
+      <ServerRouter context={routerContext} url={request.url} nonce={nonce} />
+    </NonceContext.Provider>,
     {
+      nonce,
       onError(error: unknown) {
         responseStatusCode = 500;
         if (shellRendered) console.error(error);

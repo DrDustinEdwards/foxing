@@ -8,13 +8,19 @@ import { AppError, createApi, rateLimit } from "@foxing/api";
 import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
-import { cloudflareContext } from "../app/context";
+import { cloudflareContext, cspNonceContext } from "../app/context";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { ClubRoom } from "./club-room";
 import { runBackup } from "../app/lib/backup.server";
+import {
+  CSP_REPORT_PATH,
+  cspNonceFor,
+  handleCspReport,
+  withSecurityHeaders,
+} from "./security-headers";
 
 // Public catalog surfaces are anonymous and safe to cache at the edge. Segment
 // prefixes match the path or any child (/books, /books/x), not lookalikes (/booksy).
@@ -119,6 +125,9 @@ const api = createApi({
 
 const app = new Hono<{ Bindings: Env }>();
 
+// The Content-Security-Policy report sink the policy names.
+app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw));
+
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
 mountCarrel(app, reactRouterHandler);
@@ -219,8 +228,13 @@ app.get("/reader-assets/*", async (c) => {
   if (!obj) return c.notFound();
 
   const ext = rest.split(".").pop()?.toLowerCase() ?? "";
-  const contentType =
+  const stored =
     obj.httpMetadata?.contentType ?? READER_ASSET_CONTENT_TYPES[ext] ?? "application/octet-stream";
+  // A book's own scripts never run. Readium's frames are same-origin, so the reader's CSP ('self')
+  // would let an EPUB's external <script src> load from here; served as text/plain, nosniff makes
+  // the browser refuse to run it. (Its inline scripts are refused by the CSP, which they carry no
+  // nonce for.)
+  const contentType = /javascript|ecmascript/i.test(stored) ? "text/plain; charset=utf-8" : stored;
 
   const res = new Response(obj.body, {
     headers: {
@@ -263,7 +277,10 @@ app.all("*", async (c) => {
     env: c.env,
     ctx: c.executionCtx as unknown as ExecutionContext,
   });
-  const res = await reactRouterHandler(req, context);
+  context.set(cspNonceContext, cspNonceFor(req));
+  // Headers applied before the cache put, so a cached page keeps the nonce it was rendered with
+  // and withSecurityHeaders can re-issue it on every hit.
+  const res = withSecurityHeaders(await reactRouterHandler(req, context), req);
 
   // Only cache successful responses that opted in with an s-maxage directive.
   if (
@@ -381,4 +398,11 @@ async function queue(
 // so the runtime can instantiate it for the CLUB_ROOM binding.
 export { ClubRoom } from "./club-room";
 
-export default { fetch: app.fetch, scheduled, queue };
+// Security headers on every response this Worker sends: pages, API, redirects, errors, 404s and
+// edge-cache hits (workers/security-headers.ts). Applied outside Hono, on what app.fetch returns:
+// Hono's own error and not-found answers included, and no middleware can copy an older header back.
+async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  return withSecurityHeaders(await app.fetch(request, env, ctx), request);
+}
+
+export default { fetch: handleFetch, scheduled, queue };

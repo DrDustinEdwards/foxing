@@ -3,7 +3,11 @@
 // EpubNavigator behind a small imperative API and extracts the R1 selection
 // context (before/after + cssSelector) from the content frame at selection time.
 import { HttpFetcher, Locator as ReadiumLocator, Manifest, Publication } from "@readium/shared";
-import { EpubNavigator, type EpubNavigatorListeners } from "@readium/navigator";
+import {
+  EpubNavigator,
+  type EpubNavigatorListeners,
+  type IInjectableRule,
+} from "@readium/navigator";
 import type { HighlightColor } from "@foxing/core";
 import {
   decorationStyleFor,
@@ -88,6 +92,43 @@ export interface ReaderEngine {
   applySettings: (settings: ReaderSettings) => Promise<void>;
   currentLocator: () => Locator | null;
   destroy: () => Promise<void>;
+}
+
+/**
+ * The reader page's Content-Security-Policy nonce (workers/security-headers.ts, the /read policy).
+ * Readium renders each resource into a blob: frame, which inherits this page's policy, and loads
+ * its own helpers there as blob: scripts (the CSS selector generator, and the execution-prevention
+ * shim that stops an EPUB's own scripts). The policy allows no blob: script, so each helper is
+ * given this nonce instead; an EPUB's inline scripts never carry it and stay blocked (its script
+ * files are served as text/plain by /reader-assets, so they do not run either). The browser
+ * hides the nonce attribute but keeps the `nonce` property, which is what is read here.
+ */
+function pageNonce(): string | undefined {
+  return document.querySelector<HTMLScriptElement>("script[nonce]")?.nonce || undefined;
+}
+
+/**
+ * Puts the nonce on Readium's built-in script injectables before the first frame is built. The
+ * built-in rules are not configurable (only extra rules are), so this reaches the navigator's
+ * `_readiumRulesPromise` (@readium/navigator 2.6). If a Readium upgrade renames it, this says so in
+ * the console, the reader's frames stop working, and the e2e reader spec fails.
+ */
+async function nonceReadiumInjectables(nav: EpubNavigator): Promise<void> {
+  const nonce = pageNonce();
+  if (!nonce) return;
+  const rulesPromise = (nav as unknown as { _readiumRulesPromise?: Promise<IInjectableRule[]> })
+    ._readiumRulesPromise;
+  if (!rulesPromise) {
+    console.error(
+      "[reader] Readium's built-in injectables were not found; frame scripts will be blocked by the CSP",
+    );
+    return;
+  }
+  for (const rule of await rulesPromise) {
+    for (const injectable of [...(rule.prepend ?? []), ...(rule.append ?? [])]) {
+      if (injectable.as === "script") injectable.attributes = { ...injectable.attributes, nonce };
+    }
+  }
 }
 
 function serialize(loc: unknown): Locator {
@@ -228,6 +269,7 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
     preferences: initialEpubPreferences(settings),
     defaults: {},
   } as never);
+  await nonceReadiumInjectables(nav);
   await nav.load();
 
   nav.registerDecorationObserver(ANNOTATION_GROUP, {
