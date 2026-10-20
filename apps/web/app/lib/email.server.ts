@@ -1,17 +1,31 @@
 // Transactional email via the Cloudflare Email Service send_email binding (EMAIL).
 // No API key: the binding sends from the onboarded foxing.app domain.
 
-export async function sendPasswordResetEmail(env: Env, to: string, url: string): Promise<void> {
+/** Text made safe inside HTML, attribute values included. */
+function escapeHtml(value: string): string {
+  return value.replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
+  );
+}
+
+/** One email carrying one link. The link is escaped in the HTML part: Better Auth builds it with
+ *  the caller's callbackURL in the query, and a raw "&" or quote must not end the attribute. */
+async function sendLinkEmail(
+  env: Env,
+  to: string,
+  mail: { subject: string; intro: string; linkText: string; url: string; outro: string },
+): Promise<void> {
   try {
     await env.EMAIL.send({
       to,
       from: { email: env.EMAIL_FROM, name: "Foxing" },
-      subject: "Reset your Foxing password",
-      text: `Reset your Foxing password:\n\n${url}\n\nThis link expires in 1 hour. If you did not request a reset, ignore this message.`,
+      subject: mail.subject,
+      text: `${mail.intro}\n\n${mail.url}\n\n${mail.outro}`,
       html: [
-        "<p>Reset your Foxing password:</p>",
-        `<p><a href="${url}">Reset password</a></p>`,
-        "<p>This link expires in 1 hour. If you did not request a reset, ignore this message.</p>",
+        `<p>${escapeHtml(mail.intro)}</p>`,
+        `<p><a href="${escapeHtml(mail.url)}">${escapeHtml(mail.linkText)}</a></p>`,
+        `<p>${escapeHtml(mail.outro)}</p>`,
       ].join(""),
     });
   } catch (err) {
@@ -23,46 +37,33 @@ export async function sendPasswordResetEmail(env: Env, to: string, url: string):
   }
 }
 
-export async function sendMagicLinkEmail(env: Env, to: string, url: string): Promise<void> {
-  try {
-    await env.EMAIL.send({
-      to,
-      from: { email: env.EMAIL_FROM, name: "Foxing" },
-      subject: "Your Foxing sign-in link",
-      text: `Sign in to Foxing:\n\n${url}\n\nThis link expires in 10 minutes and can be used once. If you did not request it, ignore this message.`,
-      html: [
-        "<p>Sign in to Foxing:</p>",
-        `<p><a href="${url}">Sign in</a></p>`,
-        "<p>This link expires in 10 minutes and can be used once. If you did not request it, ignore this message.</p>",
-      ].join(""),
-    });
-  } catch (err) {
-    const e = err as { code?: string; message?: string };
-    console.error(
-      `EMAIL.send failed: code=${e.code ?? "unknown"} message=${e.message ?? String(err)}`,
-    );
-    throw err;
-  }
+export function sendPasswordResetEmail(env: Env, to: string, url: string): Promise<void> {
+  return sendLinkEmail(env, to, {
+    subject: "Reset your Foxing password",
+    intro: "Reset your Foxing password:",
+    linkText: "Reset password",
+    url,
+    outro: "This link expires in 1 hour. If you did not request a reset, ignore this message.",
+  });
 }
 
-export async function sendVerificationEmail(env: Env, to: string, url: string): Promise<void> {
-  try {
-    await env.EMAIL.send({
-      to,
-      from: { email: env.EMAIL_FROM, name: "Foxing" },
-      subject: "Confirm your email for Foxing",
-      text: `Welcome to Foxing. Confirm your email address:\n\n${url}\n\nIf you did not create an account, ignore this message.`,
-      html: [
-        "<p>Welcome to Foxing.</p>",
-        `<p><a href="${url}">Confirm your email address</a></p>`,
-        "<p>If you did not create an account, ignore this message.</p>",
-      ].join(""),
-    });
-  } catch (err) {
-    const e = err as { code?: string; message?: string };
-    console.error(
-      `EMAIL.send failed: code=${e.code ?? "unknown"} message=${e.message ?? String(err)}`,
-    );
-    throw err;
-  }
+export function sendMagicLinkEmail(env: Env, to: string, url: string): Promise<void> {
+  return sendLinkEmail(env, to, {
+    subject: "Your Foxing sign-in link",
+    intro: "Sign in to Foxing:",
+    linkText: "Sign in",
+    url,
+    outro:
+      "This link expires in 10 minutes and can be used once. If you did not request it, ignore this message.",
+  });
+}
+
+export function sendVerificationEmail(env: Env, to: string, url: string): Promise<void> {
+  return sendLinkEmail(env, to, {
+    subject: "Confirm your email for Foxing",
+    intro: "Welcome to Foxing. Confirm your email address:",
+    linkText: "Confirm your email address",
+    url,
+    outro: "If you did not create an account, ignore this message.",
+  });
 }
