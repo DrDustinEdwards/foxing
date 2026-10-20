@@ -276,8 +276,8 @@ importers:
         specifier: github:DrDustinEdwards/site-api#v0.2.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.3.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ed6dded93e516d11afb3d3cf23287f92d86042a2
+        specifier: github:DrDustinEdwards/site-runtime#v0.4.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/b94b51a4e2824550ba674d1267a4ab5a6874477c
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -1245,9 +1245,9 @@ packages:
     version: 0.2.0
     engines: {node: '>=24.14.1'}
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ed6dded93e516d11afb3d3cf23287f92d86042a2':
-    resolution: {gitHosted: true, integrity: sha512-8Q7140ACXBBUvPMrUG+7K2eo5i85DkbAOzGWKYps6UDVkfiH5qH9bjFfV/KOkVgUozEqaI8UaR7C8MrQstCu4g==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ed6dded93e516d11afb3d3cf23287f92d86042a2}
-    version: 0.3.0
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/b94b51a4e2824550ba674d1267a4ab5a6874477c':
+    resolution: {gitHosted: true, integrity: sha512-eFaS7RwnXzaDtA0UmomEeiuwr8cUN6FafCHRRK+UZI8XidZ7tHDJzAWA/LXP/+hkFysCFAW5TqegLXzHMBxJzw==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/b94b51a4e2824550ba674d1267a4ab5a6874477c}
+    version: 0.4.0
     hasBin: true
 
   '@egjs/hammerjs@2.0.17':
@@ -8078,7 +8078,7 @@ snapshots:
       diff: 9.0.0
       zod: 4.6.5
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ed6dded93e516d11afb3d3cf23287f92d86042a2': {}
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/b94b51a4e2824550ba674d1267a4ab5a6874477c': {}
 
   '@egjs/hammerjs@2.0.17':
     dependencies:

@@ -4,7 +4,7 @@
 // that page, the reader, a redirect, a 404, the API, an image, and the report sink.
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { checkSecurityHeaders, failures } from "@dustinedwards/site-runtime/check";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import worker from "../workers/app";
 import {
   contentSecurityPolicy,
@@ -144,6 +144,48 @@ describe("security headers on rendered responses", () => {
       body: JSON.stringify([{ type: "csp-violation", body: { documentURL: `${ORIGIN}/` } }]),
     });
     expect(reportTo.response.status).toBe(204);
+  });
+
+  it("the report sink is the shared receiver: trimmed lines, 204 on anything, the security set", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      const { response } = await fetchPath("/api/csp-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/reports+json" },
+        body: JSON.stringify([
+          {
+            type: "csp-violation",
+            body: {
+              documentURL: `${ORIGIN}/books?q=secret`,
+              blockedURL: "https://evil.example.com/x.js?token=abc",
+              effectiveDirective: "script-src-elem",
+            },
+          },
+        ]),
+      });
+      expect(response.status).toBe(204);
+      expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+      const lines = log.mock.calls.map((c) => JSON.parse(String(c[0])));
+      expect(lines).toContainEqual(
+        expect.objectContaining({
+          event: "csp-violation",
+          directive: "script-src-elem",
+          blocked: "https://evil.example.com/x.js",
+          page: `${ORIGIN}/books`,
+        }),
+      );
+      expect(JSON.stringify(lines)).not.toContain("secret");
+      expect(JSON.stringify(lines)).not.toContain("token");
+
+      const big = await fetchPath("/api/csp-report", {
+        method: "POST",
+        headers: { "Content-Type": "application/csp-report" },
+        body: "x".repeat(20_000),
+      });
+      expect(big.response.status).toBe(204);
+    } finally {
+      log.mockRestore();
+    }
   });
 
   it("a book's script file is served as text/plain, which nosniff refuses to run", async () => {

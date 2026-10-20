@@ -10,6 +10,7 @@ import {
   generateNonce,
   type CspSources,
 } from "@dustinedwards/site-runtime/csp";
+import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 
 /** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
 export const CSP_REPORT_PATH = "/api/csp-report";
@@ -169,46 +170,13 @@ export function withSecurityHeaders(response: Response, request: Request): Respo
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 
-const REPORT_LIMIT = 16 * 1024;
-
 /**
- * The report sink: logs each violation (the directive, the blocked source and the page path; no
- * address or identifier) to Workers Logs and answers 204. Accepts report-uri's
- * application/csp-report and report-to's application/reports+json.
+ * The report sink: the family's one receiver (@dustinedwards/site-runtime/csp-report). It answers
+ * every POST 204, reads at most 16 KB, logs at most 10 violations as trimmed JSON lines (origin and
+ * path only; no address, user agent or cookie) and stores nothing. No limiter is passed: the web
+ * app's limiters are the auth, write and companion budgets, and spending a reader's login budget
+ * on their browser's violation reports would be wrong.
  */
-export async function handleCspReport(request: Request): Promise<Response> {
-  // Bytes, not .text(): the runtime warns on .text() for application/csp-report.
-  const text = new TextDecoder().decode(await request.arrayBuffer()).slice(0, REPORT_LIMIT);
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(text);
-  } catch {
-    return new Response(null, { status: 204 });
-  }
-  const reports = Array.isArray(parsed)
-    ? parsed.map((r) => r?.body)
-    : [parsed?.["csp-report" as never]];
-  for (const r of reports.slice(0, 20)) {
-    if (!r || typeof r !== "object") continue;
-    const get = (...keys: string[]) => {
-      for (const k of keys) {
-        const v = (r as Record<string, unknown>)[k];
-        if (typeof v === "string") return v.slice(0, 300);
-      }
-      return "";
-    };
-    let page = get("documentURL", "document-uri");
-    try {
-      page = new URL(page).pathname;
-    } catch {}
-    console.warn(
-      JSON.stringify({
-        event: "csp_violation",
-        directive: get("effectiveDirective", "effective-directive", "violated-directive"),
-        blocked: get("blockedURL", "blocked-uri"),
-        page,
-      }),
-    );
-  }
-  return new Response(null, { status: 204 });
+export function handleCspReport(request: Request): Promise<Response> {
+  return receiveCspReport(request, { headers: securityHeaders });
 }
