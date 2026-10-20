@@ -1,13 +1,7 @@
 // Transactional email via the Cloudflare Email Service send_email binding (EMAIL).
 // No API key: the binding sends from the onboarded foxing.app domain.
 
-/** Text made safe inside HTML, attribute values included. */
-function escapeHtml(value: string): string {
-  return value.replace(
-    /[&<>"']/g,
-    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
-  );
-}
+import { escapeHtml } from "@dustinedwards/site-runtime/html";
 
 /** One email carrying one link. The link is escaped in the HTML part: Better Auth builds it with
  *  the caller's callbackURL in the query, and a raw "&" or quote must not end the attribute. */
