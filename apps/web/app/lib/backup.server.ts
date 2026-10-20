@@ -1,14 +1,13 @@
 // Nightly D1 backup, run from the Worker's scheduled handler (wrangler.jsonc triggers.crons).
 // d1-dump writes one JSON object per table into the BACKUPS R2 bucket and works where
 // `wrangler d1 export` fails on our FTS5 tables. Restore and drill: the d1-dump README.
+import { type BackupHealth, backupHealth, runCheckedBackup } from "@dustinedwards/d1-dump";
 import {
-  type BackupHealth,
-  backupHealth,
-  dumpDatabase,
-  pruneDumps,
-  writeCompleteMarker,
-} from "@dustinedwards/d1-dump";
-import { BACKUP_COUNTED_TABLES, BACKUP_EXCLUDE, dumpProblems } from "./backup-checks";
+  BACKUP_COUNTED_TABLES,
+  BACKUP_EXCLUDE,
+  BACKUP_REQUIRED_TABLES,
+  countProblems,
+} from "./backup-checks";
 
 async function liveCounts(db: D1Database): Promise<Record<string, number>> {
   const results = await db.batch<{ n: number }>(
@@ -20,23 +19,18 @@ async function liveCounts(db: D1Database): Promise<Record<string, number>> {
 }
 
 /**
- * Dump, check, then mark complete and prune. A dump that fails its checks is left WITHOUT the
- * marker (kept as evidence, never counted as the latest), and this throws, so the failure shows
- * as a failed Cron invocation and the health age keeps growing toward its 26 hour warning.
+ * Dump, check, then mark complete and prune, by d1-dump's runCheckedBackup. A dump that fails its
+ * checks is left WITHOUT the marker (kept as evidence, never counted as the latest) and throws
+ * BackupIncomplete, so the failure shows as a failed Cron invocation and the health age keeps
+ * growing toward its 26 hour warning. Pruning keeps d1-dump's default retention: the newest
+ * complete run of each of the last 14 days, 8 ISO weeks and 6 months.
  */
 export async function runBackup(env: Env): Promise<void> {
-  const dump = await dumpDatabase(env.DB, env.BACKUPS, {
+  await runCheckedBackup(env.DB, env.BACKUPS, {
     exclude: [...BACKUP_EXCLUDE],
-    markComplete: false,
+    required: [...BACKUP_REQUIRED_TABLES],
+    check: async (dump) => countProblems(dump, await liveCounts(env.DB)),
   });
-  const problems = dumpProblems(dump, await liveCounts(env.DB));
-  if (problems.length > 0) {
-    throw new Error(`backup ${dump.run_id} left incomplete: ${problems.join("; ")}`);
-  }
-  await writeCompleteMarker(env.BACKUPS, dump);
-  // d1-dump's default retention: the newest complete run of each of the last 14 days, 8 ISO
-  // weeks and 6 months. The newest complete run is never deleted.
-  await pruneDumps(env.BACKUPS);
 }
 
 /** Age of the newest complete dump, for /health. Warns past 26 hours. Never throws. */

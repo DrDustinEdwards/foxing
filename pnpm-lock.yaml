@@ -270,8 +270,8 @@ importers:
   apps/web:
     dependencies:
       '@dustinedwards/d1-dump':
-        specifier: github:DrDustinEdwards/d1-dump#v0.4.2
-        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f
+        specifier: github:DrDustinEdwards/d1-dump#v0.5.0
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/22b84b96c3f1d69ed82ee5994f3d89d0551aafd9
       '@dustinedwards/site-api':
         specifier: github:DrDustinEdwards/site-api#v0.2.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2
@@ -1234,9 +1234,9 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f':
-    resolution: {gitHosted: true, integrity: sha512-DqPp3KrTWxZRqyTzuXW/MM1cdLoWTlIkfwq57LiA6e/LMhlTDmPlQMdhrlm/nbFD5bJFSYTlJwNAcOemZX+P2A==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f}
-    version: 0.4.2
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/22b84b96c3f1d69ed82ee5994f3d89d0551aafd9':
+    resolution: {gitHosted: true, integrity: sha512-WOIEByQr9Tpb6UBU9IU75tZkuIVQAqOO5Im+SFx8FqXtNfnfaFPteZ1mMrd4KzvP0o6aqAEszow+pWCBLYzNww==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/22b84b96c3f1d69ed82ee5994f3d89d0551aafd9}
+    version: 0.5.0
     engines: {node: '>=24.14.1'}
     hasBin: true
 
@@ -1285,11 +1285,11 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -3760,10 +3760,12 @@ packages:
   '@xmldom/xmldom@0.8.13':
     resolution: {integrity: sha512-KRYzxepc14G/CEpEGc3Yn+JKaAeT63smlDr+vjB8jRfgTBBI9wRj/nkQEO+ucV8p8I9bfKLWp37uHgFrbntPvw==}
     engines: {node: '>=10.0.0'}
+    deprecated: this version has critical issues, please update to the latest version
 
   '@xmldom/xmldom@0.9.10':
     resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
     engines: {node: '>=14.6'}
+    deprecated: this version has critical issues, please update to the latest version
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -6529,8 +6531,8 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
+  thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
+    resolution: {commit: 7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee, repo: git@github.com:edrlab/thorium-locales.git, type: git}
     version: 1.0.0
 
   throat@5.0.0:
@@ -8071,7 +8073,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/523adba1905088c8be97c24a8272c5b823d8283f': {}
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/22b84b96c3f1d69ed82ee5994f3d89d0551aafd9': {}
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e8ad899cd81ddb758a4e5be9a1678f7c6196f2d2':
     dependencies:
@@ -9622,11 +9624,11 @@ snapshots:
 
   '@readium/shared@2.2.0':
     dependencies:
-      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
+      '@edrlab/thorium-locales': thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
 
   '@readium/shared@2.2.3':
     dependencies:
-      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
+      '@edrlab/thorium-locales': thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
 
   '@remix-run/node-fetch-server@0.13.3': {}
 
@@ -13145,7 +13147,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee: {}
+  thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee: {}
 
   throat@5.0.0: {}
 
