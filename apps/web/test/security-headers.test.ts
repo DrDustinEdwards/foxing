@@ -64,7 +64,9 @@ describe("security headers on rendered responses", () => {
     // The no-flash theme script, React Router's context and module scripts at the least.
     expect(executable.length).toBeGreaterThanOrEqual(3);
     for (const s of executable) expect(s.nonce).toBe(nonce);
-    expect(response.headers.get("Reporting-Endpoints")).toBe('csp-endpoint="/api/csp-report"');
+    expect(response.headers.get("Reporting-Endpoints")).toBe(
+      `csp-endpoint="${ORIGIN}/api/csp-report"`,
+    );
   });
 
   it("a cache hit gets a fresh nonce, in its header and on every script, so readers never share one", async () => {
