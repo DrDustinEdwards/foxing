@@ -1,4 +1,4 @@
-// The checks a nightly dump must pass before it is marked complete. Pure (no d1-dump, no
+// What the nightly dump must leave out and carry, and Foxing's own checks on it. Pure (no
 // bindings) so the tests can hand it a bad dump and watch each check fail.
 //
 // EXCLUDED on purpose, because each holds live credentials or one-time tokens. A backup copy
@@ -35,22 +35,17 @@ export type DumpSummary = {
   tables: Array<{ name: string; rows: number }>;
 };
 
-/** One message per failed check; empty means the dump may be marked complete. */
-export function dumpProblems(dump: DumpSummary, liveCounts: Record<string, number>): string[] {
+/**
+ * Foxing's own checks, run by d1-dump's runCheckedBackup after its standard ones (not empty,
+ * nothing excluded present, every required table there). One message per failed check.
+ */
+export function countProblems(dump: DumpSummary, liveCounts: Record<string, number>): string[] {
   const problems: string[] = [];
-  if (dump.tables.length === 0) problems.push("the dump holds no tables");
   const byName = new Map(dump.tables.map((t) => [t.name, t.rows]));
-
-  for (const name of BACKUP_EXCLUDE) {
-    if (byName.has(name)) problems.push(`${name} is in the dump but must be excluded`);
-  }
-  for (const name of BACKUP_REQUIRED_TABLES) {
-    if (!byName.has(name)) problems.push(`${name} is missing from the dump`);
-  }
   for (const name of BACKUP_COUNTED_TABLES) {
     const dumped = byName.get(name);
     const live = liveCounts[name];
-    if (dumped === undefined) continue; // already reported as missing
+    if (dumped === undefined) continue; // reported as missing by the required-table check
     if (live === undefined) problems.push(`no live count for ${name}`);
     else if (dumped !== live) problems.push(`${name} dumped ${dumped} rows but has ${live}`);
   }

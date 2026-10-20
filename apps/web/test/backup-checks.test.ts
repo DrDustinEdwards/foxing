@@ -1,5 +1,17 @@
+import { type DumpResult, standardProblems } from "@dustinedwards/d1-dump";
 import { describe, expect, it } from "vitest";
-import { BACKUP_EXCLUDE, type DumpSummary, dumpProblems } from "../app/lib/backup-checks";
+import {
+  BACKUP_EXCLUDE,
+  BACKUP_REQUIRED_TABLES,
+  countProblems,
+  type DumpSummary,
+} from "../app/lib/backup-checks";
+
+// What runCheckedBackup checks: d1-dump's standard checks with Foxing's lists, then Foxing's own.
+function dumpProblems(dump: DumpSummary, liveCounts: Record<string, number>): string[] {
+  const lists = { exclude: [...BACKUP_EXCLUDE], required: [...BACKUP_REQUIRED_TABLES] };
+  return [...standardProblems(dump as DumpResult, lists), ...countProblems(dump, liveCounts)];
+}
 
 const live = { books: 2237, journal_posts: 75 };
 const good: DumpSummary = {
@@ -19,7 +31,7 @@ describe("nightly dump checks", () => {
 
   it("fails an empty dump", () => {
     const problems = dumpProblems({ tables: [] }, live);
-    expect(problems).toContain("the dump holds no tables");
+    expect(problems).toContain("the dump holds 0 tables and 0 rows");
     expect(problems).toContain("journal_posts is missing from the dump");
     expect(problems).toContain("every counted table dumped empty");
   });
@@ -27,6 +39,7 @@ describe("nightly dump checks", () => {
   it("fails a dump whose counted tables are all empty, even when the live counts agree", () => {
     const dump = { tables: good.tables.map((t) => ({ ...t, rows: 0 })) };
     expect(dumpProblems(dump, { books: 0, journal_posts: 0 })).toEqual([
+      "the dump holds 5 tables and 0 rows",
       "every counted table dumped empty",
     ]);
   });
