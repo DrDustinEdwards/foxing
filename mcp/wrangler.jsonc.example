@@ -56,7 +56,7 @@
 
   "durable_objects": {
     "bindings": [
-      // The rate limiter: synchronous SQLite, src/rate-limit.ts.
+      // The rate limiter: site-runtime's RateLimiter, src/rate-limit.ts.
       { "name": "MCP_RATE_LIMIT", "class_name": "McpRateLimit" },
       // The append-only tool-call log, rule 12.4, src/audit-log.ts.
       { "name": "TOOL_CALL_LOG", "class_name": "ToolCallLog" }
