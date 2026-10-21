@@ -18,7 +18,7 @@ import {
   Lock,
   CaretLeft,
 } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { pickOne, supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { PassageCommentCard } from './passage-comment-card'
@@ -40,12 +40,6 @@ export interface CommentRow {
     avatar_url: string | null
   } | null
   reply_count: number
-}
-
-function pickOne<T>(v: unknown): T | null {
-  if (!v) return null
-  if (Array.isArray(v)) return (v[0] as T | undefined) ?? null
-  return v as T
 }
 
 interface Props {

@@ -32,6 +32,7 @@ import type {
   ReaderRect,
 } from '@/components/reader/foliate-reader-webview'
 import { getChapterContent } from '@/lib/epub-content'
+import { decodeLocator, encodeLocator, settingsToReadiumPreferences, splitSentences, toSoftTint } from './readium-helpers'
 
 // Foliate -> Readium reader migration. Implements the same ReaderRef
 // contract so app/reader/[id].tsx can switch renderers without changing
@@ -66,24 +67,6 @@ const HIGHLIGHTS_GROUP = 'highlights'
 const TTS_SENTENCE_GROUP = 'tts-sentence'
 const PASSAGE_COMMENT_GROUP = 'passage-comment-markers'
 const POPULAR_HIGHLIGHTS_GROUP = 'popular-highlights'
-
-// Soften a 6-digit hex color to an 8-digit one with ~20% alpha so the
-// popular-highlight tint sits behind text instead of competing with
-// it. Pass-through for inputs we can't parse.
-function toSoftTint(hex: string): string {
-  if (/^#[0-9a-f]{6}$/i.test(hex)) return hex + '33'
-  if (/^#[0-9a-f]{8}$/i.test(hex)) return hex
-  return hex
-}
-
-// Same regex the TtsBar uses to split chapter text into utterances. Keep
-// these two in sync so highlightSentence(index) lines up with the index
-// the bar reports.
-function splitSentences(chapterText: string): string[] {
-  const parts =
-    (chapterText ?? '').replace(/\s+/g, ' ').match(/[^.!?]+[.!?]+["')\]]*\s*/g) ?? []
-  return parts.map((s) => s.trim()).filter((s) => s.length > 0)
-}
 
 interface ReadiumReaderProps {
   epubUrl: string
@@ -124,49 +107,6 @@ interface ReadiumReaderProps {
 // Every other Foliate setting (lineHeight, paragraphSpacing, marginPx,
 // letterSpacing, justify, etc.) stays unset until we map each one
 // against a verified Readium range.
-
-const READIUM_BG_TO_THEME: Array<[RegExp, 'light' | 'dark' | 'sepia']> = [
-  [/^#0/i, 'dark'],
-  [/^#1/i, 'dark'],
-  [/e8|f4|f5/i, 'sepia'],
-]
-
-function deriveReadiumTheme(bg: string): 'light' | 'dark' | 'sepia' {
-  const lower = bg.toLowerCase()
-  for (const [pattern, value] of READIUM_BG_TO_THEME) {
-    if (pattern.test(lower)) return value
-  }
-  return 'light'
-}
-
-function settingsToReadiumPreferences(s: ReaderSettings): Preferences {
-  return {
-    theme: deriveReadiumTheme(s.theme.background),
-    fontSize: Math.max(0.5, Math.min(2.0, s.fontSize / 16)),
-  }
-}
-
-// CFI <-> Locator conversion. Readium uses its own Locator shape; we keep
-// the migration storage-compatible by stringifying the whole Locator and
-// stashing it where progress_cfi used to live. Old foliate epubcfi(...)
-// strings will fail to parse here and the reader will start from the top
-// of the book on first open -- acceptable migration cost since there's no
-// reliable epubcfi -> Readium Locator mapping.
-function decodeLocator(cfi: string | undefined): Locator | undefined {
-  if (!cfi) return undefined
-  if (!cfi.startsWith('{')) return undefined
-  try {
-    const parsed = JSON.parse(cfi) as Locator
-    if (parsed && typeof parsed.href === 'string') return parsed
-  } catch {
-    return undefined
-  }
-  return undefined
-}
-
-function encodeLocator(locator: Locator): string {
-  return JSON.stringify(locator)
-}
 
 export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
   function ReadiumReader(

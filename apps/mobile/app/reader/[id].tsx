@@ -8,7 +8,6 @@ import {
   Sparkle,
   X as XIcon,
 } from 'phosphor-react-native'
-import { Alert, TextInput as RNTextInput, Modal as RNModal } from 'react-native'
 import {
   type BookmarkRow,
   createBookmark,
@@ -20,7 +19,7 @@ import { GoToSheet } from '@/components/reader/go-to-sheet'
 import { ReaderTopBar } from '@/components/reader/reader-top-bar'
 import { supabase } from '@/lib/supabase'
 import { reportWriteError } from '@/lib/db-write'
-import { Colors, useColors } from '@/constants/colors'
+import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import type {
   PassageCommentMarker,
@@ -66,16 +65,9 @@ import {
 } from '@/components/reader/floating-pill'
 import {
   type ReaderPrefs,
-  type CanvasTheme,
   DEFAULT_PREFS,
   loadPrefs,
   savePrefs,
-  FONT_SIZE_PX,
-  LINE_SPACING_VAL,
-  LETTER_SPACING_EM,
-  MARGIN_PX,
-  PARAGRAPH_SPACING_EM,
-  FONT_FAMILY_CSS,
 } from '@/lib/reader-settings'
 import { getWordWiseHints } from '@/lib/claude'
 import { resolvePreferredEpubUrl } from '@/lib/books'
@@ -91,6 +83,8 @@ import {
   saveHistory as savePositionHistory,
   type PositionEntry,
 } from '@/lib/position-history'
+import { BookmarkNamingModal, ReaderToast } from '@/components/reader/reader-overlays'
+import { CANVAS_PALETTE, formatRemaining, hexToRgba, prefsToSettings } from '@/components/reader/reader-screen-helpers'
 
 interface BookRow {
   id: string
@@ -98,60 +92,6 @@ interface BookRow {
   author: string
   source: string
   epub_url: string
-}
-
-// Reading canvas modes are decoupled from the app's UI theme, they're
-// applied to the WebView body (and via setStyles to each chapter iframe).
-const CANVAS_PALETTE: Record<CanvasTheme, { background: string; text: string }> = {
-  default: { background: Colors.light.bgReading, text: Colors.light.textPrimary },
-  sepia: { background: Colors.light.bgReadingSepia, text: Colors.light.textOnSepia },
-  dark: { background: Colors.dark.bgReading, text: Colors.dark.textPrimary },
-  oled: { background: Colors.dark.bgReadingOled, text: Colors.dark.textOnDark },
-}
-
-// "MM:SS" countdown formatter for the sleep-timer badge. Zero-pads seconds
-// so the width doesn't jitter as the digit count changes.
-function formatRemaining(ms: number): string {
-  const totalSeconds = Math.max(0, Math.floor(ms / 1000))
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`
-}
-
-// Convert a 6-digit hex like "#FEFCF8" to an rgba() string at the given
-// alpha. Used so the chrome bar can be translucent without the React Native
-// `opacity` prop (which would fade the icons inside too).
-function hexToRgba(hex: string, alpha: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
-  if (!m) return hex
-  const v = parseInt(m[1], 16)
-  const r = (v >> 16) & 0xff
-  const g = (v >> 8) & 0xff
-  const b = v & 0xff
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`
-}
-
-// Project a ReaderPrefs (step-space, persistent) into the flat ReaderSettings
-// the WebView consumes (concrete pixel/multiplier values). The isTablet flag
-// scales margins up so text doesn't run edge-to-edge on iPad-class widths.
-function prefsToSettings(prefs: ReaderPrefs, isTablet: boolean): ReaderSettings {
-  const palette = CANVAS_PALETTE[prefs.canvasTheme]
-  const baseMargin = MARGIN_PX[prefs.marginWidth]
-  return {
-    fontSize: FONT_SIZE_PX[prefs.fontSize],
-    lineHeight: LINE_SPACING_VAL[prefs.lineSpacing],
-    theme: palette,
-    fontFamily: FONT_FAMILY_CSS[prefs.fontFamily],
-    bold: prefs.bold,
-    paragraphSpacing: PARAGRAPH_SPACING_EM[prefs.paragraphSpacing],
-    marginPx: isTablet ? Math.round(baseMargin * 1.5) : baseMargin,
-    justify: prefs.alignment === 'justified',
-    letterSpacingEm: LETTER_SPACING_EM[prefs.letterSpacing],
-    firstLineIndent: prefs.firstLineIndent,
-    dropCap: prefs.dropCap,
-    warmScreen: prefs.warmScreen,
-    focusMode: prefs.focusMode,
-  }
 }
 
 // Word-pill state carries the surrounding sentence so the WordLookupSheet
@@ -167,41 +107,6 @@ interface WordPillState {
 interface PassagePillState {
   text: string
   cfi: string | null
-}
-
-// Lightweight transient toast, single instance, auto-dismisses. Kept local
-// to the reader because no other screen needs it yet.
-function ReaderToast({ message, onHide }: { message: string | null; onHide: () => void }) {
-  const colors = useColors()
-  useEffect(() => {
-    if (!message) return
-    const t = setTimeout(onHide, 2500)
-    return () => clearTimeout(t)
-  }, [message, onHide])
-  if (!message) return null
-  return (
-    <SafeAreaView
-      edges={['bottom']}
-      pointerEvents="none"
-      className="absolute bottom-0 left-0 right-0"
-    >
-      <View
-        className="mx-6 mb-6 px-4 py-3 rounded-xl"
-        style={{ backgroundColor: colors.tooltipBg, alignItems: 'center' }}
-      >
-        <Text
-          style={{
-            color: colors.tooltipText,
-            fontFamily: Fonts.uiMedium,
-            fontSize: 13,
-            textAlign: 'center',
-          }}
-        >
-          {message}
-        </Text>
-      </View>
-    </SafeAreaView>
-  )
 }
 
 export default function Reader() {
@@ -2171,78 +2076,3 @@ export default function Reader() {
   )
 }
 
-// Inline modal for naming a fresh bookmark. Defaults to "[Chapter] · X%"
-// so a confused user can just hit Save without typing anything.
-function BookmarkNamingModal({
-  suggested,
-  onCancel,
-  onSave,
-}: {
-  suggested: string
-  onCancel: () => void
-  onSave: (name: string) => void | Promise<void>
-}) {
-  const colors = useColors()
-  const [name, setName] = useState(suggested)
-  return (
-    <RNModal visible animationType="fade" transparent onRequestClose={onCancel}>
-      <Pressable
-        className="flex-1 items-center justify-center px-6"
-        style={{ backgroundColor: colors.overlay }}
-        onPress={onCancel}
-      >
-        <Pressable
-          onPress={(e) => e.stopPropagation()}
-          className="w-full p-4 rounded-2xl bg-bg-elevated-light dark:bg-bg-elevated-dark"
-        >
-          <Text
-            style={{
-              fontFamily: Fonts.displayBold,
-              fontSize: 16,
-              color: colors.textPrimary,
-              marginBottom: 12,
-            }}
-          >
-            Name this bookmark
-          </Text>
-          <RNTextInput
-            value={name}
-            onChangeText={setName}
-            placeholder={suggested}
-            placeholderTextColor={colors.textTertiary}
-            maxLength={80}
-            autoFocus
-            style={{
-              fontFamily: Fonts.body,
-              fontSize: 15,
-              color: colors.textPrimary,
-              backgroundColor: colors.bgBase,
-              borderColor: colors.borderSubtle,
-              borderWidth: 1,
-              borderRadius: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              marginBottom: 12,
-            }}
-          />
-          <View className="flex-row justify-end gap-3">
-            <Pressable onPress={onCancel} className="px-4 py-2">
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
-                Cancel
-              </Text>
-            </Pressable>
-            <Pressable
-              onPress={() => onSave(name.trim() || suggested)}
-              className="px-4 py-2 rounded-full"
-              style={{ backgroundColor: colors.brandUi }}
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Save
-              </Text>
-            </Pressable>
-          </View>
-        </Pressable>
-      </Pressable>
-    </RNModal>
-  )
-}

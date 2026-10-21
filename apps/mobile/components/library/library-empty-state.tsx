@@ -2,7 +2,7 @@ import { View, Text } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import type { UserBookStatus } from '@/lib/library'
-import type { ShelfKey } from '@/app/(tabs)/library'
+import type { ShelfKey } from '@/components/library/library-types'
 
 function statusMessage(status: UserBookStatus): string {
   switch (status) {

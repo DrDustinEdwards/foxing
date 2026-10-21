@@ -28,13 +28,13 @@ import { supabase } from '@/lib/supabase'
 import {
   fetchClub,
   fetchMembers,
-  fetchThreads,
   joinClub,
   isMember,
   type ClubMember,
   type ClubThread,
   type ClubWithBook,
 } from '@/lib/clubs'
+import { fetchThreads } from '@/lib/club-threads'
 
 export default function PublicClubScreen() {
   const colors = useColors()
