@@ -17,8 +17,7 @@ directly with a header-injected session (`x-test-user`) and never touched the
 rendered control. It reported success while a human could not commit a selection.
 A test that does not click what the user clicks proves nothing about the user.
 
-Corollary for the whole repo: D1 row checks are Fable's independent verification,
-never a slice's own gate. Integration tests may call a core function or loader
+Corollary for the whole repo: integration tests may call a core function or loader
 directly with a user id (that is not a forged session), but no test asserts a
 slice is healthy by reading rows through a forged HTTP session.
 

@@ -30,19 +30,19 @@ Run mobile commands in `apps/mobile`, web in `apps/web`; install at the root.
 - Web deploy: a merge to main deploys (the `deploy` job in `.github/workflows/ci-cf.yml`, on while the repository variable `CF_DEPLOY` is `true`), then `e2e` runs against the live site. `cd apps/web && pnpm run deploy` still deploys by hand.
 - D1 migrations: author with drizzle-kit in `packages/core` (`packages/core/migrations`), apply with wrangler. Never Supabase MCP or hand-run production DDL.
 - Supabase CLI only for the mobile ai-companion function, in `apps/mobile`: `npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc`. Never delete `apps/mobile/supabase` or merge the trees.
-- Private repo: CI shares Dustin's free monthly minutes; run heavy jobs locally, one at a time.
+- Public repo: never commit `wrangler.jsonc`, `.dev.vars`, a key or a secret; only the `.example` configs are committed.
 
-## Backup: the whole-database export does not work here
+## Backup
 
-`npx wrangler d1 export foxing` fails on the two FTS5 tables.
+Nightly: the Worker's cron dumps D1 into the private `BACKUPS` R2 bucket with d1-dump (`apps/web/app/lib/backup.server.ts`); `/health` warns when the newest complete dump is over 26 hours old. Restore: the d1-dump README.
 
-**By hand**, until a nightly dump is confirmed: export per table, data only, for `journal_posts` first, then `annotations`, `profiles`, `books`:
+`npx wrangler d1 export foxing` fails on the two FTS5 tables. If a dump by hand is needed, export per table, data only, `journal_posts` first (original prose that exists nowhere else), then `annotations`, `profiles`, `books`:
 
 ```
 npx wrangler d1 export foxing --remote --no-schema --table <table> --output export-<table>.sql
 ```
 
-`journal_posts` is original prose that exists nowhere else. Check other tables' counts; Better Auth tables regenerate at login. Never export `annotations_fts`, `books_fts` or FTS shadow tables. Restore: apply `packages/core/migrations`, then the data files (FTS triggers refill the index; `INSERT INTO books_fts (books_fts) VALUES ('rebuild');` and the same for `annotations_fts` repairs it). Check each file has INSERT rows. Full: `foxing/protocol-backup.md` in Capsid.
+Never export `annotations_fts`, `books_fts` or FTS shadow tables. Restore by hand: apply `packages/core/migrations`, then the data files (check each has INSERT rows); `INSERT INTO books_fts (books_fts) VALUES ('rebuild');` and the same for `annotations_fts` repairs the index. Full: `foxing/protocol-backup.md` in Capsid.
 
 ## Hard rules
 
