@@ -8,8 +8,6 @@ overrides:
   react: 19.2.7
   react-dom: 19.2.7
 
-pnpmfileChecksum: sha256-SgdvxHMJRfCG1E+zfc7/zOnAl9aPxHmDlBy+N7sPEC0=
-
 importers:
 
   .:
