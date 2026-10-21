@@ -153,11 +153,11 @@ export const reportTarget = z.enum(reportTargetValues);
 export const reportStatusValues = tuple(["open", "reviewing", "resolved", "dismissed"] as const);
 export const reportStatus = z.enum(reportStatusValues);
 
-// push_tokens.platform (Phase 7)
+// push_tokens.platform
 export const pushPlatformValues = tuple(["ios", "android"] as const);
 export const pushPlatform = z.enum(pushPlatformValues);
 
-// companion_messages.role (Phase 4)
+// companion_messages.role
 export const companionRoleValues = tuple(["user", "assistant"] as const);
 export const companionRole = z.enum(companionRoleValues);
 

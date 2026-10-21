@@ -1,4 +1,4 @@
-// Social endpoints (Phase 6): follows, close friends, reading lists, the
+// Social endpoints: follows, close friends, reading lists, the
 // activity feed, and Year in Reading recap. Handlers stay thin: guard the session,
 // validate, call the core social/recap domain (which authorizes, commits, and emits),
 // return. Feed visibility resolves entirely server-side in core -- the client is never

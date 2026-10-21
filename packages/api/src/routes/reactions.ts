@@ -1,4 +1,4 @@
-// Reactions endpoints (Phase 6). Generic like/reaction over the one reactions table.
+// Reactions endpoints. Generic like/reaction over the one reactions table.
 // PUT adds, DELETE removes. Target existence + owner notification handled in core.
 // Phase 6 uses this for reading_list likes and diary_entry (review) likes.
 import { reactionInput, reactionsDomain } from "@foxing/core";

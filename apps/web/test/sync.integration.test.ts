@@ -4,7 +4,7 @@ import { createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
-// Phase 7 offline sync + push, exercised web -> api -> core -> D1 against local D1. This
+// Offline sync + push, exercised web -> api -> core -> D1 against local D1. This
 // is the device-independent proof of the sync protocol: idempotent create replay,
 // row-level LWW, progress = greatest client_ts, delete idempotency, append-only sessions,
 // pull-by-cursor, and push token registration. Device behavior (airplane-mode queue +

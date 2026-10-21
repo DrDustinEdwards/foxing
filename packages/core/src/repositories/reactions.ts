@@ -1,4 +1,4 @@
-// Reactions data access (Phase 6). One generalized table replaces the old per-feature
+// Reactions data access. One generalized table replaces the old per-feature
 // like tables. Phase 6 wires reading_list + diary_entry targets (list likes, review
 // likes). Owner resolution (for the reaction notification) is done here so the domain
 // can notify the target's author without knowing each table's shape.

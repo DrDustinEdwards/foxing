@@ -1,4 +1,4 @@
-// Sync executors (Phase 7). One adapter per single-owner resource: existence/LWW probe,
+// Sync executors. One adapter per single-owner resource: existence/LWW probe,
 // insert, update, delete, and the pull query. The pure conflict decision lives in
 // domain/sync.ts (resolveSyncOp); this file only executes a decision against D1. Every
 // operation is scoped to the session user id -- payload.user_id is never trusted.

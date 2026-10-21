@@ -1,4 +1,4 @@
-// Soft Plus paywall (Phase 4b). Full-screen, dismissable, and it NEVER blocks the
+// Soft Plus paywall. Full-screen, dismissable, and it NEVER blocks the
 // reader. Triggered when a free user hits a Plus action (the companion 403 plus_required
 // is the first consumer). The CTA starts a Stripe Checkout with a 7-day trial via
 // POST /api/v1/billing/checkout and redirects to the returned URL. Pricing copy is kept

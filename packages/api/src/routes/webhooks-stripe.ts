@@ -1,4 +1,4 @@
-// Stripe webhook (Phase 4b). This is the SINGLE writer of profiles.subscription_tier.
+// Stripe webhook. This is the SINGLE writer of profiles.subscription_tier.
 // Signature-verified (no session; Stripe posts with no cookie) and idempotent (every
 // event id recorded once; a retry is a no-op). Emits nothing to the activity feed --
 // billing is private. Mounted inside the normal pipeline: session/profile resolve to

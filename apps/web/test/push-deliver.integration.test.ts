@@ -3,7 +3,7 @@ import { createDb, push, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
-// Phase 7 push delivery pipeline against local D1 with a STUB Expo fetch. Proves the
+// Push delivery pipeline against local D1 with a STUB Expo fetch. Proves the
 // whole chain minus the real Expo network + a real device: prefs/quiet-hours gating,
 // Expo message build, and DeviceNotRegistered token pruning. Device receipt is a
 // separate human gate.

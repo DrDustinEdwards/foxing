@@ -4,7 +4,7 @@ import { createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
-// Phase 6 social write paths, exercised web -> api -> core -> D1 against local D1.
+// Social write paths, exercised web -> api -> core -> D1 against local D1.
 // Verifies: diary event emission RESPECTS visibility (private emits nothing; friends /
 // public emit the right event), follow emits a new_follower notification, and list likes
 // go through the reactions table.

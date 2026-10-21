@@ -1,4 +1,4 @@
-// Year in Reading recap (Phase 6). Aggregates a user's finishes for a calendar year
+// Year in Reading recap. Aggregates a user's finishes for a calendar year
 // into a shareable payload: counts, top books (by the user's own rating), and stats.
 // The public variant is visibility-gated at the route (profile must be public). The OG
 // image renders from this same payload.

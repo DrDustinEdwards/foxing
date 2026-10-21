@@ -1,4 +1,4 @@
-// The AI companion endpoint (Phase 4a). Server assembles ALL context; the client
+// The AI companion endpoint. Server assembles ALL context; the client
 // sends only { action, book_id, thread_id?, message?, selection?, target_language? }
 // and never a prompt or system prompt -- this is what the D10 adversarial eval
 // checks. Tier-gated (D11 Plus actions) and quota-gated (cost-based, not request-

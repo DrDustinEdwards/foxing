@@ -1,4 +1,4 @@
-// Billing endpoints (Phase 4b). Checkout + portal are user-initiated (auth required; a
+// Billing endpoints. Checkout + portal are user-initiated (auth required; a
 // free user may start checkout). Neither writes the tier -- only the Stripe webhook does
 // (webhooks-stripe.ts). Stripe is dependency-injected; when unconfigured every call
 // throws BillingNotConfiguredError, surfaced here as a clean 503.

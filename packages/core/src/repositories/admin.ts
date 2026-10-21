@@ -455,7 +455,7 @@ export async function updatePick(
     .where(eq(externalBookClubPicks.id, id));
 }
 
-// ---- Reader clubs (Phase 5) ---------------------------------------------------
+// ---- Reader clubs ---------------------------------------------------
 
 export type AdminClubRow = {
   id: string;

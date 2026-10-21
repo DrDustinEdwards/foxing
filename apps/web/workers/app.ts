@@ -102,7 +102,7 @@ const api = createApi({
     }
     return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
   },
-  // The live layer (Phase 5). One ClubRoom Durable Object per club; the API calls
+  // The live layer. One ClubRoom Durable Object per club; the API calls
   // broadcast() only AFTER a write commits to D1 (write -> commit -> notify), and
   // connect() forwards a membership-checked upgrade to that club's object. The DO
   // never writes D1.
@@ -293,13 +293,13 @@ app.all("*", async (c) => {
   return res;
 });
 
-// Phase 4a companion cache pipeline. Cron finds catalog books missing a cached action
+// The companion cache pipeline. Cron finds catalog books missing a cached action
 // and enqueues one message per book; the queue consumer generates the 4 free-cached
 // actions for that book and writes book_ai_cache. Both reuse the same core functions
 // the manual proof script and the admin ops route call (one generation code path).
 type CacheJobMessage = { bookId: string };
 
-// Phase 7 push delivery sweep. Runs on a frequent cron: it push-delivers notifications
+// The push delivery sweep. Runs on a frequent cron: it push-delivers notifications
 // created since the last sweep (deduped in KV), gated per user by category prefs + quiet
 // hours (domain/push). Kept off the notification write path so core stays binding-free;
 // the cadence trades a little latency for that decoupling. In-app notifications are

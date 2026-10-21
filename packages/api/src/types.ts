@@ -9,7 +9,7 @@ import type {
   Profile,
 } from "@foxing/core";
 
-// The live-layer seam (Phase 5). The Worker builds this from the ClubRoom Durable
+// The live-layer seam. The Worker builds this from the ClubRoom Durable
 // Object namespace; tests inject a no-op. `broadcast` is called AFTER a write commits
 // to D1 (write -> commit -> notify); `connect` upgrades a membership-checked request to
 // the club's ClubRoom WebSocket. The DO is fan-out only and never writes D1.

@@ -82,7 +82,7 @@ const handlers: EventHandlers = {
     };
   },
 
-  // -- Clubs (Phase 5). Recipient lists are passed IN the payload: handlers stay pure
+  // -- Clubs. Recipient lists are passed IN the payload: handlers stay pure
   // (no DB reads), so the domain layer loads active members and hands them here.
 
   "club.member.joined": (_actor, payload) => {
@@ -210,7 +210,7 @@ const handlers: EventHandlers = {
     };
   },
 
-  // -- Social (Phase 6). Diary events carry the ENTRY's own visibility (private entries
+  // -- Social. Diary events carry the ENTRY's own visibility (private entries
   // emit no event at all, so the domain never calls these for a private entry). The feed
   // resolver later filters by that stored visibility per viewer.
 

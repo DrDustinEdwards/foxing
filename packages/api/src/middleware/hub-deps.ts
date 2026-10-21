@@ -1,4 +1,4 @@
-// Attaches the injected live-layer hub to each request (Phase 5). Same shape as the
+// Attaches the injected live-layer hub to each request. Same shape as the
 // companion/billing dep middleware: the Worker resolves the ClubRoom-backed hub from
 // its env; when no resolver is provided a no-op hub is used, so non-club callers and
 // the pre-Phase-5 test suites run without a Durable Object. Routes read it via

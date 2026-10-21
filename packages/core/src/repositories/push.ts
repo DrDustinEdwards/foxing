@@ -1,4 +1,4 @@
-// Push token + delivery-context data access (Phase 7). Tokens are registered per device
+// Push token + delivery-context data access. Tokens are registered per device
 // after sign-in and pruned when Expo reports DeviceNotRegistered. loadDeliveryContext
 // gives the Queue consumer everything the push gate needs for one notification.
 import { and, eq, inArray } from "drizzle-orm";

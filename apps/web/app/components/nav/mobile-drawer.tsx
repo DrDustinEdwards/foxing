@@ -1,4 +1,4 @@
-// Mobile slide-in drawer, ported from the legacy nav. Discover/Community sections plus a
+// Mobile slide-in drawer. Discover/Community sections plus a
 // dark-mode toggle and the sign-in/join actions. Every link is gated to a route that
 // exists in this build: By Mood is omitted (no /discover route yet).
 import { useEffect, useRef } from "react";

@@ -1,4 +1,4 @@
-// Pure club-membership state machine (Phase 5). No DB: given the current status/role
+// Pure club-membership state machine. No DB: given the current status/role
 // and the club settings, decide the next state and who is allowed to act. The clubs
 // domain layer composes these with repo reads/writes; unit-tested in membership.test.ts.
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";

@@ -1,4 +1,4 @@
-// Club domain logic (Phase 5). This is where authorization, event emission, and the
+// Club domain logic. This is where authorization, event emission, and the
 // decision of WHAT to fan out over the live layer all live -- in core, never in a
 // client and never in the Durable Object. Each write commits to D1 (via clubsRepo),
 // emits notifications/activity (via emit), and returns any `live` message for the API

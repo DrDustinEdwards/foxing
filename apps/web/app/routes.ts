@@ -14,14 +14,14 @@ export default [
   route("library", "routes/library.tsx"),
   route("shelves/:id", "routes/shelf-detail.tsx"),
 
-  // Clubs (Phase 5). List + create (Plus-gated) + detail with the live layer + threads.
+  // Clubs. List + create (Plus-gated) + detail with the live layer + threads.
   route("clubs", "routes/clubs.tsx"),
   route("clubs/new", "routes/club-new.tsx"),
   route("clubs/:slug", "routes/club-detail.tsx"),
   route("clubs/:slug/t/:threadId", "routes/club-thread.tsx"),
   route("join/:code", "routes/join-code.tsx"),
 
-  // Social (Phase 6). Feed, people/close-friends, public profiles, diary, lists, recap.
+  // Social. Feed, people/close-friends, public profiles, diary, lists, recap.
   route("feed", "routes/feed.tsx"),
   route("people", "routes/people.tsx"),
   route("u/:username", "routes/u-profile.tsx"),

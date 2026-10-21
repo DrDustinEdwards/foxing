@@ -1,4 +1,4 @@
-// Platform (4 tables) + push_tokens (Phase 7). notifications written only by core
+// Platform (4 tables) + push_tokens. notifications written only by core
 // event handlers. admin_audit_log records every admin/operator write. announcements
 // is the admin-managed site-content surface (the legacy /admin/content home).
 import { sqliteTable, text, index, primaryKey } from "drizzle-orm/sqlite-core";

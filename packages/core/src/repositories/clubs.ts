@@ -1,4 +1,4 @@
-// Club data access (Phase 5). Pure DB reads/writes over the 10 club tables; no
+// Club data access. Pure DB reads/writes over the 10 club tables; no
 // permission logic and no event emission (that lives in domain/clubs.ts). Reads are
 // called in-process from web/mobile loaders; writes are called by the API layer after
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER

@@ -111,7 +111,7 @@ export async function updateUsername(
   return row ?? null;
 }
 
-// --- Billing (Phase 4b). The Stripe webhook is the only writer of these fields. ---
+// --- Billing. The Stripe webhook is the only writer of these fields. ---
 
 export async function getProfileByStripeCustomerId(
   db: Db,
