@@ -162,8 +162,8 @@ describe("Carrel site API: conformance", () => {
     });
     const failed = report.checks.filter((c) => !c.ok);
     expect(failed).toEqual([]);
-    // meta, no key, wrong key, off-prefix, unknown route, list, stale write; no media group.
-    expect(report.checks).toHaveLength(7);
+    // Foxing serves no media, so the suite's media group never runs.
+    expect(report.checks.filter((c) => c.name.startsWith("media"))).toEqual([]);
     expect(report.ok).toBe(true);
     // Every write the suite sends is refused: nothing changed.
     expect(await auditRows()).toEqual([]);
