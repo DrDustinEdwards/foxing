@@ -12,19 +12,25 @@ test.describe("reading goals (signed in)", () => {
     await expect(page.getByRole("heading", { name: /reading goals/i })).toBeVisible();
 
     const target = `${90 + (Date.now() % 9)}`; // an unusual target so the assertion is specific
+    // A run that failed before its clean-up can leave a goal with the same target behind.
+    const rows = page.locator("li", { hasText: new RegExp(`${target} books`, "i") });
+    const before = await rows.count();
     await page.getByRole("button", { name: /set goal/i }).scrollIntoViewIfNeeded();
     // The create form's number input is the first spinbutton on the page.
     await page.getByRole("spinbutton").first().fill(target);
     await page.getByRole("button", { name: /set goal/i }).click();
 
-    await expect(page.getByText(new RegExp(`${target}\\s+books`, "i")).first()).toBeVisible();
+    await expect(rows).toHaveCount(before + 1);
     await expect(page.getByRole("alert")).toHaveCount(0);
 
-    // Clean up: remove the goal we just created so the shared account stays tidy.
-    await page
-      .locator("li", { hasText: new RegExp(`${target} books`, "i") })
-      .getByRole("button", { name: /^remove$/i })
-      .click();
+    // Clean up: remove every goal with this target so the shared account stays tidy.
+    for (let left = before + 1; left > 0; left--) {
+      await rows
+        .first()
+        .getByRole("button", { name: /^remove$/i })
+        .click();
+      await expect(rows).toHaveCount(left - 1);
+    }
   });
 
   test("a failed goal write is surfaced, not silently swallowed", async ({ page }) => {
