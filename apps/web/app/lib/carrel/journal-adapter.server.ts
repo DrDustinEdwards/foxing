@@ -1,4 +1,4 @@
-// Foxing's side of Carrel's site API (carrel/design.md section 4): the package owns the route, the
+// Foxing's side of Carrel's site API (the site-api package): the package owns the route, the
 // key, the rate limit and every body's shape; this adapter maps its content and preview calls onto
 // the Journal's own code. Every write goes through the adminRepo functions the admin Journal
 // screens use (createJournalPost, updateJournalPost, setJournalPublished), validated by the same
