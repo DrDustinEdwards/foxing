@@ -7,13 +7,13 @@ import { catalogRepo, libraryRepo, loadReaderAnnotations, readerSocialRepo } fro
 import { getAuth } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
-import {
-  ReaderView,
-  type ReaderAnnotation,
-  type ReaderComment,
-  type ReaderOther,
-  type ReaderPopular,
-} from "~/components/reader/reader-view";
+import type {
+  ReaderAnnotation,
+  ReaderComment,
+  ReaderOther,
+  ReaderPopular,
+} from "~/components/reader/reader-types";
+import { ReaderView } from "~/components/reader/reader-view";
 import type { Route } from "./+types/read";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
