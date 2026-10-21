@@ -6,6 +6,7 @@ import { type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { captcha, magicLink } from "better-auth/plugins";
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
+import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
 
 export function getAuth(env: Env) {
   const db = createDb(env.DB);
@@ -35,7 +36,7 @@ export function getAuth(env: Env) {
     secret: env.BETTER_AUTH_SECRET,
     // Both the live domain and the workers.dev preview must be accepted so auth works
     // on each. baseURL covers one; trustedOrigins lists both explicitly.
-    trustedOrigins: ["https://foxing.app", "https://foxing.dustin-edwards.workers.dev"],
+    trustedOrigins: [SITE_ORIGIN, PREVIEW_ORIGIN],
     database: drizzleAdapter(db, {
       provider: "sqlite",
       schema,

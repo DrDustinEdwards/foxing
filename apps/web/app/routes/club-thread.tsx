@@ -46,7 +46,7 @@ export default function ClubThread({ loaderData }: Route.ComponentProps) {
     const r = await write(`/threads/${thread.id}/posts`, { body: { content } });
     if (r.ok) {
       form.reset();
-      refresh();
+      void refresh();
     }
   }
 

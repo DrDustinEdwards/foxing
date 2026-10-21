@@ -14,25 +14,11 @@ import type { GoalRow } from "~/lib/library.server";
 import { loadGoals } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
+import { MONTH_ABBR } from "~/lib/months";
 
 export function meta() {
   return [{ title: "Reading goals | Foxing" }, { name: "robots", content: "noindex" }];
 }
-
-const MONTH_ABBR = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);

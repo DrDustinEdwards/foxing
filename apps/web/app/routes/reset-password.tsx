@@ -53,7 +53,7 @@ export default function ResetPassword() {
       setError(res.error.message ?? "Reset failed. The link may have expired.");
       return;
     }
-    navigate("/login?reset=1");
+    void navigate("/login?reset=1");
   }
 
   return (

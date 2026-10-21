@@ -34,7 +34,7 @@
         "packages/core/src/**",
         "packages/api/src/**",
         "apps/web/workers/**",
-        "apps/web/app/**/*.server.ts"
+        "apps/web/app/**"
       ],
       "linter": {
         "rules": { "nursery": { "noFloatingPromises": "error" } }

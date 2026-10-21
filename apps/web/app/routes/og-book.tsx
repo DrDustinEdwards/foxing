@@ -5,6 +5,7 @@ import { edgeCache } from "~/lib/cache.server";
 import { coverSrc } from "~/lib/images";
 import { loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/og-book";
+import { FONT_CACHE_ORIGIN, OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 
 const WIDTH = 1200;
 const HEIGHT = 630;
@@ -14,7 +15,7 @@ const HEIGHT = 630;
  * supports ttf/otf/woff, not woff2). Cached at the edge for a year.
  */
 async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  const key = `https://fontcache.foxing.app/${family}-${weight}.font`;
+  const key = `${FONT_CACHE_ORIGIN}/${family}-${weight}.font`;
   const cache = edgeCache();
   const hit = await cache.match(key);
   if (hit) return hit.arrayBuffer();
@@ -61,7 +62,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   if (!book) throw new Response("Not found", { status: 404 });
 
   const cacheKey = new Request(
-    `https://og.foxing.app/book/${book.slug}?v=${book.updatedAt?.getTime() ?? 0}`,
+    `${OG_CACHE_ORIGIN}/book/${book.slug}?v=${book.updatedAt?.getTime() ?? 0}`,
   );
   const cache = edgeCache();
   const cached = await cache.match(cacheKey);
@@ -75,7 +76,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   // No usable font: fall back to the cover image (or 302 home) so crawlers still get art.
   if (!display && !ui) {
-    return Response.redirect(book.coverUrl ?? "https://foxing.app", 302);
+    return Response.redirect(book.coverUrl ?? SITE_ORIGIN, 302);
   }
 
   const title = escapeHtml(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
@@ -121,6 +122,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     return response;
   } catch {
     // Render failed: fall back to the cover (or home) so crawlers still get an image.
-    return Response.redirect(book.coverUrl ?? "https://foxing.app", 302);
+    return Response.redirect(book.coverUrl ?? SITE_ORIGIN, 302);
   }
 }

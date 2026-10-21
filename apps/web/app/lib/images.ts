@@ -9,8 +9,9 @@
 // environment where the zone feature is not yet enabled) serves the raw R2 URL and
 // never shows a broken /cdn-cgi/image 404. Flip to "true" once Transformations is
 // enabled on the zone (dashboard step), then rebuild + deploy.
+import { COVER_ORIGIN } from "./origins";
+
 const TRANSFORM = import.meta.env.VITE_IMAGES_TRANSFORM === "true";
-const COVER_ORIGIN = "https://covers.foxing.app";
 
 /** The responsive widths we render covers at (1x/2x for the common display sizes). */
 export const COVER_WIDTHS = [160, 240, 320, 400, 480, 640] as const;

@@ -16,6 +16,7 @@ import { BookPicker } from "~/components/admin/book-picker";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-botm";
+import { MONTH_NAMES } from "~/lib/months";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -27,21 +28,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 export function meta() {
   return [{ title: "Admin · Book of the Month | Foxing" }, { name: "robots", content: "noindex" }];
 }
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 export default function AdminBotm({ loaderData }: Route.ComponentProps) {
   const { rows } = loaderData;
@@ -127,7 +113,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
               onChange={(e) => setMonth(Number(e.target.value))}
               className={adminInputClass}
             >
-              {MONTHS.map((m, i) => (
+              {MONTH_NAMES.map((m, i) => (
                 <option key={m} value={i + 1}>
                   {m}
                 </option>
@@ -217,7 +203,7 @@ function BotmRow({
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="font-ui text-sm font-medium text-primary">
-            {MONTHS[row.month - 1]} {row.year}
+            {MONTH_NAMES[row.month - 1]} {row.year}
             {row.isPublished ? (
               <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
                 Live

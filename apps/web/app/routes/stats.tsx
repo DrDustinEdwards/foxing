@@ -8,6 +8,7 @@ import { Container, Eyebrow, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/stats";
+import { MONTH_INITIALS, MONTH_NAMES } from "~/lib/months";
 
 export function meta() {
   return [{ title: "Reading stats | Foxing" }, { name: "robots", content: "noindex" }];
@@ -73,22 +74,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 const numberFormat = new Intl.NumberFormat("en-US");
-const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
-
 export default function Stats({ loaderData }: Route.ComponentProps) {
   const { year, finishedThisYear, monthly, genres, booksYearGoalTarget, stats, goals } = loaderData;
   const tiles = [
@@ -219,7 +204,7 @@ function MonthlyBooksChart({ monthly }: { monthly: number[] }) {
               className="fill-tertiary font-mono"
               fontSize="9"
             >
-              {MONTHS[i]}
+              {MONTH_INITIALS[i]}
             </text>
           </g>
         );

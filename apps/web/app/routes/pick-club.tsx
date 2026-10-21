@@ -6,12 +6,11 @@ import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import { breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/pick-club";
-
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+import { MONTH_ABBR } from "~/lib/months";
 
 function pickDate(year: number | null, month: number | null): string | null {
   if (!year) return null;
-  return month && month >= 1 && month <= 12 ? `${MONTHS[month - 1]} ${year}` : String(year);
+  return month && month >= 1 && month <= 12 ? `${MONTH_ABBR[month - 1]} ${year}` : String(year);
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {

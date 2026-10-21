@@ -8,12 +8,13 @@ import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import { loadRecap } from "~/lib/social.server";
 import type { Route } from "./+types/og-recap";
+import { FONT_CACHE_ORIGIN, OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 
 const WIDTH = 1200;
 const HEIGHT = 630;
 
 async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  const key = `https://fontcache.foxing.app/${family}-${weight}.font`;
+  const key = `${FONT_CACHE_ORIGIN}/${family}-${weight}.font`;
   const cache = edgeCache();
   const hit = await cache.match(key);
   if (hit) return hit.arrayBuffer();
@@ -46,14 +47,14 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   if (!data) throw new Response("Not found", { status: 404 });
 
   const cacheKey = new Request(
-    `https://og.foxing.app/recap/${params.username}/${year}?b=${data.recap.booksFinished}`,
+    `${OG_CACHE_ORIGIN}/recap/${params.username}/${year}?b=${data.recap.booksFinished}`,
   );
   const cache = edgeCache();
   const cached = await cache.match(cacheKey);
   if (cached) return cached;
 
   const [display, ui] = await Promise.all([loadFont("Fraunces", 600), loadFont("DM Sans", 500)]);
-  if (!display && !ui) return Response.redirect("https://foxing.app", 302);
+  if (!display && !ui) return Response.redirect(SITE_ORIGIN, 302);
 
   const name = escapeHtml(data.displayName);
   const top = data.recap.topBooks.slice(0, 3).map((b) => escapeHtml(b.title));
@@ -94,6 +95,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     await cache.put(cacheKey, response.clone());
     return response;
   } catch {
-    return Response.redirect("https://foxing.app", 302);
+    return Response.redirect(SITE_ORIGIN, 302);
   }
 }

@@ -63,7 +63,7 @@ export default function AdminJournalNew() {
       "Could not create the post",
     );
     const id = (result?.body as { id?: string } | null)?.id;
-    if (id) navigate(`/admin/journal/${id}`);
+    if (id) void navigate(`/admin/journal/${id}`);
   }
 
   return (

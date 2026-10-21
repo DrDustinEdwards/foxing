@@ -48,7 +48,7 @@ export function DiaryForm({
       mode === "create"
         ? await write("/diary", { method: "POST", body })
         : await write(`/diary/${entryId}`, { method: "PATCH", body });
-    if (res.ok) navigate(redirectTo, { replace: true });
+    if (res.ok) void navigate(redirectTo, { replace: true });
   }
 
   return (

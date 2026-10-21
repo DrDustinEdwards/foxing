@@ -8,6 +8,7 @@ import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import { loadRecap } from "~/lib/social.server";
 import type { Route } from "./+types/recap";
+import { SITE_ORIGIN } from "~/lib/origins";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -24,7 +25,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data) return [{ title: "Year in Reading | Foxing" }];
   const title = `${data.displayName}'s ${data.year} in reading | Foxing`;
-  const ogImage = `https://foxing.app/og/recap/${data.username}/${data.year}`;
+  const ogImage = `${SITE_ORIGIN}/og/recap/${data.username}/${data.year}`;
   return [
     { title },
     { property: "og:title", content: title },

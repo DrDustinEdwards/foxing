@@ -30,6 +30,7 @@ import {
   sourceToJournal,
   type JournalFields,
 } from "./journal-source";
+import { SITE_ORIGIN } from "../origins";
 
 type JournalPost = catalogRepo.JournalPost;
 
@@ -39,7 +40,7 @@ export type RenderDocument = (
 ) => Promise<Response>;
 
 /** Foxing's public origin, which Carrel shows and links to. */
-const FOXING_ORIGIN = "https://foxing.app";
+const FOXING_ORIGIN = SITE_ORIGIN;
 
 /** The audit actor for every write made with the Carrel key. */
 const CARREL_ACTOR = "carrel";

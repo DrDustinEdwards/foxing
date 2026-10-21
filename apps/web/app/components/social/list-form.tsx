@@ -35,7 +35,7 @@ export function ListForm({
         : await write(`/lists/${listId}`, { method: "PATCH", body });
     if (res.ok) {
       const created = (res.data as { list?: { id: string } } | null)?.list;
-      navigate(mode === "create" && created ? `/lists/${created.id}` : redirectTo, {
+      void navigate(mode === "create" && created ? `/lists/${created.id}` : redirectTo, {
         replace: true,
       });
     }

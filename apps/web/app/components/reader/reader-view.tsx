@@ -176,7 +176,7 @@ export function ReaderView(props: ReaderViewProps) {
     layersRef.current = initialLayers;
 
     let destroyed = false;
-    (async () => {
+    void (async () => {
       try {
         const { createEngine } = await import("~/lib/reader/engine.client");
         if (!containerRef.current) throw new Error("no container");
