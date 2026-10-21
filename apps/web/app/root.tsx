@@ -4,7 +4,7 @@ import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "./lib/nonce";
-import { COVER_ORIGIN } from "~/lib/origins";
+import { COVER_ORIGIN } from "./lib/origins";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
 // the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous

@@ -30,7 +30,7 @@ import {
   sourceToJournal,
   type JournalFields,
 } from "./journal-source";
-import { SITE_ORIGIN } from "~/lib/origins";
+import { SITE_ORIGIN } from "../origins";
 
 type JournalPost = catalogRepo.JournalPost;
 
