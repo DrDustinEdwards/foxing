@@ -1,0 +1,26 @@
+name: worker-size
+
+# The web Worker's bundle size budget in apps/web/.worker-size.json, checked by devkit's shared worker-size.yml against
+# `wrangler deploy --dry-run` of the build (the build leaves .wrangler/deploy/config.json pointing the dry run at
+# build/server/wrangler.json). No secret: the prepare step copies wrangler.jsonc.example and a dry run never talks to the
+# account.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: worker-size-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  worker-size:
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@fb92659b85f1bbde7956acdd86d3333fb841aad4
+    with:
+      package-manager: pnpm
+      working-directory: apps/web
+      prepare: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc && pnpm --filter web build
