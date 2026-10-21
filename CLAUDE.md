@@ -4,7 +4,8 @@ Foxing: a reading app and web platform ("Letterboxd for books"), foxing.app.
 
 ## Rules that come first
 
-- The portfolio rules are in Capsid: `capsid/conventions.md`. Read it with this file and `foxing/core.md`. Where they disagree, conventions wins. Rulings go in `foxing/decisions.md`; read `foxing/design-system.md` before design work.
+- Tests: keep the minimal set (a few browser tests for flows that must never break, one integration test per real behaviour, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
+- Read `foxing/core.md` in Capsid with this file. Rulings go in `foxing/decisions.md`; read `foxing/design-system.md` before design work.
 
 ## Layout
 

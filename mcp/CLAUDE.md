@@ -1,6 +1,6 @@
 # CLAUDE.md - mcp/ (Foxing Admin)
 
-The repo's CLAUDE.md and `capsid/conventions.md` govern this folder too. The ruling is Capsid
+The repo's CLAUDE.md governs this folder too. The ruling is Capsid
 `capsid/rulings/mcp-2026-10-10.md`; the design is `capsid/research/design-mcp-servers.md` section 5.
 
 ## What this is
