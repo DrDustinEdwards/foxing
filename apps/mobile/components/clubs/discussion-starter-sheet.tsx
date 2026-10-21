@@ -12,7 +12,7 @@ import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { friendlyAiError, getDiscussionStarter } from '@/lib/claude'
-import { createThread } from '@/lib/clubs'
+import { createThread } from '@/lib/club-threads'
 
 interface DiscussionStarterSheetProps {
   visible: boolean

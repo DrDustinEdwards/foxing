@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { CaretLeft, BookOpen, Plus, Sparkle } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
+import { pickOne } from '@/lib/pick-one'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { relativeTime } from '@/lib/feed'
@@ -35,12 +36,6 @@ interface BuddyReadRow {
     avatar_url: string | null
   } | null
   post_count: number
-}
-
-function pickOne<T>(v: unknown): T | null {
-  if (!v) return null
-  if (Array.isArray(v)) return (v[0] as T | undefined) ?? null
-  return v as T
 }
 
 export default function BuddyReadsIndex() {

@@ -29,6 +29,7 @@ import {
 } from '@/lib/scan-book'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
+import { OutlineBtn, PrimaryBtn, Section } from '@/components/scan/scan-controls'
 
 const STATUS_LABELS: Array<{ value: LibraryStatus; label: string }> = [
   { value: 'want_to_read', label: 'Want to read' },
@@ -533,103 +534,3 @@ export default function ScanScreen() {
   )
 }
 
-function Section({
-  colors,
-  label,
-  children,
-}: {
-  colors: ReturnType<typeof useColors>
-  label: string
-  children: React.ReactNode
-}) {
-  return (
-    <View style={{ marginTop: 14 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: 'uppercase',
-          letterSpacing: 0.6,
-          marginBottom: 8,
-        }}
-      >
-        {label}
-      </Text>
-      {children}
-    </View>
-  )
-}
-
-function PrimaryBtn({
-  colors,
-  label,
-  onPress,
-  disabled,
-}: {
-  colors: ReturnType<typeof useColors>
-  label: string
-  onPress: () => void
-  disabled?: boolean
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 9,
-        borderRadius: 999,
-        backgroundColor: colors.brandUi,
-        opacity: disabled ? 0.6 : 1,
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          color: colors.textOnBrand,
-          fontSize: 13,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  )
-}
-
-function OutlineBtn({
-  colors,
-  label,
-  onPress,
-  disabled,
-}: {
-  colors: ReturnType<typeof useColors>
-  label: string
-  onPress: () => void
-  disabled?: boolean
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 9,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.borderInteractive,
-        opacity: disabled ? 0.6 : 1,
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          color: colors.textPrimary,
-          fontSize: 13,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  )
-}

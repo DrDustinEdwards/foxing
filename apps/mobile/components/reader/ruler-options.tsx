@@ -2,7 +2,7 @@ import { View, Text, Pressable } from 'react-native'
 import { useColors, Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { type RulerColor, type RulerStyle } from '@/lib/reader-settings'
-import { SegmentedRow } from './typography-sheet'
+import { SegmentedRow } from './typography-controls'
 
 export function RulerOptions({
   rulerColor,

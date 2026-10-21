@@ -22,6 +22,7 @@ import {
   PencilSimple,
 } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
+import { pickOne } from '@/lib/pick-one'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { ListLikeButton } from '@/components/lists/list-like-button'
@@ -45,12 +46,6 @@ interface ListBookRow {
     author: string
     cover_url: string | null
   } | null
-}
-
-function pickOne<T>(v: unknown): T | null {
-  if (!v) return null
-  if (Array.isArray(v)) return (v[0] as T | undefined) ?? null
-  return v as T
 }
 
 export default function ListDetailScreen() {

@@ -28,7 +28,6 @@ import {
   type ClubWithBook,
   fetchClub,
   fetchMembers,
-  fetchThreads,
   getClubSchedule,
   getClubStats,
   getWaitlistPosition,
@@ -37,6 +36,7 @@ import {
   joinWaitlist,
   leaveClub,
 } from '@/lib/clubs'
+import { fetchThreads } from '@/lib/club-threads'
 import { DiscussionStarterSheet } from '@/components/clubs/discussion-starter-sheet'
 import { ClubJoinCta } from '@/components/clubs/club-join-cta'
 import {

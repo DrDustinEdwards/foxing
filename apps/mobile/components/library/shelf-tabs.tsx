@@ -3,7 +3,7 @@ import { Plus } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import type { CustomShelf } from '@/lib/library'
-import { STATUS_SHELVES, type ShelfKey } from '@/app/(tabs)/library'
+import { STATUS_SHELVES, type ShelfKey } from '@/components/library/library-types'
 
 export function ShelfTabs({
   activeShelf,

@@ -11,7 +11,7 @@ import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { X as XIcon } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { createThread } from '@/lib/clubs'
+import { createThread } from '@/lib/club-threads'
 
 export function NewThreadSheet({
   visible,
