@@ -2,21 +2,22 @@
 // permission logic and no event emission (that lives in domain/clubs.ts). Reads are
 // called in-process from web/mobile loaders; writes are called by the API layer after
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER
-// these commit -- this file never touches a Durable Object.
+// these commit -- this file never touches a Durable Object. Threads and posts live in
+// clubs-threads.ts, polls, meetings and schedule in clubs-events.ts (re-exported below).
 import { and, desc, eq, isNotNull, like, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import type { Db } from "../db";
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
 import {
   clubBooks,
-  clubMeetingRsvps,
-  clubMeetings,
+  type clubMeetingRsvps,
+  type clubMeetings,
   clubMembers,
-  clubPollVotes,
-  clubPolls,
-  clubPosts,
-  clubSchedule,
-  clubThreads,
+  type clubPollVotes,
+  type clubPolls,
+  type clubPosts,
+  type clubSchedule,
+  type clubThreads,
   clubs,
 } from "../schema";
 
@@ -303,300 +304,6 @@ export async function setMemberMute(
   return row ?? null;
 }
 
-// -- Threads ----------------------------------------------------------------
-
-export async function createThread(
-  db: Db,
-  clubId: string,
-  authorId: string,
-  input: {
-    type?: string;
-    title: string;
-    bookId?: string;
-    chapter?: string;
-    hasSpoilers?: boolean;
-    expiresAt?: number;
-    isAiStarter?: boolean;
-  },
-): Promise<ClubThread> {
-  const [row] = await db
-    .insert(clubThreads)
-    .values({
-      clubId,
-      authorId,
-      type: input.type ?? "discussion",
-      title: input.title,
-      bookId: input.bookId ?? null,
-      chapter: input.chapter ?? null,
-      hasSpoilers: input.hasSpoilers ?? false,
-      isAiStarter: input.isAiStarter ?? false,
-      expiresAt: input.expiresAt != null ? new Date(input.expiresAt) : null,
-    })
-    .returning();
-  return row;
-}
-
-export async function getThreadById(db: Db, id: string): Promise<ClubThread | null> {
-  const [row] = await db.select().from(clubThreads).where(eq(clubThreads.id, id)).limit(1);
-  return row ?? null;
-}
-
-export async function listThreads(db: Db, clubId: string, limit = 50): Promise<ClubThread[]> {
-  return db
-    .select()
-    .from(clubThreads)
-    .where(and(eq(clubThreads.clubId, clubId), eq(clubThreads.isRemoved, false)))
-    .orderBy(desc(clubThreads.isPinned), desc(clubThreads.createdAt))
-    .limit(limit);
-}
-
-export async function removeThread(
-  db: Db,
-  id: string,
-  removedBy: string,
-): Promise<ClubThread | null> {
-  const [row] = await db
-    .update(clubThreads)
-    .set({ isRemoved: true, removedBy, removedAt: new Date() })
-    .where(eq(clubThreads.id, id))
-    .returning();
-  return row ?? null;
-}
-
-// -- Posts ------------------------------------------------------------------
-
-export async function createPost(
-  db: Db,
-  threadId: string,
-  authorId: string,
-  input: { content: string; parentPostId?: string; hasSpoiler?: boolean },
-): Promise<ClubPost> {
-  const [row] = await db
-    .insert(clubPosts)
-    .values({
-      threadId,
-      authorId,
-      content: input.content,
-      parentPostId: input.parentPostId ?? null,
-      hasSpoiler: input.hasSpoiler ?? false,
-    })
-    .returning();
-  return row;
-}
-
-export async function getPostById(db: Db, id: string): Promise<ClubPost | null> {
-  const [row] = await db.select().from(clubPosts).where(eq(clubPosts.id, id)).limit(1);
-  return row ?? null;
-}
-
-export async function listPosts(db: Db, threadId: string, limit = 200): Promise<ClubPost[]> {
-  return db
-    .select()
-    .from(clubPosts)
-    .where(and(eq(clubPosts.threadId, threadId), eq(clubPosts.isRemoved, false)))
-    .orderBy(clubPosts.createdAt)
-    .limit(limit);
-}
-
-export async function removePost(
-  db: Db,
-  id: string,
-  removedBy: string,
-  reason?: string,
-): Promise<ClubPost | null> {
-  const [row] = await db
-    .update(clubPosts)
-    .set({ isRemoved: true, removedBy, removedReason: reason ?? null, removedAt: new Date() })
-    .where(eq(clubPosts.id, id))
-    .returning();
-  return row ?? null;
-}
-
-// -- Polls ------------------------------------------------------------------
-
-export async function createPoll(
-  db: Db,
-  clubId: string,
-  createdBy: string,
-  input: {
-    title: string;
-    description?: string;
-    pollType?: string;
-    options: { id: string; label: string; bookId?: string }[];
-    closesAt?: number;
-  },
-): Promise<ClubPoll> {
-  const [row] = await db
-    .insert(clubPolls)
-    .values({
-      clubId,
-      createdBy,
-      title: input.title,
-      description: input.description ?? null,
-      pollType: input.pollType ?? "single",
-      options: input.options,
-      closesAt: input.closesAt != null ? new Date(input.closesAt) : null,
-    })
-    .returning();
-  return row;
-}
-
-export async function getPollById(db: Db, id: string): Promise<ClubPoll | null> {
-  const [row] = await db.select().from(clubPolls).where(eq(clubPolls.id, id)).limit(1);
-  return row ?? null;
-}
-
-export async function listPolls(db: Db, clubId: string): Promise<ClubPoll[]> {
-  return db
-    .select()
-    .from(clubPolls)
-    .where(eq(clubPolls.clubId, clubId))
-    .orderBy(desc(clubPolls.createdAt));
-}
-
-export async function upsertVote(
-  db: Db,
-  pollId: string,
-  userId: string,
-  ranks: string[],
-): Promise<void> {
-  await db
-    .insert(clubPollVotes)
-    .values({ pollId, userId, ranks })
-    .onConflictDoUpdate({
-      target: [clubPollVotes.pollId, clubPollVotes.userId],
-      set: { ranks },
-    });
-}
-
-export async function listVotes(db: Db, pollId: string): Promise<ClubPollVote[]> {
-  return db.select().from(clubPollVotes).where(eq(clubPollVotes.pollId, pollId));
-}
-
-export async function closePoll(db: Db, id: string): Promise<ClubPoll | null> {
-  const [row] = await db
-    .update(clubPolls)
-    .set({ isClosed: true, updatedAt: new Date() })
-    .where(eq(clubPolls.id, id))
-    .returning();
-  return row ?? null;
-}
-
-// -- Meetings ---------------------------------------------------------------
-
-export async function createMeeting(
-  db: Db,
-  clubId: string,
-  createdBy: string,
-  input: {
-    title: string;
-    description?: string;
-    bookId?: string;
-    meetingDate: number;
-    endDate?: number;
-    meetingType?: string;
-    locationName?: string;
-    locationAddress?: string;
-    locationUrl?: string;
-    isRecurring?: boolean;
-    recurrenceRule?: string;
-    rsvpLimit?: number;
-  },
-): Promise<ClubMeeting> {
-  const [row] = await db
-    .insert(clubMeetings)
-    .values({
-      clubId,
-      createdBy,
-      title: input.title,
-      description: input.description ?? null,
-      bookId: input.bookId ?? null,
-      meetingDate: new Date(input.meetingDate),
-      endDate: input.endDate != null ? new Date(input.endDate) : null,
-      meetingType: input.meetingType ?? "virtual",
-      locationName: input.locationName ?? null,
-      locationAddress: input.locationAddress ?? null,
-      locationUrl: input.locationUrl ?? null,
-      isRecurring: input.isRecurring ?? false,
-      recurrenceRule: input.recurrenceRule ?? null,
-      rsvpLimit: input.rsvpLimit ?? null,
-    })
-    .returning();
-  return row;
-}
-
-export async function getMeetingById(db: Db, id: string): Promise<ClubMeeting | null> {
-  const [row] = await db.select().from(clubMeetings).where(eq(clubMeetings.id, id)).limit(1);
-  return row ?? null;
-}
-
-export async function listMeetings(db: Db, clubId: string): Promise<ClubMeeting[]> {
-  return db
-    .select()
-    .from(clubMeetings)
-    .where(eq(clubMeetings.clubId, clubId))
-    .orderBy(clubMeetings.meetingDate);
-}
-
-export async function cancelMeeting(db: Db, id: string): Promise<ClubMeeting | null> {
-  const [row] = await db
-    .update(clubMeetings)
-    .set({ isCancelled: true, cancelledAt: new Date(), updatedAt: new Date() })
-    .where(eq(clubMeetings.id, id))
-    .returning();
-  return row ?? null;
-}
-
-export async function upsertRsvp(
-  db: Db,
-  meetingId: string,
-  userId: string,
-  status: string,
-): Promise<void> {
-  const now = new Date();
-  await db
-    .insert(clubMeetingRsvps)
-    .values({ meetingId, userId, status, createdAt: now, updatedAt: now })
-    .onConflictDoUpdate({
-      target: [clubMeetingRsvps.meetingId, clubMeetingRsvps.userId],
-      set: { status, updatedAt: now },
-    });
-}
-
-export async function listRsvps(db: Db, meetingId: string): Promise<ClubMeetingRsvp[]> {
-  return db.select().from(clubMeetingRsvps).where(eq(clubMeetingRsvps.meetingId, meetingId));
-}
-
-// -- Schedule ---------------------------------------------------------------
-
-export async function createSchedule(
-  db: Db,
-  clubId: string,
-  input: { chapterName: string; unlockDate: number },
-): Promise<ClubScheduleRow> {
-  const [row] = await db
-    .insert(clubSchedule)
-    .values({ clubId, chapterName: input.chapterName, unlockDate: new Date(input.unlockDate) })
-    .returning();
-  return row;
-}
-
-export async function listSchedule(db: Db, clubId: string): Promise<ClubScheduleRow[]> {
-  return db
-    .select()
-    .from(clubSchedule)
-    .where(eq(clubSchedule.clubId, clubId))
-    .orderBy(clubSchedule.unlockDate);
-}
-
-export async function deleteSchedule(db: Db, id: string, clubId: string): Promise<boolean> {
-  const rows = await db
-    .delete(clubSchedule)
-    .where(and(eq(clubSchedule.id, id), eq(clubSchedule.clubId, clubId)))
-    .returning({ id: clubSchedule.id });
-  return rows.length > 0;
-}
-
 /** Active-member user ids for a club, minus one optional excluded id (the actor).
  *  Used by the event emitter to notify a club without notifying the actor. */
 export async function listActiveMemberIds(
@@ -610,3 +317,6 @@ export async function listActiveMemberIds(
     .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.status, "active")));
   return rows.map((r) => r.userId).filter((id) => id !== exclude);
 }
+
+export * from "./clubs-events";
+export * from "./clubs-threads";
