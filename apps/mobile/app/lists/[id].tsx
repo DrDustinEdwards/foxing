@@ -21,7 +21,8 @@ import {
   MagnifyingGlass,
   PencilSimple,
 } from 'phosphor-react-native'
-import { pickOne, supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
+import { pickOne } from '@/lib/pick-one'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { ListLikeButton } from '@/components/lists/list-like-button'

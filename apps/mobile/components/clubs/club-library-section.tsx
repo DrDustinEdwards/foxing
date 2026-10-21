@@ -7,7 +7,8 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { useRouter } from 'expo-router'
-import { pickOne, supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
+import { pickOne } from '@/lib/pick-one'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { relativeTime } from '@/lib/feed'
