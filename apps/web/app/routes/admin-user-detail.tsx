@@ -174,7 +174,7 @@ function OperatorControls({
 
   async function remove() {
     const result = await run(`/users/${userId}`, { method: "DELETE" }, "Could not delete");
-    if (result) navigate("/admin/users");
+    if (result) void navigate("/admin/users");
   }
 
   return (

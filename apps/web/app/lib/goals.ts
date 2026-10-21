@@ -1,22 +1,8 @@
+import { MONTH_NAMES } from "~/lib/months";
 // Shared reading-goal client helpers, used by both the library sidebar card and the
 // dedicated /goals page so the two never drift. The ISO-week math mirrors core
 // periodRange (weeks start Monday; week 1 holds the year's first Thursday) so the client
 // and the progress query agree on which finishes count.
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 export function isoWeek(d: Date): number {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -32,7 +18,8 @@ export function goalPeriodLabel(goal: {
   month: number | null;
   week: number | null;
 }): string {
-  if (goal.periodType === "month" && goal.month) return `${MONTHS[goal.month - 1]} ${goal.year}`;
+  if (goal.periodType === "month" && goal.month)
+    return `${MONTH_NAMES[goal.month - 1]} ${goal.year}`;
   if (goal.periodType === "week" && goal.week) return `week ${goal.week}, ${goal.year}`;
   return `${goal.year}`;
 }

@@ -104,7 +104,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
         setError("Could not add that book. Try again.");
         return;
       }
-      navigate(`/books/${slug}`);
+      void navigate(`/books/${slug}`);
     } catch {
       setError("Could not add that book. Check your connection and try again.");
     } finally {

@@ -39,7 +39,7 @@ export function AddBookToList({ listId }: { listId: string }) {
     if (res.ok) {
       setQ("");
       setResults([]);
-      navigate(".", { replace: true, preventScrollReset: true });
+      void navigate(".", { replace: true, preventScrollReset: true });
     }
   }
 

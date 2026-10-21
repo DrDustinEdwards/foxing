@@ -47,7 +47,7 @@ export default function ClubNew() {
         error?: { code?: string; message?: string };
       } | null;
       if (res.ok && data?.club?.slug) {
-        navigate(`/clubs/${data.club.slug}`);
+        void navigate(`/clubs/${data.club.slug}`);
         return;
       }
       setError(data?.error?.message ?? `Could not create the club (${res.status}).`);

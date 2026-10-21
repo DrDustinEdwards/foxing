@@ -4,6 +4,7 @@ import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "./lib/nonce";
+import { COVER_ORIGIN } from "~/lib/origins";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
 // the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous
@@ -22,7 +23,7 @@ export const links: Route.LinksFunction = () => [
     href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Source+Serif+4:opsz,wght@8..60,400..600&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap",
   },
   { rel: "stylesheet", href: stylesheet },
-  { rel: "preconnect", href: "https://covers.foxing.app" },
+  { rel: "preconnect", href: COVER_ORIGIN },
 ];
 
 // Set data-theme before paint so there is no theme flash. Stored preference wins;

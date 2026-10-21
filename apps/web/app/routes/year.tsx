@@ -11,26 +11,11 @@ import { cloudflareContext } from "~/context";
 import { loadRecap } from "~/lib/social.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/year";
+import { MONTH_INITIALS, MONTH_NAMES } from "~/lib/months";
 
 export function meta() {
   return [{ title: "Your year in reading | Foxing" }, { name: "robots", content: "noindex" }];
 }
-
-const MONTHS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -243,7 +228,7 @@ function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
               className="fill-tertiary font-mono"
               fontSize="9"
             >
-              {MONTHS[i]}
+              {MONTH_INITIALS[i]}
             </text>
           </g>
         );

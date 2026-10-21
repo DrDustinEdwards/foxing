@@ -139,7 +139,7 @@ export function CommandPalette() {
 
   function go(to: string) {
     setOpen(false);
-    navigate(to);
+    void navigate(to);
   }
 
   function runSearch(q: string) {

@@ -9,7 +9,7 @@ export function RemoveBookButton({ listId, bookId }: { listId: string; bookId: s
 
   async function remove() {
     const res = await write(`/lists/${listId}/books/${bookId}`, { method: "DELETE" });
-    if (res.ok) navigate(".", { replace: true, preventScrollReset: true });
+    if (res.ok) void navigate(".", { replace: true, preventScrollReset: true });
   }
 
   return (

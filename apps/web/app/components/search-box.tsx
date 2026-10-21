@@ -60,7 +60,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
       setActive((a) => Math.max(a - 1, -1));
     } else if (e.key === "Enter" && active >= 0) {
       e.preventDefault();
-      navigate(`/books/${items[active].slug}`);
+      void navigate(`/books/${items[active].slug}`);
       setOpen(false);
     } else if (e.key === "Escape") {
       setOpen(false);
@@ -131,7 +131,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
               onMouseEnter={() => setActive(i)}
               onMouseDown={(e) => {
                 e.preventDefault();
-                navigate(`/books/${s.slug}`);
+                void navigate(`/books/${s.slug}`);
                 setOpen(false);
               }}
             >

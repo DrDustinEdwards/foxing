@@ -11,6 +11,7 @@ import {
   type CspSources,
 } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
+import { COVER_ORIGIN } from "../app/lib/origins";
 
 /** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
 export const CSP_REPORT_PATH = "/api/csp-report";
@@ -32,7 +33,7 @@ const SITE_SOURCES: CspSources = {
   script: ["https://challenges.cloudflare.com"],
   style: ["https://fonts.googleapis.com"],
   font: ["https://fonts.gstatic.com"],
-  img: ["https://covers.foxing.app"],
+  img: [COVER_ORIGIN],
   frame: ["https://challenges.cloudflare.com"],
 };
 

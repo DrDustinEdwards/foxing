@@ -52,7 +52,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
         setError("Could not mark your notifications as read. Try again.");
         return;
       }
-      revalidator.revalidate();
+      void revalidator.revalidate();
     } catch {
       setError("Could not reach the server. Check your connection and try again.");
     } finally {

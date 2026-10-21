@@ -32,7 +32,7 @@ export function FollowButton({
     const res = await write(`/follows/${userId}`, { method: next ? "PUT" : "DELETE" });
     if (res.ok) {
       setFollowing(next);
-      navigate(".", { replace: true, preventScrollReset: true });
+      void navigate(".", { replace: true, preventScrollReset: true });
     }
   }
 

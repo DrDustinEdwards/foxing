@@ -39,7 +39,7 @@ export default function Login() {
       setError(res.error.message ?? "Sign in failed.");
       return;
     }
-    navigate("/me");
+    void navigate("/me");
   }
 
   return (

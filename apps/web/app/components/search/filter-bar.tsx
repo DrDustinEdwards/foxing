@@ -47,12 +47,12 @@ export function FilterBar({
     next.delete("page");
     if (value) next.set(key, value);
     else next.delete(key);
-    navigate(`/search?${next.toString()}`);
+    void navigate(`/search?${next.toString()}`);
   }
 
   function clearAll() {
     const q = params.get("q");
-    navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
+    void navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
   }
 
   const chips = [

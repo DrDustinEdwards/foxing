@@ -43,7 +43,7 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
 
   async function join() {
     const r = await write(`/join/${code}`);
-    if (r.ok) navigate(`/clubs/${club.slug}`);
+    if (r.ok) void navigate(`/clubs/${club.slug}`);
   }
 
   return (

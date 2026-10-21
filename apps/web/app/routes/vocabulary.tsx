@@ -139,7 +139,7 @@ function WordItem({
         setError("Could not update that word. Try again.");
         return;
       }
-      revalidator.revalidate();
+      void revalidator.revalidate();
     } catch {
       setError("Could not update that word. Check your connection and try again.");
     } finally {
