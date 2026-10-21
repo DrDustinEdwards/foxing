@@ -3,7 +3,7 @@
  *
  * `@cloudflare/workers-oauth-provider` makes this Worker an OAuth 2.1
  * authorization server for MCP clients. It does not know WHO the human is, so
- * after consent this handler sends them to Cloudflare Access (access-login.ts)
+ * after consent this handler sends them to Cloudflare Access (@dustinedwards/site-runtime/access-login)
  * and checks the returning email against the single configured administrator
  * (ADMIN_EMAIL). Capsid and Carrel sign in the same way, so one Access login
  * covers every server.
@@ -27,7 +27,7 @@ import {
   type OAuthHelpers,
 } from "@cloudflare/workers-oauth-provider";
 
-import { accessSaas, authorizationUrl, finishSignIn, newSignIn, type AccessEnv } from "./access-login";
+import { accessSaas, authorizationUrl, finishSignIn, newSignIn, type AccessEnv } from "@dustinedwards/site-runtime/access-login";
 import { isAdminUser, SCOPE_READ, SCOPE_WRITE, type Props } from "./auth";
 
 export interface LoginEnv extends AccessEnv {

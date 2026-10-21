@@ -29,7 +29,7 @@ import { MCP_ROUTE } from "./mcp-handler";
 import { checkRateLimit } from "./rate-limit";
 import { registrationRefusal } from "./registration";
 
-export { McpRateLimit } from "./rate-limit";
+export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 export { ToolCallLog } from "./audit-log";
 
 export type { Env };
