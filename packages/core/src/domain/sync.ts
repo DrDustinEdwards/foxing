@@ -1,4 +1,4 @@
-// Offline sync domain (Phase 7). resolveSyncOp is the PURE conflict-resolution core,
+// Offline sync domain. resolveSyncOp is the PURE conflict-resolution core,
 // unit-tested exhaustively; applySync/pullSync orchestrate it against D1 via the
 // per-resource adapters. Contract (spec-cf-api, offline sync protocol):
 //   - create: insert if absent; a replayed create (client id already present) is an

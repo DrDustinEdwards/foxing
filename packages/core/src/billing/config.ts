@@ -1,4 +1,4 @@
-// Billing config (Phase 4b). Pricing is authoritative from foxing/monetization.md:
+// Billing config. Pricing is authoritative from foxing/monetization.md:
 // Plus is $12.99/month or $129.99/year, both with a 7-day free trial. Price IDs come
 // from Worker env (set once the Stripe products exist); everything else is pinned here
 // so the paywall copy and the checkout trial never drift from the spec.

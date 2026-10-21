@@ -1,4 +1,4 @@
-// Club endpoints (Phase 5): CRUD, membership, threads/posts, polls, meetings,
+// Club endpoints: CRUD, membership, threads/posts, polls, meetings,
 // schedule, and the live WebSocket. Handlers stay thin: guard the session, validate,
 // call the core clubs domain (which authorizes, commits to D1, and emits events), then
 // -- only after that returns -- relay any `live` message to the club's ClubRoom via the

@@ -10,6 +10,9 @@ export default defineConfig({
   // A per-build id namespaces the edge cache so a deploy never serves stale HTML from
   // the Cache API (which persists across deployments). Old entries expire via TTL.
   define: { __CACHE_VERSION__: JSON.stringify(String(Date.now())) },
+  // The Worker bundle: Vite, not wrangler, builds it, so wrangler's "minify" does not apply here.
+  // Source maps go up with the deploy (upload_source_maps) and are never served.
+  environments: { ssr: { build: { minify: true, sourcemap: true } } },
   plugins: [
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     tailwindcss(),

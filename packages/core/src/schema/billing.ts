@@ -1,4 +1,4 @@
-// Billing (Phase 4b). Stripe is the source of truth for subscription state; profiles
+// Billing. Stripe is the source of truth for subscription state; profiles
 // carries the projected tier/status (written only by the webhook). billing_events is
 // the idempotency ledger: Stripe retries webhooks, so every event id is recorded once
 // and a duplicate delivery is a no-op.

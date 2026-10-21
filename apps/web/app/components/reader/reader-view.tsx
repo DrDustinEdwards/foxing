@@ -41,7 +41,7 @@ export interface ReaderAnnotation {
   chapter: string | null;
 }
 
-export interface AnnotationAuthor {
+interface AnnotationAuthor {
   id: string;
   username: string | null;
   displayName: string | null;

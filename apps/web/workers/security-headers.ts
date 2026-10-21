@@ -14,7 +14,7 @@ import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 
 /** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
 export const CSP_REPORT_PATH = "/api/csp-report";
-export const CSP_ENDPOINT_NAME = "csp-endpoint";
+const CSP_ENDPOINT_NAME = "csp-endpoint";
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
@@ -28,7 +28,7 @@ export const CSP_ENDPOINT_NAME = "csp-endpoint";
  *   (same host, wss). Supabase is the mobile app's alone and is not listed.
  * The Cloudflare Web Analytics beacon is asked for by name below (cloudflareWebAnalytics).
  */
-export const SITE_SOURCES: CspSources = {
+const SITE_SOURCES: CspSources = {
   script: ["https://challenges.cloudflare.com"],
   style: ["https://fonts.googleapis.com"],
   font: ["https://fonts.gstatic.com"],
@@ -67,7 +67,7 @@ export function contentSecurityPolicy(nonce?: string): string {
 }
 
 /** The reader, /read/:slug, a document of its own (app/routes/read.tsx loads it by full navigation). */
-export function isReaderPath(pathname: string): boolean {
+function isReaderPath(pathname: string): boolean {
   return pathname.startsWith("/read/");
 }
 

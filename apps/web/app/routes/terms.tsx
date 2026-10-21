@@ -1,7 +1,7 @@
 // Terms of service. Static content, edge-cached. Audited against the current
 // build: reading now happens on the web as well as in the app (no app-only
 // claim), and paid plans / AI output are scoped to when those features are
-// available (Phase 4). Catalog sourcing and governing law carry over unchanged.
+// available. Catalog sourcing and governing law carry over unchanged.
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";

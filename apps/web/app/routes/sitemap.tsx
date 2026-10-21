@@ -1,13 +1,14 @@
+import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { catalogRepo } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
-import { absoluteUrl, journalTagPath, xmlEscape } from "~/lib/seo";
+import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
 
 type Url = { loc: string; lastmod?: string; priority?: string };
 
 function urlTag(origin: string, u: Url): string {
-  return `  <url><loc>${xmlEscape(absoluteUrl(origin, u.loc))}</loc>${
+  return `  <url><loc>${escapeHtml(absoluteUrl(origin, u.loc))}</loc>${
     u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""
   }${u.priority ? `<priority>${u.priority}</priority>` : ""}</url>`;
 }

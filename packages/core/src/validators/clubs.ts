@@ -1,4 +1,4 @@
-// Validators for the club write paths (Phase 5). Enums come from the single source
+// Validators for the club write paths. Enums come from the single source
 // in enums.ts. Every club write route parses its body through one of these at the
 // boundary; core domain functions trust the parsed shape.
 import { z } from "zod";

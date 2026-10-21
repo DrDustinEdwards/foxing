@@ -1,3 +1,4 @@
+import { escapeHtml } from "@dustinedwards/site-runtime/html";
 // OG image for a Year in Reading recap at /og/recap/:username/:year. Mirrors og-book's
 // satori pipeline (legacy-UA WOFF font load, edge cache, PNG materialize with a graceful
 // fallback). Only public profiles render; others 404 (crawlers get nothing to leak).
@@ -36,10 +37,6 @@ async function loadFont(family: string, weight: number): Promise<ArrayBuffer | n
   }
 }
 
-function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const year = Number(params.year);
@@ -58,8 +55,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const [display, ui] = await Promise.all([loadFont("Fraunces", 600), loadFont("DM Sans", 500)]);
   if (!display && !ui) return Response.redirect("https://foxing.app", 302);
 
-  const name = esc(data.displayName);
-  const top = data.recap.topBooks.slice(0, 3).map((b) => esc(b.title));
+  const name = escapeHtml(data.displayName);
+  const top = data.recap.topBooks.slice(0, 3).map((b) => escapeHtml(b.title));
   const titleFamily = display ? "Fraunces" : "DM Sans";
   const topBlock = top
     .map(

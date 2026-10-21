@@ -1,4 +1,4 @@
-// Social data access (Phase 6): follows, close_friends, reading_lists +
+// Social data access: follows, close_friends, reading_lists +
 // reading_list_books, and the activity_events feed query. Pure DB reads/writes; no
 // authorization and no event emission (those live in domain/social.ts). Reads run
 // in-process from web/mobile loaders; writes are called by the API after the domain

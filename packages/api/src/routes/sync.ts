@@ -1,4 +1,4 @@
-// Offline sync endpoints (Phase 7). POST flushes the mobile op queue; GET pulls changed
+// Offline sync endpoints. POST flushes the mobile op queue; GET pulls changed
 // single-owner rows since a cursor. Conflict resolution + scoping live entirely in core
 // (syncDomain); the route is a thin session-scoped wrapper. Online-only data
 // (clubs/social) is never syncable -- the validator's resource enum enforces that.

@@ -1,4 +1,4 @@
-// Client hook for a club's live layer (Phase 5). Opens the membership-checked
+// Client hook for a club's live layer. Opens the membership-checked
 // WebSocket at /api/v1/clubs/:id/live, tracks presence, and hands server->client
 // messages to callbacks. The ONLY client->server message is {t:'ping'} (keepalive);
 // every real write goes through /api/v1, which fans out over this socket after the D1

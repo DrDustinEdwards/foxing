@@ -1,4 +1,4 @@
-// Year in Reading data access (Phase 6). Reads the books a user finished within a
+// Year in Reading data access. Reads the books a user finished within a
 // calendar year (UTC), with the detail the recap + OG image need. Rating overlays come
 // from diaryRepo. Pure DB reads; the domain assembles the recap payload.
 import { and, asc, eq, gte, lt } from "drizzle-orm";

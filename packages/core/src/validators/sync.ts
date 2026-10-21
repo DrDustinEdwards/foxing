@@ -1,4 +1,4 @@
-// Offline sync contract (Phase 7). The mobile client queues single-owner writes locally
+// Offline sync contract. The mobile client queues single-owner writes locally
 // and flushes them to POST /api/v1/sync; GET /api/v1/sync?since= pulls changed rows back.
 // Single-owner resources ONLY (annotations, user_books/progress, sessions, vocabulary,
 // diary). Clubs/social are online-only v1. Payloads are validated per resource; the

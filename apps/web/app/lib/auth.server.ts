@@ -91,8 +91,6 @@ export function getAuth(env: Env) {
   });
 }
 
-export type Auth = ReturnType<typeof getAuth>;
-
 /**
  * The signed-in user behind an /api/v1 request, from the Better Auth session cookie; null when
  * there is none. The Worker's createApi resolveSession, and the Carrel key isolation tests.

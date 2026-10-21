@@ -1,4 +1,4 @@
-// Reactions domain (Phase 6). Generic like/reaction over the one reactions table.
+// Reactions domain. Generic like/reaction over the one reactions table.
 // Phase 6 wires reading_list + diary_entry targets (list likes, review likes). Target
 // existence is checked via owner resolution; a reaction on a public target notifies its
 // author (never self).

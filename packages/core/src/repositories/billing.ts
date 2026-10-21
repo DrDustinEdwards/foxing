@@ -1,4 +1,4 @@
-// Billing idempotency ledger (Phase 4b). Stripe retries webhooks, so the route records
+// Billing idempotency ledger. Stripe retries webhooks, so the route records
 // every event id once and treats a duplicate delivery as a no-op. The insert is the
 // atomic guard: onConflictDoNothing returns nothing when the id already exists.
 import { billingEvents } from "../schema";

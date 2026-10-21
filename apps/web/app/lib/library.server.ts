@@ -41,7 +41,7 @@ export interface LibraryData {
   streak: Streak | null;
 }
 
-export interface ShelfBook {
+interface ShelfBook {
   slug: string;
   title: string;
   author: string;

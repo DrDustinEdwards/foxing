@@ -1,4 +1,4 @@
-// Notifications read/mark data access (Phase 7). Notifications are WRITTEN only by the
+// Notifications read/mark data access. Notifications are WRITTEN only by the
 // core event emitter; this repo is the read + mark-read surface the mobile client and
 // in-app UI use. Push delivery of these is gated in domain/push.ts.
 import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
@@ -47,7 +47,7 @@ export async function markAllRead(db: Db, userId: string): Promise<void> {
 }
 
 /** All notifications created at/after a cutoff, across users. Drives the push delivery
- *  sweep (Phase 7); the sweep dedupes already-pushed ids via KV. */
+ *  sweep; the sweep dedupes already-pushed ids via KV. */
 export async function listCreatedSince(db: Db, sinceMs: number): Promise<Notification[]> {
   return db
     .select()

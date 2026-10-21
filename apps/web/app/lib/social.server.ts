@@ -1,4 +1,4 @@
-// Social read plumbing for loaders (Phase 6). Reads run in-process via core (the
+// Social read plumbing for loaders. Reads run in-process via core (the
 // standing rule: loaders never self-fetch the Worker's own /api/v1). Writes go to
 // /api/v1 from the browser and the page revalidates. Feed visibility resolves entirely
 // server-side in core (socialDomain.getFeed / visibleVisibilitiesFor); the loader never
@@ -17,8 +17,8 @@ import {
 } from "@foxing/core";
 import type { ProfileSummary, Recap } from "@foxing/core";
 
-export type FeedActor = ProfileSummary;
-export type FeedBook = { id: string; title: string; slug: string; coverUrl: string | null } | null;
+type FeedActor = ProfileSummary;
+type FeedBook = { id: string; title: string; slug: string; coverUrl: string | null } | null;
 
 export type FeedRow =
   | {

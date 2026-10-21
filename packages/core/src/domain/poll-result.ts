@@ -1,4 +1,4 @@
-// Pure poll-counting functions (Phase 5). No DB, no I/O: given the option ids and the
+// Pure poll-counting functions. No DB, no I/O: given the option ids and the
 // cast ballots (each an ordered list of option ids), compute tallies and a winner.
 // Unit-tested in isolation (poll-result.test.ts). The API layer calls these; the live
 // layer broadcasts firstPreferenceTallies as votes arrive, and the close event

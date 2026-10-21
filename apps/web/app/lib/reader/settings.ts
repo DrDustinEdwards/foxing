@@ -34,7 +34,7 @@ export const READING_CANVAS: Record<ReaderTheme, { bg: string; text: string }> =
   dark: { bg: "#1A1410", text: "#F5EDDE" },
 };
 
-export function clamp(n: number, min: number, max: number): number {
+function clamp(n: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, n));
 }
 

@@ -1,4 +1,4 @@
-// Push delivery orchestrator (Phase 7). Ties the pieces together for one notification:
+// Push delivery orchestrator. Ties the pieces together for one notification:
 // load context -> gate on prefs + quiet hours (domain/push) -> build + send Expo
 // messages -> prune tokens Expo reports DeviceNotRegistered. Dependencies (fetch, clock,
 // KV) are injected so the whole pipeline is integration-testable against local D1 with a

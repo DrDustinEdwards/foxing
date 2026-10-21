@@ -1,4 +1,4 @@
-// Expo push delivery (Phase 7). Builds Expo messages, sends them in <=100 chunks to the
+// Expo push delivery. Builds Expo messages, sends them in <=100 chunks to the
 // Expo push API, and extracts tokens Expo reports as DeviceNotRegistered so the caller
 // can prune them. The fetch is injected so the queue consumer passes the Worker's fetch
 // and tests pass a stub. Message building + ticket parsing are pure and unit-testable.

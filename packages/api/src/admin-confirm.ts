@@ -20,7 +20,7 @@ export type PendingRoleChange = {
 };
 
 /** How long a preview stays performable. KV's own expiry floor is 60 seconds. */
-export const CONFIRM_TTL_SECONDS = 120;
+const CONFIRM_TTL_SECONDS = 120;
 
 /** 32 random bytes, hex. The perform body schema checks this shape. */
 export const CONFIRM_TOKEN_PATTERN = /^[0-9a-f]{64}$/;

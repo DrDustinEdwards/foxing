@@ -1,4 +1,4 @@
-// Social domain logic (Phase 6): follows, close friends, reading lists, and THE feed
+// Social domain logic: follows, close friends, reading lists, and THE feed
 // visibility resolver. Authorization and event emission live here, never in a client.
 //
 // FEED VISIBILITY CONTRACT (reviewed + approved 2026-07-11). The follow graph and the

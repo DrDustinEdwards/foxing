@@ -2,7 +2,7 @@
 // and storage sections describe the real Cloudflare-native stack (D1, R2, KV,
 // Workers, Email Sending), not the legacy Supabase/Vercel stack. Sections for
 // payments and the AI companion describe processing that begins when those
-// features ship (Phase 4), phrased in the future so nothing overstates today.
+// features ship, phrased in the future so nothing overstates today.
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";

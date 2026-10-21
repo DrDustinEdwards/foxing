@@ -1,4 +1,4 @@
-// Diary / reviews domain (Phase 6). diary_entries is THE rating + review home.
+// Diary / reviews domain. diary_entries is THE rating + review home.
 //
 // EVENT RULE (approved): creating an entry emits 'reviewed' (it has review text) or
 // 'rated' (rating only), RESPECTING visibility -- a private entry emits NO event; a

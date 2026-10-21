@@ -1,4 +1,4 @@
-// Diary / reviews endpoints (Phase 6). diary_entries is the rating + review home.
+// Diary / reviews endpoints. diary_entries is the rating + review home.
 // Create respects visibility for feed emission (private -> no event); the book rating
 // aggregate is recomputed in core on every write. Handlers stay thin.
 import { createDiaryInput, diaryDomain, diaryRepo, updateDiaryInput } from "@foxing/core";

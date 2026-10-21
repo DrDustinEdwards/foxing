@@ -10,7 +10,7 @@ import { Link } from "react-router";
 import { signIn } from "~/lib/auth-client";
 
 /** Same input treatment as settings.tsx inputClass, plus a focus affordance. */
-export const authInputClass =
+const authInputClass =
   "w-full rounded-md border border-border-subtle bg-base px-3 py-2.5 font-ui text-sm text-primary placeholder:text-tertiary transition-colors focus:border-border-interactive focus:outline-none";
 
 /** Primary CTA: the same tokens as ui.tsx Button's primary variant, full width. */

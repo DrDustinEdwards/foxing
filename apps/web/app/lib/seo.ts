@@ -7,21 +7,11 @@
 import type { MetaDescriptor } from "react-router";
 
 export const SITE_NAME = "Foxing";
-export const DEFAULT_DESCRIPTION =
+const DEFAULT_DESCRIPTION =
   "Foxing is a reading home for the classics: browse the catalog, follow literary awards and celebrity picks, and read the conversations around great books.";
 
 export function absoluteUrl(origin: string, path: string): string {
   return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
-}
-
-/** Text made safe for XML (sitemap, RSS): element content and attribute values alike. */
-export function xmlEscape(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
 
 /** A journal tag's page. Tags are free text, so the segment is encoded: a space or "&" in a

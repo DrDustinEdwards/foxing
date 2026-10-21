@@ -9,6 +9,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./build/client" },
   "observability": { "enabled": true },
+  "upload_source_maps": true,
   "d1_databases": [
     {
       "binding": "DB",
@@ -25,7 +26,7 @@
     { "binding": "MEDIA", "bucket_name": "foxing-epubs" },
     { "binding": "BACKUPS", "bucket_name": "foxing-backups" }
   ],
-  // Phase 5 live layer: one ClubRoom Durable Object per club (fan-out only, never writes
+  // The live layer: one ClubRoom Durable Object per club (fan-out only, never writes
   // D1). See workers/club-room.ts.
   "durable_objects": {
     "bindings": [{ "name": "CLUB_ROOM", "class_name": "ClubRoom" }]
@@ -40,7 +41,7 @@
     { "name": "CARREL_RATE_LIMIT", "namespace_id": "1104", "simple": { "limit": 120, "period": 60 } }
   ],
   "send_email": [{ "name": "EMAIL" }],
-  // Phase 4a: the companion cache pipeline. Cron finds catalog books missing a cached
+  // The companion cache pipeline. Cron finds catalog books missing a cached
   // action and enqueues one message per book; the queue consumer generates and writes
   // book_ai_cache rows. See packages/core/src/companion/cache-generator.ts.
   "queues": {

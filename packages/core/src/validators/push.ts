@@ -1,4 +1,4 @@
-// Push registration contract (Phase 7). The mobile client registers its Expo push token
+// Push registration contract. The mobile client registers its Expo push token
 // after sign-in; the token is pruned server-side when Expo reports DeviceNotRegistered.
 import { z } from "zod";
 import { pushPlatform } from "../enums";

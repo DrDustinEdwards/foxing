@@ -1,4 +1,4 @@
-// Diary / reviews data access (Phase 6). diary_entries is the single home for ratings
+// Diary / reviews data access. diary_entries is the single home for ratings
 // and reviews (Letterboxd model: one entry per read-through, re-reads free). Book and
 // profile ratings derive from the LATEST entry per (user, book). Pure DB access; event
 // emission + authorization live in domain/diary.ts.
