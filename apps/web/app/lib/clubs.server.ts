@@ -5,8 +5,6 @@
 import { clubsRepo, firstPreferenceTallies } from "@foxing/core";
 import { createDb } from "@foxing/core";
 
-export type ClubSummary = clubsRepo.Club;
-
 export async function loadClubsIndex(env: Env, userId: string) {
   const db = createDb(env.DB);
   const [mine, discover] = await Promise.all([

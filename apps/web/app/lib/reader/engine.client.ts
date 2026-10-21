@@ -36,7 +36,7 @@ export interface DecorationRect {
   height: number;
 }
 
-export interface HighlightSpec {
+interface HighlightSpec {
   id: string;
   locator: Locator;
   color: HighlightColor;
@@ -46,7 +46,7 @@ export interface HighlightSpec {
   ownership: "mine" | "other";
 }
 
-export interface PopularSpec {
+interface PopularSpec {
   id: string;
   locator: Locator;
 }
@@ -58,7 +58,7 @@ export interface SelectionPayload {
   rect: { x: number; y: number; width: number; height: number } | null;
 }
 
-export interface EngineListeners {
+interface EngineListeners {
   onPosition: (locator: Locator) => void;
   onSelection: (payload: SelectionPayload) => void;
   // rect is the activated highlight's bounds in navigator-container CSS pixels,

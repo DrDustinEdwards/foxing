@@ -17,8 +17,8 @@ import {
 } from "@foxing/core";
 import type { ProfileSummary, Recap } from "@foxing/core";
 
-export type FeedActor = ProfileSummary;
-export type FeedBook = { id: string; title: string; slug: string; coverUrl: string | null } | null;
+type FeedActor = ProfileSummary;
+type FeedBook = { id: string; title: string; slug: string; coverUrl: string | null } | null;
 
 export type FeedRow =
   | {

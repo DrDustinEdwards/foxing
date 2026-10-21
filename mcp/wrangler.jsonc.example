@@ -11,6 +11,8 @@
   "compatibility_flags": ["global_fetch_strictly_public"],
 
   "observability": { "enabled": true },
+  "minify": true,
+  "upload_source_maps": true,
 
   // ADDRESS. Until the cutover this Worker answers only on workers.dev, so it
   // can be verified while admin-mcp.foxing.app still serves the Vercel server.

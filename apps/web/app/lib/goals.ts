@@ -3,7 +3,7 @@
 // periodRange (weeks start Monday; week 1 holds the year's first Thursday) so the client
 // and the progress query agree on which finishes count.
 
-export const MONTHS = [
+const MONTHS = [
   "January",
   "February",
   "March",

@@ -126,7 +126,7 @@ function SecondaryAuthBar() {
   );
 }
 
-export function SiteNav() {
+function SiteNav() {
   const data = useRouteLoaderData<typeof RootLoader>("root");
   const user = data?.navUser ?? null;
   const menu = data?.navMenu ?? { featuredClubs: [], botm: null };
@@ -234,7 +234,7 @@ export function SiteNav() {
   );
 }
 
-export function SiteFooter() {
+function SiteFooter() {
   return (
     <footer className="mt-24 border-t border-border-subtle bg-sunken">
       <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-6">

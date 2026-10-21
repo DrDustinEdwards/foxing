@@ -9,6 +9,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./build/client" },
   "observability": { "enabled": true },
+  "upload_source_maps": true,
   "d1_databases": [
     {
       "binding": "DB",

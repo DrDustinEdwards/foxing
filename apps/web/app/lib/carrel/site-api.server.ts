@@ -32,7 +32,7 @@ function carrelLimiter(env: Env): RateLimiter {
 }
 
 /** One Carrel request, answered by the package over the Journal adapter. */
-export function handleCarrelRequest(
+function handleCarrelRequest(
   request: Request,
   options: { env: Env; ctx: ExecutionContext; renderDocument: RenderDocument | null },
 ): Promise<Response> {
@@ -55,7 +55,7 @@ export function handleCarrelRequest(
  * True when a request outside the prefix presents the Carrel key as its bearer token. Compared by
  * the package's own constant-time digest check; an unset or short key matches nothing.
  */
-export async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<boolean> {
+async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<boolean> {
   if (insidePrefix(new URL(request.url).pathname)) return false;
   const header = request.headers.get("authorization");
   const presented = header ? /^Bearer[ ]+(\S+)\s*$/i.exec(header)?.[1] : undefined;

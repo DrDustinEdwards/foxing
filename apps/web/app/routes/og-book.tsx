@@ -1,3 +1,4 @@
+import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { catalogRepo } from "@foxing/core";
 import { ImageResponse } from "workers-og";
 import { edgeCache } from "~/lib/cache.server";
@@ -54,10 +55,6 @@ async function coverDataUri(url: string): Promise<string | null> {
   }
 }
 
-function esc(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
-
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
   const book = await catalogRepo.getBookBySlug(db, params.slug);
@@ -81,8 +78,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     return Response.redirect(book.coverUrl ?? "https://foxing.app", 302);
   }
 
-  const title = esc(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
-  const author = esc(book.author);
+  const title = escapeHtml(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
+  const author = escapeHtml(book.author);
 
   // Single line, no whitespace between tags: satori counts whitespace text nodes as
   // children and requires display:flex on any multi-child element.

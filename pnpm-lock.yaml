@@ -366,6 +366,9 @@ importers:
 
   packages/api:
     dependencies:
+      '@dustinedwards/site-runtime':
+        specifier: github:DrDustinEdwards/site-runtime#v0.7.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d95f528715affccde933abc5b2e0bf0e7355c6ca
       '@foxing/core':
         specifier: workspace:*
         version: link:../core

@@ -6,7 +6,7 @@ import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cn } from "~/lib/cn";
 
-export const ADMIN_SECTIONS = [
+const ADMIN_SECTIONS = [
   { to: "/admin", label: "Dashboard", end: true },
   { to: "/admin/book-of-month", label: "Book of the Month" },
   { to: "/admin/celebrity-picks", label: "Celebrity Picks" },
