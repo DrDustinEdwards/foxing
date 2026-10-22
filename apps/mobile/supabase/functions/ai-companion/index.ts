@@ -237,23 +237,18 @@ async function enforceLimitsAndGate(
 // Prompt assembly + JWT user lookup
 // =====================================================================
 
-// JWT is base64url-encoded JSON: header.payload.signature. We don't
-// validate the signature here, the Edge Functions runtime already
-// did that via verify_jwt: true. We just decode the payload to grab
-// the sub claim (Supabase user UUID) for logging.
-function getUserIdFromAuth(req: Request): string | undefined {
+// The caller's Supabase user id, from a token Supabase Auth itself confirms. Decoding
+// the payload alone trusted a gateway `verify_jwt` flag no config in this repo pins
+// (Grok audit 2026-10-21, FX-5). No admin client or a refused token is no user.
+async function getUserIdFromAuth(req: Request): Promise<string | undefined> {
   const auth = req.headers.get("authorization") || req.headers.get("Authorization");
   if (!auth) return undefined;
   const token = auth.replace(/^Bearer\s+/i, "");
-  const parts = token.split(".");
-  if (parts.length !== 3) return undefined;
+  const admin = getAdminClient();
+  if (!admin) return undefined;
   try {
-    // Base64url → base64 → JSON
-    const b64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
-    const padded = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-    const json = atob(padded);
-    const claims = JSON.parse(json);
-    return typeof claims.sub === "string" ? claims.sub : undefined;
+    const { data, error } = await admin.auth.getUser(token);
+    return error || !data.user ? undefined : data.user.id;
   } catch {
     return undefined;
   }
@@ -838,7 +833,7 @@ async function deleteAccount(
   p: DeleteAccountPayload,
   req: Request,
 ): Promise<string> {
-  const viewerId = getUserIdFromAuth(req);
+  const viewerId = await getUserIdFromAuth(req);
   if (!viewerId) throw new Error("Not authenticated");
   if (!p?.userId || p.userId !== viewerId) {
     throw new Error("You can only delete your own account");
@@ -963,7 +958,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     action = body.action as ActionType;
     const payload = body.payload;
-    const userId = getUserIdFromAuth(req);
+    const userId = await getUserIdFromAuth(req);
     const bookId = (payload && typeof payload === "object" && "bookId" in payload)
       ? (payload as { bookId?: string }).bookId
       : undefined;
