@@ -81,6 +81,13 @@ stripeWebhookRoutes.post("/webhooks/stripe", async (c) => {
   const fresh = await billingRepo.recordEventOnce(db, event.id, event.type);
   if (!fresh) return c.json({ received: true, duplicate: true });
 
-  await applyIntent(db, client, billing.interpretStripeEvent(event));
+  try {
+    await applyIntent(db, client, billing.interpretStripeEvent(event));
+  } catch (err) {
+    // Without this the retry would be a duplicate and the tier would never change
+    // (Grok audit 2026-10-21, FX-9). The thrown error is the 500 Stripe retries on.
+    await billingRepo.forgetEvent(db, event.id);
+    throw err;
+  }
   return c.json({ received: true });
 });

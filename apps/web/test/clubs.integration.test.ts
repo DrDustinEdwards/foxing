@@ -212,6 +212,35 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     expect(joinedActivity).toHaveLength(1);
   });
 
+  it("PLANT: a private club's children and join-by-id are hidden from non-members; the invite code still works", async () => {
+    // Grok audit 2026-10-21, FX-1: only GET /clubs/:id checked membership, and
+    // joinClub let anyone with the id in, at the default settings.
+    await seedUser("owner_p", "plus");
+    await seedUser("outsider", "free");
+    const { body } = await createClub("owner_p", { visibility: "private" });
+    const id = body.club.id;
+
+    for (const path of ["members", "threads", "polls", "meetings", "schedule"]) {
+      expect((await call(`/clubs/${id}/${path}`, { user: "outsider" })).status, path).toBe(404);
+      expect((await call(`/clubs/${id}/${path}`)).status, `${path} anonymous`).toBe(404);
+    }
+    expect((await call(`/clubs/${id}/join`, { method: "POST", user: "outsider" })).status).toBe(
+      404,
+    );
+
+    const byCode = await call(`/join/${body.club.joinCode}`, { method: "POST", user: "outsider" });
+    expect(byCode.status).toBe(201);
+    expect((await call(`/clubs/${id}/members`, { user: "outsider" })).status).toBe(200);
+
+    // A private join is not a public activity row the feed would hand to followers.
+    const db = createDb(env.DB);
+    const joined = await db
+      .select()
+      .from(schema.activityEvents)
+      .where(eq(schema.activityEvents.targetId, id));
+    expect(joined).toHaveLength(0);
+  });
+
   it("join code lifecycle: rotate invalidates the old code, new one works", async () => {
     await seedUser("owner4", "plus");
     await seedUser("code_joiner", "free");

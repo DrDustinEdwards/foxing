@@ -316,11 +316,10 @@ async function runPushSweep(env: Env): Promise<void> {
   const now = Date.now();
   const lastRaw = await kv.get("push:last_sweep");
   const since = lastRaw ? Number(lastRaw) : now - PUSH_SWEEP_LOOKBACK_MS;
-  try {
-    await push.sweepPushDeliveries(db, { fetchImpl: fetch, nowUtcMs: now, kv }, since);
-  } finally {
-    await kv.put("push:last_sweep", String(now));
-  }
+  await push.sweepPushDeliveries(db, { fetchImpl: fetch, nowUtcMs: now, kv }, since);
+  // Only a sweep that finished moves the cursor: a thrown one is retried from the same
+  // point on the next tick instead of skipping its window (Grok audit 2026-10-21, FX-10).
+  await kv.put("push:last_sweep", String(now));
 }
 
 async function scheduled(

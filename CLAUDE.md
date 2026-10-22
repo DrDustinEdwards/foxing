@@ -17,7 +17,7 @@ Foxing: a reading app and web platform ("Letterboxd for books"), foxing.app.
     packages/utils/ @foxing/utils: shared helpers
     mcp/            Foxing Admin MCP: own Worker, npm package
 
-Web stack: Workers, D1, R2, KV, React Router 8 framework mode. A pnpm and turborepo monorepo. Node 24.
+Web stack: Workers, D1, R2, KV, React Router 8 framework mode. A pnpm and turborepo monorepo. Node 26 (`.nvmrc`).
 
 **Git submodule:** `apps/mobile/libs/foliate-js`. Clone with `--recurse-submodules` or run `git submodule update --init`, or the mobile reader silently gets an empty library.
 

@@ -1,7 +1,13 @@
 // Diary / reviews endpoints. diary_entries is the rating + review home.
 // Create respects visibility for feed emission (private -> no event); the book rating
 // aggregate is recomputed in core on every write. Handlers stay thin.
-import { createDiaryInput, diaryDomain, diaryRepo, updateDiaryInput } from "@foxing/core";
+import {
+  createDiaryInput,
+  diaryDomain,
+  diaryRepo,
+  socialDomain,
+  updateDiaryInput,
+} from "@foxing/core";
 import { Hono } from "hono";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -38,9 +44,14 @@ diaryRoutes.get("/diary/:id", async (c) => {
   const session = c.get("session");
   const entry = await diaryRepo.getEntryById(c.get("db"), c.req.param("id"));
   if (!entry) throw errors.notFound("Diary entry not found.");
-  // Private entries are visible only to their author. friends/public reads on this
-  // by-id route are allowed (the profile page enforces the friends audience itself).
-  if (entry.visibility === "private" && entry.userId !== session?.id) {
+  // The same audience as the profile page: the author sees everything, a close friend
+  // friends and public, anyone else public only (Grok audit 2026-10-21, FX-7).
+  const visible = await socialDomain.visibleVisibilitiesFor(
+    c.get("db"),
+    entry.userId,
+    session?.id ?? null,
+  );
+  if (!visible.includes(entry.visibility)) {
     throw errors.notFound("Diary entry not found.");
   }
   return c.json({ entry });

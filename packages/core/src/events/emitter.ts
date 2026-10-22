@@ -85,8 +85,15 @@ const handlers: EventHandlers = {
   // -- Clubs. Recipient lists are passed IN the payload: handlers stay pure
   // (no DB reads), so the domain layer loads active members and hands them here.
 
+  // A private club's join is never a public activity row: the feed would hand its id
+  // and name to every follower (Grok audit 2026-10-21, FX-1).
   "club.member.joined": (_actor, payload) => {
-    const { clubId, clubName } = payload as { clubId: string; clubName: string };
+    const { clubId, clubName, isPrivate } = payload as {
+      clubId: string;
+      clubName: string;
+      isPrivate?: boolean;
+    };
+    if (isPrivate) return {};
     return {
       activity: { type: "joined_club", targetId: clubId, data: { clubName }, visibility: "public" },
     };
@@ -107,9 +114,16 @@ const handlers: EventHandlers = {
   },
 
   "club.member.approved": (actor, payload) => {
-    const { clubId, clubName } = payload as { clubId: string; clubName: string };
+    const { clubId, clubName, isPrivate } = payload as {
+      clubId: string;
+      clubName: string;
+      isPrivate?: boolean;
+    };
+    const activity: ActivityWrite | undefined = isPrivate
+      ? undefined
+      : { type: "joined_club", targetId: clubId, data: { clubName }, visibility: "public" };
     return {
-      activity: { type: "joined_club", targetId: clubId, data: { clubName }, visibility: "public" },
+      ...(activity ? { activity } : {}),
       notifications: [
         {
           userId: actor.userId,

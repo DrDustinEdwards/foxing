@@ -80,5 +80,18 @@ profileRoutes.patch("/me/visibility", rateLimit("write"), async (c) => {
 profileRoutes.get("/u/:username", async (c) => {
   const profile = await profilesRepo.getProfileByUsername(c.get("db"), c.req.param("username"));
   if (!profile) throw errors.notFound("Profile not found.");
+  // A non-public profile shows only enough identity to confirm the account exists, to
+  // everyone but its owner: the same rule as the web page (Grok audit 2026-10-21, FX-2).
+  const isOwner = c.get("session")?.id === profile.id;
+  if (!isOwner && (profile.visibility?.profile ?? "public") !== "public") {
+    return c.json({
+      isPrivate: true,
+      profile: {
+        username: profile.username,
+        displayName: profile.displayName,
+        avatarUrl: profile.avatarUrl,
+      },
+    });
+  }
   return c.json({ profile: profilesRepo.toPublicProfile(profile) });
 });
