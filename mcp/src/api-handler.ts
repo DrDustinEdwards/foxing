@@ -7,7 +7,7 @@
 
 import type { ApiEnv } from "./api-client";
 import type { AuditEnv } from "./audit-log";
-import { isAdminUser, SCOPE_READ, type Props } from "./auth";
+import { isAdminUser, type Props } from "./auth";
 import type { LoginEnv } from "./login-handler";
 import { handleMcp, MCP_ROUTE } from "./mcp-handler";
 import { checkRateLimit, type RateLimitEnv } from "./rate-limit";
@@ -67,7 +67,9 @@ export const apiHandler = {
         { "retry-after": String(limit.retryAfter) },
       );
     }
-    const scopes = Array.isArray(auth.scope) ? auth.scope : [SCOPE_READ];
+    // A grant with no scope list is refused, not read as read-only (Grok audit 2026-10-21, FX-16).
+    if (!Array.isArray(auth.scope)) return refuse("This grant carries no scope. Sign in again.", 403);
+    const scopes = auth.scope;
     return handleMcp(request, env, ctx, { kind: "admin", props, scopes });
   },
 };

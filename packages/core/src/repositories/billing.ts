@@ -1,6 +1,7 @@
 // Billing idempotency ledger. Stripe retries webhooks, so the route records
 // every event id once and treats a duplicate delivery as a no-op. The insert is the
 // atomic guard: onConflictDoNothing returns nothing when the id already exists.
+import { eq } from "drizzle-orm";
 import { billingEvents } from "../schema";
 import type { Db } from "../db";
 
@@ -13,4 +14,10 @@ export async function recordEventOnce(db: Db, id: string, type: string): Promise
     .onConflictDoNothing({ target: billingEvents.id })
     .returning({ id: billingEvents.id });
   return rows.length > 0;
+}
+
+/** Remove a recorded event id after its processing failed, so Stripe's retry is
+ *  processed instead of acked as a duplicate. */
+export async function forgetEvent(db: Db, id: string): Promise<void> {
+  await db.delete(billingEvents).where(eq(billingEvents.id, id));
 }

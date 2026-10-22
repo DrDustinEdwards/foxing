@@ -122,10 +122,16 @@ export async function rotateInviteCode(db: Db, actor: EventActor, clubId: string
 
 // -- Membership -------------------------------------------------------------
 
+/** Whether a member's role (the raw text column) may moderate: see ban and mute details. */
+export function canModerateRole(role: string | null | undefined): boolean {
+  return membership.canModerate(role as ClubMemberRole);
+}
+
 export async function joinClub(
   db: Db,
   actor: EventActor,
   clubId: string,
+  opts: { viaInvite?: boolean } = {},
 ): Promise<clubsRepo.ClubMember> {
   const club = await clubsRepo.getClubById(db, clubId);
   if (!club) throw domainErrors.notFound("Club not found.");
@@ -133,6 +139,11 @@ export async function joinClub(
   const existing = await clubsRepo.getMembership(db, clubId, actor.userId);
   if (existing?.status === "active") return existing;
   if (existing?.status === "banned") throw domainErrors.forbidden("You are banned from this club.");
+  // A private club is joined through its invite code or an invitation, never by id: the
+  // same "not found" a non-member gets from GET /clubs/:id (Grok audit 2026-10-21, FX-1).
+  if (club.visibility === "private" && !opts.viaInvite && existing?.status !== "invited") {
+    throw domainErrors.notFound("Club not found.");
+  }
 
   const activeCount = await clubsRepo.countActiveMembers(db, clubId);
   const status = membership.resolveJoinStatus(
@@ -148,7 +159,11 @@ export async function joinClub(
   });
 
   if (status === "active") {
-    await emit(db, "club.member.joined", actor, { clubId, clubName: club.name });
+    await emit(db, "club.member.joined", actor, {
+      clubId,
+      clubName: club.name,
+      isPrivate: club.visibility === "private",
+    });
   } else if (status === "requested") {
     await emit(db, "club.join.requested", actor, {
       clubId,
@@ -166,7 +181,7 @@ export async function joinByCode(
 ): Promise<{ member: clubsRepo.ClubMember; club: clubsRepo.Club }> {
   const club = await clubsRepo.getClubByJoinCode(db, code);
   if (!club) throw domainErrors.notFound("This invite link is no longer valid.");
-  const member = await joinClub(db, actor, club.id);
+  const member = await joinClub(db, actor, club.id, { viaInvite: true });
   return { member, club };
 }
 
@@ -202,6 +217,7 @@ export async function approveMember(
     {
       clubId,
       clubName: club.name,
+      isPrivate: club.visibility === "private",
     },
   );
   return member as clubsRepo.ClubMember;

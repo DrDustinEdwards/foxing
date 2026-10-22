@@ -32,7 +32,8 @@ const INSTRUCTIONS =
 /** The server factory, called per request: no instance outlives the call that made it. */
 function buildServer(env: ToolEnv, caller: Caller | undefined) {
   return () => {
-    const server = new McpServer(SERVER_INFO, { instructions: INSTRUCTIONS });
+    // The element cap on tool arguments (GHSA-46jr-4wx8-v453): the SDK leaves it off by default.
+    const server = new McpServer(SERVER_INFO, { instructions: INSTRUCTIONS, maxToolInputElements: 10_000 });
     for (const tool of TOOLS) {
       server.registerTool(tool.name, tool.config, (args: Record<string, unknown>) =>
         invokeTool(env, caller, tool, args ?? {}),
