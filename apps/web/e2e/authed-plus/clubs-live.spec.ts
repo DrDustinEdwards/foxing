@@ -72,7 +72,9 @@ test.describe("clubs live layer (signed in, plus)", () => {
 
     // --- Live poll tally across contexts ----------------------------------
     // Create the poll first so B's page loads it, THEN vote so B sees the live tally.
-    await page.goto(clubUrl);
+    // The live socket opens once the page has hydrated, so "New poll" is a working button
+    // by then; a click on the server-rendered page before that opens no form.
+    await gotoLive(page, clubUrl);
     await page.getByRole("button", { name: /^new poll$/i }).click();
     await page.getByLabel("Poll question").fill("Next book?");
     await page.getByLabel("Option 1").fill("Middlemarch");
