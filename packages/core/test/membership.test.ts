@@ -9,6 +9,7 @@ import {
   isActiveMember,
   isMuted,
   muteUntil,
+  pickSuccessor,
   resolveJoinStatus,
 } from "../src/domain/membership";
 
@@ -89,5 +90,32 @@ describe("mute", () => {
     expect(isMuted(new Date(2000), 1000)).toBe(true);
     expect(isMuted(new Date(500), 1000)).toBe(false);
     expect(isMuted(null, 1000)).toBe(false);
+  });
+});
+
+describe("pickSuccessor", () => {
+  const m = (userId: string, role: string, day: number, status = "active") => ({
+    userId,
+    role,
+    status,
+    joinedAt: new Date(2026, 0, day),
+  });
+  it("prefers a moderator, then the earliest active joiner, never the leaver or an inactive member", () => {
+    const members = [
+      m("owner", "owner", 1),
+      m("early", "member", 2),
+      m("mod", "moderator", 5),
+      m("banned", "moderator", 3, "banned"),
+    ];
+    expect(pickSuccessor(members, "owner")?.userId).toBe("mod");
+    expect(
+      pickSuccessor(
+        members.filter((x) => x.userId !== "mod"),
+        "owner",
+      )?.userId,
+    ).toBe("early");
+    expect(
+      pickSuccessor([m("owner", "owner", 1), m("gone", "member", 2, "requested")], "owner"),
+    ).toBeNull();
   });
 });

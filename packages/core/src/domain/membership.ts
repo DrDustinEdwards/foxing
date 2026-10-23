@@ -57,6 +57,23 @@ export function canSetRole(
   return true;
 }
 
+/** Who takes over a club when its owner deletes their account: the longest-serving
+ *  active moderator, else the longest-serving active member; null when nobody else is
+ *  active (the club then goes with the account). Ties fall to the earlier joiner. */
+export function pickSuccessor<
+  M extends { userId: string; status: string; role: string; joinedAt: Date | null },
+>(members: M[], leavingUserId: string): M | null {
+  const joined = (m: M) => m.joinedAt?.getTime() ?? Number.POSITIVE_INFINITY;
+  const candidates = members
+    .filter((m) => m.userId !== leavingUserId && isActiveMember(m.status))
+    .sort(
+      (a, b) =>
+        Number(canModerate(b.role as ClubMemberRole)) -
+          Number(canModerate(a.role as ClubMemberRole)) || joined(a) - joined(b),
+    );
+  return candidates[0] ?? null;
+}
+
 /** Unban restores a previously banned user to active membership. */
 export function canUnban(current: string): boolean {
   return current === "banned";

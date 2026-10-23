@@ -11,7 +11,8 @@
 // anything not enumerated; the explicit deletes make erasure deterministic
 // regardless of foreign-key enforcement in a given environment.
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
-import { eq, getTableName, inArray, or } from "drizzle-orm";
+import { and, eq, getTableName, inArray, or } from "drizzle-orm";
+import { pickSuccessor } from "./membership";
 import type { Db } from "../db";
 import {
   account,
@@ -217,8 +218,36 @@ export async function exportAccount(db: Db, userId: string): Promise<Record<stri
   return out;
 }
 
+/** Before erasure, each club the user created passes to another member (pickSuccessor),
+ *  so one person leaving does not delete everyone else's discussion (Dustin, 2026-10-23).
+ *  A club with nobody else active stays creator-owned and is deleted with the account. */
+async function handOverClubs(db: Db, userId: string): Promise<void> {
+  const owned = await db.select({ id: clubs.id }).from(clubs).where(eq(clubs.creatorId, userId));
+  for (const { id } of owned) {
+    const members = await db
+      .select({
+        userId: clubMembers.userId,
+        status: clubMembers.status,
+        role: clubMembers.role,
+        joinedAt: clubMembers.joinedAt,
+      })
+      .from(clubMembers)
+      .where(eq(clubMembers.clubId, id));
+    const next = pickSuccessor(members, userId);
+    if (!next) continue;
+    await db.batch([
+      db.update(clubs).set({ creatorId: next.userId }).where(eq(clubs.id, id)),
+      db
+        .update(clubMembers)
+        .set({ role: "owner" })
+        .where(and(eq(clubMembers.clubId, id), eq(clubMembers.userId, next.userId))),
+    ]);
+  }
+}
+
 /** GDPR erasure: remove every user-owned row, then the Better Auth rows. */
 export async function deleteAccount(db: Db, userId: string): Promise<void> {
+  await handOverClubs(db, userId);
   for (const entry of REGISTRY) {
     await entry.del(db, userId);
   }
