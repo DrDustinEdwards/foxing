@@ -29,6 +29,7 @@ import * as FileSystem from 'expo-file-system/legacy'
 import { importFromStoryGraph } from '@/lib/import'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
+import { SITE_ORIGIN } from '@/constants/origins'
 import { LinkRow, MetaHeader, Section, SegmentedRow, TimeRow, ToggleRow } from '@/components/settings/settings-rows'
 import { csvEscape, escapeIlike, mapShelf, parseGoodreadsCsv } from '@/lib/goodreads-import'
 
@@ -769,11 +770,11 @@ export default function SettingsScreen() {
           </View>
           <LinkRow
             label="Privacy policy"
-            onPress={() => Share.share({ message: 'https://foxing.app/privacy' })}
+            onPress={() => Share.share({ message: `${SITE_ORIGIN}/privacy` })}
           />
           <LinkRow
             label="Terms of service"
-            onPress={() => Share.share({ message: 'https://foxing.app/terms' })}
+            onPress={() => Share.share({ message: `${SITE_ORIGIN}/terms` })}
           />
           <LinkRow
             label="Send feedback"
@@ -781,7 +782,7 @@ export default function SettingsScreen() {
           />
           <LinkRow
             label="Rate Foxing"
-            onPress={() => Share.share({ message: 'https://foxing.app/rate' })}
+            onPress={() => Share.share({ message: `${SITE_ORIGIN}/rate` })}
           />
         </Section>
 

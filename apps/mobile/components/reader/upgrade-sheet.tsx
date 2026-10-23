@@ -3,11 +3,12 @@ import { Lock } from 'phosphor-react-native'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
+import { SITE_ORIGIN } from '@/constants/origins'
 
 // Clean upgrade prompt shown when a free user taps a Plus-gated AI entry,
 // instead of letting the edge function call fail with a raw error. The CTA
 // opens the web pricing page (the same /pricing route the web app links to).
-const PLUS_URL = 'https://foxing.app/pricing'
+const PLUS_URL = `${SITE_ORIGIN}/pricing`
 
 interface UpgradeSheetProps {
   visible: boolean

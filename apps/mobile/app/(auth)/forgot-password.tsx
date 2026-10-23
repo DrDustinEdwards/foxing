@@ -12,6 +12,7 @@ import { Screen } from '@/components/ui/screen'
 import { X as XIcon } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
+import { SITE_ORIGIN } from '@/constants/origins'
 
 export default function ForgotPassword() {
   const colors = useColors()
@@ -26,7 +27,7 @@ export default function ForgotPassword() {
     setError(null)
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(
       email,
-      { redirectTo: 'https://foxing.app/auth/reset-password' },
+      { redirectTo: `${SITE_ORIGIN}/auth/reset-password` },
     )
     setLoading(false)
     if (resetError) {

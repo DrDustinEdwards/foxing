@@ -6,6 +6,7 @@ import { Screen } from '@/components/ui/screen'
 import { Info, X as XIcon, Check } from 'phosphor-react-native'
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
+import { SITE_ORIGIN } from '@/constants/origins'
 
 const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
 
@@ -92,7 +93,7 @@ export default function Signup() {
         setError('That username is taken. Please choose another.')
         return
       }
-      const emailRedirectTo = 'https://foxing.app/auth-callback'
+      const emailRedirectTo = `${SITE_ORIGIN}/auth-callback`
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
         password,
@@ -227,14 +228,14 @@ export default function Signup() {
               I am at least 13 years old and agree to the{' '}
               <Text
                 className="text-brand-text-light dark:text-brand-text-dark"
-                onPress={() => Linking.openURL('https://foxing.app/terms')}
+                onPress={() => Linking.openURL(`${SITE_ORIGIN}/terms`)}
               >
                 terms of service
               </Text>{' '}
               and{' '}
               <Text
                 className="text-brand-text-light dark:text-brand-text-dark"
-                onPress={() => Linking.openURL('https://foxing.app/privacy')}
+                onPress={() => Linking.openURL(`${SITE_ORIGIN}/privacy`)}
               >
                 privacy policy
               </Text>

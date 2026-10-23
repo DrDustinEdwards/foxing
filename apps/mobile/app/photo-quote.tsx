@@ -22,8 +22,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-
-const FOXING_API = 'https://foxing.app'
+import { SITE_ORIGIN } from '@/constants/origins'
 
 export default function PhotoQuoteScreen() {
   const colors = useColors()
@@ -83,7 +82,7 @@ export default function PhotoQuoteScreen() {
           type: mimeType,
         },
       )
-      const res = await fetch(`${FOXING_API}/api/ai/extract-quote`, {
+      const res = await fetch(`${SITE_ORIGIN}/api/ai/extract-quote`, {
         method: 'POST',
         body: formData as unknown as BodyInit,
       })
