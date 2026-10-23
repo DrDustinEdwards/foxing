@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   worker-size:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@fb92659b85f1bbde7956acdd86d3333fb841aad4
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@d92c2d87a1d14fa059cd256fa6b011fde8666f96 # v0.8.0
     with:
       package-manager: pnpm
       working-directory: apps/web
