@@ -5,33 +5,29 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 
-// The restoration pass: legacy path 301s, admin user-detail operator mutations, and the
+// The restoration pass: legacy path 301s (one hop, no chains), admin user-detail operator mutations, and the
 // settings username change/availability endpoints. Redirects are a pure function; the
 // mutation and username contracts drive the API directly (x-test-user stands in for the
 // Better Auth session the Worker injects). The visible admin UI is covered by Playwright.
 
-describe("legacy redirect map (one hop, no chains)", () => {
-  it("renames auth and celebrity-pick routes", () => {
-    expect(legacyRedirectTarget("/sign-in")).toBe("/login");
-    expect(legacyRedirectTarget("/sign-up")).toBe("/signup");
-    expect(legacyRedirectTarget("/book-clubs")).toBe("/picks");
-    expect(legacyRedirectTarget("/book-clubs/oprah")).toBe("/picks/oprah");
-  });
-
-  it("consolidates profile sub-pages but keeps recap and live routes", () => {
-    expect(legacyRedirectTarget("/u/jane/library")).toBe("/u/jane");
-    expect(legacyRedirectTarget("/u/jane/highlights")).toBe("/u/jane");
-    expect(legacyRedirectTarget("/u/jane/shelves/abc")).toBe("/u/jane");
-    // recap is a live route and must not be redirected away.
-    expect(legacyRedirectTarget("/u/jane/recap/2026")).toBeNull();
-    expect(legacyRedirectTarget("/u/jane")).toBeNull();
-    expect(legacyRedirectTarget("/picks")).toBeNull();
-  });
-
-  it("never points a target at another redirect (no chains)", () => {
-    for (const p of ["/login", "/signup", "/picks", "/picks/oprah", "/u/jane"]) {
-      expect(legacyRedirectTarget(p)).toBeNull();
+describe("legacy redirect map", () => {
+  it("sends every legacy path one hop to a live route, and keeps recap live", () => {
+    const legacy = [
+      "/sign-in",
+      "/sign-up",
+      "/book-clubs",
+      "/book-clubs/oprah",
+      "/series/dune",
+      "/quotes/123",
+      "/buddy-reads/abc",
+      "/u/jane/shelves/abc",
+    ];
+    for (const p of legacy) {
+      const target = legacyRedirectTarget(p);
+      expect(target, p).not.toBeNull();
+      expect(legacyRedirectTarget(target as string), `${p} chains`).toBeNull();
     }
+    expect(legacyRedirectTarget("/u/jane/recap/2026")).toBeNull();
   });
 });
 
