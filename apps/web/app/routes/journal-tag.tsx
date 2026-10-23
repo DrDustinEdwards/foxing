@@ -2,7 +2,7 @@ import { catalogRepo } from "@foxing/core";
 import { Link, redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, journalTagPath } from "~/lib/seo";
 import type { Route } from "./+types/journal-tag";
 
@@ -23,9 +23,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   return { origin, tag, result };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(600, 86400);
-}
+export const headers = listingPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   const label = data ? tagLabel(data.tag) : "";

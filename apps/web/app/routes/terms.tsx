@@ -4,7 +4,8 @@
 // available. Catalog sourcing and governing law carry over unchanged.
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { LEGAL_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/terms";
 
@@ -15,9 +16,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(3600, 604800);
-}
+export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Terms of service | Foxing" }];
@@ -86,8 +85,8 @@ export default function Terms() {
           <Section heading="Governing law">Texas, USA.</Section>
 
           <Section heading="Contact">
-            <a href="mailto:legal@foxing.app" className="text-brand-text hover:underline">
-              legal@foxing.app
+            <a href={`mailto:${LEGAL_EMAIL}`} className="text-brand-text hover:underline">
+              {LEGAL_EMAIL}
             </a>
           </Section>
         </div>

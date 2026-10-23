@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Button, Container, EmptyState, Eyebrow, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/botm";
 import { MONTH_NAMES } from "~/lib/months";
@@ -18,9 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin, current: all[0] ?? null, archive: all.slice(1) };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders();
-}
+export const headers = catalogPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   const title = "Book of the Month";

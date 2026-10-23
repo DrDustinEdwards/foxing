@@ -8,7 +8,7 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
 import { getAuth } from "~/lib/auth.server";
-import { affiliateConfig, loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { bookLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/book-detail";
 
@@ -68,9 +68,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders();
-}
+export const headers = catalogPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book not found | Foxing" }];

@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
 import { breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/pick-club";
 import { MONTH_ABBR } from "~/lib/months";
@@ -20,9 +20,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   return { origin, club };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(3600, 604800);
-}
+export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book club not found | Foxing" }];

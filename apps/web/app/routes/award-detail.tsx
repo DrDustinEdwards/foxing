@@ -2,7 +2,7 @@ import { catalogRepo } from "@foxing/core";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
 import { breadcrumbLd, buildMeta, itemListLd, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/award-detail";
 
@@ -13,9 +13,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   return { origin, award };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(3600, 604800);
-}
+export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Award not found | Foxing" }];
