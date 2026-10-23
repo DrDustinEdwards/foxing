@@ -24,7 +24,9 @@ on:
 
 # Capsomer is a git dependency built on install (its prepare script), and npm 12 refuses the git
 # dependency in Capsomer's own devDependencies unless allow-git says so; "root" allows only that
-# package's direct ones. pnpm hands the prepare step this variable.
+# package's direct ones. pnpm hands the prepare step this variable. Each job also moves the pnpm
+# store out of setup-pnpm's node_modules: the prepare build typechecks in the store's tmp folder,
+# and under a node_modules path tsc calls Capsomer's React types not portable.
 env:
   NPM_CONFIG_ALLOW_GIT: root
 
@@ -39,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - run: pnpm config set store-dir ~/.pnpm-store
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .nvmrc
@@ -75,6 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - run: pnpm config set store-dir ~/.pnpm-store
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .nvmrc
@@ -106,6 +110,7 @@ jobs:
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - run: pnpm config set store-dir ~/.pnpm-store
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .nvmrc
