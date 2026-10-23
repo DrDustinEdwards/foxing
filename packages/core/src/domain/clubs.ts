@@ -109,7 +109,7 @@ export async function deleteClub(db: Db, actor: EventActor, clubId: string): Pro
     throw domainErrors.forbidden("Only the club creator can delete it.");
   }
   // An explicit creator action on their own club. Deleting an account instead hands the
-  // club to another member (handOverClubs in account.ts).
+  // club to another member (deleteAccount in account.ts).
   await clubsRepo.deleteClub(db, clubId);
 }
 

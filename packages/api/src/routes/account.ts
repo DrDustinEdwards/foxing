@@ -2,7 +2,8 @@
 // the session, call the core function, return. The heavy lifting (which tables are
 // user-owned, delete order) lives in @foxing/core domain/account.
 import { Hono } from "hono";
-import { deleteAccount, exportAccount } from "@foxing/core";
+import { clubsToHandOver, deleteAccount, deleteAccountInput, exportAccount } from "@foxing/core";
+import { errors } from "../error";
 import { requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
 import type { Env } from "../types";
@@ -26,9 +27,25 @@ accountRoutes.get("/account/export", async (c) => {
   });
 });
 
-// DELETE /account - erase the account and all user-owned data, then the auth rows.
+// GET /account/clubs - the clubs the user created, who may take each over, and the default.
+accountRoutes.get("/account/clubs", async (c) => {
+  const session = requireSession(c);
+  return c.json({ clubs: await clubsToHandOver(c.get("db"), session.id) });
+});
+
+// DELETE /account - hand over the user's clubs as chosen, then erase the account and all
+// user-owned data. The body ({ successors }) is optional: an empty one takes the defaults.
 accountRoutes.delete("/account", rateLimit("write"), async (c) => {
   const session = requireSession(c);
-  await deleteAccount(c.get("db"), session.id);
+  const text = await c.req.text();
+  let raw: unknown = {};
+  try {
+    raw = text ? JSON.parse(text) : {};
+  } catch {
+    throw errors.validation({ body: "expected a JSON body" });
+  }
+  const input = deleteAccountInput.safeParse(raw);
+  if (!input.success) throw errors.validation(input.error.flatten());
+  await deleteAccount(c.get("db"), session.id, input.data.successors);
   return c.body(null, 204);
 });

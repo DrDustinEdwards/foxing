@@ -12,7 +12,9 @@
 // regardless of foreign-key enforcement in a given environment.
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
 import { and, eq, getTableName, inArray, or } from "drizzle-orm";
-import { pickSuccessor } from "./membership";
+import type { BatchItem } from "drizzle-orm/batch";
+import { domainErrors } from "./errors";
+import { rankSuccessors } from "./membership";
 import type { Db } from "../db";
 import {
   account,
@@ -64,7 +66,8 @@ type Entry = {
   /** SQL table name, used by the completeness test. */
   tableName: string;
   select: (db: Db, userId: string) => Promise<unknown[]>;
-  del: (db: Db, userId: string) => Promise<void>;
+  /** One DELETE statement, so the whole erasure runs as a single D1 batch. */
+  del: (db: Db, userId: string) => BatchItem<"sqlite">;
 };
 
 /** Rows owned via a single user-id-like column (userId, reporterId, creatorId, ...). */
@@ -73,9 +76,7 @@ function byColumn(key: string, table: SQLiteTable, column: SQLiteColumn): Entry 
     key,
     tableName: getTableName(table),
     select: (db, userId) => db.select().from(table).where(eq(column, userId)),
-    del: async (db, userId) => {
-      await db.delete(table).where(eq(column, userId));
-    },
+    del: (db, userId) => db.delete(table).where(eq(column, userId)),
   };
 }
 
@@ -89,9 +90,7 @@ function byEitherColumn(key: string, table: SQLiteTable, a: SQLiteColumn, b: SQL
         .select()
         .from(table)
         .where(or(eq(a, userId), eq(b, userId))),
-    del: async (db, userId) => {
-      await db.delete(table).where(or(eq(a, userId), eq(b, userId)));
-    },
+    del: (db, userId) => db.delete(table).where(or(eq(a, userId), eq(b, userId))),
   };
 }
 
@@ -114,9 +113,7 @@ function byParent(
         .select()
         .from(table)
         .where(inArray(fk, parent(db, userId))),
-    del: async (db, userId) => {
-      await db.delete(table).where(inArray(fk, parent(db, userId)));
-    },
+    del: (db, userId) => db.delete(table).where(inArray(fk, parent(db, userId))),
   };
 }
 
@@ -218,45 +215,113 @@ export async function exportAccount(db: Db, userId: string): Promise<Record<stri
   return out;
 }
 
-/** Before erasure, each club the user created passes to another member (pickSuccessor),
- *  so one person leaving does not delete everyone else's discussion (Dustin, 2026-10-23).
- *  A club with nobody else active stays creator-owned and is deleted with the account. */
-async function handOverClubs(db: Db, userId: string): Promise<void> {
-  const owned = await db.select({ id: clubs.id }).from(clubs).where(eq(clubs.creatorId, userId));
-  for (const { id } of owned) {
+/** A club the user created, the members who may take it over (best first, see
+ *  rankSuccessors) and the default. No candidates: the club is deleted with the account. */
+export type ClubHandover = {
+  clubId: string;
+  name: string;
+  candidates: { userId: string; name: string; role: string }[];
+  suggested: string | null;
+};
+
+/** The clubs a user would hand over on deleting their account (Dustin, 2026-10-23: one
+ *  person leaving must not delete everyone else's discussion; the owner picks who takes
+ *  over, as Slack, GitHub and Discord have an owner hand over before leaving). */
+export async function clubsToHandOver(db: Db, userId: string): Promise<ClubHandover[]> {
+  const owned = await db
+    .select({ id: clubs.id, name: clubs.name })
+    .from(clubs)
+    .where(eq(clubs.creatorId, userId));
+  const out: ClubHandover[] = [];
+  for (const club of owned) {
     const members = await db
       .select({
         userId: clubMembers.userId,
         status: clubMembers.status,
         role: clubMembers.role,
         joinedAt: clubMembers.joinedAt,
+        username: profiles.username,
+        displayName: profiles.displayName,
       })
       .from(clubMembers)
-      .where(eq(clubMembers.clubId, id));
-    const next = pickSuccessor(members, userId);
-    if (!next) continue;
-    await db.batch([
-      db.update(clubs).set({ creatorId: next.userId }).where(eq(clubs.id, id)),
+      .leftJoin(profiles, eq(profiles.id, clubMembers.userId))
+      .where(eq(clubMembers.clubId, club.id));
+    const candidates = rankSuccessors(members, userId).map((m) => ({
+      userId: m.userId,
+      name: m.displayName || m.username || "A member",
+      role: m.role,
+    }));
+    out.push({
+      clubId: club.id,
+      name: club.name,
+      candidates,
+      suggested: candidates[0]?.userId ?? null,
+    });
+  }
+  return out;
+}
+
+/** The owner's choice per club: a candidate's user id, or null to delete the club. A club
+ *  left out gets its suggested successor (an admin deletion, or an older client). */
+export type ClubSuccessors = Record<string, string | null>;
+
+/** The statements that hand each club over, checked before anything is written. */
+async function handoverStatements(
+  db: Db,
+  userId: string,
+  chosen: ClubSuccessors,
+): Promise<BatchItem<"sqlite">[]> {
+  const plan = await clubsToHandOver(db, userId);
+  const owned = new Set(plan.map((c) => c.clubId));
+  for (const id of Object.keys(chosen)) {
+    if (!owned.has(id)) throw domainErrors.validation("That club is not yours to hand over.");
+  }
+  const stmts: BatchItem<"sqlite">[] = [];
+  for (const club of plan) {
+    const pick = club.clubId in chosen ? chosen[club.clubId] : club.suggested;
+    if (pick === null) continue; // deleted with the account
+    if (!club.candidates.some((c) => c.userId === pick)) {
+      throw domainErrors.validation(`Pick an active member to take over ${club.name}.`);
+    }
+    stmts.push(
+      db
+        .update(clubs)
+        .set({ creatorId: pick, updatedAt: new Date() })
+        .where(eq(clubs.id, club.clubId)),
       db
         .update(clubMembers)
         .set({ role: "owner" })
-        .where(and(eq(clubMembers.clubId, id), eq(clubMembers.userId, next.userId))),
-    ]);
+        .where(and(eq(clubMembers.clubId, club.clubId), eq(clubMembers.userId, pick))),
+      db.insert(notifications).values({
+        userId: pick,
+        type: "club_ownership",
+        title: `You now own ${club.name}`,
+        body: "Its creator deleted their account and handed the club to you.",
+        data: { clubId: club.clubId },
+      }),
+    );
   }
+  return stmts;
 }
 
-/** GDPR erasure: remove every user-owned row, then the Better Auth rows. */
-export async function deleteAccount(db: Db, userId: string): Promise<void> {
-  await handOverClubs(db, userId);
-  for (const entry of REGISTRY) {
-    await entry.del(db, userId);
-  }
-  // Better Auth rows. verification keys on the email (identifier), not the user id.
+/** GDPR erasure, in one D1 batch so a failure leaves nothing half-done: hand each club
+ *  the user created to the member they chose (or the suggested one), then remove every
+ *  user-owned row, then the Better Auth rows. Clubs nobody takes over go with the account. */
+export async function deleteAccount(
+  db: Db,
+  userId: string,
+  successors: ClubSuccessors = {},
+): Promise<void> {
+  const handover = await handoverStatements(db, userId, successors);
+  // verification keys on the email (identifier), not the user id.
   const [row] = await db.select({ email: user.email }).from(user).where(eq(user.id, userId));
-  await db.delete(session).where(eq(session.userId, userId));
-  await db.delete(account).where(eq(account.userId, userId));
-  if (row?.email) {
-    await db.delete(verification).where(eq(verification.identifier, row.email));
-  }
-  await db.delete(user).where(eq(user.id, userId));
+  const stmts: BatchItem<"sqlite">[] = [
+    ...handover,
+    ...REGISTRY.map((entry) => entry.del(db, userId)),
+    db.delete(session).where(eq(session.userId, userId)),
+    db.delete(account).where(eq(account.userId, userId)),
+    ...(row?.email ? [db.delete(verification).where(eq(verification.identifier, row.email))] : []),
+    db.delete(user).where(eq(user.id, userId)),
+  ];
+  await db.batch(stmts as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
 }

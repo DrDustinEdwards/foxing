@@ -46,3 +46,9 @@ export const visibilityPrefsInput = z
   })
   .partial();
 export type VisibilityPrefsInput = z.infer<typeof visibilityPrefsInput>;
+
+/** DELETE /account: who takes over each club the user created (a member's user id), or
+ *  null to delete that club. Clubs left out get their suggested successor. */
+export const deleteAccountInput = z.object({
+  successors: z.record(z.string(), z.string().nullable()).default({}),
+});

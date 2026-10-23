@@ -87,8 +87,9 @@ export default function Privacy() {
 
           <Section heading="Retention and deletion">
             Delete your account at any time from settings. Your profile, library, reading history,
-            highlights, notes, and goals are removed when you do. Operational backups are purged on
-            a rolling basis after that.
+            highlights, notes, and goals are removed when you do. A club you created passes to the
+            member you choose, so its members keep their discussions; a club with no other members
+            is deleted. Operational backups are purged on a rolling basis after that.
           </Section>
 
           <Section heading="Children">

@@ -9,7 +9,7 @@ import {
   isActiveMember,
   isMuted,
   muteUntil,
-  pickSuccessor,
+  rankSuccessors,
   resolveJoinStatus,
 } from "../src/domain/membership";
 
@@ -93,29 +93,23 @@ describe("mute", () => {
   });
 });
 
-describe("pickSuccessor", () => {
+describe("rankSuccessors", () => {
   const m = (userId: string, role: string, day: number, status = "active") => ({
     userId,
     role,
     status,
     joinedAt: new Date(2026, 0, day),
   });
-  it("prefers a moderator, then the earliest active joiner, never the leaver or an inactive member", () => {
+  it("puts moderators first, then earlier joiners, and leaves out the leaver and inactive members", () => {
     const members = [
       m("owner", "owner", 1),
+      m("late", "member", 9),
       m("early", "member", 2),
       m("mod", "moderator", 5),
       m("banned", "moderator", 3, "banned"),
+      m("asked", "member", 1, "requested"),
     ];
-    expect(pickSuccessor(members, "owner")?.userId).toBe("mod");
-    expect(
-      pickSuccessor(
-        members.filter((x) => x.userId !== "mod"),
-        "owner",
-      )?.userId,
-    ).toBe("early");
-    expect(
-      pickSuccessor([m("owner", "owner", 1), m("gone", "member", 2, "requested")], "owner"),
-    ).toBeNull();
+    expect(rankSuccessors(members, "owner").map((x) => x.userId)).toEqual(["mod", "early", "late"]);
+    expect(rankSuccessors([m("owner", "owner", 1)], "owner")).toEqual([]);
   });
 });
