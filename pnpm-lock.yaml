@@ -279,8 +279,8 @@ importers:
         specifier: github:DrDustinEdwards/site-api#v0.8.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/822be44c6a1356e29cf78723579250cbefbee08b
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.9.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9
+        specifier: github:DrDustinEdwards/site-runtime#v0.11.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -373,8 +373,8 @@ importers:
   packages/api:
     dependencies:
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.9.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9
+        specifier: github:DrDustinEdwards/site-runtime#v0.11.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248
       '@foxing/core':
         specifier: workspace:*
         version: link:../core
@@ -1294,6 +1294,11 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-thnjIUkLOwkDaXYGJXbPD2OWQiFbuTQAJyXSuLE71dej7wNLO8twQtM92bHxkNmg1RMkLo15OzeuqfwR68ibCg==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/822be44c6a1356e29cf78723579250cbefbee08b}
     version: 0.8.0
     engines: {node: '>=26.11.1'}
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248':
+    resolution: {gitHosted: true, integrity: sha512-UnXDRkGZuE++cBOwPQ+T5tEr/gosq88KG+eGx7c/GnyJVWJmIsSZErSbhsOZsh7iOeBy+50H8L95dQ2w/tJnpg==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248}
+    version: 0.11.0
+    hasBin: true
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9':
     resolution: {gitHosted: true, integrity: sha512-A+hGowQCequ/ZmOSHGpL/6TvA4Co3GwLFW3uvfrW5y/sOd6UA5oql6JCR/UiFNQ3AWR19R21C8NOsFV3/sSBiQ==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9}
@@ -8506,6 +8511,8 @@ snapshots:
       '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9
       diff: 9.0.0
       zod: 4.6.5
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248': {}
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9': {}
 
