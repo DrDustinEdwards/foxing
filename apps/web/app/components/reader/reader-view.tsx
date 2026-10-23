@@ -188,6 +188,12 @@ export function ReaderView(props: ReaderViewProps) {
           listeners: {
             onPosition: (loc) => {
               currentLocatorRef.current = loc;
+              // Where the reader stands, on the container: a browser test waits on it for a
+              // page turn or a Contents jump to land.
+              containerRef.current?.setAttribute(
+                "data-position",
+                `${loc.href}@${String(loc.locations?.progression ?? 0)}`,
+              );
               setPct(progressPctFromLocator(loc));
               if (typeof loc.title === "string") setChapter(loc.title);
               setSelection(null);
