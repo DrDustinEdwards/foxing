@@ -1,0 +1,117 @@
+/* The shared pieces of components/ui.tsx that Capsomer has no component for: the tag pill and
+   metadata chip of Rule 07, the entity card, the page heading, and Foxing's avatar sizes. */
+.fx-tag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.625rem;
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+a.fx-tag:hover {
+  color: var(--accent-text);
+  background: color-mix(in srgb, var(--accent-soft), var(--accent) 12%);
+}
+.fx-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  padding: 0.25rem 0.625rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* design-system Rule 15: shadow-sm to shadow-md on hover, the border stays quiet. */
+.fx-entity {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--fx-radius-card);
+  background: var(--surface);
+  padding: 1.25rem;
+  box-shadow: var(--fx-shadow-sm);
+  @media (prefers-reduced-motion: no-preference) {
+    transition: box-shadow var(--dur-base) var(--ease-out);
+  }
+}
+.fx-entity:hover {
+  box-shadow: var(--fx-shadow-md);
+}
+.fx-entity:hover .fx-entity-title {
+  color: var(--accent-text);
+}
+
+.fx-empty {
+  border: 1px solid var(--line);
+  border-radius: var(--fx-radius-card);
+  background: var(--surface);
+  padding: 4rem 1.5rem;
+}
+.fx-empty .cap-empty-title {
+  font-family: var(--fx-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.fx-empty .cap-empty-text {
+  font-family: var(--fx-body);
+  font-size: 1rem;
+  color: var(--muted);
+}
+
+.fx-avatar {
+  background: var(--accent-soft);
+  color: var(--accent-text);
+  font-family: var(--ui);
+}
+.fx-avatar[data-fx-size="sm"] {
+  --cap-avatar-size: 2rem;
+}
+.fx-avatar[data-fx-size="md"] {
+  --cap-avatar-size: 2.25rem;
+}
+.fx-avatar[data-fx-size="lg"] {
+  --cap-avatar-size: 5rem;
+}
+
+.fx-page-head {
+  margin-block-end: 2.5rem;
+}
+.fx-page-title {
+  font-family: var(--fx-display);
+  font-size: 2.25rem;
+  font-weight: 600;
+  line-height: 1.15;
+}
+@media (min-width: 40rem) {
+  .fx-page-title {
+    font-size: 3rem;
+  }
+}
+
+/* A result row in the admin and diary book pickers. */
+.fx-pick-option {
+  display: block;
+  inline-size: 100%;
+  border-radius: var(--fx-radius-cover);
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  color: var(--text);
+}
+.fx-pick-option:hover {
+  background: var(--fx-hover);
+}
+
+/* Foxing's ghost button: Capsomer's quiet button in the accent text, the soft accent on hover. */
+.cap-btn.fx-btn-ghost {
+  --cap-btn-fg: var(--accent-text);
+  --cap-btn-hover: var(--accent-soft);
+}

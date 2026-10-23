@@ -48,8 +48,8 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
         {!current?.book ? (
           <EmptyState title="No pick yet" body="The next Book of the Month lands soon." />
         ) : (
-          <article className="grid gap-8 rounded-hero border border-border-subtle bg-surface p-6 shadow-card-md sm:p-10 lg:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
-            <div className="mx-auto w-full max-w-[240px] lg:mx-0">
+          <article className="fx-botm-card">
+            <div className="fx-botm-box">
               <Link to={`/books/${current.book.slug}`}>
                 <CoverImage
                   src={current.book.coverUrl}
@@ -62,16 +62,14 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
             </div>
             <div>
               <Eyebrow>{monthLabel(current.year, current.month)}</Eyebrow>
-              <h2 className="mt-2 font-display text-3xl leading-tight">
-                <Link to={`/books/${current.book.slug}`} className="hover:text-brand-text">
+              <h2 className="mt-2 fx-botm-title">
+                <Link to={`/books/${current.book.slug}`} className="hover-accent">
                   {current.book.title}
                 </Link>
               </h2>
-              <p className="mt-2 font-ui text-lg text-secondary">{current.book.author}</p>
+              <p className="mt-2 fx-botm-text">{current.book.author}</p>
               {current.curatorNote ? (
-                <p className="mt-5 max-w-prose font-body text-lg leading-relaxed text-secondary">
-                  {current.curatorNote}
-                </p>
+                <p className="mt-5 fx-botm-text-2">{current.curatorNote}</p>
               ) : null}
               <div className="mt-6">
                 <Button to={`/books/${current.book.slug}`}>View the book</Button>
@@ -82,21 +80,19 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
 
         {archive.length > 0 ? (
           <section className="mt-16">
-            <h2 className="mb-6 font-display text-2xl">Past picks</h2>
-            <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-6">
+            <h2 className="mb-6 fx-botm-title-2">Past picks</h2>
+            <ul className="fx-botm-grid">
               {archive.map((e) =>
                 e.book ? (
                   <li key={e.id}>
-                    <Link to={`/books/${e.book.slug}`} className="group block">
+                    <Link to={`/books/${e.book.slug}`} className="block">
                       <CoverImage
                         src={e.book.coverUrl}
                         alt={`${e.book.title} by ${e.book.author}`}
                         fallbackLabel={e.book.title}
                         sizes="160px"
                       />
-                      <p className="mt-2 font-mono text-[0.625rem] uppercase tracking-[0.12em] text-tertiary">
-                        {monthLabel(e.year, e.month)}
-                      </p>
+                      <p className="mt-2 fx-botm-caps">{monthLabel(e.year, e.month)}</p>
                     </Link>
                   </li>
                 ) : null,

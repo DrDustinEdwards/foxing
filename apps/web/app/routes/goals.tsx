@@ -102,17 +102,17 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl flex flex-col gap-8">
+      <Container className="fx-goals-wrap">
         <PageHeader eyebrow="Reading" title="Reading goals" className="mb-0" />
 
         <CreateGoal onChanged={refresh} />
 
-        <section className="flex flex-col gap-4">
-          <h2 className="font-display text-2xl text-primary">Active</h2>
+        <section className="stack">
+          <h2 className="display-2">Active</h2>
           {active.length === 0 ? (
             <EmptyState title="No active goals." body="Set a target above to start tracking." />
           ) : (
-            <ul className="flex flex-col gap-3">
+            <ul className="stack-3">
               {active.map((g) => (
                 <GoalItem key={g.goal.id} row={g} active now={now} onChanged={refresh} />
               ))}
@@ -121,9 +121,9 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
         </section>
 
         {past.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl text-primary">Past</h2>
-            <ul className="flex flex-col gap-3">
+          <section className="stack">
+            <h2 className="display-2">Past</h2>
+            <ul className="stack-3">
               {past.map((g) => (
                 <GoalItem key={g.goal.id} row={g} active={false} now={now} onChanged={refresh} />
               ))}
@@ -131,12 +131,12 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
           </section>
         ) : null}
 
-        <section className="flex flex-col gap-4">
-          <h2 className="font-display text-2xl text-primary">Reading activity</h2>
-          <div className="overflow-x-auto rounded-card border border-border-subtle bg-surface p-5">
+        <section className="stack">
+          <h2 className="display-2">Reading activity</h2>
+          <div className="fx-goals-card">
             <ActivityHeatmap weeks={heatmap.weeks} monthLabels={heatmap.monthLabels} />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="fx-goals-grid">
             <StreakCard label="current streak" value={streak.currentStreak} hint="days in a row" />
             <StreakCard label="longest streak" value={streak.longestStreak} hint="all time" />
             <StreakCard label="books finished" value={streak.totalBooksFinished} hint="all time" />
@@ -151,16 +151,8 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
 // A small status pill: success (reached / on track) or neutral (behind). Inline SVG check,
 // no icon library. Uses the semantic success tokens so it reads in light and dark.
 function GoalBadge({ tone, children }: { tone: "success" | "neutral"; children: ReactNode }) {
-  const cls =
-    tone === "success"
-      ? "bg-[color:var(--success-bg)] text-[color:var(--success)]"
-      : "bg-sunken text-secondary";
   return (
-    <span
-      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono text-[0.625rem] uppercase tracking-[0.06em] ${cls}`}
-    >
-      {children}
-    </span>
+    <span className={tone === "success" ? "badge badge-ok" : "badge badge-quiet"}>{children}</span>
   );
 }
 
@@ -243,13 +235,9 @@ function GoalItem({
   }
 
   return (
-    <li
-      className={`rounded-card border bg-surface p-4 ${
-        complete ? "border-[color:var(--success)]" : "border-border-subtle"
-      }`}
-    >
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="flex flex-wrap items-center gap-2 font-ui text-sm text-primary">
+    <li className={complete ? "fx-goal fx-goal-done" : "fx-goal"}>
+      <div className="fx-goals-row">
+        <span className="fx-goals-label">
           <span>
             {goal.target} {goal.type} in {goalPeriodLabel(goal)}
           </span>
@@ -263,26 +251,18 @@ function GoalItem({
             <GoalBadge tone="neutral">Behind by {pacing.behind}</GoalBadge>
           ) : null}
         </span>
-        <div className="flex shrink-0 items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setEditing((v) => !v)}
-            className="font-ui text-xs text-tertiary hover:text-brand-text hover:underline"
-          >
+        <div className="shrink-0 row">
+          <button type="button" onClick={() => setEditing((v) => !v)} className="fx-goals-btn">
             {editing ? "Cancel" : "Edit"}
           </button>
-          <button
-            type="button"
-            onClick={remove}
-            className="font-ui text-xs text-tertiary hover:text-error hover:underline"
-          >
+          <button type="button" onClick={remove} className="fx-goals-btn-2">
             Remove
           </button>
         </div>
       </div>
 
       <div
-        className="mt-2 h-2 overflow-hidden rounded-full bg-sunken"
+        className="mt-2 fx-goals-box"
         role="progressbar"
         aria-valuenow={progress}
         aria-valuemin={0}
@@ -290,38 +270,37 @@ function GoalItem({
         aria-label={`${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
       >
         <div
-          className={`h-full rounded-full ${
-            complete ? "bg-[color:var(--success)]" : "bg-[color:var(--brand-ui)]"
-          }`}
+          className={complete ? "fx-goal-fill fx-goal-done" : "fx-goal-fill"}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="mt-1 font-ui text-xs text-tertiary">
+      <p className="mt-1 fine">
         {progress} of {goal.target}
       </p>
 
       {editing ? (
-        <div className="mt-3 flex items-center gap-2">
-          <label className="font-ui text-sm">
-            <span className="sr-only">New target</span>
+        <div className="mt-3 row-2">
+          <label className="sans small">
+            <span className="cap-sr-only">New target</span>
             <input
               type="number"
               min={1}
               value={target}
               onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))}
-              className="w-16 rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+              className="cap-input fx-goals-input"
             />
           </label>
           <button
             type="button"
             onClick={save}
             disabled={pending}
-            className="rounded-md border border-border-interactive px-3 py-1 font-ui text-sm hover:bg-hover disabled:opacity-50"
+            className="cap-btn"
+            data-size="sm"
           >
             Save
           </button>
           {pending ? (
-            <span className="font-ui text-xs text-tertiary" role="status">
+            <span className="fine" role="status">
               Saving...
             </span>
           ) : null}
@@ -329,7 +308,7 @@ function GoalItem({
       ) : null}
 
       {error ? (
-        <p className="mt-2 font-ui text-xs text-error" role="alert">
+        <p className="mt-2 error xsmall" role="alert">
           {error}
         </p>
       ) : null}
@@ -377,26 +356,26 @@ function CreateGoal({ onChanged }: { onChanged: () => void }) {
   }
 
   return (
-    <section className="rounded-card border border-border-subtle bg-surface p-4">
-      <p className="mb-3 font-ui text-sm font-medium text-primary">Set a new goal</p>
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="font-ui text-sm">
-          <span className="sr-only">Number of books</span>
+    <section className="card">
+      <p className="mb-3 fx-goals-text">Set a new goal</p>
+      <div className="row-2 wrap">
+        <label className="sans small">
+          <span className="cap-sr-only">Number of books</span>
           <input
             type="number"
             min={1}
             value={target}
             onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))}
-            className="w-16 rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+            className="cap-input fx-goals-input"
           />
         </label>
-        <span className="font-ui text-sm text-secondary">books</span>
-        <label className="font-ui text-sm">
-          <span className="sr-only">Goal period</span>
+        <span className="ui">books</span>
+        <label className="sans small">
+          <span className="cap-sr-only">Goal period</span>
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as "year" | "month" | "week")}
-            className="rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+            className="cap-select"
           >
             <option value="year">this year</option>
             <option value="month">this month</option>
@@ -407,18 +386,20 @@ function CreateGoal({ onChanged }: { onChanged: () => void }) {
           type="button"
           onClick={add}
           disabled={pending}
-          className="rounded-md bg-brand-ui px-4 py-1.5 font-ui text-sm font-medium text-on-brand transition hover:opacity-90 disabled:opacity-50"
+          className="cap-btn"
+          data-variant="primary"
+          data-size="sm"
         >
           Set goal
         </button>
       </div>
       {pending ? (
-        <p className="mt-2 font-ui text-xs text-tertiary" role="status">
+        <p className="mt-2 fx-goals-text-2" role="status">
           Saving...
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 font-ui text-xs text-error" role="alert">
+        <p className="mt-2 error xsmall" role="alert">
           {error}
         </p>
       ) : null}
@@ -449,7 +430,7 @@ function ActivityHeatmap({
   const gridH = 7 * PITCH;
   const height = gridH + 16;
   return (
-    <div className="flex w-max flex-col gap-3">
+    <div className="fx-goals-stack">
       <svg
         width={width}
         height={height}
@@ -468,7 +449,7 @@ function ActivityHeatmap({
                 width={CELL}
                 height={CELL}
                 rx="2"
-                className={count === 0 ? "fill-brand-subtle" : "fill-brand"}
+                className={count === 0 ? "fx-heat-empty" : "fx-heat"}
                 fillOpacity={count === 0 ? 1 : intensity(count)}
               >
                 {count > 0 ? (
@@ -483,19 +464,19 @@ function ActivityHeatmap({
             key={`${m.col}-${m.label}`}
             x={m.col * PITCH}
             y={gridH + 11}
-            className="fill-tertiary font-mono"
+            className="fx-goals-text-3"
             fontSize="9"
           >
             {m.label}
           </text>
         ))}
       </svg>
-      <div className="flex items-center gap-1.5 font-mono text-[0.6rem] text-tertiary">
+      <div className="fx-goals-row-4">
         <span>Less</span>
-        <span className="h-2.5 w-2.5 rounded-sm bg-brand-subtle" />
-        <span className="h-2.5 w-2.5 rounded-sm bg-brand" style={{ opacity: 0.5 }} />
-        <span className="h-2.5 w-2.5 rounded-sm bg-brand" style={{ opacity: 0.75 }} />
-        <span className="h-2.5 w-2.5 rounded-sm bg-brand" />
+        <span className="fx-goals-label-2" />
+        <span className="fx-goals-label-3" style={{ opacity: 0.5 }} />
+        <span className="fx-goals-label-3" style={{ opacity: 0.75 }} />
+        <span className="fx-goals-label-3" />
         <span>More</span>
       </div>
     </div>
@@ -504,12 +485,10 @@ function ActivityHeatmap({
 
 function StreakCard({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
-    <div className="rounded-card border border-border-subtle bg-surface p-4">
-      <p className="font-display text-2xl text-primary">{value.toLocaleString()}</p>
-      <p className="mt-1 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-        {label}
-      </p>
-      <p className="mt-0.5 font-ui text-xs text-tertiary">{hint}</p>
+    <div className="card">
+      <p className="display-2">{value.toLocaleString()}</p>
+      <p className="mt-1 fx-goals-caps">{label}</p>
+      <p className="fx-goals-text-4">{hint}</p>
     </div>
   );
 }

@@ -143,36 +143,36 @@ function RoleChangeDialog({
         e.preventDefault();
         if (!pending) closeThen(onCancel);
       }}
-      className="w-[calc(100%-2rem)] max-w-md rounded-card border border-border-subtle bg-surface p-6 text-primary shadow-card-md backdrop:bg-black/60"
+      className="fx-confirm-dialog"
     >
-      <h2 id={titleId} className="font-display text-xl text-primary">
+      <h2 id={titleId} className="display-1">
         {change.label}?
       </h2>
-      <p id={summaryId} className="mt-2 font-ui text-sm text-secondary">
+      <p id={summaryId} className="mt-2 ui">
         {preview.summary}
       </p>
-      <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 font-ui text-sm">
-        <dt className="text-secondary">Who</dt>
-        <dd className="text-primary">
+      <dl className="mt-4 fx-confirm-change-grid">
+        <dt className="muted">Who</dt>
+        <dd className="fx-confirm-change-value">
           @{preview.target.username}
           {preview.target.displayName ? ` (${preview.target.displayName})` : ""}
         </dd>
-        <dt className="text-secondary">Now</dt>
-        <dd className="text-primary">{label(preview.from)}</dd>
-        <dt className="text-secondary">After</dt>
-        <dd className="font-medium text-primary">{label(preview.to)}</dd>
+        <dt className="muted">Now</dt>
+        <dd className="fx-confirm-change-value">{label(preview.from)}</dd>
+        <dt className="muted">After</dt>
+        <dd className="strong">{label(preview.to)}</dd>
       </dl>
-      <p className="mt-4 font-ui text-xs text-secondary">
+      <p className="mt-4 fx-confirm-change-text">
         Nothing has changed yet. This confirmation works once, until{" "}
         {fmtTime.format(new Date(change.expiresAt))}. The change is recorded in the audit log under
         your account.
       </p>
       {error ? (
-        <p className="mt-3 font-ui text-sm text-error" role="alert">
+        <p className="mt-3 error" role="alert">
           {error}
         </p>
       ) : null}
-      <div className="mt-5 flex flex-wrap justify-end gap-3">
+      <div className="mt-5 justify-end fx-confirm-change-row">
         {/* Cancel is the first control, so showModal focuses it and Enter on open
             never performs the change. */}
         <AdminButton disabled={pending} onClick={() => closeThen(onCancel)}>

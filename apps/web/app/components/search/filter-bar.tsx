@@ -2,11 +2,10 @@
 // the three facets backed by real catalog data (genre from subjects, era, length).
 // URL-driven: every change navigates to /search with the param set, resetting page, so
 // the loader re-runs and results are server-rendered. Mood/difficulty/language stay
-// hidden until enrichment populates them.
-import { useRef, useState } from "react";
+// hidden until enrichment populates them. The panel is Capsomer's popover (the platform's
+// popover: Esc and an outside click close it).
+import { Popover, PopoverContent, PopoverTrigger } from "capsomer/react/popover";
 import { useNavigate, useSearchParams } from "react-router";
-import { useDismiss } from "~/components/nav/use-menu";
-import { cn } from "~/lib/cn";
 
 // Mirror core ERA_BUCKETS / LENGTH_BUCKETS locally so the client bundle stays out of
 // the core query layer (same pattern as the Books nav era chips).
@@ -38,9 +37,6 @@ export function FilterBar({
 }) {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  useDismiss(ref, open, () => setOpen(false));
 
   function apply(key: string, value: string | null) {
     const next = new URLSearchParams(params);
@@ -63,20 +59,9 @@ export function FilterBar({
 
   return (
     <div className="mt-6">
-      <div ref={ref} className="relative inline-block">
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-haspopup="true"
-          onClick={() => setOpen((o) => !o)}
-          className={cn(
-            "inline-flex items-center gap-2 rounded-full border px-4 py-2 font-ui text-sm transition-colors",
-            chips.length
-              ? "border-border-interactive bg-brand-subtle text-brand-subtle-text"
-              : "border-border-interactive text-secondary hover:bg-hover",
-          )}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <Popover>
+        <PopoverTrigger className="cap-btn fx-filter-btn" data-on={chips.length ? "" : undefined}>
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
               d="M4 6h16M7 12h10M10 18h4"
               stroke="currentColor"
@@ -85,103 +70,86 @@ export function FilterBar({
             />
           </svg>
           Filters
-          {chips.length ? (
-            <span className="grid h-5 min-w-5 place-items-center rounded-full bg-brand-text px-1 font-mono text-[0.625rem] text-on-brand dark:text-[color:var(--section-charcoal)]">
-              {chips.length}
-            </span>
-          ) : null}
-        </button>
-
-        {open ? (
-          <div className="absolute left-0 top-12 z-40 w-[min(22rem,90vw)] rounded-hero border border-border-subtle bg-surface p-5 shadow-card-md">
-            <fieldset className="mb-4">
-              <legend className="mb-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-                Genre
-              </legend>
-              <div className="flex flex-wrap gap-1.5">
-                {genres.map((g) => {
-                  const on = active.genre === g.subject;
-                  return (
-                    <button
-                      key={g.subject}
-                      type="button"
-                      aria-pressed={on}
-                      onClick={() => apply("genre", on ? null : g.subject)}
-                      className={cn(
-                        "inline-flex rounded-full px-2.5 py-1 font-ui text-xs transition-colors",
-                        on
-                          ? "bg-brand-text text-on-brand dark:text-[color:var(--section-charcoal)]"
-                          : "border border-border-subtle text-secondary hover:bg-hover",
-                      )}
-                    >
-                      {g.subject}
-                    </button>
-                  );
-                })}
-              </div>
+          {chips.length ? <span className="fx-filter-count">{chips.length}</span> : null}
+        </PopoverTrigger>
+        <PopoverContent
+          side="bottom"
+          align="start"
+          aria-label="Filters"
+          className="fx-filter-panel"
+        >
+          <div className="stack">
+            <fieldset className="cap-chips">
+              <legend className="group-label full">Genre</legend>
+              {genres.map((g) => {
+                const on = active.genre === g.subject;
+                return (
+                  <button
+                    key={g.subject}
+                    type="button"
+                    className="cap-chip"
+                    aria-pressed={on}
+                    onClick={() => apply("genre", on ? null : g.subject)}
+                  >
+                    {g.subject}
+                  </button>
+                );
+              })}
             </fieldset>
 
-            <label className="mb-4 block">
-              <span className="mb-2 block font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-                Era
+            <label className="block">
+              <span className="group-label block mb-2">Era</span>
+              <span className="cap-select-wrap" data-native="">
+                <select
+                  value={active.era ?? ""}
+                  onChange={(e) => apply("era", e.target.value || null)}
+                  className="cap-select"
+                >
+                  <option value="">Any era</option>
+                  {ERAS.map((e) => (
+                    <option key={e.slug} value={e.slug}>
+                      {e.label}
+                    </option>
+                  ))}
+                </select>
               </span>
-              <select
-                value={active.era ?? ""}
-                onChange={(e) => apply("era", e.target.value || null)}
-                className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary"
-              >
-                <option value="">Any era</option>
-                {ERAS.map((e) => (
-                  <option key={e.slug} value={e.slug}>
-                    {e.label}
-                  </option>
-                ))}
-              </select>
             </label>
 
             <label className="block">
-              <span className="mb-2 block font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-                Length
+              <span className="group-label block mb-2">Length</span>
+              <span className="cap-select-wrap" data-native="">
+                <select
+                  value={active.length ?? ""}
+                  onChange={(e) => apply("length", e.target.value || null)}
+                  className="cap-select"
+                >
+                  <option value="">Any length</option>
+                  {LENGTHS.map((l) => (
+                    <option key={l.slug} value={l.slug}>
+                      {l.label}
+                    </option>
+                  ))}
+                </select>
               </span>
-              <select
-                value={active.length ?? ""}
-                onChange={(e) => apply("length", e.target.value || null)}
-                className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary"
-              >
-                <option value="">Any length</option>
-                {LENGTHS.map((l) => (
-                  <option key={l.slug} value={l.slug}>
-                    {l.label}
-                  </option>
-                ))}
-              </select>
             </label>
 
             {chips.length ? (
-              <button
-                type="button"
-                onClick={clearAll}
-                className="mt-4 font-ui text-sm text-brand-text hover:underline"
-              >
+              <button type="button" onClick={clearAll} className="cap-link-btn">
                 Clear all filters
               </button>
             ) : null}
           </div>
-        ) : null}
-      </div>
+        </PopoverContent>
+      </Popover>
 
       {chips.length ? (
-        <ul className="mt-3 flex flex-wrap gap-2">
+        <ul className="row-2 wrap mt-3">
           {chips.map((c) => (
             <li key={c.key}>
-              <button
-                type="button"
-                onClick={() => apply(c.key, null)}
-                className="inline-flex items-center gap-1.5 rounded-full border border-border-interactive bg-surface px-3 py-1 font-ui text-xs text-secondary hover:bg-hover"
-              >
+              <button type="button" onClick={() => apply(c.key, null)} className="cap-chip">
                 {c.label}
                 <span aria-hidden="true">×</span>
-                <span className="sr-only">Remove filter</span>
+                <span className="cap-sr-only">Remove filter</span>
               </button>
             </li>
           ))}

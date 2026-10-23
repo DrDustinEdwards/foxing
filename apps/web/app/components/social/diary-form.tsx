@@ -52,20 +52,18 @@ export function DiaryForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-6">
-      <p className="font-ui text-sm text-secondary">
-        Logging <span className="font-medium text-primary">{bookTitle}</span>
+    <form onSubmit={submit} className="stack-6">
+      <p className="ui">
+        Logging <span className="strong">{bookTitle}</span>
       </p>
 
-      <fieldset className="flex flex-col gap-2">
-        <legend className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-tertiary">
-          Rating
-        </legend>
-        <div className="flex flex-wrap items-center gap-2">
+      <fieldset className="stack-2">
+        <legend className="group-label">Rating</legend>
+        <div className="row-2 wrap">
           <select
             value={ratingHalf ?? ""}
             onChange={(e) => setRatingHalf(e.target.value === "" ? null : Number(e.target.value))}
-            className="rounded-cover border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary"
+            className="cap-select py-2"
           >
             <option value="">No rating</option>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((h) => (
@@ -77,32 +75,28 @@ export function DiaryForm({
         </div>
       </fieldset>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-tertiary">
-          Review
-        </span>
+      <label className="stack-2">
+        <span className="group-label">Review</span>
         <textarea
           value={review}
           onChange={(e) => setReview(e.target.value)}
           rows={7}
           placeholder="What did you make of it?"
-          className="rounded-card border border-border-interactive bg-surface px-3 py-2 font-body text-primary"
+          className="cap-input py-2"
         />
       </label>
 
-      <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+      <label className="row-2 ui">
         <input type="checkbox" checked={spoilers} onChange={(e) => setSpoilers(e.target.checked)} />
         This review contains spoilers
       </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-tertiary">
-          Who can see this
-        </span>
+      <label className="stack-2">
+        <span className="group-label">Who can see this</span>
         <select
           value={visibility}
           onChange={(e) => setVisibility(e.target.value as Visibility)}
-          className="rounded-cover border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary"
+          className="cap-select py-2"
         >
           <option value="public">Public - anyone, shown in followers' feeds</option>
           <option value="friends">Close friends only</option>
@@ -111,27 +105,16 @@ export function DiaryForm({
       </label>
 
       {error ? (
-        <p
-          role="alert"
-          className="rounded-md border border-danger/50 bg-danger-subtle px-3 py-2 font-ui text-sm text-danger-text"
-        >
+        <p role="alert" className="py-2 fx-diary-form-text">
           {error}
         </p>
       ) : null}
 
-      <div className="flex items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
-        >
+      <div className="row">
+        <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
           {pending ? "Saving..." : mode === "create" ? "Save entry" : "Save changes"}
         </button>
-        <button
-          type="button"
-          onClick={() => navigate(redirectTo)}
-          className="font-ui text-sm text-secondary hover:text-primary"
-        >
+        <button type="button" onClick={() => navigate(redirectTo)} className="fx-diary-form-btn">
           Cancel
         </button>
       </div>

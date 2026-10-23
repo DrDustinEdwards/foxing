@@ -32,9 +32,9 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-3xl">
+      <Container>
         <p className="mb-6">
-          <Link to="/journal" className="font-ui text-sm text-tertiary hover:text-primary">
+          <Link to="/journal" className="fx-journal-archive-link">
             &larr; Journal
           </Link>
         </p>
@@ -44,7 +44,7 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
         />
 
         {tags.length > 0 ? (
-          <div className="mb-10 flex flex-wrap gap-2">
+          <div className="mb-10 fx-journal-archive-row">
             {tags.map((t) => (
               <TagPill key={t.tag} to={journalTagPath(t.tag)}>
                 {t.tag.replace(/-/g, " ")} &middot; {t.count}
@@ -56,25 +56,21 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
         {result.posts.length === 0 ? (
           <EmptyState title="No articles match those filters." />
         ) : (
-          <ul className="flex flex-col divide-y divide-border-subtle">
+          <ul className="fx-journal-archive-stack">
             {result.posts.map((post) => (
               <li key={post.slug}>
                 <Link
                   to={`/journal/${post.slug}`}
-                  className="group flex items-start justify-between gap-4 rounded-md px-2 py-4 -mx-2 transition-colors hover:bg-hover"
+                  className="group items-start py-4 fx-journal-archive-link-2"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-display text-base leading-snug text-primary transition-colors group-hover:text-brand-text">
-                      {post.title}
-                    </p>
+                  <div className="fx-journal-archive-box">
+                    <p className="truncate fx-journal-archive-title">{post.title}</p>
                     {post.excerpt ? (
-                      <p className="mt-0.5 truncate font-body text-sm text-secondary">
-                        {post.excerpt}
-                      </p>
+                      <p className="truncate fx-journal-archive-text">{post.excerpt}</p>
                     ) : null}
                   </div>
                   {post.tags?.[0] ? (
-                    <span className="shrink-0 font-mono text-xs text-tertiary">
+                    <span className="shrink-0 fx-journal-archive-label">
                       {post.tags[0].replace(/-/g, " ")}
                     </span>
                   ) : null}
@@ -85,25 +81,17 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
         )}
 
         {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-4">
+          <nav aria-label="Pagination" className="mt-12 justify-center row-4">
             {result.page > 1 ? (
-              <Link
-                to={`/journal/archive?page=${result.page - 1}`}
-                rel="prev"
-                className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-              >
+              <Link to={`/journal/archive?page=${result.page - 1}`} rel="prev" className="cap-btn">
                 Newer
               </Link>
             ) : null}
-            <span className="font-ui text-sm text-secondary">
+            <span className="ui">
               Page {result.page} of {result.pageCount}
             </span>
             {result.page < result.pageCount ? (
-              <Link
-                to={`/journal/archive?page=${result.page + 1}`}
-                rel="next"
-                className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-              >
+              <Link to={`/journal/archive?page=${result.page + 1}`} rel="next" className="cap-btn">
                 Older
               </Link>
             ) : null}

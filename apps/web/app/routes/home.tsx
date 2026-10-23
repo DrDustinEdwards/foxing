@@ -66,12 +66,12 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="flex flex-col gap-8">
-        <h1 className="font-display text-3xl sm:text-4xl">
+      <Container className="stack-8">
+        <h1 className="fx-home-title">
           Good {greeting}, {firstName}.
         </h1>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="fx-home-grid">
           <ContinueReadingCard reading={reading} />
           <StreakCard streak={streak} />
         </div>
@@ -83,12 +83,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 function ContinueReadingCard({ reading }: { reading: Entry | null }) {
   if (!reading) {
     return (
-      <section className="flex flex-col justify-center rounded-hero border border-dashed border-border-subtle bg-surface p-8 text-center">
+      <section className="justify-center text-center fx-home-card">
         <Eyebrow className="mb-2">Continue reading</Eyebrow>
-        <p className="font-display text-xl text-primary">Nothing in progress</p>
-        <p className="mx-auto mt-2 max-w-sm text-secondary">
-          Start a book and it shows up here with your progress.
-        </p>
+        <p className="display-1">Nothing in progress</p>
+        <p className="mt-2 fx-home-text">Start a book and it shows up here with your progress.</p>
         <div className="mt-5">
           <Button to="/books">Browse the library</Button>
         </div>
@@ -98,8 +96,8 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
 
   const progress = Math.max(0, Math.min(100, Math.round(reading.progressPct)));
   return (
-    <section className="grid gap-6 rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm sm:grid-cols-[minmax(0,132px)_minmax(0,1fr)] sm:items-center sm:p-8">
-      <div className="mx-auto w-full max-w-[132px]">
+    <section className="fx-home-card-2">
+      <div className="fx-home-box">
         <Link to={`/books/${reading.slug}`}>
           <CoverImage
             src={reading.coverUrl}
@@ -111,26 +109,23 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
       </div>
       <div>
         <Eyebrow>Continue reading</Eyebrow>
-        <h2 className="mt-2 font-display text-2xl leading-tight">
-          <Link to={`/books/${reading.slug}`} className="hover:text-brand-text">
+        <h2 className="mt-2 fx-home-title-2">
+          <Link to={`/books/${reading.slug}`} className="hover-accent">
             {reading.title}
           </Link>
         </h2>
-        <p className="mt-1 font-ui text-secondary">{reading.author}</p>
+        <p className="mt-1 fx-home-text-2">{reading.author}</p>
         <div
-          className="mt-4 h-1.5 overflow-hidden rounded-full bg-sunken"
+          className="mt-4 fx-home-box-2"
           role="progressbar"
           aria-valuenow={progress}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-label="Reading progress"
         >
-          <div
-            className="h-full rounded-full bg-[color:var(--brand-ui)]"
-            style={{ width: `${progress}%` }}
-          />
+          <div className="fx-home-box-3" style={{ width: `${progress}%` }} />
         </div>
-        <p className="mt-1.5 font-mono text-xs text-tertiary">{progress}% read</p>
+        <p className="fx-home-text-3">{progress}% read</p>
         <div className="mt-5">
           <Button to={`/books/${reading.slug}`} variant="secondary">
             Open book
@@ -147,27 +142,21 @@ function StreakCard({ streak }: { streak: Streak | null }) {
     s.currentStreak === 0 ? "Open a book to start a streak." : "Read today to keep it going.";
 
   return (
-    <aside className="flex flex-col rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm">
+    <aside className="fx-home-card-3">
       <Eyebrow className="mb-3">Reading streak</Eyebrow>
-      <p className="font-display text-3xl leading-none">
+      <p className="fx-home-title-3">
         {s.currentStreak}
-        <span className="ml-1.5 font-ui text-base text-secondary">
-          {s.currentStreak === 1 ? "day" : "days"}
-        </span>
+        <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>
       </p>
-      <p className="mt-2 font-ui text-sm text-secondary">{subtext}</p>
-      <dl className="mt-5 grid grid-cols-2 gap-3 border-t border-border-subtle pt-4 text-center">
+      <p className="mt-2 ui">{subtext}</p>
+      <dl className="mt-5 text-center fx-home-grid-2">
         <div>
-          <dd className="font-display text-xl text-primary">{s.longestStreak}</dd>
-          <dt className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-            longest
-          </dt>
+          <dd className="display-1">{s.longestStreak}</dd>
+          <dt className="fx-home-caps">longest</dt>
         </div>
         <div>
-          <dd className="font-display text-xl text-primary">{s.totalBooksFinished}</dd>
-          <dt className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-            finished
-          </dt>
+          <dd className="display-1">{s.totalBooksFinished}</dd>
+          <dt className="fx-home-caps">finished</dt>
         </div>
       </dl>
     </aside>

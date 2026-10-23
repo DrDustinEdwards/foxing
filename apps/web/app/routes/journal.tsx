@@ -45,8 +45,8 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
           title="The Journal"
           lede="Essays on the books in the library, and the ideas inside them."
         />
-        <p className="-mt-6 mb-10">
-          <Link to="/journal/archive" className="font-ui text-sm text-brand-text hover:underline">
+        <p className="mb-10 fx-journal-text">
+          <Link to="/journal/archive" className="link sans small">
             All articles
           </Link>
         </p>
@@ -54,10 +54,10 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
         {result.posts.length === 0 ? (
           <EmptyState title="Nothing published yet" body="The first essays are on the way." />
         ) : (
-          <div className="flex flex-col gap-12">
+          <div className="fx-journal-stack">
             {lead ? <LeadPost post={lead} /> : null}
             {rest.length > 0 ? (
-              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="fx-journal-grid">
                 {rest.map((p) => (
                   <PostCard key={p.slug} post={p} />
                 ))}
@@ -67,25 +67,17 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
         )}
 
         {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-4">
+          <nav aria-label="Pagination" className="mt-12 justify-center fx-journal-row">
             {result.page > 1 ? (
-              <Link
-                to={`/journal?page=${result.page - 1}`}
-                rel="prev"
-                className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-              >
+              <Link to={`/journal?page=${result.page - 1}`} rel="prev" className="cap-btn">
                 Newer
               </Link>
             ) : null}
-            <span className="font-ui text-sm text-secondary">
+            <span className="ui">
               Page {result.page} of {result.pageCount}
             </span>
             {result.page < result.pageCount ? (
-              <Link
-                to={`/journal?page=${result.page + 1}`}
-                rel="next"
-                className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-              >
+              <Link to={`/journal?page=${result.page + 1}`} rel="next" className="cap-btn">
                 Older
               </Link>
             ) : null}
@@ -100,30 +92,23 @@ type Post = Route.ComponentProps["loaderData"]["result"]["posts"][number];
 
 function LeadPost({ post }: { post: Post }) {
   return (
-    <Link
-      to={`/journal/${post.slug}`}
-      className="group grid gap-6 rounded-hero border border-border-subtle bg-surface p-5 shadow-card-sm transition-shadow hover:shadow-card-md sm:p-8 md:grid-cols-2 md:items-center"
-    >
+    <Link to={`/journal/${post.slug}`} className="group fx-journal-card">
       {post.coverImageUrl ? (
-        <div className="overflow-hidden rounded-card">
+        <div className="fx-journal-box">
           <img
             src={post.coverImageUrl}
             alt={post.coverImageAlt ?? ""}
-            className="aspect-[16/10] w-full object-cover"
+            className="fx-journal-img"
             loading="eager"
           />
         </div>
       ) : (
-        <div className="aspect-[16/10] rounded-card bg-sunken" aria-hidden="true" />
+        <div className="fx-journal-box-2" aria-hidden="true" />
       )}
       <div>
         <Eyebrow>{post.featured ? "Featured" : (fmtDate(post.publishedAt) ?? "Essay")}</Eyebrow>
-        <h2 className="mt-2 font-display text-3xl leading-tight text-primary group-hover:text-brand-text">
-          {post.title}
-        </h2>
-        {post.excerpt ? (
-          <p className="mt-3 line-clamp-3 font-body text-lg text-secondary">{post.excerpt}</p>
-        ) : null}
+        <h2 className="mt-2 fx-journal-title">{post.title}</h2>
+        {post.excerpt ? <p className="mt-3 fx-journal-text-2">{post.excerpt}</p> : null}
         <PostMeta post={post} />
       </div>
     </Link>
@@ -132,24 +117,17 @@ function LeadPost({ post }: { post: Post }) {
 
 function PostCard({ post }: { post: Post }) {
   return (
-    <Link
-      to={`/journal/${post.slug}`}
-      className="group flex flex-col rounded-card border border-border-subtle bg-surface p-4 shadow-card-sm transition-shadow hover:shadow-card-md"
-    >
+    <Link to={`/journal/${post.slug}`} className="group fx-journal-card-2">
       {post.coverImageUrl ? (
         <img
           src={post.coverImageUrl}
           alt={post.coverImageAlt ?? ""}
-          className="mb-4 aspect-[16/10] w-full rounded-cover object-cover"
+          className="mb-4 fx-journal-img-2"
           loading="lazy"
         />
       ) : null}
-      <h3 className="font-display text-xl leading-snug text-primary group-hover:text-brand-text">
-        {post.title}
-      </h3>
-      {post.excerpt ? (
-        <p className="mt-2 line-clamp-3 font-body text-secondary">{post.excerpt}</p>
-      ) : null}
+      <h3 className="fx-journal-title-2">{post.title}</h3>
+      {post.excerpt ? <p className="mt-2 fx-journal-text-3">{post.excerpt}</p> : null}
       <PostMeta post={post} />
     </Link>
   );
@@ -158,7 +136,7 @@ function PostCard({ post }: { post: Post }) {
 function PostMeta({ post }: { post: Post }) {
   const date = fmtDate(post.publishedAt);
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 font-ui text-xs text-tertiary">
+    <div className="mt-4 fx-journal-row-2">
       {date ? <span>{date}</span> : null}
       {post.readingTimeMinutes ? (
         <>

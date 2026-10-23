@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Link, redirect, useNavigate } from "react-router";
 import { catalogRepo, createDb, profilesRepo } from "@foxing/core";
 import { CoverImage } from "~/components/cover-image";
-import { cn } from "~/lib/cn";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/onboarding";
@@ -29,16 +28,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
  *  the user has no profile yet, so the signed-in nav would show a "Sign in" prompt. */
 function Frame({ step, children }: { step: 1 | 2; children: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-base">
-      <div className="mx-auto flex min-h-dvh max-w-2xl flex-col px-5 py-10">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold">
+    <div className="fx-onboarding-box">
+      <div className="fx-onboarding-stack">
+        <Link to="/" className="fx-onboarding-link">
           {/* Fox emoji is allowed in auth chrome (Rule 9). */}
           <span aria-hidden="true">🦊</span>
           <span>Foxing</span>
         </Link>
-        <p className="mt-8 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-tertiary">
-          Step {step} of 2
-        </p>
+        <p className="mt-8 fx-onboarding-caps">Step {step} of 2</p>
         <main className="mt-3">{children}</main>
       </div>
     </div>
@@ -115,14 +112,14 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
   if (step === 1) {
     return (
       <Frame step={1}>
-        <h1 className="font-display text-3xl leading-tight sm:text-4xl">Set up your profile</h1>
-        <p className="mt-3 text-secondary">
+        <h1 className="fx-onboarding-title">Set up your profile</h1>
+        <p className="mt-3 fx-onboarding-text">
           Your username is how other readers find you. You can change your display name and favorite
           genres later in settings.
         </p>
-        <form onSubmit={onSubmitProfile} className="mt-8 space-y-6">
+        <form onSubmit={onSubmitProfile} className="mt-8 fx-onboarding-form">
           <label className="block">
-            <span className="mb-1.5 block font-ui text-sm font-medium text-primary">Username</span>
+            <span className="block fx-onboarding-label">Username</span>
             <input
               name="username"
               required
@@ -130,32 +127,30 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
               maxLength={30}
               pattern="[a-zA-Z0-9_]+"
               autoComplete="username"
-              className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2.5 font-ui text-base text-primary outline-none focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[color:var(--border-focus)]"
+              className="cap-input fx-onboarding-input"
             />
-            <span className="mt-1.5 block font-ui text-xs text-tertiary">
-              Letters, numbers, and underscores.
-            </span>
+            <span className="block fx-onboarding-label-2">Letters, numbers, and underscores.</span>
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block font-ui text-sm font-medium text-primary">
-              Display name <span className="font-normal text-tertiary">(optional)</span>
+            <span className="block fx-onboarding-label">
+              Display name <span className="fx-onboarding-label-3">(optional)</span>
             </span>
             <input
               name="displayName"
               defaultValue={suggested}
               maxLength={80}
               autoComplete="name"
-              className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2.5 font-ui text-base text-primary outline-none focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[color:var(--border-focus)]"
+              className="cap-input fx-onboarding-input"
             />
           </label>
 
           {genres.length ? (
             <fieldset>
-              <legend className="mb-2 font-ui text-sm font-medium text-primary">
-                Favorite genres <span className="font-normal text-tertiary">(optional)</span>
+              <legend className="mb-2 fx-onboarding-legend">
+                Favorite genres <span className="fx-onboarding-label-3">(optional)</span>
               </legend>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="fx-onboarding-row">
                 {genres.map((g) => {
                   const on = chosen.includes(g.subject);
                   return (
@@ -164,12 +159,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
                       type="button"
                       aria-pressed={on}
                       onClick={() => toggleGenre(g.subject)}
-                      className={cn(
-                        "inline-flex rounded-full px-3 py-1.5 font-ui text-sm transition-colors",
-                        on
-                          ? "bg-brand-text text-on-brand dark:text-[color:var(--section-charcoal)]"
-                          : "border border-border-subtle text-secondary hover:bg-hover",
-                      )}
+                      className="cap-chip"
                     >
                       {g.subject}
                     </button>
@@ -180,7 +170,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           ) : null}
 
           {error ? (
-            <p role="alert" className="font-ui text-sm text-error">
+            <p role="alert" className="error">
               {error}
             </p>
           ) : null}
@@ -188,7 +178,8 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           <button
             type="submit"
             disabled={pending}
-            className="inline-flex items-center justify-center rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-50 dark:text-[color:var(--section-charcoal)]"
+            className="cap-btn justify-center fx-onboarding-btn"
+            data-variant="primary"
           >
             {pending ? "Saving..." : "Continue"}
           </button>
@@ -199,21 +190,21 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
 
   return (
     <Frame step={2}>
-      <h1 className="font-display text-3xl leading-tight sm:text-4xl">Start your first book</h1>
-      <p className="mt-3 text-secondary">
+      <h1 className="fx-onboarding-title">Start your first book</h1>
+      <p className="mt-3 fx-onboarding-text">
         Award winners to begin with. Adding one shelves it as reading and opens its page.
       </p>
 
       {error ? (
-        <p role="alert" className="mt-4 font-ui text-sm text-error">
+        <p role="alert" className="mt-4 fx-onboarding-text-2">
           {error}
         </p>
       ) : null}
 
       {starters.length ? (
-        <ul className="mt-8 grid grid-cols-2 gap-5 sm:grid-cols-3">
+        <ul className="mt-8 fx-onboarding-grid">
           {starters.map((book) => (
-            <li key={book.id} className="flex flex-col">
+            <li key={book.id} className="fx-onboarding-stack-2">
               <Link to={`/books/${book.slug}`} className="group">
                 <CoverImage
                   src={book.coverUrl}
@@ -221,16 +212,15 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
                   fallbackLabel={book.title}
                   sizes="(min-width: 640px) 200px, 45vw"
                 />
-                <h2 className="mt-3 font-display text-base leading-snug text-primary transition-colors group-hover:text-brand-text">
-                  {book.title}
-                </h2>
+                <h2 className="mt-3 fx-onboarding-title-2">{book.title}</h2>
               </Link>
-              <p className="mt-1 font-ui text-sm text-tertiary">{book.author}</p>
+              <p className="mt-1 meta">{book.author}</p>
               <button
                 type="button"
                 onClick={() => startReading(book.id, book.slug)}
                 disabled={savingId !== null}
-                className="mt-2 inline-flex items-center justify-center rounded-cover border border-border-interactive px-3 py-1.5 font-ui text-sm text-primary transition hover:bg-hover disabled:opacity-50"
+                className="cap-btn mt-2 justify-center fx-onboarding-btn"
+                data-size="sm"
               >
                 {savingId === book.id ? "Adding..." : "Start reading"}
               </button>
@@ -238,9 +228,9 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           ))}
         </ul>
       ) : (
-        <p className="mt-8 text-secondary">
+        <p className="mt-8 fx-onboarding-text">
           The catalog is warming up.{" "}
-          <Link to="/books" className="text-brand-text hover:underline">
+          <Link to="/books" className="link">
             Browse the library
           </Link>{" "}
           to pick your first book.
@@ -248,11 +238,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
       )}
 
       <div className="mt-10">
-        <button
-          type="button"
-          onClick={() => navigate("/home")}
-          className="font-ui text-sm text-secondary hover:text-primary"
-        >
+        <button type="button" onClick={() => navigate("/home")} className="fx-onboarding-btn-2">
           Skip for now
         </button>
       </div>

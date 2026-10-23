@@ -29,10 +29,9 @@ export function ChromeButton({
       onClick={onClick}
       aria-label={label}
       aria-pressed={pressed}
-      // Border/hover/pressed derive from currentColor (the reading theme's text)
-      // so the button always contrasts with its canvas; the old site tokens
-      // (border-subtle/hover/selected) went dark-on-dark on the dark reading canvas.
-      className="rounded-md border border-[color-mix(in_srgb,currentColor_32%,transparent)] px-3 py-1 text-sm hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] aria-pressed:bg-[color-mix(in_srgb,currentColor_20%,transparent)]"
+      // Border/hover/pressed derive from currentColor (the reading theme's text) so the
+      // button always contrasts with its canvas, whatever the site theme.
+      className="fx-reader-toggle"
     >
       {children}
     </button>
@@ -51,14 +50,9 @@ export function LayerChip({
   onClick: () => void;
 }) {
   return (
-    <button
-      type="button"
-      aria-pressed={on}
-      onClick={onClick}
-      className="rounded-full border border-[color-mix(in_srgb,currentColor_28%,transparent)] px-2 py-0.5 hover:bg-[color-mix(in_srgb,currentColor_12%,transparent)] aria-pressed:border-[color:var(--border-brand)] aria-pressed:bg-[color:var(--brand-subtle)] aria-pressed:text-[color:var(--brand-subtle-text)]"
-    >
+    <button type="button" aria-pressed={on} onClick={onClick} className="fx-reader-layer">
       {label}
-      {count ? <span className="ml-1 tabular-nums">{count}</span> : null}
+      {count ? <span className="fx-reader-panels-label">{count}</span> : null}
     </button>
   );
 }
@@ -79,31 +73,31 @@ export function SidePanel({
       <button
         type="button"
         aria-label="Close panel"
-        className="fixed inset-0 z-20 bg-[color:var(--overlay)]"
+        className="fx-reader-panels-btn"
         onClick={onClose}
       />
       <aside
         // Themed with the reading canvas (not site tokens): the reader root sets an
         // inline text color per reading theme, so a site-surface panel would show
         // light text on a light panel in dark theme.
-        className="fixed right-0 top-0 z-30 flex h-full w-[min(22rem,90vw)] flex-col border-l border-border-subtle"
+        className="fx-reader-panels-aside"
         style={{ background: canvas.bg, color: canvas.text }}
         aria-label={title}
       >
-        <div className="flex items-center justify-between border-b border-border-subtle px-4 py-3">
+        <div className="py-3 fx-reader-panels-row">
           {/* text-inherit so the reading-canvas color wins over the global h2 rule
               (var(--text-primary)), which would be near-black on a dark panel. */}
-          <h2 className="font-display text-lg text-inherit">{title}</h2>
+          <h2 className="fx-reader-panels-title">{title}</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="rounded-md px-2 py-1 hover:bg-hover"
+            className="fx-reader-panels-btn-2"
           >
             ✕
           </button>
         </div>
-        <div className="flex-1 overflow-auto p-3">{children}</div>
+        <div className="fx-reader-panels-box">{children}</div>
       </aside>
     </>
   );
@@ -123,16 +117,11 @@ function Modal({
       <button
         type="button"
         aria-label="Close"
-        className="fixed inset-0 z-30 bg-[color:var(--overlay)]"
+        className="fx-reader-panels-btn-3"
         onClick={onClose}
       />
-      <div
-        role="dialog"
-        aria-modal
-        aria-label={title}
-        className="fixed left-1/2 top-1/2 z-40 w-[min(26rem,90vw)] -translate-x-1/2 -translate-y-1/2 rounded-card border border-border-subtle bg-surface p-5 shadow-lg"
-      >
-        <h2 className="mb-2 font-display text-xl">{title}</h2>
+      <div role="dialog" aria-modal aria-label={title} className="fx-reader-panels-card">
+        <h2 className="mb-2 fx-reader-panels-title-2">{title}</h2>
         {children}
       </div>
     </>
@@ -157,25 +146,25 @@ function Stepper({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm">{label}</span>
-      <div className="flex items-center gap-2">
+    <div className="row spread">
+      <span className="fx-reader-panels-label-2">{label}</span>
+      <div className="row-2">
         <button
           type="button"
           aria-label={`Decrease ${label}`}
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, Math.round((value - step) * 100) / 100))}
-          className="h-7 w-7 rounded-md border border-border-subtle disabled:opacity-40"
+          className="fx-reader-panels-btn-4"
         >
           −
         </button>
-        <span className="w-12 text-center text-sm tabular-nums">{display}</span>
+        <span className="text-center fx-reader-panels-label-3">{display}</span>
         <button
           type="button"
           aria-label={`Increase ${label}`}
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, Math.round((value + step) * 100) / 100))}
-          className="h-7 w-7 rounded-md border border-border-subtle disabled:opacity-40"
+          className="fx-reader-panels-btn-4"
         >
           +
         </button>
@@ -193,17 +182,17 @@ export function TypographyControls({
 }) {
   const themes: ReaderTheme[] = ["light", "sepia", "dark"];
   return (
-    <div className="flex flex-col gap-4">
+    <div className="stack">
       <div>
-        <span className="mb-2 block text-xs uppercase tracking-wider text-tertiary">Theme</span>
-        <div className="flex gap-2">
+        <span className="mb-2 block fx-reader-panels-label-4">Theme</span>
+        <div className="row-2">
           {themes.map((t) => (
             <button
               key={t}
               type="button"
               aria-pressed={settings.theme === t}
               onClick={() => onChange({ theme: t })}
-              className="flex-1 rounded-md border border-border-subtle px-3 py-2 text-sm capitalize aria-pressed:border-border-interactive aria-pressed:bg-selected"
+              className="fx-reader-theme"
               style={{ background: READING_CANVAS[t].bg, color: READING_CANVAS[t].text }}
             >
               {t}
@@ -240,43 +229,33 @@ export function TypographyControls({
         onChange={(v) => onChange({ margin: v })}
       />
 
-      <div className="flex items-center justify-between">
-        <span className="text-sm">Scroll</span>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={settings.scroll}
-          aria-label="Scroll mode"
-          onClick={() => onChange({ scroll: !settings.scroll })}
-          className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
-            settings.scroll ? "bg-[color:var(--brand-ui)]" : "bg-border-strong"
-          }`}
-        >
-          <span
-            aria-hidden="true"
-            className={`inline-block h-5 w-5 transform rounded-full bg-surface shadow-sm transition-transform ${
-              settings.scroll ? "translate-x-[22px]" : "translate-x-0.5"
-            }`}
+      <div className="row spread">
+        <span className="fx-reader-panels-label-2">Scroll</span>
+        <label className="cap-switch">
+          <input
+            type="checkbox"
+            role="switch"
+            aria-checked={settings.scroll}
+            aria-label="Scroll mode"
+            checked={settings.scroll}
+            onChange={(e) => onChange({ scroll: e.target.checked })}
           />
-        </button>
+        </label>
       </div>
 
       {!settings.scroll ? (
-        <div className="flex items-center justify-between">
-          <span className="text-sm">Columns</span>
-          <div className="flex gap-2">
+        <div className="row spread">
+          <span className="fx-reader-panels-label-2">Columns</span>
+          <div className="row-2">
             {[1, 2].map((n) => (
               <button
                 key={n}
                 type="button"
                 aria-pressed={settings.columns === n}
                 onClick={() => onChange({ columns: n as 1 | 2 })}
-                // Selected: the brand-subtle fill with its own text colour, so it
-                // reads on every reading canvas (the panel's inherited text is not
-                // used). White on brand-ui is 3.76:1, under WCAG AA for this size.
-                // The old bg-selected token is a site light tint, invisible under the
-                // panel's inherited (light) text in dark.
-                className="h-7 w-10 rounded-md border border-border-subtle text-sm aria-pressed:border-[color:var(--border-brand)] aria-pressed:bg-[color:var(--brand-subtle)] aria-pressed:text-[color:var(--brand-subtle-text)]"
+                // Selected: the accent-soft fill with its own text colour, so it reads on
+                // every reading canvas (the panel's inherited text is not used).
+                className="fx-reader-cols"
               >
                 {n}
               </button>
@@ -310,12 +289,12 @@ export function ContentsList({
   return (
     <>
       <nav aria-label="Table of contents">
-        <ul className="flex flex-col gap-0.5">
+        <ul className="fx-reader-panels-stack">
           {toc.map((t) => (
             <li key={t.href}>
               <button
                 type="button"
-                className="w-full rounded-md px-2 py-1.5 text-left text-sm hover:bg-hover"
+                className="fx-reader-panels-btn-5"
                 onClick={() => onGoToHref(t.href)}
               >
                 {t.title}
@@ -326,20 +305,20 @@ export function ContentsList({
       </nav>
       {bookmarks.length > 0 ? (
         <div className="mt-6">
-          <h3 className="mb-2 text-xs uppercase tracking-wider text-tertiary">Bookmarks</h3>
-          <ul className="flex flex-col gap-0.5">
+          <h3 className="mb-2 fx-reader-panels-label-4">Bookmarks</h3>
+          <ul className="fx-reader-panels-stack">
             {bookmarks.map((b) => (
-              <li key={b.id} className="flex items-center gap-2">
+              <li key={b.id} className="row-2">
                 <button
                   type="button"
-                  className="flex-1 rounded-md px-2 py-1.5 text-left text-sm hover:bg-hover"
+                  className="fx-reader-panels-btn-6"
                   onClick={() => onGoToLocator(b.locator)}
                 >
                   {b.chapter ?? "Bookmark"}
                 </button>
                 <button
                   type="button"
-                  className="rounded-md px-2 py-1 text-xs text-tertiary hover:underline"
+                  className="fx-reader-panels-btn-7"
                   onClick={() => onDelete(b.id)}
                   aria-label="Remove bookmark"
                 >
@@ -353,32 +332,30 @@ export function ContentsList({
 
       {marks.length > 0 ? (
         <div className="mt-6">
-          <h3 className="mb-2 text-xs uppercase tracking-wider text-tertiary">
-            Highlights & notes
-          </h3>
-          <ul className="flex flex-col gap-1">
+          <h3 className="mb-2 fx-reader-panels-label-4">Highlights & notes</h3>
+          <ul className="stack-1">
             {marks.map((a) => (
               <li key={a.id}>
                 <button
                   type="button"
-                  className="flex w-full items-start gap-2 rounded-md px-2 py-1.5 text-left hover:bg-hover"
+                  className="items-start fx-reader-panels-btn-8"
                   onClick={() => onOpenMark(a)}
                 >
                   <span
-                    className="mt-1 h-3 w-3 flex-none rounded-full border border-border-default"
+                    className="mt-1 fx-reader-panels-label-5"
                     style={{
                       background: tintFor((a.color as HighlightColor) ?? "amber", "light"),
                     }}
                     aria-hidden
                   />
-                  <span className="min-w-0 flex-1">
+                  <span className="fx-reader-panels-label-6">
                     {a.selectedText ? (
-                      <span className="line-clamp-2 text-sm">{a.selectedText}</span>
+                      <span className="fx-reader-panels-label-7">{a.selectedText}</span>
                     ) : null}
                     {a.body ? (
-                      <span className="mt-0.5 flex items-start gap-1 text-xs text-tertiary">
-                        <span className="rounded bg-hover px-1 font-medium">Note</span>
-                        <span className="line-clamp-2">{a.body}</span>
+                      <span className="items-start fx-reader-panels-label-8">
+                        <span className="fx-reader-panels-label-9">Note</span>
+                        <span className="fx-reader-panels-label-10">{a.body}</span>
                       </span>
                     ) : null}
                   </span>
@@ -395,21 +372,14 @@ export function ContentsList({
 export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClose: () => void }) {
   return (
     <Modal onClose={onClose} title="Sign in to save">
-      <p className="text-sm text-secondary">
+      <p className="small muted">
         Reading is free. Sign in to keep highlights, notes, bookmarks, and your place.
       </p>
-      <div className="mt-4 flex gap-2">
-        <Link
-          to={loginHref}
-          className="rounded-md bg-[color:var(--brand-ui)] px-4 py-2 text-sm text-[color:var(--text-on-brand)]"
-        >
+      <div className="mt-4 fx-reader-panels-row-2">
+        <Link to={loginHref} className="py-2 fx-reader-panels-link">
           Sign in
         </Link>
-        <button
-          type="button"
-          className="rounded-md px-4 py-2 text-sm hover:bg-hover"
-          onClick={onClose}
-        >
+        <button type="button" className="py-2 fx-reader-panels-btn-9" onClick={onClose}>
           Keep reading
         </button>
       </div>
@@ -431,25 +401,15 @@ export function WriteStatus({
   return (
     <>
       {saving ? (
-        <p
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 rounded-md bg-surface/95 px-3 py-1.5 font-ui text-xs text-tertiary shadow-md"
-          role="status"
-        >
+        <p className="fx-reader-panels-text" role="status">
           Saving...
         </p>
       ) : null}
 
       {writeError ? (
-        <div
-          className="fixed bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-md border border-error-border bg-surface px-3 py-2 font-ui text-xs text-error shadow-md"
-          role="alert"
-        >
+        <div className="py-2 fx-reader-panels-card-2" role="alert">
           <span>{writeError}</span>
-          <button
-            type="button"
-            className="font-medium text-tertiary underline underline-offset-2"
-            onClick={onDismiss}
-          >
+          <button type="button" className="fx-reader-panels-btn-10" onClick={onDismiss}>
             Dismiss
           </button>
         </div>
@@ -485,21 +445,18 @@ export function ReaderTopBar({
   return (
     <>
       {/* Top bar */}
-      <header
-        className="flex items-center gap-2 border-b border-border-subtle px-3 py-2"
-        style={{ background }}
-      >
+      <header className="py-2 fx-reader-panels-row-3" style={{ background }}>
         <Link
           to={`/books/${book.slug}`}
-          className="rounded-md px-2 py-1 text-sm hover:underline"
+          className="fx-reader-panels-link-2"
           aria-label="Back to book page"
         >
           ‹ Back
         </Link>
-        <div className="min-w-0 flex-1 truncate text-center text-sm">
-          <span className="font-display">{book.title}</span>
+        <div className="truncate text-center fx-reader-panels-box-2">
+          <span className="fx-reader-panels-title-3">{book.title}</span>
           {chapter ? (
-            <span className="text-[color-mix(in_srgb,currentColor_60%,transparent)]">
+            <span className="fx-reader-panels-label-11">
               {" "}
               {"·"} {chapter}
             </span>
@@ -527,12 +484,12 @@ export function ReaderTopBar({
       {/* Social layer toggles: read your book with optional social layers overlaid. */}
       {/* biome-ignore lint/a11y/useSemanticElements: a toggle bar of buttons, not a form fieldset */}
       <div
-        className="flex items-center gap-2 border-b border-border-subtle px-3 py-1.5 text-xs"
+        className="fx-reader-panels-row-4"
         style={{ background }}
         role="group"
         aria-label="Reading layers"
       >
-        <span className="text-[color-mix(in_srgb,currentColor_70%,transparent)]">Layers</span>
+        <span className="fx-reader-panels-label-12">Layers</span>
         <LayerChip label="Mine" on={layers.mine} onClick={() => onToggleLayer("mine")} />
         <LayerChip
           label="My clubs"

@@ -64,7 +64,7 @@ export default function AwardDetail({ loaderData }: Route.ComponentProps) {
             <div key={`${e.book.slug}-${e.year}`}>
               <BookCard book={e.book} priority={i < 6} />
               {e.year ? (
-                <p className="mt-1.5 px-0.5 font-mono text-[0.625rem] uppercase tracking-[0.12em] text-tertiary">
+                <p className="fx-award-detail-caps">
                   {e.year} · {e.distinction}
                 </p>
               ) : null}

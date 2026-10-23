@@ -24,20 +24,20 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 export default function About() {
   return (
     <PageShell>
-      <Container className="max-w-prose">
+      <Container className="measure-prose">
         <PageHeader title="About Foxing" />
-        <p className="mt-6 font-body text-base text-secondary">
+        <p className="mt-6 fx-about-text">
           Foxing is a reader for the classics. The name comes from the brown spots that bloom on the
           pages of old books. The kind of book that's been carried, marked, and remembered.
         </p>
-        <p className="mt-4 font-body text-base text-secondary">
+        <p className="mt-4 fx-about-text">
           The catalog is public-domain literature, browsable and searchable, free to read. Track
           what you're reading, mark what you've finished, and follow the picks worth reading: award
           winners, celebrity picks, and Foxing's own monthly pick.
         </p>
-        <p className="mt-4 font-body text-base text-secondary">
+        <p className="mt-4 fx-about-text">
           Built by Dustin Edwards. One person, one inbox. Email{" "}
-          <a href={`mailto:${HELLO_EMAIL}`} className="text-brand-text hover:underline">
+          <a href={`mailto:${HELLO_EMAIL}`} className="link">
             {HELLO_EMAIL}
           </a>{" "}
           with anything.

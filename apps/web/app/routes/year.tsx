@@ -82,20 +82,20 @@ export default function Year({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-3xl flex flex-col gap-8">
+      <Container className="stack-8">
         <PageHeader
           eyebrow={`Year in Reading ${year}`}
           title="Your reading year"
           className="mb-0"
         />
 
-        <nav aria-label="Choose a year" className="flex flex-wrap gap-2">
+        <nav aria-label="Choose a year" className="row-2 wrap">
           {years.map((y) => (
             <Link
               key={y}
               to={y === new Date().getUTCFullYear() ? "/year" : `/year/${y}`}
               aria-current={y === year ? "page" : undefined}
-              className="rounded-full border px-3 py-1 font-ui text-sm transition-colors aria-[current=page]:border-border-interactive aria-[current=page]:bg-selected aria-[current=page]:text-primary border-border-subtle text-secondary hover:border-border-interactive hover:text-primary"
+              className="cap-chip"
             >
               {y}
             </Link>
@@ -109,61 +109,50 @@ export default function Year({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <section className="fx-year-grid">
               {stats.map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-card border border-border-subtle bg-surface p-5 text-center"
-                >
-                  <p className="font-display text-3xl text-primary">{s.value}</p>
-                  <p className="mt-1 font-mono text-[0.65rem] uppercase tracking-wide text-tertiary">
-                    {s.label}
-                  </p>
+                <div key={s.label} className="text-center fx-year-card">
+                  <p className="display-3">{s.value}</p>
+                  <p className="mt-1 fx-year-caps">{s.label}</p>
                 </div>
               ))}
             </section>
 
             {monthly.some((n) => n > 0) ? (
-              <section className="flex flex-col gap-4">
-                <h2 className="font-display text-2xl">Your reading months</h2>
-                <div className="rounded-card border border-border-subtle bg-surface p-5">
+              <section className="stack">
+                <h2 className="display-2">Your reading months</h2>
+                <div className="card card-5">
                   <MonthStrip monthly={monthly} year={year} />
                 </div>
               </section>
             ) : null}
 
             {genres.length > 0 ? (
-              <section className="flex flex-col gap-4">
-                <h2 className="font-display text-2xl">Genre spread</h2>
-                <div className="rounded-card border border-border-subtle bg-surface p-5">
+              <section className="stack">
+                <h2 className="display-2">Genre spread</h2>
+                <div className="card card-5">
                   <GenreSpread genres={genres} />
                 </div>
               </section>
             ) : null}
 
             {firstBook && lastBook && recap.finished.length >= 2 ? (
-              <section className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <section className="fx-year-grid-2">
                 <Bookend label={`First finish of ${year}`} book={firstBook} />
                 <Bookend label={`Latest finish of ${year}`} book={lastBook} />
               </section>
             ) : null}
 
             {recap.topBooks.length > 0 ? (
-              <section className="flex flex-col gap-4">
-                <h2 className="font-display text-2xl">Top books</h2>
-                <ol className="flex flex-col gap-2">
+              <section className="stack">
+                <h2 className="display-2">Top books</h2>
+                <ol className="stack-2">
                   {recap.topBooks.map((b) => (
-                    <li
-                      key={b.bookId}
-                      className="flex items-baseline justify-between gap-3 rounded-card border border-border-subtle bg-surface px-4 py-3"
-                    >
-                      <Link
-                        to={`/books/${b.slug}`}
-                        className="font-display text-lg text-primary hover:text-brand-text"
-                      >
+                    <li key={b.bookId} className="py-3 fx-year-card-2">
+                      <Link to={`/books/${b.slug}`} className="fx-year-link">
                         {b.title}
                       </Link>
-                      <span className="font-mono text-sm text-brand-text">
+                      <span className="fx-year-label">
                         {b.ratingHalf != null ? `${(b.ratingHalf / 2).toFixed(1)}★` : ""}
                       </span>
                     </li>
@@ -174,9 +163,9 @@ export default function Year({ loaderData }: Route.ComponentProps) {
           </>
         )}
 
-        <p className="font-ui text-sm text-tertiary">
+        <p className="meta">
           Want to share this?{" "}
-          <Link to={`/u/${username}/recap/${year}`} className="text-brand-text hover:underline">
+          <Link to={`/u/${username}/recap/${year}`} className="link">
             View the public version
           </Link>
           .
@@ -198,26 +187,19 @@ function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
   return (
     <svg
       viewBox={`0 0 ${width} 84`}
-      className="h-24 w-full"
+      className="fx-year-icon"
       role="img"
       aria-label={`Books finished each month of ${year}`}
       preserveAspectRatio="xMidYMid meet"
     >
-      <line
-        x1="0"
-        y1={baseY}
-        x2={width}
-        y2={baseY}
-        className="stroke-border-subtle"
-        strokeWidth="1"
-      />
+      <line x1="0" y1={baseY} x2={width} y2={baseY} className="fx-year-line" strokeWidth="1" />
       {monthly.map((count, i) => {
         const h = count > 0 ? Math.max(3, (count / max) * plotH) : 0;
         const x = i * colW + (colW - barW) / 2;
         return (
           <g key={MONTH_NAMES[i]}>
             {h > 0 ? (
-              <rect x={x} y={baseY - h} width={barW} height={h} rx="2" className="fill-brand">
+              <rect x={x} y={baseY - h} width={barW} height={h} rx="2" className="fx-year-bar">
                 <title>{`${MONTH_NAMES[i]}: ${count} book${count === 1 ? "" : "s"}`}</title>
               </rect>
             ) : null}
@@ -225,7 +207,7 @@ function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
               x={i * colW + colW / 2}
               y="78"
               textAnchor="middle"
-              className="fill-tertiary font-mono"
+              className="fx-year-text"
               fontSize="9"
             >
               {MONTH_INITIALS[i]}
@@ -241,26 +223,26 @@ function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
 function GenreSpread({ genres }: { genres: Array<{ name: string; value: number }> }) {
   const max = Math.max(1, ...genres.map((g) => g.value));
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="stack-3">
       {genres.map((g) => {
         const pct = Math.max(4, (g.value / max) * 100);
         return (
           <li
             key={g.name}
-            className="grid grid-cols-[6rem_1fr_2rem] items-center gap-3"
+            className="fx-year-grid-3"
             title={`${g.name}: ${g.value} book${g.value === 1 ? "" : "s"}`}
           >
-            <span className="truncate font-ui text-sm capitalize text-secondary">{g.name}</span>
+            <span className="truncate fx-year-label-2">{g.name}</span>
             <svg
               viewBox="0 0 100 6"
               preserveAspectRatio="none"
-              className="h-1.5 w-full"
+              className="fx-year-icon-2"
               aria-hidden="true"
             >
-              <rect x="0" y="0" width="100" height="6" rx="3" className="fill-brand-subtle" />
-              <rect x="0" y="0" width={pct} height="6" rx="3" className="fill-brand" />
+              <rect x="0" y="0" width="100" height="6" rx="3" className="fx-year-bar-2" />
+              <rect x="0" y="0" width={pct} height="6" rx="3" className="fx-year-bar" />
             </svg>
-            <span className="text-right font-mono text-xs text-tertiary">{g.value}</span>
+            <span className="fx-year-label-3">{g.value}</span>
           </li>
         );
       })}
@@ -271,15 +253,12 @@ function GenreSpread({ genres }: { genres: Array<{ name: string; value: number }
 // The first and latest finish of the year, a small celebratory pair of bookends.
 function Bookend({ label, book }: { label: string; book: RecapBook }) {
   return (
-    <div className="rounded-card border border-border-subtle bg-surface p-4">
-      <p className="font-mono text-[0.65rem] uppercase tracking-wide text-tertiary">{label}</p>
-      <Link
-        to={`/books/${book.slug}`}
-        className="mt-1 block font-display text-lg text-primary hover:text-brand-text"
-      >
+    <div className="card">
+      <p className="fx-year-caps">{label}</p>
+      <Link to={`/books/${book.slug}`} className="mt-1 block fx-year-link">
         {book.title}
       </Link>
-      <p className="mt-0.5 font-ui text-sm text-secondary">{book.author}</p>
+      <p className="fx-year-text-2">{book.author}</p>
     </div>
   );
 }

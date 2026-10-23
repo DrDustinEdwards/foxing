@@ -41,16 +41,12 @@ export function BookPicker({
 
   if (selected) {
     return (
-      <div className="flex items-center justify-between gap-3 rounded-md border border-border-subtle bg-base px-3 py-2">
-        <span className="min-w-0 font-ui text-sm text-primary">
-          <span className="font-medium">{selected.title}</span>
-          <span className="text-tertiary"> by {selected.author}</span>
+      <div className="py-2 fx-book-picker-card">
+        <span className="fx-book-picker-label">
+          <span className="fx-book-picker-label-2">{selected.title}</span>
+          <span className="dim"> by {selected.author}</span>
         </span>
-        <button
-          type="button"
-          onClick={() => onPick(null)}
-          className="shrink-0 font-ui text-sm text-secondary hover:text-error"
-        >
+        <button type="button" onClick={() => onPick(null)} className="shrink-0 fx-book-picker-btn">
           Change
         </button>
       </div>
@@ -68,7 +64,7 @@ export function BookPicker({
         aria-label="Search for a book"
       />
       {open && results.length > 0 ? (
-        <ul className="absolute z-20 mt-1 max-h-64 w-full overflow-auto rounded-md border border-border-subtle bg-surface shadow-card-md">
+        <ul className="mt-1 fx-book-picker-list">
           {results.map((b) => (
             <li key={b.id}>
               <button
@@ -78,10 +74,10 @@ export function BookPicker({
                   setOpen(false);
                   setQ("");
                 }}
-                className="block w-full px-3 py-2 text-left font-ui text-sm text-secondary hover:bg-hover hover:text-primary"
+                className="fx-pick-option"
               >
-                <span className="font-medium text-primary">{b.title}</span>
-                <span className="text-tertiary"> by {b.author}</span>
+                <span className="strong">{b.title}</span>
+                <span className="dim"> by {b.author}</span>
               </button>
             </li>
           ))}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card, inputClass, ToggleRow } from "./settings-card";
-import { ThemeToggle } from "~/components/theme-toggle";
+import { ThemeSwitch } from "capsomer/react/theme-switch";
+import { THEME_PREF_KEY } from "~/components/page-shell";
 import { Link } from "react-router";
 import { Avatar } from "~/components/ui";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
@@ -44,37 +45,33 @@ export function BillingSection({
   return (
     <Card title="Plan">
       {isPlus ? (
-        <div className="space-y-3">
-          <p className="font-ui text-sm text-secondary">
-            You are on <span className="font-medium text-primary">Foxing Plus</span>
+        <div className="stack-3">
+          <p className="ui">
+            You are on <span className="strong">Foxing Plus</span>
             {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
           </p>
-          <button
-            type="button"
-            onClick={manage}
-            disabled={pending}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-          >
+          <button type="button" onClick={manage} disabled={pending} className="cap-btn">
             {pending ? "Opening..." : "Manage billing"}
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
-          <p className="font-ui text-sm text-secondary">
-            You are on the <span className="font-medium text-primary">Free</span> plan. Clubs and
-            the whole social layer are free. Plus adds the AI reading companion.
+        <div className="stack-3">
+          <p className="ui">
+            You are on the <span className="strong">Free</span> plan. Clubs and the whole social
+            layer are free. Plus adds the AI reading companion.
           </p>
           <button
             type="button"
             onClick={onUpgrade}
-            className="rounded-md bg-brand-ui px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:opacity-90"
+            className="cap-btn self-start"
+            data-variant="primary"
           >
             Upgrade to Plus
           </button>
         </div>
       )}
       {error ? (
-        <p className="mt-3 font-ui text-sm text-error" role="alert">
+        <p className="mt-3 error" role="alert">
           {error}
         </p>
       ) : null}
@@ -121,7 +118,7 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
 
   return (
     <Card title="Visibility">
-      <form onSubmit={save} className="space-y-4">
+      <form onSubmit={save} className="stack">
         <ToggleRow
           checked={profile === "public"}
           onChange={(on) => setProfile(on ? "public" : "private")}
@@ -135,9 +132,7 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
           subtext="Show what you are currently reading on your profile."
         />
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">
-            Default highlight and note audience
-          </span>
+          <span className="fx-label">Default highlight and note audience</span>
           <select
             value={defaultAnnotation}
             onChange={(e) =>
@@ -149,27 +144,23 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
             <option value="friends">Close friends</option>
             <option value="public">Public</option>
           </select>
-          <span className="mt-1 block font-ui text-xs text-tertiary">
+          <span className="mt-1 block fx-preference-sections-label">
             New highlights and notes start with this audience. You can change any one when you make
             it.
           </span>
         </label>
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-          >
+        <div className="row">
+          <button type="submit" disabled={pending} className="cap-btn">
             {pending ? "Saving..." : "Save visibility"}
           </button>
           {status === "saved" ? (
-            <span className="font-ui text-sm text-tertiary" role="status">
+            <span className="meta" role="status">
               Saved.
             </span>
           ) : null}
         </div>
         {error ? (
-          <p className="font-ui text-sm text-error" role="alert">
+          <p className="error" role="alert">
             {error}
           </p>
         ) : null}
@@ -234,12 +225,12 @@ export function NotificationsSection({
 
   return (
     <Card title="Notifications">
-      <form onSubmit={save} className="space-y-4">
-        <p className="font-ui text-sm text-secondary">
+      <form onSubmit={save} className="stack">
+        <p className="ui">
           Choose which push notifications the mobile app sends you. Quiet hours pause them overnight
           in your timezone.
         </p>
-        <div className="space-y-3">
+        <div className="stack-3">
           {Object.keys(NOTIFICATION_LABELS).map((cat) => (
             <ToggleRow
               key={cat}
@@ -257,8 +248,8 @@ export function NotificationsSection({
           subtext="Pause notifications between these times."
         />
         {quietOn ? (
-          <div className="flex items-center gap-3">
-            <label className="font-ui text-sm text-secondary">
+          <div className="row">
+            <label className="ui">
               From
               <input
                 type="time"
@@ -267,7 +258,7 @@ export function NotificationsSection({
                 className={`${inputClass} mt-1`}
               />
             </label>
-            <label className="font-ui text-sm text-secondary">
+            <label className="ui">
               To
               <input
                 type="time"
@@ -278,22 +269,18 @@ export function NotificationsSection({
             </label>
           </div>
         ) : null}
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-          >
+        <div className="row">
+          <button type="submit" disabled={pending} className="cap-btn">
             {pending ? "Saving..." : "Save notifications"}
           </button>
           {status === "saved" ? (
-            <span className="font-ui text-sm text-tertiary" role="status">
+            <span className="meta" role="status">
               Saved.
             </span>
           ) : null}
         </div>
         {error ? (
-          <p className="font-ui text-sm text-error" role="alert">
+          <p className="error" role="alert">
             {error}
           </p>
         ) : null}
@@ -305,14 +292,14 @@ export function NotificationsSection({
 export function AppearanceSection() {
   return (
     <Card title="Appearance">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col">
-          <span className="font-ui text-sm font-medium text-primary">Theme</span>
-          <span className="font-ui text-xs text-tertiary">
+      <div className="row-4 spread">
+        <div className="fx-preference-sections-stack">
+          <span className="sans small strong">Theme</span>
+          <span className="fine">
             Switch between light and dark. Your choice is remembered on this device.
           </span>
         </div>
-        <ThemeToggle />
+        <ThemeSwitch prefKey={THEME_PREF_KEY} />
       </div>
     </Card>
   );
@@ -325,31 +312,28 @@ export function CloseFriendsSection({
 }) {
   return (
     <Card title="Close friends">
-      <p className="font-ui text-sm text-secondary">
+      <p className="ui">
         Close friends see your friends-only reviews, activity, and shared annotations.
       </p>
       {friends.length === 0 ? (
-        <p className="mt-4 font-ui text-sm text-tertiary">
+        <p className="mt-4 meta">
           No close friends yet. Add readers you follow from{" "}
-          <Link to="/people" className="text-brand-text underline underline-offset-2">
+          <Link to="/people" className="fx-preference-sections-link">
             People
           </Link>
           .
         </p>
       ) : (
-        <ul className="mt-4 flex flex-col gap-2">
+        <ul className="mt-4 fx-preference-sections-stack-2">
           {friends.map((f) => (
-            <li
-              key={f.id}
-              className="flex items-center justify-between gap-3 rounded-md border border-border-subtle bg-base px-3 py-2"
-            >
-              <Link to={`/u/${f.username}`} className="flex min-w-0 items-center gap-3">
+            <li key={f.id} className="py-2 fx-preference-sections-card">
+              <Link to={`/u/${f.username}`} className="fx-preference-sections-link-2">
                 <Avatar src={f.avatarUrl} name={f.displayName} size="sm" />
-                <span className="min-w-0">
-                  <span className="block truncate font-ui text-sm font-medium text-primary">
+                <span className="min-0">
+                  <span className="block truncate fx-preference-sections-label-2">
                     {f.displayName}
                   </span>
-                  <span className="block truncate font-mono text-xs text-tertiary">
+                  <span className="block truncate fx-preference-sections-label-3">
                     @{f.username}
                   </span>
                 </span>
@@ -359,9 +343,9 @@ export function CloseFriendsSection({
           ))}
         </ul>
       )}
-      <p className="mt-4 font-ui text-sm text-tertiary">
+      <p className="mt-4 meta">
         Add close friends from{" "}
-        <Link to="/people" className="text-brand-text underline underline-offset-2">
+        <Link to="/people" className="fx-preference-sections-link">
           People
         </Link>
         , where you can pick from the readers you follow.

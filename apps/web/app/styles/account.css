@@ -1,0 +1,511 @@
+.fx-auth-shell-grid {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  background-color: var(--ground);
+  padding: 3rem 1.25rem;
+}
+.fx-auth-shell-box {
+  width: 100%;
+  max-width: 24rem;
+}
+.fx-auth-shell-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--fx-display);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.fx-auth-shell-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.75rem;
+  box-shadow: var(--fx-shadow-md);
+}
+.fx-auth-shell-text {
+  margin-top: 0.375rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-auth-shell-box-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+}
+.fx-auth-shell-label {
+  margin-bottom: 0.375rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+.fx-auth-shell-link-2 {
+  font-weight: 500;
+  color: var(--accent-text);
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+.fx-auth-shell-icon {
+  height: 18px;
+  width: 18px;
+}
+.fx-auth-shell-label-2 {
+  height: 1px;
+  flex: 1 1 0%;
+  background-color: var(--line);
+}
+.fx-auth-shell-label-3 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--dim);
+}
+.fx-auth-shell-text-2 {
+  border-radius: 0.375rem;
+  border: 1px solid var(--line);
+  background-color: var(--sunken);
+  padding: 0.625rem 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-auth-shell-btn {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--accent-text);
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+
+.fx-paywall-row {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  background-color: color-mix(in srgb, #000 70%, transparent);
+  padding: 1rem;
+}
+.fx-paywall-card {
+  width: 100%;
+  max-width: 28rem;
+  overflow: hidden;
+  border-radius: var(--fx-radius-hero);
+  background-color: var(--fx-charcoal);
+  padding: 2rem;
+  color: var(--fx-on-dark);
+  box-shadow: var(--fx-shadow-md);
+}
+.fx-paywall-btn {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  display: grid;
+  height: 2.25rem;
+  width: 2.25rem;
+  place-items: center;
+  border-radius: 9999px;
+  color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  &:hover {
+    background-color: color-mix(in srgb, #fff 10%, transparent);
+    color: var(--fx-on-dark);
+  }
+}
+.fx-paywall-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--fx-display);
+  font-size: 1.5rem;
+  line-height: 2rem;
+  font-weight: 600;
+}
+.fx-paywall-text {
+  font-family: var(--fx-body);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
+}
+.fx-paywall-list {
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-paywall-row-2 {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: color-mix(in srgb, var(--fx-on-dark) 90%, transparent);
+}
+.fx-paywall-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.fx-paywall-label {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
+}
+.fx-paywall-label-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+}
+.fx-paywall-label-3 {
+  margin-top: 0.125rem;
+  display: inline-block;
+  border-radius: 9999px;
+  background-color: var(--primary);
+  padding: 0.125rem 0.375rem;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  color: var(--primary-fg);
+}
+.fx-paywall-btn-2 {
+  width: 100%;
+}
+.fx-paywall-text-2 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: color-mix(in srgb, var(--fx-on-dark) 60%, transparent);
+}
+.fx-paywall-text-3 {
+  border-radius: 0.375rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  padding-inline: 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--fx-on-dark);
+}
+.fx-paywall-link {
+  text-decoration-line: underline;
+  &:hover {
+    color: var(--fx-on-dark);
+  }
+}
+
+.fx-account-sections-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-account-sections-label-2 {
+  font-family: var(--mono);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+}
+.fx-account-sections-label-3 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+.fx-account-sections-label-4 {
+  color: var(--ok);
+}
+.fx-account-sections-form {
+  & > * + * {
+    margin-top: 0.75rem;
+  }
+}
+.fx-account-sections-link {
+  display: inline-flex;
+}
+.fx-account-sections-label-5 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--crit);
+}
+.fx-account-sections-field {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.fx-account-sections-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid color-mix(in srgb, var(--crit) 40%, transparent);
+  background-color: var(--surface);
+  padding: 1.5rem;
+}
+.fx-account-sections-title {
+  font-family: var(--fx-display);
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  color: var(--crit);
+}
+.fx-account-sections-text {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+.fx-preference-sections-label {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}
+.fx-preference-sections-stack {
+  display: flex;
+  flex-direction: column;
+}
+.fx-preference-sections-link {
+  color: var(--accent-text);
+  text-decoration-line: underline;
+  text-underline-offset: 2px;
+}
+.fx-preference-sections-stack-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.fx-preference-sections-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--line);
+  background-color: var(--ground);
+  padding-inline: 0.75rem;
+}
+.fx-preference-sections-link-2 {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+.fx-preference-sections-label-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.fx-preference-sections-label-3 {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}
+
+.fx-settings-card-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--line);
+  background-color: var(--ground);
+  padding: 0.75rem;
+}
+.fx-settings-card-stack {
+  display: flex;
+  flex-direction: column;
+}
+.fx-settings-card-card-2 {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.5rem;
+}
+
+.fx-login-text {
+  border-radius: 0.375rem;
+  border: 1px solid var(--line);
+  background-color: var(--sunken);
+  padding-inline: 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-login-text-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--crit);
+}
+.fx-login-form,
+.fx-login-box {
+  margin-top: 0.375rem;
+  text-align: right;
+}
+
+.fx-onboarding-box {
+  min-height: 100dvh;
+  background-color: var(--ground);
+}
+.fx-onboarding-stack {
+  margin-inline: auto;
+  display: flex;
+  min-height: 100dvh;
+  max-width: 42rem;
+  flex-direction: column;
+  padding: 2.5rem 1.25rem;
+}
+.fx-onboarding-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--fx-display);
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 600;
+}
+.fx-onboarding-caps {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--dim);
+}
+.fx-onboarding-title {
+  font-family: var(--fx-display);
+  font-size: 1.875rem;
+  line-height: 1.25;
+  @media (min-width: 40rem) {
+    font-size: 2.25rem;
+    line-height: 2.5rem;
+  }
+}
+.fx-onboarding-text {
+  color: var(--muted);
+}
+.fx-onboarding-form {
+  & > * + * {
+    margin-top: 1.5rem;
+  }
+}
+.fx-onboarding-label {
+  margin-bottom: 0.375rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.fx-onboarding-input {
+  width: 100%;
+}
+.fx-onboarding-label-2 {
+  margin-top: 0.375rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}
+.fx-onboarding-label-3 {
+  font-weight: 400;
+  color: var(--dim);
+}
+.fx-onboarding-legend {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.fx-onboarding-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+.fx-onboarding-btn {
+  display: inline-flex;
+}
+.fx-onboarding-text-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--crit);
+}
+.fx-onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-onboarding-stack-2 {
+  display: flex;
+  flex-direction: column;
+}
+.fx-onboarding-title-2 {
+  font-family: var(--fx-display);
+  font-size: 1rem;
+  line-height: 1.375;
+  color: var(--text);
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-onboarding-btn-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+  &:hover {
+    color: var(--text);
+  }
+}
+
+.fx-signup-form {
+  border-block-start: 1px solid var(--line);
+  padding-top: 1rem;
+  & > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* The plan choices on the paywall's dark band. */
+.fx-paywall-plan {
+  border: 1px solid rgb(255 255 255 / 0.2);
+  border-radius: var(--fx-radius-card);
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+  @media (prefers-reduced-motion: no-preference) {
+    transition: border-color var(--dur-base) var(--ease-out);
+  }
+}
+.fx-paywall-plan:hover {
+  border-color: rgb(255 255 255 / 0.4);
+}
+.fx-paywall-plan[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: rgb(255 255 255 / 0.1);
+}

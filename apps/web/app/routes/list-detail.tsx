@@ -33,16 +33,13 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-3xl flex flex-col gap-8">
-        <header className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
+      <Container className="stack-8">
+        <header className="stack">
+          <div className="row-4 spread top">
             <div>
-              <h1 className="font-display text-4xl">{list.title}</h1>
+              <h1 className="display-4">{list.title}</h1>
               {owner ? (
-                <Link
-                  to={`/u/${owner.username}`}
-                  className="mt-2 inline-flex items-center gap-2 font-ui text-sm text-secondary hover:text-brand-text"
-                >
+                <Link to={`/u/${owner.username}`} className="mt-2 fx-list-detail-link">
                   <Avatar
                     src={owner.avatarUrl}
                     name={owner.displayName ?? owner.username}
@@ -52,7 +49,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                 </Link>
               ) : null}
             </div>
-            <div className="flex items-center gap-3">
+            <div className="row">
               <LikeButton
                 targetType="reading_list"
                 targetId={list.id}
@@ -61,18 +58,13 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                 signedIn={signedIn}
               />
               {isOwner ? (
-                <Link
-                  to={`/lists/${list.id}/edit`}
-                  className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm text-primary hover:bg-hover"
-                >
+                <Link to={`/lists/${list.id}/edit`} className="cap-btn">
                   Edit
                 </Link>
               ) : null}
             </div>
           </div>
-          {list.description ? (
-            <p className="max-w-2xl font-body text-secondary">{list.description}</p>
-          ) : null}
+          {list.description ? <p className="fx-list-detail-text">{list.description}</p> : null}
         </header>
 
         {isOwner ? <AddBookToList listId={list.id} /> : null}
@@ -83,31 +75,21 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
             body={isOwner ? "Search above to add books." : undefined}
           />
         ) : (
-          <ol className="flex flex-col gap-3">
+          <ol className="stack-3">
             {books.map((entry, i) => (
-              <li
-                key={entry.bookId}
-                className="flex items-center justify-between gap-4 rounded-card border border-border-subtle bg-surface p-4"
-              >
-                <div className="flex min-w-0 items-center gap-4">
-                  <span className="font-mono text-sm text-tertiary">{i + 1}</span>
-                  <div className="min-w-0">
+              <li key={entry.bookId} className="fx-list-detail-card">
+                <div className="fx-list-detail-row">
+                  <span className="fx-list-detail-label">{i + 1}</span>
+                  <div className="min-0">
                     {entry.book ? (
-                      <Link
-                        to={`/books/${entry.book.slug}`}
-                        className="font-display text-lg text-primary hover:text-brand-text"
-                      >
+                      <Link to={`/books/${entry.book.slug}`} className="fx-list-detail-link-2">
                         {entry.book.title}
                       </Link>
                     ) : (
-                      <span className="font-display text-lg text-tertiary">Unavailable book</span>
+                      <span className="fx-list-detail-title">Unavailable book</span>
                     )}
-                    {entry.book ? (
-                      <p className="font-ui text-sm text-secondary">{entry.book.author}</p>
-                    ) : null}
-                    {entry.note ? (
-                      <p className="mt-1 font-body text-sm text-secondary">{entry.note}</p>
-                    ) : null}
+                    {entry.book ? <p className="ui">{entry.book.author}</p> : null}
+                    {entry.note ? <p className="mt-1 fx-list-detail-text-2">{entry.note}</p> : null}
                   </div>
                 </div>
                 {isOwner ? <RemoveBookButton listId={list.id} bookId={entry.bookId} /> : null}

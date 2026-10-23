@@ -13,17 +13,17 @@ export function RemoveBookButton({ listId, bookId }: { listId: string; bookId: s
   }
 
   return (
-    <span className="inline-flex flex-col items-end gap-1">
+    <span className="items-end fx-remove-book-button-label">
       <button
         type="button"
         onClick={remove}
         disabled={pending}
-        className="font-ui text-xs text-tertiary transition hover:text-danger-text disabled:opacity-50"
+        className="fx-remove-book-button-btn"
       >
         Remove
       </button>
       {error ? (
-        <span role="alert" className="font-ui text-[0.65rem] text-error">
+        <span role="alert" className="fx-remove-book-button-label-2">
           {error}
         </span>
       ) : null}

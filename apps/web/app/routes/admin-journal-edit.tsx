@@ -78,24 +78,20 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <Link to="/admin/journal" className="font-ui text-sm text-secondary hover:text-brand-text">
+        <Link to="/admin/journal" className="fx-admin-journal-edit-link">
           Back to journal
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-primary">
+        <h1 className="mt-2 fx-admin-journal-edit-title">
           Edit post
           {post.isPublished ? (
-            <span className="ml-3 rounded-full bg-brand-subtle px-2 py-0.5 align-middle font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-              Live
-            </span>
+            <span className="fx-admin-journal-edit-caps">Live</span>
           ) : (
-            <span className="ml-3 rounded-full border border-border-subtle px-2 py-0.5 align-middle font-mono text-[0.6rem] uppercase text-tertiary">
-              Draft
-            </span>
+            <span className="fx-admin-journal-edit-caps-2">Draft</span>
           )}
         </h1>
       </div>
 
-      <div className="space-y-6">
+      <div className="stack-6">
         <AdminCard
           title="Visibility"
           action={
@@ -113,16 +109,16 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
             </AdminButton>
           }
         >
-          <p className="font-ui text-sm text-tertiary">
+          <p className="meta">
             {post.isPublished ? "This post is live." : "This post is a draft."}
           </p>
           <AdminError error={publishAction.error} />
         </AdminCard>
 
         <AdminCard title="Content">
-          <div className="space-y-4">
+          <div className="stack">
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
+              <span className="fx-label">Title</span>
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -130,18 +126,18 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Slug</span>
+              <span className="fx-label">Slug</span>
               <input
                 value={slug}
                 onChange={(e) => setSlug(e.target.value)}
                 className={adminInputClass}
               />
-              <span className="mt-1 block font-ui text-xs text-tertiary">
+              <span className="mt-1 block fx-admin-journal-edit-label">
                 Lowercase letters, numbers, and hyphens only.
               </span>
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Excerpt (optional)</span>
+              <span className="fx-label">Excerpt (optional)</span>
               <textarea
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
@@ -150,18 +146,16 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">Content</span>
+              <span className="fx-label">Content</span>
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={14}
-                className={`${adminInputClass} font-mono`}
+                className={`${adminInputClass} mono`}
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">
-                Cover image URL (optional)
-              </span>
+              <span className="fx-label">Cover image URL (optional)</span>
               <input
                 value={coverImageUrl}
                 onChange={(e) => setCoverImageUrl(e.target.value)}
@@ -169,9 +163,7 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">
-                Cover image alt (optional)
-              </span>
+              <span className="fx-label">Cover image alt (optional)</span>
               <input
                 value={coverImageAlt}
                 onChange={(e) => setCoverImageAlt(e.target.value)}
@@ -179,16 +171,14 @@ export default function AdminJournalEdit({ loaderData }: Route.ComponentProps) {
               />
             </label>
             <label className="block">
-              <span className="mb-1 block font-ui text-sm text-secondary">
-                Tags (comma separated)
-              </span>
+              <span className="fx-label">Tags (comma separated)</span>
               <input
                 value={tags}
                 onChange={(e) => setTags(e.target.value)}
                 className={adminInputClass}
               />
             </label>
-            <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+            <label className="row-2 ui">
               <input
                 type="checkbox"
                 checked={featured}

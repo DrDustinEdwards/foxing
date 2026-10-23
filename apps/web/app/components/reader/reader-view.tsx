@@ -563,10 +563,7 @@ export function ReaderView(props: ReaderViewProps) {
   }, []);
 
   return (
-    <div
-      className="fixed inset-0 flex flex-col font-ui"
-      style={{ background: canvas.bg, color: canvas.text }}
-    >
+    <div className="fx-reader-view-stack" style={{ background: canvas.bg, color: canvas.text }}>
       <ReaderTopBar
         book={book}
         chapter={chapter}
@@ -581,12 +578,9 @@ export function ReaderView(props: ReaderViewProps) {
       />
 
       {/* Reading area */}
-      <div className="relative flex-1 overflow-hidden">
+      <div className="relative fx-reader-view-box">
         {status !== "ready" ? (
-          <div
-            className="absolute inset-0 z-10 grid place-items-center text-sm text-tertiary"
-            role="status"
-          >
+          <div className="fx-reader-view-grid" role="status">
             {status === "error" ? `Could not open this book. ${errorMsg}` : "Opening book…"}
           </div>
         ) : null}
@@ -596,13 +590,13 @@ export function ReaderView(props: ReaderViewProps) {
           type="button"
           onClick={() => engineRef.current?.prev()}
           aria-label="Previous page"
-          className="absolute left-0 top-0 z-[5] h-full w-[12%] cursor-w-resize bg-transparent"
+          className="fx-reader-view-btn"
         />
         <button
           type="button"
           onClick={() => engineRef.current?.next()}
           aria-label="Next page"
-          className="absolute right-0 top-0 z-[5] h-full w-[12%] cursor-e-resize bg-transparent"
+          className="fx-reader-view-btn-2"
         />
 
         {/* The engine iframe fills this box (see .readium-navigator-iframe in app.css),
@@ -611,15 +605,15 @@ export function ReaderView(props: ReaderViewProps) {
         <div
           ref={containerRef}
           data-testid="reader-container"
-          className="relative mx-auto h-full w-full"
+          className="relative fx-reader-view-box-2"
           style={{ maxWidth: !settings.scroll && settings.columns === 2 ? "64rem" : "40rem" }}
         />
       </div>
 
       {/* Bottom progress scrubber */}
-      <footer className="border-t border-border-subtle px-4 py-2" style={{ background: canvas.bg }}>
-        <label className="flex items-center gap-3 text-xs text-[color-mix(in_srgb,currentColor_60%,transparent)]">
-          <span className="tabular-nums" aria-hidden>
+      <footer className="py-2 fx-reader-view-foot" style={{ background: canvas.bg }}>
+        <label className="fx-reader-view-row">
+          <span className="num" aria-hidden>
             {pct.toFixed(0)}%
           </span>
           <input
@@ -629,7 +623,7 @@ export function ReaderView(props: ReaderViewProps) {
             step={0.5}
             value={pct}
             aria-label="Reading progress"
-            className="h-1 flex-1 cursor-pointer accent-[color:var(--brand-ui)]"
+            className="fx-reader-view-input"
             onChange={(e) => {
               const v = Number(e.target.value);
               setPct(v);

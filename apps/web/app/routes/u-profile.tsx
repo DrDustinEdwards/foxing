@@ -58,11 +58,7 @@ function currentYear(): number {
 function Stars({ ratingHalf }: { ratingHalf: number | null }) {
   if (ratingHalf == null) return null;
   return (
-    <span
-      role="img"
-      aria-label={`${ratingHalf / 2} stars`}
-      className="font-mono text-sm text-brand-text"
-    >
+    <span role="img" aria-label={`${ratingHalf / 2} stars`} className="fx-u-profile-label">
       {"★".repeat(Math.floor(ratingHalf / 2))}
       {ratingHalf % 2 === 1 ? "½" : ""}
     </span>
@@ -118,24 +114,22 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="flex flex-col gap-10">
-        <header className="flex flex-col items-start gap-5 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-5">
+      <Container className="stack-10">
+        <header className="items-start fx-u-profile-stack">
+          <div className="items-start fx-u-profile-row">
             <Avatar src={profile.avatarUrl} name={name} size="lg" />
-            <div className="min-w-0">
-              <h1 className="font-display text-3xl sm:text-4xl">{name}</h1>
-              <p className="mt-1 font-mono text-sm text-tertiary">@{profile.username}</p>
-              {profile.bio ? (
-                <p className="mt-3 max-w-xl font-body text-secondary">{profile.bio}</p>
-              ) : null}
-              <dl className="mt-4 flex flex-wrap gap-6">
+            <div className="min-0">
+              <h1 className="fx-u-profile-title">{name}</h1>
+              <p className="mt-1 fx-u-profile-text">@{profile.username}</p>
+              {profile.bio ? <p className="mt-3 fx-u-profile-text-2">{profile.bio}</p> : null}
+              <dl className="mt-4 fx-u-profile-stats">
                 <StatTile label="Books read" value={booksRead} />
                 <StatTile label="Highlights" value={highlightCount} />
                 <StatTile label="Followers" value={followerCount} />
                 <StatTile label="Following" value={followingCount} />
               </dl>
               {profile.favoriteGenres.length > 0 ? (
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-3 fx-u-profile-row-2">
                   {profile.favoriteGenres.slice(0, 6).map((g) => (
                     <TagPill key={g}>{g}</TagPill>
                   ))}
@@ -143,21 +137,18 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
               ) : null}
               <Link
                 to={isOwner ? "/year" : `/u/${profile.username}/recap/${currentYear()}`}
-                className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
+                className="mt-3 fx-u-profile-link"
               >
                 {currentYear()} in reading
               </Link>
             </div>
           </div>
           {isOwner ? (
-            <Link
-              to="/me"
-              className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm text-primary hover:bg-hover"
-            >
+            <Link to="/me" className="cap-btn">
               Edit profile
             </Link>
           ) : (
-            <div className="flex flex-col items-end gap-2">
+            <div className="items-end fx-u-profile-stack-2">
               <FollowButton
                 userId={profile.id}
                 initialFollowing={isFollowing}
@@ -171,37 +162,30 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
         </header>
 
         {favorites.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl">Favorite books</h2>
+          <section className="stack">
+            <h2 className="display-2">Favorite books</h2>
             <ProfileCovers books={favorites} />
           </section>
         ) : null}
 
         {currentlyReading.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl">Currently reading</h2>
-            <ul className="flex flex-wrap gap-4">
+          <section className="stack">
+            <h2 className="display-2">Currently reading</h2>
+            <ul className="fx-u-profile-row-3">
               {currentlyReading.map((b) => (
-                <li key={b.bookId} className="w-32">
-                  <Link to={`/books/${b.slug}`} className="group block">
-                    <span className="block overflow-hidden rounded-cover border border-border-subtle bg-sunken">
+                <li key={b.bookId} className="fx-u-profile-item">
+                  <Link to={`/books/${b.slug}`} className="block">
+                    <span className="block fx-u-profile-label-2">
                       {b.coverUrl ? (
-                        <img
-                          src={b.coverUrl}
-                          alt=""
-                          className="aspect-[2/3] w-full object-cover"
-                          loading="lazy"
-                        />
+                        <img src={b.coverUrl} alt="" className="fx-u-profile-img" loading="lazy" />
                       ) : (
-                        <span className="flex aspect-[2/3] w-full items-center justify-center px-2 text-center font-ui text-xs text-tertiary">
+                        <span className="justify-center text-center fx-u-profile-label-3">
                           {b.title}
                         </span>
                       )}
                     </span>
-                    <span className="mt-1.5 block truncate font-ui text-xs text-primary group-hover:text-brand-text">
-                      {b.title}
-                    </span>
-                    <span className="block truncate font-mono text-[0.65rem] text-tertiary">
+                    <span className="block truncate fx-u-profile-label-4">{b.title}</span>
+                    <span className="block truncate fx-u-profile-label-5">
                       {Math.round(b.progressPct)}% read
                     </span>
                   </Link>
@@ -212,11 +196,11 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
         ) : null}
 
         {finishedBooks.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl">Library</h2>
+          <section className="stack">
+            <div className="row spread">
+              <h2 className="display-2">Library</h2>
               {isOwner ? (
-                <Link to="/library" className="font-ui text-sm text-brand-text hover:underline">
+                <Link to="/library" className="link sans small">
                   Manage library
                 </Link>
               ) : null}
@@ -226,25 +210,25 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
         ) : null}
 
         {publicHighlights.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl">Highlights</h2>
+          <section className="stack">
+            <div className="row spread">
+              <h2 className="display-2">Highlights</h2>
               {isOwner ? (
-                <Link to="/highlights" className="font-ui text-sm text-brand-text hover:underline">
+                <Link to="/highlights" className="link sans small">
                   All highlights
                 </Link>
               ) : null}
             </div>
-            <ul className="flex flex-col gap-3">
+            <ul className="stack-3">
               {publicHighlights.map((h) => (
-                <li key={h.id} className="rounded-card border border-border-subtle bg-surface p-4">
+                <li key={h.id} className="card">
                   {h.selectedText ? (
-                    <blockquote className="font-body text-secondary">"{h.selectedText}"</blockquote>
+                    <blockquote className="fx-u-profile-quote">"{h.selectedText}"</blockquote>
                   ) : null}
                   {h.bookTitle ? (
-                    <p className="mt-2 font-mono text-xs text-tertiary">
+                    <p className="mt-2 fx-u-profile-text-3">
                       {h.bookSlug ? (
-                        <Link to={`/books/${h.bookSlug}`} className="hover:text-brand-text">
+                        <Link to={`/books/${h.bookSlug}`} className="hover-accent">
                           {h.bookTitle}
                         </Link>
                       ) : (
@@ -259,16 +243,13 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
         ) : null}
 
         {publicShelves.length > 0 ? (
-          <section className="flex flex-col gap-4">
-            <h2 className="font-display text-2xl">Shelves</h2>
-            <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <section className="stack">
+            <h2 className="display-2">Shelves</h2>
+            <ul className="fx-u-profile-grid">
               {publicShelves.map((s) => (
-                <li
-                  key={s.id}
-                  className="rounded-cover border border-border-subtle bg-surface px-4 py-3"
-                >
-                  <p className="font-ui text-sm font-medium text-primary">{s.name}</p>
-                  <p className="mt-0.5 font-mono text-xs text-tertiary">
+                <li key={s.id} className="py-3 fx-u-profile-card">
+                  <p className="sans small strong">{s.name}</p>
+                  <p className="fx-u-profile-text-4">
                     {s.bookCount} {s.bookCount === 1 ? "book" : "books"}
                   </p>
                 </li>
@@ -277,12 +258,12 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
           </section>
         ) : null}
 
-        <section className="grid gap-10 lg:grid-cols-[1.4fr_1fr]">
-          <div className="flex flex-col gap-6">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl">Diary</h2>
+        <section className="fx-u-profile-grid-2">
+          <div className="stack-6">
+            <div className="row spread">
+              <h2 className="display-2">Diary</h2>
               {isOwner ? (
-                <Link to="/diary/new" className="font-ui text-sm text-brand-text hover:underline">
+                <Link to="/diary/new" className="link sans small">
                   New entry
                 </Link>
               ) : null}
@@ -290,16 +271,13 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             {diary.length === 0 ? (
               <EmptyState title="No entries yet" body="Reviews and ratings will appear here." />
             ) : (
-              <ul className="flex flex-col gap-4">
+              <ul className="stack">
                 {diary.map((d) => (
-                  <li
-                    key={d.id}
-                    className="rounded-card border border-border-subtle bg-surface p-4"
-                  >
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="font-display text-lg text-primary">
+                  <li key={d.id} className="card">
+                    <div className="fx-u-profile-row-4">
+                      <p className="display-0">
                         {d.book ? (
-                          <Link to={`/books/${d.book.slug}`} className="hover:text-brand-text">
+                          <Link to={`/books/${d.book.slug}`} className="hover-accent">
                             {d.book.title}
                           </Link>
                         ) : (
@@ -309,13 +287,13 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
                       <Stars ratingHalf={d.ratingHalf} />
                     </div>
                     {d.review ? (
-                      <p className="mt-2 font-body text-secondary">
+                      <p className="mt-2 fx-u-profile-quote">
                         {d.containsSpoilers ? <em>Contains spoilers. </em> : null}
                         {d.review}
                       </p>
                     ) : null}
                     {d.visibility !== "public" ? (
-                      <p className="mt-2 font-mono text-[0.65rem] uppercase tracking-wide text-tertiary">
+                      <p className="mt-2 fx-u-profile-caps">
                         {d.visibility === "friends" ? "Close friends" : "Private"}
                       </p>
                     ) : null}
@@ -325,32 +303,25 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             )}
           </div>
 
-          <div className="flex flex-col gap-8">
-            <div className="flex flex-col gap-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-2xl">Lists</h2>
+          <div className="stack-8">
+            <div className="stack">
+              <div className="row spread">
+                <h2 className="display-2">Lists</h2>
                 {isOwner ? (
-                  <Link to="/lists/new" className="font-ui text-sm text-brand-text hover:underline">
+                  <Link to="/lists/new" className="link sans small">
                     New list
                   </Link>
                 ) : null}
               </div>
               {lists.length === 0 ? (
-                <p className="font-ui text-sm text-tertiary">No lists yet.</p>
+                <p className="meta">No lists yet.</p>
               ) : (
-                <ul className="flex flex-col gap-2">
+                <ul className="stack-2">
                   {lists.map((l) => (
                     <li key={l.id}>
-                      <Link
-                        to={`/lists/${l.id}`}
-                        className="flex items-center justify-between rounded-cover border border-border-subtle bg-surface px-4 py-3 hover:border-border-interactive"
-                      >
-                        <span className="font-ui text-sm text-primary">{l.title}</span>
-                        {!l.isPublic ? (
-                          <span className="font-mono text-[0.6rem] uppercase text-tertiary">
-                            Private
-                          </span>
-                        ) : null}
+                      <Link to={`/lists/${l.id}`} className="fx-profile-row">
+                        <span className="fx-u-profile-label-6">{l.title}</span>
+                        {!l.isPublic ? <span className="fx-u-profile-caps-2">Private</span> : null}
                       </Link>
                     </li>
                   ))}
@@ -358,14 +329,14 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
               )}
             </div>
 
-            <div className="flex flex-col gap-4">
-              <h2 className="font-display text-2xl">Activity</h2>
+            <div className="stack">
+              <h2 className="display-2">Activity</h2>
               {activity.length === 0 ? (
-                <p className="font-ui text-sm text-tertiary">Nothing recent.</p>
+                <p className="meta">Nothing recent.</p>
               ) : (
-                <ul className="flex flex-col gap-2 font-ui text-sm text-secondary">
+                <ul className="fx-u-profile-stack-3">
                   {activity.map((a) => (
-                    <li key={a.id} className="border-b border-border-subtle pb-2">
+                    <li key={a.id} className="fx-u-profile-item-2">
                       {activityLabel(a.type, a.data)}
                     </li>
                   ))}
@@ -382,10 +353,8 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
     <div>
-      <dd className="font-display text-2xl leading-none text-primary">{value}</dd>
-      <dt className="mt-1 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-        {label}
-      </dt>
+      <dd className="fx-u-profile-title-2">{value}</dd>
+      <dt className="mt-1 fx-u-profile-caps-3">{label}</dt>
     </div>
   );
 }
@@ -400,27 +369,23 @@ type CoverBook = {
 
 function ProfileCovers({ books }: { books: CoverBook[] }) {
   return (
-    <ul className="flex flex-wrap gap-4">
+    <ul className="fx-u-profile-row-3">
       {books.map((b) => (
-        <li key={b.bookId} className="w-28">
-          <Link to={`/books/${b.slug}`} className="group block">
-            <span className="block overflow-hidden rounded-cover border border-border-subtle bg-sunken">
+        <li key={b.bookId} className="fx-u-profile-item-3">
+          <Link to={`/books/${b.slug}`} className="block">
+            <span className="block fx-u-profile-label-2">
               {b.coverUrl ? (
                 <img
                   src={b.coverUrl}
                   alt={`${b.title} by ${b.author}`}
-                  className="aspect-[2/3] w-full object-cover"
+                  className="fx-u-profile-img"
                   loading="lazy"
                 />
               ) : (
-                <span className="flex aspect-[2/3] w-full items-center justify-center px-2 text-center font-ui text-xs text-tertiary">
-                  {b.title}
-                </span>
+                <span className="justify-center text-center fx-u-profile-label-3">{b.title}</span>
               )}
             </span>
-            <span className="mt-1.5 block truncate font-ui text-xs text-primary group-hover:text-brand-text">
-              {b.title}
-            </span>
+            <span className="block truncate fx-u-profile-label-4">{b.title}</span>
           </Link>
         </li>
       ))}
@@ -438,11 +403,11 @@ function PrivateProfile({
   const name = profile.displayName ?? profile.username;
   return (
     <PageShell>
-      <Container className="flex flex-col items-center gap-5 py-16 text-center">
+      <Container className="text-center fx-u-profile-wrap">
         <Avatar src={profile.avatarUrl} name={name} size="lg" />
         <div>
-          <h1 className="font-display text-3xl">{name}</h1>
-          <p className="mt-1 font-mono text-sm text-tertiary">@{profile.username}</p>
+          <h1 className="display-3">{name}</h1>
+          <p className="mt-1 fx-u-profile-text">@{profile.username}</p>
         </div>
         <EmptyState
           title="This profile is private"

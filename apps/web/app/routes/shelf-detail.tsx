@@ -30,12 +30,12 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <Link to="/library" className="font-ui text-sm text-tertiary hover:text-brand-text">
+        <Link to="/library" className="fx-shelf-detail-link">
           All shelves
         </Link>
-        <h1 className="mt-2 font-display text-4xl">{shelf.name}</h1>
+        <h1 className="mt-2 fx-shelf-detail-title">{shelf.name}</h1>
         {shelf.description ? (
-          <p className="mt-2 max-w-prose font-body text-secondary">{shelf.description}</p>
+          <p className="mt-2 fx-shelf-detail-text">{shelf.description}</p>
         ) : null}
 
         <div className="mt-8">
@@ -43,9 +43,7 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
             {books.length} {books.length === 1 ? "book" : "books"}
           </Eyebrow>
           {books.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">
-              Add books to this shelf from any book page.
-            </p>
+            <p className="meta">Add books to this shelf from any book page.</p>
           ) : (
             <BookGrid>
               {books.map((b) => (

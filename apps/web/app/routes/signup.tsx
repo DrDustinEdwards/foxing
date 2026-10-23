@@ -71,9 +71,7 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
         title="Check your email"
         subtitle="We sent a link to confirm your address. Open it to finish setting up your account."
       >
-        <p className="font-ui text-sm text-secondary">
-          You can close this tab once you have confirmed.
-        </p>
+        <p className="ui">You can close this tab once you have confirmed.</p>
       </AuthShell>
     );
   }
@@ -88,13 +86,13 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
         </>
       }
     >
-      <div className="space-y-4">
+      <div className="stack">
         <GoogleButton />
         <AuthDivider />
         <MagicLinkForm />
 
         {showPassword ? (
-          <form onSubmit={onSubmit} className="space-y-4 border-t border-border-subtle pt-4">
+          <form onSubmit={onSubmit} className="fx-signup-form">
             <Field label="Name" name="name" required autoComplete="name" />
             <Field label="Email" name="email" type="email" required autoComplete="email" />
             <Field
@@ -109,7 +107,7 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
               <TurnstileWidget siteKey={turnstile.siteKey} onToken={setCaptchaToken} />
             ) : null}
             {error ? (
-              <p role="alert" className="font-ui text-sm text-error">
+              <p role="alert" className="error">
                 {error}
               </p>
             ) : null}

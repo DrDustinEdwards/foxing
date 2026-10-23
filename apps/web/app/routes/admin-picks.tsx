@@ -40,15 +40,19 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Celebrity Picks</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Celebrity Picks</h1>
       </div>
 
-      <div className="space-y-6">
+      <div className="stack-6">
         <AdminCard title="Curator">
-          <ul className="flex flex-wrap gap-1">
+          <ul className="fx-admin-picks-row">
             <li>
-              <Link to="/admin/celebrity-picks" className={filterClass(!clubId)}>
+              <Link
+                to="/admin/celebrity-picks"
+                className="fx-admin-nav-link"
+                aria-current={!clubId ? "page" : undefined}
+              >
                 All
               </Link>
             </li>
@@ -56,7 +60,8 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
               <li key={c.id}>
                 <Link
                   to={`/admin/celebrity-picks?club=${c.id}`}
-                  className={filterClass(clubId === c.id)}
+                  className="fx-admin-nav-link"
+                  aria-current={clubId === c.id ? "page" : undefined}
                 >
                   {c.shortName || c.name}
                 </Link>
@@ -67,9 +72,9 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Picks">
           {picks.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No picks for this curator yet.</p>
+            <p className="meta">No picks for this curator yet.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {picks.map((p) => (
                 <PickRow key={p.id} pick={p} onDone={reload} />
               ))}
@@ -79,12 +84,6 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
       </div>
     </AdminShell>
   );
-}
-
-function filterClass(active: boolean) {
-  return active
-    ? "block rounded-md bg-brand-subtle px-3 py-2 font-ui text-sm text-brand-subtle-text"
-    : "block rounded-md px-3 py-2 font-ui text-sm text-secondary hover:bg-hover hover:text-primary";
 }
 
 function PickRow({
@@ -99,21 +98,17 @@ function PickRow({
 
   return (
     <li className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-ui text-sm font-medium text-primary">
+      <div className="row spread">
+        <div className="min-0">
+          <p className="sans small strong">
             {pick.clubName}
             {pick.isPublished ? (
-              <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-                Live
-              </span>
+              <span className="badge ml-2">Live</span>
             ) : (
-              <span className="ml-2 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-tertiary">
-                Draft
-              </span>
+              <span className="badge badge-quiet ml-2">Draft</span>
             )}
           </p>
-          <p className="truncate font-ui text-sm text-tertiary">
+          <p className="truncate meta">
             {pick.bookTitle ?? "No book"}
             {pick.pickYear
               ? ` · ${pick.pickMonth ? `${pick.pickMonth}/` : ""}${pick.pickYear}`
@@ -121,7 +116,7 @@ function PickRow({
             {pick.category ? ` · ${pick.category}` : ""}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="row-2 shrink-0">
           <AdminButton pending={pending} onClick={() => setEditing((v) => !v)}>
             {editing ? "Close" : "Edit"}
           </AdminButton>
@@ -173,9 +168,9 @@ function PickEdit({
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-md border border-border-subtle bg-sunken p-4">
+    <div className="mt-3 fx-admin-picks-card">
       <label className="block">
-        <span className="mb-1 block font-ui text-sm text-secondary">Category</span>
+        <span className="fx-label">Category</span>
         <input
           value={category}
           onChange={(e) => setCategory(e.target.value)}
@@ -183,7 +178,7 @@ function PickEdit({
         />
       </label>
       <label className="block">
-        <span className="mb-1 block font-ui text-sm text-secondary">Notes</span>
+        <span className="fx-label">Notes</span>
         <textarea
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
@@ -192,7 +187,7 @@ function PickEdit({
         />
       </label>
       <label className="block">
-        <span className="mb-1 block font-ui text-sm text-secondary">Curator quote</span>
+        <span className="fx-label">Curator quote</span>
         <textarea
           value={curatorQuote}
           onChange={(e) => setCuratorQuote(e.target.value)}

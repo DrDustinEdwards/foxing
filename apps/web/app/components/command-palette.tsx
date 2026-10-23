@@ -157,18 +157,18 @@ export function CommandPalette() {
       onOpenChange={setOpen}
       label="Search Foxing"
       shouldFilter={false}
-      overlayClassName="fixed inset-0 z-[99] bg-black/40 backdrop-blur-sm"
-      contentClassName="fixed inset-0 z-[100] grid place-items-start justify-center p-4 pt-[12vh]"
-      className="h-fit w-full max-w-xl overflow-hidden rounded-hero border border-border-subtle bg-surface shadow-card-md"
+      overlayClassName="fx-cmd-overlay"
+      contentClassName="fx-cmd-content"
+      className="fx-cmd"
     >
-      <div className="flex items-center gap-2 border-b border-border-subtle px-4">
+      <div className="fx-cmd-head">
         <svg
           width="18"
           height="18"
           viewBox="0 0 24 24"
           fill="none"
           aria-hidden="true"
-          className="shrink-0 text-tertiary"
+          className="shrink-0"
         >
           <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
           <path d="m20 20-3.2-3.2" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
@@ -177,13 +177,13 @@ export function CommandPalette() {
           value={query}
           onValueChange={setQuery}
           placeholder="Search books, people, clubs..."
-          className="w-full bg-transparent py-3.5 font-ui text-base text-primary outline-none placeholder:text-tertiary"
+          className="fx-cmd-input"
         />
       </div>
 
-      <Command.List className="max-h-[min(24rem,60vh)] overflow-y-auto p-2">
+      <Command.List className="fx-cmd-list">
         {typing ? (
-          <Command.Empty className="px-3 py-6 text-center font-ui text-sm text-tertiary">
+          <Command.Empty className="fx-cmd-empty">
             Nothing found. Press Enter to search everything.
           </Command.Empty>
         ) : null}
@@ -192,45 +192,39 @@ export function CommandPalette() {
           <Command.Item
             value={`search:${query}`}
             onSelect={() => runSearch(query)}
-            className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2.5 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-primary"
+            className="fx-cmd-item"
           >
             Search all results for &ldquo;{query.trim()}&rdquo;
           </Command.Item>
         ) : null}
 
         {typing && books.length > 0 ? (
-          <Command.Group
-            heading="Books"
-            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
-          >
+          <Command.Group heading="Books">
             {books.map((b) => (
               <Command.Item
                 key={b.slug}
                 value={`book:${b.slug}`}
                 onSelect={() => go(`/books/${b.slug}`)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 data-[selected=true]:bg-hover"
+                className="fx-cmd-item"
               >
-                <span className="truncate font-display text-sm text-primary">{b.title}</span>
-                <span className="truncate font-ui text-sm text-tertiary">· {b.author}</span>
+                <span className="truncate fx-cmd-title">{b.title}</span>
+                <span className="truncate meta">· {b.author}</span>
               </Command.Item>
             ))}
           </Command.Group>
         ) : null}
 
         {typing && authors.length > 0 ? (
-          <Command.Group
-            heading="Authors"
-            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
-          >
+          <Command.Group heading="Authors">
             {authors.map((a) => (
               <Command.Item
                 key={a.slug}
                 value={`author:${a.slug}`}
                 onSelect={() => go(`/authors/${a.slug}`)}
-                className="flex cursor-pointer items-center justify-between gap-2 rounded-md px-3 py-2 data-[selected=true]:bg-hover"
+                className="fx-cmd-item spread"
               >
-                <span className="truncate font-ui text-sm text-primary">{a.name}</span>
-                <span className="shrink-0 font-mono text-xs text-tertiary">
+                <span className="truncate ink">{a.name}</span>
+                <span className="shrink-0 mono xsmall dim">
                   {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
                 </span>
               </Command.Item>
@@ -239,53 +233,44 @@ export function CommandPalette() {
         ) : null}
 
         {typing && people.length > 0 ? (
-          <Command.Group
-            heading="People"
-            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
-          >
+          <Command.Group heading="People">
             {people.map((p) => (
               <Command.Item
                 key={p.username}
                 value={`person:${p.username}`}
                 onSelect={() => go(`/u/${p.username}`)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 data-[selected=true]:bg-hover"
+                className="fx-cmd-item"
               >
-                <span className="truncate font-ui text-sm text-primary">{p.displayName}</span>
-                <span className="truncate font-mono text-xs text-tertiary">@{p.username}</span>
+                <span className="truncate ink">{p.displayName}</span>
+                <span className="truncate mono xsmall dim">@{p.username}</span>
               </Command.Item>
             ))}
           </Command.Group>
         ) : null}
 
         {typing && clubs.length > 0 ? (
-          <Command.Group
-            heading="Clubs"
-            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
-          >
+          <Command.Group heading="Clubs">
             {clubs.map((c) => (
               <Command.Item
                 key={c.slug}
                 value={`club:${c.slug}`}
                 onSelect={() => go(`/clubs/${c.slug}`)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 data-[selected=true]:bg-hover"
+                className="fx-cmd-item"
               >
-                <span className="truncate font-ui text-sm text-primary">{c.name}</span>
+                <span className="truncate ink">{c.name}</span>
               </Command.Item>
             ))}
           </Command.Group>
         ) : null}
 
         {!typing && recent.length > 0 ? (
-          <Command.Group
-            heading="Recent"
-            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
-          >
+          <Command.Group heading="Recent">
             {recent.map((r) => (
               <Command.Item
                 key={r}
                 value={`recent:${r}`}
                 onSelect={() => runSearch(r)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-primary"
+                className="fx-cmd-item"
               >
                 {r}
               </Command.Item>
@@ -294,16 +279,13 @@ export function CommandPalette() {
         ) : null}
 
         {!typing ? (
-          <Command.Group
-            heading="Go to"
-            className="[&_[cmdk-group-heading]]:px-3 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:pt-3 [&_[cmdk-group-heading]]:font-mono [&_[cmdk-group-heading]]:text-[0.625rem] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-tertiary"
-          >
+          <Command.Group heading="Go to">
             {(signedIn ? [...SIGNED_IN_LINKS, ...PUBLIC_LINKS] : PUBLIC_LINKS).map((l) => (
               <Command.Item
                 key={l.to}
                 value={`go:${l.to}`}
                 onSelect={() => go(l.to)}
-                className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 font-ui text-sm text-secondary data-[selected=true]:bg-hover data-[selected=true]:text-primary"
+                className="fx-cmd-item"
               >
                 {l.label}
               </Command.Item>
@@ -312,12 +294,12 @@ export function CommandPalette() {
         ) : null}
       </Command.List>
 
-      <div className="flex items-center justify-end gap-3 border-t border-border-subtle px-4 py-2 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
+      <div className="fx-cmd-foot">
         <span>
-          <kbd className="font-mono">Enter</kbd> to open
+          <kbd>Enter</kbd> to open
         </span>
         <span>
-          <kbd className="font-mono">Esc</kbd> to close
+          <kbd>Esc</kbd> to close
         </span>
       </div>
     </Command.Dialog>

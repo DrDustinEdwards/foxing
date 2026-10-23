@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Card, inputClass } from "./settings-card";
-import { cn } from "~/lib/cn";
 import { authClient } from "~/lib/auth-client";
 import { Link } from "react-router";
 
@@ -51,9 +50,9 @@ export function ProfileSection({
 
   return (
     <Card title="Profile">
-      <form onSubmit={save} className="space-y-4">
+      <form onSubmit={save} className="stack">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Display name</span>
+          <span className="fx-label">Display name</span>
           <input
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -62,14 +61,9 @@ export function ProfileSection({
           />
         </label>
         <label className="block">
-          <span className="mb-1 flex items-center justify-between font-ui text-sm text-secondary">
+          <span className="mb-1 fx-account-sections-label">
             <span>Bio</span>
-            <span
-              className={cn(
-                "font-mono text-xs",
-                bio.length > BIO_MAX ? "text-error" : "text-tertiary",
-              )}
-            >
+            <span className={bio.length > BIO_MAX ? "mono xsmall crit" : "mono xsmall dim"}>
               {bio.length} / {BIO_MAX}
             </span>
           </span>
@@ -82,31 +76,25 @@ export function ProfileSection({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">
-            Favorite genres (comma separated)
-          </span>
+          <span className="fx-label">Favorite genres (comma separated)</span>
           <input
             value={genres}
             onChange={(e) => setGenres(e.target.value)}
             className={inputClass}
           />
         </label>
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-          >
+        <div className="row">
+          <button type="submit" disabled={pending} className="cap-btn">
             {pending ? "Saving..." : "Save profile"}
           </button>
           {status === "saved" ? (
-            <span className="font-ui text-sm text-tertiary" role="status">
+            <span className="meta" role="status">
               Saved.
             </span>
           ) : null}
         </div>
         {error ? (
-          <p className="font-ui text-sm text-error" role="alert">
+          <p className="error" role="alert">
             {error}
           </p>
         ) : null}
@@ -181,11 +169,11 @@ export function UsernameSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Username">
-      <form onSubmit={save} className="space-y-3">
+      <form onSubmit={save} className="stack-3">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Username</span>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm text-tertiary">@</span>
+          <span className="fx-label">Username</span>
+          <div className="row-2">
+            <span className="fx-account-sections-label-2">@</span>
             <input
               value={value}
               onChange={(e) => setValue(e.target.value)}
@@ -195,31 +183,33 @@ export function UsernameSection({ initial }: { initial: string }) {
               className={inputClass}
             />
           </div>
-          <span className="mt-1 block font-ui text-xs" aria-live="polite">
-            {avail === "checking" ? <span className="text-tertiary">Checking...</span> : null}
-            {avail === "available" ? <span className="text-success">Available.</span> : null}
-            {avail === "taken" ? <span className="text-error">That username is taken.</span> : null}
+          <span className="mt-1 block fx-account-sections-label-3" aria-live="polite">
+            {avail === "checking" ? <span className="dim">Checking...</span> : null}
+            {avail === "available" ? (
+              <span className="fx-account-sections-label-4">Available.</span>
+            ) : null}
+            {avail === "taken" ? <span className="error">That username is taken.</span> : null}
             {avail === "invalid" ? (
-              <span className="text-error">3 to 30 letters, numbers, or underscores.</span>
+              <span className="error">3 to 30 letters, numbers, or underscores.</span>
             ) : null}
           </span>
         </label>
-        <div className="flex items-center gap-3">
+        <div className="row">
           <button
             type="submit"
             disabled={!(changed && avail === "available") || pending}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
+            className="cap-btn"
           >
             {pending ? "Saving..." : "Change username"}
           </button>
           {status === "saved" ? (
-            <span className="font-ui text-sm text-tertiary" role="status">
+            <span className="meta" role="status">
               Saved.
             </span>
           ) : null}
         </div>
         {error ? (
-          <p className="font-ui text-sm text-error" role="alert">
+          <p className="error" role="alert">
             {error}
           </p>
         ) : null}
@@ -259,13 +249,13 @@ export function EmailSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Email">
-      <p className="font-ui text-sm text-secondary">
-        Your account email is <span className="font-medium text-primary">{initial}</span>. Changing
-        it sends a confirmation link to your current address.
+      <p className="ui">
+        Your account email is <span className="strong">{initial}</span>. Changing it sends a
+        confirmation link to your current address.
       </p>
-      <form onSubmit={change} className="mt-4 space-y-3">
+      <form onSubmit={change} className="mt-4 fx-account-sections-form">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">New email</span>
+          <span className="fx-label">New email</span>
           <input
             type="email"
             value={email}
@@ -275,22 +265,18 @@ export function EmailSection({ initial }: { initial: string }) {
             className={inputClass}
           />
         </label>
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={pending || email.trim().length === 0}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-          >
+        <div className="row">
+          <button type="submit" disabled={pending || email.trim().length === 0} className="cap-btn">
             {pending ? "Sending..." : "Change email"}
           </button>
           {status === "sent" ? (
-            <span className="font-ui text-sm text-tertiary" role="status">
+            <span className="meta" role="status">
               Check your inbox to confirm.
             </span>
           ) : null}
         </div>
         {error ? (
-          <p className="font-ui text-sm text-error" role="alert">
+          <p className="error" role="alert">
             {error}
           </p>
         ) : null}
@@ -302,13 +288,8 @@ export function EmailSection({ initial }: { initial: string }) {
 export function AdminSection() {
   return (
     <Card title="Admin">
-      <p className="font-ui text-sm text-secondary">
-        You have operator access to the Foxing admin tools.
-      </p>
-      <Link
-        to="/admin"
-        className="mt-4 inline-flex rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-      >
+      <p className="ui">You have operator access to the Foxing admin tools.</p>
+      <Link to="/admin" className="cap-btn mt-4 fx-account-sections-link">
         Open admin dashboard
       </Link>
     </Card>
@@ -357,9 +338,9 @@ export function PasswordSection() {
 
   return (
     <Card title="Password">
-      <form onSubmit={change} className="space-y-4">
+      <form onSubmit={change} className="stack">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Current password</span>
+          <span className="fx-label">Current password</span>
           <input
             type="password"
             value={current}
@@ -370,7 +351,7 @@ export function PasswordSection() {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">New password</span>
+          <span className="fx-label">New password</span>
           <input
             type="password"
             value={next}
@@ -382,7 +363,7 @@ export function PasswordSection() {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Confirm new password</span>
+          <span className="fx-label">Confirm new password</span>
           <input
             type="password"
             value={confirm}
@@ -391,30 +372,30 @@ export function PasswordSection() {
             required
             minLength={8}
             aria-invalid={mismatch}
-            className={cn(inputClass, mismatch && "border-error")}
+            className={inputClass}
           />
           {mismatch ? (
-            <span className="mt-1 block font-ui text-xs text-error" role="alert">
+            <span className="mt-1 block fx-account-sections-label-5" role="alert">
               Passwords do not match.
             </span>
           ) : null}
         </label>
-        <div className="flex items-center gap-3">
+        <div className="row">
           <button
             type="submit"
             disabled={pending || mismatch || next.length === 0}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
+            className="cap-btn"
           >
             {pending ? "Changing..." : "Change password"}
           </button>
           {status === "changed" ? (
-            <span className="font-ui text-sm text-tertiary" role="status">
+            <span className="meta" role="status">
               Password changed.
             </span>
           ) : null}
         </div>
         {error ? (
-          <p className="font-ui text-sm text-error" role="alert">
+          <p className="error" role="alert">
             {error}
           </p>
         ) : null}
@@ -426,14 +407,11 @@ export function PasswordSection() {
 export function DataSection() {
   return (
     <Card title="Your data">
-      <p className="font-ui text-sm text-secondary">
+      <p className="ui">
         Download a JSON archive of everything tied to your account: your profile, library, reading
         history, highlights, notes, and goals.
       </p>
-      <a
-        href="/api/v1/account/export"
-        className="mt-4 inline-flex rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-      >
+      <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
         Download your data
       </a>
     </Card>
@@ -463,20 +441,20 @@ function ClubHandoverFields({
 }) {
   if (clubs.length === 0) return null;
   return (
-    <fieldset className="mt-4 space-y-3">
-      <legend className="font-ui text-sm text-secondary">
+    <fieldset className="mt-4 fx-account-sections-form">
+      <legend className="ui">
         You created {clubs.length === 1 ? "a club" : `${clubs.length} clubs`}. Choose who takes each
         one over, so its members keep their discussions.
       </legend>
       {clubs.map((club) =>
         club.candidates.length === 0 ? (
-          <p key={club.clubId} className="font-ui text-sm text-secondary">
-            <span className="font-medium text-primary">{club.name}</span> has no other members, so
-            it will be deleted with your account.
+          <p key={club.clubId} className="ui">
+            <span className="strong">{club.name}</span> has no other members, so it will be deleted
+            with your account.
           </p>
         ) : (
-          <label key={club.clubId} className="block font-ui text-sm">
-            <span className="font-medium text-primary">{club.name}</span>
+          <label key={club.clubId} className="block fx-account-sections-field">
+            <span className="strong">{club.name}</span>
             <select
               value={choice[club.clubId] ?? club.suggested ?? DELETE_CLUB}
               onChange={(e) => onChoose(club.clubId, e.target.value)}
@@ -545,11 +523,11 @@ export function DangerSection() {
   }
 
   return (
-    <section className="rounded-card border border-error/40 bg-surface p-6">
-      <h2 className="font-display text-xl text-error">Delete account</h2>
-      <p className="mt-4 font-ui text-sm text-secondary">
+    <section className="fx-account-sections-card">
+      <h2 className="fx-account-sections-title">Delete account</h2>
+      <p className="mt-4 fx-account-sections-text">
         This permanently removes your account and all of your data. It cannot be undone. Type
-        <span className="font-medium text-primary"> {CONFIRM_PHRASE} </span>
+        <span className="strong"> {CONFIRM_PHRASE} </span>
         to confirm.
       </p>
       <ClubHandoverFields
@@ -569,13 +547,14 @@ export function DangerSection() {
           type="button"
           onClick={remove}
           disabled={pending || clubs === null || confirm.trim().toLowerCase() !== CONFIRM_PHRASE}
-          className="rounded-md border border-error px-4 py-2 font-ui text-sm text-error hover:bg-error/10 disabled:opacity-40"
+          className="cap-btn"
+          data-variant="danger"
         >
           {pending ? "Deleting..." : "Delete my account"}
         </button>
       </div>
       {error ? (
-        <p className="mt-3 font-ui text-sm text-error" role="alert">
+        <p className="mt-3 error" role="alert">
           {error}
         </p>
       ) : null}

@@ -83,9 +83,9 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
   const [paywallOpen, setPaywallOpen] = useState(false);
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader eyebrow="Account" title="Settings" />
-        <div className="space-y-8">
+        <div className="stack-8">
           <ProfileSection initial={loaderData} />
           <UsernameSection initial={loaderData.username} />
           <EmailSection initial={loaderData.email} />

@@ -36,13 +36,13 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Clubs</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Clubs</h1>
       </div>
 
-      <div className="space-y-6">
+      <div className="stack-6">
         <AdminCard title="Search">
-          <form method="get" className="flex gap-2">
+          <form method="get" className="row-2">
             <input name="q" defaultValue={q} placeholder="Club name" className={adminInputClass} />
             <AdminButton variant="primary" type="submit">
               Search
@@ -52,9 +52,9 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Clubs">
           {clubs.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No clubs match this search.</p>
+            <p className="meta">No clubs match this search.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {clubs.map((c) => (
                 <ClubRow key={c.id} club={c} onDone={reload} />
               ))}
@@ -78,30 +78,23 @@ function ClubRow({
 
   return (
     <li className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-ui text-sm font-medium text-primary">
+      <div className="row spread">
+        <div className="min-0">
+          <p className="sans small strong">
             {club.name}
             {club.isVerified ? (
-              <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-                Verified
-              </span>
+              <span className="badge ml-2">Verified</span>
             ) : (
-              <span className="ml-2 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-tertiary">
-                Unverified
-              </span>
+              <span className="badge badge-quiet ml-2">Unverified</span>
             )}
           </p>
-          <p className="truncate font-ui text-sm text-tertiary">
+          <p className="truncate meta">
             {club.slug ? `/${club.slug}` : "No slug"} · {club.visibility}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="shrink-0 row-2">
           {club.slug ? (
-            <Link
-              to={`/clubs/${club.slug}`}
-              className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-            >
+            <Link to={`/clubs/${club.slug}`} className="cap-btn">
               View
             </Link>
           ) : null}

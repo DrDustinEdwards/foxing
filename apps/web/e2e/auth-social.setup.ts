@@ -15,7 +15,7 @@ async function signIn(page: import("@playwright/test").Page, email: string, pass
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: /^sign in$/i }).click();
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(page.getByRole("button", { name: /account menu/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /your account/i })).toBeVisible();
 }
 
 setup("sign in account B (club member) through the visible form", async ({ page }) => {

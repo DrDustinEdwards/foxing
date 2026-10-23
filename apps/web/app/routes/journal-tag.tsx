@@ -41,9 +41,9 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-4xl">
+      <Container>
         <p className="mb-6">
-          <Link to="/journal/archive" className="font-ui text-sm text-tertiary hover:text-primary">
+          <Link to="/journal/archive" className="fx-journal-tag-link">
             &larr; All articles
           </Link>
         </p>
@@ -55,28 +55,22 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
         {result.posts.length === 0 ? (
           <EmptyState title="Nothing here yet." />
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="fx-journal-tag-grid">
             {result.posts.map((post) => (
               <Link
                 key={post.slug}
                 to={`/journal/${post.slug}`}
-                className="group flex flex-col rounded-card border border-border-subtle bg-surface p-5 shadow-card-sm transition-shadow hover:shadow-card-md"
+                className="group fx-journal-tag-card"
               >
                 {post.tags?.[0] ? (
-                  <span className="mb-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
+                  <span className="mb-2 fx-journal-tag-caps">
                     {post.tags[0].replace(/-/g, " ")}
                   </span>
                 ) : null}
-                <h3 className="font-display text-lg leading-snug text-primary group-hover:text-brand-text">
-                  {post.title}
-                </h3>
-                {post.excerpt ? (
-                  <p className="mt-2 line-clamp-3 font-body text-secondary">{post.excerpt}</p>
-                ) : null}
+                <h3 className="fx-journal-tag-title">{post.title}</h3>
+                {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
                 {post.readingTimeMinutes ? (
-                  <p className="mt-3 font-ui text-xs text-tertiary">
-                    {post.readingTimeMinutes} min read
-                  </p>
+                  <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
                 ) : null}
               </Link>
             ))}
@@ -84,24 +78,24 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
         )}
 
         {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-4">
+          <nav aria-label="Pagination" className="mt-12 justify-center fx-journal-tag-row">
             {result.page > 1 ? (
               <Link
                 to={`${journalTagPath(tag)}?page=${result.page - 1}`}
                 rel="prev"
-                className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
+                className="cap-btn"
               >
                 Newer
               </Link>
             ) : null}
-            <span className="font-ui text-sm text-secondary">
+            <span className="ui">
               Page {result.page} of {result.pageCount}
             </span>
             {result.page < result.pageCount ? (
               <Link
                 to={`${journalTagPath(tag)}?page=${result.page + 1}`}
                 rel="next"
-                className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
+                className="cap-btn"
               >
                 Older
               </Link>

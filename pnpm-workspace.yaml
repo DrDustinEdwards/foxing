@@ -14,6 +14,7 @@ allowBuilds:
   '@dustinedwards/d1-dump': true
   '@dustinedwards/site-api': true
   '@sentry/cli': true
+  capsomer: true
   dtrace-provider: true
   esbuild: true
   msgpackr-extract: true

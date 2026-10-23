@@ -29,9 +29,7 @@ export default function ResetPassword() {
         }
         footer={<AuthLink to="/forgot-password">Request a new reset link</AuthLink>}
       >
-        <p className="font-ui text-sm text-secondary">
-          Reset links are single-use and expire quickly for security.
-        </p>
+        <p className="ui">Reset links are single-use and expire quickly for security.</p>
       </AuthShell>
     );
   }
@@ -58,7 +56,7 @@ export default function ResetPassword() {
 
   return (
     <AuthShell title="Set a new password" subtitle="Choose a password you don't use elsewhere.">
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} className="stack">
         <Field
           label="New password"
           name="password"
@@ -76,7 +74,7 @@ export default function ResetPassword() {
           autoComplete="new-password"
         />
         {error ? (
-          <p role="alert" className="font-ui text-sm text-error">
+          <p role="alert" className="error">
             {error}
           </p>
         ) : null}

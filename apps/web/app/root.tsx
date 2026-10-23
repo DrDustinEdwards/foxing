@@ -27,7 +27,8 @@ export const links: Route.LinksFunction = () => [
 ];
 
 // Set data-theme before paint so there is no theme flash. Stored preference wins;
-// otherwise follow the OS. Attribute-driven per design-system.md.
+// otherwise follow the OS. Attribute-driven per design-system.md. Capsomer's theme button
+// (page-shell.tsx) remembers its choice under the same key, as the plain word.
 // Migration shim: the key was "foxing-mode" (attribute data-mode) before the
 // portfolio standardized on data-theme. Read the old key once, rewrite it to the
 // new one, and drop it, so a returning reader keeps their choice. Safe to delete
@@ -38,7 +39,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
   // The CSP nonce (workers/security-headers.ts) for every script this document renders.
   const nonce = useNonce();
   return (
-    <html lang="en" data-theme="light">
+    <html
+      lang="en"
+      data-theme="light"
+      data-family="fox"
+      data-cap-site="foxing"
+      data-density="comfortable"
+    >
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -71,14 +78,11 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       ? "That page has wandered off the shelf."
       : "An unexpected error occurred. Try again in a moment.";
   return (
-    <main className="mx-auto flex min-h-[70dvh] max-w-2xl flex-col items-center justify-center gap-4 px-6 text-center">
-      <p className="font-mono text-sm uppercase tracking-[0.18em] text-tertiary">Error {status}</p>
-      <h1 className="font-display text-4xl">{title}</h1>
-      <p className="text-lg text-secondary">{message}</p>
-      <a
-        href="/"
-        className="mt-2 rounded-cover bg-brand-text px-5 py-2.5 font-ui font-medium text-on-brand transition hover:bg-brand-hover dark:text-[color:var(--section-charcoal)]"
-      >
+    <main className="fx-error">
+      <p className="eyebrow">Error {status}</p>
+      <h1 className="display-4">{title}</h1>
+      <p className="lead">{message}</p>
+      <a href="/" className="cap-btn mt-2" data-variant="primary" data-size="lg">
         Back to Foxing
       </a>
     </main>
