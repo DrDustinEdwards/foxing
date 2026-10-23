@@ -60,7 +60,7 @@
     "bindings": [
       // The rate limiter: site-runtime's RateLimiter, src/rate-limit.ts.
       { "name": "MCP_RATE_LIMIT", "class_name": "McpRateLimit" },
-      // The append-only tool-call log, rule 12.4, src/audit-log.ts.
+      // The append-only tool-call log, rule 12.4, @dustinedwards/site-runtime/audit-log.
       { "name": "TOOL_CALL_LOG", "class_name": "ToolCallLog" }
     ]
   },

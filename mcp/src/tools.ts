@@ -25,10 +25,10 @@
  * log before and after (12.4).
  */
 
+import { appendAudit, loggedArgs, loggedResult, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";
 import { z } from "zod";
 
 import { ApiLegError, callAdmin, type ApiCallResult, type ApiEnv } from "./api-client";
-import { appendAudit, loggedArgs, loggedResult, type AuditEnv } from "./audit-log";
 import {
   authorizeCall,
   callerName,
