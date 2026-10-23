@@ -279,8 +279,8 @@ importers:
         specifier: github:DrDustinEdwards/site-api#v0.7.2
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/6b0f1f1a090950ba6bca37e2e11e5c19c4effc3b
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.8.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/040adaf9dec8b473550fb46cb53204e8cf949552
+        specifier: github:DrDustinEdwards/site-runtime#v0.9.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -324,9 +324,6 @@ importers:
         specifier: ^0.0.27
         version: 0.0.27
     devDependencies:
-      '@dustinedwards/devkit':
-        specifier: github:DrDustinEdwards/devkit#v0.9.0
-        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/6f4c67e69cc34285f2bdc63a1883912dc7f0c06e
       '@axe-core/playwright':
         specifier: ^4.12.1
         version: 4.12.1(playwright-core@1.61.1)
@@ -336,6 +333,9 @@ importers:
       '@cloudflare/vitest-plugin':
         specifier: ^1.0.0
         version: 1.4.5(@cloudflare/workers-types@5.20260706.1)(@types/node@20.19.41)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
+      '@dustinedwards/devkit':
+        specifier: github:DrDustinEdwards/devkit#v0.9.0
+        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/6f4c67e69cc34285f2bdc63a1883912dc7f0c06e
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -373,8 +373,8 @@ importers:
   packages/api:
     dependencies:
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.8.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/040adaf9dec8b473550fb46cb53204e8cf949552
+        specifier: github:DrDustinEdwards/site-runtime#v0.9.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9
       '@foxing/core':
         specifier: workspace:*
         version: link:../core
@@ -1298,6 +1298,11 @@ packages:
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/040adaf9dec8b473550fb46cb53204e8cf949552':
     resolution: {gitHosted: true, integrity: sha512-clAfu7J9fy1ul6hut7TXVMyDrses3rKBsxdKE4tj10hLULQW1Iuxtz0uJM+e8tweFpeHvEvwHXmHyY90y9k02g==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/040adaf9dec8b473550fb46cb53204e8cf949552}
     version: 0.8.0
+    hasBin: true
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9':
+    resolution: {gitHosted: true, integrity: sha512-A+hGowQCequ/ZmOSHGpL/6TvA4Co3GwLFW3uvfrW5y/sOd6UA5oql6JCR/UiFNQ3AWR19R21C8NOsFV3/sSBiQ==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9}
+    version: 0.9.0
     hasBin: true
 
   '@egjs/hammerjs@2.0.17':
@@ -8508,6 +8513,8 @@ snapshots:
       zod: 4.6.5
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/040adaf9dec8b473550fb46cb53204e8cf949552': {}
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/d264c9d95ba6fc9abc75017e2d07a002d80de4f9': {}
 
   '@egjs/hammerjs@2.0.17':
     dependencies:
