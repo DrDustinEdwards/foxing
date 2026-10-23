@@ -8,10 +8,10 @@
 import {
   createSiteApi,
   insidePrefix,
-  keysMatch,
   MIN_KEY_LENGTH,
   type RateLimiter,
 } from "@dustinedwards/site-api";
+import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import type { Context, Hono, Next } from "hono";
 import { journalSiteAdapter, type RenderDocument } from "./journal-adapter.server";
 
@@ -53,7 +53,7 @@ function handleCarrelRequest(
 
 /**
  * True when a request outside the prefix presents the Carrel key as its bearer token. Compared by
- * the package's own constant-time digest check; an unset or short key matches nothing.
+ * site-runtime's constant-time digest check; an unset or short key matches nothing.
  */
 async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<boolean> {
   if (insidePrefix(new URL(request.url).pathname)) return false;
@@ -62,7 +62,7 @@ async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<b
   if (!presented) return false;
   const key = env.CARREL_SITE_KEY?.trim() ?? "";
   if (key.length < MIN_KEY_LENGTH) return false;
-  return keysMatch(presented, key);
+  return safeEqual(presented, key);
 }
 
 /**
