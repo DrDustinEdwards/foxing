@@ -273,8 +273,8 @@ importers:
   apps/web:
     dependencies:
       '@dustinedwards/d1-dump':
-        specifier: github:DrDustinEdwards/d1-dump#v0.5.1
-        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/590299e2307ff62e479afd59b8479d2705a3edf0
+        specifier: github:DrDustinEdwards/d1-dump#v0.6.0
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/f18c254836e15690e196ccce8172d1402de79a82
       '@dustinedwards/site-api':
         specifier: github:DrDustinEdwards/site-api#v0.7.2
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/6b0f1f1a090950ba6bca37e2e11e5c19c4effc3b
@@ -1279,9 +1279,9 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/590299e2307ff62e479afd59b8479d2705a3edf0':
-    resolution: {gitHosted: true, integrity: sha512-exYLfdG332/F6lBvvlE7IqSMIeCsmKDdIPy8YdQuPuRKBxxuu8eSsq2AWwMi4oPAWWCsqgFLNaByY2CJPBAr8Q==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/590299e2307ff62e479afd59b8479d2705a3edf0}
-    version: 0.5.1
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/f18c254836e15690e196ccce8172d1402de79a82':
+    resolution: {gitHosted: true, integrity: sha512-7hJPqApB08dEg+rhuUZ/o7Yjl4QCr9IcasLWDH09DD3c2sv87HJNRfIn4mT3xlpdNV9e/aNtvoINUeytGiyI2w==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/f18c254836e15690e196ccce8172d1402de79a82}
+    version: 0.6.0
     engines: {node: '>=24.14.1'}
     hasBin: true
 
@@ -8502,7 +8502,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/590299e2307ff62e479afd59b8479d2705a3edf0': {}
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/f18c254836e15690e196ccce8172d1402de79a82': {}
 
   '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/6f4c67e69cc34285f2bdc63a1883912dc7f0c06e': {}
 

@@ -1,5 +1,4 @@
-// What the nightly dump must leave out and carry, and Foxing's own checks on it. Pure (no
-// bindings) so the tests can hand it a bad dump and watch each check fail.
+// What the nightly dump must leave out, carry and count (d1-dump's runCheckedBackup checks them).
 //
 // EXCLUDED on purpose, because each holds live credentials or one-time tokens. A backup copy
 // is one more place a credential could leak from, and restoring one revives it:
@@ -28,31 +27,6 @@ export const BACKUP_REQUIRED_TABLES = [
 ] as const;
 
 // Written by the operator, not by readers, so the count read straight after the dump matches
-// unless the dump lost rows. Reader-written tables can change between the two reads.
+// unless the dump lost rows. Reader-written tables can change between the two reads. A run whose
+// counted tables all dumped empty fails too: Foxing always has catalog books and journal posts.
 export const BACKUP_COUNTED_TABLES = ["books", "journal_posts"] as const;
-
-export type DumpSummary = {
-  tables: Array<{ name: string; rows: number }>;
-};
-
-/**
- * Foxing's own checks, run by d1-dump's runCheckedBackup after its standard ones (not empty,
- * nothing excluded present, every required table there). One message per failed check.
- */
-export function countProblems(dump: DumpSummary, liveCounts: Record<string, number>): string[] {
-  const problems: string[] = [];
-  const byName = new Map(dump.tables.map((t) => [t.name, t.rows]));
-  for (const name of BACKUP_COUNTED_TABLES) {
-    const dumped = byName.get(name);
-    const live = liveCounts[name];
-    if (dumped === undefined) continue; // reported as missing by the required-table check
-    if (live === undefined) problems.push(`no live count for ${name}`);
-    else if (dumped !== live) problems.push(`${name} dumped ${dumped} rows but has ${live}`);
-  }
-  // An emptied database dumps cleanly and matches its own empty counts, so the counts alone
-  // cannot catch it. Foxing always has catalog books and journal posts.
-  if (BACKUP_COUNTED_TABLES.every((n) => (byName.get(n) ?? 0) === 0)) {
-    problems.push("every counted table dumped empty");
-  }
-  return problems;
-}

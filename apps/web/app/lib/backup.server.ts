@@ -2,24 +2,12 @@
 // d1-dump writes one JSON object per table into the BACKUPS R2 bucket and works where
 // `wrangler d1 export` fails on our FTS5 tables. Restore and drill: the d1-dump README.
 import { type BackupHealth, backupHealth, runCheckedBackup } from "@dustinedwards/d1-dump";
-import {
-  BACKUP_COUNTED_TABLES,
-  BACKUP_EXCLUDE,
-  BACKUP_REQUIRED_TABLES,
-  countProblems,
-} from "./backup-checks";
-
-async function liveCounts(db: D1Database): Promise<Record<string, number>> {
-  const results = await db.batch<{ n: number }>(
-    BACKUP_COUNTED_TABLES.map((name) => db.prepare(`SELECT COUNT(*) AS n FROM "${name}"`)),
-  );
-  return Object.fromEntries(
-    BACKUP_COUNTED_TABLES.map((name, i) => [name, results[i]?.results[0]?.n ?? 0]),
-  );
-}
+import { BACKUP_COUNTED_TABLES, BACKUP_EXCLUDE, BACKUP_REQUIRED_TABLES } from "./backup-checks";
 
 /**
- * Dump, check, then mark complete and prune, by d1-dump's runCheckedBackup. A dump that fails its
+ * Dump, check, then mark complete and prune, by d1-dump's runCheckedBackup. Its `counted` check
+ * reads each counted table's live count straight after the dump and fails a run whose dumped rows
+ * differ, or whose counted tables all dumped empty. A dump that fails its
  * checks is left WITHOUT the marker (kept as evidence, never counted as the latest) and throws
  * BackupIncomplete, so the failure shows as a failed Cron invocation and the health age keeps
  * growing toward its 26 hour warning. Pruning keeps d1-dump's default retention: the newest
@@ -29,7 +17,7 @@ export async function runBackup(env: Env): Promise<void> {
   await runCheckedBackup(env.DB, env.BACKUPS, {
     exclude: [...BACKUP_EXCLUDE],
     required: [...BACKUP_REQUIRED_TABLES],
-    check: async (dump) => countProblems(dump, await liveCounts(env.DB)),
+    counted: [...BACKUP_COUNTED_TABLES],
   });
 }
 
