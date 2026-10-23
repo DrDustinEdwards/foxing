@@ -8,6 +8,8 @@
  * Free of MCP and OAuth imports so the grant logic is testable on its own.
  */
 
+import { isAdminUser } from "@dustinedwards/site-runtime/mcp-login";
+
 /** The Cloudflare Access identity carried on an OAuth grant, set at sign-in. */
 export interface Props extends Record<string, unknown> {
   /** The verified email from the Access ID token. */
@@ -33,20 +35,6 @@ export type Caller = { kind: "admin"; props: Props; scopes: readonly string[] };
 /** The audit name of a caller: the signed-in email, never a credential. */
 export function callerName(caller: Caller): string {
   return `access:${caller.props.email}`;
-}
-
-/**
- * Is this grant the single administrator's?
- *
- * `ADMIN_EMAIL` is the one email let in, compared without case. The email is
- * the one Cloudflare Access verified at sign-in, as in Capsid and Carrel.
- *
- * Fails CLOSED: an unset or blank value admits nobody.
- */
-export function isAdminUser(env: { ADMIN_EMAIL?: string }, user: { email?: unknown }): boolean {
-  const admin = (env.ADMIN_EMAIL ?? "").trim().toLowerCase();
-  if (!admin || typeof user.email !== "string") return false;
-  return user.email.trim().toLowerCase() === admin;
 }
 
 /**

@@ -2,7 +2,7 @@
  * A fake foxing Worker behind the FOXING binding, and a fake tool-call log.
  * The fake records every request so a test can assert exactly what was sent.
  */
-import type { AuditRow } from "../src/audit-log.ts";
+import type { AuditRow } from "@dustinedwards/site-runtime/audit-log";
 import type { Caller } from "../src/auth.ts";
 import type { ToolEnv } from "../src/tools.ts";
 

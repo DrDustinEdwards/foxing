@@ -5,9 +5,11 @@
  * grant is long lived and this is the boundary a request actually crosses.
  */
 
+import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
+import { isAdminUser } from "@dustinedwards/site-runtime/mcp-login";
+
 import type { ApiEnv } from "./api-client";
-import type { AuditEnv } from "./audit-log";
-import { isAdminUser, type Props } from "./auth";
+import type { Props } from "./auth";
 import type { LoginEnv } from "./login-handler";
 import { handleMcp, MCP_ROUTE } from "./mcp-handler";
 import { checkRateLimit, type RateLimitEnv } from "./rate-limit";
