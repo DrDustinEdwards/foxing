@@ -12,7 +12,7 @@ import {
 } from "~/lib/reader/settings";
 import type { LayerState, ReaderAnnotation } from "./reader-types";
 
-export function ChromeButton({
+function ChromeButton({
   children,
   onClick,
   pressed,
@@ -38,7 +38,7 @@ export function ChromeButton({
   );
 }
 
-export function LayerChip({
+function LayerChip({
   label,
   on,
   count,

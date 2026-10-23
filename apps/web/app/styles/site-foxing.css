@@ -1,5 +1,7 @@
-/* Foxing's per-site layer, written by Capsomer's tokens/sites.mjs from the entry below. Capsomer
-   v0.14.0 does not carry a foxing site yet, so the generated file sits here until a Capsomer release
+/* Foxing's per-site layer,
+written by Capsomer's tokens/sites.mjs from the entry below. Capsomer
+   v0.14.0 does not carry a foxing site yet,
+so the generated file sits here until a Capsomer release
    adds this entry to SITES; then this file goes and app.css imports "capsomer/site-foxing.css".
    It passes sites.mjs --check (Capsomer's WCAG pairs on these colours over the fox family).
 

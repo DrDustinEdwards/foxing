@@ -21,23 +21,7 @@
     grid-template-columns: 220px minmax(0, 1fr);
   }
 }
-.fx-admin-shell-card {
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.5rem;
-}
 
-.fx-book-picker-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
-  background-color: var(--ground);
-  padding-inline: 0.75rem;
-}
 .fx-book-picker-label {
   min-width: 0;
   font-family: var(--ui);
@@ -81,16 +65,12 @@
 .fx-confirm-change-value {
   color: var(--text);
 }
-.fx-confirm-change-text,
-.fx-admin-analytics-text,
 .fx-confirm-change-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
 }
 
-.fx-admin-analytics-grid,
-.fx-admin-analytics-caps,
 .fx-admin-analytics-box {
   overflow-x: auto;
 }
@@ -159,9 +139,6 @@
   color: var(--dim);
 }
 
-.fx-admin-journal-edit-link,
-.fx-admin-user-detail-link,
-.fx-admin-journal-edit-title,
 .fx-admin-journal-edit-caps {
   margin-left: 0.75rem;
   border-radius: 9999px;
@@ -184,15 +161,9 @@
   text-transform: uppercase;
   color: var(--dim);
 }
-.fx-admin-journal-edit-label,
-.fx-admin-journal-new-label {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: var(--dim);
-}
 
-.fx-admin-journal-row {
+.fx-admin-journal-row,
+.fx-notifications-row {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -400,4 +371,57 @@
 }
 .fx-confirm-dialog::backdrop {
   background: var(--fx-scrim);
+}
+
+.fx-confirm-change-text {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--muted);
+}
+.fx-admin-analytics-text {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--muted);
+}
+.fx-admin-analytics-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--dim);
+}
+.fx-admin-user-detail-link {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+  &:hover {
+    color: var(--accent-text);
+  }
+}
+.fx-admin-journal-edit-title {
+  font-family: var(--fx-display);
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  color: var(--text);
+}
+
+.fx-admin-analytics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-admin-journal-edit-link {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+  &:hover {
+    color: var(--accent-text);
+  }
 }

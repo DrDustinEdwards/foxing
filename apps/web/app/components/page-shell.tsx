@@ -32,7 +32,7 @@ const isCurrent = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
 /** Capsomer's links as React Router's. */
-export function renderLink({ href, children, ...rest }: LinkProps) {
+function renderLink({ href, children, ...rest }: LinkProps) {
   return (
     <Link to={href} {...rest}>
       {children}

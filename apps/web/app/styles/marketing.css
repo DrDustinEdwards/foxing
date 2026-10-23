@@ -72,21 +72,6 @@
   }
 }
 
-.fx-about-text,
-.fx-app-guide-text-2,
-.fx-features-text-2,
-.fx-app-guide-row,
-.fx-features-row,
-.fx-app-guide-link,
-.fx-app-guide-text,
-.fx-features-text,
-.fx-app-guide-section {
-  margin-bottom: 3.5rem;
-  scroll-margin-top: 6rem;
-}
-.fx-app-guide-title,
-.fx-features-title,
-.fx-app-guide-row-2,
 .fx-features-link {
   &:hover {
     text-decoration-line: underline;
@@ -121,12 +106,6 @@
   &:hover {
     text-decoration-line: underline;
   }
-}
-.fx-guide-text {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--muted);
 }
 .fx-guide-section {
   margin-bottom: 3.5rem;
@@ -167,4 +146,92 @@
   & > * + * {
     margin-top: 2rem;
   }
+}
+
+.fx-app-guide-text-2 {
+  font-family: var(--fx-body);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--muted);
+}
+.fx-features-text-2 {
+  font-family: var(--fx-body);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--muted);
+}
+.fx-app-guide-link {
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+.fx-app-guide-text {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-features-text {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-app-guide-section {
+  margin-bottom: 3.5rem;
+}
+.fx-app-guide-title {
+  font-family: var(--fx-display);
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--text);
+}
+.fx-features-title {
+  font-family: var(--fx-display);
+  font-size: 1.5rem;
+  line-height: 1.25;
+  color: var(--text);
+}
+.fx-app-guide-row-2 {
+  display: flex;
+  gap: 0.5rem;
+  font-family: var(--fx-body);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--muted);
+}
+
+.fx-about-text {
+  font-family: var(--fx-body);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--muted);
+}
+.fx-app-guide-row {
+  margin-bottom: 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-color: var(--line);
+  padding-bottom: 1.5rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--accent-text);
+}
+.fx-features-row {
+  margin-bottom: 3rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-bottom-width: 1px;
+  border-bottom-style: solid;
+  border-color: var(--line);
+  padding-bottom: 1.5rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--accent-text);
 }

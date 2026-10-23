@@ -5,7 +5,6 @@
   color: var(--accent-text);
   text-decoration-line: underline;
 }
-.fx-club-schedule-card,
 .fx-club-schedule-btn-2 {
   font-family: var(--ui);
   font-size: 0.75rem;
@@ -13,9 +12,6 @@
   color: var(--dim);
   text-decoration-line: underline;
 }
-.fx-club-schedule-box,
-.fx-club-schedule-caps,
-.fx-club-schedule-btn-3,
 .fx-club-schedule-list {
   & > * + * {
     margin-top: 0.375rem;
@@ -64,7 +60,8 @@
   background-color: var(--surface);
   padding: 0.75rem;
 }
-.fx-club-schedule-text-3 {
+.fx-club-schedule-text-3,
+.fx-u-profile-label-6 {
   font-family: var(--ui);
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -175,12 +172,6 @@
   color: var(--accent-text);
 }
 
-.fx-club-detail-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-}
 .fx-club-detail-text {
   max-width: 42rem;
   font-family: var(--fx-body);
@@ -218,7 +209,6 @@
   padding: 2.5rem;
 }
 
-.fx-club-new-text,
 .fx-club-new-form {
   & > * + * {
     margin-top: 1.25rem;
@@ -231,8 +221,8 @@
   font-weight: 500;
   color: var(--text);
 }
-.fx-club-new-input,
-.fx-club-new-input-2 {
+.fx-club-new-input-2,
+.fx-like-button-icon {
   height: 1rem;
   width: 1rem;
 }
@@ -323,7 +313,6 @@
   line-height: 1.25rem;
   color: var(--muted);
 }
-.fx-clubs-caps,
 .fx-clubs-card-2 {
   border-radius: var(--fx-radius-card);
   border: 1px dashed var(--line);
@@ -360,12 +349,6 @@
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--dim);
-}
-.fx-join-code-text-3 {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--crit);
 }
 
 .fx-pick-club-grid {
@@ -442,4 +425,53 @@
 }
 .fx-poll-option:disabled {
   cursor: default;
+}
+
+.fx-club-schedule-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-club-schedule-box {
+  & > * + * {
+    margin-top: 1rem;
+  }
+}
+.fx-club-schedule-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--dim);
+}
+.fx-club-schedule-btn-3 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+  text-decoration-line: underline;
+  &:hover {
+    color: var(--text);
+  }
+}
+.fx-club-new-input {
+  margin-top: 0.375rem;
+  width: 100%;
+}
+.fx-clubs-caps {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+
+.fx-club-new-text {
+  font-family: var(--fx-body);
+  color: var(--muted);
 }

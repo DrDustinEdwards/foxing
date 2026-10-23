@@ -148,7 +148,6 @@
   inline-size: min(22rem, 90vw);
 }
 
-.fx-book-shelves-picker-row,
 .fx-book-status-control-link {
   display: inline-flex;
 }
@@ -180,12 +179,6 @@
   flex-grow: 1;
 }
 
-.fx-grouped-results-text {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--dim);
-}
 .fx-grouped-results-caps {
   font-family: var(--mono);
   font-size: 0.6875rem;
@@ -240,7 +233,6 @@
   color: var(--dim);
 }
 
-.fx-awards-grid,
 .fx-awards-title {
   font-family: var(--fx-display);
   font-size: 1.25rem;
@@ -279,7 +271,8 @@
   flex-direction: column;
   gap: 0.625rem;
 }
-.fx-book-detail-title {
+.fx-book-detail-title,
+.fx-journal-post-title {
   font-family: var(--fx-display);
   font-size: 2.25rem;
   line-height: 1.25;
@@ -294,7 +287,9 @@
   line-height: 1.75rem;
   color: var(--muted);
 }
-.fx-book-detail-row {
+.fx-book-detail-row,
+.fx-journal-archive-row,
+.fx-vocabulary-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
@@ -438,7 +433,8 @@
   color: var(--dim);
 }
 
-.fx-find-next-book-row {
+.fx-find-next-book-row,
+.fx-club-detail-row {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
@@ -479,7 +475,8 @@
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }
-.fx-find-next-book-card-2 {
+.fx-find-next-book-card-2,
+.fx-library-card-2 {
   display: flex;
   flex-direction: column;
   border-radius: var(--fx-radius-card);
@@ -493,7 +490,8 @@
   flex-direction: column;
   padding-inline: 0.125rem;
 }
-.fx-find-next-book-title {
+.fx-find-next-book-title,
+.fx-journal-archive-title {
   font-family: var(--fx-display);
   font-size: 1rem;
   line-height: 1.375;
@@ -542,4 +540,29 @@
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--dim);
+}
+
+.fx-book-shelves-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.fx-awards-grid {
+  display: grid;
+  gap: 1rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-journal-archive-link {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+  &:hover {
+    color: var(--text);
+  }
 }
