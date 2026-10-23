@@ -16,6 +16,8 @@
  * do. It is never the client's OAuth token (no token passthrough, rule 12.2).
  */
 
+import { ApiLegError, callApi } from "@dustinedwards/site-runtime/mcp-server";
+
 export interface ApiEnv {
   /** Service binding to the `foxing` Worker. The only route to the app. */
   FOXING: Fetcher;
@@ -42,36 +44,16 @@ export interface ApiCallResult {
   details?: unknown;
 }
 
-export class ApiLegError extends Error {
-  readonly kind: "unconfigured" | "unreachable" | "malformed";
-
-  // A plain field, not a parameter property: Node runs these files by stripping
-  // types only, which cannot erase a parameter property.
-  constructor(message: string, kind: ApiLegError["kind"]) {
-    super(message);
-    this.name = "ApiLegError";
-    this.kind = kind;
-  }
-}
+export { ApiLegError };
 
 export const ACTOR_HEADER = "X-Foxing-Admin-Id";
-const USER_AGENT = "foxing-admin-mcp/0.1";
-
-function assertConfigured(env: Partial<ApiEnv>): asserts env is ApiEnv {
-  const unconfigured = (what: string) =>
-    new ApiLegError(
-      `The MCP server is not configured: ${what}. Not configured means not open.`,
-      "unconfigured",
-    );
-  if (!env.FOXING || typeof env.FOXING.fetch !== "function") {
-    throw unconfigured("the FOXING service binding is missing");
-  }
-  if (!env.SITE_ORIGIN) throw unconfigured("SITE_ORIGIN is unset");
-  if (!env.ADMIN_OPERATOR_TOKEN || env.ADMIN_OPERATOR_TOKEN.length < 32) {
-    throw unconfigured("ADMIN_OPERATOR_TOKEN is unset or shorter than 32 characters");
-  }
-  if (!env.FOXING_ADMIN_ID?.trim()) throw unconfigured("FOXING_ADMIN_ID is unset");
-}
+const LEG = {
+  binding: "FOXING",
+  token: "ADMIN_OPERATOR_TOKEN",
+  api: "The Foxing admin API",
+  userAgent: "foxing-admin-mcp/0.1",
+  require: ["FOXING_ADMIN_ID"],
+};
 
 export type Query = Record<string, string | number | undefined>;
 
@@ -85,57 +67,23 @@ export async function callAdmin(
   path: string,
   options: { query?: Query; body?: Record<string, unknown> } = {},
 ): Promise<ApiCallResult> {
-  assertConfigured(env);
-
-  const url = new URL(`/api/v1/admin${path}`, env.SITE_ORIGIN);
+  const query = new URLSearchParams();
   for (const [key, value] of Object.entries(options.query ?? {})) {
-    if (value !== undefined) url.searchParams.set(key, String(value));
+    if (value !== undefined) query.set(key, String(value));
   }
-  const headers = new Headers({
-    authorization: `Bearer ${env.ADMIN_OPERATOR_TOKEN}`,
-    [ACTOR_HEADER]: env.FOXING_ADMIN_ID.trim(),
-    accept: "application/json",
-    "user-agent": USER_AGENT,
+  const { status, ok, body } = await callApi(env, LEG, `/api/v1/admin${path}${query.size ? `?${query}` : ""}`, {
+    method,
+    headers: { [ACTOR_HEADER]: env.FOXING_ADMIN_ID?.trim() ?? "" },
+    json: options.body,
   });
-  if (options.body) headers.set("content-type", "application/json");
-
-  let response: Response;
-  try {
-    response = await env.FOXING.fetch(url.toString(), {
-      method,
-      headers,
-      body: options.body ? JSON.stringify(options.body) : undefined,
-    });
-  } catch (cause) {
-    throw new ApiLegError(
-      `The Foxing admin API could not be reached: ${cause instanceof Error ? cause.message : String(cause)}`,
-      "unreachable",
-    );
-  }
-
-  const raw = await response.text();
-  let parsed: unknown;
-  try {
-    parsed = raw ? JSON.parse(raw) : null;
-  } catch {
-    throw new ApiLegError(
-      `The Foxing admin API returned status ${response.status} with a body that is not JSON.`,
-      "malformed",
-    );
-  }
-
-  if (response.ok) return { status: response.status, ok: true, data: parsed };
+  if (ok) return { status, ok: true, data: body };
 
   // The API's error envelope: { error: { code, message, details? } } (packages/api/src/error.ts).
-  const envelope = (parsed as { error?: { code?: unknown; message?: unknown; details?: unknown } })
-    ?.error;
+  const envelope = (body as { error?: { code?: unknown; message?: unknown; details?: unknown } })?.error;
   return {
-    status: response.status,
+    status,
     ok: false,
-    error:
-      typeof envelope?.message === "string"
-        ? envelope.message
-        : `The Foxing admin API refused with status ${response.status}.`,
+    error: typeof envelope?.message === "string" ? envelope.message : `The Foxing admin API refused with status ${status}.`,
     code: typeof envelope?.code === "string" ? envelope.code : undefined,
     details: envelope?.details,
   };

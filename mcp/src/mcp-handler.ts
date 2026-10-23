@@ -2,14 +2,15 @@
  * The MCP server and its era routing.
  *
  * The primary handler is `legacy: "reject"`: stateless-native 2026-07-28. Prior
- * era traffic is diverted by one call into src/legacy-era.ts.
+ * era traffic is diverted by site-runtime's routeMcpEra, whose header carries the
+ * shim's removal condition: drop `isLegacyRequest` below to go modern-only.
  */
 
-import { McpServer } from "@modelcontextprotocol/server";
+import { routeMcpEra } from "@dustinedwards/site-runtime/mcp-server";
+import { isLegacyRequest, McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 
 import type { Caller } from "./auth";
-import { createLegacyEraHandler, isLegacyRequest } from "./legacy-era";
 import { invokeTool, TOOLS, type ToolEnv } from "./tools";
 
 export const MCP_ROUTE = "/mcp";
@@ -50,14 +51,10 @@ export async function handleMcp(
   ctx: ExecutionContext,
   caller: Caller | undefined,
 ): Promise<Response> {
-  const factory = buildServer(env, caller);
-
-  // --- the one legacy call site, deletable with src/legacy-era.ts -----------
-  // The predicate reads the body, so it gets a clone: the handler reads it too.
-  if (await isLegacyRequest(request.clone())) {
-    return createLegacyEraHandler(factory, MCP_ROUTE)(request, env, ctx);
-  }
-  // -------------------------------------------------------------------------
-
-  return createMcpHandler(factory, { route: MCP_ROUTE, legacy: "reject" })(request, env, ctx);
+  return routeMcpEra(request, env, ctx, {
+    factory: buildServer(env, caller),
+    options: { route: MCP_ROUTE },
+    createMcpHandler,
+    isLegacyRequest,
+  });
 }

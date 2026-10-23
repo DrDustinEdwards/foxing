@@ -7,19 +7,22 @@
 
 import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
 import { isAdminUser } from "@dustinedwards/site-runtime/mcp-login";
+import { checkRateLimit, refuse } from "@dustinedwards/site-runtime/mcp-server";
+import type { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
 import type { ApiEnv } from "./api-client";
 import type { Props } from "./auth";
 import type { LoginEnv } from "./login-handler";
 import { handleMcp, MCP_ROUTE } from "./mcp-handler";
-import { checkRateLimit, type RateLimitEnv } from "./rate-limit";
+
 
 export interface Env
   extends Partial<ApiEnv>,
-    Partial<RateLimitEnv>,
     Partial<AuditEnv>,
     Omit<LoginEnv, "OAUTH_PROVIDER"> {
   OAUTH_KV: KVNamespace;
+  /** The door's limiter (index.ts exports the Durable Object as McpRateLimit). */
+  MCP_RATE_LIMIT?: DurableObjectNamespace<RateLimiter>;
   /** The one public origin. Every access token is bound to its /mcp (RFC 8707). */
   PUBLIC_ORIGIN?: string;
   /** Comma-separated redirect URIs a dynamically registered client may use, matched exactly. */
@@ -29,18 +32,6 @@ export interface Env
 /** The configured origin, or "" when unset. There is no default: an unset origin serves nothing. */
 export function publicOrigin(env: Pick<Env, "PUBLIC_ORIGIN">): string {
   return (env.PUBLIC_ORIGIN?.trim() ?? "").replace(/\/+$/, "");
-}
-
-export function refuse(body: string, status: number, headers: Record<string, string> = {}): Response {
-  return new Response(body, {
-    status,
-    headers: {
-      "content-type": "text/plain; charset=utf-8",
-      "cache-control": "no-store",
-      "x-robots-tag": "noindex, nofollow",
-      ...headers,
-    },
-  });
 }
 
 export const apiHandler = {
@@ -61,7 +52,7 @@ export const apiHandler = {
         403,
       );
     }
-    const limit = await checkRateLimit(env, `admin:${props.email.toLowerCase()}`);
+    const limit = await checkRateLimit(env.MCP_RATE_LIMIT, `admin:${props.email.toLowerCase()}`);
     if (!limit.allowed) {
       return refuse(
         "Rate limited. This server allows 30 requests per 60 seconds. The Foxing admin API applies its own limit as well.",

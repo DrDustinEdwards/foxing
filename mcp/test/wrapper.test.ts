@@ -59,7 +59,7 @@ describe("imports", () => {
   test("src/ reaches nothing outside mcp/: no @foxing package, no ../../ path", () => {
     const dir = new URL("../src/", import.meta.url);
     const files = readdirSync(dir).filter((f) => f.endsWith(".ts"));
-    assert.ok(files.length >= 9, `read ${files.length} source files`);
+    assert.ok(files.length >= 7, `read ${files.length} source files`);
     let read = 0;
     for (const file of files) {
       const source = readFileSync(new URL(file, dir), "utf8");
