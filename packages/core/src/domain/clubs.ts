@@ -108,10 +108,8 @@ export async function deleteClub(db: Db, actor: EventActor, clubId: string): Pro
   if (club.creatorId !== actor.userId) {
     throw domainErrors.forbidden("Only the club creator can delete it.");
   }
-  // TODO(security-open-items #5): deleting a club created by a user is a destructive
-  // cascade (removes every member's posts). The account-deletion policy for authored
-  // club content is an OPEN decision; do NOT resolve it here. This path is an explicit
-  // creator action on their own club, which is in-scope; account-level cascade is not.
+  // An explicit creator action on their own club. Deleting an account instead hands the
+  // club to another member (deleteAccount in account.ts).
   await clubsRepo.deleteClub(db, clubId);
 }
 

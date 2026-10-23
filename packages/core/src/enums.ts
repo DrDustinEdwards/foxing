@@ -184,6 +184,7 @@ export const notificationTypeValues = tuple([
   "new_follower",
   "club_request",
   "club_approval",
+  "club_ownership",
   "thread_reply",
   "post_reply",
   "poll",

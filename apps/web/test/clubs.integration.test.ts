@@ -369,4 +369,69 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     });
     expect(res.status).toBe(403);
   });
+
+  it("deleting an account hands the club to the chosen member, keeps their posts, and a bad pick changes nothing", async () => {
+    await seedUser("leaver", "plus");
+    await seedUser("stayer", "free");
+    await seedUser("outsider2", "free");
+    const { body } = await createClub("leaver");
+    const clubId = body.club.id;
+    await call(`/clubs/${clubId}/join`, { method: "POST", user: "stayer" });
+    const threadRes = await call(`/clubs/${clubId}/threads`, {
+      method: "POST",
+      user: "stayer",
+      body: { title: "Chapter one" },
+    });
+    const { thread } = (await threadRes.json()) as { thread: { id: string } };
+    await call(`/threads/${thread.id}/posts`, {
+      method: "POST",
+      user: "stayer",
+      body: { content: "I loved it" },
+    });
+
+    const plan = await call("/account/clubs", { user: "leaver" });
+    const { clubs } = (await plan.json()) as {
+      clubs: { clubId: string; candidates: { userId: string }[]; suggested: string }[];
+    };
+    expect(clubs).toHaveLength(1);
+    expect(clubs[0].suggested).toBe("stayer");
+
+    // A pick who is not an active member is refused, and the batch never runs.
+    const bad = await call("/account", {
+      method: "DELETE",
+      user: "leaver",
+      body: { successors: { [clubId]: "outsider2" } },
+    });
+    expect(bad.status).toBe(422);
+    const db = createDb(env.DB);
+    expect(await db.select().from(schema.user).where(eq(schema.user.id, "leaver"))).toHaveLength(1);
+
+    const ok = await call("/account", {
+      method: "DELETE",
+      user: "leaver",
+      body: { successors: { [clubId]: "stayer" } },
+    });
+    expect(ok.status).toBe(204);
+    const [club] = await db.select().from(schema.clubs).where(eq(schema.clubs.id, clubId));
+    expect(club.creatorId).toBe("stayer");
+    const [member] = await db
+      .select()
+      .from(schema.clubMembers)
+      .where(and(eq(schema.clubMembers.clubId, clubId), eq(schema.clubMembers.userId, "stayer")));
+    expect(member.role).toBe("owner");
+    expect(
+      await db.select().from(schema.clubPosts).where(eq(schema.clubPosts.authorId, "stayer")),
+    ).toHaveLength(1);
+    const notes = await db
+      .select()
+      .from(schema.notifications)
+      .where(
+        and(
+          eq(schema.notifications.userId, "stayer"),
+          eq(schema.notifications.type, "club_ownership"),
+        ),
+      );
+    expect(notes).toHaveLength(1);
+    expect(await db.select().from(schema.user).where(eq(schema.user.id, "leaver"))).toHaveLength(0);
+  });
 });

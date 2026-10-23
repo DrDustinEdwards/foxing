@@ -441,17 +441,94 @@ export function DataSection() {
 }
 
 const CONFIRM_PHRASE = "delete my account";
+const DELETE_CLUB = "";
+
+type ClubHandover = {
+  clubId: string;
+  name: string;
+  candidates: { userId: string; name: string; role: string }[];
+  suggested: string | null;
+};
+
+/** Clubs the user created: each passes to a member they pick before the account goes, so
+ *  their leaving does not delete everyone else's discussion. */
+function ClubHandoverFields({
+  clubs,
+  choice,
+  onChoose,
+}: {
+  clubs: ClubHandover[];
+  choice: Record<string, string>;
+  onChoose: (clubId: string, userId: string) => void;
+}) {
+  if (clubs.length === 0) return null;
+  return (
+    <fieldset className="mt-4 space-y-3">
+      <legend className="font-ui text-sm text-secondary">
+        You created {clubs.length === 1 ? "a club" : `${clubs.length} clubs`}. Choose who takes each
+        one over, so its members keep their discussions.
+      </legend>
+      {clubs.map((club) =>
+        club.candidates.length === 0 ? (
+          <p key={club.clubId} className="font-ui text-sm text-secondary">
+            <span className="font-medium text-primary">{club.name}</span> has no other members, so
+            it will be deleted with your account.
+          </p>
+        ) : (
+          <label key={club.clubId} className="block font-ui text-sm">
+            <span className="font-medium text-primary">{club.name}</span>
+            <select
+              value={choice[club.clubId] ?? club.suggested ?? DELETE_CLUB}
+              onChange={(e) => onChoose(club.clubId, e.target.value)}
+              className={`${inputClass} mt-1`}
+            >
+              {club.candidates.map((m) => (
+                <option key={m.userId} value={m.userId}>
+                  {m.name}
+                  {m.role === "moderator" ? " (moderator)" : ""}
+                </option>
+              ))}
+              <option value={DELETE_CLUB}>Nobody: delete the club and all its posts</option>
+            </select>
+          </label>
+        ),
+      )}
+    </fieldset>
+  );
+}
 
 export function DangerSection() {
   const [confirm, setConfirm] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [clubs, setClubs] = useState<ClubHandover[] | null>(null);
+  const [choice, setChoice] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch("/api/v1/account/clubs")
+      .then(async (res) => {
+        if (!res.ok) throw new Error(String(res.status));
+        const data = (await res.json()) as { clubs: ClubHandover[] };
+        setClubs(data.clubs);
+      })
+      .catch(() => setError("Could not load your clubs. Reload the page before deleting."));
+  }, []);
 
   async function remove() {
     setPending(true);
     setError(null);
+    const successors: Record<string, string | null> = {};
+    for (const club of clubs ?? []) {
+      if (club.candidates.length === 0) continue;
+      const picked = choice[club.clubId] ?? club.suggested ?? DELETE_CLUB;
+      successors[club.clubId] = picked === DELETE_CLUB ? null : picked;
+    }
     try {
-      const res = await fetch("/api/v1/account", { method: "DELETE" });
+      const res = await fetch("/api/v1/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ successors }),
+      });
       if (!res.ok) {
         setError("Could not delete your account. Try again.");
         setPending(false);
@@ -475,6 +552,11 @@ export function DangerSection() {
         <span className="font-medium text-primary"> {CONFIRM_PHRASE} </span>
         to confirm.
       </p>
+      <ClubHandoverFields
+        clubs={clubs ?? []}
+        choice={choice}
+        onChoose={(clubId, userId) => setChoice((c) => ({ ...c, [clubId]: userId }))}
+      />
       <input
         value={confirm}
         onChange={(e) => setConfirm(e.target.value)}
@@ -486,7 +568,7 @@ export function DangerSection() {
         <button
           type="button"
           onClick={remove}
-          disabled={pending || confirm.trim().toLowerCase() !== CONFIRM_PHRASE}
+          disabled={pending || clubs === null || confirm.trim().toLowerCase() !== CONFIRM_PHRASE}
           className="rounded-md border border-error px-4 py-2 font-ui text-sm text-error hover:bg-error/10 disabled:opacity-40"
         >
           {pending ? "Deleting..." : "Delete my account"}
