@@ -1,10 +1,10 @@
 name: Page weight (warn-only)
 
 # JavaScript and CSS weight per route of apps/web (gzip), from a production build,
-# compared with scripts/no-bloat/baseline.json. WARN-ONLY (capsid decisions,
-# 2026-10-01, "no bloat, as a standing plan"): the report step is continue-on-error,
-# so a heavier route never fails the job and never blocks a merge. The step exits
-# 1 when a route grew past the threshold and 2 when it could not run (see Outcome).
+# compared with the baseline in .route-weight.json by devkit-route-weight. WARN-ONLY
+# (capsid decisions, 2026-10-01, "no bloat, as a standing plan"): a route grown past
+# the threshold is a warning and the step passes. It exits 1 only when it could not
+# run (no build); the step is continue-on-error, so even that never blocks a merge.
 #
 # Separate from ci-cf.yml so it runs while that workflow's Lint (biome) step is
 # red on main. The paths are what the web client bundle is built from: apps/web
@@ -18,8 +18,7 @@ on:
       - "package.json"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
-      - "scripts/no-bloat/page-weight.mjs"
-      - "scripts/no-bloat/baseline.json"
+      - ".route-weight.json"
       - ".github/workflows/page-weight.yml"
       - "!apps/web/test/**"
       - "!apps/web/e2e/**"
@@ -52,7 +51,7 @@ jobs:
       - name: Stage wrangler config
         run: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc
       # continue-on-error here too: a broken build is ci-cf.yml's to report. The
-      # report step then exits 2 (no build) and says so.
+      # report step then exits 1 (no build) and says so.
       - name: Build web
         id: build
         continue-on-error: true
