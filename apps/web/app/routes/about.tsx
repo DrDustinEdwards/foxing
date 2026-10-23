@@ -1,6 +1,7 @@
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { HELLO_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/about";
 
@@ -9,9 +10,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(3600, 604800);
-}
+export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return buildMeta({
@@ -38,8 +37,8 @@ export default function About() {
         </p>
         <p className="mt-4 font-body text-base text-secondary">
           Built by Dustin Edwards. One person, one inbox. Email{" "}
-          <a href="mailto:hello@foxing.app" className="text-brand-text hover:underline">
-            hello@foxing.app
+          <a href={`mailto:${HELLO_EMAIL}`} className="text-brand-text hover:underline">
+            {HELLO_EMAIL}
           </a>{" "}
           with anything.
         </p>

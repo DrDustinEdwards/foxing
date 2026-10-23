@@ -54,9 +54,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin, filters, result, genres };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(1800, 86400);
-}
+export const headers = () => publicCacheHeaders(1800, 86400);
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Books | Foxing" }];

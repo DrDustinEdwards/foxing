@@ -1,44 +1,11 @@
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { catalogRepo } from "@foxing/core";
-import { ImageResponse } from "workers-og";
 import { edgeCache } from "~/lib/cache.server";
 import { coverSrc } from "~/lib/images";
 import { loaderBase } from "~/lib/loader.server";
+import { loadOgFonts, renderOgPng } from "~/lib/og.server";
 import type { Route } from "./+types/og-book";
-import { FONT_CACHE_ORIGIN, OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
-
-const WIDTH = 1200;
-const HEIGHT = 630;
-
-/**
- * Load a font satori can use. A legacy UA makes Google Fonts serve WOFF (satori
- * supports ttf/otf/woff, not woff2). Cached at the edge for a year.
- */
-async function loadFont(family: string, weight: number): Promise<ArrayBuffer | null> {
-  const key = `${FONT_CACHE_ORIGIN}/${family}-${weight}.font`;
-  const cache = edgeCache();
-  const hit = await cache.match(key);
-  if (hit) return hit.arrayBuffer();
-  try {
-    const css = await fetch(
-      `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weight}`,
-      { headers: { "User-Agent": "Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1)" } },
-    ).then((r) => r.text());
-    const url = css.match(
-      /src:\s*url\((.+?)\)\s*format\(['"]?(?:woff|truetype|opentype)['"]?\)/,
-    )?.[1];
-    if (!url) return null;
-    const res = await fetch(url);
-    const buf = await res.arrayBuffer();
-    await cache.put(
-      key,
-      new Response(buf, { headers: { "Cache-Control": "public, max-age=31536000" } }),
-    );
-    return buf;
-  } catch {
-    return null;
-  }
-}
+import { OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 
 async function coverDataUri(url: string): Promise<string | null> {
   try {
@@ -68,12 +35,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const cached = await cache.match(cacheKey);
   if (cached) return cached;
 
-  const [display, ui, cover] = await Promise.all([
-    loadFont("Fraunces", 600),
-    loadFont("DM Sans", 500),
+  const [fonts, cover] = await Promise.all([
+    loadOgFonts(),
     book.coverUrl ? coverDataUri(book.coverUrl) : Promise.resolve(null),
   ]);
 
+  const [display, ui] = fonts;
   // No usable font: fall back to the cover image (or 302 home) so crawlers still get art.
   if (!display && !ui) {
     return Response.redirect(book.coverUrl ?? SITE_ORIGIN, 302);
@@ -101,27 +68,9 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     coverBlock +
     `</div>`;
 
-  const fonts = [
-    display
-      ? { name: "Fraunces", data: display, weight: 600 as const, style: "normal" as const }
-      : null,
-    ui ? { name: "DM Sans", data: ui, weight: 500 as const, style: "normal" as const } : null,
-  ].filter((f): f is NonNullable<typeof f> => f !== null);
-
-  try {
-    const image = new ImageResponse(html, { width: WIDTH, height: HEIGHT, fonts });
-    // Materialize the PNG so any render error is caught here (satori/resvg run async).
-    const png = await new Response(image.body).arrayBuffer();
-    const response = new Response(png, {
-      headers: {
-        "Content-Type": "image/png",
-        "Cache-Control": "public, max-age=0, s-maxage=604800, immutable",
-      },
-    });
-    await cache.put(cacheKey, response.clone());
-    return response;
-  } catch {
-    // Render failed: fall back to the cover (or home) so crawlers still get an image.
-    return Response.redirect(book.coverUrl ?? SITE_ORIGIN, 302);
-  }
+  // Render failed: fall back to the cover (or home) so crawlers still get an image.
+  return (
+    (await renderOgPng(html, fonts, cacheKey)) ??
+    Response.redirect(book.coverUrl ?? SITE_ORIGIN, 302)
+  );
 }

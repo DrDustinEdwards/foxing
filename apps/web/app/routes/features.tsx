@@ -5,7 +5,7 @@
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/features";
 
@@ -14,9 +14,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(3600, 604800);
-}
+export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return buildMeta({

@@ -1,7 +1,7 @@
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { catalogRepo } from "@foxing/core";
 import { SITE_NAME, absoluteUrl } from "~/lib/seo";
-import { loaderBase } from "~/lib/loader.server";
+import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import type { Route } from "./+types/journal-rss";
 
 // Resource route (loader only, no component): serves the Journal RSS 2.0 feed.
@@ -39,7 +39,7 @@ ${items}
   return new Response(body, {
     headers: {
       "Content-Type": "application/rss+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=1800, stale-while-revalidate=86400",
+      ...publicCacheHeaders(1800, 86400),
     },
   });
 }

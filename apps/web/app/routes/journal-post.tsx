@@ -3,7 +3,7 @@ import { marked } from "marked";
 import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
 
@@ -42,9 +42,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(600, 86400);
-}
+export const headers = listingPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Essay not found | Foxing" }];

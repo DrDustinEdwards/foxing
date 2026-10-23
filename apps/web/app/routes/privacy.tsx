@@ -5,7 +5,8 @@
 // features ship, phrased in the future so nothing overstates today.
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { PRIVACY_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/privacy";
 
@@ -16,9 +17,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(3600, 604800);
-}
+export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Privacy | Foxing" }];
@@ -99,8 +98,8 @@ export default function Privacy() {
           </Section>
 
           <Section heading="Contact">
-            <a href="mailto:privacy@foxing.app" className="text-brand-text hover:underline">
-              privacy@foxing.app
+            <a href={`mailto:${PRIVACY_EMAIL}`} className="text-brand-text hover:underline">
+              {PRIVACY_EMAIL}
             </a>
           </Section>
         </div>

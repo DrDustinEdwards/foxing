@@ -6,7 +6,7 @@ import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
 import { Button, Container, Eyebrow } from "~/components/ui";
 import { getAuth } from "~/lib/auth.server";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/marketing";
 
@@ -74,9 +74,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { origin, pick, books: browse.books, total: browse.total, posts: journal.posts };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders(600, 86400);
-}
+export const headers = listingPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return [

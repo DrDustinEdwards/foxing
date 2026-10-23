@@ -2,7 +2,7 @@ import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { catalogRepo } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
-import { loaderBase } from "~/lib/loader.server";
+import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
 
 type Url = { loc: string; lastmod?: string; priority?: string };
@@ -79,7 +79,7 @@ ${urls.map((u) => urlTag(origin, u)).join("\n")}
   return new Response(body, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400",
+      ...catalogPageHeaders(),
     },
   });
 }

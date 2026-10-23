@@ -22,9 +22,16 @@ export function affiliateConfig(env: Env): AffiliateConfig {
   };
 }
 
-/** Cache-Control for public catalog pages: short edge TTL + long stale-while-revalidate. */
-export function publicCacheHeaders(sMaxAge = 3600, swr = 86400): HeadersInit {
+/** Cache-Control for public pages: short edge TTL + long stale-while-revalidate. */
+export function publicCacheHeaders(sMaxAge: number, swr: number) {
   return {
     "Cache-Control": `public, max-age=0, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`,
   };
 }
+
+/** Catalog pages (books, authors, book of the month): an hour at the edge, a day stale. */
+export const catalogPageHeaders = () => publicCacheHeaders(3600, 86400);
+/** Pages that change rarely (about, terms, guides, awards, picks): an hour, a week stale. */
+export const staticPageHeaders = () => publicCacheHeaders(3600, 604800);
+/** The journal and the marketing home: ten minutes at the edge, a day stale. */
+export const listingPageHeaders = () => publicCacheHeaders(600, 86400);

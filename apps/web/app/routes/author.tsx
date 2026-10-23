@@ -2,7 +2,7 @@ import { catalogRepo } from "@foxing/core";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { absoluteUrl, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/author";
 
@@ -13,9 +13,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   return { origin, author };
 }
 
-export function headers(): HeadersInit {
-  return publicCacheHeaders();
-}
+export const headers = catalogPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Author not found | Foxing" }];
