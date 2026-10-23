@@ -23,11 +23,12 @@
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
 
-import { apiHandler, publicOrigin, refuse, type Env } from "./api-handler";
+import { checkRateLimit, refuse } from "@dustinedwards/site-runtime/mcp-server";
+
+import { apiHandler, publicOrigin, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
 import { defaultHandler } from "./login-handler";
 import { MCP_ROUTE } from "./mcp-handler";
-import { checkRateLimit } from "./rate-limit";
 
 export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
@@ -54,14 +55,14 @@ function providerFor(env: Env): OAuthProvider<Env> {
       defaultHandler: defaultHandler as unknown as ExportedHandler<Env>,
       authorizeEndpoint: "/authorize",
       tokenEndpoint: "/token",
-      scopesSupported: [...SCOPES],
+      scopesSupported: SCOPES.all,
       // AUDIENCE BINDING, rule 12.2 and RFC 8707: every grant and token is
       // pinned to exactly this server's /mcp. Nothing is passed through; the
       // API leg uses ADMIN_OPERATOR_TOKEN, never the client's token.
       resourceMetadata: {
         resource: `${origin}${MCP_ROUTE}`,
         authorization_servers: [origin],
-        scopes_supported: [...SCOPES],
+        scopes_supported: SCOPES.all,
         resource_name: "Foxing Admin",
       },
       // Rule 13. CIMD for Claude, Claude Code and ChatGPT, which send their
@@ -96,7 +97,7 @@ export default {
     }
     if (url.pathname === "/register") {
       const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
-      const limit = await checkRateLimit(env, `register:${ip}`, REGISTRATIONS_PER_MINUTE);
+      const limit = await checkRateLimit(env.MCP_RATE_LIMIT, `register:${ip}`, REGISTRATIONS_PER_MINUTE);
       if (!limit.allowed) {
         return refuse(
           `Rate limited. This server allows ${REGISTRATIONS_PER_MINUTE} client registrations per minute per address.`,
