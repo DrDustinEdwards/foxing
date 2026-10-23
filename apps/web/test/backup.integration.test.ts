@@ -1,8 +1,8 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BACKUP_EXCLUDE } from "../app/lib/backup-checks";
-import { runBackup } from "../app/lib/backup.server";
-import { healthResponse } from "../app/lib/health.server";
+import { backupStatus, runBackup } from "../app/lib/backup.server";
+import { healthResponse } from "@dustinedwards/site-runtime/health";
 
 // Real D1 (with the real migrations, FTS5 tables and triggers included) and real R2, in
 // Miniflare. One test per behaviour: a good run, an emptied database, a stale run, and the
@@ -83,7 +83,11 @@ async function keys(): Promise<string[]> {
 }
 
 async function health(at?: Date) {
-  const res = await healthResponse(workerEnv, at);
+  const res = await healthResponse({
+    ping: () => workerEnv.DB.prepare("SELECT 1").first(),
+    backup: () => backupStatus(workerEnv, at),
+    now: at,
+  });
   return {
     status: res.status,
     body: (await res.json()) as {
