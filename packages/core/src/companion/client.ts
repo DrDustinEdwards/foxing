@@ -19,9 +19,12 @@ export type CompanionCallArgs = {
 
 export type CompanionCaller = (args: CompanionCallArgs) => AsyncIterable<CompanionStreamEvent>;
 
-/** Real Anthropic-backed caller. Constructed once in the Worker from env.ANTHROPIC_API_KEY. */
-export function createAnthropicCaller(apiKey: string): CompanionCaller {
-  const client = new Anthropic({ apiKey });
+/** Where the calls go: AI Gateway or Anthropic directly, as site-runtime's anthropicRoute decides. */
+export type AnthropicRoute = { baseURL: string; headers: Record<string, string> };
+
+/** Real Anthropic-backed caller. Constructed in the Worker from env.ANTHROPIC_API_KEY and its route. */
+export function createAnthropicCaller(apiKey: string, route?: AnthropicRoute): CompanionCaller {
+  const client = new Anthropic({ apiKey, baseURL: route?.baseURL, defaultHeaders: route?.headers });
 
   return async function* call({ model, system, messages, maxTokens }) {
     const stream = client.messages.stream({
