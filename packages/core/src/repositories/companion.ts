@@ -1,6 +1,6 @@
 // Companion persistence: per-book conversation threads/messages, and the free-cached
 // catalog generator output. All companion data access goes through here.
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { bookAiCache, companionMessages, companionThreads } from "../schema";
 
@@ -54,7 +54,9 @@ export async function listRecentMessages(
     .select()
     .from(companionMessages)
     .where(eq(companionMessages.threadId, threadId))
-    .orderBy(desc(companionMessages.createdAt))
+    // Two messages saved in the same millisecond tie on created_at, and the nanoid id is
+    // random, so SQLite's rowid (insertion order) breaks the tie.
+    .orderBy(desc(companionMessages.createdAt), desc(sql`rowid`))
     .limit(limit);
   return rows.reverse();
 }

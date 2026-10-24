@@ -1,5 +1,6 @@
-// Hono environment for the mounted API. Bindings are bare (DB, APP_KV, rate
-// limiters) per capsid/conventions.md; Variables carry the resolved request context.
+// Hono environment for the mounted API. Bindings are bare (DB, APP_KV, the rate
+// limiter) per capsid/conventions.md; Variables carry the resolved request context.
+import type { limit } from "@dustinedwards/site-runtime/rate-limit";
 import type {
   BillingClient,
   BillingPriceConfig,
@@ -21,10 +22,8 @@ export type ClubLiveHub = {
 export type Bindings = {
   DB: D1Database;
   APP_KV: KVNamespace;
-  // Workers rate-limiting bindings (spec-cf-api middleware pipeline).
-  AUTH_RL: RateLimit;
-  WRITE_RL: RateLimit;
-  COMPANION_RL: RateLimit;
+  // site-runtime's RateLimiter Durable Object (middleware/rate-limit.ts).
+  RATE_LIMITER?: Parameters<typeof limit>[0];
   // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
   // every bearer request to /admin/* is refused (operator.ts).
   ADMIN_OPERATOR_TOKEN?: string;
