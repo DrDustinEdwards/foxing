@@ -68,6 +68,39 @@ test.describe("onboarding (ephemeral account)", () => {
     // numbers, and underscores."), so match a prefix, not the full string.
     const username = `e2eonb${Date.now().toString(36)}`;
     await page.getByLabel(/^username/i).fill(username);
+    // TEMP diagnostics for the CI-only hang on this click; removed once it is understood.
+    page.on("console", (m) => console.log(`[console ${m.type()}] ${m.text()}`));
+    page.on("pageerror", (e) => console.log(`[pageerror] ${e.message}`));
+    console.log(
+      "[diag]",
+      JSON.stringify(
+        await page.evaluate(async () => {
+          const btn = [...document.querySelectorAll("button")].find(
+            (b) => b.textContent === "Continue",
+          );
+          const box = () => JSON.stringify(btn?.getBoundingClientRect());
+          const raf = await Promise.race([
+            new Promise((r) => requestAnimationFrame(() => r("raf ok"))),
+            new Promise((r) => setTimeout(() => r("raf stalled"), 2000)),
+          ]);
+          const b1 = box();
+          await new Promise((r) => setTimeout(r, 300));
+          return {
+            raf,
+            b1,
+            b2: box(),
+            visibility: document.visibilityState,
+            animations: document
+              .getAnimations()
+              .map(
+                (a) =>
+                  `${(a as CSSAnimation).animationName ?? a.constructor.name} on ${(a.effect as KeyframeEffect)?.target?.nodeName}.${((a.effect as KeyframeEffect)?.target as Element)?.className}`,
+              ),
+            dialogs: document.querySelectorAll("dialog[open], [popover]").length,
+          };
+        }),
+      ),
+    );
     await page.getByRole("button", { name: /^continue$/i }).click();
 
     // Step 2: the starter-book handoff.
