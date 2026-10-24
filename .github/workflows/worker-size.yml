@@ -22,8 +22,6 @@ jobs:
     uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@9458af9d1521d77ed5bca0f7454c07eea3869221 # v0.11.0
     with:
       package-manager: pnpm
-      # The pnpm store moves out of node_modules, where action-setup puts it: Capsomer's git-hosted prepare build fails
-      # its typecheck (TS2883) when its temp folder sits under a node_modules path. Same fix as ci-cf.yml.
-      install: pnpm config set store-dir ~/.pnpm-store && NPM_CONFIG_ALLOW_GIT=root pnpm install --frozen-lockfile
+      install: NPM_CONFIG_ALLOW_GIT=root pnpm install --frozen-lockfile
       working-directory: apps/web
       prepare: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc && pnpm --filter web build
