@@ -23,7 +23,8 @@ async function handleFromMe(page: Page): Promise<string> {
 
 // Log a book with a review + visibility, entirely through the visible diary form.
 async function logReview(page: Page, reviewText: string, visibility: string) {
-  await page.goto("/diary/new");
+  // A fill before hydration never reaches the picker's state, so no results would come.
+  await page.goto("/diary/new", { waitUntil: "networkidle" });
   await page.getByLabel(/find the book to log/i).fill("the");
   // Pick the first suggestion from the picker's own result list (the page header has
   // buttons of its own, so "the first button on the page" is never a suggestion).

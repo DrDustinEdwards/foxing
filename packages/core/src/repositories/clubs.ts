@@ -34,6 +34,8 @@ export type ClubScheduleRow = typeof clubSchedule.$inferSelect;
 // Join codes are short, unambiguous, and URL/deep-link safe (no lookalike chars).
 const joinCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const makeJoinCode = customAlphabet(joinCodeAlphabet, 10);
+// nanoid's own alphabet has "_" and "-", which put "_" or "--" into a club's URL.
+const makeSlugSuffix = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
 
 /** A fresh, collision-resistant invite code. */
 export function generateJoinCode(): string {
@@ -47,7 +49,7 @@ function slugify(name: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
   // Suffix guarantees uniqueness without a collision-retry loop.
-  return `${base || "club"}-${nanoid(6).toLowerCase()}`;
+  return `${base || "club"}-${makeSlugSuffix()}`;
 }
 
 // -- Clubs ------------------------------------------------------------------
