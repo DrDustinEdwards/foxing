@@ -1,19 +1,16 @@
+import { NOTIFICATION_LABELS, useMe, useSetNotificationPrefs, useSetVisibility } from '@foxing/client'
+import type * as W from '@foxing/types'
 import { useCallback, useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  Alert,
-  Share,
-  Modal,
-} from 'react-native'
+import { View, Text, Pressable, ScrollView, Share, Modal } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import * as DocumentPicker from 'expo-document-picker'
+import { File, Paths } from 'expo-file-system'
+import * as Sharing from 'expo-sharing'
 import { CaretLeft, Trash } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
-import { reportWriteError } from '@/lib/db-write'
+import { api } from '@/lib/api'
+import { importCsv, type ImportResult, type ImportSource } from '@/lib/import'
 import { rescheduleAll } from '@/lib/local-notifications'
 import { getHapticsEnabled, setHapticsEnabled } from '@/lib/haptics'
 import {
@@ -24,56 +21,34 @@ import {
   getUserPrefs,
   setUserPrefs,
 } from '@/lib/user-prefs'
-import * as DocumentPicker from 'expo-document-picker'
-import * as FileSystem from 'expo-file-system/legacy'
-import { importFromStoryGraph } from '@/lib/import'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { LinkRow, MetaHeader, Section, SegmentedRow, TimeRow, ToggleRow } from '@/components/settings/settings-rows'
-import { csvEscape, escapeIlike, mapShelf, parseGoodreadsCsv } from '@/lib/goodreads-import'
+import { ChangeEmailSheet, DeleteAccountSheet, LinkedAccounts } from '@/components/settings/account-sheets'
 
 const APP_VERSION = '1.0.0'
-const NOTIFICATION_PREFS_KEY = 'notification_prefs'
+// Device-only settings. The account's own (visibility, push switches, quiet hours) live
+// on the server through /me, the same ones the web settings page edits.
+const LOCAL_REMINDERS_KEY = 'notification_prefs'
 const READING_DEFAULTS_KEY = 'reading_defaults'
-const ANON_HIGHLIGHTS_KEY = 'anonymous_highlights'
-// Reader-adjacent accessibility prefs live here for now; the reader can
-// pick them up later. Stored locally so we don't have to widen UserPrefs.
 const A11Y_HIGH_CONTRAST_KEY = 'a11y_high_contrast'
 const A11Y_REDUCE_MOTION_KEY = 'a11y_reduce_motion'
 const TTS_SPEED_KEY = 'tts_speed'
 
-type ProfileVisibility = 'public' | 'followers' | 'private'
-
-interface NotificationPrefs {
+/** What lib/local-notifications schedules on the device. streakAtRisk follows the
+ *  account's "streak" push switch, so one toggle governs streak nudges everywhere. */
+interface LocalReminders {
   master: boolean
   dailyReminder: boolean
   reminderTime: string
   streakAtRisk: boolean
-  newClubDiscussion: boolean
-  someoneRepliedToComment: boolean
-  newFollower: boolean
-  badgeEarned: boolean
-  friendFinishedBook: boolean
-  quietStart: string
-  quietEnd: string
 }
 
-// Per task.md Section 3h: only streak-risk is ON by default. Everything else
-// is opt-in so a new user isn't ambushed with notifications they didn't ask
-// for. The first-streak prompt (lib/streaks.ts) handles the daily reminder
-// opt-in conversation separately.
-const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
+const DEFAULT_LOCAL_REMINDERS: LocalReminders = {
   master: true,
   dailyReminder: false,
   reminderTime: '20:00',
   streakAtRisk: true,
-  newClubDiscussion: false,
-  someoneRepliedToComment: false,
-  newFollower: false,
-  badgeEarned: false,
-  friendFinishedBook: false,
-  quietStart: '22:00',
-  quietEnd: '08:00',
 }
 
 interface ReadingDefaults {
@@ -90,74 +65,45 @@ const DEFAULT_READING_DEFAULTS: ReadingDefaults = {
   keepAwake: false,
 }
 
+type Sheet = 'email' | 'delete' | null
+
 export default function SettingsScreen() {
   const colors = useColors()
   const router = useRouter()
+  const me = useMe().data
+  const profile = me?.profile ?? null
+  const setVisibility = useSetVisibility()
+  const setPrefs = useSetNotificationPrefs()
 
-  const [email, setEmail] = useState<string | null>(null)
-  const [userId, setUserId] = useState<string | null>(null)
-  const [visibility, setVisibility] = useState<ProfileVisibility>('public')
-  const [progressPublic, setProgressPublic] = useState(true)
-  const [anonHighlights, setAnonHighlights] = useState(false)
   const [hapticsOn, setHapticsOn] = useState(true)
   const [readingDefaults, setReadingDefaults] = useState<ReadingDefaults>(DEFAULT_READING_DEFAULTS)
-  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(DEFAULT_NOTIFICATION_PREFS)
-  const [importResult, setImportResult] = useState<{ imported: number; skipped: number } | null>(null)
-  const [importBusy, setImportBusy] = useState(false)
-  // Which source the most recent import came from, drives the result modal
-  // title so users see "StoryGraph import complete" instead of a generic message.
-  const [importSource, setImportSource] = useState<'Goodreads' | 'StoryGraph'>('Goodreads')
-  const [busy, setBusy] = useState(false)
+  const [reminders, setReminders] = useState<LocalReminders>(DEFAULT_LOCAL_REMINDERS)
   const [userPrefs, setUserPrefsState] = useState<UserPrefs>(DEFAULT_USER_PREFS)
   const [calibratedWpm, setCalibratedWpmState] = useState<number | null>(null)
-  // New accessibility prefs (TTS speed, high contrast, reduce motion).
-  // Stored as plain AsyncStorage so we don't have to widen UserPrefs.
   const [highContrast, setHighContrast] = useState(false)
   const [reduceMotion, setReduceMotion] = useState(false)
   const [ttsSpeed, setTtsSpeed] = useState<number>(1.0)
+  const [sheet, setSheet] = useState<Sheet>(null)
+  const [importing, setImporting] = useState<{ source: ImportSource; done: number; total: number } | null>(null)
+  const [importResult, setImportResult] = useState<(ImportResult & { source: ImportSource }) | null>(null)
+  const [exporting, setExporting] = useState(false)
+  const [dataError, setDataError] = useState<string | null>(null)
 
-  // ── Load ─────────────────────────────────────────────────────────────────
+  // ── Load device settings ─────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!mounted) return
-      setEmail(user?.email ?? null)
-      setUserId(user?.id ?? null)
-
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_public, progress_is_public')
-          .eq('id', user.id)
-          .maybeSingle()
-        const p = profile as
-          | {
-              is_public: boolean | string | null
-              progress_is_public: boolean | null
-            }
-          | null
-        if (p) {
-          // is_public could be a boolean or a string enum in the schema.
-          // tolerate both shapes.
-          const v = p.is_public
-          if (typeof v === 'string') setVisibility((v as ProfileVisibility) ?? 'public')
-          else setVisibility(v === false ? 'private' : 'public')
-          setProgressPublic(p.progress_is_public !== false)
-        }
-      }
-
-      const [notif, defaults, anon, hc, rm, tts] = await Promise.all([
-        AsyncStorage.getItem(NOTIFICATION_PREFS_KEY),
+      const [local, defaults, hc, rm, tts] = await Promise.all([
+        AsyncStorage.getItem(LOCAL_REMINDERS_KEY),
         AsyncStorage.getItem(READING_DEFAULTS_KEY),
-        AsyncStorage.getItem(ANON_HIGHLIGHTS_KEY),
         AsyncStorage.getItem(A11Y_HIGH_CONTRAST_KEY),
         AsyncStorage.getItem(A11Y_REDUCE_MOTION_KEY),
         AsyncStorage.getItem(TTS_SPEED_KEY),
       ])
-      if (notif) {
+      if (!mounted) return
+      if (local) {
         try {
-          setNotifPrefs({ ...DEFAULT_NOTIFICATION_PREFS, ...JSON.parse(notif) })
+          setReminders({ ...DEFAULT_LOCAL_REMINDERS, ...JSON.parse(local) })
         } catch { /* ignore */ }
       }
       if (defaults) {
@@ -165,7 +111,6 @@ export default function SettingsScreen() {
           setReadingDefaults({ ...DEFAULT_READING_DEFAULTS, ...JSON.parse(defaults) })
         } catch { /* ignore */ }
       }
-      if (anon === 'true') setAnonHighlights(true)
       if (hc === 'true') setHighContrast(true)
       if (rm === 'true') setReduceMotion(true)
       if (tts) {
@@ -187,46 +132,11 @@ export default function SettingsScreen() {
     await AsyncStorage.setItem(READING_DEFAULTS_KEY, JSON.stringify(next))
   }, [])
 
-  const updateNotifPrefs = useCallback(async (next: NotificationPrefs) => {
-    setNotifPrefs(next)
-    await AsyncStorage.setItem(NOTIFICATION_PREFS_KEY, JSON.stringify(next))
-    // Re-program OS-level reminders to match. No-op on devices that don't
-    // have expo-notifications yet (pre-1.0.1 build).
+  const updateReminders = useCallback(async (next: LocalReminders) => {
+    setReminders(next)
+    await AsyncStorage.setItem(LOCAL_REMINDERS_KEY, JSON.stringify(next))
+    // Re-program the device's scheduled reminders to match.
     rescheduleAll().catch(() => {})
-  }, [])
-
-  const updateVisibility = useCallback(
-    async (v: ProfileVisibility) => {
-      setVisibility(v)
-      if (!userId) return
-      // is_public is stored as either a boolean or a 3-value text enum in
-      // the schema. Write the text value, Postgres will coerce to bool
-      // when the column is boolean.
-      const { error } = await supabase
-        .from('profiles')
-        .update({ is_public: v === 'private' ? false : v })
-        .eq('id', userId)
-      reportWriteError(error, { op: 'update', table: 'profiles', extra: { field: 'is_public' } })
-    },
-    [userId],
-  )
-
-  const updateProgressPublic = useCallback(
-    async (value: boolean) => {
-      setProgressPublic(value)
-      if (!userId) return
-      const { error } = await supabase
-        .from('profiles')
-        .update({ progress_is_public: value })
-        .eq('id', userId)
-      reportWriteError(error, { op: 'update', table: 'profiles', extra: { field: 'progress_is_public' } })
-    },
-    [userId],
-  )
-
-  const updateAnon = useCallback(async (value: boolean) => {
-    setAnonHighlights(value)
-    await AsyncStorage.setItem(ANON_HIGHLIGHTS_KEY, value ? 'true' : 'false')
   }, [])
 
   const updateUserPrefs = useCallback(async (next: UserPrefs) => {
@@ -234,223 +144,73 @@ export default function SettingsScreen() {
     await setUserPrefs(next)
   }, [])
 
-  // ── Account actions ──────────────────────────────────────────────────────
+  // ── Account settings (saved on toggle; the cached profile patches at once) ─
+  const visibility = profile?.visibility ?? {}
+  const saveVisibility = (patch: Partial<Required<W.MyProfile['visibility']>>) =>
+    setVisibility.fire({
+      profile: visibility.profile ?? 'public',
+      progress: visibility.progress ?? 'public',
+      defaultAnnotation: visibility.defaultAnnotation ?? 'private',
+      ...patch,
+    })
 
-  const exportData = useCallback(async () => {
-    if (!userId || busy) return
-    setBusy(true)
-    try {
-      const [ub, hl, vb] = await Promise.all([
-        supabase
-          .from('user_books')
-          .select('book_id, status, rating, review, started_at, finished_at')
-          .eq('user_id', userId),
-        supabase
-          .from('highlights')
-          .select('book_id, cfi, text, color, created_at')
-          .eq('user_id', userId),
-        supabase
-          .from('vocabulary')
-          .select('book_id, word, context, created_at')
-          .eq('user_id', userId),
-      ])
-      const csv = [
-        '# Foxing data export',
-        '',
-        '## user_books',
-        'book_id,status,rating,review,started_at,finished_at',
-        ...((ub.data ?? []) as Array<Record<string, unknown>>).map(
-          (r) =>
-            [r.book_id, r.status, r.rating ?? '', csvEscape(r.review), r.started_at ?? '', r.finished_at ?? ''].join(','),
-        ),
-        '',
-        '## highlights',
-        'book_id,cfi,text,color,created_at',
-        ...((hl.data ?? []) as Array<Record<string, unknown>>).map(
-          (r) => [r.book_id, r.cfi, csvEscape(r.text), r.color ?? '', r.created_at].join(','),
-        ),
-        '',
-        '## vocabulary',
-        'book_id,word,context,created_at',
-        ...((vb.data ?? []) as Array<Record<string, unknown>>).map(
-          (r) => [r.book_id, csvEscape(r.word), csvEscape(r.context), r.created_at].join(','),
-        ),
-      ].join('\n')
-      await Share.share({ message: csv })
-    } finally {
-      setBusy(false)
-    }
-  }, [busy, userId])
+  const categories = profile?.notificationPrefs.categories ?? {}
+  const quietHours = profile?.notificationPrefs.quietHours ?? null
+  const savePrefs = (next: { categories?: Record<string, boolean>; quietHours?: { start: string; end: string } | null }) =>
+    setPrefs.fire({
+      categories: next.categories ?? categories,
+      quietHours: next.quietHours !== undefined ? next.quietHours : quietHours,
+    })
+  const toggleCategory = (cat: string, on: boolean) => {
+    savePrefs({ categories: { ...categories, [cat]: on } })
+    if (cat === 'streak') void updateReminders({ ...reminders, streakAtRisk: on })
+  }
 
-  const importGoodreads = useCallback(async () => {
-    if (importBusy) return
-    setImportResult(null)
-    setImportSource('Goodreads')
-    let pick: DocumentPicker.DocumentPickerResult
+  // ── Data ─────────────────────────────────────────────────────────────────
+  const runImport = async (source: ImportSource) => {
+    if (importing) return
+    setDataError(null)
     try {
-      pick = await DocumentPicker.getDocumentAsync({
+      const pick = await DocumentPicker.getDocumentAsync({
         type: ['text/csv', 'text/comma-separated-values', '*/*'],
         copyToCacheDirectory: true,
       })
-    } catch (e) {
-      console.warn('[settings] document pick failed:', e instanceof Error ? e.message : e)
-      return
-    }
-    if (pick.canceled) return
-    const asset = pick.assets?.[0]
-    if (!asset?.uri) return
-    setImportBusy(true)
-    try {
-      const csv = await FileSystem.readAsStringAsync(asset.uri, {
-        encoding: FileSystem.EncodingType.UTF8,
-      })
-      const rows = parseGoodreadsCsv(csv)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        setImportBusy(false)
-        return
-      }
-      let imported = 0
-      let skipped = 0
-      // Match each row against the books table by title+author ilike and
-      // upsert a user_books row. Done sequentially, Goodreads exports are
-      // usually under a few hundred rows so this isn't worth parallelizing.
-      for (const r of rows) {
-        if (!r.title) {
-          skipped += 1
-          continue
-        }
-        let q = supabase
-          .from('books')
-          .select('id')
-          .ilike('title', `%${escapeIlike(r.title)}%`)
-          .limit(1)
-        if (r.author) q = q.ilike('author', `%${escapeIlike(r.author)}%`)
-        const { data: match } = await q
-        const bookId = ((match ?? [])[0] as { id?: string } | undefined)?.id
-        if (!bookId) {
-          skipped += 1
-          continue
-        }
-        const status = mapShelf(r.shelf)
-        const finishedIso = r.dateRead ? new Date(r.dateRead).toISOString() : null
-        const { error } = await supabase.from('user_books').upsert(
-          {
-            user_id: user.id,
-            book_id: bookId,
-            status,
-            rating: r.rating > 0 ? r.rating : null,
-            review: r.review || null,
-            finished_at: status === 'finished' ? finishedIso : null,
-            started_at: status === 'reading' ? finishedIso ?? new Date().toISOString() : null,
-          },
-          { onConflict: 'user_id,book_id' },
-        )
-        if (error) {
-          console.warn('[settings] import upsert failed:', error.message)
-          skipped += 1
-        } else {
-          imported += 1
-        }
-      }
-      setImportResult({ imported, skipped })
-    } catch (e) {
-      console.warn('[settings] goodreads parse failed:', e instanceof Error ? e.message : e)
+      const uri = pick.canceled ? null : pick.assets?.[0]?.uri
+      if (!uri) return
+      const text = await new File(uri).text()
+      setImporting({ source, done: 0, total: 0 })
+      const result = await importCsv(text, source, (done, total) => setImporting({ source, done, total }))
+      setImportResult({ ...result, source })
+    } catch {
+      setDataError(`Could not read that ${source} export.`)
     } finally {
-      setImportBusy(false)
+      setImporting(null)
     }
-  }, [importBusy])
+  }
 
-  // Shared wrapper for the simpler CSV imports, picks a file, runs the
-  // provided lib/import function against the signed-in user, surfaces a
-  // result modal. The Goodreads importer above stays inline because its
-  // parser + matching live in this file from before lib/import existed.
-  const runCsvImport = useCallback(
-    async (source: 'StoryGraph', fn: (uri: string, userId: string) => Promise<{ imported: number; skipped: number }>) => {
-      if (importBusy) return
-      setImportResult(null)
-      setImportSource(source)
-      let pick: DocumentPicker.DocumentPickerResult
-      try {
-        pick = await DocumentPicker.getDocumentAsync({
-          type: ['text/csv', 'text/comma-separated-values', '*/*'],
-          copyToCacheDirectory: true,
-        })
-      } catch (e) {
-        console.warn('[settings] document pick failed:', e instanceof Error ? e.message : e)
-        return
-      }
-      if (pick.canceled) return
-      const asset = pick.assets?.[0]
-      if (!asset?.uri) return
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-      setImportBusy(true)
-      try {
-        const result = await fn(asset.uri, user.id)
-        setImportResult(result)
-      } catch (e) {
-        console.warn(`[settings] ${source} import failed:`, e instanceof Error ? e.message : e)
-      } finally {
-        setImportBusy(false)
-      }
-    },
-    [importBusy],
-  )
+  // GET /account/export: the same JSON archive the web page downloads, handed to the share sheet.
+  const exportData = async () => {
+    if (exporting) return
+    setExporting(true)
+    setDataError(null)
+    try {
+      const archive = await api.get<unknown>('/account/export')
+      const file = new File(Paths.cache, 'foxing-export.json')
+      file.write(JSON.stringify(archive, null, 2))
+      await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Your Foxing data' })
+    } catch {
+      setDataError('Could not prepare your data export. Check your connection and try again.')
+    } finally {
+      setExporting(false)
+    }
+  }
 
-  const importStoryGraph = useCallback(
-    () => runCsvImport('StoryGraph', importFromStoryGraph),
-    [runCsvImport],
-  )
-
-  const deleteAccount = useCallback(() => {
-    Alert.alert(
-      'Delete your Foxing account?',
-      'This permanently removes your profile, library, highlights, clubs, comments, and badges.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert(
-              'Are you absolutely sure?',
-              'This cannot be undone.',
-              [
-                { text: 'Keep account', style: 'cancel' },
-                {
-                  text: 'Delete account',
-                  style: 'destructive',
-                  onPress: async () => {
-                    // Hard delete requires service-role privileges so it flows
-                    // through an Edge Function. The handler verifies the JWT
-                    // sub matches the userId in payload before deleting.
-                    try {
-                      const { data: { user } } = await supabase.auth.getUser()
-                      if (user) {
-                        const { error } = await supabase.functions.invoke('ai-companion', {
-                          body: { action: 'delete_account', payload: { userId: user.id } },
-                        })
-                        if (error) console.warn('[settings] delete_account:', error.message)
-                      }
-                    } catch (e) {
-                      console.warn('[settings] delete_account threw:', e)
-                    }
-                    await supabase.auth.signOut()
-                  },
-                },
-              ],
-            )
-          },
-        },
-      ],
-    )
-  }, [])
+  const accountError = setVisibility.error ?? setPrefs.error
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
+        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2" accessibilityRole="button" accessibilityLabel="Back">
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <Text
@@ -629,114 +389,97 @@ export default function SettingsScreen() {
 
         <MetaHeader>Account</MetaHeader>
 
-        <Section title="Email">
-          <View className="px-3 py-3 border-t" style={{ borderTopColor: colors.borderSubtle }}>
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary }}>
-              Email
-            </Text>
-            <Text style={{ fontFamily: Fonts.mono, fontSize: 13, color: colors.textPrimary, marginTop: 4 }}>
-              {email ?? ''}
-            </Text>
-          </View>
+        {accountError ? (
+          <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, marginTop: 12 }} accessibilityRole="alert">
+            {accountError}
+          </Text>
+        ) : null}
+
+        <Section title="Sign-in">
+          <LinkRow label={me ? `Email: ${me.user.email}` : 'Email'} onPress={() => setSheet('email')} />
+          <LinkedAccounts Row={(row) => <LinkRow {...row} />} />
         </Section>
 
         <Section title="Notifications">
           <ToggleRow
-            label="All notifications"
-            value={notifPrefs.master}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, master: v })}
-          />
-          <ToggleRow
             label="Daily reading reminder"
-            value={notifPrefs.dailyReminder}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, dailyReminder: v })}
+            sub="Scheduled on this device"
+            value={reminders.dailyReminder}
+            onChange={(v) => updateReminders({ ...reminders, dailyReminder: v })}
           />
-          {notifPrefs.dailyReminder ? (
+          {reminders.dailyReminder ? (
             <TimeRow
               label="Reminder time"
-              value={notifPrefs.reminderTime}
-              onChange={(t) => updateNotifPrefs({ ...notifPrefs, reminderTime: t })}
+              value={reminders.reminderTime}
+              onChange={(t) => updateReminders({ ...reminders, reminderTime: t })}
             />
           ) : null}
+          {Object.entries(NOTIFICATION_LABELS).map(([cat, { label, subtext }]) => (
+            <ToggleRow
+              key={cat}
+              label={label}
+              sub={subtext}
+              value={categories[cat] ?? false}
+              onChange={(on) => toggleCategory(cat, on)}
+            />
+          ))}
           <ToggleRow
-            label="Streak at risk warning"
-            value={notifPrefs.streakAtRisk}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, streakAtRisk: v })}
+            label="Quiet hours"
+            sub="Pause notifications between these times, in your timezone"
+            value={quietHours !== null}
+            onChange={(on) => savePrefs({ quietHours: on ? { start: '22:00', end: '07:00' } : null })}
           />
-          <ToggleRow
-            label="New club discussion"
-            value={notifPrefs.newClubDiscussion}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, newClubDiscussion: v })}
-          />
-          <ToggleRow
-            label="Someone replied to your comment"
-            value={notifPrefs.someoneRepliedToComment}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, someoneRepliedToComment: v })}
-          />
-          <ToggleRow
-            label="New follower"
-            value={notifPrefs.newFollower}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, newFollower: v })}
-          />
-          <ToggleRow
-            label="Badge earned"
-            value={notifPrefs.badgeEarned}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, badgeEarned: v })}
-          />
-          <ToggleRow
-            label="Friend finished a book"
-            value={notifPrefs.friendFinishedBook}
-            onChange={(v) => updateNotifPrefs({ ...notifPrefs, friendFinishedBook: v })}
-          />
-          <TimeRow
-            label="Quiet hours start"
-            value={notifPrefs.quietStart}
-            onChange={(t) => updateNotifPrefs({ ...notifPrefs, quietStart: t })}
-          />
-          <TimeRow
-            label="Quiet hours end"
-            value={notifPrefs.quietEnd}
-            onChange={(t) => updateNotifPrefs({ ...notifPrefs, quietEnd: t })}
-          />
+          {quietHours ? (
+            <>
+              <TimeRow label="From" value={quietHours.start} onChange={(start) => savePrefs({ quietHours: { ...quietHours, start } })} />
+              <TimeRow label="To" value={quietHours.end} onChange={(end) => savePrefs({ quietHours: { ...quietHours, end } })} />
+            </>
+          ) : null}
         </Section>
 
         <Section title="Privacy">
+          <ToggleRow
+            label="Public profile"
+            sub="Let other readers find your profile, library and reviews"
+            value={visibility.profile !== 'private'}
+            onChange={(on) => saveVisibility({ profile: on ? 'public' : 'private' })}
+          />
+          <ToggleRow
+            label="Share reading progress"
+            sub="Show what you are currently reading on your profile"
+            value={visibility.progress !== 'private'}
+            onChange={(on) => saveVisibility({ progress: on ? 'public' : 'private' })}
+          />
           <SegmentedRow
-            label="Profile visibility"
-            value={visibility}
+            label="New highlights and notes are seen by"
+            value={visibility.defaultAnnotation ?? 'private'}
             options={[
-              { value: 'public', label: 'Public' },
-              { value: 'followers', label: 'Followers' },
-              { value: 'private', label: 'Private' },
+              { value: 'private', label: 'Only me' },
+              { value: 'friends', label: 'Close friends' },
+              { value: 'public', label: 'Everyone' },
             ]}
-            onChange={(v) => updateVisibility(v as ProfileVisibility)}
-          />
-          <ToggleRow
-            label="Show reading progress to followers"
-            value={progressPublic}
-            onChange={updateProgressPublic}
-          />
-          <ToggleRow
-            label="Anonymous highlights"
-            sub="Public highlights aren't attributed to you"
-            value={anonHighlights}
-            onChange={updateAnon}
+            onChange={(v) => saveVisibility({ defaultAnnotation: v })}
           />
         </Section>
 
         <Section title="Data">
-          <LinkRow
-            label={importBusy && importSource === 'Goodreads' ? 'Importing…' : 'Import from Goodreads'}
-            onPress={importGoodreads}
-          />
-          <LinkRow
-            label={importBusy && importSource === 'StoryGraph' ? 'Importing…' : 'Import from StoryGraph'}
-            onPress={importStoryGraph}
-          />
-          <LinkRow
-            label={busy ? 'Preparing export…' : 'Export my data'}
-            onPress={exportData}
-          />
+          {(['Goodreads', 'StoryGraph'] as const).map((source) => (
+            <LinkRow
+              key={source}
+              label={
+                importing?.source === source
+                  ? `Importing… ${importing.done} of ${importing.total || '?'}`
+                  : `Import from ${source}`
+              }
+              onPress={() => runImport(source)}
+            />
+          ))}
+          <LinkRow label={exporting ? 'Preparing export…' : 'Export my data'} onPress={exportData} />
+          {dataError ? (
+            <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, padding: 12 }} accessibilityRole="alert">
+              {dataError}
+            </Text>
+          ) : null}
         </Section>
 
         <Section title="Close friends">
@@ -749,8 +492,7 @@ export default function SettingsScreen() {
               lineHeight: 18,
             }}
           >
-            Close friends can see your private passage comments and reactions
-            marked as close friends only.
+            Close friends see your friends-only highlights, notes and activity.
           </Text>
           <LinkRow
             label="Manage close friends"
@@ -785,11 +527,9 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        {/* Delete account, separated from About so it isn't a "link" in
-            a long list of innocuous ones. */}
         <View style={{ marginTop: 24 }}>
           <Pressable
-            onPress={deleteAccount}
+            onPress={() => setSheet('delete')}
             accessibilityRole="button"
             accessibilityLabel="Delete account"
             className="flex-row items-center justify-center gap-2 px-3 py-3 rounded-xl border"
@@ -803,7 +543,9 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      {/* Result modal, shows after the importer finishes. */}
+      <ChangeEmailSheet visible={sheet === 'email'} email={me?.user.email ?? ''} onClose={() => setSheet(null)} />
+      <DeleteAccountSheet visible={sheet === 'delete'} onClose={() => setSheet(null)} />
+
       <Modal
         visible={importResult !== null}
         animationType="fade"
@@ -827,7 +569,7 @@ export default function SettingsScreen() {
                 marginBottom: 6,
               }}
             >
-              {importSource} import complete
+              {importResult?.source} import complete
             </Text>
             <Text
               style={{
@@ -837,7 +579,7 @@ export default function SettingsScreen() {
                 marginBottom: 14,
               }}
             >
-              {importResult?.imported ?? 0} books imported. {importResult?.skipped ?? 0} not found in catalog.
+              {importResult?.imported ?? 0} books added to your library. {importResult?.skipped ?? 0} not found in the catalog.
             </Text>
             <View className="flex-row justify-end">
               <Pressable
@@ -854,8 +596,3 @@ export default function SettingsScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Reusable rows ────────────────────────────────────────────────────────
-
-// ── Goodreads CSV parsing ────────────────────────────────────────────────
-

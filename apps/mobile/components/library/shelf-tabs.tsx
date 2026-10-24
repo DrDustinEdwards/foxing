@@ -1,8 +1,8 @@
-import { View, Text, Pressable, ScrollView } from 'react-native'
+import { Text, Pressable, ScrollView } from 'react-native'
 import { Plus } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import type { CustomShelf } from '@/lib/library'
+import type * as W from '@foxing/types'
 import { STATUS_SHELVES, type ShelfKey } from '@/components/library/library-types'
 
 export function ShelfTabs({
@@ -13,15 +13,16 @@ export function ShelfTabs({
   onNewShelf,
 }: {
   activeShelf: ShelfKey
-  shelves: CustomShelf[]
+  shelves: W.Shelf[]
   onSelectShelf: (shelf: ShelfKey) => void
-  onLongPressShelf: (shelf: CustomShelf) => void
+  onLongPressShelf: (shelf: W.Shelf) => void
   onNewShelf: () => void
 }) {
   const colors = useColors()
   return (
     <ScrollView
       horizontal
+      style={{ flexGrow: 0 }}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 12, gap: 6, paddingBottom: 4 }}
     >

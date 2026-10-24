@@ -1,17 +1,19 @@
 import { View, Text } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import type { UserBookStatus } from '@/lib/library'
+import type * as W from '@foxing/types'
 import type { ShelfKey } from '@/components/library/library-types'
 
-function statusMessage(status: UserBookStatus): string {
+function statusMessage(status: W.ShelfStatus): string {
   switch (status) {
     case 'reading':
       return "You're not reading anything yet."
-    case 'want_to_read':
+    case 'want':
       return 'Your reading list is empty.'
     case 'finished':
       return "You haven't finished a book yet."
+    case 'paused':
+      return 'Nothing paused.'
     default:
       return 'Nothing abandoned, nice.'
   }

@@ -1,25 +1,11 @@
-import { View, Text, Pressable, Image, Linking } from 'react-native'
+import type * as W from '@foxing/types'
+import { View, Text, Pressable, Linking } from 'react-native'
 import { CalendarBlank, GoogleLogo } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-interface MeetingRow {
-  id: string
-  title: string
-  description: string | null
-  meeting_date: string
-  end_date: string | null
-  location_name: string | null
-  location_url: string | null
-  meeting_type: 'in_person' | 'virtual' | 'hybrid'
-  is_cancelled: boolean
-  book: { title: string; cover_url: string | null } | null
-  rsvp_counts: { going: number; maybe: number; not_going: number }
-  user_rsvp: 'going' | 'maybe' | 'not_going' | null
-}
-
-function formatMeetingTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
+function formatMeetingTime(at: number): string {
+  return new Date(at).toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -29,12 +15,12 @@ function formatMeetingTime(iso: string): string {
 
 export function ClubMeetingCard({
   m,
-  userId,
+  canRsvp,
   onRsvp,
 }: {
-  m: MeetingRow
-  userId: string | null
-  onRsvp: (meetingId: string, status: 'going' | 'maybe' | 'not_going') => void
+  m: W.ClubMeetingItem
+  canRsvp: boolean
+  onRsvp: (meetingId: string, status: W.RsvpStatus) => void
 }) {
   const colors = useColors()
   return (
@@ -65,8 +51,8 @@ export function ClubMeetingCard({
               marginTop: 2,
             }}
           >
-            {formatMeetingTime(m.meeting_date)}
-            {m.location_name ? ` · ${m.location_name}` : ''}
+            {formatMeetingTime(m.meetingDate)}
+            {m.locationName ? ` · ${m.locationName}` : ''}
           </Text>
           <View
             className="flex-row flex-wrap"
@@ -88,15 +74,15 @@ export function ClubMeetingCard({
                   textTransform: 'capitalize',
                 }}
               >
-                {m.meeting_type.replace('_', ' ')}
+                {m.meetingType.replace('_', ' ')}
               </Text>
             </View>
           </View>
-          {m.location_url &&
-          m.location_url.includes('meet.google.com') ? (
+          {m.locationUrl &&
+          m.locationUrl.includes('meet.google.com') ? (
             <Pressable
               onPress={() => {
-                if (m.location_url) void Linking.openURL(m.location_url)
+                if (m.locationUrl) void Linking.openURL(m.locationUrl)
               }}
               className="flex-row items-center"
               style={{ gap: 6, marginTop: 8 }}
@@ -112,10 +98,10 @@ export function ClubMeetingCard({
                 Join on Google Meet
               </Text>
             </Pressable>
-          ) : m.location_url ? (
+          ) : m.locationUrl ? (
             <Pressable
               onPress={() => {
-                if (m.location_url) void Linking.openURL(m.location_url)
+                if (m.locationUrl) void Linking.openURL(m.locationUrl)
               }}
               style={{ marginTop: 8 }}
             >
@@ -132,47 +118,13 @@ export function ClubMeetingCard({
           ) : null}
         </View>
       </View>
-      {m.book ? (
-        <View
-          className="flex-row items-center"
-          style={{ gap: 8, marginTop: 10 }}
-        >
-          <View
-            style={{
-              width: 32,
-              height: 48,
-              borderRadius: 3,
-              overflow: 'hidden',
-              backgroundColor: colors.bgSunken,
-            }}
-          >
-            {m.book.cover_url ? (
-              <Image
-                source={{ uri: m.book.cover_url }}
-                style={{ width: '100%', height: '100%' }}
-              />
-            ) : null}
-          </View>
-          <Text
-            style={{
-              fontFamily: Fonts.ui,
-              fontSize: 12,
-              color: colors.textSecondary,
-            }}
-            numberOfLines={2}
-          >
-            {m.book.title}
-          </Text>
-        </View>
-      ) : null}
-
-      {userId ? (
+      {canRsvp ? (
         <View
           className="flex-row"
           style={{ gap: 6, marginTop: 12 }}
         >
           {(['going', 'maybe', 'not_going'] as const).map((s) => {
-            const active = m.user_rsvp === s
+            const active = m.myRsvp === s
             const label =
               s === 'going'
                 ? 'Going'
@@ -182,7 +134,7 @@ export function ClubMeetingCard({
             return (
               <Pressable
                 key={s}
-                onPress={() => void onRsvp(m.id, s)}
+                onPress={() => onRsvp(m.id, s)}
                 style={{
                   flex: 1,
                   paddingVertical: 6,
@@ -217,7 +169,7 @@ export function ClubMeetingCard({
           marginTop: 6,
         }}
       >
-        {m.rsvp_counts.going} going · {m.rsvp_counts.maybe} maybe
+        {m.rsvps.going} going · {m.rsvps.maybe} maybe
       </Text>
     </View>
   )

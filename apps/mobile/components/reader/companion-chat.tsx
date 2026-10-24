@@ -1,3 +1,4 @@
+import { useCompanion } from '@foxing/client'
 import { useEffect, useState } from 'react'
 import {
   View,
@@ -7,42 +8,20 @@ import {
   TextInput,
   ScrollView,
   ActivityIndicator,
-  Switch,
+  Linking,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { KeyboardStickyView } from 'react-native-keyboard-controller'
-import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import { Sliders } from 'phosphor-react-native'
-import { chatWithCompanion, friendlyAiError, type ChatMode } from '@/lib/claude'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-
-const CHAT_MODES: Array<{ id: ChatMode; label: string; subtitle: string }> = [
-  { id: 'normal', label: 'Normal', subtitle: 'Warm, conversational fellow reader.' },
-  { id: 'spoiler_free', label: 'Spoiler-free', subtitle: 'Locks the spoiler ceiling at your current chapter.' },
-  { id: 'socratic', label: 'Socratic', subtitle: 'Answers your questions with questions.' },
-  { id: 'debate', label: 'Debate', subtitle: 'Argues the opposite of whatever you say.' },
-  { id: 'character_interview', label: 'Character Interview', subtitle: 'Roleplays as a character you pick.' },
-  { id: 'author_mode', label: 'Author Mode', subtitle: 'Roleplays as the book\'s author.' },
-  { id: 'scholar', label: 'Scholar', subtitle: 'Academic but readable.' },
-  { id: 'child_esl', label: 'Child + ESL', subtitle: 'Simple words, short sentences.' },
-  { id: 'comparative', label: 'Comparative', subtitle: 'Connects to other books each turn.' },
-  { id: 'prediction', label: 'Prediction', subtitle: 'Guesses what happens next (off in spoiler-free).' },
-  { id: 'emotional_check_in', label: 'Emotional Check-in', subtitle: 'How the book is landing for you.' },
-  { id: 'journal_prompts', label: 'Journal Prompts', subtitle: 'Ends each turn with a prompt to write to.' },
-]
 
 interface CompanionChatProps {
   visible: boolean
   bookTitle: string
-  author: string
-  currentChapter: string
-  bookId?: string
-  progress?: number
-  // When set, the chat opens with this message pre-shown as the assistant's
-  // first turn (e.g. "I selected this passage: '...', what would you like
-  // to discuss?"). Reset whenever the chat re-opens for a different passage.
-  seedAssistantMessage?: string | null
+  bookId: string
+  // When set, the chat opens with this text ready in the box (a quoted passage or
+  // word), for the reader to finish their question.
+  seedQuestion?: string | null
   onClose: () => void
 }
 
@@ -51,71 +30,35 @@ interface ChatMessage {
   content: string
 }
 
-export function CompanionChat({
-  visible,
-  bookTitle,
-  author,
-  currentChapter,
-  bookId,
-  progress,
-  seedAssistantMessage,
-  onClose,
-}: CompanionChatProps) {
+// A conversation about the book. The server keeps the thread and its history; the
+// companion avoids spoilers past what the reader has mentioned.
+export function CompanionChat({ visible, bookTitle, bookId, seedQuestion, onClose }: CompanionChatProps) {
   const colors = useColors()
+  const companion = useCompanion()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
-  const [spoilerFree, setSpoilerFree] = useState(true)
-  const [mode, setMode] = useState<ChatMode>('normal')
-  const [modePickerOpen, setModePickerOpen] = useState(false)
+  const sending = companion.pending
 
-  // Seed the assistant's opening message every time the chat opens with
-  // a (possibly new) seed string. We re-seed on `visible` flips so closing
-  // and re-opening with a different passage replaces the seed cleanly.
   useEffect(() => {
     if (!visible) return
-    if (seedAssistantMessage) {
-      setMessages([{ role: 'assistant', content: seedAssistantMessage }])
-    } else {
-      setMessages([])
-    }
-    setInput('')
-    setSending(false)
-  }, [visible, seedAssistantMessage])
+    companion.reset()
+    setMessages([])
+    setInput(seedQuestion ?? '')
+  }, [visible, seedQuestion])
 
   async function send() {
-    if (!input.trim() || sending) return
-    const userMsg: ChatMessage = { role: 'user', content: input.trim() }
-    const updated = [...messages, userMsg]
-    console.log('[companion-chat] send', {
-      turn: updated.length,
-      currentChapter,
-      spoilerFree,
-    })
+    const message = input.trim()
+    if (!message || sending) return
+    const updated = [...messages, { role: 'user' as const, content: message }]
     setMessages(updated)
     setInput('')
-    setSending(true)
-    try {
-      const reply = await chatWithCompanion(
-        updated,
-        bookTitle,
-        author,
-        currentChapter,
-        spoilerFree,
-        { bookId, progress, mode },
-      )
-      console.log('[companion-chat] reply', { chars: reply.length })
-      setMessages([...updated, { role: 'assistant', content: reply }])
-    } catch (e) {
-      const message = friendlyAiError(e)
-      console.warn('[companion-chat] error', message)
-      setMessages([
-        ...updated,
-        { role: 'assistant', content: `Error: ${message}` },
-      ])
-    } finally {
-      setSending(false)
-    }
+    const reply = await companion.run({
+      action: 'chat',
+      bookId,
+      message,
+      threadId: companion.threadId ?? undefined,
+    })
+    if (reply) setMessages([...updated, { role: 'assistant', content: reply }])
   }
 
   return (
@@ -127,28 +70,6 @@ export function CompanionChat({
                 <Text className="font-display text-lg text-text-primary-light dark:text-text-primary-dark">
                   AI Companion
                 </Text>
-                {/* Mode badge, only renders for non-Normal modes per spec.
-                    Normal is the default; an empty header reads cleaner. */}
-                {mode !== 'normal' ? (
-                  <View
-                    style={{
-                      paddingHorizontal: 8,
-                      paddingVertical: 2,
-                      borderRadius: 999,
-                      backgroundColor: colors.brandSubtle,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 11,
-                        color: colors.brandSubtleText,
-                      }}
-                    >
-                      {CHAT_MODES.find((m) => m.id === mode)?.label ?? 'Normal'}
-                    </Text>
-                  </View>
-                ) : null}
               </View>
               <Text
                 className="font-ui text-xs text-text-tertiary-light dark:text-text-tertiary-dark"
@@ -158,26 +79,6 @@ export function CompanionChat({
               </Text>
             </View>
             <View className="flex-row items-center gap-3">
-              <Pressable
-                onPress={() => setModePickerOpen(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Change companion mode"
-                hitSlop={8}
-                style={{ padding: 4 }}
-              >
-                <Sliders color={colors.textTertiary} size={20} />
-              </Pressable>
-              <View className="flex-row items-center">
-                <Text className="font-ui text-xs mr-2 text-text-secondary-light dark:text-text-secondary-dark">
-                  Spoiler-free
-                </Text>
-                <Switch
-                  value={spoilerFree}
-                  onValueChange={setSpoilerFree}
-                  trackColor={{ true: colors.brandUi, false: colors.borderDefault }}
-                  thumbColor={colors.bgSurface}
-                />
-              </View>
               <Pressable
                 onPress={onClose}
                 accessibilityRole="button"
@@ -189,16 +90,6 @@ export function CompanionChat({
               </Pressable>
             </View>
           </View>
-
-          <ModePickerSheet
-            visible={modePickerOpen}
-            activeMode={mode}
-            onPick={(id) => {
-              setMode(id)
-              setModePickerOpen(false)
-            }}
-            onClose={() => setModePickerOpen(false)}
-          />
 
           <ScrollView className="flex-1 px-4" contentContainerStyle={{ paddingVertical: 16 }}>
             {messages.length === 0 ? (
@@ -228,7 +119,27 @@ export function CompanionChat({
                 </View>
               ))
             )}
-            {sending ? <ActivityIndicator color={colors.brandUi} className="mt-2" /> : null}
+            {sending && companion.text ? (
+              <View
+                className="mb-3 rounded-2xl px-4 py-3 self-start bg-bg-surface-light dark:bg-bg-surface-dark border border-border-subtle-light dark:border-border-subtle-dark"
+                style={{ maxWidth: '85%' }}
+              >
+                <Text className="font-body text-text-primary-light dark:text-text-primary-dark">{companion.text}</Text>
+              </View>
+            ) : sending ? (
+              <ActivityIndicator color={colors.brandUi} className="mt-2" />
+            ) : null}
+            {companion.planRequired ? (
+              <Pressable onPress={() => Linking.openURL('https://foxing.app/pricing')} accessibilityRole="link">
+                <Text style={{ fontFamily: Fonts.ui, fontSize: 14, color: colors.brandText, marginTop: 8 }}>
+                  The companion is a Foxing Plus feature. See Foxing Plus
+                </Text>
+              </Pressable>
+            ) : companion.error ? (
+              <Text accessibilityRole="alert" style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textSecondary, marginTop: 8 }}>
+                {companion.error}
+              </Text>
+            ) : null}
           </ScrollView>
 
           <KeyboardStickyView>
@@ -257,82 +168,5 @@ export function CompanionChat({
           </KeyboardStickyView>
       </SafeAreaView>
     </Modal>
-  )
-}
-
-// Bottom-sheet picker for the 12 companion modes. Selected mode gets a
-// brand-ui left border + brand-subtle bg per task.md Section A.
-function ModePickerSheet({
-  visible,
-  activeMode,
-  onPick,
-  onClose,
-}: {
-  visible: boolean
-  activeMode: ChatMode
-  onPick: (id: ChatMode) => void
-  onClose: () => void
-}) {
-  const colors = useColors()
-  return (
-    <SheetScaffold
-      visible={visible}
-      onClose={onClose}
-      variant="bottom"
-      contentContainerStyle={{ paddingBottom: 12 }}
-      header={
-        <View className="flex-row items-center justify-between px-5 mb-3">
-          <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
-            Companion mode
-          </Text>
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel="Close mode picker"
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Close</Text>
-          </Pressable>
-        </View>
-      }
-    >
-            {CHAT_MODES.map((m) => {
-              const active = m.id === activeMode
-              return (
-                <Pressable
-                  key={m.id}
-                  onPress={() => onPick(m.id)}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: active }}
-                  accessibilityLabel={`${m.label}, ${m.subtitle}`}
-                  className="px-5 py-3"
-                  style={{
-                    backgroundColor: active ? colors.brandSubtle : 'transparent',
-                    borderLeftWidth: 3,
-                    borderLeftColor: active ? colors.brandUi : 'transparent',
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      fontSize: 14,
-                      color: active ? colors.brandSubtleText : colors.textPrimary,
-                    }}
-                  >
-                    {m.label}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 12,
-                      color: colors.textTertiary,
-                      marginTop: 2,
-                    }}
-                  >
-                    {m.subtitle}
-                  </Text>
-                </Pressable>
-              )
-            })}
-    </SheetScaffold>
   )
 }

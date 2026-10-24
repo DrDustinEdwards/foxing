@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useBookAnnotations, useBookPage, useMyBook, useSetBookStatus } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useRef, useState } from 'react'
 import {
   View,
   Text,
@@ -8,6 +10,7 @@ import {
   ActivityIndicator,
   Share,
   Alert,
+  Linking,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -21,95 +24,48 @@ import {
   Megaphone,
   CaretRight,
   CaretDown,
-  Heart,
   BookmarkSimple,
-  UserPlus,
+  CheckCircle,
+  Lightbulb,
+  Student,
 } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  authorSlug,
-  getBookDescription,
-  getBookInsight,
-  getDeepDive,
-  getSimilarBooks,
-  type BookInsightLens,
-  type DeepDiveKind,
-  type SimilarBook,
-} from '@/lib/book-ai'
+import { authClient, queueWrite } from '@/lib/api'
 import { haptic } from '@/lib/haptics'
 import { FinishReviewSheet } from '@/components/book/finish-review-sheet'
-import { ChapterReactionsSection } from '@/components/book/chapter-reactions-section'
-import { BookDiscussionsSection } from '@/components/book/book-discussions-section'
-import { PassageCommentsSection } from '@/components/book/passage-comments-section'
 import { PrimaryCta } from '@/components/book/primary-cta'
-import { InsightCard, DeepDiveCard } from '@/components/book/book-detail-cards'
 import { BottomSheetMenu } from '@/components/book/bottom-sheet-menu'
 import { PauseNoteModal } from '@/components/book/pause-note-modal'
 import { ExpandableText, SecondaryButton, SectionHeading } from '@/components/book/book-detail-parts'
-import { RecommendToFriendSheet } from '@/components/book/recommend-to-friend-sheet'
+import { CompanionSheet } from '@/components/reader/companion-sheet'
 
-interface BookRow {
-  id: string
-  title: string
-  author: string
-  cover_url: string | null
-  description: string | null
-  subjects: string[] | null
-  word_count: number | null
-  series_name?: string | null
-  series_order?: number | null
-  mood_tags?: string[] | null
-  pacing?: 'slow' | 'medium' | 'fast' | null
-  content_warnings?: string[] | null
-}
-
-interface UserBookRow {
-  id: string
-  status: 'reading' | 'paused' | 'want_to_read' | 'finished' | 'abandoned'
-  progress_percentage: number
-  is_favorite: boolean | null
-}
-
-interface ReviewRow {
-  rating: number | null
-  review: string | null
-  user: {
-    id: string
-    display_name: string | null
-    username: string | null
-    avatar_url: string | null
-  } | null
-}
-
-interface ClubLite {
-  id: string
-  name: string
-  member_count: number
-}
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-
-function pacingLabel(p: 'slow' | 'medium' | 'fast' | string | null | undefined): string {
+function pacingLabel(p: string | null | undefined): string {
   if (p === 'slow') return 'Slow-paced'
   if (p === 'fast') return 'Fast-paced'
   if (p === 'medium') return 'Medium-paced'
   return ''
 }
 
+// The book page: the shared GET /books/:idOrSlug view (the same object the web page
+// renders) plus the reader's own shelf state. Status changes patch the cache, so the
+// page never reloads.
 export default function BookDetail() {
   const colors = useColors()
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
+  const session = authClient.useSession()
+  const signedIn = !!session.data
+  const pageQuery = useBookPage(id ?? '')
+  const page = pageQuery.data
+  const book = page?.book ?? null
+  const myBook = useMyBook(book?.id ?? '', undefined, signedIn && !!book)
+  const userBook = myBook.data ?? null
+  const annotations = useBookAnnotations(book?.id ?? '')
+  const setBookStatus = useSetBookStatus()
 
-  const [book, setBook] = useState<BookRow | null>(null)
-  const [userBook, setUserBook] = useState<UserBookRow | null>(null)
-  const [viewerId, setViewerId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
   const [statusMenuOpen, setStatusMenuOpen] = useState(false)
   const [shareMenuOpen, setShareMenuOpen] = useState(false)
-  const [recommendOpen, setRecommendOpen] = useState(false)
   // Pause-note modal, captures the optional "why are you pausing?" note
   // when the user picks Pause from the status menu.
   const [pauseModalOpen, setPauseModalOpen] = useState(false)
@@ -117,374 +73,82 @@ export default function BookDetail() {
   // Finish review sheet, opens immediately after a fresh transition to
   // 'finished'. The celebration flow (quote card + series prompt) runs after
   // the sheet closes so we don't stack two routes on top of each other.
-  const [finishReviewUserBookId, setFinishReviewUserBookId] = useState<string | null>(null)
+  const [finishReviewOpen, setFinishReviewOpen] = useState(false)
   const finishCelebrationRef = useRef<(() => void) | null>(null)
+  // A Plus companion answer about the whole book.
+  const [companion, setCompanion] = useState<'book_insight' | 'deep_dive' | null>(null)
 
-  // AI
-  const [description, setDescription] = useState<string | null>(null)
-  const [descLoading, setDescLoading] = useState(false)
-  const [descError, setDescError] = useState<string | null>(null)
-  const [insights, setInsights] = useState<Partial<Record<BookInsightLens, string | 'loading' | 'error'>>>({})
-  const [deepDive, setDeepDive] = useState<Partial<Record<DeepDiveKind, string | 'loading' | 'error'>>>({})
-  const [similar, setSimilar] = useState<SimilarBook[]>([])
-
-  // Community
-  const [avgRating, setAvgRating] = useState<number | null>(null)
-  const [readerCount, setReaderCount] = useState(0)
-  const [recentReviews, setRecentReviews] = useState<ReviewRow[]>([])
-
-  // More by author
-  const [moreByAuthor, setMoreByAuthor] = useState<BookRow[]>([])
-
-  // Clubs reading this
-  const [clubs, setClubs] = useState<ClubLite[]>([])
-
-  // Public highlights for this book, pulled from highlights.is_public=true.
-  const [popularHighlights, setPopularHighlights] = useState<
-    Array<{ id: string; text: string; user: { display_name: string | null; username: string | null } | null }>
-  >([])
-
-  // Collapsibles, About/Deep Dive default closed per task.md Section 1.
+  // Collapsibles, About/Deep Dive default closed.
   // Content warnings also default closed so they don't dominate the page.
   const [showDescription, setShowDescription] = useState(false)
-  const [showDeepDive, setShowDeepDive] = useState(false)
   const [showContentWarnings, setShowContentWarnings] = useState(false)
 
-  const load = useCallback(async () => {
-    if (!id) return
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    setViewerId(user?.id ?? null)
-
-    // Accept either a uuid or a legacy Gutenberg numeric id.
-    const isUuid = UUID_RE.test(id)
-    let bookRow: BookRow | null = null
-    if (isUuid) {
-      const { data } = await supabase
-        .from('books')
-        .select('id, title, author, cover_url, description, subjects, word_count, series_name, series_order, mood_tags, pacing, content_warnings')
-        .eq('id', id)
-        .maybeSingle()
-      bookRow = (data as BookRow | null) ?? null
-    } else {
-      const numeric = Number(id)
-      if (Number.isFinite(numeric)) {
-        const { data } = await supabase
-          .from('books')
-          .select('id, title, author, cover_url, description, subjects, word_count, series_name, series_order, mood_tags, pacing, content_warnings')
-          .eq('gutenberg_id', numeric)
-          .maybeSingle()
-        bookRow = (data as BookRow | null) ?? null
-      }
-    }
-    if (!bookRow) {
-      setBook(null)
-      setLoading(false)
+  function setStatus(status: W.ShelfStatus) {
+    setStatusMenuOpen(false)
+    if (!book) return
+    if (!signedIn) {
+      router.push('/(auth)/login' as never)
       return
     }
-    setBook(bookRow)
-    setDescription(bookRow.description ?? null)
-
-    if (user) {
-      const { data: ub } = await supabase
-        .from('user_books')
-        .select('id, status, progress_percentage, is_favorite')
-        .eq('user_id', user.id)
-        .eq('book_id', bookRow.id)
-        .maybeSingle()
-      setUserBook((ub as UserBookRow | null) ?? null)
-    }
-
-    // Community stats, average rating + reader count.
-    const { data: ratings } = await supabase
-      .from('user_books')
-      .select('rating')
-      .eq('book_id', bookRow.id)
-      .not('rating', 'is', null)
-    const nums = (ratings ?? []).map((r: any) => (r as { rating: number }).rating)
-    setAvgRating(nums.length > 0 ? nums.reduce((a: number, b: number) => a + b, 0) / nums.length : null)
-    const { count: rc } = await supabase
-      .from('user_books')
-      .select('id', { count: 'exact', head: true })
-      .eq('book_id', bookRow.id)
-    setReaderCount(rc ?? 0)
-
-    // Recent public reviews.
-    const { data: reviews } = await supabase
-      .from('user_books')
-      .select(
-        'rating, review, user:profiles!user_id(id, display_name, username, avatar_url)',
-      )
-      .eq('book_id', bookRow.id)
-      .eq('review_is_public', true)
-      .not('review', 'is', null)
-      .order('created_at', { ascending: false })
-      .limit(3)
-    setRecentReviews(((reviews ?? []) as unknown) as ReviewRow[])
-
-    // More by this author.
-    const { data: more } = await supabase
-      .from('books')
-      .select('id, title, author, cover_url, description, subjects, word_count, series_name')
-      .eq('author', bookRow.author)
-      .neq('id', bookRow.id)
-      .limit(4)
-    setMoreByAuthor(((more ?? []) as BookRow[]))
-
-    // Clubs reading this book.
-    const { data: clubRows } = await supabase
-      .from('clubs')
-      .select('id, name, member_count')
-      .eq('current_book_id', bookRow.id)
-      .eq('is_public', true)
-      .limit(3)
-    setClubs(((clubRows ?? []) as ClubLite[]))
-
-    // Popular highlights, public passages from other readers for this book.
-    const { data: hlRows } = await supabase
-      .from('highlights')
-      .select('id, text, user_id')
-      .eq('book_id', bookRow.id)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false })
-      .limit(3)
-    type HR = { id: string; text: string; user_id: string }
-    const highlights = ((hlRows ?? []) as unknown) as HR[]
-    // highlights.user_id FKs auth.users, not profiles, so the author is fetched
-    // separately rather than embedded.
-    const hlAuthorIds = [...new Set(highlights.map((r) => r.user_id).filter(Boolean))]
-    const hlAuthorById = new Map<string, { display_name: string | null; username: string | null }>()
-    if (hlAuthorIds.length > 0) {
-      const { data: profs } = await supabase
-        .from('profiles')
-        .select('id, display_name, username')
-        .in('id', hlAuthorIds)
-      for (const p of (((profs ?? []) as unknown) as Array<{
-        id: string
-        display_name: string | null
-        username: string | null
-      }>)) {
-        hlAuthorById.set(p.id, { display_name: p.display_name, username: p.username })
-      }
-    }
-    setPopularHighlights(
-      highlights.map((r) => ({
-        id: r.id,
-        text: r.text,
-        user: hlAuthorById.get(r.user_id) ?? null,
-      })),
-    )
-
-    setLoading(false)
-  }, [id])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  // Fetch AI description in the background if we don't have it cached.
-  useEffect(() => {
-    if (!book || description) return
-    setDescLoading(true)
-    getBookDescription({ bookId: book.id, bookTitle: book.title, author: book.author })
-      .then((d) => setDescription(d))
-      .catch((e) => setDescError(e instanceof Error ? e.message : 'Failed to load'))
-      .finally(() => setDescLoading(false))
-  }, [book, description])
-
-  // ── Mutations ────────────────────────────────────────────────────────────
-
-  const setStatus = useCallback(
-    async (status: UserBookRow['status']) => {
-      if (!book || !viewerId) return
-      const wasFinished = userBook?.status === 'finished'
-      const payload: Record<string, unknown> = {
-        user_id: viewerId,
-        book_id: book.id,
-        status,
-      }
-      if (status === 'reading') payload.started_at = new Date().toISOString()
-      if (status === 'finished') payload.finished_at = new Date().toISOString()
-      const { data, error } = await supabase
-        .from('user_books')
-        .upsert(payload, { onConflict: 'user_id,book_id' })
-        .select('id, status, progress_percentage, is_favorite')
-        .single()
-      if (!error && data) setUserBook(data as UserBookRow)
-      setStatusMenuOpen(false)
-      // Fresh transition to finished, surface the review sheet first, then
-      // run the celebration (quote-card nav + series follow-up) once the
-      // sheet closes. We capture all the celebration data up front and
-      // stash it in a ref so the post-close handler can replay it.
-      if (status === 'finished' && !wasFinished && data) {
-        haptic.success()
-        ;(async () => {
-          const { notifyClubMembersOfFinish } = await import('@/lib/clubs')
-          await notifyClubMembersOfFinish({
-            finisherUserId: viewerId,
-            bookId: book.id,
-            bookTitle: book.title,
-          })
-        })().catch(() => {})
-        const startIso = (data as { started_at?: string } | null)?.started_at
-        let daysToRead: number | null = null
-        if (startIso) {
-          const ms = Date.now() - new Date(startIso).getTime()
-          daysToRead = Math.max(1, Math.round(ms / 86_400_000))
-        }
-        const { count: highlightCount } = await supabase
-          .from('highlights')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', viewerId)
-          .eq('book_id', book.id)
-
-        finishCelebrationRef.current = () => {
-          router.push({
-            pathname: '/quote-card',
-            params: {
-              type: 'finished',
-              bookId: book.id,
-              bookTitle: book.title,
-              author: book.author,
-              coverUrl: book.cover_url ?? '',
-              daysToRead: daysToRead != null ? String(daysToRead) : '',
-              highlightCount: String(highlightCount ?? 0),
-            },
-          } as never)
-          if (book.series_name) {
-            let q = supabase
-              .from('books')
-              .select('id, title, author, cover_url, series_order')
-              .eq('series_name', book.series_name)
-              .neq('id', book.id)
-              .order('series_order', { ascending: true, nullsFirst: false })
-              .limit(1)
-            if (typeof book.series_order === 'number') {
-              q = q.gt('series_order', book.series_order)
-            }
-            q.then(({ data: nextRow }: any) => {
-              const next = ((nextRow ?? [])[0] as
-                | { id: string; title: string; author: string }
-                | undefined)
-              if (!next) return
-              setTimeout(() => {
-                Alert.alert(
-                  `Next in ${book.series_name}`,
-                  `${next.title} is up next. Add it to your library?`,
-                  [
-                    { text: 'Maybe later', style: 'cancel' },
-                    {
-                      text: 'Add to Want to Read',
-                      onPress: async () => {
-                        await supabase.from('user_books').upsert(
-                          { user_id: viewerId, book_id: next.id, status: 'want_to_read' },
-                          { onConflict: 'user_id,book_id' },
-                        )
-                      },
-                    },
-                    {
-                      text: 'Open',
-                      onPress: () => router.push(`/book/${next.id}` as never),
-                    },
-                  ],
-                )
-              }, 600)
-            })
-          }
-        }
-
-        const userBookId = (data as { id: string }).id
-        setFinishReviewUserBookId(userBookId)
-      }
-    },
-    [book, router, userBook, viewerId],
-  )
-
-  const toggleFavorite = useCallback(async () => {
-    if (!book || !viewerId) return
-    const next = !userBook?.is_favorite
-    setUserBook((prev) => (prev ? { ...prev, is_favorite: next } : prev))
-    await supabase
-      .from('user_books')
-      .upsert(
-        {
-          user_id: viewerId,
-          book_id: book.id,
-          status: userBook?.status ?? 'want_to_read',
-          is_favorite: next,
+    const wasFinished = userBook?.status === 'finished'
+    setBookStatus.fire({ bookId: book.id, status, book })
+    if (status !== 'finished' || wasFinished) return
+    // Fresh transition to finished: the review sheet first, then the celebration
+    // (quote card, and the next book in the series) once it closes.
+    haptic.success()
+    const daysToRead = userBook?.startedAt ? Math.max(1, Math.round((Date.now() - userBook.startedAt) / 86_400_000)) : null
+    const highlightCount = (annotations.data?.mine ?? []).filter((m) => m.type === 'highlight').length
+    const next = page?.nextInSeries ?? null
+    finishCelebrationRef.current = () => {
+      router.push({
+        pathname: '/quote-card',
+        params: {
+          type: 'finished',
+          bookId: book.id,
+          bookTitle: book.title,
+          author: book.author,
+          coverUrl: book.coverUrl ?? '',
+          daysToRead: daysToRead != null ? String(daysToRead) : '',
+          highlightCount: String(highlightCount),
         },
-        { onConflict: 'user_id,book_id' },
-      )
-  }, [book, userBook, viewerId])
-
-  const fetchInsight = useCallback(
-    async (lens: BookInsightLens) => {
-      if (!book) return
-      setInsights((m) => ({ ...m, [lens]: 'loading' }))
-      try {
-        const text = await getBookInsight(
-          { bookId: book.id, bookTitle: book.title, author: book.author },
-          lens,
+      } as never)
+      if (!next) return
+      setTimeout(() => {
+        Alert.alert(
+          `Next in ${book.seriesName ?? 'the series'}`,
+          `${next.title} is up next. Add it to your library?`,
+          [
+            { text: 'Maybe later', style: 'cancel' },
+            {
+              text: 'Add to Want to Read',
+              onPress: () => setBookStatus.fire({ bookId: next.id, status: 'want', book: next }),
+            },
+            { text: 'Open', onPress: () => router.push(`/book/${next.slug}` as never) },
+          ],
         )
-        setInsights((m) => ({ ...m, [lens]: text }))
-      } catch {
-        setInsights((m) => ({ ...m, [lens]: 'error' }))
-      }
-    },
-    [book],
-  )
-
-  const fetchDeepDive = useCallback(
-    async (kind: DeepDiveKind) => {
-      if (!book) return
-      setDeepDive((m) => ({ ...m, [kind]: 'loading' }))
-      try {
-        const text = await getDeepDive(
-          { bookId: book.id, bookTitle: book.title, author: book.author },
-          kind,
-        )
-        setDeepDive((m) => ({ ...m, [kind]: text }))
-      } catch {
-        setDeepDive((m) => ({ ...m, [kind]: 'error' }))
-      }
-    },
-    [book],
-  )
-
-  const fetchSimilar = useCallback(async () => {
-    if (!book || similar.length > 0) return
-    try {
-      const list = await getSimilarBooks({
-        bookId: book.id,
-        bookTitle: book.title,
-        author: book.author,
-      })
-      setSimilar(list)
-    } catch {
-      // ignore
+      }, 600)
     }
-  }, [book, similar.length])
-
-  useEffect(() => {
-    if (book) fetchSimilar()
-  }, [book, fetchSimilar])
+    setFinishReviewOpen(true)
+  }
 
   // ── Render ───────────────────────────────────────────────────────────────
 
-  if (loading) {
+  if (pageQuery.isPending) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
         <ActivityIndicator color={colors.brandUi} />
       </SafeAreaView>
     )
   }
-  if (!book) {
+  if (!book || !page) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
         <Text
           style={{ fontFamily: Fonts.ui, fontSize: 14, color: colors.textTertiary, textAlign: 'center' }}
         >
-          We couldn't find that book.
+          {pageQuery.isError && (pageQuery.error as { status?: number }).status !== 404
+            ? "We couldn't load that book. Check your connection and try again."
+            : "We couldn't find that book."}
         </Text>
         <Pressable onPress={() => router.back()} className="mt-3">
           <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Back</Text>
@@ -493,7 +157,8 @@ export default function BookDetail() {
     )
   }
 
-  const readMinutes = book.word_count ? Math.round(book.word_count / 250) : null
+  const description = page.ai.description ?? book.description
+  const readMinutes = book.wordCount ? Math.round(book.wordCount / 250) : null
   const readingTimeLabel = readMinutes
     ? readMinutes >= 60
       ? `~${Math.round(readMinutes / 60)} hr read`
@@ -507,9 +172,9 @@ export default function BookDetail() {
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         {/* Header with cover hero + gradient */}
         <View style={{ height: 320, backgroundColor: colors.bgSunken }}>
-          {book.cover_url ? (
+          {book.coverUrl ? (
             <Image
-              source={{ uri: book.cover_url }}
+              source={{ uri: book.coverUrl }}
               style={{ width: '100%', height: '100%' }}
               resizeMode="cover"
               blurRadius={4}
@@ -608,9 +273,9 @@ export default function BookDetail() {
                 borderColor: colors.borderSubtle,
               }}
             >
-              {book.cover_url ? (
+              {book.coverUrl ? (
                 <Image
-                  source={{ uri: book.cover_url }}
+                  source={{ uri: book.coverUrl }}
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="cover"
                   accessibilityRole="image"
@@ -645,7 +310,7 @@ export default function BookDetail() {
           </Text>
           <Pressable
             onPress={() =>
-              router.push(`/author/${authorSlug(book.author)}` as never)
+              book.authorSlug && router.push(`/author/${book.authorSlug}` as never)
             }
           >
             <Text
@@ -660,7 +325,7 @@ export default function BookDetail() {
               {book.author}
             </Text>
           </Pressable>
-          {book.series_name ? (
+          {book.seriesName ? (
             <Text
               style={{
                 fontFamily: Fonts.ui,
@@ -670,7 +335,7 @@ export default function BookDetail() {
                 marginTop: 2,
               }}
             >
-              {book.series_name}
+              {book.seriesName}{book.seriesOrder ? `, book ${book.seriesOrder}` : ''}
             </Text>
           ) : null}
           {readingTimeLabel ? (
@@ -718,23 +383,30 @@ export default function BookDetail() {
           <PrimaryCta
             userBook={userBook}
             onAddPress={() => setStatusMenuOpen(true)}
-            onContinue={() => book && router.push(`/reader/${book.id}` as never)}
-            onReread={() => setStatus('reading')}
+            onContinue={() => {
+              if (!book.readable) return
+              if (userBook?.status !== 'reading') setStatus('reading')
+              router.push(`/reader/${book.id}` as never)
+            }}
+            onReread={() => {
+              setStatus('reading')
+              router.push(`/reader/${book.id}` as never)
+            }}
           />
 
           {/* Secondary row */}
           <View className="flex-row items-center justify-around mt-3 mb-2">
             <SecondaryButton
-              Icon={Heart}
-              label={userBook?.is_favorite ? 'Favorited' : 'Favorite'}
-              onPress={toggleFavorite}
-              active={!!userBook?.is_favorite}
-            />
-            <SecondaryButton
               Icon={BookmarkSimple}
               label="Want"
-              onPress={() => setStatus('want_to_read')}
-              active={userBook?.status === 'want_to_read'}
+              onPress={() => setStatus('want')}
+              active={userBook?.status === 'want'}
+            />
+            <SecondaryButton
+              Icon={CheckCircle}
+              label="Finished"
+              onPress={() => setStatus('finished')}
+              active={userBook?.status === 'finished'}
             />
             <SecondaryButton
               Icon={ShareNetwork}
@@ -759,7 +431,7 @@ export default function BookDetail() {
                 marginLeft: 6,
               }}
             >
-              {avgRating ? avgRating.toFixed(1) : ''}
+              {book.rating ? book.rating.toFixed(1) : ''}
             </Text>
             <Text
               style={{
@@ -769,17 +441,18 @@ export default function BookDetail() {
                 marginLeft: 10,
               }}
             >
-              from {readerCount} reader{readerCount === 1 ? '' : 's'}
+              {book.ratingCount > 0 ? `${book.ratingCount} rating${book.ratingCount === 1 ? '' : 's'}, ` : ''}
+              {page.readerCount} reader{page.readerCount === 1 ? '' : 's'}
             </Text>
           </View>
-          {book.mood_tags && book.mood_tags.length > 0 ? (
+          {book.moodTags && book.moodTags.length > 0 ? (
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ gap: 6, paddingBottom: 4 }}
               style={{ marginBottom: 8 }}
             >
-              {book.mood_tags.map((m) => (
+              {book.moodTags.map((m) => (
                 <View
                   key={m}
                   className="px-3 py-1 rounded-full"
@@ -808,7 +481,7 @@ export default function BookDetail() {
         </View>
 
         {/* Content warnings, collapsed by default so they don't dominate. */}
-        {book.content_warnings && book.content_warnings.length > 0 ? (
+        {book.contentWarnings && book.contentWarnings.length > 0 ? (
           <View style={{ paddingHorizontal: 20, marginTop: 16 }}>
             <Pressable
               onPress={() => setShowContentWarnings((v) => !v)}
@@ -834,7 +507,7 @@ export default function BookDetail() {
               <View
                 className="mt-2 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
               >
-                {book.content_warnings.map((w) => (
+                {book.contentWarnings.map((w) => (
                   <Text
                     key={w}
                     style={{
@@ -856,7 +529,7 @@ export default function BookDetail() {
             see read/library/buy options before the AI cards. */}
         <SectionHeading>Where to read</SectionHeading>
         <View style={{ paddingHorizontal: 20, gap: 8 }}>
-          {book.id ? (
+          {book.readable ? (
             <Pressable
               onPress={() => router.push(`/reader/${book.id}` as never)}
               accessibilityRole="button"
@@ -869,34 +542,19 @@ export default function BookDetail() {
               </Text>
             </Pressable>
           ) : null}
-          <Pressable
-            onPress={() =>
-              Share.share({
-                message: `https://www.worldcat.org/search?q=${encodeURIComponent(`${book.title} ${book.author}`)}`,
-              })
-            }
-            accessibilityRole="link"
-            accessibilityLabel="Find in a library"
-            className="px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark items-center"
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textPrimary, fontSize: 14 }}>
-              Find in a library
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() =>
-              Share.share({
-                message: `https://bookshop.org/search?keywords=${encodeURIComponent(book.title)}`,
-              })
-            }
-            accessibilityRole="link"
-            accessibilityLabel="Buy a copy on Bookshop.org"
-            className="px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark items-center"
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textPrimary, fontSize: 14 }}>
-              Buy a copy
-            </Text>
-          </Pressable>
+          {page.buys.map((b) => (
+            <Pressable
+              key={b.retailer}
+              onPress={() => Linking.openURL(b.url)}
+              accessibilityRole="link"
+              accessibilityLabel={b.sponsored ? `${b.label} (affiliate link)` : b.label}
+              className="px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark items-center"
+            >
+              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textPrimary, fontSize: 14 }}>
+                {b.label}
+              </Text>
+            </Pressable>
+          ))}
         </View>
 
         {/* About this book, collapsed by default per task.md Section 1.
@@ -922,105 +580,71 @@ export default function BookDetail() {
           </Pressable>
           {showDescription ? (
             <View style={{ marginTop: 8 }}>
-              {descLoading && !description ? (
-                <View style={{ paddingVertical: 16 }}>
-                  <ActivityIndicator color={colors.brandUi} />
-                </View>
-              ) : descError && !description ? (
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
-                  Couldn't generate a description right now.
-                </Text>
+              {description ? (
+                <ExpandableText text={description} />
               ) : (
-                <ExpandableText text={description ?? ''} />
+                <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
+                  No description yet.
+                </Text>
               )}
             </View>
           ) : null}
         </View>
 
-        {/* Deep Dive, bundles the AI insight lenses and the long-form
-            analyses behind a single collapsible header per task.md Section 1.
-            Default closed; the cards' own lazy-fetch fires on first expand. */}
-        <View style={{ paddingHorizontal: 20, marginTop: 12 }}>
-          <Pressable
-            onPress={() => setShowDeepDive((v) => !v)}
-            accessibilityRole="button"
-            accessibilityLabel={showDeepDive ? 'Hide Deep Dive' : 'Show Deep Dive'}
-            accessibilityState={{ expanded: showDeepDive }}
-            className="flex-row items-center justify-between px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>
-              Deep Dive
-            </Text>
-            {showDeepDive ? (
-              <CaretDown color={colors.textTertiary} size={14} />
-            ) : (
-              <CaretRight color={colors.textTertiary} size={14} />
-            )}
-          </Pressable>
-        </View>
-
-        {showDeepDive ? (
-        <>
-        {/* AI Insights */}
-        <SectionHeading>AI insights</SectionHeading>
-        <View style={{ paddingHorizontal: 20, gap: 8 }}>
-          <InsightCard
-            lens="difficulty"
-            label="Reading difficulty"
-            state={insights.difficulty}
-            onOpen={() => fetchInsight('difficulty')}
-          />
-          <InsightCard
-            lens="warnings"
-            label="Content warnings"
-            state={insights.warnings}
-            onOpen={() => fetchInsight('warnings')}
-          />
-          <InsightCard
-            lens="context"
-            label="Historical context"
-            state={insights.context}
-            onOpen={() => fetchInsight('context')}
-          />
-          <InsightCard
-            lens="appeal"
-            label="Why readers love it"
-            state={insights.appeal}
-            onOpen={() => fetchInsight('appeal')}
-          />
-        </View>
-
-        {/* Deep Dive, long-form analyses cached in book_ai_cache. The
-            reread guide is gated on the viewer having finished the book. */}
-        <SectionHeading>Deep Dive</SectionHeading>
-        <View style={{ paddingHorizontal: 20, gap: 8 }}>
-          <DeepDiveCard kind="book_summary" label="Full Book Summary" state={deepDive.book_summary} onOpen={() => fetchDeepDive('book_summary')} />
-          <DeepDiveCard kind="character_arcs" label="Character Arc Tracker" state={deepDive.character_arcs} onOpen={() => fetchDeepDive('character_arcs')} />
-          <DeepDiveCard kind="book_timeline" label="Chronological Timeline" state={deepDive.book_timeline} onOpen={() => fetchDeepDive('book_timeline')} />
-          <DeepDiveCard kind="theme_analysis" label="Theme Analysis" state={deepDive.theme_analysis} onOpen={() => fetchDeepDive('theme_analysis')} />
-          <DeepDiveCard kind="symbolism_index" label="Symbolism Index" state={deepDive.symbolism_index} onOpen={() => fetchDeepDive('symbolism_index')} />
-          <DeepDiveCard kind="criticism_digest" label="Literary Criticism Digest" state={deepDive.criticism_digest} onOpen={() => fetchDeepDive('criticism_digest')} />
-          <DeepDiveCard kind="influence_map" label="Influence Map" state={deepDive.influence_map} onOpen={() => fetchDeepDive('influence_map')} />
-          <DeepDiveCard kind="narrative_structure" label="Narrative Structure" state={deepDive.narrative_structure} onOpen={() => fetchDeepDive('narrative_structure')} />
-          <DeepDiveCard kind="pov_analysis" label="POV Analysis" state={deepDive.pov_analysis} onOpen={() => fetchDeepDive('pov_analysis')} />
-          <DeepDiveCard kind="setting_analysis" label="Setting Analysis" state={deepDive.setting_analysis} onOpen={() => fetchDeepDive('setting_analysis')} />
-          {userBook?.status === 'finished' ? (
-            <DeepDiveCard kind="reread_guide" label="First vs Second Read" state={deepDive.reread_guide} onOpen={() => fetchDeepDive('reread_guide')} />
-          ) : (
-            <View
-              className="flex-row items-center p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              style={{ opacity: 0.6 }}
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary, flex: 1 }}>
-                First vs Second Read
-              </Text>
-              <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
-                🔒 Finish the book first
-              </Text>
+        {page.ai.authorBio ? (
+          <>
+            <SectionHeading>About {book.author}</SectionHeading>
+            <View style={{ paddingHorizontal: 20 }}>
+              <ExpandableText text={page.ai.authorBio} />
             </View>
-          )}
+          </>
+        ) : null}
+
+        {page.ai.readingOrder ? (
+          <>
+            <SectionHeading>Reading order</SectionHeading>
+            <View style={{ paddingHorizontal: 20 }}>
+              <ExpandableText text={page.ai.readingOrder} />
+            </View>
+          </>
+        ) : null}
+
+        {/* Plus companion answers about the whole book. */}
+        <SectionHeading>Ask the companion</SectionHeading>
+        <View className="flex-row" style={{ paddingHorizontal: 20, gap: 8 }}>
+          {([
+            { action: 'book_insight', label: 'An insight', Icon: Lightbulb },
+            { action: 'deep_dive', label: 'Go deeper', Icon: Student },
+          ] as const).map((t) => (
+            <Pressable
+              key={t.action}
+              onPress={() => (signedIn ? setCompanion(t.action) : router.push('/(auth)/login' as never))}
+              accessibilityRole="button"
+              className="flex-1 flex-row items-center justify-center px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
+              style={{ gap: 8 }}
+            >
+              <t.Icon color={colors.brandUi} size={18} />
+              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>{t.label}</Text>
+            </Pressable>
+          ))}
         </View>
-        </>
+
+        {page.awards.length > 0 ? (
+          <>
+            <SectionHeading>Awards</SectionHeading>
+            <View style={{ paddingHorizontal: 20, gap: 4 }}>
+              {page.awards.map((a) => (
+                <Text
+                  key={`${a.awardSlug}:${a.year}:${a.distinction}`}
+                  style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textSecondary }}
+                >
+                  {a.awardName}
+                  {a.year ? ` ${a.year}` : ''}
+                  {a.distinction && a.distinction !== 'winner' ? `, ${a.distinction}` : ''}
+                </Text>
+              ))}
+            </View>
+          </>
         ) : null}
 
         {/* Reviews + Similar were previously bundled under Community. Per
@@ -1028,7 +652,7 @@ export default function BookDetail() {
             with the social signal, similar books lives further down. */}
         <SectionHeading>Recent reviews</SectionHeading>
         <View style={{ paddingHorizontal: 20 }}>
-          {recentReviews.length === 0 ? (
+          {page.reviews.length === 0 ? (
             <Text
               style={{
                 fontFamily: Fonts.ui,
@@ -1040,9 +664,9 @@ export default function BookDetail() {
               No public reviews yet.
             </Text>
           ) : (
-            recentReviews.map((r, i) => (
+            page.reviews.map((r) => (
               <View
-                key={`${r.user?.id}:${i}`}
+                key={r.id}
                 className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
               >
                 <View className="flex-row items-center" style={{ marginBottom: 4 }}>
@@ -1053,9 +677,9 @@ export default function BookDetail() {
                       color: colors.textPrimary,
                     }}
                   >
-                    {r.user?.display_name ?? r.user?.username ?? 'Reader'}
+                    {r.author?.displayName ?? r.author?.username ?? 'Reader'}
                   </Text>
-                  {r.rating ? (
+                  {r.ratingHalf ? (
                     <Text
                       style={{
                         fontFamily: Fonts.mono,
@@ -1064,7 +688,8 @@ export default function BookDetail() {
                         marginLeft: 8,
                       }}
                     >
-                      {'★'.repeat(r.rating)}
+                      {'★'.repeat(Math.floor(r.ratingHalf / 2))}
+                      {r.ratingHalf % 2 ? '½' : ''}
                     </Text>
                   ) : null}
                 </View>
@@ -1077,7 +702,7 @@ export default function BookDetail() {
                   }}
                   numberOfLines={4}
                 >
-                  {r.review}
+                  {r.containsSpoilers ? 'Contains spoilers.' : r.review}
                 </Text>
               </View>
             ))
@@ -1085,15 +710,14 @@ export default function BookDetail() {
         </View>
 
         {/* Popular highlights, public passages from other readers. */}
-        {popularHighlights.length > 0 ? (
+        {page.popular.length > 0 ? (
           <>
             <SectionHeading>Popular highlights</SectionHeading>
             <View style={{ paddingHorizontal: 20, gap: 8 }}>
-              {popularHighlights.map((h) => {
-                const name = h.user?.display_name ?? h.user?.username ?? null
+              {page.popular.map((h) => {
                 return (
                   <View
-                    key={h.id}
+                    key={h.normalizedText}
                     className="p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
                   >
                     <Text
@@ -1105,20 +729,11 @@ export default function BookDetail() {
                       }}
                       numberOfLines={4}
                     >
-                      "{h.text}"
+                      "{h.normalizedText}"
                     </Text>
-                    {name ? (
-                      <Text
-                        style={{
-                          fontFamily: Fonts.ui,
-                          fontSize: 11,
-                          color: colors.textTertiary,
-                          marginTop: 6,
-                        }}
-                      >
-                       , {name}
-                      </Text>
-                    ) : null}
+                    <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 6 }}>
+                      Highlighted by {h.count} readers
+                    </Text>
                   </View>
                 )
               })}
@@ -1128,98 +743,35 @@ export default function BookDetail() {
 
         {/* Similar books, extracted from the old Community block per
             task.md Section 1. */}
-        {similar.length > 0 ? (
+        {page.ai.similarBooks ? (
           <>
-            <SectionHeading>Readers also liked</SectionHeading>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 10, paddingRight: 12 }}
-            >
-              {similar.map((s) => (
-                <Pressable
-                  key={`${s.title}:${s.author}`}
-                  onPress={() => s.bookId && router.push(`/book/${s.bookId}` as never)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${s.title} by ${s.author}`}
-                  className="p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-                  style={{ width: 220 }}
-                >
-                  <Text
-                    style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
-                    numberOfLines={2}
-                  >
-                    {s.title}
-                  </Text>
-                  <Text
-                    style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 2 }}
-                    numberOfLines={1}
-                  >
-                    {s.author}
-                  </Text>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.bodyItalic,
-                      fontSize: 12,
-                      color: colors.textSecondary,
-                      marginTop: 6,
-                      lineHeight: 17,
-                    }}
-                    numberOfLines={3}
-                  >
-                    {s.reason}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+            <SectionHeading>If you like this</SectionHeading>
+            <View style={{ paddingHorizontal: 20 }}>
+              <ExpandableText text={page.ai.similarBooks} />
+            </View>
           </>
         ) : null}
 
+        <BookRow title="Readers also liked" books={page.related} onOpen={(slug) => router.push(`/book/${slug}` as never)} />
+        {page.nextInSeries ? (
+          <BookRow
+            title={`Next in ${book.seriesName ?? 'the series'}`}
+            books={[page.nextInSeries]}
+            onOpen={(slug) => router.push(`/book/${slug}` as never)}
+          />
+        ) : null}
+
         {/* Author section */}
-        {moreByAuthor.length > 0 ? (
+        {page.moreByAuthor.length > 0 ? (
           <>
-            <SectionHeading>More by {book.author}</SectionHeading>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
-            >
-              {moreByAuthor.map((b) => (
-                <Pressable
-                  key={b.id}
-                  onPress={() => router.push(`/book/${b.id}` as never)}
-                  style={{ width: 100 }}
-                >
-                  <View
-                    style={{
-                      width: 100,
-                      height: 150,
-                      borderRadius: 6,
-                      overflow: 'hidden',
-                      backgroundColor: colors.bgSunken,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginBottom: 6,
-                    }}
-                  >
-                    {b.cover_url ? (
-                      <Image source={{ uri: b.cover_url }} style={{ width: '100%', height: '100%' }} />
-                    ) : (
-                      <BookOpen color={colors.textTertiary} size={20} />
-                    )}
-                  </View>
-                  <Text
-                    style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textPrimary }}
-                    numberOfLines={2}
-                  >
-                    {b.title}
-                  </Text>
-                </Pressable>
-              ))}
-            </ScrollView>
+            <BookRow
+              title={`More by ${book.author}`}
+              books={page.moreByAuthor}
+              onOpen={(slug) => router.push(`/book/${slug}` as never)}
+            />
             <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
               <Pressable
-                onPress={() => router.push(`/author/${authorSlug(book.author)}` as never)}
+                onPress={() => book.authorSlug && router.push(`/author/${book.authorSlug}` as never)}
                 className="flex-row items-center"
               >
                 <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, fontSize: 13 }}>
@@ -1232,11 +784,11 @@ export default function BookDetail() {
         ) : null}
 
         {/* Clubs reading this */}
-        {clubs.length > 0 ? (
+        {page.clubs.length > 0 ? (
           <>
             <SectionHeading>Clubs reading this</SectionHeading>
             <View style={{ paddingHorizontal: 20, gap: 8 }}>
-              {clubs.map((c) => (
+              {page.clubs.map((c) => (
                 <Pressable
                   key={c.id}
                   onPress={() => router.push(`/clubs/${c.id}` as never)}
@@ -1257,7 +809,7 @@ export default function BookDetail() {
                         marginTop: 2,
                       }}
                     >
-                      {c.member_count} members
+                      {c.memberCount} members
                     </Text>
                   </View>
                   <Text
@@ -1271,18 +823,6 @@ export default function BookDetail() {
           </>
         ) : null}
 
-        <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-          <ChapterReactionsSection
-            bookId={book.id}
-            progressPercentage={userBook?.progress_percentage ?? null}
-            inLibrary={Boolean(
-              userBook?.status &&
-                ['reading', 'finished', 'paused'].includes(userBook.status),
-            )}
-          />
-          <BookDiscussionsSection bookId={book.id} bookSlug={null} />
-          <PassageCommentsSection bookId={book.id} />
-        </View>
       </ScrollView>
 
       {/* Add to Library status menu */}
@@ -1291,16 +831,21 @@ export default function BookDetail() {
         title="Add to library"
         onClose={() => setStatusMenuOpen(false)}
         items={[
-          { id: 'want', label: 'Want to Read', onPress: () => setStatus('want_to_read') },
+          { id: 'want', label: 'Want to Read', onPress: () => setStatus('want') },
           { id: 'reading', label: 'Currently Reading', onPress: () => setStatus('reading') },
-          {
-            id: 'now',
-            label: 'Start Reading Now',
-            onPress: () => {
-              setStatus('reading')
-              if (book) router.push(`/reader/${book.id}` as never)
-            },
-          },
+          ...(book.readable
+            ? [
+                {
+                  id: 'now',
+                  label: 'Start Reading Now',
+                  onPress: () => {
+                    setStatus('reading')
+                    router.push(`/reader/${book.id}` as never)
+                  },
+                },
+              ]
+            : []),
+          { id: 'finished', label: 'Finished', onPress: () => setStatus('finished') },
           {
             id: 'pause',
             label: 'Pause Reading',
@@ -1313,11 +858,11 @@ export default function BookDetail() {
       />
 
       <FinishReviewSheet
-        visible={finishReviewUserBookId !== null}
-        userBookId={finishReviewUserBookId ?? ''}
-        bookTitle={book?.title ?? 'this book'}
+        visible={finishReviewOpen}
+        bookId={book.id}
+        bookTitle={book.title}
         onClose={() => {
-          setFinishReviewUserBookId(null)
+          setFinishReviewOpen(false)
           const run = finishCelebrationRef.current
           finishCelebrationRef.current = null
           if (run) run()
@@ -1329,23 +874,11 @@ export default function BookDetail() {
         note={pauseNote}
         onChangeNote={setPauseNote}
         onCancel={() => setPauseModalOpen(false)}
-        onConfirm={async () => {
-          if (!book || !viewerId) return
-          const trimmed = pauseNote.trim()
-          await supabase.from('user_books').upsert(
-            {
-              user_id: viewerId,
-              book_id: book.id,
-              status: 'paused',
-              paused_at: new Date().toISOString(),
-              paused_note: trimmed || null,
-            },
-            { onConflict: 'user_id,book_id' },
-          )
-          setUserBook((prev) =>
-            prev ? { ...prev, status: 'paused' } : prev,
-          )
+        onConfirm={() => {
           setPauseModalOpen(false)
+          setStatus('paused')
+          const note = pauseNote.trim()
+          if (note) void queueWrite({ resource: 'user_book', verb: 'update', payload: { bookId: book.id, pausedNote: note } })
         }}
       />
 
@@ -1360,7 +893,6 @@ export default function BookDetail() {
             label: 'Create Quote Card',
             Icon: ImageSquare,
             onPress: () => {
-              if (!book) return
               router.push(
                 `/quote-card?bookId=${book.id}&bookTitle=${encodeURIComponent(book.title)}&author=${encodeURIComponent(book.author)}` as never,
               )
@@ -1371,10 +903,9 @@ export default function BookDetail() {
             label: "I'm Reading This",
             Icon: Megaphone,
             onPress: async () => {
-              if (!book) return
               try {
                 await Share.share({
-                  message: `I'm reading "${book.title}" by ${book.author} on Foxing.`,
+                  message: `I'm reading "${book.title}" by ${book.author} on Foxing. https://foxing.app/books/${book.slug}`,
                 })
               } catch {
                 /* user cancelled */
@@ -1382,22 +913,12 @@ export default function BookDetail() {
             },
           },
           {
-            id: 'recommend',
-            label: 'Recommend to a friend',
-            Icon: UserPlus,
-            onPress: () => {
-              if (!book) return
-              setRecommendOpen(true)
-            },
-          },
-          {
             id: 'link',
             label: 'Copy link',
             Icon: LinkIcon,
             onPress: async () => {
-              if (!book) return
               try {
-                await Share.share({ message: `foxing://book/${book.id}` })
+                await Share.share({ message: `https://foxing.app/books/${book.slug}` })
               } catch {
                 /* user cancelled */
               }
@@ -1406,17 +927,70 @@ export default function BookDetail() {
         ]}
       />
 
-      {book ? (
-        <RecommendToFriendSheet
-          visible={recommendOpen}
-          onClose={() => setRecommendOpen(false)}
-          bookId={book.id}
-          bookTitle={book.title}
-        />
-      ) : null}
+      <CompanionSheet
+        visible={companion !== null}
+        title={companion === 'deep_dive' ? 'Go deeper' : 'An insight'}
+        eyebrow={book.title}
+        request={companion ? { action: companion, bookId: book.id } : null}
+        onClose={() => setCompanion(null)}
+      />
     </View>
   )
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 
+function BookRow({
+  title,
+  books,
+  onOpen,
+}: {
+  title: string
+  books: W.BookCard[]
+  onOpen: (slug: string) => void
+}) {
+  const colors = useColors()
+  if (books.length === 0) return null
+  return (
+    <>
+      <SectionHeading>{title}</SectionHeading>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 20, gap: 10 }}
+      >
+        {books.map((b) => (
+          <Pressable
+            key={b.id}
+            onPress={() => onOpen(b.slug)}
+            accessibilityRole="link"
+            accessibilityLabel={`${b.title} by ${b.author}`}
+            style={{ width: 100 }}
+          >
+            <View
+              style={{
+                width: 100,
+                height: 150,
+                borderRadius: 6,
+                overflow: 'hidden',
+                backgroundColor: colors.bgSunken,
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 6,
+              }}
+            >
+              {b.coverUrl ? (
+                <Image source={{ uri: b.coverUrl }} style={{ width: '100%', height: '100%' }} />
+              ) : (
+                <BookOpen color={colors.textTertiary} size={20} />
+              )}
+            </View>
+            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textPrimary }} numberOfLines={2}>
+              {b.title}
+            </Text>
+          </Pressable>
+        ))}
+      </ScrollView>
+    </>
+  )
+}

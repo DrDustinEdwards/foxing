@@ -1,10 +1,17 @@
 import { useColors } from '@/constants/colors'
-import { ActivityIndicator, FlatList, Image, Pressable, ScrollView, Text, View } from 'react-native'
+import { FlatList, Image, Pressable, ScrollView, Text, View } from 'react-native'
 import { Fonts } from '@/constants/fonts'
-import type { ClubLite, SupaBook } from './discover-types'
-import { ArrowsClockwise, BookOpen, CaretDown, CaretUp, Sparkle } from 'phosphor-react-native'
-import type { RecommendedBook } from '@/lib/recommendations'
+import type { ClubCard } from '@foxing/types'
+import { BookOpen, CaretDown, CaretUp } from 'phosphor-react-native'
 import { useState } from 'react'
+
+/** What a cover tile needs; book cards and today's pick both have it. */
+export interface MiniBook {
+  slug: string
+  title: string
+  author: string
+  coverUrl: string | null
+}
 
 export function SectionWrap({ title, children }: { title: string; children: React.ReactNode }) {
   const colors = useColors()
@@ -34,24 +41,24 @@ export function SectionRow({
   onPressBook,
 }: {
   title: string
-  books: SupaBook[]
-  onPressBook: (id: string) => void
+  books: MiniBook[]
+  onPressBook: (slug: string) => void
 }) {
   return (
     <SectionWrap title={title}>
       <FlatList
         horizontal
         data={books}
-        keyExtractor={(b) => b.id}
+        keyExtractor={(b) => b.slug}
         contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
         showsHorizontalScrollIndicator={false}
-        renderItem={({ item }) => <SupaBookMini book={item} onPress={() => onPressBook(item.id)} />}
+        renderItem={({ item }) => <BookMini book={item} onPress={() => onPressBook(item.slug)} />}
       />
     </SectionWrap>
   )
 }
 
-function SupaBookMini({ book, onPress }: { book: SupaBook; onPress: () => void }) {
+function BookMini({ book, onPress }: { book: MiniBook; onPress: () => void }) {
   const colors = useColors()
   return (
     <Pressable onPress={onPress} style={{ width: 110 }}>
@@ -67,8 +74,8 @@ function SupaBookMini({ book, onPress }: { book: SupaBook; onPress: () => void }
           marginBottom: 6,
         }}
       >
-        {book.cover_url ? (
-          <Image source={{ uri: book.cover_url }} style={{ width: '100%', height: '100%' }} />
+        {book.coverUrl ? (
+          <Image source={{ uri: book.coverUrl }} style={{ width: '100%', height: '100%' }} />
         ) : (
           <BookOpen color={colors.textTertiary} size={20} />
         )}
@@ -128,7 +135,7 @@ export function ChipRow({
   )
 }
 
-export function ClubMiniCard({ club, onPress }: { club: ClubLite; onPress: () => void }) {
+export function ClubMiniCard({ club, onPress }: { club: ClubCard; onPress: () => void }) {
   const colors = useColors()
   return (
     <Pressable
@@ -142,17 +149,17 @@ export function ClubMiniCard({ club, onPress }: { club: ClubLite; onPress: () =>
       >
         {club.name}
       </Text>
-      {club.current_book ? (
+      {club.currentBook ? (
         <Text
           style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 4 }}
           numberOfLines={1}
         >
-          Reading {club.current_book.title}
+          Reading {club.currentBook.title}
         </Text>
       ) : null}
       <View className="flex-row items-center justify-between" style={{ marginTop: 8 }}>
         <Text style={{ fontFamily: Fonts.mono, fontSize: 11, color: colors.textTertiary }}>
-          {club.member_count} member{club.member_count === 1 ? '' : 's'}
+          {club.memberCount} member{club.memberCount === 1 ? '' : 's'}
         </Text>
         <Text
           style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}
@@ -164,111 +171,8 @@ export function ClubMiniCard({ club, onPress }: { club: ClubLite; onPress: () =>
   )
 }
 
-function RecommendedSection({
-  recs,
-  busy,
-  onRefresh,
-  onTap,
-}: {
-  recs: RecommendedBook[] | null
-  busy: boolean
-  onRefresh: () => void
-  onTap: (r: RecommendedBook) => void
-}) {
-  const colors = useColors()
-  if (!recs && !busy) return null
-  return (
-    <View style={{ marginTop: 18 }}>
-      <View className="flex-row items-center justify-between px-4" style={{ marginBottom: 10 }}>
-        <View className="flex-row items-center gap-2">
-          <Sparkle color={colors.brandUi} size={14} weight="regular" />
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-            }}
-          >
-            Recommended for you
-          </Text>
-        </View>
-        <Pressable onPress={onRefresh} disabled={busy} hitSlop={8}>
-          {busy ? (
-            <ActivityIndicator color={colors.brandUi} size="small" />
-          ) : (
-            <ArrowsClockwise color={colors.textTertiary} size={14} />
-          )}
-        </Pressable>
-      </View>
-      {busy && !recs ? (
-        <View style={{ paddingVertical: 24, alignItems: 'center' }}>
-          <ActivityIndicator color={colors.brandUi} />
-        </View>
-      ) : recs && recs.length === 0 ? (
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 12,
-            color: colors.textTertiary,
-            paddingHorizontal: 16,
-          }}
-        >
-          We need a little more reading history to suggest something.
-        </Text>
-      ) : (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
-        >
-          {(recs ?? []).map((r) => (
-            <Pressable
-              key={`${r.title}:${r.author}`}
-              onPress={() => onTap(r)}
-              className="p-3 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              style={{ width: 240 }}
-            >
-              <Text
-                style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}
-                numberOfLines={2}
-              >
-                {r.title}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.ui,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  marginTop: 2,
-                }}
-                numberOfLines={1}
-              >
-                {r.author}
-              </Text>
-              <Text
-                style={{
-                  fontFamily: Fonts.bodyItalic,
-                  fontSize: 12,
-                  color: colors.textSecondary,
-                  marginTop: 8,
-                  lineHeight: 17,
-                }}
-                numberOfLines={3}
-              >
-                {r.reason}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      )}
-    </View>
-  )
-}
-
-// Today's Pick hero, a large card with the rotating daily book.
-export function TodaysPickHero({ book, onOpen }: { book: SupaBook; onOpen: () => void }) {
+// Today's Pick hero: the Book of the Month, or the latest staff pick.
+export function TodaysPickHero({ book, onOpen }: { book: MiniBook; onOpen: () => void }) {
   const colors = useColors()
   return (
     <View style={{ marginTop: 18, marginBottom: 4 }}>
@@ -303,9 +207,9 @@ export function TodaysPickHero({ book, onOpen }: { book: SupaBook; onOpen: () =>
             justifyContent: 'center',
           }}
         >
-          {book.cover_url ? (
+          {book.coverUrl ? (
             <Image
-              source={{ uri: book.cover_url }}
+              source={{ uri: book.coverUrl }}
               style={{ width: '100%', height: '100%' }}
               accessibilityRole="image"
               accessibilityLabel={`${book.title} cover`}
@@ -343,23 +247,23 @@ export function TodaysPickHero({ book, onOpen }: { book: SupaBook; onOpen: () =>
   )
 }
 
-// Browse-by collapsible, wraps Era / Length / Theme / Country chip rows
-// behind a single tappable header so the default discover view stays clean.
+// Browse-by collapsible: era and length chip rows behind one header, so the default
+// discover view stays clean.
 export function BrowseBy({
   eras,
   lengths,
-  themes,
-  countries,
   onPick,
 }: {
-  eras: readonly string[]
-  lengths: ReadonlyArray<{ label: string; value: string }>
-  themes: readonly string[]
-  countries: readonly string[]
-  onPick: (type: string, value: string) => void
+  eras: ReadonlyArray<{ slug: string; label: string }>
+  lengths: ReadonlyArray<{ slug: string; label: string }>
+  onPick: (type: 'era' | 'length', slug: string, label: string) => void
 }) {
   const colors = useColors()
   const [open, setOpen] = useState(false)
+  const pick = (type: 'era' | 'length', list: ReadonlyArray<{ slug: string; label: string }>) => (label: string) => {
+    const match = list.find((x) => x.label === label)
+    if (match) onPick(type, match.slug, match.label)
+  }
   return (
     <View style={{ marginTop: 18 }}>
       <Pressable
@@ -387,17 +291,8 @@ export function BrowseBy({
       </Pressable>
       {open ? (
         <View style={{ marginTop: 8 }}>
-          <ChipRow title="Era" values={[...eras]} onPress={(v) => onPick('era', v)} />
-          <ChipRow
-            title="Length"
-            values={lengths.map((l) => l.label)}
-            onPress={(label) => {
-              const match = lengths.find((l) => l.label === label)
-              if (match) onPick('length', match.value)
-            }}
-          />
-          <ChipRow title="Theme" values={[...themes]} onPress={(v) => onPick('theme', v)} />
-          <ChipRow title="Country" values={[...countries]} onPress={(v) => onPick('country', v)} />
+          <ChipRow title="Era" values={eras.map((e) => e.label)} onPress={pick('era', eras)} />
+          <ChipRow title="Length" values={lengths.map((l) => l.label)} onPress={pick('length', lengths)} />
         </View>
       ) : null}
     </View>

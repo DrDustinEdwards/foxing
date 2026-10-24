@@ -1,7 +1,7 @@
+import { useCreateMeeting, useCreatePoll } from '@foxing/client'
 import { useColors } from '@/constants/colors'
 import { useState } from 'react'
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
-import { supabase } from '@/lib/supabase'
 import { CaretLeft } from 'phosphor-react-native'
 import { Fonts } from '@/constants/fonts'
 
@@ -9,13 +9,11 @@ export function AddMeetingModal({
   visible,
   onClose,
   clubId,
-  userId,
   onCreated,
 }: {
   visible: boolean
   onClose: () => void
   clubId: string
-  userId: string | null
   onCreated: () => void
 }) {
   const colors = useColors()
@@ -26,29 +24,27 @@ export function AddMeetingModal({
   const [locationUrl, setLocationUrl] = useState('')
   const [meetingType, setMeetingType] =
     useState<'in_person' | 'virtual' | 'hybrid'>('in_person')
-  const [saving, setSaving] = useState(false)
+  const createMeeting = useCreateMeeting()
+  const saving = createMeeting.pending
 
   async function create() {
-    if (!userId || !title.trim() || !meetingDate.trim()) return
+    if (!title.trim() || !meetingDate.trim()) return
     const date = new Date(meetingDate.trim())
     if (!Number.isFinite(date.getTime())) {
       Alert.alert('Invalid date', 'Use a format like 2026-06-15T19:00')
       return
     }
-    setSaving(true)
-    const { error } = await supabase.from('club_meetings').insert({
-      club_id: clubId,
-      created_by: userId,
+    const ok = await createMeeting.run({
+      clubId,
       title: title.trim().slice(0, 120),
-      description: description.trim() || null,
-      meeting_date: date.toISOString(),
-      location_name: locationName.trim() || null,
-      location_url: locationUrl.trim() || null,
-      meeting_type: meetingType,
+      description: description.trim() || undefined,
+      meetingDate: date.getTime(),
+      locationName: locationName.trim() || undefined,
+      locationUrl: locationUrl.trim() || undefined,
+      meetingType,
     })
-    setSaving(false)
-    if (error) {
-      Alert.alert('Could not create', error.message)
+    if (!ok) {
+      Alert.alert('Could not create', 'Check the details and try again.')
       return
     }
     setTitle('')
@@ -184,57 +180,36 @@ export function AddPollModal({
   visible,
   onClose,
   clubId,
-  userId,
   onCreated,
 }: {
   visible: boolean
   onClose: () => void
   clubId: string
-  userId: string | null
   onCreated: () => void
 }) {
   const colors = useColors()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [options, setOptions] = useState<string[]>(['', ''])
-  const [saving, setSaving] = useState(false)
+  const createPoll = useCreatePoll()
+  const saving = createPoll.pending
 
   async function create() {
-    if (!userId || !title.trim()) return
+    if (!title.trim()) return
     const filled = options.map((o) => o.trim()).filter(Boolean)
     if (filled.length < 2) {
       Alert.alert('Need at least 2 options')
       return
     }
-    setSaving(true)
-    const { data, error } = await supabase
-      .from('club_polls')
-      .insert({
-        club_id: clubId,
-        created_by: userId,
-        title: title.trim().slice(0, 200),
-        description: description.trim() || null,
-        poll_type: 'single',
-      })
-      .select('id')
-      .single()
-    if (error || !data) {
-      setSaving(false)
-      Alert.alert('Could not create', error?.message ?? 'Try again.')
-      return
-    }
-    const pollId = (data as { id: string }).id
-    const optionRows = filled.map((label, idx) => ({
-      poll_id: pollId,
-      label: label.slice(0, 120),
-      position: idx,
-    }))
-    const { error: optErr } = await supabase
-      .from('club_poll_options')
-      .insert(optionRows)
-    setSaving(false)
-    if (optErr) {
-      Alert.alert('Could not create options', optErr.message)
+    const ok = await createPoll.run({
+      clubId,
+      title: title.trim().slice(0, 200),
+      description: description.trim() || undefined,
+      pollType: 'single',
+      options: filled.map((label, idx) => ({ id: `o${idx + 1}`, label: label.slice(0, 120) })),
+    })
+    if (!ok) {
+      Alert.alert('Could not create', 'Try again.')
       return
     }
     setTitle('')

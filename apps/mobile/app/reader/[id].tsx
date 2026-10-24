@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { View, Text, Pressable, ActivityIndicator, AppState, PanResponder, Image, useWindowDimensions } from 'react-native'
+import { View, Text, Pressable, ActivityIndicator, AppState, PanResponder, TextInput, useWindowDimensions } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
@@ -8,17 +8,9 @@ import {
   Sparkle,
   X as XIcon,
 } from 'phosphor-react-native'
-import {
-  type BookmarkRow,
-  createBookmark,
-  findBookmarkAtCfi,
-  deleteBookmark,
-} from '@/lib/bookmarks'
 import { TtsBar } from '@/components/reader/tts-bar'
 import { GoToSheet } from '@/components/reader/go-to-sheet'
 import { ReaderTopBar } from '@/components/reader/reader-top-bar'
-import { supabase } from '@/lib/supabase'
-import { reportWriteError } from '@/lib/db-write'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import type {
@@ -29,33 +21,23 @@ import type {
 } from '@/components/reader/foliate-reader-webview'
 import { ReadiumReader } from '@/components/reader/readium-reader'
 import { PassageCommentSheet } from '@/components/reader/passage-comment-sheet'
-import {
-  listCommentsForBook,
-  listMatchingClubsForBook,
-} from '@/lib/passage-comments'
-import { listPopularHighlights } from '@/lib/popular-highlights'
 import { TypographySheet } from '@/components/reader/typography-sheet'
 import { WordLookupSheet } from '@/components/reader/word-lookup-sheet'
 import { PassageAnalysisSheet } from '@/components/reader/passage-analysis-sheet'
-import { ChapterSummaryModal } from '@/components/reader/chapter-summary-modal'
 import { CompanionChat } from '@/components/reader/companion-chat'
 import {
+  COMPANION_TOOL_TITLES,
+  type CompanionTool,
   MenuSheet,
   type MenuAction,
   type MenuInitialView,
 } from '@/components/reader/menu-sheet'
+import { CompanionSheet } from '@/components/reader/companion-sheet'
 import { ClubPanelSheet } from '@/components/reader/club-panel-sheet'
 import { ProgressSlider } from '@/components/reader/progress-slider'
-import type { PassageComment } from '@/lib/passage-comments'
 import { SleepTimerSheet, type SleepTimerOption } from '@/components/reader/sleep-timer-sheet'
-import { ChapterReactionSheet } from '@/components/reader/chapter-reaction-sheet'
-import { privacyToBool, type PrivacyTier } from '@/components/privacy-selector'
-import { ChapterFeatureSheet } from '@/components/reader/chapter-feature-sheet'
-import type { ChapterFeatureKind } from '@/lib/claude'
-import { CharacterMapSheet } from '@/components/reader/character-map-sheet'
+import { privacyToVisibility, type PrivacyTier } from '@/components/privacy-selector'
 import { HighlightsSheet } from '@/components/reader/highlights-sheet'
-import { SearchSheet } from '@/components/reader/search-sheet'
-import { TranslateSheet } from '@/components/reader/translate-sheet'
 import { UpgradeSheet } from '@/components/reader/upgrade-sheet'
 import {
   FloatingPill,
@@ -69,11 +51,11 @@ import {
   loadPrefs,
   savePrefs,
 } from '@/lib/reader-settings'
-import { getWordWiseHints } from '@/lib/claude'
-import { resolvePreferredEpubUrl } from '@/lib/books'
-import { updateStreak, checkAndAwardBadges } from '@/lib/streaks'
 import { haptic } from '@/lib/haptics'
-import { enqueue } from '@/lib/offline-queue'
+import { authClient } from '@/lib/api'
+import { useBookmarks, useReaderWrites } from '@/lib/reader-data'
+import { useBookAnnotations, useClubLive, useMe, useMyBook, useReaderPage } from '@foxing/client'
+import { decodeLocator, encodeLocator } from '@/components/reader/readium-helpers'
 import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import {
@@ -85,14 +67,6 @@ import {
 } from '@/lib/position-history'
 import { BookmarkNamingModal, ReaderToast } from '@/components/reader/reader-overlays'
 import { CANVAS_PALETTE, formatRemaining, hexToRgba, prefsToSettings } from '@/components/reader/reader-screen-helpers'
-
-interface BookRow {
-  id: string
-  title: string
-  author: string
-  source: string
-  epub_url: string
-}
 
 // Word-pill state carries the surrounding sentence so the WordLookupSheet
 // receives real context (the AI prompt is sentence-scoped). Passage-pill
@@ -118,16 +92,8 @@ export default function Reader() {
   const { width: windowWidth } = useWindowDimensions()
   const isTablet = windowWidth >= 768
   const readerRef = useRef<ReaderRef>(null)
-  const sessionIdRef = useRef<string | null>(null)
-  // userId captured into a ref so the unmount cleanup can flush writes
-  // without calling supabase.auth.getUser() (a network call that
-  // unreliably resolves during teardown / backgrounding).
-  const userIdRef = useRef<string | null>(null)
-  // UTC date (YYYY-MM-DD) the daily streak update last succeeded on, so
-  // pingSession only pays the 4-parallel-counts + upsert + badge fan-out
-  // once per day. Mirrored to AsyncStorage so re-opens the same day skip
-  // it too; left unset on failure so the next ping retries.
-  const streakDateRef = useRef<string | null>(null)
+  // Start of the reading stretch not yet logged as a session (see logStretch).
+  const stretchStartRef = useRef<number>(Date.now())
   const positionRef = useRef<{ cfi: string | null; percentage: number }>({
     cfi: null,
     percentage: 0,
@@ -135,32 +101,35 @@ export default function Reader() {
   const lastSaveRef = useRef<number>(Date.now())
   const chromeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [book, setBook] = useState<BookRow | null>(null)
-  // PDFs are detected by URL extension. Foliate handles them natively;
-  // we only need to gate features that don't translate cleanly: the word
-  // tap pill and Word Wise vocabulary hints both rely on text-flow chunks.
-  const isPdf = !!book && /\.pdf(\?|#|$)/i.test(book.epub_url)
-  const [loading, setLoading] = useState(true)
+  const readerPage = useReaderPage(id ?? '')
+  const book = readerPage.data?.book ?? null
+  const session = authClient.useSession()
+  const userId = session.data?.user.id ?? null
+  const me = useMe(undefined, !!userId)
+  const myBook = useMyBook(book?.id ?? '', undefined, !!userId && !!book)
+  const layers = useBookAnnotations(book?.id ?? '')
+  const writes = useReaderWrites(book?.id ?? null)
+  const writesRef = useRef(writes)
+  writesRef.current = writes
+  // PDFs are detected by URL extension. We only need to gate features that
+  // don't translate cleanly: the word tap pill relies on text-flow chunks.
+  const isPdf = !!book && /\.pdf(\?|#|$)/i.test(book.epubUrl)
+  // The saved position is read once, when the book first loads.
   const [initialCfi, setInitialCfi] = useState<string | null>(null)
+  const [prefsLoaded, setPrefsLoaded] = useState(false)
   const [readerState, setReaderState] = useState<'loading' | 'ready' | 'error'>('loading')
   const [readerError, setReaderError] = useState<string | null>(null)
   const [chrome, setChrome] = useState(false)
 
   const [prefs, setPrefs] = useState<ReaderPrefs>(DEFAULT_PREFS)
-  const [userId, setUserId] = useState<string | null>(null)
-  // Subscription tier for client-side Plus gating of AI actions. null = unknown
-  // (tier lookup not done or failed), in which case we do NOT block: the edge
-  // function remains the authoritative gate. 'free' shows the lock + upgrade
-  // prompt; 'plus' is ungated.
-  const [subscriptionTier, setSubscriptionTier] = useState<'free' | 'plus' | null>(null)
+  // Subscription tier for client-side Plus gating of AI actions. Unknown (still
+  // loading) does not block: the server remains the authoritative gate. 'free'
+  // shows the lock + upgrade prompt; 'plus' is ungated.
+  const subscriptionTier = me.data?.profile?.subscriptionTier ?? null
   // When set, the upgrade prompt is shown; the string is the feature name for
   // the headline (e.g. "Translate").
   const [upgradeFeature, setUpgradeFeature] = useState<string | null>(null)
   const locked = subscriptionTier === 'free'
-  // Mirror userId into a ref so the unmount cleanup, the 30s ticker,
-  // and the chapter-change callback always read the latest without
-  // re-binding on every render.
-  userIdRef.current = userId
   const [showSettings, setShowSettings] = useState(false)
 
   const [currentChapter, setCurrentChapter] = useState({ title: '', index: 0 })
@@ -176,7 +145,6 @@ export default function Reader() {
   // Sheet visibility, opened from pill actions or chrome buttons.
   const [wordSheet, setWordSheet] = useState<WordPillState | null>(null)
   const [passageSheet, setPassageSheet] = useState<PassagePillState | null>(null)
-  const [summaryOpen, setSummaryOpen] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
   const [chatSeed, setChatSeed] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -187,17 +155,14 @@ export default function Reader() {
   // Club panel: half-height slide-up. Tapping the bottom-bar club chip
   // opens it; reading continues underneath since the panel isn't a Modal.
   const [clubPanelOpen, setClubPanelOpen] = useState(false)
-  const [characterMapOpen, setCharacterMapOpen] = useState(false)
   const [highlightsOpen, setHighlightsOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  // Translate sheet: holds the selected text split into paragraphs (a word is
-  // a single-item list). Rendered side by side with its translation.
-  const [translateSel, setTranslateSel] = useState<{ paragraphs: string[] } | null>(null)
-  const [chapterFeature, setChapterFeature] = useState<ChapterFeatureKind | null>(null)
-  // Chapter check-in, pops a 3-option toast at the bottom after a chapter
-  // change. previousChapter holds the just-completed chapter's title; the
-  // toast pulls that into its prompt. Auto-dismisses after 10s.
-  const [checkinChapter, setCheckinChapter] = useState<string | null>(null)
+  // A companion tool from the menu (characters, this chapter, ...), shown as one answer.
+  const [companionTool, setCompanionTool] = useState<CompanionTool | null>(null)
+  // The question typed into the Find tool; it waits until the reader submits one.
+  const [findQuery, setFindQuery] = useState('')
+  const [findSubmitted, setFindSubmitted] = useState<string | null>(null)
+  // Translate sheet: the selected word or passage, translated into prefs.targetLanguage.
+  const [translateText, setTranslateText] = useState<string | null>(null)
   const previousChapterRef = useRef<string | null>(null)
   // TTS state, bar visibility, chapter text snapshot, last sentence index.
   const [ttsOpen, setTtsOpen] = useState(false)
@@ -222,8 +187,6 @@ export default function Reader() {
   // PanResponder closes over this ref so the swipe-back handler always reads
   // the latest state without re-creating the responder on every render.
   const swipeBackRef = useRef<() => void>(() => {})
-  // Bookmark for the current position, drives the filled/outline icon.
-  const [currentBookmark, setCurrentBookmark] = useState<BookmarkRow | null>(null)
   // Inline bookmark naming modal, shown when the chrome bookmark button
   // is tapped on a position that doesn't have a bookmark yet.
   const [bookmarkPrompt, setBookmarkPrompt] = useState<{ cfi: string; suggestedName: string } | null>(null)
@@ -234,20 +197,17 @@ export default function Reader() {
   const lastLocationTimeRef = useRef<number>(Date.now())
   const lastPageWordsRef = useRef<number>(0)
   const wpmSamplesRef = useRef<number[]>([])
-  // Page navigations this session, written to reading_sessions.pages_read
-  // by the heartbeat. Seeded from the row when resuming an open session.
+  // Page turns in the stretch not yet logged as a session.
   const pagesReadRef = useRef<number>(0)
   const [wpm, setWpm] = useState<number | null>(null)
-  // Chapter list for the AI semantic search action, populated from
-  // foliate's TOC if we can pull it; otherwise just the current chapter.
-  const [chapterList, setChapterList] = useState<string[]>([])
 
   // Transient toast, currently used for "couldn't save highlight" feedback.
   const [toast, setToast] = useState<string | null>(null)
 
-  // Set of bookmarked CFIs for this book, drives the filled vs outline
-  // bookmark icon in the top chrome without a per-page-turn DB roundtrip.
-  const [bookmarkCfis, setBookmarkCfis] = useState<Set<string>>(new Set())
+  // This book's bookmarks, from the cached annotation layers; drives the filled
+  // vs outline bookmark icon in the top chrome without a per-page-turn lookup.
+  const { bookmarks } = useBookmarks(book?.id ?? null)
+  const bookmarkCfis = useMemo(() => new Set(bookmarks.map((b) => b.cfi)), [bookmarks])
   const isCurrentBookmarked = useMemo(
     () => !!(positionRef.current.cfi && bookmarkCfis.has(positionRef.current.cfi)),
     // Re-evaluate when progress changes since positionRef is a ref.
@@ -256,14 +216,8 @@ export default function Reader() {
   )
 
   // Clubs the viewer belongs to that are currently reading THIS book. Empty
-  // = no Club button on the pill, no margin dots. Stored as state so the
-  // pill's showClub re-renders when it changes; mirrored to a ref so the
-  // WebView callback can read it without re-binding.
-  const [matchingClubs, setMatchingClubs] = useState<
-    Array<{ club_id: string; name: string }>
-  >([])
-  const matchingClubsRef = useRef(matchingClubs)
-  matchingClubsRef.current = matchingClubs
+  // = no Club button on the pill, no margin dots.
+  const matchingClubs = readerPage.data?.shareableClubs ?? []
 
   // Sheet state, single sheet that handles both "tapped margin dot" and
   // "tapped Club button on the pill". The pill path comes in with the
@@ -273,24 +227,15 @@ export default function Reader() {
     passageText: string
   } | null>(null)
 
-  // Club presence in the bottom chrome, up to 3 avatars of club members
-  // with active reading_sessions on this book in the last 30 minutes.
-  const [presence, setPresence] = useState<
-    Array<{ user_id: string; display_name: string | null; avatar_url: string | null }>
-  >([])
-
-  // Word Wise cache + in-flight guard, see onLocation. Keyed by
-  // bookId+chapterTitle so we don't refetch the same chapter mid-session.
-  // The debounce timer ensures a fast page-flip burst only fires once.
-  const wwCacheRef = useRef<Set<string>>(new Set())
-  const wwInFlightRef = useRef<Set<string>>(new Set())
-  const wwDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const WW_DEBOUNCE_MS = 500
+  // Club presence in the bottom chrome: members of the first matching club who
+  // are in the club right now (its live socket), not counting the viewer.
+  const live = useClubLive(matchingClubs[0]?.id ?? null)
+  const presence = live.presence.filter((u) => u !== userId)
 
   // The set-interval / cleanup paths fire saveProgress on a stale closure
   // (book is null at first render). Route through a ref so they always
   // call the latest version that closes over the current `book`.
-  const saveProgressRef = useRef<() => Promise<void>>(async () => {})
+  const saveProgressRef = useRef<() => void>(() => {})
 
   // Design-token-aware highlight palette pushed into the WebView so the
   // foliate annotation rects match what the FloatingPill swatches preview.
@@ -323,139 +268,38 @@ export default function Reader() {
       .catch(() => {})
   }, [])
 
-  // Resolve which of the viewer's clubs (if any) are currently reading this
-  // book. Both the Club button on the pill and the margin-dot fetch gate
-  // on this. Re-runs if either the viewer or the book row changes (a
-  // Standard-Ebooks promotion swaps epub_url but keeps book.id, so this
-  // doesn't re-run unnecessarily).
+  // Paint the reader's own highlights once the book is open, and again when they change.
   useEffect(() => {
-    if (!userId || !book) {
-      setMatchingClubs([])
-      return
+    if (readerState !== 'ready') return
+    for (const m of layers.data?.mine ?? []) {
+      if (m.type === 'highlight' && m.locator) {
+        readerRef.current?.addHighlight(encodeLocator(m.locator), (m.color ?? 'amber') as HighlightColor)
+      }
     }
-    let mounted = true
-    ;(async () => {
-      const clubs = await listMatchingClubsForBook(userId, book.id)
-      if (mounted) setMatchingClubs(clubs)
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [userId, book])
+  }, [readerState, layers.data?.mine])
 
-  // Club presence: members of matching clubs with active reading_sessions
-  // on this book in the last 30 minutes. Re-polls every 60s while the
-  // reader is open, enough to feel live without hammering the API.
+  // Popular highlights, gated on the prefs toggle: passages at least three readers
+  // highlighted, from the book's annotation layers.
   useEffect(() => {
-    if (!book || matchingClubs.length === 0) {
-      setPresence([])
-      return
-    }
-    let mounted = true
-    const clubIds = matchingClubs.map((c) => c.club_id)
-
-    async function refresh() {
-      const since = new Date(Date.now() - 30 * 60 * 1000).toISOString()
-      const { data: memberRows } = await supabase
-        .from('club_members')
-        .select('user_id, profile:profiles!user_id(id, display_name, avatar_url)')
-        .in('club_id', clubIds)
-      type MR = {
-        user_id: string
-        profile:
-          | { id: string; display_name: string | null; avatar_url: string | null }
-          | Array<{ id: string; display_name: string | null; avatar_url: string | null }>
-          | null
-      }
-      const profileById = new Map<
-        string,
-        { id: string; display_name: string | null; avatar_url: string | null }
-      >()
-      for (const m of ((memberRows ?? []) as unknown) as MR[]) {
-        const p = Array.isArray(m.profile) ? m.profile[0] : m.profile
-        if (p && m.user_id !== userId) profileById.set(m.user_id, p)
-      }
-      if (profileById.size === 0) {
-        if (mounted) setPresence([])
-        return
-      }
-      const { data: sessions } = await supabase
-        .from('reading_sessions')
-        .select('user_id')
-        .eq('book_id', book!.id)
-        .in('user_id', [...profileById.keys()])
-        .gte('started_at', since)
-        .is('ended_at', null)
-      const activeIds = new Set(
-        ((sessions ?? []) as Array<{ user_id: string }>).map((s) => s.user_id),
-      )
-      const out = [...profileById.values()]
-        .filter((p) => activeIds.has(p.id))
-        .slice(0, 3)
-        .map((p) => ({
-          user_id: p.id,
-          display_name: p.display_name,
-          avatar_url: p.avatar_url,
-        }))
-      if (mounted) setPresence(out)
-    }
-
-    refresh()
-    const interval = setInterval(refresh, 60_000)
-    return () => {
-      mounted = false
-      clearInterval(interval)
-    }
-  }, [book, matchingClubs, userId])
-
-  // Popular highlights, gated on the prefs toggle. Push to the reader
-  // when toggled on (or when the book/user changes); push empty when off.
-  useEffect(() => {
-    if (readerState !== 'ready' || !book) return
+    if (readerState !== 'ready') return
     if (!prefs.popularHighlightsEnabled) {
       readerRef.current?.setPopularHighlights([])
       return
     }
-    let mounted = true
-    ;(async () => {
-      const list = await listPopularHighlights({
-        bookId: book.id,
-        viewerId: userId,
-        minCount: 3,
-      })
-      if (!mounted) return
-      readerRef.current?.setPopularHighlights(list, colors.textTertiary)
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [readerState, book, userId, prefs.popularHighlightsEnabled, colors.textTertiary])
+    const list = (layers.data?.popular ?? [])
+      .filter((p) => p.count >= 3 && p.locator)
+      .map((p) => ({ text: p.normalizedText, cfi: encodeLocator(p.locator!), count: p.count }))
+    readerRef.current?.setPopularHighlights(list, colors.textTertiary)
+  }, [readerState, layers.data?.popular, prefs.popularHighlightsEnabled, colors.textTertiary])
 
-  // Push comments into the reader for margin-dot rendering. Re-runs when
-  // matchingClubs OR the reader transitions to ready.
+  // Club passage comments as margin dots.
   useEffect(() => {
-    if (readerState !== 'ready' || !book) return
-    if (matchingClubs.length === 0) {
-      readerRef.current?.setPassageComments([])
-      return
-    }
-    let mounted = true
-    ;(async () => {
-      const rows = await listCommentsForBook(
-        book.id,
-        matchingClubs.map((c) => c.club_id),
-      )
-      if (!mounted) return
-      const markers: PassageCommentMarker[] = rows.map((r) => ({
-        cfi: r.cfi,
-        passageText: r.passage_text ?? '',
-      }))
-      readerRef.current?.setPassageComments(markers, colors.brandUi)
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [readerState, book, matchingClubs, colors.brandUi])
+    if (readerState !== 'ready') return
+    const markers: PassageCommentMarker[] = (layers.data?.comments ?? [])
+      .filter((c) => !c.parentId && c.locator)
+      .map((c) => ({ cfi: encodeLocator(c.locator!), passageText: (c.locator?.text as { highlight?: string } | undefined)?.highlight ?? '' }))
+    readerRef.current?.setPassageComments(markers, colors.brandUi)
+  }, [readerState, layers.data?.comments, colors.brandUi])
 
   // Swipe responder claims ONE gesture while otherwise letting taps fall
   // through to the WebView:
@@ -485,179 +329,60 @@ export default function Reader() {
     }),
   ).current
 
+  // Once the book loads: open at the saved place, and put the book on the Reading shelf
+  // if it isn't there yet (finished and paused books stay where they are, so opening
+  // a finished book to look something up doesn't bounce it back).
+  const opened = useRef(false)
   useEffect(() => {
-    if (!id) return
+    if (!readerPage.data || opened.current) return
+    if (userId && myBook.isPending) return
+    opened.current = true
+    const saved = readerPage.data.initialLocator
+    if (saved) setInitialCfi(encodeLocator(saved))
+    if (myBook.data?.progressPct) setProgress(myBook.data.progressPct / 100)
+    const status = myBook.data?.status ?? null
+    if (userId && (!status || status === 'want' || status === 'abandoned')) {
+      writes.saveBook({ status: 'reading', ...(myBook.data?.startedAt ? {} : { startedAt: Date.now() }) })
+    }
+  }, [readerPage.data, userId, myBook.isPending, myBook.data, writes])
+
+  // Reader prefs, per user (falls back to an anonymous key when signed out).
+  useEffect(() => {
+    if (session.isPending) return
     let mounted = true
-    ;(async () => {
-      const { data: bookData, error: bookError } = await supabase
-        .from('books')
-        .select('id, title, author, source, epub_url')
-        .eq('id', id)
-        .single()
-      console.log('[reader] book query result', { bookData, error: bookError?.message })
-      if (!mounted || !bookData) {
-        setLoading(false)
-        return
-      }
-
-      // Prefer the Standard Ebooks edition when one exists. We swap only
-      // the epub_url, book.id stays the row the user tapped, so their
-      // progress, highlights, and vocabulary remain associated with it.
-      // Resolve BEFORE setBook so the WebView mounts straight to the SE
-      // bytes; otherwise the Gutenberg URL would briefly download first.
-      const typedBook = bookData as BookRow
-      const preferredUrl = await resolvePreferredEpubUrl(typedBook)
+    loadPrefs(userId).then((loaded) => {
       if (!mounted) return
-      setBook({ ...typedBook, epub_url: preferredUrl })
-
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUserId(user.id)
-        // Resolve subscription tier for client-side AI gating. Fire and forget
-        // so it never delays the book load; leaves tier null (ungated client
-        // side) if the lookup fails.
-        supabase
-          .from('profiles')
-          .select('subscription_tier')
-          .eq('id', user.id)
-          .maybeSingle()
-          .then(({ data: prof }: any) => {
-            if (!mounted) return
-            const t = (prof as { subscription_tier: string | null } | null)?.subscription_tier
-            setSubscriptionTier(t === 'plus' ? 'plus' : 'free')
-          })
-        const { data: ub } = await supabase
-          .from('user_books')
-          .select('status, progress_cfi, progress_percentage, started_at')
-          .eq('user_id', user.id)
-          .eq('book_id', bookData.id)
-          .maybeSingle()
-        if (ub?.progress_cfi) setInitialCfi(ub.progress_cfi)
-        if (ub?.progress_percentage) setProgress(ub.progress_percentage)
-
-        // Land a row on the Reading shelf the moment the book is opened.
-        // Without this the shelf stayed empty until the user actually turned
-        // a page (saveProgress is gated on progress_cfi being non-null and
-        // the wrapper now suppresses the first locator emit). Only promote
-        // statuses that should advance: a missing row, a 'want_to_read'
-        // intent, or an 'abandoned' return both make sense; 'finished' and
-        // 'paused' stay where they are so opening a finished book to
-        // reference a passage doesn't bounce it back to Reading.
-        const shouldPromote =
-          !ub || ub.status === 'want_to_read' || ub.status === 'abandoned'
-        if (shouldPromote) {
-          const update: Record<string, unknown> = {
-            user_id: user.id,
-            book_id: bookData.id,
-            status: 'reading',
-          }
-          if (!ub?.started_at) update.started_at = new Date().toISOString()
-          const { error: shelfErr } = await supabase
-            .from('user_books')
-            .upsert(update, { onConflict: 'user_id,book_id' })
-          if (shelfErr) {
-            console.warn(
-              '[reader] shelf upsert failed:',
-              shelfErr.message,
-            )
-          }
-        }
-
-        // Resume a dangling open session for this user+book instead of
-        // stacking a new row per mount (remounts from app restarts, OTA
-        // reloads, and quick close/reopen were creating duplicates).
-        // ended_at null + started_at within 30 minutes is the same
-        // definition of "active" the club-presence query uses. A cleanly
-        // heartbeated session has ended_at set, so a fresh open after one
-        // correctly starts a new row.
-        const since = new Date(Date.now() - 30 * 60 * 1000).toISOString()
-        const { data: open, error: openErr } = await supabase
-          .from('reading_sessions')
-          .select('id, pages_read')
-          .eq('user_id', user.id)
-          .eq('book_id', bookData.id)
-          .is('ended_at', null)
-          .gte('started_at', since)
-          .order('started_at', { ascending: false })
-          .limit(1)
-          .maybeSingle()
-        if (openErr) {
-          console.warn('[reader] open-session lookup failed:', openErr.message)
-        }
-        const openSess = open as { id: string; pages_read: number | null } | null
-        if (openSess) {
-          sessionIdRef.current = openSess.id
-          pagesReadRef.current = openSess.pages_read ?? 0
-        } else {
-          const { data: sess, error: sessErr } = await supabase
-            .from('reading_sessions')
-            .insert({
-              user_id: user.id,
-              book_id: bookData.id,
-              started_at: new Date().toISOString(),
-            })
-            .select('id')
-            .single()
-          if (sessErr) {
-            console.warn('[reader] session insert failed:', sessErr.message)
-          }
-          if (sess) sessionIdRef.current = sess.id
-        }
-      }
-      // Load reader prefs (per user; falls back to anon key if signed out).
-      const loaded = await loadPrefs(user?.id ?? null)
-      if (mounted) setPrefs(loaded)
-      setLoading(false)
-    })()
+      setPrefs(loaded)
+      setPrefsLoaded(true)
+    })
     return () => {
       mounted = false
     }
-  }, [id])
+  }, [userId, session.isPending])
 
-  // The interval + cleanup both call through saveProgressRef so they always
-  // see the latest closure (book/userId). Without this they'd capture the
-  // first render's saveProgress, which returns early because book is null.
-  // pingSession bumps reading_sessions.ended_at every tick so the unmount
-  // path is a final flush, not the only write path. Previously the unmount
-  // ended_at update raced the JS-bridge teardown and ~45% of sessions on
-  // production had null ended_at.
+  // Position and reading stretches are queued on the device (they survive a crash
+  // or no signal) through refs, so the timers always see the latest values. A stretch
+  // is logged every five minutes, when the app leaves the foreground, and on close;
+  // coming back to the front starts a new one.
   useEffect(() => {
     const t = setInterval(() => {
-      saveProgressRef.current().catch((e) =>
-        console.warn('[reader] interval save failed:', e instanceof Error ? e.message : e),
-      )
-      pingSession().catch((e) =>
-        console.warn('[reader] interval ping failed:', e instanceof Error ? e.message : e),
-      )
-    }, 30000)
+      saveProgressRef.current()
+      logStretch()
+    }, 5 * 60_000)
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        stretchStartRef.current = Date.now()
+        return
+      }
+      saveProgressRef.current()
+      logStretch()
+    })
     return () => {
       clearInterval(t)
-      if (wwDebounceRef.current) clearTimeout(wwDebounceRef.current)
-      saveProgressRef.current().catch((e) =>
-        console.warn('[reader] unmount save failed:', e instanceof Error ? e.message : e),
-      )
-      pingSession().catch((e) =>
-        console.warn('[reader] unmount ping failed:', e instanceof Error ? e.message : e),
-      )
+      sub.remove()
+      saveProgressRef.current()
+      logStretch()
     }
-  }, [])
-
-  // Flush progress + heartbeat when the app leaves the foreground. JS
-  // timers pause in the background and the unmount cleanup never runs on
-  // app-switch, screen lock, app kill, or an OTA reload, so without this
-  // a session that ends by backgrounding keeps a stale ended_at forever.
-  // Best-effort: the transition usually lets in-flight requests finish.
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') return
-      saveProgressRef.current().catch((e) =>
-        console.warn('[reader] background save failed:', e instanceof Error ? e.message : e),
-      )
-      pingSession().catch((e) =>
-        console.warn('[reader] background ping failed:', e instanceof Error ? e.message : e),
-      )
-    })
-    return () => sub.remove()
   }, [])
 
   // Auto-hide chrome 3s after it appears (same duration as the on-open peek
@@ -705,15 +430,6 @@ export default function Reader() {
     }
   }, [])
 
-  // Word Wise toggle → bridge. When disabled, the bridge clears any
-  // already-injected hints; when enabled, the next onLocation triggers
-  // the first fetch. We don't backfill the current page on toggle-on.
-  // a single page turn brings hints in.
-  useEffect(() => {
-    if (readerState !== 'ready') return
-    readerRef.current?.setWordWiseEnabled(prefs.wordWiseEnabled)
-  }, [prefs.wordWiseEnabled, readerState])
-
   // Auto-scroll → bridge. Starts/stops a per-page interval that calls
   // renderer.next() at the rate the user set in the Aa sheet.
   useEffect(() => {
@@ -751,107 +467,42 @@ export default function Reader() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isTablet, userId, readerState])
 
-  // Bilingual mode, fetch translations for the current chapter's
-  // paragraphs and push them back into the reader. Re-runs on chapter
-  // change (currentChapter.title), language change, or toggle. Clears
-  // translations when bilingualMode flips off.
-  useEffect(() => {
-    if (readerState !== 'ready' || !book) return
-    // Bilingual translation is disabled (D13): the paid bilingual_paragraph
-    // AI call did not render usefully in-reader, so we skip the API spend and
-    // just ensure no stale translations remain shown.
-    readerRef.current?.setBilingualContent([])
-  }, [readerState, book])
-
   const toggleChrome = useCallback(() => setChrome((v) => !v), [])
 
-  async function saveProgress() {
-    if (!book || !positionRef.current.cfi) return
-    if (Date.now() - lastSaveRef.current < 5000) return
-    lastSaveRef.current = Date.now()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-    const { error } = await supabase
-      .from('user_books')
-      .upsert(
-        {
-          user_id: user.id,
-          book_id: book.id,
-          status: 'reading',
-          progress_cfi: positionRef.current.cfi,
-          progress_percentage: positionRef.current.percentage,
-        },
-        { onConflict: 'user_id,book_id' },
-      )
-    reportWriteError(error, { op: 'upsert', table: 'user_books', extra: { bookId: book.id } })
-  }
-
-  // Keep the ref pointed at the current-render saveProgress so the interval
-  // started in the mount effect always invokes the freshest closure.
-  saveProgressRef.current = saveProgress
-
-  // Rolling heartbeat. Called every 30s by the interval, on app
-  // background, and one final time on unmount; previously this was an
-  // end-of-life write that raced the JS-bridge teardown and dropped ~45%
-  // of session close-outs. Reads refs only (always current), so the
-  // closure captured by the mount-effect's interval/cleanup is safe.
-  // Throws on failure: supabase-js returns { error } instead of throwing,
-  // and an RLS-filtered update "succeeds" with 0 rows, so both cases are
-  // checked explicitly and surfaced to the callers' catch handlers.
-  async function pingSession() {
-    if (!sessionIdRef.current) return
-    const samples = wpmSamplesRef.current
-    const patch: Record<string, unknown> = {
-      ended_at: new Date().toISOString(),
-      pages_read: pagesReadRef.current,
-    }
-    if (samples.length > 0) {
-      patch.avg_wpm = Math.round(samples.reduce((a, b) => a + b, 0) / samples.length)
-      patch.last_wpm = Math.round(samples[samples.length - 1])
-    }
-    const { data, error } = await supabase
-      .from('reading_sessions')
-      .update(patch)
-      .eq('id', sessionIdRef.current)
-      .select('id')
-    if (error) {
-      throw new Error(`session heartbeat failed: ${error.message}`)
-    }
-    if (!data || data.length === 0) {
-      throw new Error('session heartbeat updated 0 rows (RLS rejection or stale session id)')
-    }
-    // A successful heartbeat is the ground truth that reading happened
-    // today; the old chapter-change trigger never fired for publications
-    // whose locators lack titles. Failures are logged but don't fail the
-    // heartbeat itself, and the gate stays unset so the next ping retries.
-    await maybeFireDailyStreak().catch((e) => {
-      console.warn(
-        '[reader] daily streak update failed:',
-        e instanceof Error ? e.message : e,
-      )
+  function saveProgress() {
+    if (!book || !userId || !positionRef.current.cfi) return
+    const locator = decodeLocator(positionRef.current.cfi)
+    if (!locator) return
+    writesRef.current.saveBook({
+      progress: locator as unknown as Record<string, unknown>,
+      progressPct: Math.round(positionRef.current.percentage * 1000) / 10,
     })
   }
 
-  // First-successful-ping-of-the-day streak trigger. Uses the same UTC
-  // date math as updateStreak. The AsyncStorage gate spans reader
-  // remounts; the ref spares the storage read on every subsequent ping.
-  async function maybeFireDailyStreak() {
-    const uid = userIdRef.current
-    if (!uid) return
-    const today = new Date().toISOString().slice(0, 10)
-    if (streakDateRef.current === today) return
-    const gateKey = `foxing.streak-fired.${uid}`
-    const stored = await AsyncStorage.getItem(gateKey).catch(() => null)
-    if (stored === today) {
-      streakDateRef.current = today
-      return
-    }
-    await updateStreak(uid)
-    streakDateRef.current = today
-    AsyncStorage.setItem(gateKey, today).catch(() => {})
+  // Keep the ref pointed at the current-render saveProgress so the timers
+  // started in the mount effect always invoke the freshest closure.
+  saveProgressRef.current = saveProgress
+
+  // Logs the stretch since the last one as a reading session (sessions are append-only,
+  // and the server counts the day toward the streak). Reads refs only, so the
+  // mount-effect timers can call it. A stretch with no page turns is not reading.
+  function logStretch() {
+    const startedAt = stretchStartRef.current
+    const pagesRead = pagesReadRef.current
+    stretchStartRef.current = Date.now()
+    pagesReadRef.current = 0
+    if (pagesRead === 0) return
+    const samples = wpmSamplesRef.current
+    writesRef.current.logSession({
+      startedAt,
+      endedAt: Date.now(),
+      pagesRead,
+      avgWpm: samples.length > 0 ? Math.round(samples.reduce((a, b) => a + b, 0) / samples.length) : null,
+      lastWpm: samples.length > 0 ? Math.round(samples[samples.length - 1]) : null,
+    })
   }
 
-  function onLocation(cfi: string, percentage: number, pageWordCount?: number, pageText?: string) {
+  function onLocation(cfi: string, percentage: number, pageWordCount?: number) {
     positionRef.current = { cfi, percentage }
     setProgress(percentage)
     // The wrapper suppresses the initial relocate and debounces bursts, so
@@ -897,42 +548,10 @@ export default function Reader() {
     lastLocationTimeRef.current = now
     if (pageWordCount && pageWordCount > 0) lastPageWordsRef.current = pageWordCount
 
-    // AI Word Wise, debounced, deduped, in-flight-guarded fetch. Cache key
-    // is bookId+chapterTitle: rapid page-flips within a chapter only hit the
-    // API once. Debounce absorbs the burst that fires when foliate emits
-    // multiple relocate events in quick succession on a chapter boundary.
-    if (prefs.wordWiseEnabled && !isPdf && pageText && pageText.length > 50 && book) {
-      const cacheKey = `${book.id}::${currentChapter.title || '__nochapter__'}`
-      if (wwCacheRef.current.has(cacheKey)) {
-        // Already fetched this chapter this session, nothing to do.
-      } else if (!wwInFlightRef.current.has(cacheKey)) {
-        if (wwDebounceRef.current) clearTimeout(wwDebounceRef.current)
-        wwDebounceRef.current = setTimeout(() => {
-          // Re-check the guards inside the timer: the user may have toggled
-          // Word Wise off, navigated away, or another timer may have fired.
-          if (!prefs.wordWiseEnabled) return
-          if (wwCacheRef.current.has(cacheKey)) return
-          if (wwInFlightRef.current.has(cacheKey)) return
-          wwInFlightRef.current.add(cacheKey)
-          ;(async () => {
-            try {
-              const hints = await getWordWiseHints(
-                pageText,
-                book.title,
-                book.author,
-                currentChapter.title,
-                { bookId: book.id, progress: percentage },
-              )
-              wwCacheRef.current.add(cacheKey)
-              if (hints.length > 0) readerRef.current?.applyWordWiseHints(hints)
-            } catch (e) {
-              console.warn('[reader] word wise fetch failed:', e instanceof Error ? e.message : e)
-            } finally {
-              wwInFlightRef.current.delete(cacheKey)
-            }
-          })()
-        }, WW_DEBOUNCE_MS)
-      }
+    // Save the place at most every 5 seconds of page turning.
+    if (Date.now() - lastSaveRef.current >= 5000) {
+      lastSaveRef.current = Date.now()
+      saveProgress()
     }
   }
 
@@ -1009,7 +628,7 @@ export default function Reader() {
 
   // ── Pill action handlers ────────────────────────────────────────────────
 
-  async function handleHighlight(color: HighlightColor, privacy: PrivacyTier = 'public') {
+  function handleHighlight(color: HighlightColor, privacy: PrivacyTier = 'public') {
     // Resolve the active payload (word or passage) to a single highlight row.
     const cfi = (pillMode === 'word' ? wordPayload?.cfi : passagePayload?.cfi) ?? null
     const text = pillMode === 'word' ? wordPayload?.word : passagePayload?.text
@@ -1025,105 +644,20 @@ export default function Reader() {
       dismissPill()
       return
     }
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    if (!userId) {
       dismissPill()
       return
     }
-    const isPublic = privacyToBool(privacy)
-    const { error } = await supabase.from('highlights').insert({
-      user_id: user.id,
-      book_id: book.id,
-      cfi,
-      text,
+    writes.addAnnotation({
+      type: 'highlight',
+      locator: decodeLocator(cfi) as unknown as Record<string, unknown>,
+      selectedText: text,
       color,
       chapter: currentChapter.title || null,
-      is_public: isPublic,
+      visibility: privacyToVisibility(privacy),
     })
-    if (error) {
-      console.warn('[reader] save highlight failed:', error.message)
-      // Network/server hiccup, queue the write to retry once we're back
-      // online. The optimistic visual highlight already painted; if the
-      // queued write succeeds the row lands and survives across launches.
-      enqueue({
-        table: 'highlights',
-        op: 'insert',
-        data: {
-          user_id: user.id,
-          book_id: book.id,
-          cfi,
-          text,
-          color,
-          chapter: currentChapter.title || null,
-          is_public: isPublic,
-        },
-      }).catch(() => {})
-      readerRef.current?.addHighlight(cfi, color)
-      haptic.light()
-    } else {
-      readerRef.current?.addHighlight(cfi, color)
-      haptic.light()
-      // First/100th highlight badges, fire-and-forget so the pill dismiss
-      // doesn't wait on a network round-trip.
-      checkAndAwardBadges(user.id).catch(() => {})
-      // Shared-highlight notification, if any followed user has a highlight
-      // at the SAME CFI on this book, ping them. We use exact CFI match
-      // because "within 100 chars" doesn't translate cleanly to CFI string
-      // distance, different chapters can produce wildly different strings.
-      ;(async () => {
-        const { data: followsRows } = await supabase
-          .from('follows')
-          .select('following_id')
-          .eq('follower_id', user.id)
-        const followedIds = ((followsRows ?? []) as Array<{ following_id: string }>).map((r) => r.following_id)
-        if (followedIds.length === 0) return
-        const { data: matches } = await supabase
-          .from('highlights')
-          .select('user_id')
-          .eq('book_id', book.id)
-          .eq('cfi', cfi)
-          .in('user_id', followedIds)
-        if (!matches || matches.length === 0) return
-        const { data: me } = await supabase
-          .from('profiles')
-          .select('display_name, username')
-          .eq('id', user.id)
-          .maybeSingle()
-        const me2 = me as { display_name: string | null; username: string | null } | null
-        const myName = me2?.display_name ?? me2?.username ?? 'Someone'
-        const { createNotification } = await import('@/lib/notifications')
-        const seen = new Set<string>()
-        for (const row of matches as Array<{ user_id: string }>) {
-          if (seen.has(row.user_id)) continue
-          seen.add(row.user_id)
-          await createNotification(
-            row.user_id,
-            'shared_highlight',
-            `${myName} highlighted the same passage`,
-            `In ${book.title}, tap to see their note.`,
-            { book_id: book.id, cfi, by_user_id: user.id },
-          )
-        }
-      })().catch(() => {})
-    }
-    // Word highlight also auto-saves vocabulary so the word ends up in
-    // the Vocabulary screen even if the user didn't tap "Look up".
-    if (pillMode === 'word' && wordPayload) {
-      const { error: vocabErr } = await supabase.from('vocabulary').insert({
-        user_id: user.id,
-        book_id: book.id,
-        book_title: book.title,
-        word: wordPayload.word,
-        // `context` is NOT NULL in the legacy schema, keep it populated
-        // alongside the new `context_sentence` column.
-        context: wordPayload.surroundingText,
-        context_sentence: wordPayload.surroundingText,
-        // definition is also NOT NULL legacy, fill with a placeholder for
-        // highlight-only saves; lookups overwrite this with the real AI text.
-        definition: '(highlighted, open to look up definition)',
-      })
-      reportWriteError(vocabErr, { op: 'insert', table: 'vocabulary' })
-    }
+    readerRef.current?.addHighlight(cfi, color)
+    haptic.light()
     dismissPill()
   }
 
@@ -1150,17 +684,13 @@ export default function Reader() {
   // from the old passage-only "Discuss".
   function handleAsk() {
     if (pillMode === 'word' && wordPayload) {
-      setChatSeed(
-        `I'm reading and selected the word "${wordPayload.word}" in this sentence: "${wordPayload.surroundingText}". What would you like to know about it?`,
-      )
+      setChatSeed(`In "${wordPayload.surroundingText}", what does "${wordPayload.word}" mean? `)
       setChatOpen(true)
       dismissPill()
       return
     }
     if (passagePayload) {
-      setChatSeed(
-        `I selected this passage: "${passagePayload.text}", what would you like to discuss about it?`,
-      )
+      setChatSeed(`About this passage: "${passagePayload.text}" `)
       setChatOpen(true)
       dismissPill()
       return
@@ -1168,23 +698,11 @@ export default function Reader() {
     dismissPill()
   }
 
-  // Translate opens the side-by-side sheet for the current selection, using the
-  // reader's saved target language (prefs.targetLanguage). A word becomes a
-  // single-paragraph translation; a passage is split on blank lines.
+  // Translate the current selection into the reader's saved target language
+  // (prefs.targetLanguage).
   function handleTranslate() {
     const raw = pillMode === 'word' ? wordPayload?.word : passagePayload?.text
-    if (!raw) {
-      dismissPill()
-      return
-    }
-    const paragraphs =
-      pillMode === 'word'
-        ? [raw]
-        : raw
-            .split(/\n{2,}/)
-            .map((p) => p.trim())
-            .filter(Boolean)
-    setTranslateSel({ paragraphs: paragraphs.length ? paragraphs : [raw] })
+    if (raw) setTranslateText(raw)
     dismissPill()
   }
 
@@ -1197,11 +715,15 @@ export default function Reader() {
         setChatSeed(null)
         setChatOpen(true)
         break
-      case 'story-so-far':
-        setSummaryOpen(true)
-        break
-      case 'character-map':
-        setCharacterMapOpen(true)
+      case 'character_map':
+      case 'book_insight':
+      case 'semantic_search':
+      case 'chapter_feature':
+      case 'deep_dive':
+      case 'discussion_starter':
+        setFindQuery('')
+        setFindSubmitted(null)
+        setCompanionTool(action)
         break
       case 'highlights':
         setHighlightsOpen(true)
@@ -1211,9 +733,6 @@ export default function Reader() {
         // generated route types only refresh when Metro runs, on a cold
         // tsc the new file isn't known yet.
         if (book) router.push(`/vocabulary?bookId=${book.id}` as never)
-        break
-      case 'search':
-        setSearchOpen(true)
         break
       case 'quote-card':
         if (book) {
@@ -1226,11 +745,8 @@ export default function Reader() {
         // First matching club for now. A multi-club picker is a future PR
         // (Part 12 spec only requires routing to a ClubDetailScreen).
         if (matchingClubs.length > 0) {
-          router.push(`/clubs/${matchingClubs[0].club_id}` as never)
+          router.push(`/clubs/${matchingClubs[0].id}` as never)
         }
-        break
-      case 'chapter-features':
-        // Handled internally by MenuSheet (opens sub-list, then onChapterFeature).
         break
       case 'listen':
         // Pull the current chapter's plain text from the WebView, then
@@ -1254,22 +770,6 @@ export default function Reader() {
         break
     }
   }
-
-  // Load this book's bookmark CFIs once on open so the chrome icon can
-  // reflect filled/outline state without a network call per page turn.
-  useEffect(() => {
-    if (!book) return
-    let mounted = true
-    ;(async () => {
-      const { listBookmarks } = await import('@/lib/bookmarks')
-      const rows = await listBookmarks(book.id)
-      if (!mounted) return
-      setBookmarkCfis(new Set(rows.map((r) => r.cfi)))
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [book])
 
   // Hydrate per-book position history on open. The ref is the source of truth
   // mid-session, onLocation appends to it directly and a debounced save
@@ -1312,31 +812,24 @@ export default function Reader() {
 
   // Bookmark button handler, toggle if current position is bookmarked,
   // else open the naming prompt.
-  const onBookmarkTap = useCallback(async () => {
+  const onBookmarkTap = useCallback(() => {
     const cfi = positionRef.current.cfi
     if (!cfi || !book) {
       setToast("Couldn't read the current position. Try turning the page.")
       return
     }
-    if (bookmarkCfis.has(cfi)) {
-      const existing = await findBookmarkAtCfi(book.id, cfi)
-      if (existing) {
-        await deleteBookmark(existing.id)
-        setBookmarkCfis((s) => {
-          const next = new Set(s)
-          next.delete(cfi)
-          return next
-        })
-        setToast('Bookmark removed.')
-      }
+    const existing = bookmarks.find((b) => b.cfi === cfi)
+    if (existing) {
+      writes.removeAnnotation(existing.id)
+      setToast('Bookmark removed.')
       return
     }
     haptic.light()
     const suggested = `${currentChapter.title || 'Bookmark'} · ${Math.round(progress * 100)}%`
     setBookmarkPrompt({ cfi, suggestedName: suggested })
-  }, [book, bookmarkCfis, currentChapter.title, progress])
+  }, [book, bookmarks, writes, currentChapter.title, progress])
 
-  if (loading) {
+  if (readerPage.isPending || !prefsLoaded) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
         <ActivityIndicator color={colors.brandUi} />
@@ -1374,7 +867,7 @@ export default function Reader() {
     >
       <ReadiumReader
         ref={readerRef}
-        epubUrl={book.epub_url}
+        epubUrl={book.epubUrl}
         initialCfi={initialCfi ?? undefined}
         initialSettings={initialSettings}
         onReady={() => {
@@ -1395,7 +888,6 @@ export default function Reader() {
           const prevTitle = previousChapterRef.current
           const isRealTransition = !!prevTitle && prevTitle !== c.title
           if (isRealTransition) {
-            setCheckinChapter(prevTitle!)
             // End-of-chapter sleep mode fires once on the next real
             // transition. Wait until after the state update so the user
             // sees the new chapter momentarily before we save + navigate.
@@ -1405,8 +897,6 @@ export default function Reader() {
           }
           previousChapterRef.current = c.title
           setCurrentChapter({ title: c.title, index: 0 })
-          // Append to TOC sample for AI semantic-search if this chapter is new.
-          setChapterList((prev) => (prev.includes(c.title) ? prev : [...prev, c.title]))
         }}
         onWordTapped={(word, surroundingText, cfi, rect: ReaderRect) => {
           // PDF mode: foliate's word boundaries are unreliable, so suppress
@@ -1670,11 +1160,10 @@ export default function Reader() {
                 </View>
               ) : null}
               {/* Companion button (Phase 1 stub). Opens the existing This
-                  Chapter grid plus the Story So Far / Characters / Search
-                  tools; becomes the hub in Phase 3. */}
+                  book and chapter tools. */}
               <Pressable
                 onPress={() => {
-                  setMenuInitialView('chapter-features')
+                  setMenuInitialView('companion')
                   setMenuOpen(true)
                 }}
                 hitSlop={8}
@@ -1715,56 +1204,6 @@ export default function Reader() {
                 <CaretUp color={colors.brandUi} size={20} weight="regular" />
               </Pressable>
             </View>
-            {presence.length > 0 ? (
-              <Pressable
-                onPress={() => {
-                  if (matchingClubs.length > 0) {
-                    router.push(`/clubs/${matchingClubs[0].club_id}` as never)
-                  }
-                }}
-                className="flex-row items-center"
-                style={{ marginTop: 8 }}
-                accessibilityLabel="Club members reading now"
-              >
-                {presence.map((p, i) => {
-                  const initial = (p.display_name ?? '?')[0]?.toUpperCase() ?? '?'
-                  return (
-                    <View
-                      key={p.user_id}
-                      style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: 12,
-                        overflow: 'hidden',
-                        backgroundColor: colors.brandSubtle,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        borderWidth: 1.5,
-                        borderColor: chromeBg,
-                        marginLeft: i === 0 ? 0 : -8,
-                      }}
-                    >
-                      {p.avatar_url ? (
-                        <Image
-                          source={{ uri: p.avatar_url }}
-                          style={{ width: '100%', height: '100%' }}
-                        />
-                      ) : (
-                        <Text
-                          style={{
-                            fontFamily: Fonts.display,
-                            fontSize: 11,
-                            color: colors.brandSubtleText,
-                          }}
-                        >
-                          {initial}
-                        </Text>
-                      )}
-                    </View>
-                  )
-                })}
-              </Pressable>
-            ) : null}
           </View>
         </SafeAreaView>
       ) : null}
@@ -1801,41 +1240,11 @@ export default function Reader() {
 
       <ReaderToast message={toast} onHide={() => setToast(null)} />
 
-      {/* Chapter reaction, slides up after a chapter ends. Replaces the
-          comprehension check-in per task.md Section H4. */}
-      <ChapterReactionSheet
-        visible={!!checkinChapter}
-        chapterTitle={checkinChapter ?? ''}
-        onSave={async (emoji, note, privacy: PrivacyTier) => {
-          const chapter = checkinChapter
-          setCheckinChapter(null)
-          if (!chapter) return
-          try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user && book) {
-              await supabase.from('chapter_reactions').insert({
-                user_id: user.id,
-                book_id: book.id,
-                chapter_name: chapter,
-                emoji,
-                note: note || null,
-                privacy,
-              })
-            }
-          } catch (e) {
-            console.warn('[reader] chapter_reactions insert failed:', e instanceof Error ? e.message : e)
-          }
-        }}
-        onDismiss={() => setCheckinChapter(null)}
-      />
-
       <TypographySheet
         visible={showSettings}
         prefs={prefs}
         userId={userId}
         bookId={book.id}
-        bookTitle={book.title}
-        bookAuthor={book.author}
         sidePanel={isTablet}
         onChangePrefs={changePrefs}
         onClose={() => setShowSettings(false)}
@@ -1846,12 +1255,9 @@ export default function Reader() {
           visible
           word={wordSheet.word}
           sentence={wordSheet.surroundingText}
-          bookTitle={book.title}
           bookId={book.id}
-          author={book.author}
-          era=""
           currentChapter={currentChapter.title}
-          progress={progress}
+          onSaveWord={writes.saveWord}
           onClose={() => setWordSheet(null)}
         />
       ) : null}
@@ -1860,37 +1266,25 @@ export default function Reader() {
         <PassageAnalysisSheet
           visible
           passage={passageSheet.text}
-          bookTitle={book.title}
-          author={book.author}
-          era=""
           bookId={book.id}
           currentChapter={currentChapter.title}
-          progress={progress}
-          cfi={passageSheet.cfi}
+          onSavePassage={() =>
+            writes.addAnnotation({
+              type: 'commonplace',
+              locator: passageSheet.cfi ? (decodeLocator(passageSheet.cfi) as unknown as Record<string, unknown>) : null,
+              selectedText: passageSheet.text.slice(0, 4000),
+              chapter: currentChapter.title || null,
+            })
+          }
           onClose={() => setPassageSheet(null)}
         />
       ) : null}
 
-      <ChapterSummaryModal
-        visible={summaryOpen}
-        chapterTitle={currentChapter.title || book.title}
-        chapterNumber={currentChapter.index || 1}
-        bookTitle={book.title}
-        author={book.author}
-        timing="after"
-        bookId={book.id}
-        progress={progress}
-        onClose={() => setSummaryOpen(false)}
-      />
-
       <CompanionChat
         visible={chatOpen}
         bookTitle={book.title}
-        author={book.author}
-        currentChapter={currentChapter.title || 'the current chapter'}
         bookId={book.id}
-        progress={progress}
-        seedAssistantMessage={chatSeed}
+        seedQuestion={chatSeed}
         onClose={() => {
           setChatOpen(false)
           setChatSeed(null)
@@ -1905,7 +1299,6 @@ export default function Reader() {
         initialView={menuInitialView}
         clubsReadingThis={matchingClubs}
         onAction={handleMenuAction}
-        onChapterFeature={(kind) => setChapterFeature(kind)}
         locked={locked}
         onUpgrade={(feature) => setUpgradeFeature(feature)}
         onClose={() => setMenuOpen(false)}
@@ -1917,35 +1310,52 @@ export default function Reader() {
           club={matchingClubs[0]}
           bookId={book.id}
           bookTitle={book.title}
-          viewerClubIds={matchingClubs.map((c) => c.club_id)}
-          onOpenComment={(c: PassageComment) => {
-            setCommentSheet({ cfi: c.cfi, passageText: c.passage_text ?? '' })
+          onOpenComment={(c) => {
+            if (c.locator) setCommentSheet({ cfi: encodeLocator(c.locator), passageText: '' })
             setClubPanelOpen(false)
           }}
           onClose={() => setClubPanelOpen(false)}
         />
       ) : null}
 
-      <ChapterFeatureSheet
-        visible={chapterFeature !== null}
-        kind={chapterFeature}
-        bookTitle={book.title}
-        author={book.author}
-        chapterTitle={currentChapter.title}
-        bookId={book.id}
-        progress={progress}
-        onClose={() => setChapterFeature(null)}
-      />
-
-      <CharacterMapSheet
-        visible={characterMapOpen}
-        bookTitle={book.title}
-        bookId={book.id}
-        author={book.author}
-        currentChapter={currentChapter.title}
-        progress={progress}
-        onClose={() => setCharacterMapOpen(false)}
-      />
+      <CompanionSheet
+        visible={companionTool !== null}
+        title={companionTool ? COMPANION_TOOL_TITLES[companionTool] : ''}
+        eyebrow={companionTool === 'book_insight' ? book.title : currentChapter.title || null}
+        request={
+          !companionTool
+            ? null
+            : companionTool === 'semantic_search'
+              ? findSubmitted
+                ? { action: 'semantic_search', bookId: book.id, message: findSubmitted }
+                : null
+              : { action: companionTool, bookId: book.id, chapter: currentChapter.title || undefined }
+        }
+        onClose={() => setCompanionTool(null)}
+      >
+        {companionTool === 'semantic_search' ? (
+          <TextInput
+            value={findQuery}
+            onChangeText={setFindQuery}
+            onSubmitEditing={() => setFindSubmitted(findQuery.trim() || null)}
+            placeholder="Describe a moment, an idea or a line"
+            placeholderTextColor={colors.textTertiary}
+            returnKeyType="search"
+            accessibilityLabel="What are you looking for in the book?"
+            style={{
+              fontFamily: Fonts.body,
+              fontSize: 15,
+              color: colors.textPrimary,
+              borderColor: colors.borderSubtle,
+              borderWidth: 1,
+              borderRadius: 12,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              marginBottom: 14,
+            }}
+          />
+        ) : null}
+      </CompanionSheet>
 
       <HighlightsSheet
         visible={highlightsOpen}
@@ -1958,31 +1368,21 @@ export default function Reader() {
         onClose={() => setHighlightsOpen(false)}
       />
 
-      <SearchSheet
-        visible={searchOpen}
-        bookTitle={book.title}
-        bookId={book.id}
-        author={book.author}
-        chapterList={chapterList}
-        // Exact search not yet wired through to foliate, sheet shows a
-        // "coming soon" message in that mode. AI Search routes by
-        // chapter name; we treat that as a no-op for now since we don't
-        // have a chapter-name → CFI map yet (a follow-up).
-        onClose={() => setSearchOpen(false)}
+      <CompanionSheet
+        visible={translateText !== null}
+        title={`Translate to ${prefs.targetLanguage}`}
+        request={
+          translateText
+            ? {
+                action: 'bilingual_paragraph',
+                bookId: book.id,
+                selection: { text: translateText.slice(0, 4000), chapter: currentChapter.title || null },
+                targetLanguage: prefs.targetLanguage,
+              }
+            : null
+        }
+        onClose={() => setTranslateText(null)}
       />
-
-      {translateSel ? (
-        <TranslateSheet
-          visible
-          paragraphs={translateSel.paragraphs}
-          targetLanguage={prefs.targetLanguage}
-          bookTitle={book.title}
-          author={book.author}
-          bookId={book.id}
-          currentChapter={currentChapter.title}
-          onClose={() => setTranslateSel(null)}
-        />
-      ) : null}
 
       <UpgradeSheet
         visible={upgradeFeature !== null}
@@ -2055,19 +1455,14 @@ export default function Reader() {
         <BookmarkNamingModal
           suggested={bookmarkPrompt.suggestedName}
           onCancel={() => setBookmarkPrompt(null)}
-          onSave={async (name) => {
-            if (!book) return
-            const row = await createBookmark({
-              bookId: book.id,
-              cfi: bookmarkPrompt.cfi,
-              name: name || bookmarkPrompt.suggestedName,
+          onSave={(name) => {
+            writes.addAnnotation({
+              type: 'bookmark',
+              locator: decodeLocator(bookmarkPrompt.cfi) as unknown as Record<string, unknown>,
+              body: name || bookmarkPrompt.suggestedName,
+              chapter: currentChapter.title || null,
             })
-            if (row) {
-              setBookmarkCfis((s) => new Set(s).add(row.cfi))
-              setToast('Bookmark saved.')
-            } else {
-              setToast("Couldn't save bookmark.")
-            }
+            setToast('Bookmark saved.')
             setBookmarkPrompt(null)
           }}
         />

@@ -1,17 +1,14 @@
 import * as Sentry from '@sentry/react-native'
 import { useEffect, useState } from 'react'
+import { AppState } from 'react-native'
 import { Stack, useRouter, useSegments } from 'expo-router'
 import { StatusBar } from 'expo-status-bar'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context'
 import { KeyboardProvider } from 'react-native-keyboard-controller'
-import * as Linking from 'expo-linking'
 import * as SplashScreen from 'expo-splash-screen'
 import { useFonts } from 'expo-font'
 import { ReaderProvider } from '@epubjs-react-native/core'
-// Minimal local shape for the auth session. Supabase was removed; the shim in
-// lib/supabase.ts returns `any`, so this only needs to cover what we read.
-type Session = { access_token: string; refresh_token: string; user: { id: string } | null }
 import { IconContext } from 'phosphor-react-native'
 import {
   Fraunces_300Light,
@@ -29,12 +26,9 @@ import {
 } from '@expo-google-fonts/source-serif-4'
 import { DMSans_400Regular, DMSans_500Medium } from '@expo-google-fonts/dm-sans'
 import { DMMono_400Regular, DMMono_500Medium } from '@expo-google-fonts/dm-mono'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { AppState } from 'react-native'
-import { supabase } from '@/lib/supabase'
+import { FoxingDataProvider, useMe } from '@foxing/client'
+import { api, authClient, queryClient, syncNow } from '@/lib/api'
 import { rescheduleAll } from '@/lib/local-notifications'
-import { checkStreakRisk } from '@/lib/streaks'
-import { startOfflineWatch, stopOfflineWatch } from '@/lib/offline-queue'
 import '../global.css'
 
 Sentry.init({
@@ -42,8 +36,6 @@ Sentry.init({
   tracesSampleRate: 0.1,
   environment: __DEV__ ? 'development' : 'production',
 })
-
-const ONBOARDING_KEY = 'onboarding_complete'
 
 // Keep the splash screen up until both auth and fonts are ready. This prevents
 // the visible flash of the platform fallback typeface that happens when the
@@ -54,51 +46,17 @@ SplashScreen.preventAutoHideAsync().catch(() => {
   // (e.g. during fast refresh). It's not actionable.
 })
 
-// Parse tokens out of a Supabase auth deep link. Email-confirmation links
-// land here as foxing://auth/callback#access_token=...&refresh_token=...
-// (implicit flow) or foxing://auth/callback?code=... (PKCE flow).
-async function handleAuthDeepLink(url: string) {
-  console.log('[deeplink] incoming URL', url)
-
-  const hashIndex = url.indexOf('#')
-  if (hashIndex >= 0) {
-    const fragment = new URLSearchParams(url.slice(hashIndex + 1))
-    const access_token = fragment.get('access_token')
-    const refresh_token = fragment.get('refresh_token')
-    if (access_token && refresh_token) {
-      const { error } = await supabase.auth.setSession({ access_token, refresh_token })
-      console.log('[deeplink] setSession result', { error: error?.message })
-      return
-    }
-  }
-
-  const queryIndex = url.indexOf('?')
-  if (queryIndex >= 0) {
-    const query = new URLSearchParams(
-      url.slice(queryIndex + 1, hashIndex >= 0 ? hashIndex : undefined),
-    )
-    const code = query.get('code')
-    if (code) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-      console.log('[deeplink] exchangeCodeForSession result', { error: error?.message })
-    }
-  }
-}
-
+// Signed out goes to sign-in; signed in without a profile goes to onboarding, which
+// creates it. Both come from the server: the session from Better Auth, the profile from
+// GET /me.
 function RootLayout() {
-  const [session, setSession] = useState<Session | null>(null)
-  const [authLoading, setAuthLoading] = useState(true)
+  const { data: session, isPending: authLoading } = authClient.useSession()
+  const signedIn = !!session?.user
+  const me = useMe(undefined, signedIn)
+  const onboarded = me.data ? me.data.profile !== null : null
   const [splashTimeoutReached, setSplashTimeoutReached] = useState(false)
-  // Tri-state, null while we're checking AsyncStorage on launch.
-  const [onboardingComplete, setOnboardingComplete] = useState<boolean | null>(null)
   const segments = useSegments()
   const router = useRouter()
-
-  useEffect(() => {
-    AsyncStorage.getItem(ONBOARDING_KEY)
-      .then((v) => setOnboardingComplete(v === 'true'))
-      .catch(() => setOnboardingComplete(false))
-  }, [])
 
   const [fontsLoaded, fontsError] = useFonts({
     Fraunces_300Light,
@@ -137,133 +95,39 @@ function RootLayout() {
     return () => clearTimeout(t)
   }, [])
 
+  // Queued offline writes go up at launch and whenever the app comes back to the front.
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }: any) => {
-      setSession(session)
-      setAuthLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
-      setSession(session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  // Offline write queue, starts once at app boot. Listens for NetInfo
-  // reconnect when the package is installed; falls back to polling otherwise.
-  useEffect(() => {
-    startOfflineWatch()
-    return () => stopOfflineWatch()
-  }, [])
-
-  // Local notification scheduling + streak-risk check. Both no-op when the
-  // expo-notifications native module isn't yet on the device (1.0.0 build).
-  useEffect(() => {
-    if (!session?.user) return
-    const userId = session.user.id
-    // Schedule daily reminder + 8pm streak risk based on prefs.
+    if (!signedIn) return
+    void syncNow()
+    // Daily reminder and the 8pm streak nudge, from the reader's notification prefs.
     rescheduleAll().catch(() => {})
-    // Foreground-triggered in-app streak risk notification. Runs on mount
-    // plus every time the app comes back to active state.
-    checkStreakRisk(userId).catch(() => {})
-    // Year-in-Reading nudge, fires once per year on Dec 1. Idempotent via
-    // an AsyncStorage flag so reopening the app on Dec 1 doesn't re-send.
-    ;(async () => {
-      try {
-        const today = new Date()
-        const isDecFirst = today.getMonth() === 11 && today.getDate() === 1
-        if (!isDecFirst) return
-        const year = today.getFullYear()
-        const flagKey = `year_in_reading_notified_${year}`
-        const alreadySent = await AsyncStorage.getItem(flagKey)
-        if (alreadySent === 'true') return
-        const { supabase: sb } = await import('@/lib/supabase')
-        const { count } = await sb
-          .from('user_books')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', userId)
-          .eq('status', 'finished')
-          .gte('finished_at', `${year}-01-01`)
-        const finished = count ?? 0
-        const { createNotification } = await import('@/lib/notifications')
-        await createNotification(
-          userId,
-          'year_in_reading',
-          `Your ${year} in Reading is ready`,
-          `You read ${finished} book${finished === 1 ? '' : 's'} this year. See your full recap.`,
-          { screen: '/year-in-reading', year, finished },
-        )
-        await AsyncStorage.setItem(flagKey, 'true')
-      } catch (e) {
-        console.warn('[year-in-reading] notify failed:', e instanceof Error ? e.message : e)
-      }
-    })()
     const sub = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        checkStreakRisk(userId).catch(() => {})
-      }
+      if (state === 'active') void syncNow()
     })
     return () => sub.remove()
-  }, [session?.user])
-
-  useEffect(() => {
-    // Cold start: the app was launched by tapping the email link.
-    Linking.getInitialURL().then((url) => {
-      if (url) handleAuthDeepLink(url)
-    })
-
-    // Warm start: the app was already running when the link was tapped.
-    const sub = Linking.addEventListener('url', ({ url }) => {
-      handleAuthDeepLink(url)
-    })
-
-    return () => sub.remove()
-  }, [])
+  }, [signedIn])
 
   useEffect(() => {
     if (authLoading) return
-    if (onboardingComplete === null) return
+    if (signedIn && onboarded === null) return
 
     const inAuthGroup = segments[0] === '(auth)'
-    // Cast: Expo Router's generated route types don't refresh until Metro
-    // sees the new app/onboarding/ entry. The string still works at runtime.
     const inOnboarding = (segments[0] as string) === 'onboarding'
 
-    // Already on onboarding, never redirect to itself (would cause a loop
-    // and also masks the just-completed flow before our flag re-read lands).
-    if (inOnboarding) return
-
-    if (!session && !inAuthGroup) {
-      router.replace('/(auth)/login')
+    if (!signedIn) {
+      if (!inAuthGroup) router.replace('/(auth)/login')
       return
     }
-    if (session && inAuthGroup) {
-      // Just signed in, show onboarding first if they haven't seen it.
-      router.replace((onboardingComplete ? '/(tabs)' : '/onboarding') as never)
+    if (!onboarded) {
+      if (!inOnboarding) router.replace('/onboarding' as never)
       return
     }
-    if (session && !onboardingComplete) {
-      // The state variable is hydrated once at mount and never refreshed,
-      // so after the onboarding screen flips the AsyncStorage flag and
-      // replaces to /(tabs), this effect sees a stale `false` and would
-      // bounce back to /onboarding. Re-read AsyncStorage just-in-time and
-      // only redirect if the flag is still genuinely missing.
-      AsyncStorage.getItem(ONBOARDING_KEY)
-        .then((v) => {
-          if (v === 'true') {
-            setOnboardingComplete(true)
-          } else {
-            router.replace('/onboarding' as never)
-          }
-        })
-        .catch(() => router.replace('/onboarding' as never))
-    }
-  }, [session, segments, authLoading, onboardingComplete, router])
+    if (inAuthGroup || inOnboarding) router.replace('/(tabs)')
+  }, [signedIn, onboarded, segments, authLoading, router])
 
   const ready =
     splashTimeoutReached ||
-    ((fontsLoaded || !!fontsError) && !authLoading && onboardingComplete !== null)
+    ((fontsLoaded || !!fontsError) && !authLoading && (!signedIn || onboarded !== null))
 
   // Hide the native splash as soon as we're ready. useEffect runs after every
   // render where `ready` is true, so this is more reliable than onLayout
@@ -305,4 +169,12 @@ function RootLayout() {
   )
 }
 
-export default Sentry.wrap(RootLayout)
+function App() {
+  return (
+    <FoxingDataProvider api={api} queryClient={queryClient}>
+      <RootLayout />
+    </FoxingDataProvider>
+  )
+}
+
+export default Sentry.wrap(App)

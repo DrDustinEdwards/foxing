@@ -1,331 +1,42 @@
-import { useCallback, useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  Image,
-} from 'react-native'
+import { useMe, useMyAnnotations, useProfilePage, useStats } from '@foxing/client'
+import { useState } from 'react'
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useFocusEffect, useRouter } from 'expo-router'
-import {
-  SignOut,
-  BookOpen,
-  GearSix,
-} from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { useRouter } from 'expo-router'
+import { SignOut, BookOpen, GearSix, Sparkle } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  EditProfileSheet,
-  pickAndUploadAvatar,
-  type EditableProfile,
-} from '@/components/profile/edit-profile-sheet'
-import { refreshReadingPersonality } from '@/lib/recommendations'
-import { PickFavoritesSheet } from '@/components/profile/pick-favorites-sheet'
+import { authClient, queryClient } from '@/lib/api'
+import { EditProfileSheet } from '@/components/profile/edit-profile-sheet'
 import { ProfileHeader } from '@/components/profile/profile-header'
 import { FavoritesStrip } from '@/components/profile/favorites-strip'
-import { BadgesSection } from '@/components/profile/badges-section'
 import { RecentHighlightsSection } from '@/components/profile/recent-highlights-section'
 import { Section } from '@/components/profile/profile-section'
-import { Divider, StatTile, pct } from '@/components/profile/stat-tile'
-import { XpProgressCard } from '@/components/profile/xp-progress-card'
-import { StatBlock, StatLine, deriveStreaks } from '@/components/profile/stat-block'
+import { Divider, StatTile } from '@/components/profile/stat-tile'
+import { StatBlock, StatLine } from '@/components/profile/stat-block'
+import { CompanionSheet } from '@/components/reader/companion-sheet'
 
-interface CurrentlyReading {
-  id: string
-  progress_percentage: number
-  book: { id: string; title: string; author: string; cover_url: string | null }
-}
-
-interface BadgeEntry {
-  earned_at: string
-  badge: { slug: string; name: string; category: string | null } | null
-}
-
-interface RecentHighlight {
-  id: string
-  text: string
-  color: string | null
-  created_at: string
-  book: { id: string; title: string; author: string } | null
-}
-
-interface Stats {
-  booksRead: number
-  highlights: number
-  following: number
-  followers: number
-  yearBooks: number
-  allTimeBooks: number
-  currentStreak: number
-  longestStreak: number
-  avgWpm: number | null
-}
-
-const EMPTY_STATS: Stats = {
-  booksRead: 0,
-  highlights: 0,
-  following: 0,
-  followers: 0,
-  yearBooks: 0,
-  allTimeBooks: 0,
-  currentStreak: 0,
-  longestStreak: 0,
-  avgWpm: null,
-}
-
+// The reader's own profile: GET /me, their public profile page (the same one others
+// see), reading stats and recent highlights. Edits patch the cached profile in place.
 export default function ProfileScreen() {
   const colors = useColors()
   const router = useRouter()
-  const [profile, setProfile] = useState<EditableProfile | null>(null)
-  const [stats, setStats] = useState<Stats>(EMPTY_STATS)
-  const [xpInfo, setXpInfo] = useState<{ xp: number; level: string } | null>(
-    null,
-  )
-  const [currentlyReading, setCurrentlyReading] = useState<CurrentlyReading | null>(null)
-  const [badges, setBadges] = useState<BadgeEntry[]>([])
-  const [recentHighlights, setRecentHighlights] = useState<RecentHighlight[]>([])
-  const [loading, setLoading] = useState(true)
+  const me = useMe()
+  const profile = me.data?.profile ?? null
+  const page = useProfilePage(profile?.username ?? '').data
+  const publicPage = page && !page.isPrivate ? page : null
+  const stats = useStats().data
+  const highlights = (useMyAnnotations(['highlight']).data ?? []).slice(0, 3)
   const [editing, setEditing] = useState(false)
-  const [avatarBusy, setAvatarBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [personality, setPersonality] = useState<string | null>(null)
-  const [personalityBusy, setPersonalityBusy] = useState(false)
-  // Five favorite books, one row per position (1..5). Position is the slot
-  // in the profile grid; book may be null if a slot is empty.
-  const [favorites, setFavorites] = useState<
-    Array<{ position: number; book: { id: string; title: string; author: string; cover_url: string | null } | null }>
-  >([])
-  const [favoritePickPos, setFavoritePickPos] = useState<number | null>(null)
+  const [personalityOpen, setPersonalityOpen] = useState(false)
+  const reading = publicPage?.currentlyReading[0] ?? null
+  // The companion needs a book to anchor on: what they're reading, or last finished.
+  const anchorBookId = reading?.bookId ?? publicPage?.finishedBooks[0]?.bookId ?? null
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setLoading(false)
-      return
-    }
-    const uid = user.id
-    const yearStart = `${new Date().getFullYear()}-01-01T00:00:00Z`
-
-    const [
-      profileRes,
-      finishedRes,
-      yearFinishedRes,
-      currentRes,
-      highlightCountRes,
-      recentHighlightsRes,
-      followersRes,
-      followingRes,
-      streakRes,
-      sessionsRes,
-      badgesRes,
-      favoritesRes,
-    ] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select(
-          'id, display_name, username, avatar_url, bio, favorite_genres, reading_personality, xp_points, reading_level',
-        )
-        .eq('id', uid)
-        .single(),
-      supabase
-        .from('user_books')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', uid)
-        .eq('status', 'finished'),
-      supabase
-        .from('user_books')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', uid)
-        .eq('status', 'finished')
-        .gte('finished_at', yearStart),
-      supabase
-        .from('user_books')
-        .select('id, progress_percentage, started_at, book:books(id, title, author, cover_url)')
-        .eq('user_id', uid)
-        .eq('status', 'reading')
-        .order('started_at', { ascending: false, nullsFirst: false })
-        .limit(1),
-      supabase
-        .from('highlights')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', uid),
-      supabase
-        .from('highlights')
-        .select('id, text, color, created_at, book:books(id, title, author)')
-        .eq('user_id', uid)
-        .order('created_at', { ascending: false })
-        .limit(3),
-      supabase
-        .from('follows')
-        .select('follower_id', { count: 'exact', head: true })
-        .eq('following_id', uid),
-      supabase
-        .from('follows')
-        .select('following_id', { count: 'exact', head: true })
-        .eq('follower_id', uid),
-      supabase
-        .from('reading_streaks')
-        .select('current_streak, longest_streak, total_books_finished')
-        .eq('user_id', uid)
-        .maybeSingle(),
-      supabase
-        .from('reading_sessions')
-        .select('avg_wpm, started_at')
-        .eq('user_id', uid),
-      supabase
-        .from('user_badges')
-        .select('earned_at, badge:badges(slug, name, category)')
-        .eq('user_id', uid)
-        .order('earned_at', { ascending: false }),
-      supabase
-        .from('user_favorites')
-        .select('position, book:books(id, title, author, cover_url)')
-        .eq('user_id', uid)
-        .order('position', { ascending: true }),
-    ])
-
-    if (profileRes.error) {
-      setError(profileRes.error.message)
-    } else if (profileRes.data) {
-      setProfile(profileRes.data as EditableProfile)
-      const xpRow = profileRes.data as {
-        xp_points?: number | null
-        reading_level?: string | null
-      }
-      setXpInfo({
-        xp: xpRow.xp_points ?? 0,
-        level: xpRow.reading_level ?? 'bookworm',
-      })
-      const pers = (profileRes.data as { reading_personality?: string | null }).reading_personality
-      setPersonality(pers ?? null)
-    }
-
-    const sessions = (sessionsRes.data ?? []) as Array<{ avg_wpm: number | null; started_at: string }>
-    const wpmSamples = sessions.map((s) => s.avg_wpm).filter((v): v is number => typeof v === 'number' && v > 0)
-    const avgWpm = wpmSamples.length
-      ? Math.round(wpmSamples.reduce((a, b) => a + b, 0) / wpmSamples.length)
-      : null
-
-    const streakRow = streakRes.data as
-      | { current_streak: number | null; longest_streak: number | null; total_books_finished: number | null }
-      | null
-
-    // Fall back to deriving streaks from session dates if the streak table
-    // doesn't have a row yet (e.g. early account, before a tracker job ran).
-    const fallback = streakRow ? null : deriveStreaks(sessions.map((s) => s.started_at))
-
-    setStats({
-      booksRead: finishedRes.count ?? 0,
-      highlights: highlightCountRes.count ?? 0,
-      followers: followersRes.count ?? 0,
-      following: followingRes.count ?? 0,
-      yearBooks: yearFinishedRes.count ?? 0,
-      allTimeBooks: streakRow?.total_books_finished ?? finishedRes.count ?? 0,
-      currentStreak: streakRow?.current_streak ?? fallback?.current ?? 0,
-      longestStreak: streakRow?.longest_streak ?? fallback?.longest ?? 0,
-      avgWpm,
-    })
-
-    const reading = (currentRes.data?.[0] as unknown) as CurrentlyReading | undefined
-    setCurrentlyReading(reading ?? null)
-
-    setRecentHighlights((recentHighlightsRes.data as unknown as RecentHighlight[]) ?? [])
-    setBadges((badgesRes.data as unknown as BadgeEntry[]) ?? [])
-
-    // Normalize favorites into 5 slots (1..5). Empty slots stay null so the
-    // grid can render dashed placeholders for them.
-    type FR = {
-      position: number
-      book:
-        | { id: string; title: string; author: string; cover_url: string | null }
-        | Array<{ id: string; title: string; author: string; cover_url: string | null }>
-        | null
-    }
-    const rows = ((favoritesRes.data ?? []) as unknown) as FR[]
-    const byPos = new Map<number, FR['book']>()
-    for (const r of rows) byPos.set(r.position, r.book)
-    setFavorites(
-      [1, 2, 3, 4, 5].map((position) => {
-        const raw = byPos.get(position) ?? null
-        const book = Array.isArray(raw) ? raw[0] ?? null : raw
-        return { position, book }
-      }),
-    )
-    setLoading(false)
-  }, [])
-
-  const onPickFavorite = useCallback(
-    async (bookId: string) => {
-      if (favoritePickPos === null || !profile) return
-      await supabase
-        .from('user_favorites')
-        .upsert(
-          { user_id: profile.id, book_id: bookId, position: favoritePickPos },
-          { onConflict: 'user_id,position' },
-        )
-      setFavoritePickPos(null)
-      load()
-    },
-    [favoritePickPos, load, profile],
-  )
-
-  const onRemoveFavorite = useCallback(
-    async (position: number) => {
-      if (!profile) return
-      await supabase
-        .from('user_favorites')
-        .delete()
-        .eq('user_id', profile.id)
-        .eq('position', position)
-      load()
-    },
-    [load, profile],
-  )
-
-  useFocusEffect(
-    useCallback(() => {
-      load()
-    }, [load])
-  )
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  const handleAvatarTap = useCallback(async () => {
-    if (!profile) return
-    try {
-      setAvatarBusy(true)
-      const url = await pickAndUploadAvatar(profile.id)
-      if (url) setProfile({ ...profile, avatar_url: url })
-    } catch (e: any) {
-      setError(e?.message ?? 'Avatar upload failed')
-    } finally {
-      setAvatarBusy(false)
-    }
-  }, [profile])
-
-  const signOut = useCallback(async () => {
-    await supabase.auth.signOut()
-  }, [])
-
-  const refreshPersonality = useCallback(async () => {
-    if (!profile?.id || personalityBusy) return
-    setPersonalityBusy(true)
-    try {
-      const next = await refreshReadingPersonality(profile.id)
-      if (next) setPersonality(next)
-    } finally {
-      setPersonalityBusy(false)
-    }
-  }, [personalityBusy, profile?.id])
-
-  const initial = (profile?.display_name || profile?.username || '?')[0]?.toUpperCase() ?? '?'
+  const signOut = async () => {
+    await authClient.signOut()
+    queryClient.clear()
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -341,125 +52,79 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-        {/* Header */}
-        <ProfileHeader
-          profile={profile}
-          initial={initial}
-          avatarBusy={avatarBusy}
-          onAvatarTap={handleAvatarTap}
-          onEdit={() => setEditing(true)}
-        />
-
-        {loading ? (
+        {!profile ? (
           <ActivityIndicator color={colors.brandUi} />
         ) : (
           <>
-            {/* 5 Favorite Books grid, the identity section. Tap an empty
-                slot to pick from finished books; tap a filled slot to
-                replace or remove. */}
+            <ProfileHeader profile={profile} onEdit={() => setEditing(true)} />
+
             <FavoritesStrip
-              favorites={favorites}
-              onPickSlot={setFavoritePickPos}
-              onRemove={onRemoveFavorite}
+              books={publicPage?.favorites ?? []}
+              onOpen={(slug) => router.push(`/book/${slug}` as never)}
             />
 
-            {/* Stats row */}
             <View
               className="flex-row mb-6 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
               style={{ paddingVertical: 14 }}
             >
               <StatTile
-                value={stats.booksRead}
+                value={publicPage?.booksRead ?? 0}
                 label="Books"
                 onPress={() => router.push('/(tabs)/library')}
               />
               <Divider />
               <StatTile
-                value={stats.highlights}
+                value={publicPage?.highlightCount ?? 0}
                 label="Highlights"
                 onPress={() => router.push('/highlights' as never)}
               />
               <Divider />
               <StatTile
-                value={stats.following}
+                value={publicPage?.followingCount ?? 0}
                 label="Following"
                 onPress={() => router.push('/follows?tab=following' as never)}
               />
               <Divider />
               <StatTile
-                value={stats.followers}
+                value={publicPage?.followerCount ?? 0}
                 label="Followers"
                 onPress={() => router.push('/follows?tab=followers' as never)}
               />
             </View>
 
-            {/* Reading personality */}
-            <View
-              style={{
-                marginBottom: 24,
-                padding: 14,
-                borderRadius: 16,
-                backgroundColor: colors.brandSubtle,
-                borderWidth: 1,
-                borderColor: colors.borderSubtle,
-              }}
-            >
-              <View
+            {anchorBookId ? (
+              <Pressable
+                onPress={() => setPersonalityOpen(true)}
+                accessibilityRole="button"
+                className="flex-row items-center"
                 style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  marginBottom: 6,
+                  marginBottom: 24,
+                  padding: 14,
+                  borderRadius: 16,
+                  backgroundColor: colors.brandSubtle,
+                  borderWidth: 1,
+                  borderColor: colors.borderSubtle,
+                  gap: 10,
                 }}
               >
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 11,
-                    color: colors.brandSubtleText,
-                    textTransform: 'uppercase',
-                    letterSpacing: 0.6,
-                  }}
-                >
-                  Reading Personality
-                </Text>
-                <Pressable
-                  onPress={refreshPersonality}
-                  disabled={personalityBusy}
-                  hitSlop={8}
-                >
-                  {personalityBusy ? (
-                    <ActivityIndicator color={colors.brandSubtleText} size="small" />
-                  ) : (
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 11,
-                        color: colors.brandSubtleText,
-                      }}
-                    >
-                      {personality ? 'Refresh' : 'Generate'}
-                    </Text>
-                  )}
-                </Pressable>
-              </View>
-              <Text
-                style={{
-                  fontFamily: Fonts.body,
-                  fontSize: 14,
-                  color: colors.brandSubtleText,
-                  lineHeight: 20,
-                }}
-              >
-                {personality ?? 'Finish a few books and your reading personality will appear here.'}
-              </Text>
-            </View>
+                <Sparkle color={colors.brandSubtleText} size={18} />
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.brandSubtleText }}>
+                    Your reading personality
+                  </Text>
+                  <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.brandSubtleText, marginTop: 2 }}>
+                    What your reading says about you, written by the companion.
+                  </Text>
+                </View>
+              </Pressable>
+            ) : null}
 
-            {/* Currently reading */}
-            {currentlyReading?.book ? (
+            {reading ? (
               <Section title="Currently Reading">
                 <Pressable
-                  onPress={() => router.push(`/reader/${currentlyReading.book.id}`)}
+                  onPress={() => router.push(`/reader/${reading.bookId}` as never)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Continue ${reading.title}`}
                   className="flex-row rounded-2xl p-3 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
                 >
                   <View
@@ -470,164 +135,84 @@ export default function ProfileScreen() {
                       overflow: 'hidden',
                       backgroundColor: colors.bgSunken,
                       marginRight: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
                     }}
                   >
-                    {currentlyReading.book.cover_url ? (
-                      <Image
-                        source={{ uri: currentlyReading.book.cover_url }}
-                        style={{ width: '100%', height: '100%' }}
-                      />
+                    {reading.coverUrl ? (
+                      <Image source={{ uri: reading.coverUrl }} style={{ width: '100%', height: '100%' }} />
                     ) : (
-                      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-                        <BookOpen color={colors.textTertiary} size={20} />
-                      </View>
+                      <BookOpen color={colors.textTertiary} size={20} />
                     )}
                   </View>
                   <View style={{ flex: 1, justifyContent: 'center' }}>
-                    <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}
-                      numberOfLines={2}
-                    >
-                      {currentlyReading.book.title}
+                    <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }} numberOfLines={2}>
+                      {reading.title}
                     </Text>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.ui,
-                        fontSize: 12,
-                        color: colors.textTertiary,
-                        marginTop: 2,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {currentlyReading.book.author}
+                    <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, marginTop: 2 }} numberOfLines={1}>
+                      {reading.author}
                     </Text>
-                    <View
-                      style={{
-                        marginTop: 10,
-                        height: 4,
-                        borderRadius: 2,
-                        backgroundColor: colors.bgSunken,
-                      }}
-                    >
+                    <View style={{ marginTop: 10, height: 4, borderRadius: 2, backgroundColor: colors.bgSunken }}>
                       <View
                         style={{
                           height: 4,
                           borderRadius: 2,
                           backgroundColor: colors.brandUi,
-                          width: `${pct(currentlyReading.progress_percentage)}%`,
+                          width: `${Math.max(0, Math.min(100, Math.round(reading.progressPct)))}%`,
                         }}
                       />
                     </View>
-                    <Text
-                      style={{
-                        fontFamily: Fonts.mono,
-                        fontSize: 11,
-                        color: colors.textTertiary,
-                        marginTop: 4,
-                      }}
-                    >
-                      {pct(currentlyReading.progress_percentage)}%
+                    <Text style={{ fontFamily: Fonts.mono, fontSize: 11, color: colors.textTertiary, marginTop: 4 }}>
+                      {Math.round(reading.progressPct)}%
                     </Text>
                   </View>
                 </Pressable>
               </Section>
             ) : null}
 
-            {/* Quick links, one-row horizontal scroll for screens that
-                don't have a top-level home elsewhere. */}
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 8, marginBottom: 16 }}
-            >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 16 }}>
               {[
-                { label: 'Genre Bingo', href: '/genre-bingo' },
                 { label: 'Saved Passages', href: '/saved-passages' },
                 { label: 'Timeline', href: '/reading-timeline' },
-                { label: 'Saved posts', href: '/saved-posts' },
-                { label: 'Badges', href: '/badges' },
+                { label: 'Year in Reading', href: '/year-in-reading' },
+                { label: 'Vocabulary', href: '/vocabulary' },
               ].map((l) => (
                 <Pressable
                   key={l.href}
                   onPress={() => router.push(l.href as never)}
+                  accessibilityRole="link"
                   className="px-3 py-2 rounded-full border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
                 >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      fontSize: 12,
-                      color: colors.textPrimary,
-                    }}
-                  >
-                    {l.label}
-                  </Text>
+                  <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}>{l.label}</Text>
                 </Pressable>
               ))}
             </ScrollView>
 
-            {xpInfo ? <XpProgressCard xp={xpInfo.xp} /> : null}
-
-            {/* Reading stats card */}
-            <Section
-              title="Reading Stats"
-              actionLabel="View goals"
-              onAction={() => router.push('/goals' as never)}
-            >
-              <View
-                className="rounded-2xl p-4 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
-                <StatBlock heading="This Year">
-                  <StatLine value={`${stats.yearBooks}`} label={stats.yearBooks === 1 ? 'book' : 'books'} />
-                  <StatLine
-                    value={`${stats.currentStreak}`}
-                    label={stats.currentStreak === 1 ? 'day streak' : 'day streak'}
-                  />
-                </StatBlock>
-                <View style={{ height: 1, backgroundColor: colors.borderSubtle, marginVertical: 14 }} />
-                <StatBlock heading="All Time">
-                  <StatLine
-                    value={`${stats.allTimeBooks}`}
-                    label={stats.allTimeBooks === 1 ? 'book total' : 'books total'}
-                  />
-                  <StatLine
-                    value={`${stats.longestStreak}`}
-                    label={stats.longestStreak === 1 ? 'longest day' : 'longest days'}
-                  />
-                  {stats.avgWpm ? (
-                    <StatLine value={`${stats.avgWpm}`} label="avg WPM" />
-                  ) : null}
-                </StatBlock>
-              </View>
-            </Section>
-
-            {/* Badges row */}
-            {badges.length > 0 ? (
-              <BadgesSection badges={badges} onViewAll={() => router.push('/badges' as never)} />
+            {stats ? (
+              <Section title="Reading Stats" actionLabel="View goals" onAction={() => router.push('/goals' as never)}>
+                <View className="rounded-2xl p-4 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
+                  <StatBlock heading="This Year">
+                    <StatLine value={`${stats.finishedThisYear}`} label={stats.finishedThisYear === 1 ? 'book' : 'books'} />
+                    <StatLine value={`${stats.streak.currentStreak}`} label="day streak" />
+                  </StatBlock>
+                  <View style={{ height: 1, backgroundColor: colors.borderSubtle, marginVertical: 14 }} />
+                  <StatBlock heading="All Time">
+                    <StatLine
+                      value={`${stats.streak.totalBooksFinished}`}
+                      label={stats.streak.totalBooksFinished === 1 ? 'book total' : 'books total'}
+                    />
+                    <StatLine
+                      value={`${stats.streak.longestStreak}`}
+                      label={stats.streak.longestStreak === 1 ? 'longest day' : 'longest days'}
+                    />
+                    <StatLine value={`${stats.streak.totalPagesRead}`} label="pages read" />
+                  </StatBlock>
+                </View>
+              </Section>
             ) : null}
 
-            {/* Recent highlights */}
-            {recentHighlights.length > 0 ? (
-              <RecentHighlightsSection
-                highlights={recentHighlights}
-                onViewAll={() => router.push('/highlights' as never)}
-              />
-            ) : null}
-
-            {error ? (
-              <View
-                style={{
-                  flexDirection: 'row',
-                  gap: 8,
-                  padding: 12,
-                  borderRadius: 12,
-                  backgroundColor: colors.errorBg,
-                  marginBottom: 16,
-                }}
-              >
-                <Text style={{ flex: 1, fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>
-                  {error}
-                </Text>
-              </View>
+            {highlights.length > 0 ? (
+              <RecentHighlightsSection highlights={highlights} onViewAll={() => router.push('/highlights' as never)} />
             ) : null}
 
             <Pressable
@@ -643,25 +228,15 @@ export default function ProfileScreen() {
         )}
       </ScrollView>
 
-      {profile ? (
-        <EditProfileSheet
-          visible={editing}
-          profile={profile}
-          onClose={() => setEditing(false)}
-          onSaved={() => {
-            setEditing(false)
-            load()
-          }}
-        />
-      ) : null}
+      {profile ? <EditProfileSheet visible={editing} profile={profile} onClose={() => setEditing(false)} /> : null}
 
-      <PickFavoritesSheet
-        visible={favoritePickPos !== null}
-        position={favoritePickPos}
-        onPick={onPickFavorite}
-        onClose={() => setFavoritePickPos(null)}
+      <CompanionSheet
+        visible={personalityOpen}
+        title="Your reading personality"
+        eyebrow={profile?.displayName ?? profile?.username ?? ''}
+        request={anchorBookId ? { action: 'reading_personality', bookId: anchorBookId } : null}
+        onClose={() => setPersonalityOpen(false)}
       />
     </SafeAreaView>
   )
 }
-

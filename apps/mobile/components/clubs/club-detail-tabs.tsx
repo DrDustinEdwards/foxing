@@ -1,3 +1,4 @@
+import type * as W from '@foxing/types'
 import { useMemo } from 'react'
 import {
   View,
@@ -16,16 +17,14 @@ import {
 } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  type ClubMember,
-  type ClubScheduleRow,
-  type ClubStats,
-  type ClubThread,
-  type ClubWithBook,
-  PACE_OPTIONS,
-} from '@/lib/clubs'
 import { MeetingsPollsSection } from '@/components/clubs/meetings-polls-section'
-import { ClubLibrarySection } from '@/components/clubs/club-library-section'
+import { relativeTime } from '@/lib/relative-time'
+
+const PACE_LABELS: Record<string, string> = {
+  chill: 'Chill, a chapter a week, no pressure.',
+  steady: 'Steady, two-to-three chapters a week.',
+  fast: 'Fast, daily reading.',
+}
 
 export function DiscussionsTab({
   club,
@@ -39,16 +38,16 @@ export function DiscussionsTab({
   onNewThread,
   onOpen,
 }: {
-  club: ClubWithBook
-  threads: ClubThread[]
+  club: W.ClubInfo
+  threads: W.ClubThreadItem[]
   canPost: boolean
   query: string
   setQuery: (q: string) => void
   nextUnlock: number | null
-  isLocked: (t: ClubThread) => boolean
+  isLocked: (t: W.ClubThreadItem) => boolean
   onAiStarter: () => void
   onNewThread: () => void
-  onOpen: (t: ClubThread) => void
+  onOpen: (t: W.ClubThreadItem) => void
 }) {
   const colors = useColors()
   const countdown = useMemo(() => {
@@ -99,9 +98,9 @@ export function DiscussionsTab({
         <View className="flex-row gap-2 mb-4">
           <Pressable
             onPress={onAiStarter}
-            disabled={!club.current_book}
+            disabled={!club.currentBook}
             className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-xl"
-            style={{ backgroundColor: club.current_book ? colors.brandUi : colors.bgDisabled }}
+            style={{ backgroundColor: club.currentBook ? colors.brandUi : colors.bgDisabled }}
           >
             <Sparkle color={colors.textOnBrand} size={16} weight="regular" />
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textOnBrand }}>
@@ -151,8 +150,8 @@ export function DiscussionsTab({
             <View style={{ flex: 1, paddingRight: 12 }}>
               <View className="flex-row items-center gap-1">
                 {locked ? <Text style={{ fontSize: 12 }}>🔒</Text> : null}
-                {t.is_pinned ? <PushPin color={colors.textTertiary} size={12} weight="fill" /> : null}
-                {t.is_ai_starter ? (
+                {t.isPinned ? <PushPin color={colors.textTertiary} size={12} weight="fill" /> : null}
+                {t.isAiStarter ? (
                   <Sparkle color={colors.brandUi} size={12} weight="regular" />
                 ) : null}
                 <Text
@@ -187,7 +186,8 @@ export function DiscussionsTab({
                   marginTop: 4,
                 }}
               >
-                {t.post_count} {t.post_count === 1 ? 'post' : 'posts'}
+                {t.author ? `${t.author.displayName ?? t.author.username} · ` : ''}
+                {relativeTime(t.createdAt)}
               </Text>
             </View>
             <CaretRight color={colors.textTertiary} size={14} />
@@ -200,32 +200,26 @@ export function DiscussionsTab({
 }
 
 export function ReadingTab({
-  club,
-  schedule,
-  canModerate,
+  page,
+  signedIn,
   onOpenBook,
 }: {
-  club: ClubWithBook
-  schedule: ClubScheduleRow[]
-  canModerate: boolean
-  onOpenBook: (bookId: string) => void
+  page: W.ClubPage
+  signedIn: boolean
+  onOpenBook: (slug: string) => void
 }) {
   const colors = useColors()
-  const pace = PACE_OPTIONS.find((p) => p.id === club.pace)
+  const club = page.club
   const now = Date.now()
   const scheduleSorted = useMemo(
-    () =>
-      [...schedule].sort(
-        (a, b) =>
-          new Date(a.unlock_date).getTime() - new Date(b.unlock_date).getTime(),
-      ),
-    [schedule],
+    () => [...page.schedule].sort((a, b) => a.unlockDate - b.unlockDate),
+    [page.schedule],
   )
   return (
     <View>
-      {club.current_book ? (
+      {club.currentBook ? (
         <Pressable
-          onPress={() => onOpenBook(club.current_book!.id)}
+          onPress={() => club.currentBook && onOpenBook(club.currentBook.slug)}
           className="flex-row p-3 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
         >
           <View
@@ -239,9 +233,9 @@ export function ReadingTab({
               justifyContent: 'center',
             }}
           >
-            {club.current_book.cover_url ? (
+            {club.currentBook.coverUrl ? (
               <Image
-                source={{ uri: club.current_book.cover_url }}
+                source={{ uri: club.currentBook.coverUrl }}
                 style={{ width: '100%', height: '100%' }}
               />
             ) : (
@@ -253,7 +247,7 @@ export function ReadingTab({
               style={{ fontFamily: Fonts.uiMedium, fontSize: 16, color: colors.textPrimary }}
               numberOfLines={2}
             >
-              {club.current_book.title}
+              {club.currentBook.title}
             </Text>
             <Text
               style={{
@@ -264,20 +258,8 @@ export function ReadingTab({
               }}
               numberOfLines={1}
             >
-              {club.current_book.author}
+              {club.currentBook.author}
             </Text>
-            {club.current_chapter ? (
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 12,
-                  color: colors.brandText,
-                  marginTop: 6,
-                }}
-              >
-                Up to: {club.current_chapter}
-              </Text>
-            ) : null}
           </View>
         </Pressable>
       ) : (
@@ -308,11 +290,13 @@ export function ReadingTab({
           Pace
         </Text>
         <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary, marginTop: 6 }}>
-          {pace?.label ?? club.pace}
+          {PACE_LABELS[club.readingPace ?? ''] ?? club.readingPace ?? 'Set by the club'}
         </Text>
-        <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-          {pace?.subtitle ?? ''}
-        </Text>
+        {club.chaptersPerWeek ? (
+          <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
+            {club.chaptersPerWeek} chapter{club.chaptersPerWeek === 1 ? '' : 's'} a week
+          </Text>
+        ) : null}
       </View>
 
       <View
@@ -343,10 +327,8 @@ export function ReadingTab({
         ) : (
           <View style={{ marginTop: 8 }}>
             {scheduleSorted.map((s) => {
-              const ts = new Date(s.unlock_date).getTime()
-              const isToday =
-                new Date(s.unlock_date).toDateString() ===
-                new Date().toDateString()
+              const ts = s.unlockDate
+              const isToday = new Date(ts).toDateString() === new Date().toDateString()
               const status = isToday ? 'Today' : ts > now ? 'Upcoming' : 'Unlocked'
               const statusColor =
                 status === 'Today'
@@ -356,7 +338,7 @@ export function ReadingTab({
                     : colors.info
               return (
                 <View
-                  key={`${s.chapter_name}-${s.unlock_date}`}
+                  key={s.id}
                   className="flex-row items-center justify-between"
                   style={{ paddingVertical: 8 }}
                 >
@@ -368,7 +350,7 @@ export function ReadingTab({
                         color: colors.textPrimary,
                       }}
                     >
-                      {s.chapter_name}
+                      {s.chapterName}
                     </Text>
                     <Text
                       style={{
@@ -378,7 +360,7 @@ export function ReadingTab({
                         marginTop: 2,
                       }}
                     >
-                      {new Date(s.unlock_date).toLocaleDateString()}
+                      {new Date(s.unlockDate).toLocaleDateString()}
                     </Text>
                   </View>
                   <Text
@@ -397,8 +379,7 @@ export function ReadingTab({
         )}
       </View>
 
-      <MeetingsPollsSection clubId={club.id} canModerate={canModerate} />
-      <ClubLibrarySection clubId={club.id} />
+      <MeetingsPollsSection page={page} signedIn={signedIn} />
     </View>
   )
 }
@@ -407,8 +388,8 @@ export function MembersTab({
   members,
   onOpenMember,
 }: {
-  members: ClubMember[]
-  onOpenMember: (id: string) => void
+  members: W.ClubMemberItem[]
+  onOpenMember: (username: string) => void
 }) {
   const colors = useColors()
   if (members.length === 0) {
@@ -423,12 +404,12 @@ export function MembersTab({
   return (
     <View>
       {members.map((m) => {
-        const name = m.profile?.display_name ?? m.profile?.username ?? 'Reader'
+        const name = m.profile?.displayName ?? m.profile?.username ?? 'Reader'
         const initial = (name || '?')[0]?.toUpperCase() ?? '?'
         return (
           <Pressable
-            key={`${m.club_id}:${m.user_id}`}
-            onPress={() => onOpenMember(m.user_id)}
+            key={m.userId}
+            onPress={() => m.profile && onOpenMember(m.profile.username)}
             className="flex-row items-center p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
             <View
@@ -443,9 +424,9 @@ export function MembersTab({
                 marginRight: 12,
               }}
             >
-              {m.profile?.avatar_url ? (
+              {m.profile?.avatarUrl ? (
                 <Image
-                  source={{ uri: m.profile.avatar_url }}
+                  source={{ uri: m.profile.avatarUrl }}
                   style={{ width: '100%', height: '100%' }}
                 />
               ) : (
@@ -482,7 +463,7 @@ export function MembersTab({
   )
 }
 
-export function AboutTab({ club, stats }: { club: ClubWithBook; stats: ClubStats | null }) {
+export function AboutTab({ club, threadCount }: { club: W.ClubInfo; threadCount: number }) {
   const colors = useColors()
   return (
     <View>
@@ -511,65 +492,13 @@ export function AboutTab({ club, stats }: { club: ClubWithBook; stats: ClubStats
         </Text>
       )}
 
-      {stats ? (
-        <View
-          className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-          style={{ marginBottom: 16 }}
-        >
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              marginBottom: 10,
-            }}
-          >
-            Club stats
-          </Text>
-          <View className="flex-row" style={{ gap: 14 }}>
-            <StatPill value={stats.members} label="members" />
-            <StatPill value={stats.threads} label="discussions" />
-            <StatPill value={stats.posts} label="posts" />
-          </View>
-          {stats.mostActive ? (
-            <Text
-              style={{
-                fontFamily: Fonts.ui,
-                fontSize: 12,
-                color: colors.textTertiary,
-                marginTop: 10,
-              }}
-            >
-              Most active:{' '}
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textPrimary }}>
-                {stats.mostActive.display_name ?? stats.mostActive.username ?? 'Reader'}
-              </Text>{' '}
-              ({stats.mostActive.count} posts)
-            </Text>
-          ) : null}
-        </View>
-      ) : null}
-
-      <Row label="Visibility" value={club.is_public ? 'Public' : 'Invite-only'} />
-      <Row label="Members" value={`${club.member_count}`} />
-      <Row label="Pace" value={club.pace} />
-      <Row label="Created" value={new Date(club.created_at).toLocaleDateString()} />
-    </View>
-  )
-}
-
-function StatPill({ value, label }: { value: number; label: string }) {
-  const colors = useColors()
-  return (
-    <View style={{ flex: 1, alignItems: 'center' }}>
-      <Text style={{ fontFamily: Fonts.displayBold, fontSize: 18, color: colors.textPrimary }}>
-        {value}
-      </Text>
-      <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 2 }}>
-        {label}
-      </Text>
+      <Row label="Visibility" value={club.visibility === 'public' ? 'Public' : 'Invite-only'} />
+      <Row label="Members" value={`${club.memberCount}`} />
+      <Row label="Discussions" value={`${threadCount}`} />
+      {club.readingPace ? <Row label="Pace" value={club.readingPace} /> : null}
+      {club.genreTags.length > 0 ? <Row label="Genres" value={club.genreTags.join(', ')} /> : null}
+      <Row label="Created" value={new Date(club.createdAt).toLocaleDateString()} />
+      {club.joinCode ? <Row label="Invite code" value={club.joinCode} /> : null}
     </View>
   )
 }

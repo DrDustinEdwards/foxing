@@ -1,71 +1,68 @@
+import type * as W from '@foxing/types'
 import { Pressable, Text } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { type ClubRole, type ClubWithBook } from '@/lib/clubs'
 
 export function ClubJoinCta({
-  club,
-  role,
-  viewerId,
-  busyJoin,
-  waitlistPosition,
+  page,
+  busy,
   onJoin,
   onLeave,
 }: {
-  club: ClubWithBook
-  role: ClubRole | null
-  viewerId: string | null
-  busyJoin: boolean
-  waitlistPosition: number | null
+  page: W.ClubPage
+  busy: boolean
   onJoin: () => void
   onLeave: () => void
 }) {
   const colors = useColors()
+  const membership = page.membership
 
-  if (role) {
+  if (page.isMember) {
+    const owner = membership?.role === 'owner'
     return (
       <Pressable
         onPress={onLeave}
-        disabled={busyJoin}
+        disabled={busy || owner}
+        accessibilityRole="button"
         className="px-3 py-1 rounded-full border"
         style={{ borderColor: colors.borderInteractive }}
       >
         <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}>
-          {busyJoin ? '…' : role === 'admin' ? 'Owner' : 'Leave'}
+          {busy ? '…' : owner ? 'Owner' : 'Leave'}
         </Text>
       </Pressable>
     )
   }
 
-  const isFull =
-    !!club &&
-    typeof club.max_members === 'number' &&
-    club.max_members > 0 &&
-    club.member_count >= club.max_members
-  const onWaitlist = waitlistPosition !== null
-  const label = busyJoin
+  // Joining a club that approves members, or one that is full, files a request or a
+  // waitlist place; the server decides which.
+  const waiting = membership?.status === 'waitlisted' || membership?.status === 'requested'
+  const label = busy
     ? '…'
-    : onWaitlist
-      ? `Waitlist #${waitlistPosition}`
-      : isFull
-        ? 'Join Waitlist'
-        : 'Join'
+    : membership?.status === 'waitlisted'
+      ? 'On the waitlist'
+      : membership?.status === 'requested'
+        ? 'Requested'
+        : page.club.memberApproval
+          ? 'Ask to join'
+          : 'Join'
   return (
     <Pressable
       onPress={onJoin}
-      disabled={busyJoin || !viewerId || onWaitlist}
+      disabled={busy || waiting || membership?.status === 'banned'}
+      accessibilityRole="button"
       className="px-3 py-1 rounded-full"
       style={{
-        backgroundColor: onWaitlist ? colors.bgSelected : colors.brandUi,
-        borderWidth: onWaitlist ? 1 : 0,
-        borderColor: onWaitlist ? colors.borderBrand : 'transparent',
+        backgroundColor: waiting ? colors.bgSelected : colors.brandUi,
+        borderWidth: waiting ? 1 : 0,
+        borderColor: waiting ? colors.borderBrand : 'transparent',
       }}
     >
       <Text
         style={{
           fontFamily: Fonts.uiMedium,
           fontSize: 12,
-          color: onWaitlist ? colors.brandText : colors.textOnBrand,
+          color: waiting ? colors.brandText : colors.textOnBrand,
         }}
       >
         {label}

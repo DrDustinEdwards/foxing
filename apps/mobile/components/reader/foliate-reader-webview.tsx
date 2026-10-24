@@ -12,7 +12,6 @@ import { WebView, type WebViewMessageEvent } from 'react-native-webview'
 import { ensureFoliateRuntime } from '@/lib/foliate-assets'
 import { ensureEpubLocallyCached } from '@/lib/epub-cache'
 import type { HighlightColor } from '@/components/reader/floating-pill'
-import type { WordWiseHint } from '@/lib/claude'
 
 // Callback shape mirrors the old ReaderWebView so the reader screen wiring
 // stays simple. Position info on word/passage callbacks lets the host
@@ -67,8 +66,6 @@ export interface ReaderRef {
   applySettings: (settings: ReaderSettings) => void
   addHighlight: (cfi: string, color: HighlightColor) => void
   removeHighlight: (cfi: string) => void
-  setWordWiseEnabled: (enabled: boolean) => void
-  applyWordWiseHints: (hints: WordWiseHint[]) => void
   // Push the active design-token palette into the WebView so the highlight
   // rects rendered by foliate-view match the swatches shown in the pill.
   setHighlightColors: (map: Record<HighlightColor, string>) => void
@@ -108,7 +105,6 @@ export interface ReaderRef {
   highlightSentence: (index: number | null) => void
   // Append italic translations under each paragraph in the visible chapter.
   // Empty array clears any existing translations.
-  setBilingualContent: (translations: string[]) => void
 }
 
 interface FoliateReaderWebViewProps {
@@ -324,16 +320,6 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
             `window.foliateBridge.removeHighlight(${JSON.stringify(cfi)}); true;`,
           )
         },
-        setWordWiseEnabled: (enabled: boolean) => {
-          webRef.current?.injectJavaScript(
-            `window.foliateBridge.setWordWiseEnabled(${enabled ? 'true' : 'false'}); true;`,
-          )
-        },
-        applyWordWiseHints: (hints: WordWiseHint[]) => {
-          webRef.current?.injectJavaScript(
-            `window.foliateBridge.applyWordWiseHints(${JSON.stringify(hints)}); true;`,
-          )
-        },
         setHighlightColors: (map: Record<HighlightColor, string>) => {
           // Guard against stale reader.html on disk that predates this bridge
           // method: a missing `setHighlightColors` would throw inside the
@@ -420,16 +406,6 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
           webRef.current?.injectJavaScript(
             `if (typeof window.foliateBridge?.highlightSentence === 'function') {
               window.foliateBridge.highlightSentence(${index === null ? 'null' : String(index)});
-            }
-            true;`,
-          )
-        },
-        setBilingualContent: (translations: string[]) => {
-          webRef.current?.injectJavaScript(
-            `if (typeof window.foliateBridge?.setBilingualContent === 'function') {
-              window.foliateBridge.setBilingualContent(${JSON.stringify(translations)});
-            } else {
-              console.warn('[reader] setBilingualContent not on bridge, stale reader.html');
             }
             true;`,
           )

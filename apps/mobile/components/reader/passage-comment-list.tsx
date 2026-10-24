@@ -1,24 +1,25 @@
-import { View, Text, ActivityIndicator } from 'react-native'
+import type * as W from '@foxing/types'
 import { ChatCircleDots } from 'phosphor-react-native'
+import { ActivityIndicator, Text, View } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { type PassageComment } from '@/lib/passage-comments'
 import { CommentCard } from './passage-comment-card'
 
+/** Top-level comments with their replies underneath. */
 export function PassageCommentList({
   loading,
   comments,
+  replies,
   revealed,
   onToggleReveal,
-  onReact,
   onReply,
 }: {
   loading: boolean
-  comments: PassageComment[]
+  comments: W.ResolvedComment[]
+  replies: W.ResolvedComment[]
   revealed: Set<string>
   onToggleReveal: (id: string) => void
-  onReact: (id: string, emoji: string) => void
-  onReply: (comment: PassageComment) => void
+  onReply: (comment: W.ResolvedComment) => void
 }) {
   const colors = useColors()
 
@@ -35,13 +36,7 @@ export function PassageCommentList({
       <View style={{ paddingVertical: 32, alignItems: 'center', paddingHorizontal: 24 }}>
         <ChatCircleDots color={colors.textTertiary} size={28} weight="regular" />
         <Text
-          style={{
-            fontFamily: Fonts.body,
-            fontSize: 13,
-            color: colors.textTertiary,
-            marginTop: 8,
-            textAlign: 'center',
-          }}
+          style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textTertiary, marginTop: 8, textAlign: 'center' }}
         >
           Nothing here yet. Be the first to comment.
         </Text>
@@ -55,9 +50,9 @@ export function PassageCommentList({
         <CommentCard
           key={c.id}
           comment={c}
+          replies={replies.filter((r) => r.parentId === c.id)}
           revealed={revealed.has(c.id)}
           onToggleReveal={() => onToggleReveal(c.id)}
-          onReact={(emoji) => onReact(c.id, emoji)}
           onReply={() => onReply(c)}
         />
       ))}

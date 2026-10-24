@@ -1,21 +1,14 @@
+import type * as W from '@foxing/types'
 import { View, Text } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { Section } from '@/components/profile/profile-section'
 
-type RecentHighlight = {
-  id: string
-  text: string
-  color: string | null
-  created_at: string
-  book: { id: string; title: string; author: string } | null
-}
-
 export function RecentHighlightsSection({
   highlights,
   onViewAll,
 }: {
-  highlights: RecentHighlight[]
+  highlights: W.MyAnnotation[]
   onViewAll: () => void
 }) {
   const colors = useColors()
@@ -35,9 +28,9 @@ export function RecentHighlightsSection({
             }}
             numberOfLines={3}
           >
-            “{h.text}”
+            “{h.selectedText}”
           </Text>
-          {h.book ? (
+          {h.bookTitle ? (
             <Text
               style={{
                 fontFamily: Fonts.ui,
@@ -47,7 +40,7 @@ export function RecentHighlightsSection({
               }}
               numberOfLines={1}
             >
-              {h.book.title} · {h.book.author}
+              {h.bookTitle}{h.bookAuthor ? ` · ${h.bookAuthor}` : ''}
             </Text>
           ) : null}
         </View>

@@ -1,3 +1,5 @@
+import { useClubsIndex, useSetBookStatus } from '@foxing/client'
+import type * as W from '@foxing/types'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   View,
@@ -14,25 +16,13 @@ import { useRouter } from 'expo-router'
 import { CameraView, useCameraPermissions } from 'expo-camera'
 import * as Haptics from 'expo-haptics'
 import { CaretLeft } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
-import {
-  resolveScannedIsbn,
-  loadClubContext,
-  setClubCurrentRead,
-  startClubBookThread,
-  addScannedToLibrary,
-  isClubMod,
-  type ScannedBook,
-  type ResolvedMeta,
-  type ClubRel,
-  type LibraryStatus,
-} from '@/lib/scan-book'
+import { resolveScannedIsbn, type ResolvedMeta } from '@/lib/scan-book'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { OutlineBtn, PrimaryBtn, Section } from '@/components/scan/scan-controls'
 
-const STATUS_LABELS: Array<{ value: LibraryStatus; label: string }> = [
-  { value: 'want_to_read', label: 'Want to read' },
+const STATUS_LABELS: Array<{ value: W.ShelfStatus; label: string }> = [
+  { value: 'want', label: 'Want to read' },
   { value: 'reading', label: 'Reading' },
   { value: 'finished', label: 'Finished' },
 ]
@@ -43,12 +33,14 @@ export default function ScanScreen() {
   const [permission, requestPermission] = useCameraPermissions()
   const [scanning, setScanning] = useState(true)
   const [manualIsbn, setManualIsbn] = useState('')
-  const [book, setBook] = useState<ScannedBook | null>(null)
+  const [book, setBook] = useState<W.BookCard | null>(null)
   const [resolved, setResolved] = useState<ResolvedMeta | null>(null)
   const [notFound, setNotFound] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [busy, setBusy] = useState(false)
-  const [clubs, setClubs] = useState<ClubRel[]>([])
+  const setStatus = useSetBookStatus()
+  const busy = setStatus.pending
+  // Clubs the reader belongs to that are reading the scanned book right now.
+  const readingClubs = (useClubsIndex().data?.mine ?? []).filter((c) => book && c.currentBook?.id === book.id)
   const detected = useRef(false)
 
   useEffect(() => {
@@ -57,26 +49,6 @@ export default function ScanScreen() {
       void requestPermission()
     }
   }, [permission, requestPermission])
-
-  // Load the viewer's club relationships once a catalog book is matched.
-  useEffect(() => {
-    let active = true
-    if (!book) {
-      setClubs([])
-      return
-    }
-    void (async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user || !active) return
-      const rels = await loadClubContext(book.id, user.id)
-      if (active) setClubs(rels)
-    })()
-    return () => {
-      active = false
-    }
-  }, [book])
 
   const lookup = useCallback(async (isbnRaw: string) => {
     setLoading(true)
@@ -91,9 +63,9 @@ export default function ScanScreen() {
       setScanning(true)
       return
     }
-    setResolved(res.result.resolved)
-    if (res.result.match) {
-      setBook(res.result.match)
+    setResolved(res.resolved)
+    if (res.match) {
+      setBook(res.match)
     } else {
       setNotFound(true)
     }
@@ -118,56 +90,18 @@ export default function ScanScreen() {
     setBook(null)
     setResolved(null)
     setNotFound(false)
-    setClubs([])
     detected.current = false
     setScanning(true)
   }
 
-  async function handleAddToLibrary(status: LibraryStatus) {
+  async function handleAddToLibrary(status: W.ShelfStatus) {
     if (!book) return
-    setBusy(true)
-    const res = await addScannedToLibrary(book.id, status)
-    setBusy(false)
-    if (!res.ok) {
-      Alert.alert('Could not add', res.error ?? 'Try again.')
+    if (!(await setStatus.run({ bookId: book.id, status, book }))) {
+      Alert.alert('Could not add', 'Check your connection and try again.')
       return
     }
     const label = STATUS_LABELS.find((s) => s.value === status)?.label ?? 'library'
     Alert.alert('Added to library', `${book.title} → ${label}.`)
-  }
-
-  async function handleSetCurrent(rel: ClubRel) {
-    if (!book) return
-    setBusy(true)
-    const res = await setClubCurrentRead(rel.club_id, book.id)
-    setBusy(false)
-    if (!res.ok) {
-      Alert.alert('Could not update', res.error ?? 'Try again.')
-      return
-    }
-    Alert.alert('Current read set', `${book.title} is now ${rel.name}'s current read.`, [
-      { text: 'Open club', onPress: () => router.push(`/clubs/${rel.club_id}` as never) },
-      { text: 'OK' },
-    ])
-  }
-
-  async function handleStartDiscussion(rel: ClubRel) {
-    if (!book) return
-    setBusy(true)
-    const res = await startClubBookThread(
-      rel.club_id,
-      book.id,
-      `Reading ${book.title}`,
-    )
-    setBusy(false)
-    if (!res.ok) {
-      Alert.alert('Could not start discussion', res.error ?? 'Try again.')
-      return
-    }
-    Alert.alert('Discussion started', `A thread for ${book.title} is live in ${rel.name}.`, [
-      { text: 'Open club', onPress: () => router.push(`/clubs/${rel.club_id}` as never) },
-      { text: 'OK' },
-    ])
   }
 
   if (!permission) {
@@ -299,9 +233,9 @@ export default function ScanScreen() {
                     backgroundColor: colors.bgSunken,
                   }}
                 >
-                  {book.cover_url ? (
+                  {book.coverUrl ? (
                     <Image
-                      source={{ uri: book.cover_url }}
+                      source={{ uri: book.coverUrl }}
                       style={{ width: '100%', height: '100%' }}
                     />
                   ) : null}
@@ -332,7 +266,7 @@ export default function ScanScreen() {
               </View>
 
               {/* READ FREE: public-domain edition in the catalog. */}
-              {book.epub_url ? (
+              {book.readable ? (
                 <Section colors={colors} label="Read free">
                   <PrimaryBtn
                     colors={colors}
@@ -357,63 +291,18 @@ export default function ScanScreen() {
                 </View>
               </Section>
 
-              {/* CLUB: open where it's being read, or admin actions. */}
-              {clubs.some(
-                (c) => c.reading || c.hasThread || isClubMod(c.role),
-              ) ? (
-                <Section colors={colors} label="Your clubs">
-                  <View style={{ gap: 10 }}>
-                    {clubs
-                      .filter(
-                        (c) => c.reading || c.hasThread || isClubMod(c.role),
-                      )
-                      .map((c) => (
-                        <View key={c.club_id} style={{ gap: 6 }}>
-                          <Text
-                            style={{
-                              fontFamily: Fonts.uiMedium,
-                              fontSize: 13,
-                              color: colors.textPrimary,
-                            }}
-                          >
-                            {c.name}
-                          </Text>
-                          <View
-                            className="flex-row"
-                            style={{ gap: 8, flexWrap: 'wrap' }}
-                          >
-                            {c.reading || c.hasThread ? (
-                              <OutlineBtn
-                                colors={colors}
-                                label={
-                                  c.reading
-                                    ? 'Open discussion'
-                                    : 'View discussion'
-                                }
-                                onPress={() =>
-                                  router.push(`/clubs/${c.club_id}` as never)
-                                }
-                              />
-                            ) : null}
-                            {!c.reading && isClubMod(c.role) ? (
-                              <OutlineBtn
-                                colors={colors}
-                                label="Set as current read"
-                                disabled={busy}
-                                onPress={() => handleSetCurrent(c)}
-                              />
-                            ) : null}
-                            {!c.hasThread && isClubMod(c.role) ? (
-                              <OutlineBtn
-                                colors={colors}
-                                label="Start a discussion"
-                                disabled={busy}
-                                onPress={() => handleStartDiscussion(c)}
-                              />
-                            ) : null}
-                          </View>
-                        </View>
-                      ))}
+              {/* CLUBS: where the reader's clubs are reading it now. */}
+              {readingClubs.length > 0 ? (
+                <Section colors={colors} label="Your clubs reading it">
+                  <View className="flex-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                    {readingClubs.map((c) => (
+                      <OutlineBtn
+                        key={c.id}
+                        colors={colors}
+                        label={c.name}
+                        onPress={() => router.push(`/clubs/${c.id}` as never)}
+                      />
+                    ))}
                   </View>
                 </Section>
               ) : null}

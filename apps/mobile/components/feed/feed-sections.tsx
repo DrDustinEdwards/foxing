@@ -1,270 +1,10 @@
+import type * as W from '@foxing/types'
 import { useColors } from '@/constants/colors'
 import { useRouter } from 'expo-router'
-import { useCallback, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
 import { Bell, Newspaper, UserPlus } from 'phosphor-react-native'
 import { Fonts } from '@/constants/fonts'
-import { Avatar } from '@/components/feed/feed-row'
 import { TrendingBookCard } from '@/components/feed/trending-book-card'
-import { PopularReviewCard } from '@/components/feed/popular-review-card'
-
-export interface PopularReview {
-  id: string
-  rating: number | null
-  review: string
-  user: {
-    id: string
-    display_name: string | null
-    username: string | null
-    avatar_url: string | null
-  } | null
-  book: { id: string; title: string; cover_url: string | null } | null
-}
-
-export interface TrendingBook {
-  id: string
-  title: string
-  author: string
-  cover_url: string | null
-  readerCount: number
-}
-
-function FollowSuggestions({
-  viewerId,
-  onFollowed,
-}: {
-  viewerId: string
-  onFollowed: () => void
-}) {
-  const colors = useColors()
-  const router = useRouter()
-  const [loading, setLoading] = useState(true)
-  const [suggestions, setSuggestions] = useState<
-    Array<{
-      id: string
-      display_name: string | null
-      username: string | null
-      avatar_url: string | null
-      finishedCount: number
-    }>
-  >([])
-  const [followedThisSession, setFollowedThisSession] = useState<Set<string>>(new Set())
-
-  useEffect(() => {
-    let cancel = false
-    ;(async () => {
-      // Pull a sample of recently finished books to find active readers.
-      // Aggregating client-side keeps us off RPCs.
-      const since = new Date(Date.now() - 30 * 86_400_000).toISOString()
-      const { data } = await supabase
-        .from('user_books')
-        .select('user_id, profile:profiles(id, display_name, username, avatar_url)')
-        .eq('status', 'finished')
-        .gte('finished_at', since)
-        .neq('user_id', viewerId)
-        .limit(200)
-      if (cancel) return
-      type R = {
-        user_id: string
-        profile:
-          | { id: string; display_name: string | null; username: string | null; avatar_url: string | null }
-          | Array<{ id: string; display_name: string | null; username: string | null; avatar_url: string | null }>
-          | null
-      }
-      const counts = new Map<
-        string,
-        {
-          profile: { id: string; display_name: string | null; username: string | null; avatar_url: string | null }
-          n: number
-        }
-      >()
-      for (const r of ((data ?? []) as unknown) as R[]) {
-        const p = Array.isArray(r.profile) ? r.profile[0] : r.profile
-        if (!p) continue
-        const cur = counts.get(r.user_id) ?? { profile: p, n: 0 }
-        cur.n += 1
-        counts.set(r.user_id, cur)
-      }
-      const ranked = [...counts.values()]
-        .sort((a, b) => b.n - a.n)
-        .slice(0, 8)
-        .map((v) => ({
-          id: v.profile.id,
-          display_name: v.profile.display_name,
-          username: v.profile.username,
-          avatar_url: v.profile.avatar_url,
-          finishedCount: v.n,
-        }))
-      setSuggestions(ranked)
-      setLoading(false)
-    })()
-    return () => {
-      cancel = true
-    }
-  }, [viewerId])
-
-  const follow = useCallback(
-    async (targetId: string) => {
-      setFollowedThisSession((prev) => new Set(prev).add(targetId))
-      const { error } = await supabase
-        .from('follows')
-        .insert({ follower_id: viewerId, following_id: targetId })
-      if (error) {
-        // Revert optimistic.
-        setFollowedThisSession((prev) => {
-          const next = new Set(prev)
-          next.delete(targetId)
-          return next
-        })
-        return
-      }
-      onFollowed()
-    },
-    [onFollowed, viewerId],
-  )
-
-  return (
-    <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 64 }}>
-      <View style={{ alignItems: 'center', marginBottom: 18 }}>
-        <View
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 32,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: colors.brandSubtle,
-            marginBottom: 12,
-          }}
-        >
-          <UserPlus color={colors.brandSubtleText} size={32} weight="regular" />
-        </View>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            textAlign: 'center',
-            marginBottom: 4,
-          }}
-        >
-          Follow other readers
-        </Text>
-        <Text
-          style={{
-            fontFamily: Fonts.body,
-            fontSize: 13,
-            color: colors.textTertiary,
-            textAlign: 'center',
-            lineHeight: 19,
-            maxWidth: 280,
-          }}
-        >
-          Highlights, finishes, and notes from people you follow will land here.
-        </Text>
-      </View>
-      {loading ? (
-        <ActivityIndicator color={colors.brandUi} />
-      ) : suggestions.length === 0 ? (
-        <Pressable
-          onPress={() => router.push('/discover-readers' as never)}
-          className="px-4 py-3 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark items-center"
-        >
-          <Text
-            style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.brandText }}
-          >
-            Find readers →
-          </Text>
-        </Pressable>
-      ) : (
-        <View>
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-              marginBottom: 8,
-            }}
-          >
-            Suggested for you
-          </Text>
-          <View style={{ gap: 8 }}>
-            {suggestions.map((s) => {
-              const name = s.display_name ?? s.username ?? 'Reader'
-              const handle = s.username ? `@${s.username}` : ''
-              const followed = followedThisSession.has(s.id)
-              return (
-                <View
-                  key={s.id}
-                  className="flex-row items-center p-3 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-                >
-                  <Pressable onPress={() => router.push(`/user/${s.id}` as never)} hitSlop={4}>
-                    <Avatar
-                      actor={{
-                        avatar_url: s.avatar_url,
-                        display_name: s.display_name,
-                        username: s.username,
-                      }}
-                      size={40}
-                    />
-                  </Pressable>
-                  <Pressable
-                    onPress={() => router.push(`/user/${s.id}` as never)}
-                    style={{ flex: 1, marginLeft: 12 }}
-                  >
-                    <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}
-                      numberOfLines={1}
-                    >
-                      {name}
-                    </Text>
-                    <Text
-                      style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}
-                      numberOfLines={1}
-                    >
-                      {handle ? `${handle} · ` : ''}
-                      {s.finishedCount} book{s.finishedCount === 1 ? '' : 's'} this month
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    onPress={() => !followed && follow(s.id)}
-                    disabled={followed}
-                    className="px-3 py-2 rounded-full"
-                    style={{
-                      backgroundColor: followed ? colors.bgSelected : colors.brandUi,
-                      opacity: followed ? 0.7 : 1,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 12,
-                        color: followed ? colors.brandText : colors.textOnBrand,
-                      }}
-                    >
-                      {followed ? 'Following' : 'Follow'}
-                    </Text>
-                  </Pressable>
-                </View>
-              )
-            })}
-          </View>
-          <Pressable
-            onPress={() => router.push('/discover-readers' as never)}
-            style={{ marginTop: 16, alignSelf: 'center', padding: 8 }}
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}>
-              See more readers
-            </Text>
-          </Pressable>
-        </View>
-      )}
-    </ScrollView>
-  )
-}
 
 export function FeedEmptyState({
   icon,
@@ -326,13 +66,7 @@ export function FeedEmptyState({
   )
 }
 
-export function FeedListEmpty({
-  error,
-  hasNoFollows,
-}: {
-  error: string | null
-  hasNoFollows: boolean
-}) {
+export function FeedListEmpty({ error }: { error: string | null }) {
   const colors = useColors()
   if (error) {
     return (
@@ -343,12 +77,11 @@ export function FeedListEmpty({
       />
     )
   }
-  if (hasNoFollows) return null
   return (
     <FeedEmptyState
       icon={<Newspaper color={colors.brandSubtleText} size={32} weight="regular" />}
-      title="Quiet for now"
-      body="No recent activity from the readers you follow."
+      title="Your feed is quiet"
+      body="Follow other readers to see their reviews, finishes and lists here."
     />
   )
 }
@@ -447,24 +180,20 @@ export function FeedHeader({ unread, onBell }: { unread: number; onBell: () => v
   )
 }
 
-// "Popular on Foxing this week" + optional Find Readers card. Always rendered
+// "Popular on Foxing this month" + optional Find Readers card. Always rendered
 // as the FlatList header so the feed has content even when the user follows
 // no one.
 export function PopularSection({
   showFindReaders,
   onFindReaders,
-  reviews,
   trending,
   onPressBook,
-  onPressUser,
   sectionLabel,
 }: {
   showFindReaders: boolean
   onFindReaders: () => void
-  reviews: PopularReview[]
-  trending: TrendingBook[]
-  onPressBook: (id: string) => void
-  onPressUser: (id: string) => void
+  trending: W.BookCard[]
+  onPressBook: (slug: string) => void
   sectionLabel: string | null
 }) {
   const colors = useColors()
@@ -504,8 +233,8 @@ export function PopularSection({
         </Pressable>
       ) : null}
 
-      <SectionLabel>Popular on Foxing this week</SectionLabel>
-      {reviews.length === 0 && trending.length === 0 ? (
+      <SectionLabel>Popular on Foxing this month</SectionLabel>
+      {trending.length === 0 ? (
         <View
           className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
         >
@@ -516,40 +245,15 @@ export function PopularSection({
           </Text>
         </View>
       ) : (
-        <>
-          {trending.length > 0 ? (
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={{ gap: 10, paddingRight: 12 }}
-              style={{ marginBottom: 12 }}
-            >
-              {trending.map((b) => (
-                <TrendingBookCard
-                  key={b.id}
-                  id={b.id}
-                  title={b.title}
-                  author={b.author}
-                  coverUrl={b.cover_url}
-                  readerCount={b.readerCount}
-                  onPress={onPressBook}
-                />
-              ))}
-            </ScrollView>
-          ) : null}
-
-          {reviews.map((r) => (
-            <PopularReviewCard
-              key={r.id}
-              rating={r.rating}
-              review={r.review}
-              user={r.user}
-              book={r.book}
-              onPressBook={onPressBook}
-              onPressUser={onPressUser}
-            />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10, paddingRight: 12 }}
+        >
+          {trending.map((b) => (
+            <TrendingBookCard key={b.id} book={b} onPress={onPressBook} />
           ))}
-        </>
+        </ScrollView>
       )}
 
       {sectionLabel ? (

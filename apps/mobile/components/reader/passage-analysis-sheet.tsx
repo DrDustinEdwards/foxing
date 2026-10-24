@@ -1,236 +1,98 @@
-import { useCallback, useState } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ActivityIndicator,
-  ScrollView,
-} from 'react-native'
-import { X as XIcon, BookmarkSimple } from 'phosphor-react-native'
-import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import { analyzePassage, friendlyAiError, type PassageAnalysisType } from '@/lib/claude'
-import { supabase } from '@/lib/supabase'
+import type { CompanionAction } from '@foxing/client'
+import { BookmarkSimple } from 'phosphor-react-native'
+import { useEffect, useState } from 'react'
+import { Pressable, ScrollView, Text, View } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
+import { CompanionSheet } from './companion-sheet'
 
-const MODES: Array<{ key: PassageAnalysisType; label: string }> = [
-  { key: 'rewrite', label: 'Plain English' },
-  { key: 'historical', label: 'Historical Context' },
-  { key: 'literary', label: 'Literary Devices' },
-  { key: 'thematic', label: 'Themes' },
-  { key: 'motivation', label: 'Character Motivation' },
-  { key: 'passage_comparison', label: 'Compare to Another' },
-  { key: 'perspective', label: 'Narrative Perspective' },
-  { key: 'readability', label: 'Readability Score' },
+const MODES: Array<{ action: CompanionAction; label: string }> = [
+  { action: 'passage_analysis', label: 'Analyze' },
+  { action: 'word_wise', label: 'Plain English' },
+  { action: 'deep_dive', label: 'Go deeper' },
+  { action: 'language_difficulty', label: 'Difficulty' },
 ]
 
-interface PassageAnalysisSheetProps {
-  visible: boolean
-  passage: string
-  bookTitle: string
-  author: string
-  era: string
-  bookId?: string
-  currentChapter?: string
-  progress?: number
-  // CFI of the selected passage, required to save to commonplace_book.
-  cfi?: string | null
-  onClose: () => void
-}
-
+// A selected passage: four ways to read it closer, and a save to the commonplace book.
 export function PassageAnalysisSheet({
   visible,
   passage,
-  bookTitle,
-  author,
-  era,
   bookId,
   currentChapter,
-  progress,
-  cfi,
+  onSavePassage,
   onClose,
-}: PassageAnalysisSheetProps) {
+}: {
+  visible: boolean
+  passage: string
+  bookId: string
+  currentChapter?: string
+  onSavePassage: () => void
+  onClose: () => void
+}) {
   const colors = useColors()
-  const [result, setResult] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [activeMode, setActiveMode] = useState<PassageAnalysisType | null>(null)
-  const [commonplaceState, setCommonplaceState] = useState<'idle' | 'saving' | 'saved' | 'error'>(
-    'idle',
-  )
-
-  async function run(mode: PassageAnalysisType) {
-    console.log('[passage-analysis] run', { mode, passageChars: passage.length })
-    setActiveMode(mode)
-    setLoading(true)
-    setError(null)
-    setResult(null)
-    try {
-      const text = await analyzePassage(passage, mode, bookTitle, author, era, {
-        bookId,
-        currentChapter,
-        progress,
-      })
-      console.log('[passage-analysis] result', { mode, chars: text.length })
-      setResult(text)
-    } catch (e) {
-      const message = friendlyAiError(e)
-      console.warn('[passage-analysis] error', message)
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // Save to commonplace_book (the canonical table web reads), book_id may be
-  // null if we couldn't resolve but we always have the passage text.
-  const addToCommonplace = useCallback(async () => {
-    if (commonplaceState === 'saving' || commonplaceState === 'saved') return
-    setCommonplaceState('saving')
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setCommonplaceState('error')
-      return
-    }
-    const { error: insertError } = await supabase.from('commonplace_book').insert({
-      user_id: user.id,
-      book_id: bookId ?? null,
-      passage_text: passage.slice(0, 4000),
-      cfi: cfi ?? null,
-    })
-    if (insertError) {
-      console.warn('[passage-analysis] commonplace insert failed:', insertError.message)
-      setCommonplaceState('error')
-    } else {
-      setCommonplaceState('saved')
-    }
-  }, [bookId, cfi, commonplaceState, passage])
-
-  function handleClose() {
-    setActiveMode(null)
-    setResult(null)
-    setError(null)
-    setCommonplaceState('idle')
-    onClose()
-  }
-
-  const commonplaceLabel =
-    commonplaceState === 'saved'
-      ? 'Saved'
-      : commonplaceState === 'saving'
-        ? 'Saving…'
-        : commonplaceState === 'error'
-          ? "Couldn't save, tap to retry"
-          : 'Save Passage'
+  const [action, setAction] = useState<CompanionAction>('passage_analysis')
+  const [saved, setSaved] = useState(false)
+  useEffect(() => {
+    if (!visible) return
+    setAction('passage_analysis')
+    setSaved(false)
+  }, [visible, passage])
 
   return (
-    <SheetScaffold
+    <CompanionSheet
       visible={visible}
-      onClose={handleClose}
-      variant="bottom"
-      scroll={false}
-      maxHeight="90%"
-      contentContainerStyle={{ flex: 1, paddingHorizontal: 24 }}
+      title={MODES.find((m) => m.action === action)?.label ?? 'Analyze'}
+      request={{ action, bookId, selection: { text: passage.slice(0, 4000), chapter: currentChapter || null } }}
+      onClose={onClose}
     >
-          <View className="flex-row justify-between items-center mb-4">
-            <Text className="font-display text-lg text-text-primary-light dark:text-text-primary-dark">
-              Passage analysis
-            </Text>
-            <Pressable onPress={handleClose}>
-              <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">Close</Text>
-            </Pressable>
-          </View>
-
-          <View
-            className="rounded-lg p-3 mb-3 bg-bg-sunken-light dark:bg-bg-sunken-dark border-l-4 border-border-brand-light dark:border-border-brand-dark"
-            style={{ maxHeight: 100 }}
-          >
-            <Text
-              className="font-body italic text-sm text-text-secondary-light dark:text-text-secondary-dark"
-              numberOfLines={4}
-            >
-              "{passage}"
-            </Text>
-          </View>
-
-          {/* Commonplace button, always available, independent of analysis */}
-          <Pressable
-            onPress={addToCommonplace}
-            disabled={commonplaceState === 'saving' || commonplaceState === 'saved'}
-            className="flex-row items-center justify-center gap-2 py-2 mb-3 rounded-full border"
-            style={{
-              borderColor:
-                commonplaceState === 'saved' ? colors.successBorder : colors.borderInteractive,
-              backgroundColor:
-                commonplaceState === 'saved' ? colors.successBg : 'transparent',
-              opacity: commonplaceState === 'saving' ? 0.7 : 1,
-            }}
-          >
-            <BookmarkSimple
-              color={commonplaceState === 'saved' ? colors.success : colors.textPrimary}
-              size={14}
-              weight={commonplaceState === 'saved' ? 'fill' : 'regular'}
-            />
-            <Text
+      <Text
+        numberOfLines={4}
+        style={{ fontFamily: Fonts.body, fontStyle: 'italic', fontSize: 14, color: colors.textSecondary, marginBottom: 12 }}
+      >
+        “{passage}”
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 14 }}>
+        {MODES.map((m) => {
+          const active = m.action === action
+          return (
+            <Pressable
+              key={m.action}
+              onPress={() => setAction(m.action)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
               style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 12,
-                color: commonplaceState === 'saved' ? colors.success : colors.textPrimary,
+                paddingHorizontal: 12,
+                paddingVertical: 6,
+                borderRadius: 999,
+                backgroundColor: active ? colors.brandUi : colors.bgSurface,
+                borderWidth: 1,
+                borderColor: active ? colors.brandUi : colors.borderSubtle,
               }}
             >
-              {commonplaceLabel}
-            </Text>
-          </Pressable>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4">
-            <View className="flex-row gap-2">
-              {MODES.map((m) => {
-                const active = activeMode === m.key
-                return (
-                  <Pressable
-                    key={m.key}
-                    onPress={() => run(m.key)}
-                    className={
-                      active
-                        ? 'rounded-full px-3 py-2 border bg-brand-ui-light dark:bg-brand-ui-dark border-border-interactive-light dark:border-border-interactive-dark'
-                        : 'rounded-full px-3 py-2 border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark'
-                    }
-                  >
-                    <Text
-                      className={
-                        active
-                          ? 'font-ui text-xs text-text-on-brand'
-                          : 'font-ui text-xs text-text-primary-light dark:text-text-primary-dark'
-                      }
-                    >
-                      {m.label}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-          </ScrollView>
-
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 16 }}>
-            {loading ? (
-              <ActivityIndicator color={colors.brandUi} />
-            ) : error ? (
-              <View className="flex-row items-start gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark">
-                <XIcon color={colors.error} size={16} />
-                <Text className="font-ui flex-1 text-error-light dark:text-error-dark">
-                  {error}
-                </Text>
-              </View>
-            ) : result ? (
-              <Text className="font-body text-base leading-7 text-text-primary-light dark:text-text-primary-dark">
-                {result}
+              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: active ? colors.textOnBrand : colors.textPrimary }}>
+                {m.label}
               </Text>
-            ) : (
-              <Text className="font-ui text-sm text-text-tertiary-light dark:text-text-tertiary-dark">
-                Pick an analysis above to begin.
-              </Text>
-            )}
-          </ScrollView>
-    </SheetScaffold>
+            </Pressable>
+          )
+        })}
+      </ScrollView>
+      <View className="flex-row" style={{ marginBottom: 14 }}>
+        <Pressable
+          onPress={() => {
+            if (saved) return
+            onSavePassage()
+            setSaved(true)
+          }}
+          accessibilityRole="button"
+          className="flex-row items-center"
+          style={{ gap: 6 }}
+        >
+          <BookmarkSimple color={colors.brandText} size={16} weight={saved ? 'fill' : 'regular'} />
+          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.brandText }}>
+            {saved ? 'Saved to your commonplace book' : 'Save passage'}
+          </Text>
+        </Pressable>
+      </View>
+    </CompanionSheet>
   )
 }

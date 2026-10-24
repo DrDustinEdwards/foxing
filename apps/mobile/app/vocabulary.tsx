@@ -1,4 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useLibrary, useSetMastered, useVocabulary } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useMemo, useState } from 'react'
 import {
   View, Text, Pressable, ScrollView, ActivityIndicator, TextInput,
 } from 'react-native'
@@ -6,55 +8,35 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import { Screen } from '@/components/ui/screen'
 import { useRouter, useLocalSearchParams } from 'expo-router'
 import { CaretLeft, X as XIcon, Check } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-interface VocabRow {
-  id: string
-  word: string
-  definition: string | null
-  ai_context: string | null
-  context: string | null
-  context_sentence: string | null
-  book_title: string | null
-  book_id: string | null
-  mastered: boolean
-  looked_up_at: string | null
-  created_at: string
-}
+/** A saved word with the title of the book it came from, when that book is in the library. */
+type VocabRow = W.VocabularyWord & { bookTitle: string | null }
 
+// Words looked up while reading (GET /vocabulary), newest first; mastering one patches
+// the list at once.
 export default function VocabularyScreen() {
   const colors = useColors()
   const router = useRouter()
   const { bookId } = useLocalSearchParams<{ bookId?: string }>()
 
-  const [rows, setRows] = useState<VocabRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const vocabulary = useVocabulary()
+  const library = useLibrary()
+  const setMastered = useSetMastered()
+  const loading = vocabulary.isPending
+  const error = vocabulary.error ? 'Could not load your words.' : null
   const [filter, setFilter] = useState('')
   const [bookFilter, setBookFilter] = useState<string | null>(bookId ?? null)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [flashMode, setFlashMode] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    ;(async () => {
-      let query = supabase
-        .from('vocabulary')
-        .select('id, word, definition, ai_context, context, context_sentence, book_title, book_id, mastered, looked_up_at, created_at')
-        .order('looked_up_at', { ascending: false, nullsFirst: false })
-      if (bookFilter) query = query.eq('book_id', bookFilter)
-      const { data, error: err } = await query
-      if (cancelled) return
-      if (err) setError(err.message)
-      else setRows((data ?? []) as VocabRow[])
-      setLoading(false)
-    })()
-    return () => { cancelled = true }
-  }, [bookFilter])
+  const rows = useMemo<VocabRow[]>(() => {
+    const titles = new Map((library.data ?? []).map((e) => [e.bookId, e.title]))
+    return (vocabulary.data ?? [])
+      .filter((w) => !bookFilter || w.bookId === bookFilter)
+      .map((w) => ({ ...w, bookTitle: w.bookId ? (titles.get(w.bookId) ?? null) : null }))
+  }, [vocabulary.data, library.data, bookFilter])
 
   const filtered = filter
     ? rows.filter((r) => r.word.toLowerCase().includes(filter.toLowerCase()))
@@ -69,10 +51,7 @@ export default function VocabularyScreen() {
         rows={filtered.filter((r) => !r.mastered)}
         masteredCount={masteredCount}
         total={rows.length}
-        onMaster={async (id) => {
-          await supabase.from('vocabulary').update({ mastered: true }).eq('id', id)
-          setRows((prev) => prev.map((r) => (r.id === id ? { ...r, mastered: true } : r)))
-        }}
+        onMaster={(id) => setMastered.fire({ id, mastered: true })}
         onExit={() => setFlashMode(false)}
       />
     )
@@ -149,7 +128,7 @@ export default function VocabularyScreen() {
         ) : (
           filtered.map((r) => {
             const expanded = expandedId === r.id
-            const sentence = r.context_sentence || r.context || ''
+            const sentence = r.contextSentence ?? ''
             return (
               <Pressable
                 key={r.id}
@@ -174,12 +153,12 @@ export default function VocabularyScreen() {
                     </View>
                   )}
                 </View>
-                {r.book_title ? (
+                {r.bookTitle ? (
                   <Text
                     style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 2 }}
                     numberOfLines={1}
                   >
-                    {r.book_title}
+                    {r.bookTitle}
                   </Text>
                 ) : null}
                 <Text
@@ -220,7 +199,7 @@ interface FlashcardProps {
   rows: VocabRow[]
   masteredCount: number
   total: number
-  onMaster: (id: string) => Promise<void>
+  onMaster: (id: string) => void
   onExit: () => void
 }
 
@@ -241,7 +220,7 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
 
   async function markMastered() {
     if (!card) return
-    await onMaster(card.id)
+    onMaster(card.id)
     next()
   }
 
@@ -311,7 +290,7 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                 >
                   {card.definition || '(no definition saved)'}
                 </Text>
-                {(card.context_sentence || card.context) && (
+                {card.contextSentence && (
                   <View className="mt-4 pt-4 border-t border-border-subtle-light dark:border-border-subtle-dark">
                     <Text
                       style={{
@@ -322,7 +301,7 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                       Where you saw it
                     </Text>
                     <Text style={{ fontFamily: Fonts.bodyItalic, fontSize: 14, color: colors.textSecondary }}>
-                      “{card.context_sentence || card.context}”
+                      “{card.contextSentence}”
                     </Text>
                   </View>
                 )}

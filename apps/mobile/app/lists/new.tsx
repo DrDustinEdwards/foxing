@@ -1,3 +1,4 @@
+import { useCreateList } from '@foxing/client'
 import { useState } from 'react'
 import {
   View,
@@ -11,7 +12,6 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { CaretLeft, Eye, EyeSlash } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -21,34 +21,21 @@ export default function NewListScreen() {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const create = useCreateList()
+  const saving = create.pending
 
   async function save() {
     if (!title.trim()) return
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      Alert.alert('Sign in required')
+    const res = await create.run({
+      title: title.trim().slice(0, 80),
+      description: description.trim() || null,
+      isPublic,
+    })
+    if (!res) {
+      Alert.alert('Could not create the list', 'Check your connection and try again.')
       return
     }
-    setSaving(true)
-    const { data, error } = await supabase
-      .from('reading_lists')
-      .insert({
-        user_id: user.id,
-        title: title.trim().slice(0, 80),
-        description: description.trim() || null,
-        is_public: isPublic,
-      })
-      .select('id')
-      .single()
-    setSaving(false)
-    if (error || !data) {
-      Alert.alert('Could not create', error?.message ?? 'Try again.')
-      return
-    }
-    router.replace(`/lists/${(data as { id: string }).id}` as never)
+    router.replace(`/lists/${res.list.id}` as never)
   }
 
   return (

@@ -1,12 +1,8 @@
-// Offline sync queue (Phase 7). The mobile half of the /api/v1/sync protocol whose
-// server resolver lives in @foxing/core (domain/sync.ts). Every offline write becomes an
-// op with a client-generated id that doubles as the row primary key, so a replayed op is
-// an idempotent no-op server-side. This module is transport-agnostic: the caller injects
-// an authenticated fetch (Better Auth session cookie / bearer) so there is no coupling to
-// the auth layer here.
-//
-// This is ADDITIVE. The legacy supabase-table queue in ./offline-queue.ts stays until the
-// data-layer swap rewires every caller and deletes supabase-js. Nothing here imports it.
+// Offline sync queue: the mobile half of the /api/v1/sync protocol whose server resolver
+// lives in @foxing/core (domain/sync.ts). Every offline write becomes an op with a
+// client-generated id that doubles as the row primary key, so a replayed op is an
+// idempotent no-op server-side. The transport is injected (lib/api.ts adds the session
+// cookie). Screens read through the query cache, so the queue only ever pushes.
 
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
@@ -39,17 +35,11 @@ interface SyncPushResponse {
   results: SyncOpResult[]
 }
 
-interface SyncPullResponse {
-  cursor: number
-  changes: Record<string, unknown[]>
-}
-
 // Injected authenticated transport: (path, init) => Response. Path is relative to the API
 // base (e.g. '/api/v1/sync'); the caller's implementation supplies base URL + auth headers.
 export type SyncTransport = (path: string, init: RequestInit) => Promise<Response>
 
 const QUEUE_KEY = 'sync_queue_v1'
-const CURSOR_KEY = 'sync_cursor_v1'
 const MAX_BATCH = 500
 
 let flushing = false
@@ -87,24 +77,6 @@ async function writeQueue(ops: SyncOp[]): Promise<void> {
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(ops))
   } catch (e) {
     console.warn('[sync-queue] write failed:', e instanceof Error ? e.message : e)
-  }
-}
-
-export async function getCursor(): Promise<number> {
-  try {
-    const raw = await AsyncStorage.getItem(CURSOR_KEY)
-    const n = raw ? Number(raw) : 0
-    return Number.isFinite(n) ? n : 0
-  } catch {
-    return 0
-  }
-}
-
-async function setCursor(cursor: number): Promise<void> {
-  try {
-    await AsyncStorage.setItem(CURSOR_KEY, String(cursor))
-  } catch (e) {
-    console.warn('[sync-queue] cursor write failed:', e instanceof Error ? e.message : e)
   }
 }
 
@@ -183,42 +155,4 @@ export async function flush(transport: SyncTransport): Promise<{ pushed: number;
   } finally {
     flushing = false
   }
-}
-
-// -- pull -------------------------------------------------------------------
-
-// Pull rows changed since the stored cursor and hand each resource's rows to an applier
-// (the caller upserts into its local store -- idempotent, since server rows carry stable
-// ids). Advances the cursor only after the applier succeeds so a crash re-pulls the window.
-export async function pull(
-  transport: SyncTransport,
-  apply: (changes: Record<string, unknown[]>) => Promise<void>,
-): Promise<{ cursor: number } | null> {
-  const since = await getCursor()
-  let res: Response
-  try {
-    res = await transport(`/api/v1/sync?since=${since}`, { method: 'GET' })
-  } catch (e) {
-    console.warn('[sync-queue] pull network error:', e instanceof Error ? e.message : e)
-    return null
-  }
-  if (!res.ok) {
-    console.warn('[sync-queue] pull rejected:', res.status)
-    return null
-  }
-  const body = (await res.json().catch(() => null)) as SyncPullResponse | null
-  if (!body) return null
-  await apply(body.changes ?? {})
-  await setCursor(body.cursor)
-  return { cursor: body.cursor }
-}
-
-// Full round-trip: push local ops, then pull remote changes. Call on reconnect / app
-// foreground. Pull runs even if the push made no progress so inbound changes still land.
-export async function sync(
-  transport: SyncTransport,
-  apply: (changes: Record<string, unknown[]>) => Promise<void>,
-): Promise<void> {
-  await flush(transport)
-  await pull(transport, apply)
 }

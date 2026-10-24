@@ -1,13 +1,7 @@
+import type * as W from '@foxing/types'
 import { Pressable, Text } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-
-interface UserBookRow {
-  id: string
-  status: 'reading' | 'paused' | 'want_to_read' | 'finished' | 'abandoned'
-  progress_percentage: number
-  is_favorite: boolean | null
-}
 
 export function PrimaryCta({
   userBook,
@@ -15,7 +9,7 @@ export function PrimaryCta({
   onContinue,
   onReread,
 }: {
-  userBook: UserBookRow | null
+  userBook: W.MyBookState | null
   onAddPress: () => void
   onContinue: () => void
   onReread: () => void
@@ -23,10 +17,10 @@ export function PrimaryCta({
   const colors = useColors()
   const label =
     userBook?.status === 'reading'
-      ? `Continue Reading, ${Math.round((userBook.progress_percentage ?? 0) * 100)}%`
+      ? `Continue Reading, ${Math.round(userBook.progressPct)}%`
       : userBook?.status === 'finished'
         ? 'Read Again'
-        : userBook?.status === 'want_to_read' || userBook?.status === 'abandoned'
+        : userBook?.status === 'want' || userBook?.status === 'abandoned' || userBook?.status === 'paused'
           ? 'Start Reading'
           : 'Add to Library'
   const onPress =
@@ -34,7 +28,7 @@ export function PrimaryCta({
       ? onContinue
       : userBook?.status === 'finished'
         ? onReread
-        : userBook?.status === 'want_to_read' || userBook?.status === 'abandoned'
+        : userBook?.status === 'want' || userBook?.status === 'abandoned' || userBook?.status === 'paused'
           ? onContinue
           : onAddPress
   return (

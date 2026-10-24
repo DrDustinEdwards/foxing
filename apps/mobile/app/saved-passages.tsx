@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useDeleteAnnotation, useMyAnnotations, useUpdateAnnotation } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useCallback, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -10,7 +12,7 @@ import {
   Alert,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useFocusEffect, useRouter } from 'expo-router'
+import { useRouter } from 'expo-router'
 import {
   CaretLeft,
   Trash,
@@ -19,7 +21,6 @@ import {
   Check,
   BookOpen,
 } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
@@ -27,65 +28,23 @@ import { Fonts } from '@/constants/fonts'
 // Section 2a. Pulls every highlight where a note has been written, grouped
 // by book, with public toggle + share + delete.
 
-interface HighlightRow {
-  id: string
-  book_id: string | null
-  text: string
-  cfi: string | null
-  color: string | null
-  note: string | null
-  is_public: boolean | null
-  created_at: string
-  book: { id: string; title: string; author: string } | null
-}
-
 export default function SavedPassagesScreen() {
   const colors = useColors()
   const router = useRouter()
-  const [rows, setRows] = useState<HighlightRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const highlights = useMyAnnotations(['highlight'])
+  const rows = useMemo(() => (highlights.data ?? []).filter((h) => h.body), [highlights.data])
+  const loading = highlights.isPending
+  const update = useUpdateAnnotation()
+  const del = useDeleteAnnotation()
   const [editing, setEditing] = useState<string | null>(null)
   const [noteDraft, setNoteDraft] = useState('')
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setRows([])
-      setLoading(false)
-      return
-    }
-    const { data, error } = await supabase
-      .from('highlights')
-      .select('id, book_id, text, cfi, color, note, is_public, created_at, book:books(id, title, author)')
-      .eq('user_id', user.id)
-      .not('note', 'is', null)
-      .order('created_at', { ascending: false })
-    if (error) {
-      console.warn('[saved-passages] load failed:', error.message)
-      setRows([])
-    } else {
-      // Normalize the joined-book shape (Supabase may return array or object).
-      const normalized = (((data ?? []) as unknown) as Array<
-        Omit<HighlightRow, 'book'> & { book: HighlightRow['book'] | Array<NonNullable<HighlightRow['book']>> | null }
-      >).map((r) => ({
-        ...r,
-        book: Array.isArray(r.book) ? r.book[0] ?? null : r.book,
-      }))
-      setRows(normalized)
-    }
-    setLoading(false)
-  }, [])
-
-  useEffect(() => { load() }, [load])
-  useFocusEffect(useCallback(() => { load() }, [load]))
 
   // Group by book title for the section headers, entries without a book
   // bucket into "Loose pages".
   const grouped = useMemo(() => {
-    const m = new Map<string, HighlightRow[]>()
+    const m = new Map<string, W.MyAnnotation[]>()
     for (const r of rows) {
-      const key = r.book?.title ?? 'Loose pages'
+      const key = r.bookTitle ?? r.sourceTitle ?? 'Loose pages'
       const list = m.get(key) ?? []
       list.push(r)
       m.set(key, list)
@@ -93,37 +52,38 @@ export default function SavedPassagesScreen() {
     return Array.from(m.entries())
   }, [rows])
 
-  const onTogglePublic = useCallback(async (entry: HighlightRow) => {
-    const next = !entry.is_public
-    setRows((prev) =>
-      prev.map((r) => (r.id === entry.id ? { ...r, is_public: next } : r)),
-    )
-    await supabase.from('highlights').update({ is_public: next }).eq('id', entry.id)
-  }, [])
-
-  const onSaveNote = useCallback(
-    async (id: string) => {
-      const trimmed = noteDraft.trim()
-      setEditing(null)
-      setRows((prev) => prev.map((r) => (r.id === id ? { ...r, note: trimmed || null } : r)))
-      await supabase.from('highlights').update({ note: trimmed || null }).eq('id', id)
+  // Edits patch the cached list at once and roll back if the server refuses them.
+  const onTogglePublic = useCallback(
+    (entry: W.MyAnnotation) => {
+      if (!entry.bookId) return
+      update.fire({ bookId: entry.bookId, id: entry.id, visibility: entry.visibility === 'public' ? 'private' : 'public' })
     },
-    [noteDraft],
+    [update],
   )
 
-  const onDelete = useCallback((entry: HighlightRow) => {
-    Alert.alert('Delete passage?', entry.text.slice(0, 120), [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await supabase.from('highlights').delete().eq('id', entry.id)
-          setRows((prev) => prev.filter((r) => r.id !== entry.id))
+  const onSaveNote = useCallback(
+    (entry: W.MyAnnotation) => {
+      setEditing(null)
+      if (entry.bookId) update.fire({ bookId: entry.bookId, id: entry.id, body: noteDraft.trim() || null })
+    },
+    [noteDraft, update],
+  )
+
+  const onDelete = useCallback(
+    (entry: W.MyAnnotation) => {
+      Alert.alert('Delete passage?', (entry.selectedText ?? '').slice(0, 120), [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            if (entry.bookId) del.fire({ bookId: entry.bookId, id: entry.id })
+          },
         },
-      },
-    ])
-  }, [])
+      ])
+    },
+    [del],
+  )
 
   function colorSwatchFor(c: string | null): string {
     switch (c) {
@@ -212,7 +172,7 @@ export default function SavedPassagesScreen() {
                         lineHeight: 21,
                       }}
                     >
-                      "{e.text}"
+                      "{e.selectedText}"
                     </Text>
                     {editing === e.id ? (
                       <View
@@ -241,10 +201,10 @@ export default function SavedPassagesScreen() {
                             paddingHorizontal: 10,
                             paddingVertical: 6,
                           }}
-                          onSubmitEditing={() => onSaveNote(e.id)}
+                          onSubmitEditing={() => onSaveNote(e)}
                         />
                         <Pressable
-                          onPress={() => onSaveNote(e.id)}
+                          onPress={() => onSaveNote(e)}
                           accessibilityRole="button"
                           accessibilityLabel="Save note"
                           style={{
@@ -256,10 +216,10 @@ export default function SavedPassagesScreen() {
                           <Check color={colors.textOnBrand} size={14} weight="bold" />
                         </Pressable>
                       </View>
-                    ) : e.note ? (
+                    ) : e.body ? (
                       <Pressable
                         onPress={() => {
-                          setNoteDraft(e.note ?? '')
+                          setNoteDraft(e.body ?? '')
                           setEditing(e.id)
                         }}
                         accessibilityRole="button"
@@ -274,7 +234,7 @@ export default function SavedPassagesScreen() {
                             fontStyle: 'italic',
                           }}
                         >
-                          ✎ {e.note}
+                          ✎ {e.body}
                         </Text>
                       </Pressable>
                     ) : (
@@ -308,7 +268,7 @@ export default function SavedPassagesScreen() {
                           color: colors.textTertiary,
                         }}
                       >
-                        {new Date(e.created_at).toLocaleDateString(undefined, {
+                        {new Date(e.createdAt).toLocaleDateString(undefined, {
                           month: 'short',
                           day: 'numeric',
                           year: 'numeric',
@@ -326,7 +286,7 @@ export default function SavedPassagesScreen() {
                             Public
                           </Text>
                           <Switch
-                            value={!!e.is_public}
+                            value={e.visibility === 'public'}
                             onValueChange={() => onTogglePublic(e)}
                             trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
                             accessibilityLabel="Public passage toggle"
@@ -338,10 +298,10 @@ export default function SavedPassagesScreen() {
                               pathname: '/quote-card',
                               params: {
                                 type: 'quote',
-                                bookId: e.book?.id ?? '',
-                                bookTitle: e.book?.title ?? '',
-                                author: e.book?.author ?? '',
-                                passageText: e.text,
+                                bookId: e.bookId ?? '',
+                                bookTitle: e.bookTitle ?? '',
+                                author: e.bookAuthor ?? '',
+                                passageText: e.selectedText ?? '',
                               },
                             } as never)
                           }

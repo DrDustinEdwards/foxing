@@ -1,28 +1,92 @@
 import { useState } from 'react'
 import { View, Text, TextInput, Pressable, ActivityIndicator } from 'react-native'
-import { Link } from 'expo-router'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-controller'
 import { Screen } from '@/components/ui/screen'
 import { X as XIcon } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { authClient } from '@/lib/api'
 import { useColors } from '@/constants/colors'
+
+// One way in for new and returning readers: Google, Apple, or a six-digit code sent to
+// their email (a new address gets an account; the username comes next, at onboarding).
+// A good sign-in updates the session, and the root layout routes on from there.
+
+const INPUT_CLASS =
+  'font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark'
+
+type Busy = 'send' | 'verify' | 'google' | 'apple' | null
 
 export default function Login() {
   const colors = useColors()
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [code, setCode] = useState('')
+  const [sentTo, setSentTo] = useState<string | null>(null)
+  const [busy, setBusy] = useState<Busy>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function signInWithEmail() {
-    setLoading(true)
+  async function attempt(kind: Busy, call: () => Promise<{ error: { message?: string } | null }>, fallback: string) {
+    setBusy(kind)
     setError(null)
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError(error.message)
-    setLoading(false)
+    try {
+      const { error } = await call()
+      if (error) setError(error.message ?? fallback)
+      return !error
+    } catch {
+      setError(`${fallback} Check your connection and try again.`)
+      return false
+    } finally {
+      setBusy(null)
+    }
   }
 
-  const disabled = loading || !email || !password
+  async function sendCode() {
+    const address = email.trim()
+    const ok = await attempt(
+      'send',
+      () => authClient.emailOtp.sendVerificationOtp({ email: address, type: 'sign-in' }),
+      'Could not send a code.',
+    )
+    if (ok) {
+      setSentTo(address)
+      setCode('')
+    }
+  }
+
+  const verify = () =>
+    sentTo &&
+    attempt('verify', () => authClient.signIn.emailOtp({ email: sentTo, otp: code.trim() }), 'That code did not work.')
+
+  const social = (provider: 'google' | 'apple') =>
+    attempt(provider, () => authClient.signIn.social({ provider, callbackURL: '/' }), 'Sign in was not completed.')
+
+  const button = (label: string, onPress: () => void, disabled: boolean, loading: boolean, primary = false) => (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled, busy: loading }}
+      className={
+        primary
+          ? 'rounded-xl py-4 items-center bg-brand-ui-light dark:bg-brand-ui-dark'
+          : 'rounded-xl py-4 items-center border border-border-interactive-light dark:border-border-interactive-dark'
+      }
+      style={{ opacity: disabled && !loading ? 0.5 : 1 }}
+    >
+      {loading ? (
+        <ActivityIndicator color={primary ? colors.textOnBrand : colors.brandUi} />
+      ) : (
+        <Text
+          className={
+            primary
+              ? 'font-ui-medium text-base text-text-on-brand'
+              : 'font-ui text-base text-text-primary-light dark:text-text-primary-dark'
+          }
+        >
+          {label}
+        </Text>
+      )}
+    </Pressable>
+  )
 
   return (
     <Screen>
@@ -41,24 +105,50 @@ export default function Login() {
         </View>
 
         <View className="gap-4">
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Email"
-            placeholderTextColor={colors.textTertiary}
-            autoCapitalize="none"
-            autoComplete="email"
-            keyboardType="email-address"
-            className="font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
-          />
-          <TextInput
-            value={password}
-            onChangeText={setPassword}
-            placeholder="Password"
-            placeholderTextColor={colors.textTertiary}
-            secureTextEntry
-            className="font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
-          />
+          {button('Continue with Apple', () => void social('apple'), busy !== null, busy === 'apple')}
+          {button('Continue with Google', () => void social('google'), busy !== null, busy === 'google')}
+
+          <Text className="font-ui text-center text-text-tertiary-light dark:text-text-tertiary-dark">
+            or use your email
+          </Text>
+
+          {sentTo ? (
+            <>
+              <Text className="font-ui text-center text-text-secondary-light dark:text-text-secondary-dark">
+                We sent a six-digit code to {sentTo}. It works for five minutes.
+              </Text>
+              <TextInput
+                value={code}
+                onChangeText={(v) => setCode(v.replace(/\D/g, '').slice(0, 6))}
+                placeholder="Code"
+                placeholderTextColor={colors.textTertiary}
+                keyboardType="number-pad"
+                autoComplete="one-time-code"
+                textContentType="oneTimeCode"
+                accessibilityLabel="Six-digit code"
+                className={INPUT_CLASS}
+              />
+              {button('Sign in', () => void verify(), busy !== null || code.length !== 6, busy === 'verify', true)}
+              <Pressable onPress={() => setSentTo(null)} accessibilityRole="button" className="items-center">
+                <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">Use a different email</Text>
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Email"
+                placeholderTextColor={colors.textTertiary}
+                autoCapitalize="none"
+                autoComplete="email"
+                keyboardType="email-address"
+                accessibilityLabel="Email"
+                className={INPUT_CLASS}
+              />
+              {button('Email me a code', () => void sendCode(), busy !== null || !email.trim().includes('@'), busy === 'send', true)}
+            </>
+          )}
 
           {error ? (
             <View
@@ -67,67 +157,9 @@ export default function Login() {
               className="flex-row items-center justify-center gap-2 rounded-lg px-3 py-2 bg-error-bg-light dark:bg-error-bg-dark"
             >
               <XIcon color={colors.error} size={16} />
-              <Text className="font-ui text-center text-error-light dark:text-error-dark">
-                {error}
-              </Text>
+              <Text className="font-ui text-center text-error-light dark:text-error-dark">{error}</Text>
             </View>
           ) : null}
-
-          <Pressable
-            onPress={signInWithEmail}
-            disabled={disabled}
-            accessibilityRole="button"
-            accessibilityLabel="Sign in"
-            accessibilityState={{ disabled, busy: loading }}
-            className="rounded-xl py-4 items-center bg-brand-ui-light dark:bg-brand-ui-dark"
-            style={{ opacity: disabled ? 0.5 : 1 }}
-          >
-            {loading ? (
-              <ActivityIndicator color={colors.textOnBrand} />
-            ) : (
-              <Text className="font-ui-medium text-base text-text-on-brand">
-                Sign in
-              </Text>
-            )}
-          </Pressable>
-
-          <Pressable
-            disabled
-            accessibilityRole="button"
-            accessibilityLabel="Continue with Apple, unavailable"
-            accessibilityState={{ disabled: true }}
-            className="rounded-xl py-4 items-center border border-border-interactive-light dark:border-border-interactive-dark opacity-50"
-          >
-            <Text className="font-ui text-base text-text-primary-light dark:text-text-primary-dark">
-              Continue with Apple
-            </Text>
-          </Pressable>
-
-          <View className="items-center mt-2">
-            <Link href={'/(auth)/forgot-password' as never} asChild>
-              <Pressable
-                accessibilityRole="link"
-                accessibilityLabel="Forgot password"
-              >
-                <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">
-                  Forgot password?
-                </Text>
-              </Pressable>
-            </Link>
-          </View>
-
-          <View className="flex-row justify-center mt-4">
-            <Text className="font-ui text-text-secondary-light dark:text-text-secondary-dark">
-              New here?{' '}
-            </Text>
-            <Link href="/(auth)/signup" asChild>
-              <Pressable accessibilityRole="link" accessibilityLabel="Create an account">
-                <Text className="font-ui text-brand-text-light dark:text-brand-text-dark">
-                  Create an account
-                </Text>
-              </Pressable>
-            </Link>
-          </View>
         </View>
       </KeyboardAwareScrollView>
     </Screen>

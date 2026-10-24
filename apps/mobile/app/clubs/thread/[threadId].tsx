@@ -1,179 +1,81 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  TextInput,
-  Switch,
-} from 'react-native'
+import { useClubLive, useCreatePost, useRemovePost, useThreadPage } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { View, Text, Pressable, ScrollView, ActivityIndicator, TextInput, Switch, Alert } from 'react-native'
 import { KeyboardStickyView } from 'react-native-keyboard-controller'
 import { Screen } from '@/components/ui/screen'
 import { useLocalSearchParams, useRouter } from 'expo-router'
-import {
-  CaretLeft,
-  Sparkle,
-  ChatCircleDots,
-  PaperPlaneRight,
-} from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { CaretLeft, Sparkle, ChatCircleDots, PaperPlaneRight } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { Alert } from 'react-native'
-import {
-  type ClubPost,
-  type ClubThread,
-} from '@/lib/clubs'
-import { createPost, fetchPosts, fetchThread, reportPost, savePost, toggleReaction } from '@/lib/club-threads'
+import { authClient } from '@/lib/api'
 import { PostCard } from '@/components/clubs/post-card'
 
+// A club thread: GET /threads/:id, kept fresh by the club's live socket while you
+// are a member, so new posts appear without a reload.
 export default function ThreadScreen() {
   const colors = useColors()
   const router = useRouter()
-  const { id, threadId } = useLocalSearchParams<{ id: string; threadId: string }>()
-  const [thread, setThread] = useState<ClubThread | null>(null)
-  const [posts, setPosts] = useState<ClubPost[]>([])
-  const [loading, setLoading] = useState(true)
-  const [viewerId, setViewerId] = useState<string | null>(null)
+  const { threadId } = useLocalSearchParams<{ threadId: string }>()
+  const session = authClient.useSession()
+  const viewerId = session.data?.user.id ?? null
+  const threadPage = useThreadPage(threadId ?? '')
+  const page = threadPage.data
+  useClubLive(page?.isMember ? page.club.id : null)
+  const createPost = useCreatePost()
+  const removePost = useRemovePost()
+  const posting = createPost.pending
   const [body, setBody] = useState('')
   const [hasSpoilers, setHasSpoilers] = useState(false)
-  const [replyTo, setReplyTo] = useState<ClubPost | null>(null)
-  const [posting, setPosting] = useState(false)
+  const [replyTo, setReplyTo] = useState<W.ClubPostItem | null>(null)
   // Per-post reveal state for spoiler bodies. Defaults to hidden.
   const [revealed, setRevealed] = useState<Set<string>>(new Set())
   const scrollRef = useRef<ScrollView>(null)
 
-  const load = useCallback(async () => {
-    if (!threadId) return
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    setViewerId(user?.id ?? null)
-    const [t, p] = await Promise.all([fetchThread(threadId), fetchPosts(threadId)])
-    setThread(t)
-    setPosts(p)
-    setLoading(false)
-  }, [threadId])
-
-  useEffect(() => {
-    load()
-  }, [load])
-
-  // Realtime: subscribe to new posts and reaction inserts/deletes for this
-  // thread. We refetch posts on any event, small enough payloads that the
-  // extra round-trip beats stitching individual rows by hand.
-  useEffect(() => {
-    if (!threadId) return
-    const channel = supabase
-      .channel(`thread-${threadId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'club_posts', filter: `thread_id=eq.${threadId}` },
-        () => load(),
-      )
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'club_post_reactions' }, () => load())
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [threadId, load])
-
   // Arrange posts: top-level first, then nest direct replies under each.
-  // We only render ONE level of nesting in v1 to keep the layout sane.
+  // We only render ONE level of nesting to keep the layout sane.
   const grouped = useMemo(() => {
-    const topLevel = posts.filter((p) => !p.parent_post_id)
-    const childrenByParent = new Map<string, ClubPost[]>()
+    const posts = page?.posts ?? []
+    const topLevel = posts.filter((p) => !p.parentPostId)
+    const childrenByParent = new Map<string, W.ClubPostItem[]>()
     for (const p of posts) {
-      if (p.parent_post_id) {
-        const list = childrenByParent.get(p.parent_post_id) ?? []
+      if (p.parentPostId) {
+        const list = childrenByParent.get(p.parentPostId) ?? []
         list.push(p)
-        childrenByParent.set(p.parent_post_id, list)
+        childrenByParent.set(p.parentPostId, list)
       }
     }
     return topLevel.map((p) => ({ post: p, replies: childrenByParent.get(p.id) ?? [] }))
-  }, [posts])
+  }, [page?.posts])
 
   const send = useCallback(async () => {
     if (!threadId || !body.trim() || posting) return
-    setPosting(true)
-    const newPost = await createPost({
+    const ok = await createPost.run({
       threadId,
-      parentPostId: replyTo?.id ?? null,
-      body: body.trim(),
-      hasSpoilers,
+      parentPostId: replyTo?.id,
+      content: body.trim(),
+      hasSpoiler: hasSpoilers,
     })
-    setPosting(false)
-    if (newPost) {
+    if (ok) {
       setBody('')
       setHasSpoilers(false)
       setReplyTo(null)
-      load()
       // Scroll to end so the user sees their own post; small timeout lets
       // the new layout pass settle.
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)
     }
-  }, [body, hasSpoilers, load, posting, replyTo, threadId])
+  }, [body, createPost, hasSpoilers, posting, replyTo, threadId])
 
-  // Long-press a post → action sheet: Save / Report. Skip if not signed in.
+  // Long-press your own post to delete it.
   const openPostActions = useCallback(
-    (post: ClubPost) => {
-      if (!viewerId) return
-      Alert.alert('Post actions', undefined, [
-        {
-          text: 'Save post',
-          onPress: async () => {
-            const ok = await savePost(post.id)
-            if (!ok) console.warn('[thread] save failed')
-          },
-        },
-        {
-          text: 'Report',
-          style: 'destructive',
-          onPress: () => {
-            Alert.alert('Report this post', 'Pick a reason.', [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Spam',
-                onPress: async () => {
-                  const ok = await reportPost(post.id, 'spam')
-                  if (ok) Alert.alert('Report submitted')
-                },
-              },
-              {
-                text: 'Harassment',
-                onPress: async () => {
-                  const ok = await reportPost(post.id, 'harassment')
-                  if (ok) Alert.alert('Report submitted')
-                },
-              },
-              {
-                text: 'Spoilers without tag',
-                onPress: async () => {
-                  const ok = await reportPost(post.id, 'spoiler')
-                  if (ok) Alert.alert('Report submitted')
-                },
-              },
-              {
-                text: 'Offensive content',
-                onPress: async () => {
-                  const ok = await reportPost(post.id, 'offensive')
-                  if (ok) Alert.alert('Report submitted')
-                },
-              },
-              {
-                text: 'Other',
-                onPress: async () => {
-                  const ok = await reportPost(post.id, 'other')
-                  if (ok) Alert.alert('Report submitted')
-                },
-              },
-            ])
-          },
-        },
+    (post: W.ClubPostItem) => {
+      if (!threadId || !viewerId || post.author?.id !== viewerId) return
+      Alert.alert('Delete this post?', undefined, [
         { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => removePost.fire({ threadId, postId: post.id }) },
       ])
     },
-    [viewerId],
+    [removePost, threadId, viewerId],
   )
 
   const toggleReveal = useCallback((postId: string) => {
@@ -185,50 +87,14 @@ export default function ThreadScreen() {
     })
   }, [])
 
-  const onReaction = useCallback(
-    async (postId: string, emoji: string) => {
-      // Optimistic toggle: flip viewer's reacted/count on the matching post.
-      setPosts((prev) =>
-        prev.map((p) => {
-          if (p.id !== postId) return p
-          const groups = p.reactions ?? []
-          const exists = groups.find((g) => g.emoji === emoji)
-          if (exists) {
-            return {
-              ...p,
-              reactions: groups
-                .map((g) =>
-                  g.emoji === emoji
-                    ? {
-                        ...g,
-                        count: g.count + (g.viewerReacted ? -1 : 1),
-                        viewerReacted: !g.viewerReacted,
-                      }
-                    : g,
-                )
-                .filter((g) => g.count > 0),
-            }
-          }
-          return {
-            ...p,
-            reactions: [...groups, { emoji, count: 1, viewerReacted: true }],
-          }
-        }),
-      )
-      const ok = await toggleReaction(postId, emoji)
-      if (!ok) load()
-    },
-    [load],
-  )
-
-  if (loading) {
+  if (threadPage.isPending) {
     return (
       <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
       </Screen>
     )
   }
-  if (!thread) {
+  if (!page) {
     return (
       <Screen className="items-center justify-center px-8">
         <Text
@@ -245,6 +111,9 @@ export default function ThreadScreen() {
     )
   }
 
+  const thread = page.thread
+  const canPost = page.isMember
+
   return (
     <Screen>
       <View className="flex-row items-center px-3 py-2">
@@ -253,7 +122,7 @@ export default function ThreadScreen() {
         </Pressable>
         <View style={{ flex: 1, marginLeft: 4 }}>
           <View className="flex-row items-center gap-1">
-            {thread.is_ai_starter ? (
+            {thread.isAiStarter ? (
               <Sparkle color={colors.brandUi} size={12} weight="regular" />
             ) : null}
             <Text
@@ -308,11 +177,10 @@ export default function ThreadScreen() {
                 <PostCard
                   post={post}
                   revealed={revealed.has(post.id)}
-                  viewerId={viewerId}
+                  canReply={canPost}
                   onToggleReveal={() => toggleReveal(post.id)}
-                  onReact={(emoji) => onReaction(post.id, emoji)}
                   onReply={() => setReplyTo(post)}
-                  onOpenAuthor={(uid) => router.push(`/user/${uid}` as never)}
+                  onOpenAuthor={(username) => router.push(`/u/${username}` as never)}
                   onLongPress={() => openPostActions(post)}
                 />
                 {replies.length > 0 ? (
@@ -323,10 +191,9 @@ export default function ThreadScreen() {
                         post={r}
                         nested
                         revealed={revealed.has(r.id)}
-                        viewerId={viewerId}
+                        canReply={false}
                         onToggleReveal={() => toggleReveal(r.id)}
-                        onReact={(emoji) => onReaction(r.id, emoji)}
-                        onOpenAuthor={(uid) => router.push(`/user/${uid}` as never)}
+                        onOpenAuthor={(username) => router.push(`/u/${username}` as never)}
                         onLongPress={() => openPostActions(r)}
                       />
                     ))}
@@ -337,7 +204,7 @@ export default function ThreadScreen() {
           )}
         </ScrollView>
 
-        {viewerId ? (
+        {canPost ? (
           <KeyboardStickyView>
           <View
             className="border-t border-border-subtle-light dark:border-border-subtle-dark"
@@ -352,7 +219,7 @@ export default function ThreadScreen() {
                   style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textSecondary, flex: 1 }}
                   numberOfLines={1}
                 >
-                  Replying to {replyTo.author?.display_name ?? replyTo.author?.username ?? 'reader'}
+                  Replying to {replyTo.author?.displayName ?? replyTo.author?.username ?? 'reader'}
                 </Text>
                 <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
                   <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}>
@@ -360,6 +227,11 @@ export default function ThreadScreen() {
                   </Text>
                 </Pressable>
               </View>
+            ) : null}
+            {createPost.error ? (
+              <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.error, marginBottom: 6 }}>
+                {createPost.error}
+              </Text>
             ) : null}
             <View className="flex-row items-end gap-2">
               <TextInput
@@ -421,6 +293,3 @@ export default function ThreadScreen() {
     </Screen>
   )
 }
-
-// ── PostCard ─────────────────────────────────────────────────────────────
-

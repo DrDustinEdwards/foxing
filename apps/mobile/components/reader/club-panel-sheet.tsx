@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useBookAnnotations, useClubLive, useClubPage } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useEffect, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -14,11 +16,6 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import { X as XIcon, ChatCircleDots } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { supabase } from '@/lib/supabase'
-import {
-  listCommentsForBook,
-  type PassageComment,
-} from '@/lib/passage-comments'
 
 // Half-height bottom-anchored panel that slides up over the bottom of
 // the reader. Unlike the rest of the reader sheets this is NOT a Modal,
@@ -26,38 +23,17 @@ import {
 // is open -- per spec, "reading continues" while it sits on top.
 //
 // Two tabs:
-//   - Discussion: recent passage comments for this club + book. Tap a
-//     row to open the existing PassageCommentSheet with replies +
-//     reactions. ("Chapter-gated thread list" per spec is approximated
-//     as a flat recent-first list because passage_comments doesn't
-//     carry a chapter column -- adding that would need a schema
-//     migration which is out of scope here.)
-//   - Members: club members with reading progress bars. One Supabase
-//     query joins club_members + profiles + user_books.
-
-interface ClubInfo {
-  club_id: string
-  name: string
-}
-
-interface MemberRow {
-  user_id: string
-  display_name: string | null
-  username: string | null
-  avatar_url: string | null
-  progress_percentage: number | null
-}
+//   - Discussion: this club's passage comments on the book, from the book's
+//     annotation layers. Tap one to open its PassageCommentSheet.
+//   - Members: the club's members, marked when they are in the club right now
+//     (the club's live socket).
 
 interface ClubPanelSheetProps {
   visible: boolean
-  club: ClubInfo
+  club: { id: string; name: string }
   bookId: string
   bookTitle: string
-  // Which club ids the viewer belongs to that are reading this book.
-  // listCommentsForBook needs the full list so the visibility filter
-  // matches what surfaces in the rest of the reader.
-  viewerClubIds: string[]
-  onOpenComment: (comment: PassageComment) => void
+  onOpenComment: (comment: W.ResolvedComment) => void
   onClose: () => void
 }
 
@@ -68,7 +44,6 @@ export function ClubPanelSheet({
   club,
   bookId,
   bookTitle,
-  viewerClubIds,
   onOpenComment,
   onClose,
 }: ClubPanelSheetProps) {
@@ -77,9 +52,14 @@ export function ClubPanelSheet({
   const panelHeight = Math.round(screenHeight * 0.55)
 
   const [tab, setTab] = useState<Tab>('discussion')
-  const [comments, setComments] = useState<PassageComment[]>([])
-  const [members, setMembers] = useState<MemberRow[]>([])
-  const [loading, setLoading] = useState(false)
+  const layers = useBookAnnotations(bookId)
+  const page = useClubPage(club.id)
+  const live = useClubLive(visible ? club.id : null)
+  const comments = (layers.data?.comments ?? [])
+    .filter((c) => c.clubId === club.id && !c.parentId)
+    .sort((a, b) => b.createdAt - a.createdAt)
+  const members = (page.data?.members ?? []).filter((m) => m.status === 'active')
+  const loading = tab === 'discussion' ? layers.isPending : page.isPending
 
   // Slide-up animation. Translate from off-screen to 0 when visible.
   const slide = useMemo(() => new Animated.Value(panelHeight), [panelHeight])
@@ -91,94 +71,6 @@ export function ClubPanelSheet({
       useNativeDriver: true,
     }).start()
   }, [visible, panelHeight, slide])
-
-  const loadDiscussion = useCallback(async () => {
-    setLoading(true)
-    const rows = await listCommentsForBook(bookId, viewerClubIds)
-    setComments(
-      rows.filter((c) => c.club_id === null || c.club_id === club.club_id),
-    )
-    setLoading(false)
-  }, [bookId, viewerClubIds, club.club_id])
-
-  const loadMembers = useCallback(async () => {
-    setLoading(true)
-    const { data, error } = await supabase
-      .from('club_members')
-      .select('user_id')
-      .eq('club_id', club.club_id)
-    if (error) {
-      console.warn('[club-panel] members fetch failed:', error.message)
-      setMembers([])
-      setLoading(false)
-      return
-    }
-    const rows = ((data ?? []) as unknown) as Array<{ user_id: string }>
-    const memberIds = rows.map((r) => r.user_id)
-    if (memberIds.length === 0) {
-      setMembers([])
-      setLoading(false)
-      return
-    }
-    // club_members.user_id FKs auth.users, not profiles, so member profiles are
-    // fetched separately rather than embedded.
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('id, display_name, username, avatar_url')
-      .in('id', memberIds)
-    const profileById = new Map<
-      string,
-      { display_name: string | null; username: string | null; avatar_url: string | null }
-    >()
-    for (const p of (((profileData ?? []) as unknown) as Array<{
-      id: string
-      display_name: string | null
-      username: string | null
-      avatar_url: string | null
-    }>)) {
-      profileById.set(p.id, {
-        display_name: p.display_name,
-        username: p.username,
-        avatar_url: p.avatar_url,
-      })
-    }
-    // Pull progress in a second query rather than as a nested join --
-    // user_books has its own RLS that doesn't necessarily allow joined
-    // reads through club_members, so we hydrate the field separately.
-    const { data: progressData } = await supabase
-      .from('user_books')
-      .select('user_id, progress_percentage')
-      .eq('book_id', bookId)
-      .in('user_id', memberIds)
-    const progressByUser = new Map<string, number>()
-    for (const p of (progressData ?? []) as Array<{
-      user_id: string
-      progress_percentage: number | null
-    }>) {
-      if (p.progress_percentage != null) {
-        progressByUser.set(p.user_id, p.progress_percentage)
-      }
-    }
-    setMembers(
-      rows.map((r) => {
-        const p = profileById.get(r.user_id)
-        return {
-          user_id: r.user_id,
-          display_name: p?.display_name ?? null,
-          username: p?.username ?? null,
-          avatar_url: p?.avatar_url ?? null,
-          progress_percentage: progressByUser.get(r.user_id) ?? null,
-        }
-      }),
-    )
-    setLoading(false)
-  }, [club.club_id, bookId])
-
-  useEffect(() => {
-    if (!visible) return
-    if (tab === 'discussion') loadDiscussion()
-    else loadMembers()
-  }, [visible, tab, loadDiscussion, loadMembers])
 
   if (!visible) {
     // Keep the panel mounted only when visible so the Animated value
@@ -302,7 +194,7 @@ export function ClubPanelSheet({
               onOpenComment={onOpenComment}
             />
           ) : (
-            <MembersList members={members} />
+            <MembersList members={members} online={new Set(live.presence)} />
           )}
         </SafeAreaView>
       </View>
@@ -350,8 +242,8 @@ function DiscussionList({
   comments,
   onOpenComment,
 }: {
-  comments: PassageComment[]
-  onOpenComment: (c: PassageComment) => void
+  comments: W.ResolvedComment[]
+  onOpenComment: (c: W.ResolvedComment) => void
 }) {
   const colors = useColors()
   if (comments.length === 0) {
@@ -387,9 +279,9 @@ function DiscussionList({
           onPress={() => onOpenComment(c)}
           className="p-3 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
         >
-          {c.passage_text ? (
+          {c.chapter ? (
             <Text
-              numberOfLines={2}
+              numberOfLines={1}
               style={{
                 fontFamily: Fonts.bodyItalic,
                 fontSize: 12,
@@ -398,7 +290,7 @@ function DiscussionList({
                 marginBottom: 6,
               }}
             >
-              {c.passage_text}
+              {c.chapter}
             </Text>
           ) : null}
           <Text
@@ -410,7 +302,7 @@ function DiscussionList({
               lineHeight: 21,
             }}
           >
-            {c.spoiler_tagged ? 'Spoiler hidden, tap to read' : c.comment}
+            {c.gate.spoiler || c.gate.ahead ? 'Hidden for now, tap to read' : c.body}
           </Text>
         </Pressable>
       ))}
@@ -418,38 +310,24 @@ function DiscussionList({
   )
 }
 
-function MembersList({ members }: { members: MemberRow[] }) {
+function MembersList({ members, online }: { members: W.ClubMemberItem[]; online: Set<string> }) {
   const colors = useColors()
   if (members.length === 0) {
     return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-      >
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 13,
-            color: colors.textTertiary,
-          }}
-        >
-          No members yet.
-        </Text>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>No members yet.</Text>
       </View>
     )
   }
   return (
     <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 24 }}>
       {members.map((m) => {
-        const name = m.display_name ?? m.username ?? 'Reader'
+        const name = m.profile?.displayName ?? m.profile?.username ?? 'Reader'
         const initial = (name || '?')[0]?.toUpperCase() ?? '?'
-        const progress = m.progress_percentage ?? 0
+        const here = online.has(m.userId)
         return (
           <View
-            key={m.user_id}
+            key={m.userId}
             className="flex-row items-center p-3 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
             <View
@@ -464,64 +342,23 @@ function MembersList({ members }: { members: MemberRow[] }) {
                 marginRight: 12,
               }}
             >
-              {m.avatar_url ? (
-                <Image
-                  source={{ uri: m.avatar_url }}
-                  style={{ width: '100%', height: '100%' }}
-                />
+              {m.profile?.avatarUrl ? (
+                <Image source={{ uri: m.profile.avatarUrl }} style={{ width: '100%', height: '100%' }} />
               ) : (
-                <Text
-                  style={{
-                    fontFamily: Fonts.display,
-                    fontSize: 15,
-                    color: colors.brandSubtleText,
-                  }}
-                >
+                <Text style={{ fontFamily: Fonts.display, fontSize: 15, color: colors.brandSubtleText }}>
                   {initial}
                 </Text>
               )}
             </View>
-            <View style={{ flex: 1 }}>
-              <Text
-                numberOfLines={1}
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 13,
-                  color: colors.textPrimary,
-                }}
-              >
-                {name}
-              </Text>
-              <View
-                style={{
-                  marginTop: 6,
-                  height: 4,
-                  borderRadius: 2,
-                  backgroundColor: colors.borderSubtle,
-                  overflow: 'hidden',
-                }}
-              >
-                <View
-                  style={{
-                    height: '100%',
-                    width: `${Math.max(0, Math.min(1, progress)) * 100}%`,
-                    backgroundColor: colors.brandUi,
-                  }}
-                />
-              </View>
-            </View>
             <Text
-              style={{
-                fontFamily: Fonts.mono,
-                fontSize: 11,
-                color: colors.textTertiary,
-                marginLeft: 8,
-                minWidth: 36,
-                textAlign: 'right',
-              }}
+              numberOfLines={1}
+              style={{ flex: 1, fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
             >
-              {Math.round(progress * 100)}%
+              {name}
             </Text>
+            {here ? (
+              <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.brandText }}>Here now</Text>
+            ) : null}
           </View>
         )
       })}

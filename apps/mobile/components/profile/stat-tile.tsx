@@ -45,10 +45,6 @@ export function Divider() {
   return <View style={{ width: 1, backgroundColor: colors.borderSubtle, marginVertical: 4 }} />
 }
 
-export function pct(p: number): number {
-  return Math.max(0, Math.min(100, Math.round((p ?? 0) * 100)))
-}
-
 function formatStat(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`
   return String(n)

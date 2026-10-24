@@ -18,7 +18,7 @@ export function WeeklySummaryCard({
         className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
       >
         <View
-          className="flex-row items-end justify-between"
+          className="flex-row justify-between"
           style={{ height: 100, marginBottom: 6 }}
         >
           {last7.map((d) => {
