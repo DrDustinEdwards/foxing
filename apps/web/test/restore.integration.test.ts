@@ -32,6 +32,8 @@ describe("legacy redirect map", () => {
 });
 
 const api = createApi({
+  // Cloudflare Access let the request through, unless the test says it did not.
+  checkAdminAccess: async (req) => req.headers.get("x-test-no-access") === null,
   resolveSession: async (req) => {
     const id = req.headers.get("x-test-user");
     return id ? { id, email: `${id}@example.com` } : null;

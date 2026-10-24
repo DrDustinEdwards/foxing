@@ -32,6 +32,14 @@ interface Env {
   // Operator bearer for /api/v1/admin/* (the admin MCP Worker). Unset: every bearer
   // request to the admin API is refused.
   ADMIN_OPERATOR_TOKEN?: string;
+  // Cloudflare Access in front of the admin pages and API (app/lib/access.server.ts): the
+  // team domain (https://<team>.cloudflareaccess.com) and the Access application's AUD tag.
+  // Either unset: no browser reaches them (fails closed).
+  ACCESS_TEAM_DOMAIN?: string;
+  ACCESS_AUD?: string;
+  // "1" in .dev.vars only: lets localhost into the admin pages, since no Access sits in
+  // front of `pnpm dev:web`. Ignored on any other host.
+  ACCESS_DEV_BYPASS?: string;
 }
 
 // The React Router vite plugin supplies this virtual module at build time.

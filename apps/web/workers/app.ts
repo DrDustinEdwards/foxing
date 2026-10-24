@@ -9,6 +9,7 @@ import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
+import { adminAccessOk } from "../app/lib/access.server";
 import { anthropicCaller } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
@@ -69,6 +70,7 @@ const reactRouterHandler = createRequestHandler(
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
+  checkAdminAccess: (req, env, email) => adminAccessOk(env as unknown as Env, req, email),
   // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
   // other route works normally; only an actual companion call fails, cleanly, until
   // `wrangler secret put ANTHROPIC_API_KEY` runs.

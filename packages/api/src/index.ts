@@ -2,6 +2,7 @@
 // packages/core. The Worker injects resolveSession (Better Auth) via createApi.
 import { Hono } from "hono";
 import { errorHandler } from "./error";
+import { adminAccessMw } from "./middleware/admin-access";
 import { billingDepsMw } from "./middleware/billing-deps";
 import { companionDepsMw } from "./middleware/companion-deps";
 import { contextMw } from "./middleware/context";
@@ -39,6 +40,8 @@ export function createApi(deps: ApiDeps) {
   app.use("*", contextMw);
   app.use("*", sessionMw(deps));
   app.use("/admin/*", operatorMw);
+  app.use("/admin/*", adminAccessMw(deps));
+  app.use("/ops/*", adminAccessMw(deps));
   app.use("*", profileMw);
   app.use("*", companionDepsMw(deps));
   app.use("*", billingDepsMw(deps));
