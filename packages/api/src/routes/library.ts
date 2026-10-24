@@ -12,6 +12,7 @@ import {
   shelfBookInput,
   updateGoalInput,
   updateVocabularyInput,
+  views,
 } from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -24,8 +25,12 @@ export const libraryRoutes = new Hono<Env>();
 
 libraryRoutes.get("/library", async (c) => {
   const session = requireSession(c);
-  const library = await libraryRepo.listLibrary(c.get("db"), session.id);
-  return c.json({ library });
+  return c.json({ library: await views.library(c.get("db"), session.id) });
+});
+
+libraryRoutes.get("/library/:bookId", async (c) => {
+  const session = requireSession(c);
+  return c.json(await views.myBook(c.get("db"), session.id, c.req.param("bookId")));
 });
 
 libraryRoutes.put("/library/:bookId", rateLimit("write"), async (c) => {
@@ -50,8 +55,14 @@ libraryRoutes.delete("/library/:bookId", rateLimit("write"), async (c) => {
 
 libraryRoutes.get("/shelves", async (c) => {
   const session = requireSession(c);
-  const shelves = await libraryRepo.listShelves(c.get("db"), session.id);
-  return c.json({ shelves });
+  return c.json({ shelves: await views.shelves(c.get("db"), session.id) });
+});
+
+libraryRoutes.get("/shelves/:id", async (c) => {
+  const session = requireSession(c);
+  const detail = await views.shelfDetail(c.get("db"), session.id, c.req.param("id"));
+  if (!detail) throw errors.notFound("Shelf not found.");
+  return c.json(detail);
 });
 
 libraryRoutes.post("/shelves", rateLimit("write"), async (c) => {
@@ -98,16 +109,7 @@ libraryRoutes.delete("/shelves/:id/books/:bookId", rateLimit("write"), async (c)
 
 libraryRoutes.get("/goals", async (c) => {
   const session = requireSession(c);
-  const db = c.get("db");
-  const goals = await libraryRepo.listGoals(db, session.id);
-  const withProgress = await Promise.all(
-    goals.map(async (goal) => ({
-      goal,
-      progress:
-        goal.type === "books" ? await libraryRepo.countFinishedInPeriod(db, session.id, goal) : 0,
-    })),
-  );
-  return c.json({ goals: withProgress });
+  return c.json({ goals: await views.goals(c.get("db"), session.id) });
 });
 
 libraryRoutes.post("/goals", rateLimit("write"), async (c) => {
@@ -134,6 +136,11 @@ libraryRoutes.delete("/goals/:id", rateLimit("write"), async (c) => {
 
 // --- Vocabulary ------------------------------------------------------------
 
+libraryRoutes.get("/vocabulary", async (c) => {
+  const session = requireSession(c);
+  return c.json({ words: await views.vocabulary(c.get("db"), session.id) });
+});
+
 libraryRoutes.patch("/vocabulary/:id", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   const { mastered } = await parseJson(c, updateVocabularyInput);
@@ -149,8 +156,12 @@ libraryRoutes.patch("/vocabulary/:id", rateLimit("write"), async (c) => {
 
 // --- Streaks ---------------------------------------------------------------
 
+libraryRoutes.get("/stats", async (c) => {
+  const session = requireSession(c);
+  return c.json(await views.stats(c.get("db"), session.id));
+});
+
 libraryRoutes.get("/streaks/me", async (c) => {
   const session = requireSession(c);
-  const streak = await libraryRepo.getStreak(c.get("db"), session.id);
-  return c.json({ streak });
+  return c.json({ streak: await views.streak(c.get("db"), session.id) });
 });

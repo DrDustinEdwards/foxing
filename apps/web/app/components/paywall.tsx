@@ -4,6 +4,7 @@
 // POST /api/v1/billing/checkout and redirects to the returned URL. Pricing copy is kept
 // local (not imported from core) so the client bundle stays free of the billing/Stripe
 // layer; it mirrors foxing/monetization.md.
+import { useCheckout } from "@foxing/client";
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
 
@@ -27,8 +28,11 @@ const FEATURES = [
 
 export function Paywall({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [plan, setPlan] = useState<Plan>("annual");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const checkout = useCheckout();
+  // Stays pending while the browser leaves for Stripe.
+  const [leaving, setLeaving] = useState(false);
+  const pending = checkout.pending || leaving;
+  const { error } = checkout;
   const closeRef = useRef<HTMLButtonElement>(null);
   const titleId = useId();
 
@@ -49,27 +53,10 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
   if (!open) return null;
 
   async function startTrial() {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/billing/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
-      });
-      const body = (await res.json().catch(() => null)) as {
-        url?: string;
-        error?: { message?: string };
-      } | null;
-      if (res.ok && body?.url) {
-        window.location.assign(body.url);
-        return;
-      }
-      setError(body?.error?.message ?? `Could not start checkout (${res.status}).`);
-    } catch {
-      setError("Could not reach billing. Check your connection and try again.");
-    } finally {
-      setPending(false);
+    const r = await checkout.run({ plan });
+    if (r) {
+      setLeaving(true);
+      window.location.assign(r.url);
     }
   }
 

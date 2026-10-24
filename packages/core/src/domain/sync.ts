@@ -14,6 +14,7 @@ import type { Db } from "../db";
 import { syncAdapters, type Existing } from "../repositories/sync";
 import { syncPayloadSchemas, type SyncOp, type SyncResource } from "../validators/sync";
 import { domainErrors } from "./errors";
+import { recordReadingSession } from "./library";
 
 export type SyncDecision =
   | { action: "insert" }
@@ -87,6 +88,10 @@ export async function applySync(db: Db, userId: string, ops: SyncOp[]): Promise<
       switch (decision.action) {
         case "insert":
           await adapter.insert(db, userId, op);
+          if (op.resource === "session") {
+            const p = op.payload as { startedAt: number; pagesRead?: number };
+            await recordReadingSession(db, userId, p.startedAt, p.pagesRead ?? 0);
+          }
           break;
         case "update":
           await adapter.update(db, userId, op);

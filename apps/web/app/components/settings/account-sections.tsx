@@ -1,4 +1,12 @@
-import { useEffect, useState } from "react";
+import {
+  useAccountClubs,
+  useChangeUsername,
+  useDeleteAccount,
+  useUpdateMe,
+  useUsernameAvailable,
+} from "@foxing/client";
+import type { ClubHandover } from "@foxing/types";
+import { useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient } from "~/lib/auth-client";
 import { Link, useRevalidator } from "react-router";
@@ -14,38 +22,21 @@ export function ProfileSection({
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [bio, setBio] = useState(initial.bio);
   const [genres, setGenres] = useState(initial.favoriteGenres);
-  const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"saved" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { run, pending, error } = useUpdateMe();
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    setPending(true);
     setStatus(null);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/me", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName: displayName.trim() || null,
-          bio: bio.trim() || null,
-          favoriteGenres: genres
-            .split(",")
-            .map((g) => g.trim())
-            .filter(Boolean),
-        }),
-      });
-      if (!res.ok) {
-        setError("Could not save your profile. Try again.");
-        return;
-      }
-      setStatus("saved");
-    } catch {
-      setError("Could not save your profile. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    const saved = await run({
+      displayName: displayName.trim() || null,
+      bio: bio.trim() || null,
+      favoriteGenres: genres
+        .split(",")
+        .map((g) => g.trim())
+        .filter(Boolean),
+    });
+    if (saved) setStatus("saved");
   }
 
   return (
@@ -100,63 +91,30 @@ const USERNAME_RE = /^[a-z0-9_]{3,30}$/;
 
 export function UsernameSection({ initial }: { initial: string }) {
   const [value, setValue] = useState(initial);
-  const [avail, setAvail] = useState<"idle" | "checking" | "available" | "taken" | "invalid">(
-    "idle",
-  );
-  const [pending, setPending] = useState(false);
+  const [saved, setSaved] = useState(initial);
   const [status, setStatus] = useState<"saved" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { run, pending, error } = useChangeUsername();
   const normalized = value.trim().toLowerCase();
-  const changed = normalized !== initial;
-
+  const changed = normalized !== saved;
+  const valid = USERNAME_RE.test(normalized);
   // Debounced live availability check whenever a changed, valid username settles.
-  useEffect(() => {
-    if (!changed) {
-      setAvail("idle");
-      return;
-    }
-    if (!USERNAME_RE.test(normalized)) {
-      setAvail("invalid");
-      return;
-    }
-    setAvail("checking");
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(
-          `/api/v1/me/username-available?username=${encodeURIComponent(normalized)}`,
-        );
-        const body = (await res.json().catch(() => null)) as { available?: boolean } | null;
-        setAvail(body?.available ? "available" : "taken");
-      } catch {
-        setAvail("idle");
-      }
-    }, 400);
-    return () => clearTimeout(t);
-  }, [normalized, changed]);
+  const available = useUsernameAvailable(normalized, changed && valid);
+  const avail = !changed
+    ? "idle"
+    : !valid
+      ? "invalid"
+      : available === null
+        ? "checking"
+        : available
+          ? "available"
+          : "taken";
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    setPending(true);
     setStatus(null);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/me/username", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: normalized }),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        setError(body?.error?.message ?? "Could not change your username. Try again.");
-        return;
-      }
+    if (await run({ username: normalized })) {
+      setSaved(normalized);
       setStatus("saved");
-    } catch {
-      setError("Could not change your username. Check your connection and try again.");
-    } finally {
-      setPending(false);
     }
   }
 
@@ -421,13 +379,6 @@ export function DataSection() {
 const CONFIRM_PHRASE = "delete my account";
 const DELETE_CLUB = "";
 
-type ClubHandover = {
-  clubId: string;
-  name: string;
-  candidates: { userId: string; name: string; role: string }[];
-  suggested: string | null;
-};
-
 /** Clubs the user created: each passes to a member they pick before the account goes, so
  *  their leaving does not delete everyone else's discussion. */
 function ClubHandoverFields({
@@ -477,49 +428,29 @@ function ClubHandoverFields({
 
 export function DangerSection() {
   const [confirm, setConfirm] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [clubs, setClubs] = useState<ClubHandover[] | null>(null);
   const [choice, setChoice] = useState<Record<string, string>>({});
-
-  useEffect(() => {
-    fetch("/api/v1/account/clubs")
-      .then(async (res) => {
-        if (!res.ok) throw new Error(String(res.status));
-        const data = (await res.json()) as { clubs: ClubHandover[] };
-        setClubs(data.clubs);
-      })
-      .catch(() => setError("Could not load your clubs. Reload the page before deleting."));
-  }, []);
+  const [leaving, setLeaving] = useState(false);
+  const owned = useAccountClubs();
+  const clubs = owned.data ?? null;
+  const del = useDeleteAccount();
+  const pending = del.pending || leaving;
+  const error =
+    del.error ??
+    (owned.isError ? "Could not load your clubs. Reload the page before deleting." : null);
 
   async function remove() {
-    setPending(true);
-    setError(null);
     const successors: Record<string, string | null> = {};
     for (const club of clubs ?? []) {
       if (club.candidates.length === 0) continue;
       const picked = choice[club.clubId] ?? club.suggested ?? DELETE_CLUB;
       successors[club.clubId] = picked === DELETE_CLUB ? null : picked;
     }
-    try {
-      const res = await fetch("/api/v1/account", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ successors }),
-      });
-      if (!res.ok) {
-        setError("Could not delete your account. Try again.");
-        setPending(false);
-        return;
-      }
-      // The account and its data are gone; end the session and return to the marketing
-      // page with a full navigation so the root loader re-runs anonymous.
-      await authClient.signOut();
-      window.location.assign("/");
-    } catch {
-      setError("Could not delete your account. Check your connection and try again.");
-      setPending(false);
-    }
+    if (!(await del.run({ successors }))) return;
+    // The account and its data are gone; end the session and return to the marketing
+    // page with a full navigation so the root loader re-runs anonymous.
+    setLeaving(true);
+    await authClient.signOut();
+    window.location.assign("/");
   }
 
   return (

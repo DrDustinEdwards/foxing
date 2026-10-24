@@ -1,3 +1,4 @@
+import { MONTH_NAMES } from "@foxing/client";
 import { catalogRepo } from "@foxing/core";
 import { Link } from "react-router";
 import { CoverImage } from "~/components/cover-image";
@@ -6,7 +7,6 @@ import { Button, Container, EmptyState, Eyebrow, PageHeader } from "~/components
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/botm";
-import { MONTH_NAMES } from "~/lib/months";
 
 function monthLabel(year: number, month: number): string {
   return month >= 1 && month <= 12 ? `${MONTH_NAMES[month - 1]} ${year}` : String(year);

@@ -5,6 +5,8 @@
     "includes": [
       "packages/core/**",
       "packages/api/**",
+      "packages/client/**",
+      "packages/types/**",
       "apps/web/**",
       "!**/build/**",
       "!**/.react-router/**",
@@ -33,6 +35,7 @@
       "includes": [
         "packages/core/src/**",
         "packages/api/src/**",
+        "packages/client/src/**",
         "apps/web/workers/**",
         "apps/web/app/**"
       ],

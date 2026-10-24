@@ -6,11 +6,9 @@
 import {
   addListBookInput,
   createListInput,
-  profilesRepo,
-  recapDomain,
   socialDomain,
-  socialRepo,
   updateListInput,
+  views,
 } from "@foxing/core";
 import { Hono } from "hono";
 import { errors } from "../error";
@@ -56,13 +54,18 @@ socialRoutes.delete("/close-friends/:userId", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-socialRoutes.get("/close-friends", async (c) => {
+// Who the viewer follows, who follows them, and their close friends.
+socialRoutes.get("/people", async (c) => {
   const session = requireSession(c);
-  const ids = await socialRepo.listCloseFriendIds(c.get("db"), session.id);
-  return c.json({ friendIds: ids });
+  return c.json(await views.people(c.get("db"), session.id));
 });
 
 // -- Reading lists ----------------------------------------------------------
+
+socialRoutes.get("/lists", async (c) => {
+  const session = requireSession(c);
+  return c.json(await views.myLists(c.get("db"), session.id));
+});
 
 socialRoutes.post("/lists", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
@@ -104,13 +107,9 @@ socialRoutes.delete("/lists/:id/books/:bookId", rateLimit("write"), async (c) =>
 
 // Public list read: a private list is visible only to its owner.
 socialRoutes.get("/lists/:id", async (c) => {
-  const db = c.get("db");
-  const session = c.get("session");
-  const list = await socialRepo.getListById(db, c.req.param("id"));
-  if (!list) throw errors.notFound("List not found.");
-  if (!list.isPublic && list.userId !== session?.id) throw errors.notFound("List not found.");
-  const books = await socialRepo.listBooks(db, list.id);
-  return c.json({ list, books });
+  const page = await views.listPage(c.get("db"), c.req.param("id"), c.get("session")?.id ?? null);
+  if (!page) throw errors.notFound("List not found.");
+  return c.json(page);
 });
 
 // -- Feed -------------------------------------------------------------------
@@ -120,10 +119,7 @@ socialRoutes.get("/lists/:id", async (c) => {
 socialRoutes.get("/feed", async (c) => {
   const session = requireSession(c);
   const cursor = c.req.query("cursor");
-  const feed = await socialDomain.getFeed(c.get("db"), session.id, {
-    cursor: cursor ? Number(cursor) : null,
-  });
-  return c.json(feed);
+  return c.json(await views.feed(c.get("db"), session.id, cursor ? Number(cursor) : null));
 });
 
 // -- Recap ------------------------------------------------------------------
@@ -132,20 +128,21 @@ socialRoutes.get("/recap/:year", async (c) => {
   const session = requireSession(c);
   const year = Number(c.req.param("year"));
   if (!Number.isInteger(year)) throw errors.validation({ year: "expected a year" });
-  const recap = await recapDomain.getRecap(c.get("db"), session.id, year);
-  return c.json({ recap });
+  const recap = await views.recap(c.get("db"), { userId: session.id }, year, session.id);
+  if (!recap) throw errors.notFound("Profile not found.");
+  return c.json(recap);
 });
 
-// Public recap: only when the target profile is public.
+// Public recap: only when the target profile is public (or is the viewer's own).
 socialRoutes.get("/u/:username/recap/:year", async (c) => {
-  const db = c.get("db");
   const year = Number(c.req.param("year"));
   if (!Number.isInteger(year)) throw errors.validation({ year: "expected a year" });
-  const profile = await profilesRepo.getProfileByUsername(db, c.req.param("username"));
-  if (!profile) throw errors.notFound("Profile not found.");
-  if ((profile.visibility?.profile ?? "public") !== "public") {
-    throw errors.notFound("Profile not found.");
-  }
-  const recap = await recapDomain.getRecap(db, profile.id, year);
-  return c.json({ recap, profile: profilesRepo.toPublicProfile(profile) });
+  const recap = await views.recap(
+    c.get("db"),
+    { username: c.req.param("username") },
+    year,
+    c.get("session")?.id ?? null,
+  );
+  if (!recap) throw errors.notFound("Profile not found.");
+  return c.json(recap);
 });

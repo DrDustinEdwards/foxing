@@ -1,8 +1,8 @@
-import { MONTH_NAMES } from "~/lib/months";
-// Shared reading-goal client helpers, used by both the library sidebar card and the
-// dedicated /goals page so the two never drift. The ISO-week math mirrors core
+// Shared reading-goal helpers, used by the web library card, the web /goals page and the
+// app's goals screen so they never drift. The ISO-week math mirrors core
 // periodRange (weeks start Monday; week 1 holds the year's first Thursday) so the client
 // and the progress query agree on which finishes count.
+import { MONTH_NAMES } from "./months";
 
 export function isoWeek(d: Date): number {
   const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));

@@ -1,7 +1,10 @@
-// Shelf-status control for a book. Writes go to /api/v1/library/:bookId (the
-// standing write rule); on success it calls onChanged so the caller can revalidate.
-// Anonymous readers get a sign-in link instead. Used on /library and the book page.
-import { useState } from "react";
+// Shelf-status control for a book. The write goes through @foxing/client's
+// useSetBookStatus, which patches the library and this book's cached state at once
+// and rolls back on failure, so the page never reloads. Anonymous readers get a
+// sign-in link instead. Used on /library, the book page and find-next-book.
+import { useSetBookStatus } from "@foxing/client";
+import type { BookRef, ShelfStatus } from "@foxing/types";
+import { useEffect, useState } from "react";
 import { Link } from "react-router";
 
 const STATUSES = [
@@ -12,24 +15,23 @@ const STATUSES = [
   { value: "abandoned", label: "Abandoned" },
 ] as const;
 
-export type ShelfStatus = (typeof STATUSES)[number]["value"];
+export type { ShelfStatus };
 
 export function BookStatusControl({
-  bookId,
+  book,
   currentStatus,
   signedIn,
   loginHref,
-  onChanged,
 }: {
-  bookId: string;
+  book: BookRef;
   currentStatus: ShelfStatus | null;
   signedIn: boolean;
   loginHref: string;
-  onChanged?: (status: ShelfStatus | null) => void;
 }) {
-  const [status, setStatus] = useState<ShelfStatus | "">(currentStatus ?? "");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const setStatus = useSetBookStatus();
+  // Follows the cache when the page has one; otherwise remembers the last pick.
+  const [status, setLocal] = useState<ShelfStatus | null>(currentStatus);
+  useEffect(() => setLocal(currentStatus), [currentStatus]);
 
   if (!signedIn) {
     return (
@@ -39,31 +41,11 @@ export function BookStatusControl({
     );
   }
 
-  async function apply(next: ShelfStatus | "remove") {
-    setPending(true);
-    setError(null);
-    try {
-      const res =
-        next === "remove"
-          ? await fetch(`/api/v1/library/${bookId}`, { method: "DELETE" })
-          : await fetch(`/api/v1/library/${bookId}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ status: next }),
-            });
-      if (!res.ok) {
-        // Do not swallow: a failed write must be visible, not a silent revert.
-        setError("Could not save. Try again.");
-        return;
-      }
-      const applied = next === "remove" ? "" : next;
-      setStatus(applied);
-      onChanged?.(applied || null);
-    } catch {
-      setError("Could not save. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+  async function apply(next: ShelfStatus | null) {
+    const before = status;
+    setLocal(next);
+    const ok = await setStatus.run({ bookId: book.id, status: next, book });
+    if (!ok) setLocal(before);
   }
 
   return (
@@ -71,9 +53,15 @@ export function BookStatusControl({
       <label className="fx-book-status-control-row">
         <span className="cap-sr-only">Reading status</span>
         <select
-          value={status}
-          disabled={pending}
-          onChange={(e) => apply((e.target.value || "remove") as ShelfStatus | "remove")}
+          value={status ?? ""}
+          disabled={setStatus.pending}
+          onChange={(e) =>
+            apply(
+              e.target.value === "" || e.target.value === "remove"
+                ? null
+                : (e.target.value as ShelfStatus),
+            )
+          }
           className="cap-select py-2 fx-book-status-control-box"
         >
           <option value="">Add to library</option>
@@ -85,14 +73,14 @@ export function BookStatusControl({
           {status ? <option value="remove">Remove from library</option> : null}
         </select>
       </label>
-      {pending ? (
+      {setStatus.pending ? (
         <p className="fx-book-status-control-text" role="status">
           Saving...
         </p>
       ) : null}
-      {error ? (
+      {setStatus.error ? (
         <p className="fx-book-status-control-text-2" role="alert">
-          {error}
+          {setStatus.error}
         </p>
       ) : null}
     </div>

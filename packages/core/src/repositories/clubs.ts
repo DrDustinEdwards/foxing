@@ -4,9 +4,9 @@
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER
 // these commit -- this file never touches a Durable Object. Threads and posts live in
 // clubs-threads.ts, polls, meetings and schedule in clubs-events.ts (re-exported below).
-import { and, desc, eq, isNotNull, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, like, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
 import {
   clubBooks,
@@ -59,16 +59,16 @@ export async function searchClubs(
   db: Db,
   query: string,
   limit = 4,
-): Promise<{ slug: string; name: string }[]> {
+): Promise<{ id: string; slug: string; name: string }[]> {
   const q = query.trim();
   if (q.length < 2) return [];
   const term = `%${q.replace(/[%_]/g, "")}%`;
   const rows = await db
-    .select({ slug: clubs.slug, name: clubs.name })
+    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
     .from(clubs)
     .where(and(like(clubs.name, term), eq(clubs.visibility, "public"), isNotNull(clubs.slug)))
     .limit(limit);
-  return rows.filter((r): r is { slug: string; name: string } => r.slug != null);
+  return rows.filter((r): r is { id: string; slug: string; name: string } => r.slug != null);
 }
 
 export async function createClub(
@@ -146,6 +146,16 @@ export async function listPublicClubs(db: Db, limit = 50): Promise<Club[]> {
     .limit(limit);
 }
 
+/** Public clubs whose current read is the given book. */
+export async function listPublicClubsReading(db: Db, bookId: string, limit = 3): Promise<Club[]> {
+  return db
+    .select()
+    .from(clubs)
+    .where(and(eq(clubs.visibility, "public"), eq(clubs.currentBookId, bookId)))
+    .orderBy(desc(clubs.updatedAt))
+    .limit(limit);
+}
+
 /** Clubs the user is an active member of. */
 export async function listClubsForUser(db: Db, userId: string): Promise<Club[]> {
   return db
@@ -214,6 +224,24 @@ export async function countActiveMembers(db: Db, clubId: string): Promise<number
     .from(clubMembers)
     .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.status, "active")));
   return row?.n ?? 0;
+}
+
+/** Active member counts for many clubs at once, keyed by club id. */
+export async function countActiveMembersFor(
+  db: Db,
+  clubIds: string[],
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (clubIds.length === 0) return map;
+  for (const chunk of chunked(clubIds)) {
+    const rows = await db
+      .select({ clubId: clubMembers.clubId, n: sql<number>`count(*)` })
+      .from(clubMembers)
+      .where(and(inArray(clubMembers.clubId, chunk), eq(clubMembers.status, "active")))
+      .groupBy(clubMembers.clubId);
+    for (const r of rows) map.set(r.clubId, r.n);
+  }
+  return map;
 }
 
 export async function listMembers(db: Db, clubId: string): Promise<ClubMember[]> {

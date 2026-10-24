@@ -107,7 +107,18 @@ function RecCard({ rec }: { rec: Recommendation }) {
           {rec.reason}
         </p>
         <div className="fx-find-next-book-box">
-          <BookStatusControl bookId={rec.bookId} currentStatus={null} signedIn loginHref="/login" />
+          <BookStatusControl
+            book={{
+              id: rec.bookId,
+              slug: rec.slug,
+              title: rec.title,
+              author: rec.author,
+              coverUrl: rec.coverUrl,
+            }}
+            currentStatus={null}
+            signedIn
+            loginHref="/login"
+          />
         </div>
       </div>
     </div>

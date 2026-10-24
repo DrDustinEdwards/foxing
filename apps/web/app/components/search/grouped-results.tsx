@@ -1,11 +1,12 @@
 // Federated search results grouped by entity (Books, Authors). Each group is a
 // labelled section with its own heading + count; a polite live region announces the
 // totals so a screen-reader user hears the result set change (an AA gap in legacy).
+import type { SearchPage } from "@foxing/types";
 import { Link } from "react-router";
 import { BookCard, type BookCardData, BookGrid } from "~/components/book-card";
 import { EmptyState } from "~/components/ui";
 
-export type AuthorResult = { author: string; authorSlug: string; bookCount: number };
+type AuthorResult = SearchPage["authors"][number];
 
 export function GroupedResults({
   q,
@@ -57,9 +58,9 @@ export function GroupedResults({
           </h2>
           <ul className="fx-grouped-results-grid">
             {authors.map((a) => (
-              <li key={a.authorSlug}>
-                <Link to={`/authors/${a.authorSlug}`} className="fx-result-row">
-                  <span className="truncate fx-grouped-results-title">{a.author}</span>
+              <li key={a.slug}>
+                <Link to={`/authors/${a.slug}`} className="fx-result-row">
+                  <span className="truncate fx-grouped-results-title">{a.name}</span>
                   <span className="shrink-0 fx-grouped-results-label">
                     {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
                   </span>

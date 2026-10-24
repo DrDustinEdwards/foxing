@@ -284,9 +284,15 @@ importers:
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
+      '@foxing/client':
+        specifier: workspace:*
+        version: link:../../packages/client
       '@foxing/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@foxing/types':
+        specifier: workspace:*
+        version: link:../../packages/types
       '@readium/navigator':
         specifier: ^2.6.1
         version: 2.6.1
@@ -296,6 +302,9 @@ importers:
       '@readium/shared':
         specifier: ^2.2.3
         version: 2.2.3
+      '@tanstack/react-query':
+        specifier: ^5.104.5
+        version: 5.104.5(@types/react@19.2.15)(react@19.2.7)
       better-auth:
         specifier: 1.7.12
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
@@ -386,11 +395,33 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
+  packages/client:
+    dependencies:
+      '@foxing/types':
+        specifier: workspace:*
+        version: link:../types
+      react:
+        specifier: 19.2.7
+        version: 19.2.7
+    devDependencies:
+      '@tanstack/react-query':
+        specifier: ^5.104.5
+        version: 5.104.5(@types/react@19.2.15)(react@19.2.7)
+      '@types/react':
+        specifier: ^19.2.0
+        version: 19.2.15
+      typescript:
+        specifier: ^5.0.0
+        version: 5.9.3
+
   packages/core:
     dependencies:
       '@anthropic-ai/sdk':
         specifier: ^0.111.0
         version: 0.111.0(zod@4.6.7)
+      '@foxing/types':
+        specifier: workspace:*
+        version: link:../types
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3)
@@ -1385,7 +1416,7 @@ packages:
     engines: {node: '>=26.11.1'}
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248}
+    resolution: {gitHosted: true, integrity: sha512-UnXDRkGZuE++cBOwPQ+T5tEr/gosq88KG+eGx7c/GnyJVWJmIsSZErSbhsOZsh7iOeBy+50H8L95dQ2w/tJnpg==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248}
     version: 0.11.0
     hasBin: true
 
@@ -4018,6 +4049,18 @@ packages:
 
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
+
+  '@tanstack/query-core@5.104.5':
+    resolution: {integrity: sha512-Q94gI8Opd+CbdVNOdj8ZCyV8WqLYitrDq1t96Xc8WZT6lY0r5iRnJLXYDxMex7EEf2v+mXvn4FcjaBKSxXZQ9A==}
+
+  '@tanstack/react-query@5.104.5':
+    resolution: {integrity: sha512-RORgFe052U+93weaNuqg7qHq7vNVNzXN/VrXqD4bbAuQCWUqOl2lV5Ui9flWk5CVvMyL/Bh27QWhzwH0aaOx9g==}
+    peerDependencies:
+      '@types/react': ^18 || ^19
+      react: 19.2.7
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@testing-library/dom@10.4.1':
     resolution: {integrity: sha512-o4PXJQidqJl82ckFaXUeoAW+XysPLauYI43Abki5hABd853iMhitooc6znOnczgbTYmEP6U6/y1ZyKAIsvMKGg==}
@@ -10717,6 +10760,15 @@ snapshots:
   '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
+
+  '@tanstack/query-core@5.104.5': {}
+
+  '@tanstack/react-query@5.104.5(@types/react@19.2.15)(react@19.2.7)':
+    dependencies:
+      '@tanstack/query-core': 5.104.5
+      react: 19.2.7
+    optionalDependencies:
+      '@types/react': 19.2.15
 
   '@testing-library/dom@10.4.1':
     dependencies:

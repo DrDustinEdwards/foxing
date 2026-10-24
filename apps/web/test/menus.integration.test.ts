@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 // The nav menus federate people + clubs into the command palette and show a live
 // "N words to master" count in the account menu. These drive the core reads directly
-// against D1 (the same reads the /search/suggest resource route and the root nav loader
+// against D1 (the same reads the /api/v1/search/suggest endpoint and the root nav loader
 // call). The visible menu behaviour is covered by the Playwright authed nav spec.
 
 const db = () => createDb(env.DB);

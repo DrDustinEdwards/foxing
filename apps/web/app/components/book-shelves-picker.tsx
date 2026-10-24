@@ -1,14 +1,10 @@
 // "Add to shelves" toggle for a book, shown to signed-in readers on the book page.
-// Writes go to /api/v1/shelves/:id/books (the standing write rule); toggles are
-// optimistic and revert on failure. No shelves yet -> a link to the library, where
+// Membership lives in the book's cached library state; a toggle patches it at once
+// and rolls back if the write fails. No shelves yet -> a link to the library, where
 // shelves are created.
-import { useState } from "react";
+import { useToggleShelfBook } from "@foxing/client";
+import type { Shelf } from "@foxing/types";
 import { Link } from "react-router";
-
-interface ShelfOption {
-  id: string;
-  name: string;
-}
 
 export function BookShelvesPicker({
   bookId,
@@ -16,46 +12,11 @@ export function BookShelvesPicker({
   memberOf,
 }: {
   bookId: string;
-  shelves: ShelfOption[];
+  shelves: Pick<Shelf, "id" | "name">[];
   memberOf: string[];
 }) {
-  const [members, setMembers] = useState<Set<string>>(new Set(memberOf));
-  const [pending, setPending] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  async function toggle(shelfId: string) {
-    const on = members.has(shelfId);
-    setPending(shelfId);
-    setError(null);
-    // Optimistic.
-    setMembers((prev) => {
-      const next = new Set(prev);
-      if (on) next.delete(shelfId);
-      else next.add(shelfId);
-      return next;
-    });
-    try {
-      const res = on
-        ? await fetch(`/api/v1/shelves/${shelfId}/books/${bookId}`, { method: "DELETE" })
-        : await fetch(`/api/v1/shelves/${shelfId}/books`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ bookId }),
-          });
-      if (!res.ok) throw new Error("toggle failed");
-    } catch {
-      // Revert and surface the failure instead of silently snapping back.
-      setMembers((prev) => {
-        const next = new Set(prev);
-        if (on) next.add(shelfId);
-        else next.delete(shelfId);
-        return next;
-      });
-      setError("Could not update shelves. Try again.");
-    } finally {
-      setPending(null);
-    }
-  }
+  const toggle = useToggleShelfBook();
+  const members = new Set(memberOf);
 
   return (
     <div className="card">
@@ -76,8 +37,7 @@ export function BookShelvesPicker({
               <button
                 key={shelf.id}
                 type="button"
-                onClick={() => toggle(shelf.id)}
-                disabled={pending === shelf.id}
+                onClick={() => toggle.fire({ shelfId: shelf.id, bookId, on: !on })}
                 aria-pressed={on}
                 className="cap-chip"
               >
@@ -87,9 +47,9 @@ export function BookShelvesPicker({
           })}
         </div>
       )}
-      {error ? (
+      {toggle.error ? (
         <p className="mt-2 error xsmall" role="alert">
-          {error}
+          {toggle.error}
         </p>
       ) : null}
     </div>

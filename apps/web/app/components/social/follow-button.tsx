@@ -1,23 +1,19 @@
-// Follow / unfollow control. Writes PUT/DELETE /follows/:userId from the browser and
-// revalidates the profile. Anonymous visitors get a sign-in link instead. A failed
+// Follow / unfollow control. Writes PUT/DELETE /follows/:userId through the shared
+// client, which patches the profile and people screens in place. Anonymous visitors get a sign-in link instead. A failed
 // write shows a visible error (never silent).
-import { useNavigate } from "react-router";
-import { useState } from "react";
-import { useApiWrite } from "~/hooks/use-api-write";
+import { useFollow } from "@foxing/client";
 import { Button } from "~/components/ui";
 
 export function FollowButton({
   userId,
-  initialFollowing,
+  following,
   signedIn,
 }: {
   userId: string;
-  initialFollowing: boolean;
+  following: boolean;
   signedIn: boolean;
 }) {
-  const navigate = useNavigate();
-  const { write, error, pending } = useApiWrite();
-  const [following, setFollowing] = useState(initialFollowing);
+  const { fire, error, pending } = useFollow();
 
   if (!signedIn) {
     return (
@@ -27,20 +23,11 @@ export function FollowButton({
     );
   }
 
-  async function toggle() {
-    const next = !following;
-    const res = await write(`/follows/${userId}`, { method: next ? "PUT" : "DELETE" });
-    if (res.ok) {
-      setFollowing(next);
-      void navigate(".", { replace: true, preventScrollReset: true });
-    }
-  }
-
   return (
     <div className="items-start fx-follow-button-stack">
       <button
         type="button"
-        onClick={toggle}
+        onClick={() => fire({ userId, on: !following })}
         disabled={pending}
         className="cap-btn"
         data-variant={following ? undefined : "primary"}

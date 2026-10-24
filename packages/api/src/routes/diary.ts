@@ -1,13 +1,7 @@
 // Diary / reviews endpoints. diary_entries is the rating + review home.
 // Create respects visibility for feed emission (private -> no event); the book rating
 // aggregate is recomputed in core on every write. Handlers stay thin.
-import {
-  createDiaryInput,
-  diaryDomain,
-  diaryRepo,
-  socialDomain,
-  updateDiaryInput,
-} from "@foxing/core";
+import { createDiaryInput, diaryDomain, updateDiaryInput, views } from "@foxing/core";
 import { Hono } from "hono";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -25,12 +19,7 @@ function actorOf(c: Context<Env>) {
 // The signed-in user's own diary (all visibilities: it is theirs).
 diaryRoutes.get("/diary", async (c) => {
   const session = requireSession(c);
-  const entries = await diaryRepo.listEntriesForUser(c.get("db"), session.id, [
-    "private",
-    "friends",
-    "public",
-  ]);
-  return c.json({ entries });
+  return c.json({ entries: await views.diary(c.get("db"), session.id) });
 });
 
 diaryRoutes.post("/diary", rateLimit("write"), async (c) => {
@@ -40,20 +29,14 @@ diaryRoutes.post("/diary", rateLimit("write"), async (c) => {
   return c.json({ entry }, 201);
 });
 
+// The same audience as the profile page (Grok audit 2026-10-21, FX-7).
 diaryRoutes.get("/diary/:id", async (c) => {
-  const session = c.get("session");
-  const entry = await diaryRepo.getEntryById(c.get("db"), c.req.param("id"));
-  if (!entry) throw errors.notFound("Diary entry not found.");
-  // The same audience as the profile page: the author sees everything, a close friend
-  // friends and public, anyone else public only (Grok audit 2026-10-21, FX-7).
-  const visible = await socialDomain.visibleVisibilitiesFor(
+  const entry = await views.diaryEntry(
     c.get("db"),
-    entry.userId,
-    session?.id ?? null,
+    c.req.param("id"),
+    c.get("session")?.id ?? null,
   );
-  if (!visible.includes(entry.visibility)) {
-    throw errors.notFound("Diary entry not found.");
-  }
+  if (!entry) throw errors.notFound("Diary entry not found.");
   return c.json({ entry });
 });
 

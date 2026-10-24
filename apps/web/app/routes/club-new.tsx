@@ -1,7 +1,7 @@
 // Create a club. Clubs are free: creating, joining, and taking part are all part of the
 // free social product (Plus gates the AI companion, never clubs). The form writes to
 // /api/v1/clubs from the browser and navigates to the new club on success.
-import { useState } from "react";
+import { useCreateClub } from "@foxing/client";
 import { redirect, useNavigate } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
@@ -22,40 +22,18 @@ export function meta() {
 
 export default function ClubNew() {
   const navigate = useNavigate();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { run, pending, error } = useCreateClub();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setPending(true);
-    setError(null);
     const form = new FormData(e.currentTarget);
-    const body = {
+    const r = await run({
       name: String(form.get("name") ?? "").trim(),
       description: String(form.get("description") ?? "").trim() || undefined,
       visibility: form.get("visibility") === "private" ? "private" : "public",
       memberApproval: form.get("memberApproval") === "on",
-    };
-    try {
-      const res = await fetch("/api/v1/clubs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      const data = (await res.json().catch(() => null)) as {
-        club?: { slug: string };
-        error?: { code?: string; message?: string };
-      } | null;
-      if (res.ok && data?.club?.slug) {
-        void navigate(`/clubs/${data.club.slug}`);
-        return;
-      }
-      setError(data?.error?.message ?? `Could not create the club (${res.status}).`);
-    } catch {
-      setError("Could not reach the server. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    });
+    if (r) void navigate(`/clubs/${r.club.slug ?? r.club.id}`);
   }
 
   return (

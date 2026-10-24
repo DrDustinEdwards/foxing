@@ -1,5 +1,5 @@
-// Reader annotation + reading-progress write surface. The web reader (and Phase 7
-// mobile) write here; reads come from the in-process route loader. Handlers stay
+// Reader annotation + reading-progress surface. The web reader and mobile write here,
+// and read their own annotations back. Handlers stay
 // thin: session, validate, call core. createAnnotation goes through the domain seam
 // so a new highlight inherits the reader's default-annotation visibility.
 import { Hono } from "hono";
@@ -11,7 +11,10 @@ import {
   libraryRepo,
   loadReaderAnnotations,
   saveProgressInput,
+  type AnnotationType,
+  annotationTypeValues,
   updateAnnotationInput,
+  views,
 } from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -50,6 +53,16 @@ annotationRoutes.get("/books/:id/annotations", async (c) => {
     comments: wanted.has("comments") ? result.comments : [],
     popular: wanted.has("popular") ? result.popular : [],
   });
+});
+
+// The reader's own annotations across books, filtered by ?types=highlight,note,...
+annotationRoutes.get("/annotations", async (c) => {
+  const session = requireSession(c);
+  const types = (c.req.query("types") ?? "")
+    .split(",")
+    .map((t) => t.trim())
+    .filter((t): t is AnnotationType => (annotationTypeValues as readonly string[]).includes(t));
+  return c.json({ annotations: await views.myAnnotations(c.get("db"), session.id, types) });
 });
 
 // Create a highlight/note/bookmark. Body carries the bookId; visibility is optional

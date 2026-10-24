@@ -9,6 +9,7 @@ import {
   updateMeInput,
   username as usernameSchema,
   visibilityPrefsInput,
+  views,
 } from "@foxing/core";
 import { z } from "zod";
 import { errors } from "../error";
@@ -18,10 +19,16 @@ import type { Env } from "../types";
 
 export const profileRoutes = new Hono<Env>();
 
-// GET /me - the Phase 1 round-trip gate: web -> api -> core -> D1.
+// GET /me - the reader's account; profile is null until onboarding.
 profileRoutes.get("/me", (c) => {
   const session = requireSession(c);
-  return c.json({ user: session, profile: c.get("profile") });
+  return c.json(views.me(session, c.get("profile")));
+});
+
+// GET /me/onboarding - the starter books and genres the first-run flow offers.
+profileRoutes.get("/me/onboarding", async (c) => {
+  requireSession(c);
+  return c.json(await views.onboarding(c.get("db")));
 });
 
 // POST /me/onboard - creates the profile row and emits profile.onboarded.
@@ -32,7 +39,7 @@ profileRoutes.post("/me/onboard", rateLimit("write"), async (c) => {
   const taken = await profilesRepo.getProfileByUsername(c.get("db"), input.username);
   if (taken) throw errors.conflict("That username is taken.");
   const profile = await onboardProfile(c.get("db"), session.id, input);
-  return c.json({ profile }, 201);
+  return c.json({ profile: views.myProfile(profile) }, 201);
 });
 
 // PATCH /me - update the current user's profile.
@@ -41,7 +48,7 @@ profileRoutes.patch("/me", rateLimit("write"), async (c) => {
   if (!c.get("profile")) throw errors.notFound("Onboard before editing your profile.");
   const patch = await parseJson(c, updateMeInput);
   const profile = await profilesRepo.updateProfile(c.get("db"), session.id, patch);
-  return c.json({ profile });
+  return c.json({ profile: profile && views.myProfile(profile) });
 });
 
 // GET /me/username-available?username=foo - live availability check for the username
@@ -64,7 +71,7 @@ profileRoutes.patch("/me/username", rateLimit("write"), async (c) => {
   const existing = await profilesRepo.getProfileByUsername(c.get("db"), username);
   if (existing && existing.id !== session.id) throw errors.conflict("That username is taken.");
   const profile = await profilesRepo.updateUsername(c.get("db"), session.id, username);
-  return c.json({ profile });
+  return c.json({ profile: profile && views.myProfile(profile) });
 });
 
 // PATCH /me/visibility - set the profile/progress/default-annotation visibility prefs.
@@ -76,22 +83,15 @@ profileRoutes.patch("/me/visibility", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// GET /u/:username - public, visibility-aware projection.
+// GET /u/:username - the profile page, visibility-aware. A non-public profile shows
+// only enough identity to confirm the account exists, to everyone but its owner: the
+// same view the web page renders (Grok audit 2026-10-21, FX-2).
 profileRoutes.get("/u/:username", async (c) => {
-  const profile = await profilesRepo.getProfileByUsername(c.get("db"), c.req.param("username"));
-  if (!profile) throw errors.notFound("Profile not found.");
-  // A non-public profile shows only enough identity to confirm the account exists, to
-  // everyone but its owner: the same rule as the web page (Grok audit 2026-10-21, FX-2).
-  const isOwner = c.get("session")?.id === profile.id;
-  if (!isOwner && (profile.visibility?.profile ?? "public") !== "public") {
-    return c.json({
-      isPrivate: true,
-      profile: {
-        username: profile.username,
-        displayName: profile.displayName,
-        avatarUrl: profile.avatarUrl,
-      },
-    });
-  }
-  return c.json({ profile: profilesRepo.toPublicProfile(profile) });
+  const page = await views.profilePage(
+    c.get("db"),
+    c.req.param("username"),
+    c.get("session")?.id ?? null,
+  );
+  if (!page) throw errors.notFound("Profile not found.");
+  return c.json(page);
 });

@@ -27,6 +27,9 @@ export type Bindings = {
   // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
   // every bearer request to /admin/* is refused (operator.ts).
   ADMIN_OPERATOR_TOKEN?: string;
+  // Affiliate ids appended to buy links (core config/affiliate.ts); vars, both optional.
+  AMAZON_ASSOC_TAG?: string;
+  BOOKSHOP_AFFILIATE_ID?: string;
 };
 
 export type SessionUser = { id: string; email: string };

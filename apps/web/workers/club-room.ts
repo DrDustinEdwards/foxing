@@ -19,7 +19,7 @@
 // notify each shard. Nothing about D1-as-truth changes.
 import { DurableObject } from "cloudflare:workers";
 import type { LiveMessage } from "@foxing/core";
-import { PING_FRAME, PONG_FRAME } from "../app/lib/club-live-protocol";
+import { PING_FRAME, PONG_FRAME } from "@foxing/types";
 
 type Attachment = { userId: string };
 

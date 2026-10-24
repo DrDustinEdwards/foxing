@@ -14,72 +14,27 @@ import * as annotationsRepo from "../repositories/annotations";
 import * as libraryRepo from "../repositories/library";
 import * as reactionsRepo from "../repositories/reactions";
 import * as readerSocial from "../repositories/reader-social";
-import type { AuthorRef, SocialAnnotationRow } from "../repositories/reader-social";
+import type { SocialAnnotationRow } from "../repositories/reader-social";
+import type {
+  Gate,
+  Locator,
+  OtherLayer,
+  PopularHighlight,
+  ReaderAnnotations as ReaderAnnotationsResult,
+  ReaderMine,
+  ResolvedComment,
+  ResolvedOther,
+} from "@foxing/types";
 
-type Locator = Record<string, unknown>;
-
-/** Two independent, OR-combined gate reasons. `spoiler` is the author's manual flag;
- *  `ahead` is the automatic progress gate. Either one collapses the item (client-side,
- *  tap to reveal). Both false = shown outright. */
-export type Gate = { spoiler: boolean; ahead: boolean };
-
-export type OtherLayer = "club" | "friend" | "public";
-
-export type ReaderMine = {
-  id: string;
-  type: string; // highlight | note | bookmark
-  locator: Locator | null;
-  selectedText: string | null;
-  body: string | null;
-  color: string | null;
-  chapter: string | null;
-};
-
-export type ResolvedOther = {
-  id: string;
-  type: string; // highlight | note
-  locator: Locator | null;
-  selectedText: string | null;
-  body: string | null;
-  color: string | null;
-  chapter: string | null;
-  layer: OtherLayer;
-  isPinned: boolean;
-  containsSpoilers: boolean;
-  gate: Gate;
-  author: AuthorRef;
-  likeCount: number;
-  likedByMe: boolean;
-  replyCount: number;
-};
-
-export type ResolvedComment = {
-  id: string;
-  clubId: string | null;
-  parentId: string | null;
-  locator: Locator | null;
-  body: string | null;
-  chapter: string | null;
-  isPinned: boolean;
-  containsSpoilers: boolean;
-  gate: Gate;
-  author: AuthorRef;
-  createdAt: Date;
-};
-
-export type PopularHighlight = {
-  normalizedText: string;
-  count: number;
-  locator: Locator | null;
-};
-
-export type ReaderAnnotationsResult = {
-  viewerProgressPct: number | null;
-  mine: ReaderMine[];
-  others: ResolvedOther[];
-  comments: ResolvedComment[];
-  popular: PopularHighlight[];
-};
+export type {
+  Gate,
+  OtherLayer,
+  PopularHighlight,
+  ReaderAnnotations as ReaderAnnotationsResult,
+  ReaderMine,
+  ResolvedComment,
+  ResolvedOther,
+} from "@foxing/types";
 
 // A whole page is ~0.5% of a book; require the annotation to be at least that far ahead
 // before the gate fires, so being on the same page as an annotation never collapses it.
@@ -257,7 +212,7 @@ export async function loadReaderAnnotations(
             progressGate,
           }),
       author: row.author,
-      createdAt: row.createdAt,
+      createdAt: row.createdAt.getTime(),
     };
   });
 

@@ -1,11 +1,11 @@
 // Public invite landing page for /join/:code. Shows a club preview (name, member count)
 // resolved in-process from the join code, then joins on click. A signed-out visitor is
 // sent to sign in first and returned here. Joining is free.
+import { useJoinByCode } from "@foxing/client";
 import { redirect, useNavigate } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { useClubWrite } from "~/hooks/use-club-write";
 import { clubsRepo, createDb } from "@foxing/core";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
@@ -39,11 +39,10 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export default function JoinCode({ loaderData }: Route.ComponentProps) {
   const { code, club, memberCount, alreadyMember } = loaderData;
   const navigate = useNavigate();
-  const { write, error, pending } = useClubWrite();
+  const { run, error, pending } = useJoinByCode();
 
   async function join() {
-    const r = await write(`/join/${code}`);
-    if (r.ok) void navigate(`/clubs/${club.slug}`);
+    if (await run({ code })) void navigate(`/clubs/${club.slug}`);
   }
 
   return (

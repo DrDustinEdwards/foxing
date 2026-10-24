@@ -4,6 +4,17 @@
 // keyboard nav, and annotations (7-color highlights, notes, bookmarks). Writes go
 // to /api/v1 (annotations + progress) from the browser and surface every failure;
 // anonymous readers can read fully and are prompted to sign in for personal features.
+import {
+  newId,
+  useBookAnnotations,
+  useCreateAnnotation,
+  useDeleteAnnotation,
+  useLikeAnnotation,
+  usePassageComment,
+  useSaveProgress,
+  useUpdateAnnotation,
+} from "@foxing/client";
+import type { ReaderAnnotations } from "@foxing/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { HighlightColor } from "@foxing/core";
 import type {
@@ -36,7 +47,6 @@ import {
   samePosition,
   visibleFrame,
 } from "./reader-types";
-import { useApiWrite } from "./use-api-write";
 import { AttributionPopover, EditPopover, NoteComposer, SelectionToolbar } from "./reader-popovers";
 import {
   ContentsList,
@@ -52,12 +62,9 @@ interface ReaderViewProps {
   manifestUrl: string;
   signedIn: boolean;
   loginHref: string;
-  annotations: ReaderAnnotation[];
-  others: ReaderOther[];
-  comments: ReaderComment[];
-  popular: ReaderPopular[];
+  /** Every annotation layer the viewer may see, resolved in the loader. */
+  layers: ReaderAnnotations;
   shareableClubs: { id: string; name: string }[];
-  viewerProgressPct: number | null;
   initialLocator: Locator | null;
 }
 
@@ -76,9 +83,13 @@ export function ReaderView(props: ReaderViewProps) {
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
   const [settings, setSettings] = useState<ReaderSettings>(DEFAULT_SETTINGS);
-  const [annotations, setAnnotations] = useState<ReaderAnnotation[]>(props.annotations);
-  const [others, setOthers] = useState<ReaderOther[]>(props.others);
-  const [comments, setComments] = useState<ReaderComment[]>(props.comments);
+  // The layers live in the shared cache: every write below patches it first (the
+  // highlight is on the page before the server answers) and rolls back on failure.
+  const resolved = useBookAnnotations(book.id, props.layers).data;
+  const annotations = resolved.mine as ReaderAnnotation[];
+  const others = resolved.others as unknown as ReaderOther[];
+  const comments = resolved.comments as unknown as ReaderComment[];
+  const popular = resolved.popular as unknown as ReaderPopular[];
   const [layers, setLayers] = useState<LayerState>(DEFAULT_LAYERS);
   // Ids the reader chose to reveal past their spoiler/ahead gate, this session only.
   const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
@@ -100,7 +111,20 @@ export function ReaderView(props: ReaderViewProps) {
   // Personal-feature writes (highlights, notes, bookmarks, progress) go to /api/v1
   // and never swallow a failure: saving drives a role="status" indicator, writeError
   // a role="alert" banner (mirrors book-status-control's visible-write pattern).
-  const { apiWrite, saving, writeError, setWriteError } = useApiWrite();
+  const writes = [
+    useCreateAnnotation(),
+    useUpdateAnnotation(),
+    useDeleteAnnotation(),
+    useLikeAnnotation(),
+    usePassageComment(),
+    useSaveProgress(),
+  ] as const;
+  const [createAnn, updateAnn, deleteAnn, likeAnn, comment, saveProgress] = writes;
+  const saving = writes.some((w) => w.pending);
+  const writeError = writes.find((w) => w.error)?.error ?? null;
+  const dismissWriteError = () => {
+    for (const w of writes) w.reset();
+  };
 
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -110,8 +134,8 @@ export function ReaderView(props: ReaderViewProps) {
   othersRef.current = others;
   const layersRef = useRef(layers);
   layersRef.current = layers;
-  const popularRef = useRef(props.popular);
-  popularRef.current = props.popular;
+  const popularRef = useRef(popular);
+  popularRef.current = popular;
 
   // Redraw the decoration layers from the current mine/others sets, honoring the layer
   // toggles. Your own always render when the Mine layer is on; others render as an
@@ -288,13 +312,14 @@ export function ReaderView(props: ReaderViewProps) {
         // re-emits it, which would flash "Saving..." on every reload for nothing).
         if (samePosition(loc, lastSavedRef.current)) return;
         lastSavedRef.current = loc;
-        void apiWrite(`/books/${book.id}/progress`, {
-          method: "PUT",
-          body: { locator: loc, progressPct: progressPctFromLocator(loc) },
+        saveProgress.fire({
+          bookId: book.id,
+          locator: loc,
+          progressPct: progressPctFromLocator(loc),
         });
       }, PROGRESS_DEBOUNCE);
     },
-    [book.id, apiWrite],
+    [book.id, saveProgress.fire],
   );
 
   // Keyboard navigation (ignored while a panel, composer, or prompt is open, or
@@ -362,31 +387,14 @@ export function ReaderView(props: ReaderViewProps) {
       visibility?: "club";
     }) => {
       const chapterTitle = currentLocatorRef.current?.title;
-      const res = await apiWrite(`/annotations`, {
-        method: "POST",
-        body: { ...payload, bookId: book.id, chapter: chapterTitle },
+      await createAnn.run({
+        ...payload,
+        id: newId(),
+        bookId: book.id,
+        chapter: typeof chapterTitle === "string" ? chapterTitle : undefined,
       });
-      if (!res) return null;
-      const { annotation } = (await res.json()) as {
-        annotation: { id: string; createdAt: number };
-      };
-      const optimistic: ReaderAnnotation = {
-        id: annotation.id,
-        type: payload.type,
-        locator: payload.locator,
-        selectedText: payload.selectedText ?? null,
-        body: payload.body ?? null,
-        color: payload.color ?? null,
-        chapter: chapterTitle ?? null,
-      };
-      setAnnotations((prev) => {
-        const next = [...prev, optimistic];
-        reapplyHighlights(next, othersRef.current, layersRef.current, settingsRef.current.theme);
-        return next;
-      });
-      return optimistic;
     },
-    [book.id, apiWrite, reapplyHighlights],
+    [book.id, createAnn.run],
   );
 
   const highlightSelection = useCallback(
@@ -422,40 +430,27 @@ export function ReaderView(props: ReaderViewProps) {
   }, [requireSignIn, persistAnnotation]);
 
   const patchAnnotation = useCallback(
-    async (id: string, patch: { color?: HighlightColor; body?: string | null }) => {
-      const res = await apiWrite(`/annotations/${id}`, { method: "PATCH", body: patch });
-      if (!res) return;
-      setAnnotations((prev) => {
-        const next = prev.map((a) => (a.id === id ? { ...a, ...patch } : a));
-        reapplyHighlights(next, othersRef.current, layersRef.current, settingsRef.current.theme);
-        return next;
-      });
+    (id: string, patch: { color?: HighlightColor; body?: string | null }) => {
+      updateAnn.fire({ bookId: book.id, id, ...patch });
     },
-    [apiWrite, reapplyHighlights],
+    [book.id, updateAnn.fire],
   );
 
   const deleteAnnotation = useCallback(
-    async (id: string) => {
-      const res = await apiWrite(`/annotations/${id}`, { method: "DELETE" });
-      if (!res) return;
-      setAnnotations((prev) => {
-        const next = prev.filter((a) => a.id !== id);
-        reapplyHighlights(next, othersRef.current, layersRef.current, settingsRef.current.theme);
-        return next;
-      });
+    (id: string) => {
+      deleteAnn.fire({ bookId: book.id, id });
       setEditing(null);
       setEditAnchor(null);
     },
-    [apiWrite, reapplyHighlights],
+    [book.id, deleteAnn.fire],
   );
 
-  // Toggling a layer redraws the decoration set. Others/comments come from the loader
-  // and change only via replies/likes (which do not alter decorations), so the layers
-  // are the redraw trigger.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: redraw reads live refs; layers is the trigger
+  // A layer toggle, or any change to the cached annotations (a write, its rollback, a
+  // refetch), redraws the decoration set.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: redraw reads live refs; these are the triggers
   useEffect(() => {
     redraw();
-  }, [layers]);
+  }, [layers, annotations, others, popular]);
 
   const toggleLayer = useCallback((key: keyof LayerState) => {
     setLayers((prev) => {
@@ -478,33 +473,20 @@ export function ReaderView(props: ReaderViewProps) {
     });
   }, []);
 
-  // Like / unlike another reader's annotation. Optimistic; reverts on failure. Goes to
-  // the generic reactions endpoint (target_type='annotation').
+  // Like / unlike another reader's annotation: the cache flips at once and reverts on
+  // failure. Goes to the generic reactions endpoint (target_type='annotation').
   const toggleLike = useCallback(
-    async (other: ReaderOther) => {
+    (other: ReaderOther) => {
       if (!requireSignIn()) return;
-      const liked = other.likedByMe;
-      const apply = (delta: number, likedByMe: boolean) =>
-        setOthers((prev) =>
-          prev.map((o) =>
-            o.id === other.id
-              ? { ...o, likedByMe, likeCount: Math.max(0, o.likeCount + delta) }
-              : o,
-          ),
-        );
-      apply(liked ? -1 : 1, !liked);
+      const on = !other.likedByMe;
       setAttribution((cur) =>
         cur && cur.id === other.id
-          ? { ...cur, likedByMe: !liked, likeCount: Math.max(0, cur.likeCount + (liked ? -1 : 1)) }
+          ? { ...cur, likedByMe: on, likeCount: Math.max(0, cur.likeCount + (on ? 1 : -1)) }
           : cur,
       );
-      const res = await apiWrite(`/reactions`, {
-        method: liked ? "DELETE" : "PUT",
-        body: { targetType: "annotation", targetId: other.id, kind: "like" },
-      });
-      if (!res) apply(liked ? 1 : -1, liked); // revert
+      likeAnn.fire({ bookId: book.id, id: other.id, on });
     },
-    [requireSignIn, apiWrite],
+    [requireSignIn, likeAnn.fire, book.id],
   );
 
   // Reply to another reader's annotation, posted into a shared club (the passage-comment
@@ -513,43 +495,27 @@ export function ReaderView(props: ReaderViewProps) {
   const postReply = useCallback(
     async (other: ReaderOther, clubId: string, body: string) => {
       if (!requireSignIn()) return false;
-      const res = await apiWrite(`/annotations/comments`, {
-        method: "POST",
-        body: {
-          clubId,
-          bookId: book.id,
-          body,
-          parentId: other.id,
-          locator: other.locator ?? undefined,
-        },
-      });
-      if (!res) return false;
-      const { annotation } = (await res.json()) as {
-        annotation: { id: string; createdAt: number; clubId: string | null };
-      };
-      const newComment: ReaderComment = {
-        id: annotation.id,
-        clubId: annotation.clubId,
-        parentId: other.id,
-        locator: other.locator,
-        body,
-        chapter: other.chapter,
-        isPinned: false,
-        containsSpoilers: false,
-        gate: { spoiler: false, ahead: false },
-        author: { id: "me", username: null, displayName: "You", avatarUrl: null },
-        createdAt: annotation.createdAt,
-      };
-      setComments((prev) => [...prev, newComment]);
-      setOthers((prev) =>
-        prev.map((o) => (o.id === other.id ? { ...o, replyCount: o.replyCount + 1 } : o)),
-      );
       setAttribution((cur) =>
         cur && cur.id === other.id ? { ...cur, replyCount: cur.replyCount + 1 } : cur,
       );
-      return true;
+      const ok = await comment.run({
+        id: newId(),
+        clubId,
+        bookId: book.id,
+        body,
+        parentId: other.id,
+        locator: other.locator ?? undefined,
+        chapter: other.chapter,
+        you: { id: "me", username: null, displayName: "You", avatarUrl: null },
+      });
+      if (!ok) {
+        setAttribution((cur) =>
+          cur && cur.id === other.id ? { ...cur, replyCount: cur.replyCount - 1 } : cur,
+        );
+      }
+      return !!ok;
     },
-    [requireSignIn, apiWrite, book.id],
+    [requireSignIn, comment.run, book.id],
   );
 
   const canvas = READING_CANVAS[settings.theme];
@@ -580,7 +546,7 @@ export function ReaderView(props: ReaderViewProps) {
         layers={layers}
         onToggleLayer={toggleLayer}
         clubsCount={others.filter((o) => o.layer !== "public").length}
-        everyoneCount={others.filter((o) => o.layer === "public").length + props.popular.length}
+        everyoneCount={others.filter((o) => o.layer === "public").length + popular.length}
       />
 
       {/* Reading area */}
@@ -739,7 +705,7 @@ export function ReaderView(props: ReaderViewProps) {
         <SignInPrompt loginHref={loginHref} onClose={() => setSignInPrompt(false)} />
       ) : null}
 
-      <WriteStatus saving={saving} writeError={writeError} onDismiss={() => setWriteError(null)} />
+      <WriteStatus saving={saving} writeError={writeError} onDismiss={dismissWriteError} />
     </div>
   );
 }

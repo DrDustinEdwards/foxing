@@ -2,8 +2,9 @@
 // and the D10 adversarial eval, not for users -- noindex, and slated for removal once
 // the reader (or another real surface) hosts the companion for real. Do not build
 // product polish here.
-import { useState } from "react";
+import { type CompanionAction, useCompanion } from "@foxing/client";
 import { catalogRepo, companion } from "@foxing/core";
+import { useCallback, useEffect, useState } from "react";
 import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
 import { Container, PageHeader } from "~/components/ui";
@@ -32,6 +33,7 @@ export function meta() {
 export default function CompanionTest({ loaderData }: Route.ComponentProps) {
   const { isAdmin, tier, actions, books } = loaderData;
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const openPaywall = useCallback(() => setPaywallOpen(true), []);
   return (
     <PageShell>
       <Container>
@@ -42,7 +44,7 @@ export default function CompanionTest({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         <PageHeader eyebrow="Phase 4a" title="Companion test" />
-        <RunAction actions={actions} books={books} onPlusRequired={() => setPaywallOpen(true)} />
+        <RunAction actions={actions} books={books} onPlusRequired={openPaywall} />
         {isAdmin ? <CacheBatch /> : null}
       </Container>
       <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
@@ -65,72 +67,24 @@ function RunAction({
   const [bookId, setBookId] = useState(books[0]?.id ?? "");
   const [message, setMessage] = useState("What do you think of this book?");
   const [selection, setSelection] = useState("");
-  const [output, setOutput] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const companionRun = useCompanion();
+  const { text: output, pending, error } = companionRun;
 
   async function run(event: React.FormEvent) {
     event.preventDefault();
-    setPending(true);
-    setError(null);
-    setOutput("");
-
-    try {
-      const res = await fetch("/api/v1/companion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action,
-          bookId,
-          message: message.trim() || undefined,
-          selection: selection.trim() ? { text: selection.trim() } : undefined,
-        }),
-      });
-
-      if (!res.ok || !res.body) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: { code?: string; message?: string };
-        } | null;
-        // A free user hitting a Plus action: open the paywall, the intended surface,
-        // rather than only printing an error string.
-        if (res.status === 403 && body?.error?.code === "plus_required") {
-          onPlusRequired();
-          return;
-        }
-        setError(body?.error?.message ?? `Request failed (${res.status}).`);
-        return;
-      }
-
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let text = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
-        for (const raw of events) {
-          const eventLine = raw.split("\n").find((l) => l.startsWith("event:"));
-          const dataLine = raw.split("\n").find((l) => l.startsWith("data:"));
-          const eventName = eventLine?.slice(6).trim();
-          const data = dataLine?.slice(5).trim() ?? "";
-          if (eventName === "delta") {
-            text += data;
-            setOutput(text);
-          } else if (eventName === "error") {
-            setError(data);
-          }
-        }
-      }
-    } catch {
-      setError("Stream failed. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    await companionRun.run({
+      action: action as CompanionAction,
+      bookId,
+      message: message.trim() || undefined,
+      selection: selection.trim() ? { text: selection.trim() } : undefined,
+    });
   }
+
+  // A free reader running a Plus action: open the paywall, the intended surface,
+  // rather than only printing an error string.
+  useEffect(() => {
+    if (companionRun.planRequired) onPlusRequired();
+  }, [companionRun.planRequired, onPlusRequired]);
 
   return (
     <section className="fx-companion-test-card">

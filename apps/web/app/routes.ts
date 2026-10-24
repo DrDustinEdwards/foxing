@@ -83,7 +83,6 @@ export default [
   route("journal/:slug", "routes/journal-post.tsx"),
   route("journal/rss.xml", "routes/journal-rss.tsx"),
   route("search", "routes/search.tsx"),
-  route("search/suggest", "routes/search-suggest.tsx"),
 
   // Reader (client-only mount). Annotation + progress writes go to /api/v1 from the
   // browser; the loader reads existing annotations + saved position in-process.

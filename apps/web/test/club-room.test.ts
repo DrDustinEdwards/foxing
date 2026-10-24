@@ -1,6 +1,6 @@
 import { env, runInDurableObject } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { PING_FRAME, PONG_FRAME } from "../app/lib/club-live-protocol";
+import { PING_FRAME, PONG_FRAME } from "@foxing/types";
 import type { ClubRoom } from "../workers/club-room";
 
 // The ClubRoom must register the keepalive pair with the runtime so an idle room
