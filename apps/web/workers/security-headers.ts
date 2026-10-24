@@ -6,7 +6,6 @@
 import { applyHeaderSet, buildSecurityHeaders } from "@dustinedwards/site-runtime/headers";
 import {
   buildContentSecurityPolicy,
-  buildPolicy,
   generateNonce,
   reportingEndpoints,
   type CspSources,
@@ -86,22 +85,20 @@ function isReaderPath(pathname: string): boolean {
  * and blob:, which EPUBs and Readium use.
  */
 export function readerContentSecurityPolicy(nonce?: string): string {
-  const site = contentSecurityPolicy(nonce).split("; ");
-  const replace: Record<string, string> = {
-    "style-src": `style-src 'self' 'unsafe-inline' blob: ${(SITE_SOURCES.style ?? []).join(" ")}`,
-    "style-src-attr": "",
-    "img-src": `img-src 'self' data: blob: ${(SITE_SOURCES.img ?? []).join(" ")}`,
-    "frame-src": "frame-src 'self' blob:",
-    "base-uri": "base-uri 'self'",
-  };
-  return buildPolicy(
-    site
-      .map((d) => {
-        const name = d.split(" ")[0] ?? "";
-        return name in replace ? (replace[name] ?? "") : d;
-      })
-      .filter(Boolean),
-  );
+  return buildContentSecurityPolicy({
+    sources: {
+      ...SITE_SOURCES,
+      style: ["'unsafe-inline'", "blob:", ...(SITE_SOURCES.style ?? [])],
+      img: ["data:", "blob:", ...(SITE_SOURCES.img ?? [])],
+      frame: ["blob:"],
+    },
+    nonce,
+    nonceStyles: false,
+    baseUriSelf: true,
+    cloudflareWebAnalytics: true,
+    reportUri: CSP_REPORT_PATH,
+    reportTo: CSP_ENDPOINT_NAME,
+  }).value;
 }
 
 // One nonce per request, issued to the render (app/entry.server.tsx, app/root.tsx via
