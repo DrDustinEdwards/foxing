@@ -1,5 +1,6 @@
 {
   "imports": {
-    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.95.2"
+    "@anthropic-ai/sdk": "npm:@anthropic-ai/sdk@^0.95.2",
+    "@dustinedwards/site-runtime/ai-gateway": "https://cdn.jsdelivr.net/gh/DrDustinEdwards/site-runtime@3febb511dd39c93f5e31531e35d3051979400592/ai-gateway.mjs"
   }
 }

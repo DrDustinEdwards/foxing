@@ -1,5 +1,6 @@
 import Anthropic from "npm:@anthropic-ai/sdk@^0.95.2";
 import { createClient } from "npm:@supabase/supabase-js@^2.45.0";
+import { anthropicRoute } from "@dustinedwards/site-runtime/ai-gateway";
 import type { ActionType, AuthorBioPayload, BilingualParagraphPayload, BookDescriptionPayload, BookInsightPayload, ChapterFeaturePayload, ChapterSummaryPayload, CharacterMapPayload, ChatPayload, DeepDivePayload, DeleteAccountPayload, DiscussionStarterPayload, LanguageDifficultyPayload, LogContext, PassageAnalysisPayload, ReadingOrderPayload, ReadingPersonalityPayload, RecommendationsPayload, SemanticSearchPayload, SimilarBooksPayload, WordAspectPayload, WordLookupPayload, WordWisePayload } from "./types.ts";
 import { CHAPTER_FEATURE_APPENDICES, CHAT_APPENDIX, CHAT_MODE_APPENDICES, DEEP_DIVE_APPENDICES, MASTER_SYSTEM_PROMPT, PASSAGE_ANALYSIS_EXTRA_LENSES, WORD_ASPECT_APPENDICES, buildSystemPrompt, detectRefusal, stripThinking } from "./prompts.ts";
 
@@ -13,7 +14,14 @@ if (!apiKey) {
   console.error("[ai-companion] ANTHROPIC_API_KEY is not set");
 }
 
-const client = new Anthropic({ apiKey });
+// Through AI Gateway once AI_GATEWAY_BASE_URL (and, for an authenticated gateway,
+// AI_GATEWAY_TOKEN) are set as function secrets; Anthropic directly until then. Same
+// decision as the web Worker's, from site-runtime.
+const route = anthropicRoute(
+  { AI_GATEWAY_BASE_URL: Deno.env.get("AI_GATEWAY_BASE_URL"), AI_GATEWAY_TOKEN: Deno.env.get("AI_GATEWAY_TOKEN") },
+  "foxing-mobile",
+);
+const client = new Anthropic({ apiKey, baseURL: route.baseURL, defaultHeaders: route.headers });
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

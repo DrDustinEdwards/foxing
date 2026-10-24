@@ -9,6 +9,7 @@ import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
+import { anthropicCaller } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
@@ -72,8 +73,8 @@ const api = createApi({
   // other route works normally; only an actual companion call fails, cleanly, until
   // `wrangler secret put ANTHROPIC_API_KEY` runs.
   resolveCompanionCaller: (env) => {
-    const apiKey = (env as unknown as Env).ANTHROPIC_API_KEY;
-    if (apiKey) return companion.createAnthropicCaller(apiKey);
+    const caller = anthropicCaller(env as unknown as Env);
+    if (caller) return caller;
     // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
     return async function* missingKey() {
       throw new Error(
@@ -361,9 +362,7 @@ async function queue(
   _ctx: ExecutionContext,
 ): Promise<void> {
   const db = createDb(env.DB);
-  const caller = env.ANTHROPIC_API_KEY
-    ? companion.createAnthropicCaller(env.ANTHROPIC_API_KEY)
-    : null;
+  const caller = anthropicCaller(env);
 
   for (const message of batch.messages) {
     if (!caller) {

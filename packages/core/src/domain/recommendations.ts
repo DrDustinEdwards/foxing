@@ -72,6 +72,10 @@ export interface RankedRec {
   score: number;
 }
 
+// The AI cache stays here in KV rather than in AI Gateway's response cache: the gateway
+// caches only byte-identical requests (or one custom key) and is volatile, while this
+// cache is per reader, survives the candidate list changing, is re-resolved against the
+// current pool on every read, and costs nothing against the daily quota on a hit.
 const AI_CACHE_TTL = 7 * 24 * 60 * 60; // 7 days
 const REFRESH_THROTTLE = 30; // seconds between honoured refreshes
 const RATED_HIGH = 7; // rating_half >= 7 (3.5 stars) counts as "liked"
