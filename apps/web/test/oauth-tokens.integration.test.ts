@@ -33,7 +33,7 @@ const NONE = {
 
 describe("Google tokens", () => {
   it("are never stored, and migration 0005 clears old ones", async () => {
-    const { internalAdapter } = (await getAuth(testEnv)).$context;
+    const { internalAdapter } = await (await getAuth(testEnv)).$context;
     const { account } = await internalAdapter.createOAuthUser(
       { name: "Sample", email: "oauth@example.com", emailVerified: true },
       { providerId: "google", accountId: "g-1", ...TOKENS },

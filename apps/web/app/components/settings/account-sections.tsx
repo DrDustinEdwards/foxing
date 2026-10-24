@@ -274,7 +274,7 @@ export function AdminSection() {
 export type SignInSettings = {
   passkeys: { id: string; name: string; createdAt: string | null }[];
   /** The providers the site offers, and whether this account is joined to each. */
-  providers: { id: "google" | "apple"; label: string; linked: boolean }[];
+  providers: { id: "google" | "apple"; label: string; accountId: string | null }[];
 };
 
 /**
@@ -356,9 +356,9 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
         {initial.providers.map((provider) => (
           <div key={provider.id} className="row">
             <span className="ui grow">
-              {provider.label}: {provider.linked ? "connected" : "not connected"}
+              {provider.label}: {provider.accountId ? "connected" : "not connected"}
             </span>
-            {provider.linked ? (
+            {provider.accountId ? (
               <button
                 type="button"
                 className="cap-btn"
@@ -367,7 +367,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                 onClick={() =>
                   void run(
                     provider.id,
-                    () => authClient.unlinkAccount({ providerId: provider.id }),
+                    () => authClient.unlinkAccount({ accountId: provider.accountId ?? "" }),
                     `${provider.label} was not disconnected.`,
                   )
                 }

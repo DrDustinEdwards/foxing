@@ -24,7 +24,7 @@ export type SyncVerb = z.infer<typeof syncVerb>;
 // reader carries its epubjs CFI inside locator.locations.fragment; real Locators land
 // with the Readium reader. The contract is Locator-shaped from day one so no
 // uninterpretable position data is ever written.
-const locator = z.record(z.unknown());
+const locator = z.record(z.string(), z.unknown());
 
 // -- Per-resource payloads (writable columns only). Timestamps are epoch ms. ----
 
@@ -94,7 +94,7 @@ export const syncOp = z.object({
   id: z.string().min(1).max(64),
   resource: syncResource,
   verb: syncVerb,
-  payload: z.record(z.unknown()).optional(),
+  payload: z.record(z.string(), z.unknown()).optional(),
   clientTs: z.number().int(),
 });
 export type SyncOp = z.infer<typeof syncOp>;

@@ -199,7 +199,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       return;
     }
     // A cancelled prompt is the person choosing another way, not a failure to show.
-    if (!autoFill && res.error.code !== "AUTH_CANCELLED") {
+    if (!autoFill && !("code" in res.error && res.error.code === "AUTH_CANCELLED")) {
       setError("That passkey didn't work. Try again, or use another way below.");
     }
   }

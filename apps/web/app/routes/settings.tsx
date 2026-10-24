@@ -42,7 +42,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     auth.api.listUserAccounts({ headers: request.headers }),
   ]);
   const methods = signInMethods(env, { social: true });
-  const linked = new Set(accounts.map((a) => a.providerId));
+  // The joined account's own id, which Disconnect names.
+  const linked = new Map(accounts.map((a) => [a.providerId, a.id]));
   // Effective notification prefs: each category's stored override, or its quiet default.
   const notifPrefs = profile.notificationPrefs ?? null;
   const notifications = {
@@ -91,10 +92,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       })),
       providers: [
         ...(methods.google
-          ? [{ id: "google" as const, label: "Google", linked: linked.has("google") }]
+          ? [{ id: "google" as const, label: "Google", accountId: linked.get("google") ?? null }]
           : []),
         ...(methods.apple
-          ? [{ id: "apple" as const, label: "Apple", linked: linked.has("apple") }]
+          ? [{ id: "apple" as const, label: "Apple", accountId: linked.get("apple") ?? null }]
           : []),
       ],
     },
