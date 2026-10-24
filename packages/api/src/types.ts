@@ -65,4 +65,8 @@ export type ApiDeps = {
   // Optional: when absent, createApi supplies a no-op hub so non-club callers (and the
   // pre-Phase-5 integration suites) run without a Durable Object binding.
   resolveHub?: (env: Bindings) => ClubLiveHub;
+  // Whether Cloudflare Access let this request through for `email` (the signed-in
+  // admin), checked on /admin/* and /ops/* (middleware/admin-access.ts). The Worker
+  // verifies Access's signed token (app/lib/access.server.ts). Absent: refused.
+  checkAdminAccess?: (req: Request, env: Bindings, email: string) => Promise<boolean>;
 };

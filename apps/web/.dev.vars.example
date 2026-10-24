@@ -14,3 +14,5 @@ APPLE_CLIENT_ID=""
 APPLE_TEAM_ID=""
 APPLE_KEY_ID=""
 APPLE_PRIVATE_KEY=""""
+# The admin pages sit behind Cloudflare Access in production; "1" lets localhost in.
+ACCESS_DEV_BYPASS="1"

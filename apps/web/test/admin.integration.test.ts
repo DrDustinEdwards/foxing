@@ -9,6 +9,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // for the Better Auth session the Worker injects). The visible admin UI is covered by the
 // Playwright admin specs, which need a seeded admin account.
 const api = createApi({
+  // Cloudflare Access let the request through, unless the test says it did not.
+  checkAdminAccess: async (req) => req.headers.get("x-test-no-access") === null,
   resolveSession: async (req) => {
     const id = req.headers.get("x-test-user");
     return id ? { id, email: `${id}@example.com` } : null;
@@ -72,6 +74,19 @@ describe("admin write surface gate + audit log", () => {
   it("rejects an anonymous request with 401", async () => {
     const res = await post("/admin/announcements", null, { title: "Hi", body: "There" });
     expect(res.status).toBe(401);
+  });
+
+  it("rejects an admin whose request Cloudflare Access did not sign for them", async () => {
+    const res = await call("/admin/announcements", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-test-user": "admin",
+        "x-test-no-access": "1",
+      },
+      body: JSON.stringify({ title: "Hi", body: "There" }),
+    });
+    expect(res.status).toBe(403);
   });
 
   it("rejects a signed-in non-admin with 403", async () => {
