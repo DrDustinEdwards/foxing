@@ -6968,8 +6968,8 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
-    resolution: {commit: 7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee, repo: git@github.com:edrlab/thorium-locales.git, type: git}
+  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
     version: 1.0.0
 
   throat@5.0.0:
@@ -10428,11 +10428,11 @@ snapshots:
 
   '@readium/shared@2.2.0':
     dependencies:
-      '@edrlab/thorium-locales': thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
+      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
 
   '@readium/shared@2.2.3':
     dependencies:
-      '@edrlab/thorium-locales': thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
+      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
 
   '@remix-run/node-fetch-server@0.13.3': {}
 
@@ -13924,7 +13924,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee: {}
+  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee: {}
 
   throat@5.0.0: {}
 
