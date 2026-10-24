@@ -294,11 +294,8 @@ importers:
         specifier: ^1.6.23
         version: 1.6.23(@cloudflare/workers-types@5.20260706.1)(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
-        specifier: github:DrDustinEdwards/capsomer#v0.16.0
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/678bbd2e8af9410133f7c24dc5487fd8d969f2a2(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      cmdk:
-        specifier: ^1.1.1
-        version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: github:DrDustinEdwards/capsomer#v0.17.0
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/6b64747e28a315c4ba87a67741433d5d9da63e34(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       hono:
         specifier: ^4.12.0
         version: 4.12.28
@@ -4410,9 +4407,9 @@ packages:
   caniuse-lite@1.0.30001792:
     resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/678bbd2e8af9410133f7c24dc5487fd8d969f2a2:
-    resolution: {gitHosted: true, integrity: sha512-FTs1ZZifgNfOAXU0b+Msysaw1dFr8bQRhiyGiHS9Iyphg59Qs33FepnvP4YZk88GKM91nyK2muL5bGWtotojPg==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/678bbd2e8af9410133f7c24dc5487fd8d969f2a2}
-    version: 0.16.0
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/6b64747e28a315c4ba87a67741433d5d9da63e34:
+    resolution: {gitHosted: true, integrity: sha512-8u9tEBylKn8jaxTB5k1kApOi3HAUGfxs5+tNW7+a2ZCQtPdH81e4p7uG/0RcXdwwWZrVu4Uloar2yV+S/q/XQw==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/6b64747e28a315c4ba87a67741433d5d9da63e34}
+    version: 0.17.0
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
@@ -4507,12 +4504,6 @@ packages:
   clone@1.0.4:
     resolution: {integrity: sha512-JQHZ2QMW6l3aH/j6xCqQThY/9OH4D/9ls34cgkUBiEeocRTU04tHfKPBsUK1PqZCUQM7GiA0IIXJSuXHI64Kbg==}
     engines: {node: '>=0.8'}
-
-  cmdk@1.1.1:
-    resolution: {integrity: sha512-Vsv7kFaXm+ptHDMZ7izaRsP70GgrW9NBNGswt9OZaVBLlE0SNpDq8eu/VGXyF9r7M0azK3Wy7OlYXsuyYLFzHg==}
-    peerDependencies:
-      react: 19.2.7
-      react-dom: 19.2.7
 
   code-block-writer@13.0.3:
     resolution: {integrity: sha512-Oofo0pq3IKnsFtuHqSF7TqBfr71aeyZDVJ0HpmqB7FBM2qEigL0iPONSCZSO9pE9dZTAxANe5XHG9Uy0YMv8cg==}
@@ -11003,7 +10994,7 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/678bbd2e8af9410133f7c24dc5487fd8d969f2a2(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/6b64747e28a315c4ba87a67741433d5d9da63e34(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.61.1)
       '@playwright/test': 1.61.1
@@ -11079,18 +11070,6 @@ snapshots:
       wrap-ansi: 7.0.0
 
   clone@1.0.4: {}
-
-  cmdk@1.1.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
-    dependencies:
-      '@radix-ui/react-compose-refs': 1.1.2(@types/react@19.2.15)(react@19.2.7)
-      '@radix-ui/react-dialog': 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      '@radix-ui/react-id': 1.1.1(@types/react@19.2.15)(react@19.2.7)
-      '@radix-ui/react-primitive': 2.1.3(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
-      react: 19.2.7
-      react-dom: 19.2.7(react@19.2.7)
-    transitivePeerDependencies:
-      - '@types/react'
-      - '@types/react-dom'
 
   code-block-writer@13.0.3: {}
 

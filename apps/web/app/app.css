@@ -1,10 +1,10 @@
-/* Foxing on Capsomer: the fox family, Foxing's site layer (its cream and charcoal neutrals and its
-   faces), Capsomer's header, controls and notices. Foxing's own classes are in ./styles, by area,
+/* Foxing on Capsomer: the fox family, Capsomer's foxing site layer (Foxing's cream and charcoal
+   neutrals, its faces and its on state), Capsomer's header, controls and notices. Foxing's own classes are in ./styles, by area,
    unlayered, so they win over Capsomer's where they meet; its reset sits under every layer. */
 @layer reset, cap;
 @import "capsomer/tokens.css";
 @import "capsomer/family-fox.css" layer(cap.tokens);
-@import "./styles/site-foxing.css";
+@import "capsomer/site-foxing.css";
 @import "capsomer/base.css";
 @import "capsomer/site-header.css";
 @import "capsomer/dialog.css";

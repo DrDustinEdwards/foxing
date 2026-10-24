@@ -13,7 +13,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 600;
@@ -133,7 +133,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 2rem;
   font-weight: 600;
@@ -260,7 +260,7 @@
   padding: 1.5rem;
 }
 .fx-account-sections-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   line-height: 1.75rem;
   color: var(--crit);
@@ -389,7 +389,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   line-height: 1.75rem;
   font-weight: 600;
@@ -402,7 +402,7 @@
   color: var(--dim);
 }
 .fx-onboarding-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 1.25;
   @media (min-width: 40rem) {
@@ -474,7 +474,7 @@
   flex-direction: column;
 }
 .fx-onboarding-title-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1rem;
   line-height: 1.375;
   color: var(--text);

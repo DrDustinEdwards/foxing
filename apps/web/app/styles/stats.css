@@ -109,7 +109,7 @@
 }
 
 .fx-home-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 2.25rem;
   @media (min-width: 40rem) {
@@ -157,7 +157,7 @@
   max-width: 132px;
 }
 .fx-home-title-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 1.25;
 }
@@ -193,7 +193,7 @@
   box-shadow: var(--fx-shadow-sm);
 }
 .fx-home-title-3 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 1;
 }
@@ -273,7 +273,7 @@
   padding-inline: 0.125rem;
 }
 .fx-library-link-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1rem;
   line-height: 1.375;
   color: var(--text);
@@ -348,7 +348,7 @@
   }
 }
 .fx-shelf-detail-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 2.25rem;
   line-height: 2.5rem;
 }
@@ -452,7 +452,7 @@
   padding-inline: 1rem;
 }
 .fx-year-link {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.75rem;
   color: var(--text);
