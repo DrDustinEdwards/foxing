@@ -17,7 +17,7 @@ import { MeetingsSection, PollsSection, ScheduleSection } from "../components/cl
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect(`/login?redirect=/clubs/${params.slug}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const detail = await loadClubDetail(env, params.slug, session.user.id);

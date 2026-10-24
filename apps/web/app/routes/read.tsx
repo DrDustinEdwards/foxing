@@ -21,7 +21,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const book = await catalogRepo.getBookBySlug(db, params.slug);
   if (!book || !catalogRepo.isReadable(book)) throw new Response("Not found", { status: 404 });
 
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const userId = session?.user?.id ?? null;
 
   // One in-process resolution: the viewer's own annotations (MINE), the entitled

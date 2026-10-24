@@ -40,6 +40,7 @@ import {
   journalPostVersions,
   journalPosts,
   notifications,
+  passkey,
   profiles,
   pushTokens,
   reactions,
@@ -186,9 +187,10 @@ export const USER_SCOPED_TABLE_NAMES: ReadonlySet<string> = new Set(
 /**
  * Tables with a foreign key to `user` that are intentionally NOT in the per-user
  * export or delete:
- *  - Better Auth infrastructure (user, session, account, verification). `user`
- *    basics travel with the export via the caller's session; `account` holds the
- *    password hash and is never exported. These are removed by deleteAccount.
+ *  - Better Auth infrastructure (user, session, account, verification, passkey). `user`
+ *    basics travel with the export via the caller's session; `account` holds sign-in
+ *    links to Google or Apple and `passkey` the devices' public keys, neither the
+ *    reader's own content. These are removed by deleteAccount.
  *  - Public content the user contributed or authored (catalog books via added_by,
  *    journal posts + versions via author_id / saved_by, admin announcements via
  *    created_by). These outlive the account: their FK is ON DELETE SET NULL, so
@@ -200,6 +202,7 @@ export const ACCOUNT_EXPORT_EXCLUDED: ReadonlySet<string> = new Set([
   getTableName(session),
   getTableName(account),
   getTableName(verification),
+  getTableName(passkey),
   getTableName(books),
   getTableName(journalPosts),
   getTableName(journalPostVersions),
@@ -320,6 +323,7 @@ export async function deleteAccount(
     ...REGISTRY.map((entry) => entry.del(db, userId)),
     db.delete(session).where(eq(session.userId, userId)),
     db.delete(account).where(eq(account.userId, userId)),
+    db.delete(passkey).where(eq(passkey.userId, userId)),
     ...(row?.email ? [db.delete(verification).where(eq(verification.identifier, row.email))] : []),
     db.delete(user).where(eq(user.id, userId)),
   ];

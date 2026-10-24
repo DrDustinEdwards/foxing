@@ -36,7 +36,6 @@ function testEnv(overrides: Record<string, unknown> = {}): Env {
     BETTER_AUTH_SECRET: "test-secret-value-for-carrel-suite",
     GOOGLE_CLIENT_ID: "test-google-client-id",
     GOOGLE_CLIENT_SECRET: "test-google-client-secret",
-    TURNSTILE_ENABLED: "false",
     CARREL_SITE_KEY: KEY,
     CARREL_RATE_LIMIT: allowAll,
     ...overrides,

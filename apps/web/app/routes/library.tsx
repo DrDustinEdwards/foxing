@@ -36,7 +36,7 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect("/login?redirect=/library");
   // Signed-in but not onboarded -> /onboarding (never render with a null profile).
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });

@@ -4,7 +4,7 @@
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
-import { AppError, createApi, rateLimit } from "@foxing/api";
+import { createApi } from "@foxing/api";
 import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
@@ -133,55 +133,9 @@ app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw));
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
 mountCarrel(app, reactRouterHandler);
 
-// The auth rate-limit class (5/min/IP). Applied to credential submissions below.
-const authLimiter = rateLimit("auth");
-
-// The password reset link is a GET navigation Better Auth handles directly. If the
-// token lookup fails unexpectedly (a D1 blip that outlives the retry, say), Better
-// Auth would answer with a raw 500 or its own "Something went wrong" page. For that
-// one navigation we intercept and send the user to the friendly /reset-password
-// screen, which offers a retry link. Every other auth route is untouched.
-function isResetCallback(req: Request): boolean {
-  if (req.method !== "GET") return false;
-  return new URL(req.url).pathname.startsWith("/api/auth/reset-password/");
-}
-
-function friendlyResetRedirect(req: Request): Response {
-  const to = new URL("/reset-password", req.url);
-  to.searchParams.set("error", "unavailable");
-  return Response.redirect(to.toString(), 302);
-}
-
-app.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  const req = c.req.raw;
-  // Credential-stuffing defense: throttle credential submissions (POST: sign-in,
-  // sign-up, password-reset requests) with the auth rate-limit class (5/min/IP). GET
-  // navigations (session checks, the reset callback) are not throttled. The class
-  // throws AppError on limit; the root app has no onError, so convert it here.
-  if (req.method === "POST") {
-    try {
-      await authLimiter(c as never, async () => {});
-    } catch (err) {
-      if (err instanceof AppError) {
-        return c.json({ error: { code: err.code, message: err.message } }, 429);
-      }
-      throw err;
-    }
-  }
-  try {
-    const res = await getAuth(c.env).handler(req);
-    if (isResetCallback(req)) {
-      const location = res.headers.get("Location") ?? "";
-      if (res.status >= 500 || location.includes("/api/auth/error")) {
-        return friendlyResetRedirect(req);
-      }
-    }
-    return res;
-  } catch (err) {
-    if (isResetCallback(req)) return friendlyResetRedirect(req);
-    throw err;
-  }
-});
+// Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
+// minute per address, counted in D1 (site-runtime ./sign-in).
+app.on(["GET", "POST"], "/api/auth/*", async (c) => (await getAuth(c.env)).handler(c.req.raw));
 
 app.route("/api/v1", api);
 

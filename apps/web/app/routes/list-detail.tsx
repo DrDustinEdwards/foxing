@@ -14,7 +14,7 @@ import type { Route } from "./+types/list-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const viewerId = session?.user?.id ?? null;
   const data = await loadListDetail(env, params.id, viewerId);
   if (!data) throw new Response("Not found", { status: 404 });

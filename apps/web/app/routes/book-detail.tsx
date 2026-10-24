@@ -27,7 +27,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   // Personalized shelf status + shelves. Anonymous requests are edge-cached (this
   // loader does not run), so this only fires for signed-in readers (cache bypassed).
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const userId = session?.user?.id ?? null;
   const [userBook, shelves, memberOf] = userId
     ? await Promise.all([

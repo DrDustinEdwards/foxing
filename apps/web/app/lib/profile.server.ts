@@ -29,7 +29,7 @@ export async function requireProfileForUser(env: Env, user: SessionUser): Promis
 
 // Full gate for a loader: unauthenticated to /login, onboarded-less to /onboarding.
 export async function requireProfile(env: Env, request: Request): Promise<ProfileContext> {
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect("/login");
   return requireProfileForUser(env, { id: session.user.id, email: session.user.email });
 }
