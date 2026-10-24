@@ -1,19 +1,28 @@
-// The reader's personal library (auth-gated). Reads run in-process via core in
-// loadLibraryData (the standing rule: loaders never self-fetch the Worker's own
-// /api/v1, that loopback returns HTML, not JSON). Writes (status, shelves, goals) go
-// to /api/v1 from the browser client and the page revalidates. Status transitions
-// emit events server-side.
+// The reader's personal library (auth-gated). The first paint comes from the loader,
+// which reads core's views in-process (loaders never self-fetch the Worker's own
+// /api/v1); after that each card lives in the @foxing/client cache. Writes (status,
+// shelves, goals) patch the cache at once and refetch only what they touched, so the
+// page never reloads. Status transitions emit events server-side.
+import {
+  useCreateShelf,
+  useDeleteGoal,
+  useDeleteShelf,
+  useGoals,
+  useLibrary,
+  useShelves,
+  useStreak,
+} from "@foxing/client";
+import type { GoalWithProgress, Shelf, ShelfStatus, Streak } from "@foxing/types";
 import { useState } from "react";
-import { Link, redirect, useRevalidator } from "react-router";
-import { BookStatusControl, type ShelfStatus } from "~/components/book-status-control";
+import { Link, redirect } from "react-router";
+import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
-import { GoalPeriodSelect, useCreateGoal } from "~/components/goal-form";
+import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import { goalPeriodLabel } from "~/lib/goals";
-import type { GoalRow, Shelf, Streak } from "~/lib/library.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
@@ -48,9 +57,10 @@ export function meta() {
 }
 
 export default function Library({ loaderData }: Route.ComponentProps) {
-  const { library, shelves, goals, streak } = loaderData;
-  const revalidator = useRevalidator();
-  const refresh = () => revalidator.revalidate();
+  const library = useLibrary(loaderData.library).data;
+  const shelves = useShelves(loaderData.shelves).data;
+  const goals = useGoals(loaderData.goals).data;
+  const streak = useStreak(loaderData.streak).data;
   const [tab, setTab] = useState<ShelfStatus>("reading");
 
   const counts = library.reduce<Record<string, number>>((acc, e) => {
@@ -125,11 +135,16 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                     </div>
                     <div className="mt-2 fx-library-box">
                       <BookStatusControl
-                        bookId={e.bookId}
-                        currentStatus={e.status as ShelfStatus}
+                        book={{
+                          id: e.bookId,
+                          slug: e.slug,
+                          title: e.title,
+                          author: e.author,
+                          coverUrl: e.coverUrl,
+                        }}
+                        currentStatus={e.status}
                         signedIn
                         loginHref="/login"
-                        onChanged={refresh}
                       />
                     </div>
                   </div>
@@ -141,8 +156,8 @@ export default function Library({ loaderData }: Route.ComponentProps) {
           {/* Sidebar: streak, goals, shelves */}
           <aside className="stack-6">
             <StreakCard streak={streak} />
-            <GoalsCard goals={goals} onChanged={refresh} />
-            <ShelvesCard shelves={shelves} onChanged={refresh} />
+            <GoalsCard goals={goals} />
+            <ShelvesCard shelves={shelves} />
           </aside>
         </div>
       </Container>
@@ -150,8 +165,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function StreakCard({ streak }: { streak: Streak | null }) {
-  const s = streak ?? { currentStreak: 0, longestStreak: 0, totalBooksFinished: 0 };
+function StreakCard({ streak: s }: { streak: Streak }) {
   return (
     <section className="card">
       <Eyebrow className="mb-3">Reading streak</Eyebrow>
@@ -171,31 +185,10 @@ function StreakCard({ streak }: { streak: Streak | null }) {
   );
 }
 
-function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => void }) {
-  const {
-    target,
-    setTarget,
-    period,
-    setPeriod,
-    pending,
-    error,
-    setError,
-    add: addGoal,
-  } = useCreateGoal(onChanged);
-
-  async function del(id: string) {
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/goals/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        setError("Could not remove that goal. Try again.");
-        return;
-      }
-      onChanged();
-    } catch {
-      setError("Could not remove that goal. Check your connection and try again.");
-    }
-  }
+function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
+  const draft = useGoalDraft();
+  const remove = useDeleteGoal();
+  const error = draft.error ?? remove.error;
 
   return (
     <section className="card">
@@ -210,7 +203,11 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
                 <span>
                   {goal.target} {goal.type} in {goalPeriodLabel(goal)}
                 </span>
-                <button type="button" onClick={() => del(goal.id)} className="fx-library-btn">
+                <button
+                  type="button"
+                  onClick={() => remove.fire({ id: goal.id })}
+                  className="fx-library-btn"
+                >
                   Remove
                 </button>
               </div>
@@ -238,23 +235,23 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
           <input
             type="number"
             min={1}
-            value={target}
-            onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))}
+            value={draft.target}
+            onChange={(e) => draft.setTarget(Math.max(1, Number(e.target.value)))}
             className="cap-input fx-library-input"
           />
         </label>
-        <GoalPeriodSelect value={period} onChange={setPeriod} />
+        <GoalPeriodSelect value={draft.period} onChange={draft.setPeriod} />
         <button
           type="button"
-          onClick={addGoal}
-          disabled={pending}
+          onClick={draft.add}
+          disabled={draft.pending}
           className="cap-btn"
           data-size="sm"
         >
           Set
         </button>
       </div>
-      {pending ? (
+      {draft.pending ? (
         <p className="mt-2 fx-library-text" role="status">
           Saving...
         </p>
@@ -268,46 +265,15 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
   );
 }
 
-function ShelvesCard({ shelves, onChanged }: { shelves: Shelf[]; onChanged: () => void }) {
+function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
   const [name, setName] = useState("");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const create = useCreateShelf();
+  const remove = useDeleteShelf();
+  const error = create.error ?? remove.error;
 
   async function addShelf() {
     if (!name.trim()) return;
-    setPending(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/shelves", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim() }),
-      });
-      // Do not swallow: a failed write must be visible, not a silent no-op.
-      if (!res.ok) {
-        setError("Could not create that shelf. Try again.");
-        return;
-      }
-      setName("");
-      onChanged();
-    } catch {
-      setError("Could not create that shelf. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
-  }
-  async function del(id: string) {
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/shelves/${id}`, { method: "DELETE" });
-      if (!res.ok) {
-        setError("Could not remove that shelf. Try again.");
-        return;
-      }
-      onChanged();
-    } catch {
-      setError("Could not remove that shelf. Check your connection and try again.");
-    }
+    if (await create.run({ name: name.trim() })) setName("");
   }
 
   return (
@@ -322,7 +288,11 @@ function ShelvesCard({ shelves, onChanged }: { shelves: Shelf[]; onChanged: () =
               <Link to={`/shelves/${s.id}`} className="hover-accent">
                 {s.name}
               </Link>
-              <button type="button" onClick={() => del(s.id)} className="fx-library-btn">
+              <button
+                type="button"
+                onClick={() => remove.fire({ id: s.id })}
+                className="fx-library-btn"
+              >
                 Remove
               </button>
             </li>
@@ -339,14 +309,14 @@ function ShelvesCard({ shelves, onChanged }: { shelves: Shelf[]; onChanged: () =
         <button
           type="button"
           onClick={addShelf}
-          disabled={pending}
+          disabled={create.pending}
           className="cap-btn"
           data-size="sm"
         >
           Add
         </button>
       </div>
-      {pending ? (
+      {create.pending ? (
         <p className="mt-2 fx-library-text" role="status">
           Saving...
         </p>

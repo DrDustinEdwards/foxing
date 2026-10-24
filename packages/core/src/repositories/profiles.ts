@@ -1,7 +1,7 @@
 // Profiles repository. All profile data access goes through here so an org/classroom
 // tenancy layer (Foxing Edu) can be added later without touching call sites.
 import { and, eq, inArray, like, or, sql } from "drizzle-orm";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import { profiles } from "../schema";
 import type { UpdateMeInput } from "../validators/profile";
 
@@ -15,12 +15,6 @@ export type ProfileSummary = {
   displayName: string | null;
   avatarUrl: string | null;
 };
-
-/** Public projection of a profile, honoring the owner's visibility later. */
-export type PublicProfile = Pick<
-  Profile,
-  "username" | "displayName" | "avatarUrl" | "backdropUrl" | "bio" | "favoriteGenres" | "createdAt"
->;
 
 export async function getProfileById(db: Db, userId: string): Promise<Profile | null> {
   const rows = await db.select().from(profiles).where(eq(profiles.id, userId)).limit(1);
@@ -40,16 +34,18 @@ export async function getProfileSummaries(
 ): Promise<Map<string, ProfileSummary>> {
   const map = new Map<string, ProfileSummary>();
   if (ids.length === 0) return map;
-  const rows = await db
-    .select({
-      id: profiles.id,
-      username: profiles.username,
-      displayName: profiles.displayName,
-      avatarUrl: profiles.avatarUrl,
-    })
-    .from(profiles)
-    .where(inArray(profiles.id, ids));
-  for (const r of rows) map.set(r.id, r);
+  for (const chunk of chunked([...new Set(ids)])) {
+    const rows = await db
+      .select({
+        id: profiles.id,
+        username: profiles.username,
+        displayName: profiles.displayName,
+        avatarUrl: profiles.avatarUrl,
+      })
+      .from(profiles)
+      .where(inArray(profiles.id, chunk));
+    for (const r of rows) map.set(r.id, r);
+  }
   return map;
 }
 
@@ -191,16 +187,4 @@ export async function setVisibilityPrefs(
     .update(profiles)
     .set({ visibility: prefs, updatedAt: new Date() })
     .where(eq(profiles.id, userId));
-}
-
-export function toPublicProfile(p: Profile): PublicProfile {
-  return {
-    username: p.username,
-    displayName: p.displayName,
-    avatarUrl: p.avatarUrl,
-    backdropUrl: p.backdropUrl,
-    bio: p.bio,
-    favoriteGenres: p.favoriteGenres,
-    createdAt: p.createdAt,
-  };
 }

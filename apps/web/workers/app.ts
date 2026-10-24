@@ -137,6 +137,17 @@ mountCarrel(app, reactRouterHandler);
 // minute per address, counted in D1 (site-runtime ./sign-in).
 app.on(["GET", "POST"], "/api/auth/*", async (c) => (await getAuth(c.env)).handler(c.req.raw));
 
+// Search-as-you-type answers do not depend on the viewer (public books, profiles and
+// clubs only), so they come from the edge cache for everyone, signed in or not.
+app.get("/api/v1/search/suggest", async (c, next) => {
+  const cache = edgeCache();
+  const key = cacheKeyFor(new URL(c.req.url));
+  const hit = await cache.match(key);
+  if (hit) return hit;
+  await next();
+  if (c.res.status === 200) c.executionCtx.waitUntil(cache.put(key, c.res.clone()));
+});
+
 app.route("/api/v1", api);
 
 // Exploded Readium reader assets (RWPM manifest + resources + position list),

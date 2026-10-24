@@ -1,4 +1,5 @@
-import { useClubWrite } from "~/hooks/use-club-write";
+import { useCreateThread, useJoinClub, useLeaveClub, useRotateInviteCode } from "@foxing/client";
+import type { ClubMembership, ClubThreadItem } from "@foxing/types";
 import { useState } from "react";
 import { Link } from "react-router";
 
@@ -13,43 +14,29 @@ export function ErrorText({ error }: { error: string | null }) {
 
 export function MembershipControls({
   clubId,
-  slug,
   membership,
   isMember,
   isCreator,
   joinCode,
-  onChange,
 }: {
   clubId: string;
-  slug: string;
-  membership: { status: string } | null;
+  membership: ClubMembership | null;
   isMember: boolean;
   isCreator: boolean;
   joinCode: string | null;
-  onChange: () => void;
 }) {
-  const { write, error, pending } = useClubWrite();
-  const [code, setCode] = useState(joinCode);
-
-  async function join() {
-    const r = await write(`/clubs/${clubId}/join`);
-    if (r.ok) onChange();
-  }
-  async function leave() {
-    const r = await write(`/clubs/${clubId}/members/me`, { method: "DELETE" });
-    if (r.ok) onChange();
-  }
-  async function rotate() {
-    const r = await write(`/clubs/${clubId}/invite-code`);
-    if (r.ok) setCode((r.data as { joinCode?: string })?.joinCode ?? code);
-  }
+  const join = useJoinClub();
+  const leave = useLeaveClub();
+  const rotate = useRotateInviteCode();
+  const pending = join.pending || leave.pending || rotate.pending;
+  const error = join.error ?? leave.error ?? rotate.error;
 
   return (
     <div className="fx-club-sections-box">
       {!isMember ? (
         <button
           type="button"
-          onClick={join}
+          onClick={() => join.fire({ clubId })}
           disabled={pending}
           className="cap-btn"
           data-variant="primary"
@@ -58,17 +45,17 @@ export function MembershipControls({
         </button>
       ) : (
         <div className="stack-2">
-          {code ? (
+          {joinCode ? (
             <div className="py-2 fx-club-sections-card">
               <p className="group-label">Invite link</p>
               <p className="sans small">
-                <Link to={`/join/${code}`} className="fx-club-sections-link">
-                  /join/{code}
+                <Link to={`/join/${joinCode}`} className="fx-club-sections-link">
+                  /join/{joinCode}
                 </Link>
               </p>
               <button
                 type="button"
-                onClick={rotate}
+                onClick={() => rotate.fire({ clubId })}
                 disabled={pending}
                 className="mt-1 fx-club-sections-btn"
               >
@@ -77,7 +64,12 @@ export function MembershipControls({
             </div>
           ) : null}
           {!isCreator ? (
-            <button type="button" onClick={leave} disabled={pending} className="cap-btn">
+            <button
+              type="button"
+              onClick={() => leave.fire({ clubId })}
+              disabled={pending}
+              className="cap-btn"
+            >
               Leave
             </button>
           ) : null}
@@ -92,29 +84,23 @@ export function ThreadsSection({
   clubId,
   slug,
   threads,
-  onChange,
 }: {
   clubId: string;
   slug: string;
-  threads: { id: string; title: string; type: string; createdAt: Date }[];
-  onChange: () => void;
+  threads: ClubThreadItem[];
 }) {
-  const { write, error, pending } = useClubWrite();
+  const { run, error, pending } = useCreateThread();
   const [open, setOpen] = useState(false);
 
   async function create(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
-    const r = await write(`/clubs/${clubId}/threads`, {
-      body: {
-        title: String(form.get("title") ?? "").trim(),
-        body: String(form.get("body") ?? "").trim() || undefined,
-      },
+    const r = await run({
+      clubId,
+      title: String(form.get("title") ?? "").trim(),
+      body: String(form.get("body") ?? "").trim() || undefined,
     });
-    if (r.ok) {
-      setOpen(false);
-      onChange();
-    }
+    if (r) setOpen(false);
   }
 
   return (

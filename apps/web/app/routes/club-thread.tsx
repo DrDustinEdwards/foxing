@@ -1,15 +1,14 @@
 // A single club thread (auth-gated). Posts arrive live: when another member posts, the
-// club WebSocket pushes {t:'post'} and the page revalidates, so the new post appears
-// without a manual refresh. This is the two-context DO gate surface -- a post made in
+// club WebSocket pushes {t:'post'} and the thread refetches, so the new post appears
+// without a reload. This is the two-context DO gate surface -- a post made in
 // one browser context shows up in another that has this thread open.
-import { redirect, useRevalidator, Link } from "react-router";
+import { useClubLive, useCreatePost, useThreadPage } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
+import { Link, redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { useClubLive } from "~/hooks/use-club-live";
-import { useClubWrite } from "~/hooks/use-club-write";
 import { getAuth } from "~/lib/auth.server";
-import { loadThreadDetail } from "~/lib/clubs.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
 
@@ -18,36 +17,36 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect(`/login?redirect=/clubs/${params.slug}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  const detail = await loadThreadDetail(env, params.slug, params.threadId, session.user.id);
-  if (!detail) throw new Response("Not found", { status: 404 });
-  return { ...detail, viewerId: session.user.id };
+  const page = await views.threadPage(
+    createDb(env.DB),
+    params.threadId,
+    session.user.id,
+    params.slug,
+  );
+  if (!page) throw new Response("Not found", { status: 404 });
+  return { page, viewerId: session.user.id };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
-    { title: `${loaderData?.thread?.title ?? "Thread"} | Foxing` },
+    { title: `${loaderData?.page.thread.title ?? "Thread"} | Foxing` },
     { name: "robots", content: "noindex" },
   ];
 }
 
-export default function ClubThread({ loaderData }: Route.ComponentProps) {
-  const { club, thread, posts, isMember, viewerId } = loaderData;
-  const revalidator = useRevalidator();
-  const refresh = () => revalidator.revalidate();
-  const { write, error, pending } = useClubWrite();
+export default function ClubThread({ loaderData, params }: Route.ComponentProps) {
+  const { viewerId } = loaderData;
+  const { club, thread, posts, isMember } = useThreadPage(params.threadId, loaderData.page).data;
+  const { run, error, pending } = useCreatePost();
 
-  useClubLive(isMember ? club.id : null, { onPost: refresh, onNotice: refresh });
+  useClubLive(isMember ? club.id : null);
 
   async function post(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
     const content = String(new FormData(form).get("content") ?? "").trim();
     if (!content) return;
-    const r = await write(`/threads/${thread.id}/posts`, { body: { content } });
-    if (r.ok) {
-      form.reset();
-      void refresh();
-    }
+    if (await run({ threadId: thread.id, content })) form.reset();
   }
 
   return (
@@ -66,7 +65,7 @@ export default function ClubThread({ loaderData }: Route.ComponentProps) {
               <li key={p.id} className="card">
                 <p className="fx-club-thread-text">{p.content}</p>
                 <p className="mt-2 fx-club-thread-caps">
-                  {p.authorId === viewerId ? "You" : "Member"} ·{" "}
+                  {p.author?.id === viewerId ? "You" : "Member"} ·{" "}
                   {new Date(p.createdAt).toLocaleString()}
                 </p>
               </li>

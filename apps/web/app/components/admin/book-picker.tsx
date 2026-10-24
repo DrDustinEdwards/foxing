@@ -1,5 +1,5 @@
 // Book typeahead for admin forms (BOTM, celebrity picks). Reuses the public
-// /search/suggest resource route, which returns { id, slug, title, author }, so no new
+// /api/v1/search/suggest endpoint, which returns { id, slug, title, author }, so no new
 // endpoint is needed. Emits the selected book id (or null when cleared).
 import { useEffect, useRef, useState } from "react";
 import { adminInputClass } from "./admin-form";
@@ -26,7 +26,7 @@ export function BookPicker({
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
       try {
-        const res = await fetch(`/search/suggest?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`/api/v1/search/suggest?q=${encodeURIComponent(q)}`);
         const body = (await res.json()) as { books?: Suggestion[] };
         setResults(body.books ?? []);
         setOpen(true);

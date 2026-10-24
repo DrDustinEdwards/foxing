@@ -8,6 +8,7 @@ import {
   profilesRepo,
   pushRegisterInput,
   pushRepo,
+  views,
 } from "@foxing/core";
 import { Hono } from "hono";
 import { parseJson, requireSession } from "../http";
@@ -36,13 +37,9 @@ pushRoutes.delete("/push/:token", rateLimit("write"), async (c) => {
 pushRoutes.get("/notifications", async (c) => {
   const session = requireSession(c);
   const cursor = c.req.query("cursor");
-  const [items, unread] = await Promise.all([
-    notificationsRepo.listForUser(c.get("db"), session.id, {
-      cursor: cursor ? Number(cursor) : null,
-    }),
-    notificationsRepo.unreadCount(c.get("db"), session.id),
-  ]);
-  return c.json({ notifications: items, unread });
+  return c.json(
+    await views.notifications(c.get("db"), session.id, { cursor: cursor ? Number(cursor) : null }),
+  );
 });
 
 pushRoutes.post("/notifications/read", rateLimit("write"), async (c) => {

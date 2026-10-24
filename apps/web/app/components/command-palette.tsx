@@ -1,16 +1,12 @@
 // Cmd/Ctrl+K command palette. Opens on the keyboard shortcut or the header search
 // button (which dispatches "foxing:search-open"). Empty state shows recent searches
-// and quick links; typing federates catalog books + authors from /search/suggest.
+// and quick links; typing federates catalog books, authors, people and clubs.
 // Built on cmdk, which owns the focus trap, roving keyboard nav, and dialog a11y.
+import { useSuggest } from "@foxing/client";
 import { Command } from "cmdk";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useRouteLoaderData } from "react-router";
 import type { loader as RootLoader } from "~/root";
-
-type BookHit = { slug: string; title: string; author: string };
-type AuthorHit = { slug: string; name: string; bookCount: number };
-type PersonHit = { username: string; displayName: string };
-type ClubHit = { slug: string; name: string };
 
 const RECENT_KEY = "foxing:recent-searches";
 const RECENT_MAX = 6;
@@ -62,12 +58,8 @@ export function CommandPalette() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [recent, setRecent] = useState<string[]>([]);
-  const [books, setBooks] = useState<BookHit[]>([]);
-  const [authors, setAuthors] = useState<AuthorHit[]>([]);
-  const [people, setPeople] = useState<PersonHit[]>([]);
-  const [clubs, setClubs] = useState<ClubHit[]>([]);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abort = useRef<AbortController | null>(null);
+  // Debounced federated search while typing.
+  const { books, authors, people, clubs } = useSuggest(open ? query : "");
 
   // Open on Cmd/Ctrl+K, or when the header search button asks us to.
   useEffect(() => {
@@ -92,50 +84,9 @@ export function CommandPalette() {
   useEffect(() => {
     if (open) {
       setQuery("");
-      setBooks([]);
-      setAuthors([]);
-      setPeople([]);
-      setClubs([]);
       setRecent(readRecent());
     }
   }, [open]);
-
-  // Debounced federated fetch (books + authors) while typing.
-  useEffect(() => {
-    const q = query.trim();
-    if (timer.current) clearTimeout(timer.current);
-    if (q.length < 2) {
-      setBooks([]);
-      setAuthors([]);
-      setPeople([]);
-      setClubs([]);
-      return;
-    }
-    timer.current = setTimeout(async () => {
-      abort.current?.abort();
-      abort.current = new AbortController();
-      try {
-        const res = await fetch(`/search/suggest?q=${encodeURIComponent(q)}`, {
-          signal: abort.current.signal,
-        });
-        const data = (await res.json()) as {
-          books: BookHit[];
-          authors: AuthorHit[];
-          people?: PersonHit[];
-          clubs?: ClubHit[];
-        };
-        setBooks(data.books ?? []);
-        setAuthors(data.authors ?? []);
-        setPeople(data.people ?? []);
-        setClubs(data.clubs ?? []);
-      } catch {
-        /* aborted or offline: keep the last results */
-      }
-    }, 180);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [query]);
 
   function go(to: string) {
     setOpen(false);

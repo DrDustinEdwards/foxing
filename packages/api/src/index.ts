@@ -13,6 +13,7 @@ import { accountRoutes } from "./routes/account";
 import { adminRoutes } from "./routes/admin";
 import { annotationRoutes } from "./routes/annotations";
 import { billingRoutes } from "./routes/billing";
+import { catalogRoutes } from "./routes/catalog";
 import { clubRoutes } from "./routes/clubs";
 import { companionRoutes } from "./routes/companion";
 import { companionOpsRoutes } from "./routes/companion-ops";
@@ -43,6 +44,7 @@ export function createApi(deps: ApiDeps) {
   app.use("*", billingDepsMw(deps));
   app.use("*", hubDepsMw(deps.resolveHub));
 
+  app.route("/", catalogRoutes);
   app.route("/", profileRoutes);
   app.route("/", libraryRoutes);
   app.route("/", annotationRoutes);

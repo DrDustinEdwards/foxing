@@ -1,53 +1,32 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useSuggest } from "@foxing/client";
+import { useEffect, useId, useState } from "react";
 import { Form, useNavigate } from "react-router";
 
-type Suggestion = { slug: string; title: string; author: string };
-
 /**
- * Accessible search-as-you-type combobox. Debounced suggestions come from the
- * /search/suggest JSON route; submitting the form runs the full /search (which
+ * Accessible search-as-you-type combobox. Debounced suggestions come from the shared
+ * search-as-you-type hook; submitting the form runs the full /search (which
  * includes the fuzzy fallback). Degrades to a plain GET form without JS.
  */
 export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
   const [q, setQ] = useState(initialQuery);
-  const [items, setItems] = useState<Suggestion[]>([]);
+  // Suggestions start once the reader types, not for the query the page opened with.
+  const [typed, setTyped] = useState(false);
+  const items = useSuggest(typed ? q : "").books;
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
   const navigate = useNavigate();
   const listId = useId();
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abort = useRef<AbortController | null>(null);
 
+  // A new set of suggestions opens the list; none closes it.
   useEffect(() => {
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-      abort.current?.abort();
-    };
-  }, []);
+    setOpen(items.length > 0);
+  }, [items]);
 
   function onChange(value: string) {
     setQ(value);
+    setTyped(true);
     setActive(-1);
-    if (timer.current) clearTimeout(timer.current);
-    if (value.trim().length < 2) {
-      setItems([]);
-      setOpen(false);
-      return;
-    }
-    timer.current = setTimeout(async () => {
-      abort.current?.abort();
-      abort.current = new AbortController();
-      try {
-        const res = await fetch(`/search/suggest?q=${encodeURIComponent(value)}`, {
-          signal: abort.current.signal,
-        });
-        const data = (await res.json()) as { books: Suggestion[] };
-        setItems(data.books);
-        setOpen(data.books.length > 0);
-      } catch {
-        /* aborted or offline: leave the last suggestions in place */
-      }
-    }, 180);
+    if (value.trim().length < 2) setOpen(false);
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

@@ -1,3 +1,4 @@
+import { useOnboard, useSetBookStatus } from "@foxing/client";
 import { useState } from "react";
 import { Link, redirect, useNavigate } from "react-router";
 import { catalogRepo, createDb, profilesRepo } from "@foxing/core";
@@ -47,9 +48,11 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2>(1);
   const [chosen, setChosen] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const onboard = useOnboard();
+  const setStatus = useSetBookStatus();
   const [savingId, setSavingId] = useState<string | null>(null);
+  const error = onboard.error ?? setStatus.error;
+  const pending = onboard.pending;
 
   function toggleGenre(subject: string) {
     setChosen((prev) =>
@@ -59,54 +62,21 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
 
   async function onSubmitProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setPending(true);
-    setError(null);
     const form = new FormData(event.currentTarget);
     const displayName = String(form.get("displayName") ?? "").trim();
-    try {
-      const res = await fetch("/api/v1/me/onboard", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          username: String(form.get("username")),
-          displayName: displayName || undefined,
-          favoriteGenres: chosen.length ? chosen : undefined,
-        }),
-      });
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        setError(body?.error?.message ?? "Could not finish onboarding.");
-        return;
-      }
-      setStep(2);
-    } catch {
-      setError("Could not finish onboarding. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    const done = await onboard.run({
+      username: String(form.get("username")),
+      displayName: displayName || undefined,
+      favoriteGenres: chosen.length ? chosen : undefined,
+    });
+    if (done) setStep(2);
   }
 
-  async function startReading(bookId: string, slug: string) {
-    setSavingId(bookId);
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/library/${bookId}`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ status: "reading" }),
-      });
-      if (!res.ok) {
-        setError("Could not add that book. Try again.");
-        return;
-      }
-      void navigate(`/books/${slug}`);
-    } catch {
-      setError("Could not add that book. Check your connection and try again.");
-    } finally {
-      setSavingId(null);
-    }
+  async function startReading(book: (typeof starters)[number]) {
+    setSavingId(book.id);
+    const done = await setStatus.run({ bookId: book.id, status: "reading", book });
+    setSavingId(null);
+    if (done) void navigate(`/books/${book.slug}`);
   }
 
   if (step === 1) {
@@ -217,7 +187,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
               <p className="mt-1 meta">{book.author}</p>
               <button
                 type="button"
-                onClick={() => startReading(book.id, book.slug)}
+                onClick={() => startReading(book)}
                 disabled={savingId !== null}
                 className="cap-btn mt-2 justify-center fx-onboarding-btn"
                 data-size="sm"

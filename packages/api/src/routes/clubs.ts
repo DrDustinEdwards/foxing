@@ -15,13 +15,13 @@ import {
   createScheduleInput,
   createThreadInput,
   createPostInput,
-  firstPreferenceTallies,
   muteMemberInput,
   removePostInput,
   rsvpInput,
   setRoleInput,
   updateClubInput,
   votePollInput,
+  views,
 } from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
@@ -46,96 +46,30 @@ async function notify(c: Context<Env>, clubId: string, live: LiveMessage | LiveM
   }
 }
 
-// -- Reads (also callable in-process by loaders via clubsRepo) --------------
+// -- Reads (the same views the web loaders call in-process) ---------------
 
 clubRoutes.get("/clubs", async (c) => {
-  const clubs = await clubsRepo.listPublicClubs(c.get("db"));
-  return c.json({ clubs });
+  return c.json({ clubs: await views.publicClubs(c.get("db")) });
 });
 
 clubRoutes.get("/clubs/mine", async (c) => {
   const session = requireSession(c);
-  const clubs = await clubsRepo.listClubsForUser(c.get("db"), session.id);
-  return c.json({ clubs });
+  return c.json({ clubs: await views.myClubs(c.get("db"), session.id) });
 });
 
-// Every read of a club or anything inside it goes through here. Private clubs are
-// visible only to their active members; anyone else gets the same "not found" as a
-// club that does not exist (Grok audit 2026-10-21, FX-1: the child reads skipped it).
-async function readableClub(c: Context<Env>, clubId: string) {
-  const db = c.get("db");
-  const session = c.get("session");
-  const club = await clubsRepo.getClubById(db, clubId);
-  if (!club) throw errors.notFound("Club not found.");
-  const membership = session ? await clubsRepo.getMembership(db, club.id, session.id) : null;
-  if (club.visibility === "private" && membership?.status !== "active") {
-    throw errors.notFound("Club not found.");
-  }
-  return { club, membership };
-}
-
+// A club by id or slug, with everything its page shows. Private clubs are visible only
+// to their active members; anyone else gets the same "not found" as a club that does
+// not exist (Grok audit 2026-10-21, FX-1).
 clubRoutes.get("/clubs/:id", async (c) => {
-  const { club, membership } = await readableClub(c, c.req.param("id"));
-  return c.json({ club, membership });
-});
-
-clubRoutes.get("/clubs/:id/members", async (c) => {
-  const { club, membership } = await readableClub(c, c.req.param("id"));
-  const members = await clubsRepo.listMembers(c.get("db"), club.id);
-  // Moderators see the whole roster with ban and mute details; everyone else sees active
-  // members without them (FX-8).
-  if (membership?.status === "active" && clubsDomain.canModerateRole(membership.role)) {
-    return c.json({ members });
-  }
-  return c.json({
-    members: members
-      .filter((m) => m.status === "active")
-      .map(({ bannedAt, bannedBy, banReason, mutedUntil, mutedBy, ...rest }) => rest),
-  });
-});
-
-clubRoutes.get("/clubs/:id/threads", async (c) => {
-  const { club } = await readableClub(c, c.req.param("id"));
-  const threads = await clubsRepo.listThreads(c.get("db"), club.id);
-  return c.json({ threads });
+  const page = await views.clubPage(c.get("db"), c.req.param("id"), c.get("session")?.id ?? null);
+  if (!page) throw errors.notFound("Club not found.");
+  return c.json(page);
 });
 
 clubRoutes.get("/threads/:id", async (c) => {
-  const db = c.get("db");
-  const thread = await clubsRepo.getThreadById(db, c.req.param("id"));
-  if (!thread || thread.isRemoved) throw errors.notFound("Thread not found.");
-  await readableClub(c, thread.clubId);
-  const posts = await clubsRepo.listPosts(db, thread.id);
-  return c.json({ thread, posts });
-});
-
-clubRoutes.get("/clubs/:id/polls", async (c) => {
-  const db = c.get("db");
-  const { club } = await readableClub(c, c.req.param("id"));
-  const polls = await clubsRepo.listPolls(db, club.id);
-  const withTallies = await Promise.all(
-    polls.map(async (poll) => {
-      const votes = await clubsRepo.listVotes(db, poll.id);
-      const tallies = firstPreferenceTallies(
-        (poll.options ?? []).map((o) => o.id),
-        votes.map((v) => v.ranks),
-      );
-      return { poll, tallies, voteCount: votes.length };
-    }),
-  );
-  return c.json({ polls: withTallies });
-});
-
-clubRoutes.get("/clubs/:id/meetings", async (c) => {
-  const { club } = await readableClub(c, c.req.param("id"));
-  const meetings = await clubsRepo.listMeetings(c.get("db"), club.id);
-  return c.json({ meetings });
-});
-
-clubRoutes.get("/clubs/:id/schedule", async (c) => {
-  const { club } = await readableClub(c, c.req.param("id"));
-  const schedule = await clubsRepo.listSchedule(c.get("db"), club.id);
-  return c.json({ schedule });
+  const page = await views.threadPage(c.get("db"), c.req.param("id"), c.get("session")?.id ?? null);
+  if (!page) throw errors.notFound("Thread not found.");
+  return c.json(page);
 });
 
 // Public invite preview: club summary for the join page + OG image.

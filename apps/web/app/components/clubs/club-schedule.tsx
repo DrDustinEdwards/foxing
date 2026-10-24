@@ -1,24 +1,30 @@
-import type { PollWithTally } from "~/lib/clubs.server";
-import { useClubWrite } from "~/hooks/use-club-write";
+import {
+  useAddSchedule,
+  useClosePoll,
+  useCreateMeeting,
+  useCreatePoll,
+  useRsvp,
+  useVotePoll,
+} from "@foxing/client";
+import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { useState } from "react";
 import { ErrorText } from "./club-sections";
 
 export function PollsSection({
   clubId,
   polls,
-  liveTallies,
   canModerate,
   viewerId,
-  onChange,
 }: {
   clubId: string;
-  polls: PollWithTally[];
-  liveTallies: Record<string, Record<string, number>>;
+  polls: ClubPollItem[];
   canModerate: boolean;
   viewerId: string;
-  onChange: () => void;
 }) {
-  const { write, error, pending } = useClubWrite();
+  const createPoll = useCreatePoll();
+  const vote = useVotePoll();
+  const close = useClosePoll();
+  const pending = createPoll.pending || vote.pending || close.pending;
   const [open, setOpen] = useState(false);
   const [optionCount, setOptionCount] = useState(2);
 
@@ -29,22 +35,13 @@ export function PollsSection({
       const label = String(form.get(`opt${i}`) ?? "").trim();
       return label ? { id: `o${i}`, label } : null;
     }).filter((o): o is { id: string; label: string } => o !== null);
-    const r = await write(`/clubs/${clubId}/polls`, {
-      body: { title: String(form.get("title") ?? "").trim(), pollType: "single", options },
+    const r = await createPoll.run({
+      clubId,
+      title: String(form.get("title") ?? "").trim(),
+      pollType: "single",
+      options,
     });
-    if (r.ok) {
-      setOpen(false);
-      onChange();
-    }
-  }
-
-  async function vote(pollId: string, optionId: string) {
-    const r = await write(`/polls/${pollId}/vote`, { body: { ranks: [optionId] } });
-    if (r.ok) onChange();
-  }
-  async function close(pollId: string) {
-    const r = await write(`/polls/${pollId}/close`);
-    if (r.ok) onChange();
+    if (r) setOpen(false);
   }
 
   return (
@@ -96,7 +93,7 @@ export function PollsSection({
               Create poll
             </button>
           </div>
-          <ErrorText error={error} />
+          <ErrorText error={createPoll.error} />
         </form>
       ) : null}
 
@@ -104,9 +101,8 @@ export function PollsSection({
         <p className="mt-4 meta">No polls yet.</p>
       ) : (
         <div className="mt-4 fx-club-schedule-box">
-          {polls.map(({ poll, tallies, myVote }) => {
-            const live = liveTallies[poll.id] ?? tallies;
-            const total = Object.values(live).reduce((a, b) => a + b, 0);
+          {polls.map((poll) => {
+            const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
               <div key={poll.id} className="card">
                 <div className="row spread">
@@ -116,7 +112,7 @@ export function PollsSection({
                   ) : canModerate || poll.createdBy === viewerId ? (
                     <button
                       type="button"
-                      onClick={() => close(poll.id)}
+                      onClick={() => close.fire({ clubId, pollId: poll.id })}
                       disabled={pending}
                       className="fx-club-schedule-btn-3"
                     >
@@ -125,16 +121,16 @@ export function PollsSection({
                   ) : null}
                 </div>
                 <ul className="mt-3 fx-club-schedule-list">
-                  {(poll.options ?? []).map((opt) => {
-                    const count = live[opt.id] ?? 0;
+                  {poll.options.map((opt) => {
+                    const count = poll.tallies[opt.id] ?? 0;
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-                    const mine = myVote?.includes(opt.id);
+                    const mine = poll.myVote?.includes(opt.id);
                     return (
                       <li key={opt.id}>
                         <button
                           type="button"
                           disabled={poll.isClosed || pending}
-                          onClick={() => vote(poll.id, opt.id)}
+                          onClick={() => vote.fire({ clubId, pollId: poll.id, ranks: [opt.id] })}
                           aria-pressed={mine}
                           className="fx-poll-option"
                         >
@@ -157,6 +153,7 @@ export function PollsSection({
           })}
         </div>
       )}
+      <ErrorText error={vote.error ?? close.error} />
     </section>
   );
 }
@@ -164,32 +161,24 @@ export function PollsSection({
 export function MeetingsSection({
   clubId,
   meetings,
-  onChange,
 }: {
   clubId: string;
-  meetings: { id: string; title: string; meetingDate: Date; isCancelled: boolean }[];
-  onChange: () => void;
+  meetings: ClubMeetingItem[];
 }) {
-  const { write, error, pending } = useClubWrite();
+  const createMeeting = useCreateMeeting();
+  const rsvp = useRsvp();
   const [open, setOpen] = useState(false);
 
   async function create(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
     const dateStr = String(form.get("date") ?? "");
-    const r = await write(`/clubs/${clubId}/meetings`, {
-      body: {
-        title: String(form.get("title") ?? "").trim(),
-        meetingDate: dateStr ? new Date(dateStr).getTime() : Date.now(),
-      },
+    const r = await createMeeting.run({
+      clubId,
+      title: String(form.get("title") ?? "").trim(),
+      meetingDate: dateStr ? new Date(dateStr).getTime() : Date.now(),
     });
-    if (r.ok) {
-      setOpen(false);
-      onChange();
-    }
-  }
-  async function rsvp(meetingId: string, status: string) {
-    await write(`/meetings/${meetingId}/rsvp`, { body: { status } });
+    if (r) setOpen(false);
   }
 
   return (
@@ -217,14 +206,14 @@ export function MeetingsSection({
           />
           <button
             type="submit"
-            disabled={pending}
+            disabled={createMeeting.pending}
             className="cap-btn"
             data-variant="primary"
             data-size="sm"
           >
             Schedule
           </button>
-          <ErrorText error={error} />
+          <ErrorText error={createMeeting.error} />
         </form>
       ) : null}
       {meetings.length === 0 ? (
@@ -241,7 +230,7 @@ export function MeetingsSection({
                     <button
                       key={s}
                       type="button"
-                      onClick={() => rsvp(m.id, s)}
+                      onClick={() => rsvp.fire({ clubId, meetingId: m.id, status: s })}
                       className="cap-chip"
                     >
                       {s === "not_going" ? "Can't" : s}
@@ -255,6 +244,7 @@ export function MeetingsSection({
           ))}
         </ul>
       )}
+      <ErrorText error={rsvp.error} />
     </section>
   );
 }
@@ -263,30 +253,25 @@ export function ScheduleSection({
   clubId,
   schedule,
   canModerate,
-  onChange,
 }: {
   clubId: string;
-  schedule: { id: string; chapterName: string; unlockDate: Date }[];
+  schedule: ClubScheduleItem[];
   canModerate: boolean;
-  onChange: () => void;
 }) {
-  const { write, error, pending } = useClubWrite();
+  const { run, error, pending } = useAddSchedule();
   const now = Date.now();
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
+    const formEl = e.currentTarget;
+    const form = new FormData(formEl);
     const dateStr = String(form.get("unlock") ?? "");
-    const r = await write(`/clubs/${clubId}/schedule`, {
-      body: {
-        chapterName: String(form.get("chapter") ?? "").trim(),
-        unlockDate: dateStr ? new Date(dateStr).getTime() : Date.now(),
-      },
+    const r = await run({
+      clubId,
+      chapterName: String(form.get("chapter") ?? "").trim(),
+      unlockDate: dateStr ? new Date(dateStr).getTime() : Date.now(),
     });
-    if (r.ok) {
-      (e.target as HTMLFormElement).reset();
-      onChange();
-    }
+    if (r) formEl.reset();
   }
 
   return (
@@ -297,7 +282,7 @@ export function ScheduleSection({
       ) : (
         <ul className="mt-3 fx-club-schedule-list">
           {schedule.map((s) => {
-            const unlocked = new Date(s.unlockDate).getTime() <= now;
+            const unlocked = s.unlockDate <= now;
             return (
               <li key={s.id} className="py-2 fx-club-schedule-card-4">
                 <span className={unlocked ? "ink" : "dim"}>{s.chapterName}</span>

@@ -3,6 +3,8 @@
 // client. Shows identity, follow control, recent diary, lists, and activity. Anonymous
 // visitors can view public profiles; a non-public profile 404s for everyone but its
 // owner.
+import { useProfilePage } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
@@ -11,19 +13,19 @@ import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import { ldJson } from "~/lib/seo";
-import { loadPublicProfile } from "~/lib/social.server";
 import type { Route } from "./+types/u-profile";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const viewerId = session?.user?.id ?? null;
-  const data = await loadPublicProfile(env, params.username, viewerId);
-  if (!data) throw new Response("Not found", { status: 404 });
-  return { ...data, signedIn: !!viewerId, origin: new URL(request.url).origin };
+  const page = await views.profilePage(createDb(env.DB), params.username, viewerId);
+  if (!page) throw new Response("Not found", { status: 404 });
+  return { page, signedIn: !!viewerId, origin: new URL(request.url).origin };
 }
 
-export function meta({ loaderData: data }: Route.MetaArgs) {
+export function meta({ loaderData }: Route.MetaArgs) {
+  const data = loaderData ? { ...loaderData.page, origin: loaderData.origin } : undefined;
   const name = data?.profile.displayName ?? data?.profile.username ?? "Reader";
   const base = [
     { title: `${name} | Foxing` },
@@ -87,9 +89,11 @@ function activityLabel(type: string, data: Record<string, unknown>): string {
   }
 }
 
-export default function UProfile({ loaderData }: Route.ComponentProps) {
-  if (loaderData.isPrivate) {
-    return <PrivateProfile profile={loaderData.profile} />;
+export default function UProfile({ loaderData, params }: Route.ComponentProps) {
+  const { signedIn } = loaderData;
+  const page = useProfilePage(params.username, loaderData.page).data;
+  if (page.isPrivate) {
+    return <PrivateProfile profile={page.profile} />;
   }
   const {
     profile,
@@ -108,8 +112,7 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
     lists,
     activity,
     currentlyReading,
-    signedIn,
-  } = loaderData;
+  } = page;
   const name = profile.displayName ?? profile.username;
 
   return (
@@ -149,13 +152,9 @@ export default function UProfile({ loaderData }: Route.ComponentProps) {
             </Link>
           ) : (
             <div className="items-end fx-u-profile-stack-2">
-              <FollowButton
-                userId={profile.id}
-                initialFollowing={isFollowing}
-                signedIn={signedIn}
-              />
+              <FollowButton userId={profile.id} following={isFollowing} signedIn={signedIn} />
               {signedIn ? (
-                <CloseFriendToggle userId={profile.id} initialClose={viewerHasAsCloseFriend} />
+                <CloseFriendToggle userId={profile.id} isClose={viewerHasAsCloseFriend} />
               ) : null}
             </div>
           )}

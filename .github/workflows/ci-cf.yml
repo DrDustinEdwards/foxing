@@ -7,6 +7,8 @@ on:
     paths:
       - "packages/core/**"
       - "packages/api/**"
+      - "packages/client/**"
+      - "packages/types/**"
       - "apps/web/**"
       - ".github/workflows/ci-cf.yml"
       # Lint config and the lint:cf script decide what the Lint (biome) step checks.
@@ -16,6 +18,8 @@ on:
     paths:
       - "packages/core/**"
       - "packages/api/**"
+      - "packages/client/**"
+      - "packages/types/**"
       - "apps/web/**"
       - ".github/workflows/ci-cf.yml"
       # Lint config and the lint:cf script decide what the Lint (biome) step checks.
@@ -54,6 +58,8 @@ jobs:
         run: pnpm --filter @foxing/core exec tsc --noEmit
       - name: Typecheck api
         run: pnpm --filter @foxing/api exec tsc --noEmit
+      - name: Typecheck client
+        run: pnpm --filter @foxing/client exec tsc --noEmit
       - name: Typecheck web
         run: pnpm --filter web run type-check
       - name: Lint (biome)

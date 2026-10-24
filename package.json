@@ -15,7 +15,7 @@
     "build:web": "pnpm --filter web build",
     "type-check": "pnpm --filter mobile exec tsc --noEmit && pnpm --filter web run type-check",
     "lint": "turbo lint",
-    "lint:cf": "biome check packages/core packages/api apps/web",
+    "lint:cf": "biome check packages/core packages/api packages/client packages/types apps/web",
     "check:knip": "knip --no-exit-code --reporter compact --reporter ./scripts/no-bloat/knip-summary.mjs",
     "check:jscpd": "jscpd --baseline scripts/no-bloat/jscpd-baseline.json && node scripts/no-bloat/jscpd-summary.mjs",
     "check:page-weight": "devkit-route-weight --client apps/web/build/client"

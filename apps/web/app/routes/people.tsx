@@ -1,7 +1,9 @@
 // People at /people: the follow graph (who you follow, who follows you) and the
 // close-friends management surface. Following/followers and curating close friends
-// (the audience for your friends-only content) are all free. Reads run in-process;
-// toggles write to /api/v1.
+// (the audience for your friends-only content) are all free. The loader seeds the shared
+// cache; a toggle patches every list here in place.
+import { usePeople } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
@@ -9,18 +11,12 @@ import { FollowButton } from "~/components/social/follow-button";
 import { Avatar, Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
-import { loadPeople } from "~/lib/social.server";
 import type { Route } from "./+types/people";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
-  const people = await loadPeople(env, user.id);
-  return {
-    following: people.following.map((p) => ({ ...p, isClose: people.closeFriendIds.has(p.id) })),
-    followers: people.followers,
-    closeFriends: people.closeFriends,
-  };
+  return views.people(createDb(env.DB), user.id);
 }
 
 export function meta() {
@@ -50,7 +46,7 @@ function Row({
 }
 
 export default function People({ loaderData }: Route.ComponentProps) {
-  const { following, followers, closeFriends } = loaderData;
+  const { following, followers, closeFriends } = usePeople(loaderData).data;
 
   return (
     <PageShell>
@@ -72,7 +68,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
             <ul className="stack-2">
               {following.map((p) => (
                 <Row key={p.id} p={p}>
-                  <CloseFriendToggle userId={p.id} initialClose={p.isClose} />
+                  <CloseFriendToggle userId={p.id} isClose={p.isClose} />
                 </Row>
               ))}
             </ul>
@@ -87,7 +83,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
             <ul className="stack-2">
               {followers.map((p) => (
                 <Row key={p.id} p={p}>
-                  <FollowButton userId={p.id} initialFollowing={p.isFollowing} signedIn />
+                  <FollowButton userId={p.id} following={p.isFollowing} signedIn />
                 </Row>
               ))}
             </ul>
@@ -105,7 +101,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
             <ul className="stack-2">
               {closeFriends.map((p) => (
                 <Row key={p.id} p={p}>
-                  <CloseFriendToggle userId={p.id} initialClose />
+                  <CloseFriendToggle userId={p.id} isClose />
                 </Row>
               ))}
             </ul>

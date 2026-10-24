@@ -1,9 +1,9 @@
-// Reading-list form (create + edit). Writes POST /lists or PATCH /lists/:id, then
-// navigates. A public list emits a list_created feed event server-side. Failed writes
+// Reading-list form (create + edit). Writes POST /lists or PATCH /lists/:id through the
+// shared client, then navigates. A public list emits a list_created feed event server-side. Failed writes
 // surface a visible error.
+import { useCreateList, useUpdateList } from "@foxing/client";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useApiWrite } from "~/hooks/use-api-write";
 
 export function ListForm({
   mode,
@@ -17,7 +17,9 @@ export function ListForm({
   initial?: { title: string; description: string | null; isPublic: boolean };
 }) {
   const navigate = useNavigate();
-  const { write, error, pending } = useApiWrite();
+  const create = useCreateList();
+  const update = useUpdateList();
+  const { error, pending } = mode === "create" ? create : update;
   const [title, setTitle] = useState(initial?.title ?? "");
   const [description, setDescription] = useState(initial?.description ?? "");
   const [isPublic, setIsPublic] = useState(initial?.isPublic ?? true);
@@ -29,15 +31,11 @@ export function ListForm({
       description: description.trim() === "" ? null : description.trim(),
       isPublic,
     };
-    const res =
-      mode === "create"
-        ? await write("/lists", { method: "POST", body })
-        : await write(`/lists/${listId}`, { method: "PATCH", body });
-    if (res.ok) {
-      const created = (res.data as { list?: { id: string } } | null)?.list;
-      void navigate(mode === "create" && created ? `/lists/${created.id}` : redirectTo, {
-        replace: true,
-      });
+    if (mode === "create") {
+      const r = await create.run(body);
+      if (r) void navigate(`/lists/${r.list.id}`, { replace: true });
+    } else if (await update.run({ id: listId ?? "", ...body })) {
+      void navigate(redirectTo, { replace: true });
     }
   }
 

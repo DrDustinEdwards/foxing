@@ -2,13 +2,14 @@
 // people whose close-friends list includes you (friends-only), plus your own new-follower
 // notices. Visibility resolves entirely server-side in core; the loader receives only
 // what the viewer is entitled to see.
+import { useFeed } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
+import type { FeedRow } from "@foxing/types";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Avatar, Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
-import { loadFeed } from "~/lib/social.server";
-import type { FeedRow } from "~/lib/social.server";
 import type { Route } from "./+types/feed";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -16,8 +17,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user } = await requireProfile(env, request);
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
-  const { rows, nextCursor } = await loadFeed(env, user.id, cursor ? Number(cursor) : null);
-  return { rows, nextCursor };
+  const page = await views.feed(createDb(env.DB), user.id, cursor ? Number(cursor) : null);
+  return { page, cursor: cursor ? Number(cursor) : null };
 }
 
 export function meta() {
@@ -47,7 +48,7 @@ function activityText(row: Extract<FeedRow, { kind: "activity" }>): string {
 }
 
 export default function Feed({ loaderData }: Route.ComponentProps) {
-  const { rows, nextCursor } = loaderData;
+  const { rows, nextCursor } = useFeed(loaderData.cursor, loaderData.page).data;
 
   return (
     <PageShell>

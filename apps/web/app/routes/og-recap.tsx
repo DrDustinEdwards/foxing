@@ -6,7 +6,7 @@ import { edgeCache } from "~/lib/cache.server";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import { loadOgFonts, renderOgPng } from "~/lib/og.server";
-import { loadRecap } from "~/lib/social.server";
+import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/og-recap";
 import { OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 
@@ -15,7 +15,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const year = Number(params.year);
   if (!Number.isInteger(year)) throw new Response("Not found", { status: 404 });
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
-  const data = await loadRecap(env, { username: params.username }, year, session?.user?.id ?? null);
+  const data = await views.recap(
+    createDb(env.DB),
+    { username: params.username },
+    year,
+    session?.user?.id ?? null,
+  );
   if (!data) throw new Response("Not found", { status: 404 });
 
   const cacheKey = new Request(

@@ -1,12 +1,11 @@
-// Diary entry form (create + edit). Writes POST /diary or PATCH /diary/:id from the
-// browser, then navigates to the user's profile. rating is entered in half-stars
+// Diary entry form (create + edit). Writes POST /diary or PATCH /diary/:id through the
+// shared client, which refetches the diary, profile and feed, then navigates. rating is entered in half-stars
 // (1-10) via a 0.5..5 selector. Visibility drives feed emission server-side (private
 // emits no event). Failed writes surface a visible error.
+import { useCreateDiaryEntry, useUpdateDiaryEntry } from "@foxing/client";
+import type { Visibility } from "@foxing/types";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useApiWrite } from "~/hooks/use-api-write";
-
-type Visibility = "private" | "friends" | "public";
 
 export function DiaryForm({
   mode,
@@ -29,7 +28,9 @@ export function DiaryForm({
   };
 }) {
   const navigate = useNavigate();
-  const { write, error, pending } = useApiWrite();
+  const create = useCreateDiaryEntry();
+  const update = useUpdateDiaryEntry();
+  const { error, pending } = mode === "create" ? create : update;
   const [ratingHalf, setRatingHalf] = useState<number | null>(initial?.ratingHalf ?? null);
   const [review, setReview] = useState(initial?.review ?? "");
   const [spoilers, setSpoilers] = useState(initial?.containsSpoilers ?? false);
@@ -38,17 +39,16 @@ export function DiaryForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const body = {
-      ...(mode === "create" ? { bookId } : {}),
       ratingHalf,
       review: review.trim() === "" ? null : review.trim(),
       containsSpoilers: spoilers,
       visibility,
     };
-    const res =
+    const ok =
       mode === "create"
-        ? await write("/diary", { method: "POST", body })
-        : await write(`/diary/${entryId}`, { method: "PATCH", body });
-    if (res.ok) void navigate(redirectTo, { replace: true });
+        ? await create.run({ bookId, ...body })
+        : await update.run({ id: entryId ?? "", ...body });
+    if (ok) void navigate(redirectTo, { replace: true });
   }
 
   return (

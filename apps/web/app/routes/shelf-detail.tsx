@@ -1,10 +1,11 @@
+import { useShelf } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
 import { Link, redirect } from "react-router";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { loadShelfDetail } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/shelf-detail";
 
@@ -13,7 +14,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect(`/login?redirect=/shelves/${params.id}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  const detail = await loadShelfDetail(env, session.user.id, params.id);
+  const detail = await views.shelfDetail(createDb(env.DB), session.user.id, params.id);
   if (!detail) throw new Response("Not found", { status: 404 });
   return detail;
 }
@@ -26,7 +27,8 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
-  const { shelf, books } = loaderData;
+  // Lives in the cache, so a book taken off this shelf elsewhere drops out here too.
+  const { shelf, books } = useShelf(loaderData.shelf.id, loaderData).data;
   return (
     <PageShell>
       <Container>

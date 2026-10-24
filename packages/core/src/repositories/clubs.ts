@@ -4,9 +4,9 @@
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER
 // these commit -- this file never touches a Durable Object. Threads and posts live in
 // clubs-threads.ts, polls, meetings and schedule in clubs-events.ts (re-exported below).
-import { and, desc, eq, isNotNull, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, like, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
 import {
   clubBooks,
@@ -214,6 +214,24 @@ export async function countActiveMembers(db: Db, clubId: string): Promise<number
     .from(clubMembers)
     .where(and(eq(clubMembers.clubId, clubId), eq(clubMembers.status, "active")));
   return row?.n ?? 0;
+}
+
+/** Active member counts for many clubs at once, keyed by club id. */
+export async function countActiveMembersFor(
+  db: Db,
+  clubIds: string[],
+): Promise<Map<string, number>> {
+  const map = new Map<string, number>();
+  if (clubIds.length === 0) return map;
+  for (const chunk of chunked(clubIds)) {
+    const rows = await db
+      .select({ clubId: clubMembers.clubId, n: sql<number>`count(*)` })
+      .from(clubMembers)
+      .where(and(inArray(clubMembers.clubId, chunk), eq(clubMembers.status, "active")))
+      .groupBy(clubMembers.clubId);
+    for (const r of rows) map.set(r.clubId, r.n);
+  }
+  return map;
 }
 
 export async function listMembers(db: Db, clubId: string): Promise<ClubMember[]> {

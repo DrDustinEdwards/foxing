@@ -214,15 +214,22 @@ describe("clubs API (web -> api -> core -> D1)", () => {
 
   it("PLANT: a private club's children and join-by-id are hidden from non-members; the invite code still works", async () => {
     // Grok audit 2026-10-21, FX-1: only GET /clubs/:id checked membership, and
-    // joinClub let anyone with the id in, at the default settings.
+    // joinClub let anyone with the id in, at the default settings. The child reads are
+    // now one page read, so the page and the thread read are what must stay hidden.
     await seedUser("owner_p", "plus");
     await seedUser("outsider", "free");
     const { body } = await createClub("owner_p", { visibility: "private" });
     const id = body.club.id;
 
-    for (const path of ["members", "threads", "polls", "meetings", "schedule"]) {
-      expect((await call(`/clubs/${id}/${path}`, { user: "outsider" })).status, path).toBe(404);
-      expect((await call(`/clubs/${id}/${path}`)).status, `${path} anonymous`).toBe(404);
+    const thread = await call(`/clubs/${id}/threads`, {
+      method: "POST",
+      user: "owner_p",
+      body: { title: "Members only" },
+    });
+    const threadId = ((await thread.json()) as { thread: { id: string } }).thread.id;
+    for (const path of [`/clubs/${id}`, `/threads/${threadId}`]) {
+      expect((await call(path, { user: "outsider" })).status, path).toBe(404);
+      expect((await call(path)).status, `${path} anonymous`).toBe(404);
     }
     expect((await call(`/clubs/${id}/join`, { method: "POST", user: "outsider" })).status).toBe(
       404,
@@ -230,7 +237,7 @@ describe("clubs API (web -> api -> core -> D1)", () => {
 
     const byCode = await call(`/join/${body.club.joinCode}`, { method: "POST", user: "outsider" });
     expect(byCode.status).toBe(201);
-    expect((await call(`/clubs/${id}/members`, { user: "outsider" })).status).toBe(200);
+    expect((await call(`/clubs/${id}`, { user: "outsider" })).status).toBe(200);
 
     // A private join is not a public activity row the feed would hand to followers.
     const db = createDb(env.DB);

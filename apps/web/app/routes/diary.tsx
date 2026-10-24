@@ -1,15 +1,16 @@
 // The signed-in reader's own reading log index (auth-gated, noindex). Reads run
-// in-process via loadOwnDiary (same diary query + book overlay the public profile uses,
-// scoped to the owner with all visibilities). Client-side filters by rating and whether
+// in-process via views.diary (the same view GET /diary serves) and seed the shared cache,
+// so a new or edited entry shows here without a reload. Client-side filters by rating and whether
 // an entry has a review. Logging a new entry lives at /diary/new.
+import { useDiary } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
+import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
 import { Link } from "react-router";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import type { OwnDiaryEntry } from "~/lib/social.server";
-import { loadOwnDiary } from "~/lib/social.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/diary";
 
@@ -20,8 +21,7 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
-  const entries = await loadOwnDiary(env, user.id);
-  return { entries };
+  return { entries: await views.diary(createDb(env.DB), user.id) };
 }
 
 const fmtDate = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
@@ -96,7 +96,7 @@ function groupByYear(
 }
 
 export default function Diary({ loaderData }: Route.ComponentProps) {
-  const { entries } = loaderData;
+  const entries = useDiary(loaderData.entries).data;
   const [rating, setRating] = useState<RatingFilter>("all");
   const [review, setReview] = useState<ReviewFilter>("all");
   const [sort, setSort] = useState<SortOrder>("newest");

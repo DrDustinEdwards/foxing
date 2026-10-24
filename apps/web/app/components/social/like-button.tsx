@@ -1,44 +1,28 @@
 // Like control backed by the generic reactions endpoint (PUT/DELETE /reactions). Used
-// for reading-list likes and review (diary_entry) likes. No emoji in the UI (Rule 9);
+// for reading-list likes; the cached list page holds the count. No emoji in the UI (Rule 9);
 // a heart glyph is inline SVG. Failed writes surface a visible error.
-import { useState } from "react";
-import { useApiWrite } from "~/hooks/use-api-write";
+import { useReaction } from "@foxing/client";
 
 export function LikeButton({
   targetType,
   targetId,
-  initialLiked,
-  initialCount,
+  liked,
+  count,
   signedIn,
 }: {
-  targetType: "reading_list" | "diary_entry";
+  targetType: "reading_list";
   targetId: string;
-  initialLiked: boolean;
-  initialCount: number;
+  liked: boolean;
+  count: number;
   signedIn: boolean;
 }) {
-  const { write, error, pending } = useApiWrite();
-  const [liked, setLiked] = useState(initialLiked);
-  const [count, setCount] = useState(initialCount);
-
-  async function toggle() {
-    if (!signedIn) return;
-    const next = !liked;
-    const res = await write("/reactions", {
-      method: next ? "PUT" : "DELETE",
-      body: { targetType, targetId, kind: "like" },
-    });
-    if (res.ok) {
-      setLiked(next);
-      setCount((n) => Math.max(0, n + (next ? 1 : -1)));
-    }
-  }
+  const { fire, error, pending } = useReaction();
 
   return (
     <div className="items-start fx-like-button-box">
       <button
         type="button"
-        onClick={toggle}
+        onClick={() => signedIn && fire({ targetType, targetId, on: !liked })}
         disabled={pending || !signedIn}
         aria-pressed={liked}
         aria-label={liked ? "Remove like" : "Like"}

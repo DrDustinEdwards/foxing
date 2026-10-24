@@ -7,7 +7,7 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Button, Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import type { Entry, Streak } from "~/lib/library.server";
+import type { LibraryEntry as Entry, Streak } from "@foxing/types";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/home";
@@ -136,8 +136,7 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
   );
 }
 
-function StreakCard({ streak }: { streak: Streak | null }) {
-  const s = streak ?? { currentStreak: 0, longestStreak: 0, totalBooksFinished: 0 };
+function StreakCard({ streak: s }: { streak: Streak }) {
   const subtext =
     s.currentStreak === 0 ? "Open a book to start a streak." : "Read today to keep it going.";
 

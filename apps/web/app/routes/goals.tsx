@@ -1,18 +1,18 @@
-// The signed-in reader's reading goals index (auth-gated, noindex). Reads run in-process
-// via loadGoals (mirrors GET /goals); writes go to /api/v1/goals from the browser and the
-// page revalidates. Books-type goals show progress against finishes in their period.
-// Active goals (their period covers today) are separated from past ones.
-import { createDb, libraryRepo } from "@foxing/core";
+// The signed-in reader's reading goals index (auth-gated, noindex). The loader reads
+// core's goals view in-process (the same view GET /goals answers with); after that the
+// list lives in the @foxing/client cache and every edit patches it in place. Books-type
+// goals show progress against finishes in their period. Active goals (their period
+// covers today) are separated from past ones.
+import { useDeleteGoal, useGoals, useStreak, useUpdateGoal } from "@foxing/client";
+import { createDb, libraryRepo, views } from "@foxing/core";
+import type { Goal, GoalWithProgress } from "@foxing/types";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useRevalidator } from "react-router";
-import { GoalPeriodSelect, useCreateGoal } from "~/components/goal-form";
+import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { goalPacing, goalPeriodLabel, isoWeek, periodElapsedFraction } from "~/lib/goals";
-import type { GoalRow } from "~/lib/library.server";
-import { loadGoals } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
 import { MONTH_ABBR } from "~/lib/months";
@@ -24,12 +24,12 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
-  const goals = await loadGoals(env, user.id);
 
   // Reading-activity heatmap: 53 weeks of days, coloured by books finished that day. Finish
   // dates are the only real per-day reading signal in D1 (reading_sessions are unpopulated
   // on web), so they drive the grid. Weeks are Sunday-first, GitHub-style.
   const db = createDb(env.DB);
+  const goals = await views.goals(db, user.id);
   const now = new Date();
   const dayMs = 86_400_000;
   const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
@@ -39,7 +39,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const firstSunday = lastSunday - (WEEKS - 1) * 7 * dayMs;
 
   const [streak, finished] = await Promise.all([
-    libraryRepo.getStreak(db, user.id),
+    views.streak(db, user.id),
     libraryRepo.listFinishedInRangeForStats(db, user.id, firstSunday, todayUTC + dayMs),
   ]);
 
@@ -75,17 +75,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return {
     goals,
     heatmap: { weeks, monthLabels },
-    streak: {
-      currentStreak: streak?.currentStreak ?? 0,
-      longestStreak: streak?.longestStreak ?? 0,
-      totalBooksFinished: streak?.totalBooksFinished ?? 0,
-      totalHighlights: streak?.totalHighlights ?? 0,
-    },
+    streak,
   };
 }
 
 /** A goal is active when its period covers the current date; otherwise it is past. */
-function isActive(goal: GoalRow["goal"], now: Date): boolean {
+function isActive(goal: Goal, now: Date): boolean {
   const year = now.getUTCFullYear();
   if (goal.year !== year) return false;
   if (goal.periodType === "month") return goal.month === now.getUTCMonth() + 1;
@@ -94,9 +89,9 @@ function isActive(goal: GoalRow["goal"], now: Date): boolean {
 }
 
 export default function Goals({ loaderData }: Route.ComponentProps) {
-  const { goals, heatmap, streak } = loaderData;
-  const revalidator = useRevalidator();
-  const refresh = () => revalidator.revalidate();
+  const { heatmap } = loaderData;
+  const goals = useGoals(loaderData.goals).data;
+  const streak = useStreak(loaderData.streak).data;
   const now = new Date();
   const active = goals.filter((g) => isActive(g.goal, now));
   const past = goals.filter((g) => !isActive(g.goal, now));
@@ -106,7 +101,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
       <Container className="fx-goals-wrap">
         <PageHeader eyebrow="Reading" title="Reading goals" className="mb-0" />
 
-        <CreateGoal onChanged={refresh} />
+        <CreateGoal />
 
         <section className="stack">
           <h2 className="display-2">Active</h2>
@@ -115,7 +110,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="stack-3">
               {active.map((g) => (
-                <GoalItem key={g.goal.id} row={g} active now={now} onChanged={refresh} />
+                <GoalItem key={g.goal.id} row={g} active now={now} />
               ))}
             </ul>
           )}
@@ -126,7 +121,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
             <h2 className="display-2">Past</h2>
             <ul className="stack-3">
               {past.map((g) => (
-                <GoalItem key={g.goal.id} row={g} active={false} now={now} onChanged={refresh} />
+                <GoalItem key={g.goal.id} row={g} active={false} now={now} />
               ))}
             </ul>
           </section>
@@ -175,22 +170,14 @@ function CheckIcon() {
   );
 }
 
-function GoalItem({
-  row,
-  active,
-  now,
-  onChanged,
-}: {
-  row: GoalRow;
-  active: boolean;
-  now: Date;
-  onChanged: () => void;
-}) {
+function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean; now: Date }) {
   const { goal, progress } = row;
   const [editing, setEditing] = useState(false);
   const [target, setTarget] = useState(goal.target);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const update = useUpdateGoal();
+  const remove = useDeleteGoal();
+  const pending = update.pending;
+  const error = update.error ?? remove.error;
   const pct = Math.min(100, goal.target > 0 ? (progress / goal.target) * 100 : 0);
   const complete = goal.target > 0 && progress >= goal.target;
   const pacing =
@@ -199,40 +186,11 @@ function GoalItem({
       : null;
 
   async function save() {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/goals/${goal.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ target }),
-      });
-      // Do not swallow: a failed write must be visible, not a silent no-op.
-      if (!res.ok) {
-        setError("Could not update that goal. Try again.");
-        return;
-      }
-      setEditing(false);
-      onChanged();
-    } catch {
-      setError("Could not update that goal. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    if (await update.run({ id: goal.id, target })) setEditing(false);
   }
 
-  async function remove() {
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/goals/${goal.id}`, { method: "DELETE" });
-      if (!res.ok) {
-        setError("Could not remove that goal. Try again.");
-        return;
-      }
-      onChanged();
-    } catch {
-      setError("Could not remove that goal. Check your connection and try again.");
-    }
+  function removeGoal() {
+    remove.fire({ id: goal.id });
   }
 
   return (
@@ -256,7 +214,7 @@ function GoalItem({
           <button type="button" onClick={() => setEditing((v) => !v)} className="fx-goals-btn">
             {editing ? "Cancel" : "Edit"}
           </button>
-          <button type="button" onClick={remove} className="fx-goals-btn-2">
+          <button type="button" onClick={removeGoal} className="fx-goals-btn-2">
             Remove
           </button>
         </div>
@@ -317,8 +275,8 @@ function GoalItem({
   );
 }
 
-function CreateGoal({ onChanged }: { onChanged: () => void }) {
-  const { target, setTarget, period, setPeriod, pending, error, add } = useCreateGoal(onChanged);
+function CreateGoal() {
+  const { target, setTarget, period, setPeriod, pending, error, add } = useGoalDraft();
 
   return (
     <section className="card">

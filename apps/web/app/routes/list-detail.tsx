@@ -1,6 +1,8 @@
 // Reading list at /lists/:id. Public lists are visible to anyone; a private list only
-// to its owner (enforced in loadListDetail). The owner can add/remove books and edit;
+// to its owner (enforced in views.listPage). The owner can add/remove books and edit;
 // any signed-in viewer can like the list (reactions, target_type='reading_list').
+import { useListPage } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { AddBookToList } from "~/components/social/add-book-to-list";
@@ -9,27 +11,30 @@ import { RemoveBookButton } from "~/components/social/remove-book-button";
 import { Avatar, Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { loadListDetail } from "~/lib/social.server";
 import type { Route } from "./+types/list-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const viewerId = session?.user?.id ?? null;
-  const data = await loadListDetail(env, params.id, viewerId);
-  if (!data) throw new Response("Not found", { status: 404 });
-  return { ...data, signedIn: !!viewerId };
+  const page = await views.listPage(createDb(env.DB), params.id, viewerId);
+  if (!page) throw new Response("Not found", { status: 404 });
+  return { page, signedIn: !!viewerId };
 }
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return [
-    { title: `${data?.list.title ?? "List"} | Foxing` },
-    { name: "robots", content: data?.list.isPublic ? "index" : "noindex" },
+    { title: `${data?.page.list.title ?? "List"} | Foxing` },
+    { name: "robots", content: data?.page.list.isPublic ? "index" : "noindex" },
   ];
 }
 
 export default function ListDetail({ loaderData }: Route.ComponentProps) {
-  const { list, owner, isOwner, likeCount, liked, books, signedIn } = loaderData;
+  const { signedIn } = loaderData;
+  const { list, owner, isOwner, likeCount, liked, books } = useListPage(
+    loaderData.page.list.id,
+    loaderData.page,
+  ).data;
 
   return (
     <PageShell>
@@ -53,8 +58,8 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
               <LikeButton
                 targetType="reading_list"
                 targetId={list.id}
-                initialLiked={liked}
-                initialCount={likeCount}
+                liked={liked}
+                count={likeCount}
                 signedIn={signedIn}
               />
               {isOwner ? (

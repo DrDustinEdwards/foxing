@@ -1,3 +1,5 @@
+import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
+import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
 import stylesheet from "./app.css?url";
@@ -64,8 +66,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Same-origin /api/v1 with the session cookie. One QueryClient per document, so the
+// server never shares a cache between requests.
+const api = createApiClient();
+
 export default function App() {
-  return <Outlet />;
+  const [queryClient] = useState(createFoxingQueryClient);
+  return (
+    <FoxingDataProvider api={api} queryClient={queryClient}>
+      <Outlet />
+    </FoxingDataProvider>
+  );
 }
 
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {

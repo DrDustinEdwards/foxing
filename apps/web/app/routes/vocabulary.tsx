@@ -1,12 +1,12 @@
 // The signed-in reader's saved vocabulary (auth-gated, noindex). Words looked up while
-// reading collect here. Reads run in-process via core; the mastered toggle writes to
-// /api/v1/vocabulary/:id from the browser and the page revalidates. A filter narrows to
-// still-to-master or mastered. Words originate in the reader (R2-blocked), so an empty
-// list is expected until it ships; the honest empty state stays.
+// reading collect here. The loader reads core's vocabulary view; the list then lives in
+// the @foxing/client cache and the mastered toggle flips in place (rolled back if the
+// write fails). A filter narrows to still-to-master or mastered.
+import { useSetMastered, useVocabulary } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
+import type { VocabularyWord } from "@foxing/types";
 import type { ReactNode } from "react";
 import { useState } from "react";
-import { useRevalidator } from "react-router";
-import { createDb, libraryRepo } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -20,22 +20,13 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
-  const db = createDb(env.DB);
-  const rows = await libraryRepo.listVocabulary(db, user.id);
-  const words = rows.map((w) => ({
-    id: w.id,
-    word: w.word,
-    definition: w.definition,
-    contextSentence: w.contextSentence,
-    mastered: w.mastered,
-  }));
-  return { words };
+  return { words: await views.vocabulary(createDb(env.DB), user.id) };
 }
 
 type Filter = "all" | "learning" | "mastered";
 
 export default function Vocabulary({ loaderData }: Route.ComponentProps) {
-  const { words } = loaderData;
+  const words = useVocabulary(loaderData.words).data;
   const [filter, setFilter] = useState<Filter>("all");
   const masteredCount = words.filter((w) => w.mastered).length;
   const learningCount = words.length - masteredCount;
@@ -105,42 +96,8 @@ function FilterTab({
   );
 }
 
-function WordItem({
-  word,
-}: {
-  word: {
-    id: string;
-    word: string;
-    definition: string;
-    contextSentence: string | null;
-    mastered: boolean;
-  };
-}) {
-  const revalidator = useRevalidator();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function toggle() {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/v1/vocabulary/${word.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mastered: !word.mastered }),
-      });
-      // Do not swallow: a failed write must be visible, not a silent no-op.
-      if (!res.ok) {
-        setError("Could not update that word. Try again.");
-        return;
-      }
-      void revalidator.revalidate();
-    } catch {
-      setError("Could not update that word. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
-  }
+function WordItem({ word }: { word: VocabularyWord }) {
+  const setMastered = useSetMastered();
 
   return (
     <li className="card">
@@ -148,8 +105,12 @@ function WordItem({
         <h2 className="fx-vocabulary-title">{word.word}</h2>
         <div className="shrink-0 fx-vocabulary-row-3">
           {word.mastered ? <span className="fx-vocabulary-caps">Mastered</span> : null}
-          <button type="button" onClick={toggle} disabled={pending} className="fx-vocabulary-btn">
-            {pending ? "Saving..." : word.mastered ? "Unmark" : "Mark mastered"}
+          <button
+            type="button"
+            onClick={() => setMastered.fire({ id: word.id, mastered: !word.mastered })}
+            className="fx-vocabulary-btn"
+          >
+            {word.mastered ? "Unmark" : "Mark mastered"}
           </button>
         </div>
       </div>
@@ -157,9 +118,9 @@ function WordItem({
       {word.contextSentence ? (
         <p className="mt-2 italic fx-vocabulary-text">{word.contextSentence}</p>
       ) : null}
-      {error ? (
+      {setMastered.error ? (
         <p className="mt-2 error xsmall" role="alert">
-          {error}
+          {setMastered.error}
         </p>
       ) : null}
     </li>

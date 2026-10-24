@@ -6,7 +6,7 @@ import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { loadRecap } from "~/lib/social.server";
+import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/recap";
 import { SITE_ORIGIN } from "~/lib/origins";
 
@@ -17,7 +17,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     throw new Response("Not found", { status: 404 });
   }
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
-  const data = await loadRecap(env, { username: params.username }, year, session?.user?.id ?? null);
+  const data = await views.recap(
+    createDb(env.DB),
+    { username: params.username },
+    year,
+    session?.user?.id ?? null,
+  );
   if (!data) throw new Response("Not found", { status: 404 });
   return { ...data, year, username: params.username };
 }

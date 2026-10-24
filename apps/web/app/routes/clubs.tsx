@@ -1,12 +1,13 @@
-// Club list (auth-gated). Reads run in-process via core; the "New club" button routes
-// to /clubs/new, which is Plus-gated (free users see the paywall there). Joining a club
-// is free and happens on the club detail page.
+// Club list (auth-gated). The loader reads the clubs view in-process and seeds the
+// shared cache, so joining or leaving a club updates this list without a reload. The
+// "New club" button routes to /clubs/new; joining happens on the club detail page.
+import { useClubsIndex } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
 import { Link, redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { loadClubsIndex } from "~/lib/clubs.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
 
@@ -15,8 +16,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect("/login?redirect=/clubs");
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  const { mine, discover } = await loadClubsIndex(env, session.user.id);
-  return { mine, discover };
+  return views.clubsIndex(createDb(env.DB), session.user.id);
 }
 
 export function meta() {
@@ -37,7 +37,7 @@ function ClubRow({
 }
 
 export default function Clubs({ loaderData }: Route.ComponentProps) {
-  const { mine, discover } = loaderData;
+  const { mine, discover } = useClubsIndex(loaderData).data;
 
   return (
     <PageShell>

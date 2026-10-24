@@ -3,14 +3,13 @@
 // pending + role=alert error, never a silent no-op.
 import { getAuthenticatorName } from "@better-auth/passkey";
 import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
-import { pushDomain } from "@foxing/core";
+import { createDb, pushDomain, views } from "@foxing/core";
 import { useState } from "react";
 import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
 import { requireProfile } from "~/lib/profile.server";
-import { loadCloseFriends } from "~/lib/social.server";
 import { Container, PageHeader } from "~/components/ui";
 import type { Route } from "./+types/settings";
 import {
@@ -36,8 +35,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const isPlus = profile.subscriptionTier === "plus";
   const vis = profile.visibility ?? {};
   const auth = await getAuth(env);
-  const [closeFriends, passkeys, accounts] = await Promise.all([
-    loadCloseFriends(env, user.id),
+  const [people, passkeys, accounts] = await Promise.all([
+    views.people(createDb(env.DB), user.id),
     auth.api.listPasskeys({ headers: request.headers }),
     auth.api.listUserAccounts({ headers: request.headers }),
   ]);
@@ -76,12 +75,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
             ? ("public" as const)
             : ("private" as const),
     },
-    closeFriends: closeFriends.map((p) => ({
-      id: p.id,
-      username: p.username,
-      displayName: p.displayName ?? p.username,
-      avatarUrl: p.avatarUrl,
-    })),
+    people,
     notifications,
     signIn: {
       // Named by the reader, else by the password manager or device that holds it.
@@ -125,7 +119,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <VisibilitySection initial={loaderData.visibility} />
           <NotificationsSection initial={loaderData.notifications} />
           <AppearanceSection />
-          <CloseFriendsSection friends={loaderData.closeFriends} />
+          <CloseFriendsSection people={loaderData.people} />
           <SignInSection initial={loaderData.signIn} />
           <DataSection />
           {loaderData.isAdmin ? <AdminSection /> : null}

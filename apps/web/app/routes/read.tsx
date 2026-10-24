@@ -7,12 +7,6 @@ import { catalogRepo, libraryRepo, loadReaderAnnotations, readerSocialRepo } fro
 import { getAuth } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
-import type {
-  ReaderAnnotation,
-  ReaderComment,
-  ReaderOther,
-  ReaderPopular,
-} from "~/components/reader/reader-types";
 import { ReaderView } from "~/components/reader/reader-view";
 import type { Route } from "./+types/read";
 
@@ -35,19 +29,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       : Promise.resolve<{ id: string; name: string }[]>([]),
   ]);
 
-  const annotations: ReaderAnnotation[] = resolved.mine.map((a) => ({
-    id: a.id,
-    type: a.type as ReaderAnnotation["type"],
-    locator: (a.locator as Locator | null) ?? null,
-    selectedText: a.selectedText,
-    body: a.body,
-    color: a.color,
-    chapter: a.chapter,
-  }));
-  const others = resolved.others as unknown as ReaderOther[];
-  const comments = resolved.comments as unknown as ReaderComment[];
-  const popular = resolved.popular as unknown as ReaderPopular[];
-
   // Saved reading position comes from the same resolution's viewer progress; the reader
   // component seeds its scrubber and progress gate from it.
   let initialLocator: Locator | null = null;
@@ -65,12 +46,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     manifestUrl: `${origin}/reader-assets/${book.slug}/manifest.json`,
     signedIn: !!userId,
     loginHref: `/login?redirect=${encodeURIComponent(`/read/${book.slug}`)}`,
-    annotations,
-    others,
-    comments,
-    popular,
+    layers: resolved,
     shareableClubs,
-    viewerProgressPct: resolved.viewerProgressPct,
     initialLocator,
   };
 }

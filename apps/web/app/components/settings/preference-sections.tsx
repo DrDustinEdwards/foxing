@@ -1,3 +1,10 @@
+import {
+  useBillingPortal,
+  usePeople,
+  useSetNotificationPrefs,
+  useSetVisibility,
+} from "@foxing/client";
+import type { PeoplePage } from "@foxing/types";
 import { useState } from "react";
 import { Card, inputClass, SubmitRow, ToggleRow } from "./settings-card";
 import { ThemeSwitch } from "capsomer/react/theme-switch";
@@ -17,28 +24,18 @@ export function BillingSection({
   periodEndLabel: string | null;
   onUpgrade: () => void;
 }) {
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const portal = useBillingPortal();
+  // Stays pending while the browser leaves for Stripe.
+  const [leaving, setLeaving] = useState(false);
+  const pending = portal.pending || leaving;
+  const { error } = portal;
   const isPlus = tier === "plus";
 
   async function manage() {
-    setPending(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/billing/portal", { method: "POST" });
-      const body = (await res.json().catch(() => null)) as {
-        url?: string;
-        error?: { message?: string };
-      } | null;
-      if (res.ok && body?.url) {
-        window.location.assign(body.url);
-        return;
-      }
-      setError(body?.error?.message ?? `Could not open billing (${res.status}).`);
-    } catch {
-      setError("Could not reach billing. Check your connection and try again.");
-    } finally {
-      setPending(false);
+    const r = await portal.run();
+    if (r) {
+      setLeaving(true);
+      window.location.assign(r.url);
     }
   }
 
@@ -89,31 +86,13 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
   const [profile, setProfile] = useState(initial.profile);
   const [progress, setProgress] = useState(initial.progress);
   const [defaultAnnotation, setDefaultAnnotation] = useState(initial.defaultAnnotation);
-  const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"saved" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { run, pending, error } = useSetVisibility();
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    setPending(true);
     setStatus(null);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/me/visibility", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profile, progress, defaultAnnotation }),
-      });
-      if (!res.ok) {
-        setError("Could not save your visibility settings. Try again.");
-        return;
-      }
-      setStatus("saved");
-    } catch {
-      setError("Could not save your settings. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    if (await run({ profile, progress, defaultAnnotation })) setStatus("saved");
   }
 
   return (
@@ -186,34 +165,14 @@ export function NotificationsSection({
   const [quietOn, setQuietOn] = useState(Boolean(initial.quietHours));
   const [start, setStart] = useState(initial.quietHours?.start ?? "22:00");
   const [end, setEnd] = useState(initial.quietHours?.end ?? "07:00");
-  const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"saved" | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { run, pending, error } = useSetNotificationPrefs();
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
-    setPending(true);
     setStatus(null);
-    setError(null);
-    try {
-      const res = await fetch("/api/v1/me/notification-prefs", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          categories,
-          quietHours: quietOn ? { start, end } : null,
-        }),
-      });
-      if (!res.ok) {
-        setError("Could not save your notification settings. Try again.");
-        return;
-      }
-      setStatus("saved");
-    } catch {
-      setError("Could not save your settings. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
+    const saved = await run({ categories, quietHours: quietOn ? { start, end } : null });
+    if (saved) setStatus("saved");
   }
 
   return (
@@ -291,11 +250,9 @@ export function AppearanceSection() {
   );
 }
 
-export function CloseFriendsSection({
-  friends,
-}: {
-  friends: Array<{ id: string; username: string; displayName: string; avatarUrl: string | null }>;
-}) {
+/** Lists and removes close friends; removing one patches this list in place. */
+export function CloseFriendsSection({ people }: { people: PeoplePage }) {
+  const friends = usePeople(people).data.closeFriends;
   return (
     <Card title="Close friends">
       <p className="ui">
@@ -314,17 +271,17 @@ export function CloseFriendsSection({
           {friends.map((f) => (
             <li key={f.id} className="py-2 fx-preference-sections-card">
               <Link to={`/u/${f.username}`} className="fx-preference-sections-link-2">
-                <Avatar src={f.avatarUrl} name={f.displayName} size="sm" />
+                <Avatar src={f.avatarUrl} name={f.displayName ?? f.username} size="sm" />
                 <span className="min-0">
                   <span className="block truncate fx-preference-sections-label-2">
-                    {f.displayName}
+                    {f.displayName ?? f.username}
                   </span>
                   <span className="block truncate fx-preference-sections-label-3">
                     @{f.username}
                   </span>
                 </span>
               </Link>
-              <CloseFriendToggle userId={f.id} initialClose />
+              <CloseFriendToggle userId={f.id} isClose />
             </li>
           ))}
         </ul>

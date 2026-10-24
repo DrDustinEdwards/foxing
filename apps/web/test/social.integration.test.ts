@@ -305,12 +305,10 @@ describe("social API (web -> api -> core -> D1)", () => {
     });
 
     const res = await call("/feed", { user: "carol" });
-    const { items } = (await res.json()) as {
-      items: { kind: string; event?: { type: string; bookId: string } }[];
-    };
-    const activity = items.filter((i) => i.kind === "activity");
+    const { rows } = (await res.json()) as { rows: { kind: string; book?: { id: string } }[] };
+    const activity = rows.filter((r) => r.kind === "activity");
     expect(activity).toHaveLength(1);
-    expect(activity[0].event?.bookId).toBe("b1");
+    expect(activity[0].book?.id).toBe("b1");
   });
 
   it("GET /feed reveals the friends-only review once the viewer is a close friend", async () => {
@@ -328,11 +326,9 @@ describe("social API (web -> api -> core -> D1)", () => {
     });
 
     const res = await call("/feed", { user: "carol" });
-    const { items } = (await res.json()) as {
-      items: { kind: string; event?: { bookId: string } }[];
-    };
-    const activity = items.filter((i) => i.kind === "activity");
+    const { rows } = (await res.json()) as { rows: { kind: string; book?: { id: string } }[] };
+    const activity = rows.filter((r) => r.kind === "activity");
     expect(activity).toHaveLength(1);
-    expect(activity[0].event?.bookId).toBe("b2");
+    expect(activity[0].book?.id).toBe("b2");
   });
 });

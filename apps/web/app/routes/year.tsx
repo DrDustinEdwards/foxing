@@ -2,13 +2,12 @@
 // recap aggregation that powers the public /u/:username/recap/:year, targeted by user id
 // so it is always the viewer's own. /year shows the current year; /year/:year picks one.
 // A year picker links between years. The shareable public version lives on the profile.
-import { createDb, libraryRepo } from "@foxing/core";
+import { createDb, libraryRepo, views } from "@foxing/core";
 import type { RecapBook } from "@foxing/core";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { loadRecap } from "~/lib/social.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/year";
 import { MONTH_INITIALS, MONTH_NAMES } from "~/lib/months";
@@ -26,7 +25,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     throw new Response("Not found", { status: 404 });
   }
-  const data = await loadRecap(env, { userId: user.id }, year, user.id);
+  const data = await views.recap(createDb(env.DB), { userId: user.id }, year, user.id);
   if (!data) throw new Response("Not found", { status: 404 });
 
   // The finish dates + subjects for the selected year power the month strip and genre

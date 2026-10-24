@@ -1,36 +1,14 @@
 // Book picker for starting a diary entry when /diary/new was opened without a ?book=.
-// Searches the catalog via /search/suggest and navigates to /diary/new?book=<slug> so
+// Searches the catalog as you type and navigates to /diary/new?book=<slug> so
 // the loader can resolve the book and render the form.
-import { useEffect, useRef, useState } from "react";
+import { useSuggest } from "@foxing/client";
+import { useState } from "react";
 import { useNavigate } from "react-router";
-
-type Suggestion = { slug: string; title: string; author: string };
 
 export function DiaryBookPicker() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const [results, setResults] = useState<Suggestion[]>([]);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (timer.current) clearTimeout(timer.current);
-    if (q.trim().length < 2) {
-      setResults([]);
-      return;
-    }
-    timer.current = setTimeout(async () => {
-      try {
-        const res = await fetch(`/search/suggest?q=${encodeURIComponent(q)}`);
-        const data = (await res.json()) as { books?: Suggestion[] };
-        setResults(data.books ?? []);
-      } catch {
-        setResults([]);
-      }
-    }, 200);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [q]);
+  const results = useSuggest(q, 200).books;
 
   return (
     <div className="card">

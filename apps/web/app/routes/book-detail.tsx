@@ -1,9 +1,10 @@
-import { catalogRepo, libraryRepo } from "@foxing/core";
+import { useMyBook, useShelves } from "@foxing/client";
+import { catalogRepo, views } from "@foxing/core";
 import { buyLinks } from "@foxing/core";
 import { Link } from "react-router";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { BookShelvesPicker } from "~/components/book-shelves-picker";
-import { BookStatusControl, type ShelfStatus } from "~/components/book-status-control";
+import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
@@ -29,14 +30,9 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   // loader does not run), so this only fires for signed-in readers (cache bypassed).
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const userId = session?.user?.id ?? null;
-  const [userBook, shelves, memberOf] = userId
-    ? await Promise.all([
-        libraryRepo.getUserBook(db, userId, book.id),
-        libraryRepo.listShelves(db, userId),
-        libraryRepo.shelfIdsForBook(db, userId, book.id),
-      ])
-    : [null, [], []];
-  const currentStatus = (userBook?.status as ShelfStatus | null) ?? null;
+  const [myBook, shelves] = userId
+    ? await Promise.all([views.myBook(db, userId, book.id), views.shelves(db, userId)])
+    : [undefined, []];
 
   return {
     origin,
@@ -45,9 +41,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     awards,
     related,
     signedIn: !!userId,
-    currentStatus,
-    shelves: shelves.map((s) => ({ id: s.id, name: s.name })),
-    memberOf,
+    myBook,
+    shelves,
     bookId: book.id,
     loginHref: `/login?redirect=/books/${book.slug}`,
     buys: buyLinks(book, affiliateConfig(env)),
@@ -107,7 +102,11 @@ function readingTime(words: number | null): string | null {
 
 export default function BookDetail({ loaderData }: Route.ComponentProps) {
   const { book, awards, related, buys, readable, community } = loaderData;
-  const { signedIn, currentStatus, bookId, loginHref, shelves, memberOf } = loaderData;
+  const { signedIn, bookId, loginHref } = loaderData;
+  // The reader's state for this book lives in the cache, so a status or shelf change
+  // shows at once and survives navigating away and back.
+  const mine = useMyBook(bookId, loaderData.myBook, signedIn).data;
+  const shelves = useShelves(loaderData.shelves).data;
   const time = readingTime(book.wordCount);
 
   return (
@@ -140,13 +139,23 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 </Button>
               ) : null}
               <BookStatusControl
-                bookId={bookId}
-                currentStatus={currentStatus}
+                book={{
+                  id: bookId,
+                  slug: book.slug,
+                  title: book.title,
+                  author: book.author,
+                  coverUrl: book.coverUrl,
+                }}
+                currentStatus={mine?.status ?? null}
                 signedIn={signedIn}
                 loginHref={loginHref}
               />
               {signedIn ? (
-                <BookShelvesPicker bookId={bookId} shelves={shelves} memberOf={memberOf} />
+                <BookShelvesPicker
+                  bookId={bookId}
+                  shelves={shelves}
+                  memberOf={mine?.shelfIds ?? []}
+                />
               ) : null}
               {buys.map((b) => (
                 <Button
