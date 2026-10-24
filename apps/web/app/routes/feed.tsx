@@ -51,7 +51,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader
           eyebrow="Your Foxing"
           title="Feed"
@@ -64,44 +64,32 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
             body="Follow other readers to see their reviews, finishes, and lists here."
           />
         ) : (
-          <ul className="flex flex-col gap-3">
+          <ul className="stack-3">
             {rows.map((row) =>
               row.kind === "follower" ? (
-                <li
-                  key={`f-${row.id}`}
-                  className="rounded-card border border-border-subtle bg-surface px-4 py-3 font-ui text-sm text-secondary"
-                >
+                <li key={`f-${row.id}`} className="py-3 fx-feed-card">
                   {row.actorLabel}
                 </li>
               ) : (
-                <li
-                  key={`a-${row.id}`}
-                  className="flex items-start gap-3 rounded-card border border-border-subtle bg-surface p-4"
-                >
+                <li key={`a-${row.id}`} className="items-start fx-feed-card-2">
                   <Avatar
                     src={row.actor?.avatarUrl ?? null}
                     name={row.actor?.displayName ?? row.actor?.username ?? "Reader"}
                     size="sm"
                   />
-                  <div className="min-w-0 font-ui text-sm">
-                    <p className="text-secondary">
+                  <div className="fx-feed-box">
+                    <p className="muted">
                       {row.actor ? (
-                        <Link
-                          to={`/u/${row.actor.username}`}
-                          className="font-medium text-primary hover:text-brand-text"
-                        >
+                        <Link to={`/u/${row.actor.username}`} className="fx-feed-link">
                           {row.actor.displayName ?? row.actor.username}
                         </Link>
                       ) : (
-                        <span className="font-medium text-primary">Someone</span>
+                        <span className="strong">Someone</span>
                       )}{" "}
                       {activityText(row)}
                     </p>
                     {row.book ? (
-                      <Link
-                        to={`/books/${row.book.slug}`}
-                        className="mt-0.5 inline-block font-mono text-xs text-tertiary hover:text-brand-text"
-                      >
+                      <Link to={`/books/${row.book.slug}`} className="fx-feed-link-2">
                         {row.book.title}
                       </Link>
                     ) : null}
@@ -114,10 +102,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
 
         {nextCursor ? (
           <div className="mt-6 text-center">
-            <Link
-              to={`/feed?cursor=${nextCursor}`}
-              className="font-ui text-sm text-brand-text hover:underline"
-            >
+            <Link to={`/feed?cursor=${nextCursor}`} className="link sans small">
               Older activity
             </Link>
           </div>

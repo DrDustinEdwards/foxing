@@ -43,19 +43,17 @@ const fmtDateTime = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", time
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">{label}</p>
-      <p className="mt-0.5 font-ui text-sm text-primary">{children}</p>
+      <p className="fx-admin-user-detail-caps">{label}</p>
+      <p className="fx-admin-user-detail-text">{children}</p>
     </div>
   );
 }
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md border border-border-subtle bg-base p-3 text-center">
-      <p className="font-display text-2xl text-primary">{value}</p>
-      <p className="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-        {label}
-      </p>
+    <div className="text-center fx-admin-user-detail-card">
+      <p className="display-2">{value}</p>
+      <p className="fx-admin-user-detail-caps-2">{label}</p>
     </div>
   );
 }
@@ -69,10 +67,10 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <Link to="/admin/users" className="font-ui text-sm text-secondary hover:text-brand-text">
+        <Link to="/admin/users" className="fx-admin-user-detail-link">
           Back to users
         </Link>
-        <h1 className="mt-2 font-display text-3xl text-primary">@{user.username}</h1>
+        <h1 className="mt-2 fx-admin-user-detail-title">@{user.username}</h1>
       </div>
 
       <AdminCard
@@ -93,7 +91,7 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
           </AdminButton>
         }
       >
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="fx-admin-user-detail-grid">
           <Field label="Email">{user.email ?? "Unknown"}</Field>
           <Field label="Bio">{user.bio ?? "No bio"}</Field>
           <Field label="Tier">{user.subscriptionTier === "plus" ? "Plus" : "Free"}</Field>
@@ -116,7 +114,7 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
 
       <div className="mt-6">
         <AdminCard title="Activity">
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="fx-admin-user-detail-grid-2">
             <StatTile label="Books read" value={stats.booksFinished} />
             <StatTile label="Highlights" value={stats.highlights} />
             <StatTile label="Clubs" value={stats.clubsJoined} />
@@ -179,9 +177,9 @@ function OperatorControls({
 
   return (
     <AdminCard title="Operator controls">
-      <div className="space-y-6">
+      <div className="stack-6">
         <div>
-          <div className="flex flex-wrap gap-3">
+          <div className="fx-admin-user-detail-row">
             <AdminButton
               pending={tier.pending}
               onClick={() =>
@@ -212,8 +210,8 @@ function OperatorControls({
           {admin.dialog}
         </div>
 
-        <div className="space-y-2 border-t border-border-subtle pt-5">
-          <p className="font-ui text-sm font-medium text-primary">Send a notification</p>
+        <div className="fx-admin-user-detail-box">
+          <p className="sans small strong">Send a notification</p>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -229,7 +227,7 @@ function OperatorControls({
             maxLength={2000}
             className={adminInputClass}
           />
-          <div className="flex items-center gap-3">
+          <div className="row">
             <AdminButton
               pending={pending}
               disabled={title.trim().length === 0}
@@ -238,18 +236,18 @@ function OperatorControls({
               Send to @{username}
             </AdminButton>
             {notifySent ? (
-              <span className="font-ui text-sm text-tertiary" role="status">
+              <span className="meta" role="status">
                 Sent.
               </span>
             ) : null}
           </div>
         </div>
 
-        <div className="space-y-2 border-t border-error/40 pt-5">
-          <p className="font-ui text-sm font-medium text-error">Delete account</p>
-          <p className="font-ui text-xs text-secondary">
+        <div className="fx-admin-user-detail-box-2">
+          <p className="fx-admin-user-detail-text-2">Delete account</p>
+          <p className="sans xsmall muted">
             Permanently erases this account and all of its data. Type{" "}
-            <span className="font-medium text-primary">{username}</span> to confirm.
+            <span className="strong">{username}</span> to confirm.
           </p>
           <input
             value={confirmDelete}

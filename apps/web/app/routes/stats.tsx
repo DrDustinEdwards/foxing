@@ -88,21 +88,14 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-3xl">
+      <Container>
         <PageHeader eyebrow="Reading" title="Your stats" />
 
-        <dl className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <dl className="fx-stats-grid">
           {tiles.map((tile) => (
-            <div
-              key={tile.label}
-              className="rounded-card border border-border-subtle bg-surface p-5"
-            >
-              <dd className="font-display text-3xl text-primary">
-                {numberFormat.format(tile.value)}
-              </dd>
-              <dt className="mt-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-                {tile.label}
-              </dt>
+            <div key={tile.label} className="card card-5">
+              <dd className="display-3">{numberFormat.format(tile.value)}</dd>
+              <dt className="mt-1 fx-stats-caps">{tile.label}</dt>
             </div>
           ))}
         </dl>
@@ -110,7 +103,7 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
         {finishedThisYear > 0 ? (
           <section className="mt-10">
             <Eyebrow className="mb-4">Books finished in {year}</Eyebrow>
-            <div className="rounded-card border border-border-subtle bg-surface p-5">
+            <div className="card card-5">
               <MonthlyBooksChart monthly={monthly} />
             </div>
           </section>
@@ -119,7 +112,7 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
         {genres.length > 0 ? (
           <section className="mt-10">
             <Eyebrow className="mb-4">Genres this year</Eyebrow>
-            <div className="rounded-card border border-border-subtle bg-surface p-5">
+            <div className="card card-5">
               <GenreBars genres={genres} />
             </div>
           </section>
@@ -128,22 +121,19 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
         <section className="mt-10">
           <Eyebrow className="mb-4">Goals</Eyebrow>
           {goals.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No goals set.</p>
+            <p className="meta">No goals set.</p>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="stack-2">
               {goals.map((g) => {
                 const isYearBooks = g.type === "books" && g.periodType === "year";
                 return (
-                  <li
-                    key={g.id}
-                    className="rounded-md border border-border-subtle bg-surface px-4 py-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-ui text-sm text-primary">
+                  <li key={g.id} className="py-3 fx-stats-card">
+                    <div className="row spread">
+                      <span className="fx-stats-label">
                         {numberFormat.format(g.target)} {g.type} per {g.periodType}
                       </span>
                       {isYearBooks ? (
-                        <span className="font-mono text-xs text-tertiary">
+                        <span className="mono fine">
                           {numberFormat.format(finishedThisYear)} / {numberFormat.format(g.target)}
                         </span>
                       ) : null}
@@ -174,26 +164,19 @@ function MonthlyBooksChart({ monthly }: { monthly: number[] }) {
   return (
     <svg
       viewBox={`0 0 ${width} 84`}
-      className="h-24 w-full"
+      className="fx-stats-icon"
       role="img"
       aria-label="Books finished each month this year"
       preserveAspectRatio="xMidYMid meet"
     >
-      <line
-        x1="0"
-        y1={baseY}
-        x2={width}
-        y2={baseY}
-        className="stroke-border-subtle"
-        strokeWidth="1"
-      />
+      <line x1="0" y1={baseY} x2={width} y2={baseY} className="fx-stats-line" strokeWidth="1" />
       {monthly.map((count, i) => {
         const h = count > 0 ? Math.max(3, (count / max) * plotH) : 0;
         const x = i * colW + (colW - barW) / 2;
         return (
           <g key={MONTH_NAMES[i]}>
             {h > 0 ? (
-              <rect x={x} y={baseY - h} width={barW} height={h} rx="2" className="fill-brand">
+              <rect x={x} y={baseY - h} width={barW} height={h} rx="2" className="fx-stats-bar">
                 <title>{`${MONTH_NAMES[i]}: ${count} book${count === 1 ? "" : "s"}`}</title>
               </rect>
             ) : null}
@@ -201,7 +184,7 @@ function MonthlyBooksChart({ monthly }: { monthly: number[] }) {
               x={i * colW + colW / 2}
               y="78"
               textAnchor="middle"
-              className="fill-tertiary font-mono"
+              className="fx-stats-text"
               fontSize="9"
             >
               {MONTH_INITIALS[i]}
@@ -218,26 +201,26 @@ function MonthlyBooksChart({ monthly }: { monthly: number[] }) {
 function GenreBars({ genres }: { genres: Array<{ name: string; value: number }> }) {
   const max = Math.max(1, ...genres.map((g) => g.value));
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="stack-3">
       {genres.map((g) => {
         const pct = Math.max(4, (g.value / max) * 100);
         return (
           <li
             key={g.name}
-            className="grid grid-cols-[6rem_1fr_2rem] items-center gap-3"
+            className="fx-stats-grid-2"
             title={`${g.name}: ${g.value} book${g.value === 1 ? "" : "s"}`}
           >
-            <span className="truncate font-ui text-sm capitalize text-secondary">{g.name}</span>
+            <span className="truncate fx-stats-label-2">{g.name}</span>
             <svg
               viewBox="0 0 100 6"
               preserveAspectRatio="none"
-              className="h-1.5 w-full"
+              className="fx-stats-icon-2"
               aria-hidden="true"
             >
-              <rect x="0" y="0" width="100" height="6" rx="3" className="fill-brand-subtle" />
-              <rect x="0" y="0" width={pct} height="6" rx="3" className="fill-brand" />
+              <rect x="0" y="0" width="100" height="6" rx="3" className="fx-stats-bar-2" />
+              <rect x="0" y="0" width={pct} height="6" rx="3" className="fx-stats-bar" />
             </svg>
-            <span className="text-right font-mono text-xs text-tertiary">{g.value}</span>
+            <span className="fx-stats-label-3">{g.value}</span>
           </li>
         );
       })}
@@ -252,12 +235,12 @@ function ProgressBar({ value, max }: { value: number; max: number }) {
     <svg
       viewBox="0 0 100 6"
       preserveAspectRatio="none"
-      className="mt-2 h-1.5 w-full"
+      className="mt-2 fx-stats-icon-2"
       role="img"
       aria-label={`${value} of ${max} finished, ${pct} percent`}
     >
-      <rect x="0" y="0" width="100" height="6" rx="3" className="fill-brand-subtle" />
-      <rect x="0" y="0" width={pct} height="6" rx="3" className="fill-brand" />
+      <rect x="0" y="0" width="100" height="6" rx="3" className="fx-stats-bar-2" />
+      <rect x="0" y="0" width={pct} height="6" rx="3" className="fx-stats-bar" />
     </svg>
   );
 }

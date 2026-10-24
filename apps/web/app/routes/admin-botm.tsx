@@ -37,17 +37,17 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Book of the Month</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Book of the Month</h1>
       </div>
 
-      <div className="space-y-6">
+      <div className="stack-6">
         <CreateBotm onDone={reload} />
         <AdminCard title="Scheduled picks">
           {rows.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No picks yet. Create one above.</p>
+            <p className="meta">No picks yet. Create one above.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {rows.map((r) => (
                 <BotmRow key={r.id} row={r} onDone={reload} />
               ))}
@@ -104,10 +104,10 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
 
   return (
     <AdminCard title="New pick">
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+      <div className="stack">
+        <div className="fx-admin-botm-grid">
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Month</span>
+            <span className="fx-label">Month</span>
             <select
               value={month}
               onChange={(e) => setMonth(Number(e.target.value))}
@@ -121,7 +121,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
             </select>
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Year</span>
+            <span className="fx-label">Year</span>
             <input
               type="number"
               value={year}
@@ -131,14 +131,14 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           </label>
         </div>
         <div>
-          <span className="mb-1 block font-ui text-sm text-secondary">Book</span>
+          <span className="fx-label">Book</span>
           <BookPicker
             selected={book}
             onPick={(b) => setBook(b ? { id: b.id, title: b.title, author: b.author } : null)}
           />
         </div>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Category (optional)</span>
+          <span className="fx-label">Category (optional)</span>
           <input
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -146,7 +146,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Curator note (optional)</span>
+          <span className="fx-label">Curator note (optional)</span>
           <textarea
             value={curatorNote}
             onChange={(e) => setCuratorNote(e.target.value)}
@@ -155,9 +155,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">
-            Bookshop.org link (optional)
-          </span>
+          <span className="fx-label">Bookshop.org link (optional)</span>
           <input
             type="url"
             value={bookshopUrl}
@@ -167,7 +165,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Amazon link (optional)</span>
+          <span className="fx-label">Amazon link (optional)</span>
           <input
             type="url"
             value={amazonUrl}
@@ -176,7 +174,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
             className={adminInputClass}
           />
         </label>
-        <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+        <label className="row-2 ui">
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish immediately
         </label>
@@ -200,25 +198,21 @@ function BotmRow({
 
   return (
     <li className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-ui text-sm font-medium text-primary">
+      <div className="row spread">
+        <div className="min-0">
+          <p className="sans small strong">
             {MONTH_NAMES[row.month - 1]} {row.year}
             {row.isPublished ? (
-              <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-                Live
-              </span>
+              <span className="badge ml-2">Live</span>
             ) : (
-              <span className="ml-2 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-tertiary">
-                Draft
-              </span>
+              <span className="badge badge-quiet ml-2">Draft</span>
             )}
           </p>
-          <p className="truncate font-ui text-sm text-tertiary">
+          <p className="truncate meta">
             {row.bookTitle ? `${row.bookTitle} by ${row.bookAuthor}` : "No book attached"}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="row-2 shrink-0">
           <AdminButton
             pending={pending}
             onClick={() =>

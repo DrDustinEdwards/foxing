@@ -1,0 +1,295 @@
+/* The Journal: the index, archive, tag pages and a post. */
+
+/* Journal article prose: Source Serif body on a comfortable measure. */
+.article-prose {
+  font-family: var(--fx-body);
+  font-size: 1.1875rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+.article-prose > * + * {
+  margin-block-start: 1.25em;
+}
+.article-prose :is(h2, h3) {
+  font-family: var(--fx-display);
+  color: var(--text);
+  line-height: 1.2;
+  margin-block-start: 1.8em;
+}
+.article-prose h2 {
+  font-size: 1.6rem;
+}
+.article-prose h3 {
+  font-size: 1.3rem;
+}
+.article-prose a {
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.article-prose strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.article-prose blockquote {
+  border-inline-start: 3px solid var(--accent-line);
+  padding-inline-start: 1.1rem;
+  font-style: italic;
+  color: var(--dim);
+}
+.article-prose :is(ul, ol) {
+  padding-inline-start: 1.3rem;
+}
+.article-prose ul {
+  list-style: disc;
+}
+.article-prose ol {
+  list-style: decimal;
+}
+.article-prose li + li {
+  margin-block-start: 0.4em;
+}
+
+.fx-journal-archive-stack {
+  display: flex;
+  flex-direction: column;
+  --fx-divide: var(--line);
+  & > * + * {
+    border-top: 1px solid var(--fx-divide, var(--line));
+  }
+}
+.fx-journal-archive-link-2 {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.375rem;
+  padding-inline: 0.5rem;
+  margin-inline: -0.5rem;
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  &:hover {
+    background-color: var(--fx-hover);
+  }
+}
+.fx-journal-archive-box {
+  flex-grow: 1;
+}
+.fx-journal-archive-text {
+  margin-top: 0.125rem;
+  font-family: var(--fx-body);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-journal-archive-label,
+.fx-u-profile-text-3 {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}
+
+.fx-journal-post-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+}
+.fx-journal-post-img {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  border-radius: var(--fx-radius-card);
+  object-fit: cover;
+}
+
+.fx-journal-tag-link {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+  &:hover {
+    color: var(--text);
+  }
+}
+.fx-journal-tag-grid {
+  display: grid;
+  gap: 1.5rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-journal-tag-card {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.25rem;
+  box-shadow: var(--fx-shadow-sm);
+  transition-property: box-shadow;
+  transition-duration: 150ms;
+  &:hover {
+    box-shadow: var(--fx-shadow-md);
+  }
+}
+.fx-journal-tag-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.fx-journal-tag-title {
+  font-family: var(--fx-display);
+  font-size: 1.125rem;
+  line-height: 1.375;
+  color: var(--text);
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-journal-tag-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-family: var(--fx-body);
+  color: var(--muted);
+}
+.fx-journal-tag-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.fx-journal-text {
+  margin-top: -1.5rem;
+}
+.fx-journal-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3rem;
+}
+.fx-journal-grid {
+  display: grid;
+  gap: 2rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-journal-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.fx-journal-card {
+  display: grid;
+  gap: 1.5rem;
+  border-radius: var(--fx-radius-hero);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.25rem;
+  box-shadow: var(--fx-shadow-sm);
+  transition-property: box-shadow;
+  transition-duration: 150ms;
+  &:hover {
+    box-shadow: var(--fx-shadow-md);
+  }
+  @media (min-width: 40rem) {
+    padding: 2rem;
+  }
+  @media (min-width: 48rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: center;
+  }
+}
+.fx-journal-box {
+  overflow: hidden;
+  border-radius: var(--fx-radius-card);
+}
+.fx-journal-img {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  object-fit: cover;
+}
+.fx-journal-box-2 {
+  aspect-ratio: 16 / 10;
+  border-radius: var(--fx-radius-card);
+  background-color: var(--sunken);
+}
+.fx-journal-title {
+  font-family: var(--fx-display);
+  font-size: 1.875rem;
+  line-height: 1.25;
+  color: var(--text);
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-journal-text-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-family: var(--fx-body);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: var(--muted);
+}
+.fx-journal-card-2 {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+  box-shadow: var(--fx-shadow-sm);
+  transition-property: box-shadow;
+  transition-duration: 150ms;
+  &:hover {
+    box-shadow: var(--fx-shadow-md);
+  }
+}
+.fx-journal-img-2 {
+  aspect-ratio: 16 / 10;
+  width: 100%;
+  border-radius: var(--fx-radius-cover);
+  object-fit: cover;
+}
+.fx-journal-title-2 {
+  font-family: var(--fx-display);
+  font-size: 1.25rem;
+  line-height: 1.375;
+  color: var(--text);
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-journal-text-3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-family: var(--fx-body);
+  color: var(--muted);
+}
+.fx-journal-row-2 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}

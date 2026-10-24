@@ -3,7 +3,6 @@ import { Link } from "react-router";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
-import { cn } from "~/lib/cn";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import { buildMeta, itemListLd, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/books";
@@ -88,16 +87,7 @@ function FacetLink({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      to={to}
-      aria-current={active ? "true" : undefined}
-      className={cn(
-        "inline-flex items-center rounded-full border px-3 py-1.5 font-ui text-sm transition-colors",
-        active
-          ? "border-border-interactive bg-brand-subtle text-brand-subtle-text"
-          : "border-border-subtle text-secondary hover:bg-hover",
-      )}
-    >
+    <Link to={to} aria-current={active ? "true" : undefined} className="cap-chip">
       {children}
     </Link>
   );
@@ -106,10 +96,8 @@ function FacetLink({
 function FacetGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p className="mb-2.5 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-        {label}
-      </p>
-      <div className="flex flex-wrap gap-2">{children}</div>
+      <p className="fx-books-caps">{label}</p>
+      <div className="row-2 wrap">{children}</div>
     </div>
   );
 }
@@ -128,7 +116,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
         />
 
         {/* Filters: plain links, no client JS, fully cacheable. */}
-        <div className="mb-10 flex flex-col gap-6 rounded-card border border-border-subtle bg-surface p-5">
+        <div className="mb-10 fx-books-card">
           <FacetGroup label="Genre">
             {genres.map((g) => (
               <FacetLink
@@ -168,11 +156,9 @@ export default function Books({ loaderData }: Route.ComponentProps) {
               </FacetLink>
             ))}
           </FacetGroup>
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-                Sort
-              </span>
+          <div className="fx-books-row">
+            <div className="row-2">
+              <span className="group-label">Sort</span>
               {(
                 [
                   ["title", "A to Z"],
@@ -190,7 +176,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
               ))}
             </div>
             {hasFilters ? (
-              <Link to="/books" className="font-ui text-sm text-brand-text hover:underline">
+              <Link to="/books" className="link sans small">
                 Clear filters
               </Link>
             ) : null}
@@ -231,35 +217,23 @@ function Pagination({
   const next =
     result.page < result.pageCount ? query(filters, { page: String(result.page + 1) }) : null;
   return (
-    <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-4">
+    <nav aria-label="Pagination" className="mt-12 justify-center fx-books-row-2">
       {prev ? (
-        <Link
-          to={prev}
-          rel="prev"
-          className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-        >
+        <Link to={prev} rel="prev" className="cap-btn">
           Previous
         </Link>
       ) : (
-        <span className="rounded-cover border border-border-subtle px-4 py-2 font-ui text-sm text-tertiary">
-          Previous
-        </span>
+        <span className="py-2 fx-books-label">Previous</span>
       )}
-      <span className="font-ui text-sm text-secondary">
+      <span className="ui">
         Page {result.page} of {result.pageCount}
       </span>
       {next ? (
-        <Link
-          to={next}
-          rel="next"
-          className="rounded-cover border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-        >
+        <Link to={next} rel="next" className="cap-btn">
           Next
         </Link>
       ) : (
-        <span className="rounded-cover border border-border-subtle px-4 py-2 font-ui text-sm text-tertiary">
-          Next
-        </span>
+        <span className="py-2 fx-books-label">Next</span>
       )}
     </nav>
   );

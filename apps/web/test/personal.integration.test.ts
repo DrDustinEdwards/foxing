@@ -3,29 +3,11 @@ import { createApi } from "@foxing/api";
 import { billing, createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { legacyRedirectTarget } from "../app/lib/redirects";
 
-// Personal surfaces + the three cut features. The cut redirects are a pure function
-// (unit-tested here); the goal-edit contract drives the API directly (x-test-user stands
+// Personal surfaces. The cut-feature redirects are tested with the rest of the legacy map
+// in restore.integration.test.ts; the goal-edit contract drives the API directly (x-test-user stands
 // in for the Better Auth session the Worker injects). The visible /diary, /goals, and
 // /year UI are covered by the Playwright authed spec with the real login fixture.
-
-describe("cut-feature redirects (one hop to the nearest live surface)", () => {
-  it("collapses series, quotes, and buddy-reads onto their targets", () => {
-    expect(legacyRedirectTarget("/series")).toBe("/books");
-    expect(legacyRedirectTarget("/series/dune")).toBe("/books");
-    expect(legacyRedirectTarget("/quotes")).toBe("/journal");
-    expect(legacyRedirectTarget("/quotes/123")).toBe("/journal");
-    expect(legacyRedirectTarget("/buddy-reads")).toBe("/clubs");
-    expect(legacyRedirectTarget("/buddy-reads/abc")).toBe("/clubs");
-  });
-
-  it("never points a cut target at another redirect (no chains)", () => {
-    for (const p of ["/books", "/journal", "/clubs"]) {
-      expect(legacyRedirectTarget(p)).toBeNull();
-    }
-  });
-});
 
 const api = createApi({
   resolveSession: async (req) => {

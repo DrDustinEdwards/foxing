@@ -60,14 +60,13 @@ export function useAdminAction(opts?: { onDone?: () => void }) {
 export function AdminError({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p className="mt-3 font-ui text-sm text-error" role="alert">
+    <p className="mt-3 error" role="alert">
       {error}
     </p>
   );
 }
 
-export const adminInputClass =
-  "w-full rounded-md border border-border-subtle bg-base px-3 py-2 font-ui text-sm text-primary";
+export const adminInputClass = "cap-input fx-input-ground";
 
 export function AdminButton({
   children,
@@ -78,17 +77,12 @@ export function AdminButton({
   pending?: boolean;
   variant?: "default" | "primary" | "danger";
 }) {
-  const cls =
-    variant === "primary"
-      ? "bg-brand-ui text-on-brand hover:opacity-90"
-      : variant === "danger"
-        ? "border border-error text-error hover:bg-error/10"
-        : "border border-border-interactive hover:bg-hover";
   return (
     <button
       type="button"
       disabled={pending || props.disabled}
-      className={`rounded-md px-4 py-2 font-ui text-sm transition disabled:opacity-50 ${cls}`}
+      className="cap-btn"
+      data-variant={variant === "default" ? undefined : variant}
       {...props}
     >
       {children}

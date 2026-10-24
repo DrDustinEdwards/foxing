@@ -25,44 +25,97 @@ const MIN_WORDS = 8;
 // page instead of reaching the passage.
 const TAP_LINE = 8;
 type Passage = { frame: Frame; index: number; text: string; tap: { x: number; y: number } };
+type FrameParagraph = {
+  index: number;
+  text: string;
+  marked: boolean;
+  tap: { x: number; y: number };
+  points: [number, number][] | null;
+};
 
-// Readium renders each resource into a blob-URL iframe. Wait until one holds real prose.
-async function waitForRenderedText(page: Page, minChars = 120): Promise<void> {
+// Every paragraph of a content frame, run inside the frame. `marked`: a highlight range
+// touches it (the reader draws highlights with the CSS Custom Highlight API, so a drawn
+// decoration is a range in CSS.highlights). `points`: set only when the paragraph lies
+// wholly on the frame's shown page and the frame hit-tests its centre and its tap point
+// to it, the same check a real click makes.
+function frameParagraphs(line: number): FrameParagraph[] {
+  const ranges = Array.from(CSS.highlights?.values() ?? []).flatMap((h) => Array.from(h));
+  return Array.from(document.querySelectorAll("p")).map((p, index) => {
+    const marked = ranges.some((r) => {
+      const range = document.createRange();
+      range.setStart(r.startContainer, r.startOffset);
+      range.setEnd(r.endContainer, r.endOffset);
+      return range.intersectsNode(p);
+    });
+    const r = p.getBoundingClientRect();
+    const inside =
+      r.width > 0 &&
+      r.left >= 0 &&
+      r.top >= 0 &&
+      r.right <= window.innerWidth &&
+      r.bottom <= window.innerHeight;
+    const points: [number, number][] = [
+      [r.left + r.width / 2, r.top + r.height / 2],
+      [r.left + r.width / 2, r.top + Math.min(line, r.height / 2)],
+    ];
+    const hit = inside && points.every(([x, y]) => p.contains(document.elementFromPoint(x, y)));
+    return {
+      index,
+      text: (p.textContent ?? "").replace(/\s+/g, " ").trim(),
+      marked,
+      tap: { x: r.width / 2, y: Math.min(line, r.height / 2) },
+      points: hit ? points : null,
+    };
+  });
+}
+
+// Where the reader stands (reader-view sets it on each position change), so a page turn
+// or a Contents jump is waited on by its landing, not by a timer.
+function position(page: Page): Promise<string | null> {
+  return page.getByTestId("reader-container").getAttribute("data-position");
+}
+
+// The shown page has landed: the frame on top at the centre of the reading column is
+// fully faded in (Readium keeps a pool of frames and fades the shown one in) and holds text.
+async function waitForShownPage(page: Page): Promise<void> {
   await expect
     .poll(
-      async () => {
-        let max = 0;
-        for (const f of page.frames()) {
-          if (!f.url().startsWith("blob:")) continue;
-          const len = await f
-            .evaluate(() => document.body?.innerText?.trim().length ?? 0)
-            .catch(() => 0);
-          max = Math.max(max, len);
-        }
-        return max;
-      },
-      { timeout: 30_000, intervals: [500, 1000] },
+      () =>
+        page.evaluate(() => {
+          const box = document.querySelector('[data-testid="reader-container"]');
+          if (!box) return false;
+          const r = box.getBoundingClientRect();
+          const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+          if (!(el instanceof HTMLIFrameElement)) return false;
+          for (let n: Element | null = el; n; n = n.parentElement) {
+            if (getComputedStyle(n).opacity !== "1") return false;
+          }
+          return (el.contentDocument?.body?.innerText.trim().length ?? 0) > 0;
+        }),
+      { message: "the reader never showed a page", timeout: 30_000 },
     )
-    .toBeGreaterThan(minChars);
+    .toBe(true);
+}
+
+// Turn the page with the visible Next page control and wait for the turn to land.
+async function turnPage(page: Page): Promise<void> {
+  const from = await position(page);
+  await page.getByRole("button", { name: "Next page" }).click();
+  await expect.poll(() => position(page), { message: "the page turn never landed" }).not.toBe(from);
+  await waitForShownPage(page);
 }
 
 // Find a paragraph lying wholly on the page the reader is showing: the first one of real
 // prose, or the one whose text is `text`. Readium keeps a pool of resource frames
 // (prev/current/next) and paginates each with CSS columns, so a paragraph can sit in a
-// frame that is not the one shown, or on another page of the shown frame. A paragraph
-// counts only when the main page hit-tests its centre and its tap point to its own
-// iframe, the same check a real click makes. Turns pages with the visible Next page
-// control until one is found, looking a few times per page since a turn lands its frame
-// with a short fade.
+// frame that is not the one shown, or on another page of the shown frame. Turns pages
+// with the visible Next page control until one is found.
 async function findParagraph(page: Page, text?: string, unmarked = false): Promise<Passage> {
+  await waitForShownPage(page);
   for (let turn = 0; turn < 8; turn++) {
-    for (let look = 0; look < 3; look++) {
-      const hit = await paragraphOnTop(page, text, unmarked);
-      if (hit) return hit;
-      await page.waitForTimeout(500);
-    }
-    await page.getByRole("button", { name: "Next page" }).click();
-    await waitForRenderedText(page);
+    const hit = await paragraphOnTop(page, text, unmarked);
+    if (hit) return hit;
+    await turnPage(page);
   }
   throw new Error(
     text
@@ -79,57 +132,11 @@ async function paragraphOnTop(
   for (const handle of await page.locator("iframe").elementHandles()) {
     const frame = await handle.contentFrame();
     if (!frame?.url().startsWith("blob:")) continue;
-    const candidates = await frame
-      .evaluate(
-        ({ minWords, want, line, unmarked }) => {
-          // The reader draws highlights with the CSS Custom Highlight API, so a passage
-          // this reader already marked is one that a highlight range in this frame touches.
-          const marked = (p: Element) =>
-            Array.from(CSS.highlights?.values() ?? []).some((h) =>
-              Array.from(h).some((r) => {
-                const range = document.createRange();
-                range.setStart(r.startContainer, r.startOffset);
-                range.setEnd(r.endContainer, r.endOffset);
-                return range.intersectsNode(p);
-              }),
-            );
-          const found: {
-            index: number;
-            text: string;
-            tap: { x: number; y: number };
-            points: [number, number][];
-          }[] = [];
-          Array.from(document.querySelectorAll("p")).forEach((p, index) => {
-            const body = (p.textContent ?? "").replace(/\s+/g, " ").trim();
-            if (want ? body !== want : body.split(" ").length < minWords) return;
-            if (unmarked && marked(p)) return;
-            const r = p.getBoundingClientRect();
-            const inside =
-              r.width > 0 &&
-              r.left >= 0 &&
-              r.top >= 0 &&
-              r.right <= window.innerWidth &&
-              r.bottom <= window.innerHeight;
-            if (!inside) return;
-            const points: [number, number][] = [
-              [r.left + r.width / 2, r.top + r.height / 2],
-              [r.left + r.width / 2, r.top + Math.min(line, r.height / 2)],
-            ];
-            if (points.every(([x, y]) => p.contains(document.elementFromPoint(x, y)))) {
-              found.push({
-                index,
-                text: body,
-                tap: { x: r.width / 2, y: Math.min(line, r.height / 2) },
-                points,
-              });
-            }
-          });
-          return found;
-        },
-        { minWords: MIN_WORDS, want: text, line: TAP_LINE, unmarked },
-      )
-      .catch(() => []);
-    for (const c of candidates) {
+    const paragraphs = await frame.evaluate(frameParagraphs, TAP_LINE).catch(() => []);
+    for (const c of paragraphs) {
+      if (!c.points) continue;
+      if (text ? c.text !== text : c.text.split(" ").length < MIN_WORDS) continue;
+      if (unmarked && c.marked) continue;
       const onTop = await handle.evaluate((node, points) => {
         const el = node as HTMLElement;
         const r = el.getBoundingClientRect();
@@ -144,20 +151,36 @@ async function paragraphOnTop(
   return null;
 }
 
+// Whether a highlight is drawn over the passage in its frame.
+async function isMarked(passage: Passage): Promise<boolean> {
+  const paragraphs = await passage.frame.evaluate(frameParagraphs, TAP_LINE).catch(() => []);
+  return paragraphs[passage.index]?.marked ?? false;
+}
+
 // Open the book and jump to the shared chapter through the visible Contents list.
 async function openReader(browser: Browser, storageState: string): Promise<Page> {
   const ctx = await browser.newContext({ storageState });
   const page = await ctx.newPage();
   await page.goto(`/read/${SLUG}`);
-  await waitForRenderedText(page);
-  await expect(page.getByRole("status")).toHaveCount(0);
+  // "Opening book…" is the reader's status until the engine is ready.
+  await expect(page.getByRole("status")).toHaveCount(0, { timeout: 30_000 });
+  await waitForShownPage(page);
+  const from = await position(page);
   await page.getByRole("button", { name: "Contents" }).click();
   const toc = page.getByRole("navigation", { name: /table of contents/i });
   await expect(toc).toBeVisible();
   const entries = toc.getByRole("button");
   await entries.nth(Math.min(TOC_ENTRY, (await entries.count()) - 1)).click();
   await expect(toc).toHaveCount(0);
-  await waitForRenderedText(page);
+  // The jump has landed when the position moved, or the reader already stood at the start
+  // of a resource (a reader whose saved place is that chapter's first page).
+  await expect
+    .poll(async () => {
+      const now = await position(page);
+      return now !== from || /@0$/.test(now ?? "");
+    })
+    .toBe(true);
+  await waitForShownPage(page);
   return page;
 }
 
@@ -168,20 +191,13 @@ async function tapParagraph(passage: Passage): Promise<void> {
   await passage.frame.locator("p").nth(passage.index).click({ position: passage.tap });
 }
 
-// Tap a marked passage until its popover opens. Poll the tap, since a layer draws its
-// highlights once the reader's redraw lands.
+// Tap a marked passage once its highlight is drawn, and wait for its popover.
 async function tapOpen(passage: Passage, popover: Locator): Promise<void> {
   await expect
-    .poll(
-      async () => {
-        if (!(await popover.isVisible())) {
-          await tapParagraph(passage).catch(() => {});
-        }
-        return popover.isVisible();
-      },
-      { timeout: 20_000, intervals: [1000, 2000] },
-    )
+    .poll(() => isMarked(passage), { message: "the passage's highlight was never drawn" })
     .toBe(true);
+  await tapParagraph(passage);
+  await expect(popover).toBeVisible();
 }
 
 test.describe("social reading: three-account gate", () => {
@@ -238,6 +254,7 @@ test.describe("social reading: three-account gate", () => {
     await c.getByRole("button", { name: /^everyone/i }).click();
     // Tapping the very passage A shared opens no attribution popover for C.
     const cPassage = await findParagraph(c, passage.text);
+    expect(await isMarked(cPassage)).toBe(false);
     await tapParagraph(cPassage);
     await expect(c.getByRole("dialog", { name: /annotation by/i })).toHaveCount(0);
     // And C cannot see B's reply text anywhere on the page.

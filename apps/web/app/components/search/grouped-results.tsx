@@ -24,21 +24,21 @@ export function GroupedResults({
 
   return (
     <div className="mt-8">
-      <p role="status" aria-live="polite" className="mb-6 font-ui text-sm text-tertiary">
+      <p role="status" aria-live="polite" className="mb-6 fx-grouped-results-text">
         {fuzzy ? (
           <>
-            No exact match for <span className="text-secondary">&ldquo;{q}&rdquo;</span>. Showing
-            the closest results.
+            No exact match for <span className="muted">&ldquo;{q}&rdquo;</span>. Showing the closest
+            results.
           </>
         ) : nothing ? (
-          <span className="sr-only">No results for {q}.</span>
+          <span className="cap-sr-only">No results for {q}.</span>
         ) : (
           <>
             {bookTotal.toLocaleString()} {bookTotal === 1 ? "book" : "books"}
             {authors.length
               ? ` and ${authors.length} ${authors.length === 1 ? "author" : "authors"}`
               : ""}{" "}
-            for <span className="text-secondary">&ldquo;{q}&rdquo;</span>.
+            for <span className="muted">&ldquo;{q}&rdquo;</span>.
           </>
         )}
       </p>
@@ -52,21 +52,15 @@ export function GroupedResults({
 
       {authors.length > 0 ? (
         <section aria-labelledby="results-authors" className="mb-10">
-          <h2
-            id="results-authors"
-            className="mb-4 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-tertiary"
-          >
+          <h2 id="results-authors" className="mb-4 fx-grouped-results-caps">
             Authors · {authors.length}
           </h2>
-          <ul className="grid gap-2 sm:grid-cols-2">
+          <ul className="fx-grouped-results-grid">
             {authors.map((a) => (
               <li key={a.authorSlug}>
-                <Link
-                  to={`/authors/${a.authorSlug}`}
-                  className="flex items-center justify-between gap-3 rounded-card border border-border-subtle bg-surface px-4 py-3 shadow-card-sm transition-shadow hover:shadow-card-md"
-                >
-                  <span className="truncate font-display text-base text-primary">{a.author}</span>
-                  <span className="shrink-0 font-mono text-xs text-tertiary">
+                <Link to={`/authors/${a.authorSlug}`} className="fx-result-row">
+                  <span className="truncate fx-grouped-results-title">{a.author}</span>
+                  <span className="shrink-0 fx-grouped-results-label">
                     {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
                   </span>
                 </Link>
@@ -78,10 +72,7 @@ export function GroupedResults({
 
       {books.length > 0 ? (
         <section aria-labelledby="results-books">
-          <h2
-            id="results-books"
-            className="mb-4 font-mono text-[0.6875rem] uppercase tracking-[0.18em] text-tertiary"
-          >
+          <h2 id="results-books" className="mb-4 fx-grouped-results-caps">
             Books · {bookTotal.toLocaleString()}
           </h2>
           <BookGrid>

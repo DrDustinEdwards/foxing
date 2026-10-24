@@ -34,7 +34,7 @@ export default function ForgotPassword() {
         subtitle="If that address is registered, we sent a reset link. Check your spam folder if you don't see it within a few minutes."
         footer={<AuthLink to="/login">Back to sign in</AuthLink>}
       >
-        <p className="font-ui text-sm text-secondary">The link expires shortly, so open it soon.</p>
+        <p className="ui">The link expires shortly, so open it soon.</p>
       </AuthShell>
     );
   }
@@ -45,7 +45,7 @@ export default function ForgotPassword() {
       subtitle="Enter your email and we'll send a reset link."
       footer={<AuthLink to="/login">Back to sign in</AuthLink>}
     >
-      <form onSubmit={onSubmit} className="space-y-4">
+      <form onSubmit={onSubmit} className="stack">
         <Field label="Email" name="email" type="email" required autoComplete="email" />
         <AuthSubmit pending={pending}>{pending ? "Sending..." : "Send reset link"}</AuthSubmit>
       </form>

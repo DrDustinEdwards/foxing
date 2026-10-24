@@ -31,10 +31,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 export default function Terms() {
   return (
     <PageShell>
-      <Container className="max-w-prose">
+      <Container className="measure-prose">
         <PageHeader eyebrow={`Last updated ${LAST_UPDATED}`} title="Terms of service" />
 
-        <div className="space-y-8 font-ui text-base leading-relaxed text-secondary">
+        <div className="fx-terms-box">
           <Section heading="The short version">
             Read the books, save passages, talk about them with other readers. Do not abuse the
             community or other people. Keep your account credentials private. That covers most of
@@ -85,7 +85,7 @@ export default function Terms() {
           <Section heading="Governing law">Texas, USA.</Section>
 
           <Section heading="Contact">
-            <a href={`mailto:${LEGAL_EMAIL}`} className="text-brand-text hover:underline">
+            <a href={`mailto:${LEGAL_EMAIL}`} className="link">
               {LEGAL_EMAIL}
             </a>
           </Section>
@@ -98,7 +98,7 @@ export default function Terms() {
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="font-display text-xl text-primary">{heading}</h2>
+      <h2 className="display-1">{heading}</h2>
       <p className="mt-2">{children}</p>
     </section>
   );

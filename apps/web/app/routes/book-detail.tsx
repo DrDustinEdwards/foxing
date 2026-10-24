@@ -121,10 +121,10 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
           ]}
         />
 
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,300px)_minmax(0,1fr)]">
+        <div className="fx-book-detail-grid">
           {/* Cover column (LCP). */}
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <div className="mx-auto max-w-[260px] lg:mx-0">
+          <div className="fx-book-detail-box">
+            <div className="fx-book-detail-box-2">
               <CoverImage
                 src={book.coverUrl}
                 alt={`Cover of ${book.title} by ${book.author}`}
@@ -133,7 +133,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 sizes="(min-width: 1024px) 260px, 60vw"
               />
             </div>
-            <div className="mt-5 flex flex-col gap-2.5">
+            <div className="mt-5 fx-book-detail-stack">
               {readable ? (
                 <Button to={`/read/${book.slug}`} variant="primary">
                   Read now
@@ -167,14 +167,11 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             <Eyebrow className="mb-3">
               {community ? "Tracked title" : "In the reading library"}
             </Eyebrow>
-            <h1 className="font-display text-4xl leading-tight sm:text-5xl">{book.title}</h1>
-            <p className="mt-3 font-ui text-lg text-secondary">
+            <h1 className="fx-book-detail-title">{book.title}</h1>
+            <p className="mt-3 fx-book-detail-text">
               by{" "}
               {book.authorSlug ? (
-                <Link
-                  to={`/authors/${book.authorSlug}`}
-                  className="text-brand-text hover:underline"
-                >
+                <Link to={`/authors/${book.authorSlug}`} className="link">
                   {book.author}
                 </Link>
               ) : (
@@ -182,25 +179,22 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
               )}
             </p>
 
-            <div className="mt-5 flex flex-wrap gap-2">
+            <div className="mt-5 fx-book-detail-row">
               {book.publicationYear ? <Chip>{book.publicationYear}</Chip> : null}
               {time ? <Chip>{time}</Chip> : null}
               {book.publisher ? <Chip>{book.publisher}</Chip> : null}
             </div>
 
             {awards.length > 0 ? (
-              <div className="mt-6 rounded-card border border-border-subtle bg-surface p-4">
-                <Eyebrow className="mb-2.5">Recognition</Eyebrow>
-                <ul className="flex flex-col gap-1.5">
+              <div className="mt-6 fx-book-detail-card">
+                <Eyebrow className="fx-book-detail-eyebrow">Recognition</Eyebrow>
+                <ul className="fx-book-detail-stack-2">
                   {awards.map((a) => (
-                    <li key={`${a.awardSlug}-${a.year}`} className="font-ui text-sm">
-                      <Link
-                        to={`/awards/${a.awardSlug}`}
-                        className="text-brand-text hover:underline"
-                      >
+                    <li key={`${a.awardSlug}-${a.year}`} className="sans small">
+                      <Link to={`/awards/${a.awardSlug}`} className="link">
                         {a.awardName}
                       </Link>
-                      <span className="text-tertiary">
+                      <span className="dim">
                         {a.year ? `, ${a.year}` : ""} · {a.distinction}
                       </span>
                     </li>
@@ -210,7 +204,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             ) : null}
 
             {book.description ? (
-              <div className="mt-8 max-w-prose font-body text-lg leading-relaxed text-secondary [&>p]:mt-4">
+              <div className="mt-8 fx-book-detail-box-3">
                 {book.description
                   .split(/\n{2,}/)
                   .filter(Boolean)
@@ -223,7 +217,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             {book.subjects.length > 0 ? (
               <div className="mt-8">
                 <Eyebrow className="mb-3">Subjects</Eyebrow>
-                <div className="flex flex-wrap gap-2">
+                <div className="row-2 wrap">
                   {book.subjects.slice(0, 12).map((s) => (
                     <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>
                       {s}
@@ -236,8 +230,8 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
         </div>
 
         {related.length > 0 ? (
-          <section className="mt-20">
-            <h2 className="mb-6 font-display text-2xl">More like this</h2>
+          <section className="fx-book-detail-section">
+            <h2 className="mb-6 fx-book-detail-title-2">More like this</h2>
             <BookGrid>
               {related.map((b) => (
                 <BookCard key={b.slug} book={b} />

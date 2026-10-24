@@ -46,7 +46,7 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader
           eyebrow="Reading"
           title="Vocabulary"
@@ -59,7 +59,7 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <nav aria-label="Filter words" className="mb-5 flex flex-wrap gap-2">
+            <nav aria-label="Filter words" className="mb-5 fx-vocabulary-row">
               <FilterTab active={filter === "all"} onClick={() => setFilter("all")}>
                 All {words.length}
               </FilterTab>
@@ -72,11 +72,11 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
             </nav>
 
             {shown.length === 0 ? (
-              <p className="font-ui text-sm text-tertiary">
+              <p className="meta">
                 {filter === "mastered" ? "No mastered words yet." : "Nothing left to master."}
               </p>
             ) : (
-              <ul className="flex flex-col gap-3">
+              <ul className="stack-3">
                 {shown.map((w) => (
                   <WordItem key={w.id} word={w} />
                 ))}
@@ -99,12 +99,7 @@ function FilterTab({
   children: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className="rounded-full border px-3 py-1 font-ui text-sm transition-colors aria-pressed:border-border-interactive aria-pressed:bg-selected aria-pressed:text-primary border-border-subtle text-secondary hover:border-border-interactive hover:text-primary"
-    >
+    <button type="button" onClick={onClick} aria-pressed={active} className="cap-chip">
       {children}
     </button>
   );
@@ -148,31 +143,22 @@ function WordItem({
   }
 
   return (
-    <li className="rounded-card border border-border-subtle bg-surface p-4">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="font-display text-lg font-semibold text-primary">{word.word}</h2>
-        <div className="flex shrink-0 items-center gap-3">
-          {word.mastered ? (
-            <span className="rounded-full bg-brand-subtle px-2.5 py-0.5 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-brand-subtle-text">
-              Mastered
-            </span>
-          ) : null}
-          <button
-            type="button"
-            onClick={toggle}
-            disabled={pending}
-            className="font-ui text-xs text-tertiary hover:text-brand-text hover:underline disabled:opacity-50"
-          >
+    <li className="card">
+      <div className="fx-vocabulary-row-2">
+        <h2 className="fx-vocabulary-title">{word.word}</h2>
+        <div className="shrink-0 fx-vocabulary-row-3">
+          {word.mastered ? <span className="fx-vocabulary-caps">Mastered</span> : null}
+          <button type="button" onClick={toggle} disabled={pending} className="fx-vocabulary-btn">
             {pending ? "Saving..." : word.mastered ? "Unmark" : "Mark mastered"}
           </button>
         </div>
       </div>
-      <p className="mt-1 font-ui text-sm text-secondary">{word.definition}</p>
+      <p className="mt-1 ui">{word.definition}</p>
       {word.contextSentence ? (
-        <p className="mt-2 font-body text-sm italic text-tertiary">{word.contextSentence}</p>
+        <p className="mt-2 italic fx-vocabulary-text">{word.contextSentence}</p>
       ) : null}
       {error ? (
-        <p className="mt-2 font-ui text-xs text-error" role="alert">
+        <p className="mt-2 error xsmall" role="alert">
           {error}
         </p>
       ) : null}

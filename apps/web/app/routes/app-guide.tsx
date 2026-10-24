@@ -34,18 +34,15 @@ const NAV_ANCHORS = [
 export default function AppGuide() {
   return (
     <PageShell>
-      <Container className="max-w-prose">
+      <Container className="measure-prose">
         <PageHeader
           title="Using the Foxing app"
           lede="How the Foxing mobile app works: reading offline, highlights and notes, vocabulary, sync across devices, and notifications."
         />
 
-        <nav
-          aria-label="Sections"
-          className="mb-12 flex flex-wrap gap-4 border-b border-border-subtle pb-6 font-ui text-sm text-brand-text"
-        >
+        <nav aria-label="Sections" className="fx-app-guide-row">
           {NAV_ANCHORS.map((a) => (
-            <a key={a.href} href={a.href} className="hover:underline">
+            <a key={a.href} href={a.href} className="fx-app-guide-link">
               {a.label}
             </a>
           ))}
@@ -111,13 +108,13 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <p className="mt-16 font-ui text-sm text-secondary">
+        <p className="mt-16 fx-app-guide-text">
           New to Foxing?{" "}
-          <Link to="/guide" className="text-brand-text hover:underline">
+          <Link to="/guide" className="link">
             Read the web guide
           </Link>{" "}
           or{" "}
-          <Link to="/books" className="text-brand-text hover:underline">
+          <Link to="/books" className="link">
             browse the library
           </Link>
           .
@@ -139,24 +136,24 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="mb-14 scroll-mt-24">
+    <section id={id} className="fx-app-guide-section">
       <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
-      <h2 className="font-display text-2xl leading-tight text-primary">{heading}</h2>
-      <div className="mt-4 flex flex-col gap-4">{children}</div>
+      <h2 className="fx-app-guide-title">{heading}</h2>
+      <div className="mt-4 stack">{children}</div>
     </section>
   );
 }
 
 function Prose({ children }: { children: React.ReactNode }) {
-  return <p className="font-body text-base text-secondary">{children}</p>;
+  return <p className="fx-app-guide-text-2">{children}</p>;
 }
 
 function FeatureList({ items }: { items: string[] }) {
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="stack-2">
       {items.map((item) => (
-        <li key={item} className="flex gap-2 font-body text-base text-secondary">
-          <span aria-hidden="true" className="text-brand-ui">
+        <li key={item} className="fx-app-guide-row-2">
+          <span aria-hidden="true" className="accent-ui">
             &middot;
           </span>
           <span>{item}</span>

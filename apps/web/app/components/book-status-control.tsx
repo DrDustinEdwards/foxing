@@ -33,10 +33,7 @@ export function BookStatusControl({
 
   if (!signedIn) {
     return (
-      <Link
-        to={loginHref}
-        className="inline-flex items-center rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover"
-      >
+      <Link to={loginHref} className="cap-btn fx-book-status-control-link">
         Sign in to track
       </Link>
     );
@@ -70,14 +67,14 @@ export function BookStatusControl({
   }
 
   return (
-    <div className="w-full">
-      <label className="flex w-full items-center gap-2">
-        <span className="sr-only">Reading status</span>
+    <div className="fx-book-status-control-box">
+      <label className="fx-book-status-control-row">
+        <span className="cap-sr-only">Reading status</span>
         <select
           value={status}
           disabled={pending}
           onChange={(e) => apply((e.target.value || "remove") as ShelfStatus | "remove")}
-          className="w-full rounded-md border border-border-interactive bg-surface px-3 py-2 font-ui text-sm text-primary disabled:opacity-50"
+          className="cap-select py-2 fx-book-status-control-box"
         >
           <option value="">Add to library</option>
           {STATUSES.map((s) => (
@@ -89,12 +86,12 @@ export function BookStatusControl({
         </select>
       </label>
       {pending ? (
-        <p className="mt-1.5 font-ui text-xs text-tertiary" role="status">
+        <p className="fx-book-status-control-text" role="status">
           Saving...
         </p>
       ) : null}
       {error ? (
-        <p className="mt-1.5 font-ui text-xs text-error" role="alert">
+        <p className="fx-book-status-control-text-2" role="alert">
           {error}
         </p>
       ) : null}

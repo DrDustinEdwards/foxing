@@ -34,7 +34,7 @@ export default function DiaryNew({ loaderData }: Route.ComponentProps) {
   const { book, username } = loaderData;
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader eyebrow="Diary" title="Log a book" />
         {book ? (
           <DiaryForm
@@ -46,8 +46,8 @@ export default function DiaryNew({ loaderData }: Route.ComponentProps) {
         ) : (
           <DiaryBookPicker />
         )}
-        <p className="mt-6 font-ui text-sm">
-          <Link to="/library" className="text-brand-text hover:underline">
+        <p className="mt-6 fx-diary-new-text">
+          <Link to="/library" className="link">
             Go to your library
           </Link>
         </p>

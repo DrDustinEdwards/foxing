@@ -33,29 +33,27 @@ export function DiaryBookPicker() {
   }, [q]);
 
   return (
-    <div className="rounded-card border border-border-subtle bg-surface p-4">
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-tertiary">
-          Find the book to log
-        </span>
+    <div className="card">
+      <label className="stack-2">
+        <span className="group-label">Find the book to log</span>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search the catalog"
-          className="rounded-cover border border-border-interactive bg-base px-3 py-2 font-ui text-sm text-primary"
+          className="cap-input py-2"
         />
       </label>
       {results.length > 0 ? (
-        <ul aria-label="Matching books" className="mt-2 flex flex-col gap-1">
+        <ul aria-label="Matching books" className="mt-2 stack-1">
           {results.map((b) => (
             <li key={b.slug}>
               <button
                 type="button"
                 onClick={() => navigate(`/diary/new?book=${encodeURIComponent(b.slug)}`)}
-                className="w-full rounded-cover px-3 py-2 text-left font-ui text-sm text-primary transition hover:bg-hover"
+                className="fx-pick-option"
               >
-                <span className="font-medium">{b.title}</span>{" "}
-                <span className="text-tertiary">{b.author}</span>
+                <span className="fx-diary-book-picker-label">{b.title}</span>{" "}
+                <span className="dim">{b.author}</span>
               </button>
             </li>
           ))}

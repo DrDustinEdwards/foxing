@@ -38,17 +38,17 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Content</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Content</h1>
       </div>
 
-      <div className="space-y-6">
+      <div className="stack-6">
         <CreateAnnouncement onDone={reload} />
         <AdminCard title="Announcements">
           {announcements.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No announcements yet. Create one above.</p>
+            <p className="meta">No announcements yet. Create one above.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {announcements.map((a) => (
                 <AnnouncementRow key={a.id} row={a} onDone={reload} />
               ))}
@@ -101,9 +101,9 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
 
   return (
     <AdminCard title="New announcement">
-      <div className="space-y-4">
+      <div className="stack">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
+          <span className="fx-label">Title</span>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -111,7 +111,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Body (optional)</span>
+          <span className="fx-label">Body (optional)</span>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -120,7 +120,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Placement</span>
+          <span className="fx-label">Placement</span>
           <select
             value={placement}
             onChange={(e) => setPlacement(e.target.value as (typeof PLACEMENTS)[number])}
@@ -133,9 +133,9 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
             ))}
           </select>
         </label>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="fx-admin-content-grid">
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Link URL (optional)</span>
+            <span className="fx-label">Link URL (optional)</span>
             <input
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
@@ -143,7 +143,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Link label (optional)</span>
+            <span className="fx-label">Link label (optional)</span>
             <input
               value={linkLabel}
               onChange={(e) => setLinkLabel(e.target.value)}
@@ -151,7 +151,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
             />
           </label>
         </div>
-        <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+        <label className="row-2 ui">
           <input
             type="checkbox"
             checked={isActive}
@@ -180,25 +180,21 @@ function AnnouncementRow({
 
   return (
     <li className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-ui text-sm font-medium text-primary">
+      <div className="row spread">
+        <div className="min-0">
+          <p className="sans small strong">
             {row.title}
             {row.isActive ? (
-              <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-                Active
-              </span>
+              <span className="badge ml-2">Active</span>
             ) : (
-              <span className="ml-2 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-tertiary">
-                Inactive
-              </span>
+              <span className="badge badge-quiet ml-2">Inactive</span>
             )}
           </p>
-          <p className="truncate font-ui text-xs text-tertiary">
+          <p className="truncate fx-admin-content-text">
             {row.placement} · {fmt.format(row.createdAt)}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="row-2 shrink-0">
           <AdminButton
             pending={pending}
             onClick={() =>

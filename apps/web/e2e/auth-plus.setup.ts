@@ -27,7 +27,7 @@ setup("sign in the plus account through the visible login form", async ({ page }
   await page.getByRole("button", { name: /^sign in$/i }).click();
 
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(page.getByRole("button", { name: /account menu/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /your account/i })).toBeVisible();
 
   await page.context().storageState({ path: STORAGE });
 });

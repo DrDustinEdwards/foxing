@@ -29,26 +29,21 @@ export default function AdminJournal({ loaderData }: Route.ComponentProps) {
 
   return (
     <AdminShell>
-      <div className="mb-6 flex items-end justify-between gap-4">
+      <div className="mb-6 items-end fx-admin-journal-row">
         <div>
-          <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-            Admin
-          </p>
-          <h1 className="font-display text-3xl text-primary">Journal</h1>
+          <p className="group-label">Admin</p>
+          <h1 className="display-3">Journal</h1>
         </div>
-        <Link
-          to="/admin/journal/new"
-          className="rounded-md bg-brand-ui px-4 py-2 font-ui text-sm text-on-brand transition hover:opacity-90"
-        >
+        <Link to="/admin/journal/new" className="cap-btn" data-variant="primary">
           New post
         </Link>
       </div>
 
       <AdminCard title="Posts">
         {posts.length === 0 ? (
-          <p className="font-ui text-sm text-tertiary">No posts yet. Create one above.</p>
+          <p className="meta">No posts yet. Create one above.</p>
         ) : (
-          <ul className="divide-y divide-border-subtle">
+          <ul className="divided">
             {posts.map((p) => (
               <JournalRow key={p.id} post={p} onDone={reload} />
             ))}
@@ -71,30 +66,22 @@ function JournalRow({
 
   return (
     <li className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-ui text-sm font-medium text-primary">
+      <div className="row spread">
+        <div className="min-0">
+          <p className="sans small strong">
             {post.title}
             {post.isPublished ? (
-              <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-                Live
-              </span>
+              <span className="badge ml-2">Live</span>
             ) : (
-              <span className="ml-2 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-tertiary">
-                Draft
-              </span>
+              <span className="badge badge-quiet ml-2">Draft</span>
             )}
-            {post.featured ? (
-              <span className="ml-2 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-secondary">
-                Featured
-              </span>
-            ) : null}
+            {post.featured ? <span className="ml-2 fx-admin-journal-caps">Featured</span> : null}
           </p>
-          <p className="truncate font-ui text-sm text-tertiary">
+          <p className="truncate meta">
             /{post.slug} · {stamp ? fmtDate.format(stamp) : "No date"}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="row-2 shrink-0">
           <AdminButton
             pending={pending}
             onClick={() =>
@@ -107,10 +94,7 @@ function JournalRow({
           >
             {post.isPublished ? "Unpublish" : "Publish"}
           </AdminButton>
-          <Link
-            to={`/admin/journal/${post.id}`}
-            className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm transition hover:bg-hover"
-          >
+          <Link to={`/admin/journal/${post.id}`} className="cap-btn">
             Edit
           </Link>
         </div>

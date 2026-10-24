@@ -31,10 +31,10 @@ setup("sign in through the visible login form", async ({ page }) => {
   await page.getByRole("button", { name: /^sign in$/i }).click();
 
   // A real sign-in leaves /login for an authed page. The seeded account is onboarded,
-  // so the header shows the account menu instead of the Sign in link. If sign-in
+  // so the header shows the account button instead of the Sign in link. If sign-in
   // failed, the form stays on /login with a role=alert, and these assertions fail.
   await expect(page).not.toHaveURL(/\/login/);
-  await expect(page.getByRole("button", { name: /account menu/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /your account/i })).toBeVisible();
 
   await page.context().storageState({ path: STORAGE });
 });

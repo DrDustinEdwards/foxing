@@ -1,0 +1,568 @@
+/* The catalog: book cards and their grid, covers, the search field and its suggestions, the
+   search filters and results, the book page. */
+
+/* Content card (design-system Rule 15): the edge strengthens on hover, the title turns accent. */
+.fx-book-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--fx-radius-card);
+  background: var(--surface);
+  padding: 0.625rem;
+  @media (prefers-reduced-motion: no-preference) {
+    transition: border-color var(--dur-base) var(--ease-out);
+  }
+}
+.fx-book-card:hover {
+  border-color: var(--line-strong);
+  color: inherit;
+}
+.fx-book-card-body {
+  margin-block-start: 0.75rem;
+  padding: 0 0.125rem 0.25rem;
+}
+.fx-book-card-title {
+  font-family: var(--fx-display);
+  font-size: 1rem;
+  line-height: 1.35;
+  color: var(--text);
+}
+.fx-book-card:hover .fx-book-card-title {
+  color: var(--accent-text);
+}
+.fx-book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+@media (min-width: 40rem) {
+  .fx-book-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 64rem) {
+  .fx-book-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 80rem) {
+  .fx-book-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+/* Covers: a 2:3 box with a blur-up placeholder, revealed until the full image decodes. */
+.cover-img {
+  position: relative;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border-radius: var(--fx-radius-cover);
+  background-color: var(--sunken);
+  background-size: cover;
+  background-position: center;
+  box-shadow:
+    var(--fx-shadow-sm),
+    0 0 0 1px var(--line);
+}
+.cover-img[data-loaded="true"] {
+  background-image: none !important;
+}
+.cover-img-photo {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  opacity: 0;
+  @media (prefers-reduced-motion: no-preference) {
+    transition: opacity 500ms var(--ease-out);
+  }
+}
+.cover-img[data-loaded="true"] .cover-img-photo {
+  opacity: 1;
+}
+.cover-img-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  padding: 0.75rem;
+  text-align: center;
+}
+.cover-img-fallback > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  font-family: var(--fx-display);
+  font-size: 0.875rem;
+  line-height: 1.25;
+  color: var(--dim);
+}
+
+/* The search field and its suggestions. */
+.fx-search-field {
+  --control: 3rem;
+}
+.fx-search-field .cap-input {
+  font-size: 1rem;
+}
+.fx-search-field .cap-input-addon svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  color: var(--dim);
+}
+.fx-suggest {
+  position: absolute;
+  z-index: 30;
+  inset-inline: 0;
+  margin-block-start: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: var(--fx-radius-card);
+  background: var(--raised);
+  box-shadow: var(--fx-shadow-lg);
+  text-align: start;
+}
+
+/* The search filters. */
+.fx-filter-btn {
+  border-radius: var(--radius-full);
+}
+.fx-filter-btn[data-on] {
+  border-color: var(--accent-line);
+  background: var(--accent-soft);
+  color: var(--accent-text);
+}
+.fx-filter-count {
+  display: inline-grid;
+  place-items: center;
+  min-inline-size: 1.25rem;
+  block-size: 1.25rem;
+  padding-inline: 0.25rem;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--primary-fg);
+  font-family: var(--mono);
+  font-size: 0.625rem;
+}
+.fx-filter-panel {
+  inline-size: min(22rem, 90vw);
+}
+
+.fx-book-status-control-link {
+  display: inline-flex;
+}
+.fx-book-status-control-box {
+  width: 100%;
+}
+.fx-book-status-control-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+}
+.fx-book-status-control-text {
+  margin-top: 0.375rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}
+.fx-book-status-control-text-2 {
+  margin-top: 0.375rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--crit);
+}
+
+.fx-account-panel-label {
+  flex-grow: 1;
+}
+
+.fx-grouped-results-caps {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--dim);
+}
+.fx-grouped-results-grid {
+  display: grid;
+  gap: 0.5rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.fx-result-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--fx-radius-card);
+  background: var(--surface);
+  padding: 0.75rem 1rem;
+  box-shadow: var(--fx-shadow-sm);
+  @media (prefers-reduced-motion: no-preference) {
+    transition: box-shadow 150ms;
+  }
+  &:hover {
+    box-shadow: var(--fx-shadow-md);
+  }
+}
+.fx-grouped-results-title {
+  font-family: var(--fx-display);
+  font-size: 1rem;
+  line-height: 1.5rem;
+  color: var(--text);
+}
+.fx-grouped-results-label {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+}
+
+.fx-award-detail-caps {
+  margin-top: 0.375rem;
+  padding-inline: 0.125rem;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.fx-awards-title {
+  font-family: var(--fx-display);
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  color: var(--text);
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+
+.fx-book-detail-grid {
+  display: grid;
+  gap: 2.5rem;
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  }
+}
+.fx-book-detail-box {
+  @media (min-width: 64rem) {
+    position: sticky;
+    top: 6rem;
+    align-self: flex-start;
+  }
+}
+.fx-book-detail-box-2 {
+  margin-inline: auto;
+  max-width: 260px;
+  @media (min-width: 64rem) {
+    margin-inline: 0;
+  }
+}
+.fx-book-detail-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.fx-book-detail-title,
+.fx-journal-post-title {
+  font-family: var(--fx-display);
+  font-size: 2.25rem;
+  line-height: 1.25;
+  @media (min-width: 40rem) {
+    font-size: 3rem;
+    line-height: 1;
+  }
+}
+.fx-book-detail-text {
+  font-family: var(--ui);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: var(--muted);
+}
+.fx-book-detail-row,
+.fx-journal-archive-row,
+.fx-vocabulary-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.fx-book-detail-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+}
+.fx-book-detail-eyebrow {
+  margin-bottom: 0.625rem;
+}
+.fx-book-detail-stack-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.fx-book-detail-box-3 {
+  max-width: 65ch;
+  font-family: var(--fx-body);
+  font-size: 1.125rem;
+  line-height: 1.625;
+  color: var(--muted);
+  & > p {
+    margin-top: 1rem;
+  }
+}
+.fx-book-detail-section {
+  margin-top: 5rem;
+}
+.fx-book-detail-title-2 {
+  font-family: var(--fx-display);
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+.fx-books-caps {
+  margin-bottom: 0.625rem;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.fx-books-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.25rem;
+}
+.fx-books-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-block-start: 1px solid var(--line);
+  padding-top: 1rem;
+}
+.fx-books-row-2 {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.fx-books-label {
+  border-radius: var(--fx-radius-cover);
+  border: 1px solid var(--line);
+  padding-inline: 1rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+}
+
+.fx-botm-card {
+  display: grid;
+  gap: 2rem;
+  border-radius: var(--fx-radius-hero);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.5rem;
+  box-shadow: var(--fx-shadow-md);
+  @media (min-width: 40rem) {
+    padding: 2.5rem;
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+  }
+}
+.fx-botm-box {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 240px;
+  @media (min-width: 64rem) {
+    margin-inline: 0;
+  }
+}
+.fx-botm-title {
+  font-family: var(--fx-display);
+  font-size: 1.875rem;
+  line-height: 1.25;
+}
+.fx-botm-text {
+  font-family: var(--ui);
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+  color: var(--muted);
+}
+.fx-botm-text-2 {
+  max-width: 65ch;
+  font-family: var(--fx-body);
+  font-size: 1.125rem;
+  line-height: 1.625;
+  color: var(--muted);
+}
+.fx-botm-title-2 {
+  font-family: var(--fx-display);
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+.fx-botm-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+.fx-botm-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.fx-find-next-book-row,
+.fx-club-detail-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.fx-find-next-book-card {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--sunken);
+  padding-inline: 1rem;
+}
+.fx-find-next-book-btn {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--accent-text);
+  &:hover {
+    text-decoration-line: underline;
+  }
+}
+.fx-find-next-book-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  @media (min-width: 80rem) {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+.fx-find-next-book-card-2,
+.fx-library-card-2 {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 0.625rem;
+}
+.fx-find-next-book-stack {
+  display: flex;
+  flex: 1 1 0%;
+  flex-direction: column;
+  padding-inline: 0.125rem;
+}
+.fx-find-next-book-title,
+.fx-journal-archive-title {
+  font-family: var(--fx-display);
+  font-size: 1rem;
+  line-height: 1.375;
+  color: var(--text);
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-find-next-book-text {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--accent-text);
+}
+.fx-find-next-book-box {
+  margin-top: auto;
+  padding-top: 0.75rem;
+}
+
+.fx-picks-grid {
+  display: grid;
+  gap: 1rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-picks-title {
+  font-family: var(--fx-display);
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  color: var(--text);
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-picks-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+
+.fx-book-shelves-picker-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.fx-awards-grid {
+  display: grid;
+  gap: 1rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-journal-archive-link {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+  &:hover {
+    color: var(--text);
+  }
+}

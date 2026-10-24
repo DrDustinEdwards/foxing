@@ -37,21 +37,18 @@ export function FollowButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1.5">
+    <div className="items-start fx-follow-button-stack">
       <button
         type="button"
         onClick={toggle}
         disabled={pending}
-        className={
-          following
-            ? "inline-flex items-center gap-2 rounded-cover border border-border-interactive px-5 py-2.5 font-ui text-sm font-medium text-primary transition hover:bg-hover disabled:opacity-50"
-            : "inline-flex items-center gap-2 rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-50 dark:text-[color:var(--section-charcoal)]"
-        }
+        className="cap-btn"
+        data-variant={following ? undefined : "primary"}
       >
         {following ? "Following" : "Follow"}
       </button>
       {error ? (
-        <p role="alert" className="font-ui text-xs text-error">
+        <p role="alert" className="fx-follow-button-text">
           {error}
         </p>
       ) : null}

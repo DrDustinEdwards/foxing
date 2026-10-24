@@ -60,15 +60,13 @@ export default function ClubNew() {
 
   return (
     <PageShell>
-      <Container className="max-w-xl">
-        <h1 className="font-display text-4xl">Start a club</h1>
-        <p className="mt-2 font-body text-secondary">
-          Pick a book, set the pace, and read together.
-        </p>
+      <Container>
+        <h1 className="display-4">Start a club</h1>
+        <p className="mt-2 fx-club-new-text">Pick a book, set the pace, and read together.</p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-5">
+        <form onSubmit={onSubmit} className="mt-8 fx-club-new-form">
           <div>
-            <label htmlFor="name" className="block font-ui text-sm font-medium text-primary">
+            <label htmlFor="name" className="block fx-club-new-field">
               Club name
             </label>
             <input
@@ -76,11 +74,11 @@ export default function ClubNew() {
               name="name"
               required
               maxLength={120}
-              className="mt-1.5 w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+              className="cap-input py-2 fx-club-new-input"
             />
           </div>
           <div>
-            <label htmlFor="description" className="block font-ui text-sm font-medium text-primary">
+            <label htmlFor="description" className="block fx-club-new-field">
               Description
             </label>
             <textarea
@@ -88,42 +86,35 @@ export default function ClubNew() {
               name="description"
               rows={3}
               maxLength={4000}
-              className="mt-1.5 w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+              className="cap-input py-2 fx-club-new-input"
             />
           </div>
           <div>
-            <label htmlFor="visibility" className="block font-ui text-sm font-medium text-primary">
+            <label htmlFor="visibility" className="block fx-club-new-field">
               Visibility
             </label>
             <select
               id="visibility"
               name="visibility"
               defaultValue="public"
-              className="mt-1.5 w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+              className="cap-select py-2 fx-club-new-input"
             >
               <option value="public">Public - anyone can find and join</option>
               <option value="private">Private - members only, join by link</option>
             </select>
           </div>
-          <label className="flex items-center gap-2 font-ui text-sm text-secondary">
-            <input type="checkbox" name="memberApproval" className="h-4 w-4" />
+          <label className="row-2 ui">
+            <input type="checkbox" name="memberApproval" className="fx-club-new-input-2" />
             Approve each member before they join
           </label>
 
           {error ? (
-            <p
-              className="rounded-md border border-danger/50 bg-danger-subtle px-3 py-2 font-ui text-sm text-danger-text"
-              role="alert"
-            >
+            <p className="py-2 fx-club-new-text-2" role="alert">
               {error}
             </p>
           ) : null}
 
-          <button
-            type="submit"
-            disabled={pending}
-            className="rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
-          >
+          <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
             {pending ? "Creating..." : "Create club"}
           </button>
         </form>

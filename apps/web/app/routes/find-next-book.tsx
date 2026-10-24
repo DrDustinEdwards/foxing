@@ -37,7 +37,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <div className="mb-8 items-end fx-find-next-book-row">
           <PageHeader
             eyebrow="For you"
             title="Find your next book"
@@ -48,23 +48,18 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             }
             className="mb-0"
           />
-          <Link
-            to="/find-next-book?refresh=1"
-            className="shrink-0 rounded-md border border-border-interactive px-4 py-2 font-ui text-sm text-primary transition hover:bg-hover"
-          >
+          <Link to="/find-next-book?refresh=1" className="cap-btn shrink-0">
             Refresh
           </Link>
         </div>
 
         {!isPlus ? (
-          <div className="mb-8 flex flex-wrap items-center justify-between gap-3 rounded-card border border-border-subtle bg-sunken px-4 py-3">
-            <p className="font-ui text-sm text-secondary">
-              Plus tunes these to you with AI-personalized reasons.
-            </p>
+          <div className="mb-8 py-3 fx-find-next-book-card">
+            <p className="ui">Plus tunes these to you with AI-personalized reasons.</p>
             <button
               type="button"
               onClick={() => setPaywallOpen(true)}
-              className="shrink-0 font-ui text-sm font-medium text-brand-text hover:underline"
+              className="shrink-0 fx-find-next-book-btn"
             >
               Upgrade for AI-personalized picks
             </button>
@@ -77,7 +72,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             body="Add a few books to your library and check back."
           />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="fx-find-next-book-grid">
             {recommendations.map((rec) => (
               <RecCard key={rec.bookId} rec={rec} />
             ))}
@@ -91,8 +86,8 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
 
 function RecCard({ rec }: { rec: Recommendation }) {
   return (
-    <div className="flex flex-col rounded-card border border-border-subtle bg-surface p-2.5">
-      <Link to={`/books/${rec.slug}`} className="group block">
+    <div className="fx-find-next-book-card-2">
+      <Link to={`/books/${rec.slug}`} className="block">
         <CoverImage
           src={rec.coverUrl}
           alt={`${rec.title} by ${rec.author}`}
@@ -100,20 +95,18 @@ function RecCard({ rec }: { rec: Recommendation }) {
           sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
         />
       </Link>
-      <div className="mt-3 flex flex-1 flex-col px-0.5">
+      <div className="mt-3 fx-find-next-book-stack">
         <Link to={`/books/${rec.slug}`} className="group">
-          <h3 className="font-display text-base leading-snug text-primary transition-colors group-hover:text-brand-text">
-            {rec.title}
-          </h3>
+          <h3 className="fx-find-next-book-title">{rec.title}</h3>
         </Link>
-        <p className="mt-1 font-ui text-sm text-tertiary">
+        <p className="mt-1 meta">
           {rec.author}
           {rec.publicationYear ? <span> &middot; {rec.publicationYear}</span> : null}
         </p>
-        <p className="mt-2 font-ui text-xs text-brand-text" data-testid="rec-reason">
+        <p className="mt-2 fx-find-next-book-text" data-testid="rec-reason">
           {rec.reason}
         </p>
-        <div className="mt-auto pt-3">
+        <div className="fx-find-next-book-box">
           <BookStatusControl bookId={rec.bookId} currentStatus={null} signedIn loginHref="/login" />
         </div>
       </div>

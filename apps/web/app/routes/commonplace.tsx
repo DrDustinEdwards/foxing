@@ -105,7 +105,7 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader
           eyebrow="Reading"
           title="Commonplace"
@@ -118,23 +118,23 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <div className="mb-6 flex flex-col gap-3">
-              <div className="flex flex-wrap items-center gap-3">
+            <div className="mb-6 stack-3">
+              <div className="row wrap">
                 <input
                   type="search"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search notes and passages"
                   aria-label="Search commonplace"
-                  className="min-w-[12rem] flex-1 rounded-md border border-border-subtle bg-base px-3 py-1.5 text-sm"
+                  className="cap-input fx-commonplace-input"
                 />
                 {books.length > 1 ? (
-                  <label className="font-ui text-sm text-secondary">
-                    <span className="sr-only">Filter by book</span>
+                  <label className="ui">
+                    <span className="cap-sr-only">Filter by book</span>
                     <select
                       value={book}
                       onChange={(e) => setBook(e.target.value)}
-                      className="rounded-md border border-border-subtle bg-base px-2 py-1.5 text-sm"
+                      className="cap-select"
                     >
                       <option value="all">All books</option>
                       {books.map((b) => (
@@ -146,43 +146,38 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
                   </label>
                 ) : null}
               </div>
-              <span className="font-ui text-xs text-tertiary">
+              <span className="fine">
                 {filtered.length} of {entries.length}
               </span>
             </div>
 
             {groups.length === 0 ? (
-              <p className="font-ui text-sm text-tertiary">Nothing matches those filters.</p>
+              <p className="meta">Nothing matches those filters.</p>
             ) : (
-              <div className="flex flex-col gap-8">
+              <div className="stack-8">
                 {groups.map((g) => (
-                  <section key={g.key} className="flex flex-col gap-3">
-                    <h2 className="font-display text-lg text-primary">
+                  <section key={g.key} className="stack-3">
+                    <h2 className="display-0">
                       {g.slug ? (
-                        <Link to={`/books/${g.slug}`} className="hover:text-brand-text">
+                        <Link to={`/books/${g.slug}`} className="hover-accent">
                           {g.label}
                         </Link>
                       ) : (
                         g.label
                       )}
-                      {g.author ? <span className="text-tertiary"> by {g.author}</span> : null}
+                      {g.author ? <span className="dim"> by {g.author}</span> : null}
                     </h2>
-                    <ul className="flex flex-col gap-3">
+                    <ul className="stack-3">
                       {g.items.map((e) => (
-                        <li
-                          key={e.id}
-                          className="rounded-card border border-border-subtle bg-surface p-5"
-                        >
+                        <li key={e.id} className="card card-5">
                           {e.selectedText ? (
-                            <blockquote className="border-l-2 border-border-subtle pl-4 font-body text-base italic text-primary">
+                            <blockquote className="italic fx-commonplace-quote">
                               {e.selectedText}
                             </blockquote>
                           ) : null}
-                          {e.body ? (
-                            <p className="mt-3 font-ui text-sm text-secondary">{e.body}</p>
-                          ) : null}
+                          {e.body ? <p className="mt-3 fx-commonplace-text">{e.body}</p> : null}
                           {e.chapter ? (
-                            <p className="mt-3 font-ui text-xs text-tertiary">{e.chapter}</p>
+                            <p className="mt-3 fx-commonplace-text-2">{e.chapter}</p>
                           ) : null}
                         </li>
                       ))}

@@ -53,26 +53,23 @@ export default function Login() {
       }
     >
       {passwordReset ? (
-        <p
-          role="status"
-          className="mb-4 rounded-md border border-border-subtle bg-sunken px-3 py-2 font-ui text-sm text-secondary"
-        >
+        <p role="status" className="mb-4 py-2 fx-login-text">
           Password updated. Sign in with your new password.
         </p>
       ) : null}
       {oauthError ? (
-        <p role="alert" className="mb-4 font-ui text-sm text-error">
+        <p role="alert" className="mb-4 fx-login-text-2">
           Google sign-in did not complete. Try again or use another method.
         </p>
       ) : null}
 
-      <div className="space-y-4">
+      <div className="stack">
         <GoogleButton />
         <AuthDivider />
         <MagicLinkForm />
 
         {showPassword ? (
-          <form onSubmit={onSubmit} className="space-y-4 border-t border-border-subtle pt-4">
+          <form onSubmit={onSubmit} className="fx-login-form">
             <Field label="Email" name="email" type="email" required autoComplete="email" />
             <div>
               <Field
@@ -82,12 +79,12 @@ export default function Login() {
                 required
                 autoComplete="current-password"
               />
-              <div className="mt-1.5 text-right">
+              <div className="fx-login-box">
                 <AuthLink to="/forgot-password">Forgot your password?</AuthLink>
               </div>
             </div>
             {error ? (
-              <p role="alert" className="font-ui text-sm text-error">
+              <p role="alert" className="error">
                 {error}
               </p>
             ) : null}

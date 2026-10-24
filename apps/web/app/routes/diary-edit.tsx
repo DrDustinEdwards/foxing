@@ -38,7 +38,7 @@ export default function DiaryEdit({ loaderData }: Route.ComponentProps) {
   const { entry, username } = loaderData;
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader eyebrow="Diary" title="Edit entry" />
         <DiaryForm
           mode="edit"

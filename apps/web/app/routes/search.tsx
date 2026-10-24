@@ -67,7 +67,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-4xl">
+      <Container>
         <PageHeader eyebrow="Find your next read" title="Search" />
         <SearchBox initialQuery={q} />
 
@@ -84,9 +84,9 @@ export default function Search({ loaderData }: Route.ComponentProps) {
             <Pagination page={result.page} pageCount={result.pageCount} hrefFor={hrefFor} />
           </>
         ) : (
-          <p className="mt-8 font-ui text-secondary">
+          <p className="mt-8 muted sans">
             Start typing to search, or{" "}
-            <Link to="/books" className="text-brand-text hover:underline">
+            <Link to="/books" className="link">
               browse the whole library
             </Link>
             .

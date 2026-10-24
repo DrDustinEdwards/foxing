@@ -106,9 +106,7 @@ export function AttributionPopover({
       ref={ref}
       role="dialog"
       aria-label={`Annotation by ${authorName(other.author)}`}
-      className={`z-30 w-[min(30rem,92vw)] rounded-card border border-border-subtle p-3 shadow-lg ${
-        anchored ? "fixed" : "fixed bottom-16 left-1/2 -translate-x-1/2"
-      }`}
+      className={anchored ? "fx-reader-pop" : "fx-reader-pop fx-reader-pop-docked"}
       style={
         anchored
           ? pos
@@ -117,36 +115,28 @@ export function AttributionPopover({
           : { background: canvas.bg, color: canvas.text }
       }
     >
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2 row-2">
         <span
-          className="grid h-6 w-6 flex-none place-items-center rounded-full border border-border-default text-xs font-medium"
+          className="fx-reader-popovers-label"
           style={{ background: tintFor((other.color as HighlightColor) ?? "amber", "light") }}
           aria-hidden
         >
           {authorName(other.author).charAt(0).toUpperCase()}
         </span>
-        <span className="min-w-0 flex-1 truncate text-sm font-medium">
-          {authorName(other.author)}
-        </span>
-        {other.isPinned ? (
-          <span className="rounded bg-hover px-1 text-[10px] uppercase tracking-wide text-tertiary">
-            Pinned
-          </span>
-        ) : null}
+        <span className="truncate fx-reader-popovers-label-2">{authorName(other.author)}</span>
+        {other.isPinned ? <span className="fx-reader-popovers-label-3">Pinned</span> : null}
         <button
           type="button"
           onClick={onClose}
           aria-label="Close"
-          className="rounded-md px-1.5 py-0.5 text-sm hover:bg-hover"
+          className="fx-reader-popovers-btn"
         >
           ✕
         </button>
       </div>
 
       {other.selectedText ? (
-        <p className="mb-2 max-h-24 overflow-auto text-sm italic opacity-70">
-          “{other.selectedText}”
-        </p>
+        <p className="mb-2 italic fx-reader-popovers-text">“{other.selectedText}”</p>
       ) : null}
 
       {other.body ? (
@@ -154,37 +144,37 @@ export function AttributionPopover({
           <button
             type="button"
             onClick={onReveal}
-            className="mb-2 w-full rounded-md border border-border-subtle px-3 py-2 text-left text-sm text-tertiary hover:bg-hover"
+            className="cap-btn mb-2 fx-reader-popovers-btn-2"
           >
-            <span className="font-medium">{gateLabel}.</span> Tap to reveal.
+            <span className="fx-reader-popovers-label-4">{gateLabel}.</span> Tap to reveal.
           </button>
         ) : (
-          <p className="mb-2 whitespace-pre-wrap text-sm">{other.body}</p>
+          <p className="mb-2 fx-reader-popovers-text-2">{other.body}</p>
         )
       ) : null}
 
-      <div className="mb-2 flex items-center gap-3 text-xs text-tertiary">
+      <div className="mb-2 fx-reader-popovers-row-2">
         <button
           type="button"
           aria-pressed={other.likedByMe}
           onClick={onToggleLike}
-          className="rounded-full px-2 py-0.5 hover:bg-hover aria-pressed:text-[color:var(--brand-text)]"
+          className="fx-reader-popovers-btn-3"
         >
           {other.likedByMe ? "Liked" : "Like"}
           {other.likeCount > 0 ? (
-            <span className="ml-1 tabular-nums">{other.likeCount}</span>
+            <span className="fx-reader-popovers-label-5">{other.likeCount}</span>
           ) : null}
         </button>
-        <span className="tabular-nums">
+        <span className="num">
           {replies.length} {replies.length === 1 ? "reply" : "replies"}
         </span>
       </div>
 
       {replies.length > 0 ? (
-        <ul className="mb-2 flex max-h-40 flex-col gap-1.5 overflow-auto">
+        <ul className="mb-2 fx-reader-popovers-stack">
           {replies.map((r) => (
-            <li key={r.id} className="rounded-md bg-hover px-2 py-1.5 text-sm">
-              <span className="mr-1 font-medium">{authorName(r.author)}:</span>
+            <li key={r.id} className="fx-reader-popovers-item">
+              <span className="fx-reader-popovers-label-7">{authorName(r.author)}:</span>
               <span>{r.body}</span>
             </li>
           ))}
@@ -192,13 +182,13 @@ export function AttributionPopover({
       ) : null}
 
       {canReply ? (
-        <div className="flex flex-col gap-1.5">
+        <div className="fx-reader-popovers-stack-2">
           {shareableClubs.length > 1 ? (
             <select
               aria-label="Reply in club"
               value={clubId}
               onChange={(e) => setClubId(e.target.value)}
-              className="rounded-md border border-border-subtle bg-base p-1.5 text-sm text-primary"
+              className="cap-select"
             >
               {shareableClubs.map((cl) => (
                 <option key={cl.id} value={cl.id}>
@@ -211,14 +201,14 @@ export function AttributionPopover({
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             placeholder="Reply to this passage"
-            className="h-16 w-full resize-none rounded-md border border-border-subtle bg-base p-2 text-sm text-primary"
+            className="cap-input fx-reader-popovers-btn-2"
           />
-          <div className="flex justify-end">
+          <div className="justify-end fx-reader-popovers-row-3">
             <button
               type="button"
               disabled={busy || !replyText.trim()}
               onClick={submit}
-              className="rounded-md bg-[color:var(--brand-ui)] px-3 py-1.5 text-sm text-[color:var(--text-on-brand)] disabled:opacity-50"
+              className="fx-reader-popovers-btn-4"
             >
               Reply
             </button>
@@ -249,7 +239,7 @@ export function SelectionToolbar({
     <div
       role="toolbar"
       aria-label="Highlight selection"
-      className="fixed bottom-16 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border-subtle px-3 py-2 shadow-md"
+      className="py-2 fx-reader-popovers-row-4"
       style={{ background: canvas.bg, color: canvas.text }}
     >
       {highlightColorValues.map((c) => (
@@ -259,16 +249,12 @@ export function SelectionToolbar({
           title={`${c}: ${COLOR_MEANING[c]}`}
           aria-label={`Highlight: ${COLOR_MEANING[c]}`}
           onClick={() => onColor(c, share)}
-          className="h-6 w-6 rounded-full border border-border-default"
+          className="fx-reader-popovers-btn-5"
           style={{ background: tintFor(c, "light") }}
         />
       ))}
-      <span className="mx-1 h-5 w-px bg-border-default" aria-hidden />
-      <button
-        type="button"
-        onClick={onNote}
-        className="rounded-full px-2 py-1 text-sm hover:bg-hover"
-      >
+      <span className="fx-reader-popovers-label-8" aria-hidden />
+      <button type="button" onClick={onNote} className="fx-reader-popovers-btn-6">
         Note
       </button>
       {canShareToClub ? (
@@ -276,7 +262,7 @@ export function SelectionToolbar({
           type="button"
           aria-pressed={share}
           onClick={() => setShare((s) => !s)}
-          className="rounded-full px-2 py-1 text-sm hover:bg-hover aria-pressed:bg-[color:var(--brand-subtle)] aria-pressed:text-[color:var(--brand-subtle-text)]"
+          className="fx-reader-popovers-btn-7"
         >
           Share to club
         </button>
@@ -285,7 +271,7 @@ export function SelectionToolbar({
         type="button"
         onClick={onDismiss}
         aria-label="Dismiss"
-        className="rounded-full px-2 py-1 text-sm hover:bg-hover"
+        className="fx-reader-popovers-btn-6"
       >
         ✕
       </button>
@@ -310,11 +296,8 @@ export function NoteComposer({
 }) {
   const [share, setShare] = useState(false);
   return (
-    <div
-      className="fixed bottom-16 left-1/2 z-20 w-[min(28rem,90vw)] -translate-x-1/2 rounded-card border border-border-subtle p-3 shadow-lg"
-      style={{ background: canvas.bg, color: canvas.text }}
-    >
-      <div className="mb-2 flex items-center gap-1.5">
+    <div className="fx-reader-popovers-box" style={{ background: canvas.bg, color: canvas.text }}>
+      <div className="mb-2 fx-reader-popovers-row-5">
         {highlightColorValues.map((c) => (
           <button
             key={c}
@@ -322,7 +305,7 @@ export function NoteComposer({
             aria-label={`Color: ${COLOR_MEANING[c]}`}
             aria-pressed={draft.color === c}
             onClick={() => onChange({ ...draft, color: c })}
-            className="h-5 w-5 rounded-full border border-border-default aria-pressed:ring-2 aria-pressed:ring-[color:var(--border-focus)]"
+            className="fx-reader-swatch"
             style={{ background: tintFor(c, "light") }}
           />
         ))}
@@ -333,30 +316,22 @@ export function NoteComposer({
         value={draft.text}
         onChange={(e) => onChange({ ...draft, text: e.target.value })}
         placeholder="Add a note"
-        className="h-24 w-full resize-none rounded-md border border-border-subtle bg-base p-2 text-sm text-primary"
+        className="cap-input fx-reader-note"
       />
-      <div className="mt-2 flex items-center justify-between gap-2">
+      <div className="mt-2 row-2 spread">
         {canShareToClub ? (
-          <label className="flex items-center gap-1.5 text-xs">
+          <label className="fx-reader-popovers-row-7">
             <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
             Share to club
           </label>
         ) : (
           <span />
         )}
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded-md px-3 py-1.5 text-sm hover:bg-hover"
-          >
+        <div className="row-2">
+          <button type="button" onClick={onCancel} className="fx-reader-popovers-btn-8">
             Cancel
           </button>
-          <button
-            type="button"
-            onClick={() => onSave(share)}
-            className="rounded-md bg-[color:var(--brand-ui)] px-3 py-1.5 text-sm text-[color:var(--text-on-brand)]"
-          >
+          <button type="button" onClick={() => onSave(share)} className="fx-reader-popovers-btn-9">
             Save
           </button>
         </div>
@@ -422,9 +397,11 @@ export function EditPopover({
       ref={ref}
       role="dialog"
       aria-label="Edit annotation"
-      className={`z-30 w-[min(28rem,90vw)] rounded-card border border-border-subtle p-3 shadow-lg ${
-        anchored ? "fixed" : "fixed bottom-16 left-1/2 -translate-x-1/2"
-      }`}
+      className={
+        anchored
+          ? "fx-reader-pop fx-reader-pop-narrow"
+          : "fx-reader-pop fx-reader-pop-narrow fx-reader-pop-docked"
+      }
       style={
         anchored
           ? pos
@@ -433,7 +410,7 @@ export function EditPopover({
           : { background: canvas.bg, color: canvas.text }
       }
     >
-      <div className="mb-2 flex items-center gap-1.5">
+      <div className="mb-2 fx-reader-popovers-row-5">
         {highlightColorValues.map((c) => (
           <button
             key={c}
@@ -441,42 +418,32 @@ export function EditPopover({
             aria-label={`Color: ${COLOR_MEANING[c]}`}
             aria-pressed={annotation.color === c}
             onClick={() => onColor(c)}
-            className="h-5 w-5 rounded-full border border-border-default aria-pressed:ring-2 aria-pressed:ring-[color:var(--border-focus)]"
+            className="fx-reader-popovers-btn-10"
             style={{ background: tintFor(c, "light") }}
           />
         ))}
       </div>
       {annotation.selectedText ? (
-        <p className="mb-2 max-h-20 overflow-auto text-sm italic opacity-70">
-          “{annotation.selectedText}”
-        </p>
+        <p className="mb-2 italic fx-reader-popovers-text-3">“{annotation.selectedText}”</p>
       ) : null}
       <textarea
         value={body}
         onChange={(e) => setBody(e.target.value)}
         placeholder="Add a note"
-        className="h-20 w-full resize-none rounded-md border border-border-subtle bg-base p-2 text-sm text-primary"
+        className="cap-input fx-reader-popovers-btn-2"
       />
-      <div className="mt-2 flex items-center justify-between">
-        <button
-          type="button"
-          onClick={onDelete}
-          className="rounded-md px-3 py-1.5 text-sm text-[color:var(--error)] hover:underline"
-        >
+      <div className="mt-2 fx-reader-popovers-row-8">
+        <button type="button" onClick={onDelete} className="fx-reader-popovers-btn-11">
           Delete
         </button>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-md px-3 py-1.5 text-sm hover:bg-hover"
-          >
+        <div className="row-2">
+          <button type="button" onClick={onClose} className="fx-reader-popovers-btn-8">
             Close
           </button>
           <button
             type="button"
             onClick={() => onSaveNote(body.trim())}
-            className="rounded-md bg-[color:var(--brand-ui)] px-3 py-1.5 text-sm text-[color:var(--text-on-brand)]"
+            className="fx-reader-popovers-btn-9"
           >
             Save note
           </button>

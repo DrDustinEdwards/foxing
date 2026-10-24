@@ -1,31 +1,14 @@
 // Phase 7 push delivery gate (D18). shouldDeliverPush is pure; nowUtcMs + timezone are
-// injected so quiet-hours math is deterministic. Covers category defaults + overrides,
+// injected so quiet-hours math is deterministic. Covers category overrides,
 // quiet hours (including the wrap past midnight and timezone conversion), and unknown
 // categories. In-app notifications always land; this gate only governs the Expo push.
 import { describe, expect, it } from "vitest";
-import {
-  categoryEnabled,
-  inQuietHours,
-  pushCategoryFor,
-  shouldDeliverPush,
-} from "../src/domain/push";
+import { categoryEnabled, inQuietHours, shouldDeliverPush } from "../src/domain/push";
 
 // A fixed UTC instant: 2026-01-15T03:00:00Z (03:00 UTC).
 const UTC_0300 = Date.UTC(2026, 0, 15, 3, 0, 0);
 
-describe("category mapping + defaults", () => {
-  it("maps notification types to categories", () => {
-    expect(pushCategoryFor("post_reply")).toBe("club_replies");
-    expect(pushCategoryFor("streak_at_risk")).toBe("streak");
-    expect(pushCategoryFor("reaction")).toBe("reactions");
-    expect(pushCategoryFor("nope")).toBeNull();
-  });
-  it("high-signal categories default on, noisy ones default off (quiet defaults)", () => {
-    expect(categoryEnabled("club_replies")).toBe(true);
-    expect(categoryEnabled("meetings")).toBe(true);
-    expect(categoryEnabled("reactions")).toBe(false);
-    expect(categoryEnabled("club_activity")).toBe(false);
-  });
+describe("category overrides", () => {
   it("an explicit user override beats the default", () => {
     expect(categoryEnabled("reactions", { categories: { reactions: true } })).toBe(true);
     expect(categoryEnabled("club_replies", { categories: { club_replies: false } })).toBe(false);

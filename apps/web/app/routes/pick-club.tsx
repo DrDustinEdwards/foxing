@@ -61,17 +61,14 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
           title={club.name}
           lede={club.description ?? `${withBooks.length} picks tracked.`}
         />
-        <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="fx-pick-club-grid">
           {withBooks.map((p) => {
             const b = p.book;
             if (!b) return null;
             const date = pickDate(p.pickYear, p.pickMonth);
             return (
-              <li
-                key={p.id}
-                className="flex gap-4 rounded-card border border-border-subtle bg-surface p-4 shadow-card-sm transition-shadow hover:shadow-card-md"
-              >
-                <Link to={`/books/${b.slug}`} className="w-20 shrink-0">
+              <li key={p.id} className="fx-pick-club-card">
+                <Link to={`/books/${b.slug}`} className="shrink-0 fx-pick-club-link">
                   <CoverImage
                     src={b.coverUrl}
                     alt={`${b.title} by ${b.author}`}
@@ -79,23 +76,19 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                     sizes="80px"
                   />
                 </Link>
-                <div className="min-w-0">
+                <div className="min-0">
                   {date ? (
-                    <p className="font-mono text-[0.625rem] uppercase tracking-[0.12em] text-tertiary">
+                    <p className="fx-pick-club-caps">
                       {date}
                       {p.category ? ` · ${p.category}` : ""}
                     </p>
                   ) : null}
-                  <Link to={`/books/${b.slug}`} className="group block">
-                    <h3 className="mt-1 font-display text-base leading-snug text-primary group-hover:text-brand-text">
-                      {b.title}
-                    </h3>
-                    <p className="font-ui text-sm text-tertiary">{b.author}</p>
+                  <Link to={`/books/${b.slug}`} className="block">
+                    <h3 className="mt-1 fx-pick-club-title">{b.title}</h3>
+                    <p className="meta">{b.author}</p>
                   </Link>
                   {p.curatorQuote ? (
-                    <p className="mt-2 line-clamp-3 font-body text-sm italic text-secondary">
-                      &ldquo;{p.curatorQuote}&rdquo;
-                    </p>
+                    <p className="mt-2 italic fx-pick-club-text">&ldquo;{p.curatorQuote}&rdquo;</p>
                   ) : null}
                 </div>
               </li>
