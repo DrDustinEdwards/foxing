@@ -1,59 +1,57 @@
 import { env } from "cloudflare:test";
 import { describe, expect, it } from "vitest";
-import { encryptStoredOAuthTokens, getAuth } from "../app/lib/auth.server";
+import { getAuth } from "../app/lib/auth.server";
 
-// FX-3: Google's tokens are not kept in plaintext. A row stored before encryption was on is
-// encrypted in place by the daily cron's encryptStoredOAuthTokens, and Better Auth still
-// reads it back with the same secret. Fake tokens and a fake secret.
+// FX-3: Foxing stores no Google tokens. A Google sign-in's account writes (createOAuthUser on
+// sign-up, updateAccount on each later sign-in) keep none, and migration 0005 clears the rows
+// stored before. Fake tokens and a fake secret.
 const testEnv = {
   ...env,
   BETTER_AUTH_URL: "https://foxing.app",
   BETTER_AUTH_SECRET: "test-secret-value-for-oauth-tokens-only",
-  GOOGLE_CLIENT_ID: "test-google-client-id",
-  GOOGLE_CLIENT_SECRET: "test-google-client-secret",
   TURNSTILE_ENABLED: "false",
 } as unknown as Env;
 
-const PLAIN = {
-  access: "ya29.a0-fake-access-token",
-  refresh: "1//0fake-refresh-token",
-  id: "eyJhbGciOiJub25lIn0.eyJzdWIiOiJzYW1wbGUifQ.",
+const TOKENS = {
+  accessToken: "ya29.a0-fake-access-token",
+  refreshToken: "1//0fake-refresh-token",
+  idToken: "eyJhbGciOiJub25lIn0.eyJzdWIiOiJzYW1wbGUifQ.",
+  accessTokenExpiresAt: new Date(Date.now() + 3_600_000),
 };
 
-async function storedTokens(id: string) {
-  return env.DB.prepare(
-    "SELECT access_token, refresh_token, id_token, password FROM account WHERE id = ?",
+const tokensOf = (id: string) =>
+  env.DB.prepare(
+    "SELECT access_token, refresh_token, id_token, access_token_expires_at FROM account WHERE id = ?",
   )
     .bind(id)
-    .first<{ access_token: string; refresh_token: string; id_token: string; password: null }>();
-}
+    .first();
+const NONE = {
+  access_token: null,
+  refresh_token: null,
+  id_token: null,
+  access_token_expires_at: null,
+};
 
-describe("OAuth tokens at rest", () => {
-  it("encrypts plaintext tokens once, and Better Auth reads them back", async () => {
+describe("Google tokens", () => {
+  it("are never stored, and migration 0005 clears old ones", async () => {
+    const { internalAdapter } = await getAuth(testEnv).$context;
+    const { account } = await internalAdapter.createOAuthUser(
+      { name: "Sample", email: "oauth@example.com", emailVerified: true },
+      { providerId: "google", accountId: "g-1", ...TOKENS },
+    );
+    expect(await tokensOf(account.id)).toEqual(NONE);
+    await internalAdapter.updateAccount(account.id, TOKENS);
+    expect(await tokensOf(account.id)).toEqual(NONE);
+
     const now = Date.now();
-    await env.DB.batch([
-      env.DB.prepare(
-        "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES ('u-oauth', 'Sample', 'oauth@example.com', 1, ?, ?)",
-      ).bind(now, now),
-      env.DB.prepare(
-        "INSERT INTO account (id, account_id, provider_id, user_id, access_token, refresh_token, id_token, access_token_expires_at, created_at, updated_at) VALUES ('a-oauth', 'g-1', 'google', 'u-oauth', ?, ?, ?, ?, ?, ?)",
-      ).bind(PLAIN.access, PLAIN.refresh, PLAIN.id, now + 3_600_000, now, now),
-    ]);
-
-    expect(await encryptStoredOAuthTokens(testEnv)).toBe(1);
-    const stored = await storedTokens("a-oauth");
-    expect(stored?.access_token).not.toContain(PLAIN.access);
-    expect(stored?.refresh_token).not.toContain(PLAIN.refresh);
-    expect(stored?.id_token).not.toContain(PLAIN.id);
-    expect(stored?.password).toBeNull();
-
-    // A second run finds nothing to do and never encrypts twice.
-    expect(await encryptStoredOAuthTokens(testEnv)).toBe(0);
-    expect(await storedTokens("a-oauth")).toEqual(stored);
-
-    const token = await getAuth(testEnv).api.getAccessToken({
-      body: { providerId: "google", userId: "u-oauth" },
-    });
-    expect(token.accessToken).toBe(PLAIN.access);
+    await env.DB.prepare(
+      "INSERT INTO account (id, account_id, provider_id, user_id, access_token, refresh_token, id_token, access_token_expires_at, created_at, updated_at) VALUES ('a-old', 'g-2', 'google', ?, 'a', 'r', 'i', ?, ?, ?)",
+    )
+      .bind(account.userId, now, now, now)
+      .run();
+    const migration = env.TEST_MIGRATIONS.find((m) => m.name.startsWith("0005_"));
+    for (const query of migration?.queries ?? []) await env.DB.prepare(query).run();
+    expect(migration).toBeDefined();
+    expect(await tokensOf("a-old")).toEqual(NONE);
   });
 });

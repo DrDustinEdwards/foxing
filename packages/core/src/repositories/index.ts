@@ -73,5 +73,3 @@ export type {
   Announcement,
   AuditRow,
 } from "./admin";
-
-export * as oauthTokensRepo from "./oauth-tokens";

@@ -1,13 +1,20 @@
 // Better Auth instance, built per-request from env (D1 is request-scoped).
 // Email/password with verification via the Email Sending binding; Turnstile is
 // wired but only enforced when TURNSTILE_ENABLED=true and a secret is set.
-import { createDb, oauthTokensRepo, schema } from "@foxing/core";
+import { createDb, schema } from "@foxing/core";
 import { type BetterAuthPlugin, betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { symmetricEncrypt } from "better-auth/crypto";
 import { captcha, magicLink } from "better-auth/plugins";
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
+
+const NO_OAUTH_TOKENS = {
+  accessToken: null,
+  refreshToken: null,
+  idToken: null,
+  accessTokenExpiresAt: null,
+  refreshTokenExpiresAt: null,
+};
 
 export function getAuth(env: Env) {
   const db = createDb(env.DB);
@@ -58,17 +65,21 @@ export function getAuth(env: Env) {
       },
     },
     account: {
-      // Google's access, refresh and ID tokens are stored encrypted with BETTER_AUTH_SECRET
-      // (Grok audit 2026-10-21, FX-3); rotating that secret makes them unreadable, and the
-      // next Google sign-in writes fresh ones. Tokens stored before this are encrypted by
-      // encryptStoredOAuthTokens below, from the daily cron.
-      encryptOAuthTokens: true,
       // A Google sign-in whose (Google-verified) email matches an existing verified
       // account links into that row instead of duplicating it. trustedProviders lets
       // Google's email_verified claim stand as ownership proof for the link.
       accountLinking: {
         enabled: true,
         trustedProviders: ["google"],
+      },
+    },
+    // Google is sign-in only, and nothing reads its tokens, so none are stored (FX-3). Every
+    // account write Better Auth makes on a Google sign-in (createOAuthUser, linkAccount,
+    // updateAccount) runs these hooks; migration 0005 cleared the rows from before.
+    databaseHooks: {
+      account: {
+        create: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
+        update: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
       },
     },
     emailVerification: {
@@ -96,17 +107,6 @@ export function getAuth(env: Env) {
     },
     plugins,
   });
-}
-
-/**
- * Encrypts every OAuth token still stored in plaintext, with the same cipher and key Better
- * Auth uses for encryptOAuthTokens, so Better Auth reads them back unchanged. Returns how many
- * account rows it rewrote; once the old rows are done it finds nothing.
- */
-export function encryptStoredOAuthTokens(env: Env): Promise<number> {
-  return oauthTokensRepo.encryptPlaintextOAuthTokens(createDb(env.DB), (data) =>
-    symmetricEncrypt({ key: env.BETTER_AUTH_SECRET, data }),
-  );
 }
 
 /**

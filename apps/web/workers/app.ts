@@ -10,7 +10,7 @@ import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
 import { edgeCache } from "../app/lib/cache.server";
-import { encryptStoredOAuthTokens, getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
+import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { ClubRoom } from "./club-room";
@@ -353,12 +353,6 @@ async function scheduled(
   for (const book of books) {
     ctx.waitUntil(env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage));
   }
-
-  // Any OAuth token still stored in plaintext is encrypted (FX-3). Awaited, so a failure
-  // fails this invocation.
-  const encrypted = await encryptStoredOAuthTokens(env);
-  if (encrypted > 0)
-    console.log(JSON.stringify({ event: "oauth_tokens_encrypted", rows: encrypted }));
 }
 
 async function queue(

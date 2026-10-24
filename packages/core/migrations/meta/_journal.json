@@ -36,6 +36,13 @@
       "when": 1792788302279,
       "tag": "0004_auth_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1792810216906,
+      "tag": "0005_clear_oauth_tokens",
+      "breakpoints": true
     }
   ]
 }
