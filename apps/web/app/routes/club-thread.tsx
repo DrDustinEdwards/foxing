@@ -15,7 +15,7 @@ import type { Route } from "./+types/club-thread";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect(`/login?redirect=/clubs/${params.slug}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const detail = await loadThreadDetail(env, params.slug, params.threadId, session.user.id);

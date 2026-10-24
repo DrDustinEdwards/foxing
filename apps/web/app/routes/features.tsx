@@ -96,7 +96,7 @@ export default function Features() {
         <Section id="account" eyebrow="Account" heading="Your data is yours">
           <FeatureList
             items={[
-              "Edit your profile and change your password from Settings",
+              "Edit your profile and manage your passkeys from Settings",
               "Download every row of your account data as JSON, on demand",
               "Delete your account and everything tied to it, permanently",
             ]}

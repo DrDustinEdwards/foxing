@@ -31,16 +31,6 @@ async function sendLinkEmail(
   }
 }
 
-export function sendPasswordResetEmail(env: Env, to: string, url: string): Promise<void> {
-  return sendLinkEmail(env, to, {
-    subject: "Reset your Foxing password",
-    intro: "Reset your Foxing password:",
-    linkText: "Reset password",
-    url,
-    outro: "This link expires in 1 hour. If you did not request a reset, ignore this message.",
-  });
-}
-
 export function sendMagicLinkEmail(env: Env, to: string, url: string): Promise<void> {
   return sendLinkEmail(env, to, {
     subject: "Your Foxing sign-in link",
@@ -48,8 +38,32 @@ export function sendMagicLinkEmail(env: Env, to: string, url: string): Promise<v
     linkText: "Sign in",
     url,
     outro:
-      "This link expires in 10 minutes and can be used once. If you did not request it, ignore this message.",
+      "This link expires in 5 minutes and can be used once. If you did not request it, ignore this message.",
   });
+}
+
+/** The app's sign-in code (Better Auth's email OTP): the phone can't take a link that opens in the
+ *  browser, so it asks for the code instead. */
+export async function sendSignInCodeEmail(env: Env, to: string, code: string): Promise<void> {
+  try {
+    await env.EMAIL.send({
+      to,
+      from: { email: env.EMAIL_FROM, name: "Foxing" },
+      subject: `${code} is your Foxing sign-in code`,
+      text: `Your Foxing sign-in code is ${code}\n\nIt expires in 5 minutes. If you did not request it, ignore this message.`,
+      html: [
+        `<p>Your Foxing sign-in code is</p>`,
+        `<p style="font-size:24px;letter-spacing:4px"><strong>${escapeHtml(code)}</strong></p>`,
+        `<p>It expires in 5 minutes. If you did not request it, ignore this message.</p>`,
+      ].join(""),
+    });
+  } catch (err) {
+    const e = err as { code?: string; message?: string };
+    console.error(
+      `EMAIL.send failed: code=${e.code ?? "unknown"} message=${e.message ?? String(err)}`,
+    );
+    throw err;
+  }
 }
 
 export function sendVerificationEmail(env: Env, to: string, url: string): Promise<void> {

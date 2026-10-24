@@ -24,7 +24,7 @@ export interface NavUser {
  *  A signed-in user with no profile row still sees the signed-out nav here; the
  *  profile-gated page loaders are what route them to /onboarding. */
 export async function getNavUser(env: Env, request: Request): Promise<NavUser | null> {
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) return null;
 
   const db = createDb(env.DB);

@@ -12,7 +12,7 @@ import type { Route } from "./+types/clubs";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect("/login?redirect=/clubs");
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const { mine, discover } = await loadClubsIndex(env, session.user.id);

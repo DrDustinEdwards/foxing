@@ -3,10 +3,12 @@
 // EXCLUDED on purpose, because each holds live credentials or one-time tokens. A backup copy
 // is one more place a credential could leak from, and restoring one revives it:
 //   session       Better Auth sessions: a bearer `token` per row, plus IP and user agent.
-//   verification  Better Auth one-time values: magic links, password resets, email checks.
-//   account       OAuth access, refresh and id tokens, and the password hash. Better Auth
-//                 recreates the row at the next Google or magic-link sign-in; a password
-//                 user sets a new password through /forgot-password after a restore.
+//   verification  Better Auth one-time values: magic links, sign-in codes, email checks.
+//   account       The Google and Apple sign-in links (their tokens are never stored, but the
+//                 column exists). Better Auth recreates the row at the next Google or Apple
+//                 sign-in, and the email link and passkeys need none.
+// Passkeys are KEPT: the table holds only public keys, and a restore without them would
+// leave every reader to add theirs again.
 //   push_tokens   Expo push tokens: anyone holding one can push to that device. The app
 //                 registers its token again after sign-in (POST /api/v1/push/register).
 // KEPT: user, profiles, books, annotations, journal_posts and every other table.

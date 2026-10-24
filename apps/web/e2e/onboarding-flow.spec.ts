@@ -1,15 +1,16 @@
 import { execSync } from "node:child_process";
 import { expect, test } from "@playwright/test";
+import { passkeyRowSql, privateKey, signInThroughLogin } from "./passkey";
 
 // The persistent e2e account (e2e/auth.setup.ts) is already onboarded, so it can
 // never exercise onboarding: its loader redirects straight past /onboarding to /me.
-// This spec provisions an EPHEMERAL verified account per run so the two-step flow
-// itself gets covered. Account creation and deletion are setup/teardown, not the
-// thing under test: sign-up goes through the real Better Auth API and the verified
-// flag is flipped directly in D1 (the same mechanism scripts/seed-e2e-user.mjs uses
-// for the persistent account -- Better Auth requires email verification and nothing
-// here can click a real inbox). The onboarding flow itself is driven through VISIBLE
-// UI only, exactly like every other authed spec in this repo.
+// This spec provisions an EPHEMERAL account per run so the two-step flow itself gets
+// covered. Account creation and deletion are setup/teardown, not the thing under test:
+// the user row and its e2e passkey are written directly in D1 (the same rows
+// scripts/seed-e2e-passkeys.mjs writes for the persistent accounts), because a new
+// reader's first sign-in is an email link and nothing here can click a real inbox. The
+// sign-in and the onboarding flow are driven through VISIBLE UI only, exactly like every
+// other authed spec in this repo.
 const dbName = process.env.E2E_D1_NAME ?? "foxing";
 
 function runD1(sql: string): string {
@@ -19,40 +20,23 @@ function runD1(sql: string): string {
   );
 }
 
-// The live site throttles credential POSTs (sign-in, sign-up) to 5 a minute per address
-// (the auth rate-limit class in workers/app.ts), and the setup projects' four sign-ins come
-// from the same runner in the same minute. A throttled attempt waits for the window to move on.
-const THROTTLE_WAIT = 20_000;
-
-async function provisionVerifiedAccount(baseURL: string) {
+async function provisionAccount() {
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const email = `e2e-onboard-${stamp}@foxing.app`;
-  const password = `Onb0ard-${Math.random().toString(36).slice(2, 10)}!`;
-  const origin = new URL(baseURL).origin;
-
-  let signup: Response | null = null;
-  for (let attempt = 0; attempt < 4; attempt++) {
-    signup = await fetch(new URL("/api/auth/sign-up/email", baseURL), {
-      method: "POST",
-      headers: { "content-type": "application/json", origin },
-      body: JSON.stringify({ name: "E2E Onboard", email, password }),
-    });
-    if (signup.status !== 429) break;
-    await new Promise((resolve) => setTimeout(resolve, THROTTLE_WAIT));
-  }
-  if (!signup?.ok) {
-    throw new Error(`Ephemeral sign-up failed: ${signup?.status} ${await signup?.text()}`);
-  }
-
-  // D1's read replica can lag behind the just-committed sign-up row (documented in
-  // deferred-items.md); retry the verify flip until it is actually visible.
+  runD1(
+    "INSERT INTO user (id, name, email, email_verified, created_at, updated_at) " +
+      `VALUES ('e2e-onboard-${stamp}', 'E2E Onboard', '${email}', 1, unixepoch()*1000, unixepoch()*1000);`,
+  );
+  runD1(passkeyRowSql(email, privateKey()));
+  // D1's read replica can lag behind the just-committed rows; wait until the passkey shows.
   for (let attempt = 0; attempt < 6; attempt++) {
-    runD1(`UPDATE user SET email_verified = 1 WHERE email = '${email}';`);
-    const out = runD1(`SELECT email_verified FROM user WHERE email = '${email}';`);
-    if (/"email_verified":\s*1/.test(out)) return { email, password };
+    const out = runD1(
+      `SELECT count(*) AS n FROM passkey p JOIN user u ON u.id = p.user_id WHERE u.email = '${email}';`,
+    );
+    if (/"n":\s*1/.test(out)) return email;
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
-  throw new Error("Ephemeral account never became visible/verified in D1.");
+  throw new Error("Ephemeral account never became visible in D1.");
 }
 
 async function deleteAccount(baseURL: string, cookieHeader: string) {
@@ -66,28 +50,19 @@ async function deleteAccount(baseURL: string, cookieHeader: string) {
 }
 
 test.describe("onboarding (ephemeral account)", () => {
-  test("signs up, walks the two-step flow through visible UI, and lands on the book with reading set", async ({
+  test("signs in, walks the two-step flow through visible UI, and lands on the book with reading set", async ({
     page,
     baseURL,
   }) => {
-    // Room for a throttled sign-up and sign-in to each wait out the window.
-    test.setTimeout(180_000);
+    test.setTimeout(120_000);
     const base = baseURL ?? "https://foxing.dustin-edwards.workers.dev";
-    const { email, password } = await provisionVerifiedAccount(base);
+    const email = await provisionAccount();
 
-    // Sign in through the visible form -- the only supported way into an authed
-    // session anywhere in this repo. A throttled attempt shows "Sign in failed", so try
-    // again from a fresh form once the window has moved on, as a reader would.
-    // A fresh account has no profile; /me's loader redirects it to /onboarding.
-    await expect(async () => {
-      await page.goto("/login");
-      // Reveal the collapsed password form, then target its Email (the last of two inputs).
-      await page.getByRole("button", { name: /use a password instead/i }).click();
-      await page.getByLabel("Email").last().fill(email);
-      await page.getByLabel("Password").fill(password);
-      await page.getByRole("button", { name: /^sign in$/i }).click();
-      await expect(page).toHaveURL(/\/onboarding/);
-    }).toPass({ intervals: [THROTTLE_WAIT], timeout: 90_000 });
+    // Sign in through the visible passkey button -- the only supported way into an authed
+    // session anywhere in this repo. A fresh account has no profile; /me's loader
+    // redirects it to /onboarding.
+    await signInThroughLogin(page, email, base);
+    await expect(page).toHaveURL(/\/onboarding/);
 
     // The label's accessible name includes the helper text ("Username Letters,
     // numbers, and underscores."), so match a prefix, not the full string.

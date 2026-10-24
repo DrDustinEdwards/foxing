@@ -1,11 +1,15 @@
-// Better Auth instance, built per-request from env (D1 is request-scoped).
-// Email/password with verification via the Email Sending binding; Turnstile is
-// wired but only enforced when TURNSTILE_ENABLED=true and a secret is set.
+// Better Auth with the family's one sign-in (site-runtime ./sign-in): a passkey first, an
+// emailed link before one exists (Turnstile on it once its keys are set), Google and Apple,
+// no passwords. Accounts are joined only by a signed-in person. The app adds two of its own:
+// the Expo plugin, which hands a Google or Apple sign-in back to the app through foxing://,
+// and a six-digit email code, since a link opens in the phone's browser and not the app.
+import { expo } from "@better-auth/expo";
 import { createDb, schema } from "@foxing/core";
-import { type BetterAuthPlugin, betterAuth } from "better-auth";
+import { signInOptions } from "@dustinedwards/site-runtime/sign-in";
+import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { captcha, magicLink } from "better-auth/plugins";
-import { sendMagicLinkEmail, sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
+import { emailOTP } from "better-auth/plugins";
+import { sendMagicLinkEmail, sendSignInCodeEmail, sendVerificationEmail } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
 
 const NO_OAUTH_TOKENS = {
@@ -16,74 +20,61 @@ const NO_OAUTH_TOKENS = {
   refreshTokenExpiresAt: null,
 };
 
-export function getAuth(env: Env) {
-  const db = createDb(env.DB);
+/** The app's scheme (apps/mobile app.json), where a sign-in started in the app returns. */
+const APP_ORIGIN = "foxing://";
 
-  // Passwordless sign-in link. A magic link inherently proves control of the address,
-  // so the created user is email-verified; a new user (no profile row yet) lands on
-  // /onboarding, an existing one on /me. Same send path as verification/reset.
-  const plugins: BetterAuthPlugin[] = [
-    magicLink({
-      expiresIn: 60 * 10,
-      sendMagicLink: async ({ email, url }) => {
-        await sendMagicLinkEmail(env, email, url);
-      },
-    }),
-  ];
-  if (String(env.TURNSTILE_ENABLED) === "true" && env.TURNSTILE_SECRET_KEY) {
-    plugins.push(
-      captcha({
-        provider: "cloudflare-turnstile",
-        secretKey: env.TURNSTILE_SECRET_KEY,
-      }),
-    );
-  }
+async function buildAuth(env: Env) {
+  const db = createDb(env.DB);
+  // A magic link proves control of the address, so the created user is email-verified; a new
+  // user (no profile row yet) lands on /onboarding, an existing one on /me.
+  const signIn = await signInOptions(env, {
+    siteName: "Foxing",
+    social: true,
+    sendMagicLink: async ({ email, url }) => {
+      await sendMagicLinkEmail(env, email, url);
+    },
+  });
 
   return betterAuth({
+    ...signIn,
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
-    // Both the live domain and the workers.dev preview must be accepted so auth works
-    // on each. baseURL covers one; trustedOrigins lists both explicitly.
-    trustedOrigins: [SITE_ORIGIN, PREVIEW_ORIGIN],
+    // The live domain, the workers.dev preview and the app are all trusted; baseURL covers one.
+    trustedOrigins: [...signIn.trustedOrigins, SITE_ORIGIN, PREVIEW_ORIGIN, APP_ORIGIN],
     database: drizzleAdapter(db, {
       provider: "sqlite",
       schema,
       // D1 has limited transaction support; the adapter must not wrap in txns.
       transaction: false,
     }),
-    emailAndPassword: {
-      enabled: true,
-      requireEmailVerification: true,
-      sendResetPassword: async ({ user, url }: { user: { email: string }; url: string }) => {
-        await sendPasswordResetEmail(env, user.email, url);
-      },
+    plugins: [
+      ...signIn.plugins,
+      expo(),
+      emailOTP({
+        otpLength: 6,
+        expiresIn: 60 * 5,
+        sendVerificationOTP: async ({ email, otp, type }) => {
+          if (type === "sign-in") await sendSignInCodeEmail(env, email, otp);
+        },
+      }),
+    ],
+    rateLimit: {
+      ...signIn.rateLimit,
+      // The code is the one mail the app sends a stranger with no Turnstile in front of it
+      // (the app can't show the widget), so it is held tighter than the default.
+      customRules: { "/email-otp/send-verification-otp": { window: 60, max: 3 } },
     },
-    socialProviders: {
-      google: {
-        clientId: env.GOOGLE_CLIENT_ID,
-        clientSecret: env.GOOGLE_CLIENT_SECRET,
-      },
-    },
-    account: {
-      // A Google sign-in whose (Google-verified) email matches an existing verified
-      // account links into that row instead of duplicating it. trustedProviders lets
-      // Google's email_verified claim stand as ownership proof for the link.
-      accountLinking: {
-        enabled: true,
-        trustedProviders: ["google"],
-      },
-    },
-    // Google is sign-in only, and nothing reads its tokens, so none are stored (FX-3). Every
-    // account write Better Auth makes on a Google sign-in (createOAuthUser, linkAccount,
-    // updateAccount) runs these hooks; migration 0005 cleared the rows from before.
+    // Google and Apple are sign-in only, and nothing reads their tokens, so none are stored
+    // (FX-3). Every account write Better Auth makes on a social sign-in (createOAuthUser,
+    // linkAccount, updateAccount) runs these hooks; migration 0005 cleared the rows from before.
     databaseHooks: {
       account: {
         create: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
         update: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
       },
     },
+    // Only the change-email flow sends this now: the new address confirms itself.
     emailVerification: {
-      sendOnSignUp: true,
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendVerificationEmail(env, user.email, url);
       },
@@ -105,8 +96,22 @@ export function getAuth(env: Env) {
         },
       },
     },
-    plugins,
   });
+}
+
+type Auth = Awaited<ReturnType<typeof buildAuth>>;
+
+// Built once per isolate (the Worker env is stable within one) and the promise kept: Apple's
+// client secret is signed with WebCrypto on each build.
+const cache = new WeakMap<Env, Promise<Auth>>();
+
+export function getAuth(env: Env): Promise<Auth> {
+  let auth = cache.get(env);
+  if (!auth) {
+    auth = buildAuth(env);
+    cache.set(env, auth);
+  }
+  return auth;
 }
 
 /**
@@ -117,7 +122,7 @@ export async function sessionUserFromRequest(
   req: Request,
   env: Env,
 ): Promise<{ id: string; email: string } | null> {
-  const session = await getAuth(env).api.getSession({ headers: req.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: req.headers });
   if (!session?.user) return null;
   return { id: session.user.id, email: session.user.email };
 }

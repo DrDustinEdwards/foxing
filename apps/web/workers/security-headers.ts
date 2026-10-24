@@ -3,7 +3,11 @@
 // beside its reason, and the Content-Security-Policy built from the list below of what Foxing really
 // loads. workers/app.ts calls withSecurityHeaders on every response, redirects, API, errors and cache
 // hits included. No other file sets a security header.
-import { applyHeaderSet, buildSecurityHeaders } from "@dustinedwards/site-runtime/headers";
+import {
+  applyHeaderSet,
+  buildSecurityHeaders,
+  PASSKEY_OVERRIDES,
+} from "@dustinedwards/site-runtime/headers";
 import {
   buildContentSecurityPolicy,
   generateNonce,
@@ -11,6 +15,7 @@ import {
   type CspSources,
 } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
+import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 
 /** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
@@ -24,21 +29,24 @@ const CSP_ENDPOINT_NAME = "csp-endpoint";
  *   2,209 cover_url rows in production D1 are on it). Avatars are profiles.avatar_url, empty in
  *   production today; one on another host would be blocked (an empty avatar circle) until it is
  *   moved to R2 or its host is listed here.
- * - script, frame: Cloudflare Turnstile on the auth forms (app/components/turnstile.tsx).
+ * - script, frame: Cloudflare Turnstile on the email sign-in link (site-runtime ./turnstile).
  * - connect: nothing beyond 'self', which covers /api/v1, /api/auth and the club-room WebSocket
  *   (same host, wss). Supabase is the mobile app's alone and is not listed.
  * The Cloudflare Web Analytics beacon is asked for by name below (cloudflareWebAnalytics).
  */
 const SITE_SOURCES: CspSources = {
-  script: ["https://challenges.cloudflare.com"],
+  script: [TURNSTILE_ORIGIN],
   style: ["https://fonts.googleapis.com"],
   font: ["https://fonts.gstatic.com"],
   img: [COVER_ORIGIN],
-  frame: ["https://challenges.cloudflare.com"],
+  frame: [TURNSTILE_ORIGIN],
 };
 
-/** The set every response carries. No deviation from the standard yet: none has been needed. */
-export const securityHeaders: Readonly<Record<string, string>> = buildSecurityHeaders();
+/** The set every response carries, with passkey sign-in allowed on Foxing's own pages (OSHP's
+ *  Permissions-Policy turns it off; site-runtime's PASSKEY_OVERRIDES carries the reason). */
+export const securityHeaders: Readonly<Record<string, string>> = buildSecurityHeaders({
+  overrides: PASSKEY_OVERRIDES,
+});
 
 /**
  * Images only: the OG cards (/og/*, og.foxing.app) are embedded by other sites, and a link preview

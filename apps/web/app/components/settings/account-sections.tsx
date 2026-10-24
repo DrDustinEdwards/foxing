@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient } from "~/lib/auth-client";
-import { Link } from "react-router";
+import { Link, useRevalidator } from "react-router";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;
@@ -271,99 +271,135 @@ export function AdminSection() {
   );
 }
 
-export function PasswordSection() {
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [pending, setPending] = useState(false);
-  const [status, setStatus] = useState<"changed" | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const mismatch = confirm.length > 0 && next !== confirm;
+export type SignInSettings = {
+  passkeys: { id: string; name: string; createdAt: string | null }[];
+  /** The providers the site offers, and whether this account is joined to each. */
+  providers: { id: "google" | "apple"; label: string; linked: boolean }[];
+};
 
-  async function change(event: React.FormEvent) {
-    event.preventDefault();
-    // Client-side match check before hitting Better Auth.
-    if (next !== confirm) {
-      setError("New password and confirmation do not match.");
-      return;
-    }
-    setPending(true);
-    setStatus(null);
+/**
+ * How the reader signs in (site-runtime ./sign-in): their passkeys, and Google or Apple joined
+ * to the account. Joining happens only here, while signed in, never by a matching email at
+ * sign-in. The email link always works, so nothing here can lock a reader out.
+ */
+export function SignInSection({ initial }: { initial: SignInSettings }) {
+  const revalidator = useRevalidator();
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function run(
+    key: string,
+    action: () => Promise<{ error?: unknown } | null | undefined>,
+    failed: string,
+  ) {
+    setBusy(key);
     setError(null);
     try {
-      const res = await authClient.changePassword({
-        currentPassword: current,
-        newPassword: next,
-        revokeOtherSessions: true,
-      });
-      if (res.error) {
-        setError(res.error.message ?? "Could not change your password.");
+      const res = await action();
+      if (res?.error) {
+        const message = (res.error as { message?: string }).message;
+        setError(message ? `${failed} ${message}` : failed);
         return;
       }
-      setStatus("changed");
-      setCurrent("");
-      setNext("");
-      setConfirm("");
+      void revalidator.revalidate();
     } catch {
-      setError("Could not change your password. Check your connection and try again.");
+      setError(`${failed} Check your connection and try again.`);
     } finally {
-      setPending(false);
+      setBusy(null);
     }
   }
 
   return (
-    <Card title="Password">
-      <form onSubmit={change} className="stack">
-        <label className="block">
-          <span className="fx-label">Current password</span>
-          <input
-            type="password"
-            value={current}
-            onChange={(e) => setCurrent(e.target.value)}
-            autoComplete="current-password"
-            required
-            className={inputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">New password</span>
-          <input
-            type="password"
-            value={next}
-            onChange={(e) => setNext(e.target.value)}
-            autoComplete="new-password"
-            required
-            minLength={8}
-            className={inputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Confirm new password</span>
-          <input
-            type="password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            autoComplete="new-password"
-            required
-            minLength={8}
-            aria-invalid={mismatch}
-            className={inputClass}
-          />
-          {mismatch ? (
-            <span className="mt-1 block fx-account-sections-label-5" role="alert">
-              Passwords do not match.
+    <Card title="Sign-in">
+      <div className="stack">
+        <p className="ui">
+          A passkey signs you in with your face, fingerprint or device PIN. It only works on Foxing,
+          so it cannot be phished. You can always sign in with an email link too.
+        </p>
+        {initial.passkeys.length > 0 ? (
+          <ul className="stack-3">
+            {initial.passkeys.map((p) => (
+              <li key={p.id} className="row">
+                <span className="ui grow">{p.name}</span>
+                <button
+                  type="button"
+                  className="cap-btn"
+                  data-size="sm"
+                  disabled={busy !== null}
+                  onClick={() =>
+                    void run(
+                      p.id,
+                      () => authClient.passkey.deletePasskey({ id: p.id }),
+                      "The passkey was not removed.",
+                    )
+                  }
+                >
+                  Remove<span className="cap-sr-only"> {p.name}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        <div>
+          <button
+            type="button"
+            className="cap-btn"
+            data-variant="primary"
+            disabled={busy !== null}
+            onClick={() =>
+              void run("add", () => authClient.passkey.addPasskey(), "The passkey was not saved.")
+            }
+          >
+            {busy === "add" ? "Waiting for your device..." : "Add a passkey"}
+          </button>
+        </div>
+        {initial.providers.map((provider) => (
+          <div key={provider.id} className="row">
+            <span className="ui grow">
+              {provider.label}: {provider.linked ? "connected" : "not connected"}
             </span>
-          ) : null}
-        </label>
-        <SubmitRow
-          disabled={pending || mismatch || next.length === 0}
-          pending={pending}
-          label="Change password"
-          pendingLabel="Changing..."
-          done={status === "changed" ? "Password changed." : null}
-          error={error}
-        />
-      </form>
+            {provider.linked ? (
+              <button
+                type="button"
+                className="cap-btn"
+                data-size="sm"
+                disabled={busy !== null}
+                onClick={() =>
+                  void run(
+                    provider.id,
+                    () => authClient.unlinkAccount({ providerId: provider.id }),
+                    `${provider.label} was not disconnected.`,
+                  )
+                }
+              >
+                Disconnect<span className="cap-sr-only"> {provider.label}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="cap-btn"
+                data-size="sm"
+                disabled={busy !== null}
+                onClick={() =>
+                  void run(
+                    provider.id,
+                    () =>
+                      authClient.linkSocial({ provider: provider.id, callbackURL: "/settings" }),
+                    `${provider.label} was not connected.`,
+                  )
+                }
+              >
+                Connect<span className="cap-sr-only"> {provider.label}</span>
+              </button>
+            )}
+          </div>
+        ))}
+        {error ? (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        ) : null}
+      </div>
     </Card>
   );
 }

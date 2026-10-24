@@ -54,10 +54,12 @@ export default function Privacy() {
           <Section heading="Where your data lives">
             Foxing runs on Cloudflare. Your account and library data are stored in Cloudflare D1,
             our database. Book files, cover images, and avatars are stored in Cloudflare R2.
-            Sessions and cached pages live in Cloudflare KV. The application itself runs as a
-            Cloudflare Worker. Transactional email, such as sign-in verification and password
-            resets, is sent through Cloudflare Email Sending. Data is processed in Cloudflare's
-            network under its data processing terms.
+            Sessions live in D1 too, and cached pages in Cloudflare KV. The application itself runs
+            as a Cloudflare Worker. Transactional email, such as sign-in links and codes, is sent
+            through Cloudflare Email Sending. If you sign in with Google or Apple, Foxing receives
+            your name and email address from them and keeps none of their access tokens. A passkey
+            leaves only its public key with Foxing; the private key stays on your device. Data is
+            processed in Cloudflare's network under its data processing terms.
           </Section>
 
           <Section heading="Payments">

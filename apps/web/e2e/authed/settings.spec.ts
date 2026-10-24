@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 // The expanded settings surface (Phase integration): visibility, appearance, and close
-// friends join the original profile/plan/password/data/delete sections. Driven through a
+// friends join the original profile/plan/sign-in/data/delete sections. Driven through a
 // real session against the visible controls; the save round-trips to /api/v1/me/visibility.
 test.describe("settings (signed in)", () => {
   test("renders the profile, visibility, appearance, and close-friends sections", async ({

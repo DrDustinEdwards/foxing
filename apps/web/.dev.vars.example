@@ -1,8 +1,16 @@
 # Copy to .dev.vars (gitignored) for local `wrangler dev` / `vite dev`.
 # Generate a secret with: node -e "console.log(crypto.randomUUID()+crypto.randomUUID())"
 BETTER_AUTH_SECRET=""
-# Only needed when TURNSTILE_ENABLED=true
+# Turnstile on the email link, on only when both are set. Cloudflare's always-pass test pair:
+# 1x00000000000000000000AA / 1x0000000000000000000000000000000AA
+TURNSTILE_SITE_KEY=""
 TURNSTILE_SECRET_KEY=""
 # Google OAuth (Continue with Google). Callback: <BETTER_AUTH_URL>/api/auth/callback/google
 GOOGLE_CLIENT_ID=""
 GOOGLE_CLIENT_SECRET=""
+# Sign in with Apple. Return URL: <BETTER_AUTH_URL>/api/auth/callback/apple. APPLE_CLIENT_ID is
+# the Services ID; APPLE_PRIVATE_KEY the .p8 key's text (site-runtime ./apple-secret signs from it).
+APPLE_CLIENT_ID=""
+APPLE_TEAM_ID=""
+APPLE_KEY_ID=""
+APPLE_PRIVATE_KEY=""""

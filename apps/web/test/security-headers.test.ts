@@ -20,7 +20,6 @@ const testEnv = {
   BETTER_AUTH_SECRET: "test-secret-value-for-headers-suite",
   GOOGLE_CLIENT_ID: "test-google-client-id",
   GOOGLE_CLIENT_SECRET: "test-google-client-secret",
-  TURNSTILE_ENABLED: "false",
 } as unknown as Env;
 
 async function fetchPath(path: string, init?: RequestInit) {

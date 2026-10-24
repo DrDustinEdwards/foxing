@@ -3,13 +3,15 @@
 // that is never itself redirected, so there are no chains. Kept as a pure function so
 // the Worker and its tests share one source of truth.
 //   celebrity picks: /book-clubs[/:slug] -> /picks[/:slug]
-//   auth renames:    /sign-in -> /login, /sign-up -> /signup
+//   auth renames:    /sign-in -> /login, /sign-up -> /signup; the password pages
+//                    (/forgot-password, /reset-password) -> /login, passwords being gone
 //   profile subpages consolidated onto /u/:username (recap stays live)
 //   cut features (no browse route): /series -> /books, /quotes -> /journal,
 //     /buddy-reads -> /clubs. Any child path collapses to the same target (one hop).
 export function legacyRedirectTarget(pathname: string): string | null {
   if (pathname === "/sign-in") return "/login";
   if (pathname === "/sign-up") return "/signup";
+  if (pathname === "/forgot-password" || pathname === "/reset-password") return "/login";
   if (pathname === "/book-clubs") return "/picks";
   if (pathname.startsWith("/book-clubs/")) {
     return `/picks/${pathname.slice("/book-clubs/".length)}`;

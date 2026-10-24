@@ -2,10 +2,17 @@
 // `wrangler types` does not include them. Augment the generated global Env.
 interface Env {
   BETTER_AUTH_SECRET: string;
+  // Turnstile on the email link (site-runtime ./sign-in): on only when both are set.
+  TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET_KEY?: string;
-  // Google OAuth (set as Worker secrets). Required for the "Continue with Google" flow.
-  GOOGLE_CLIENT_ID: string;
-  GOOGLE_CLIENT_SECRET: string;
+  // Google and Apple sign-in (site-runtime ./sign-in). Each button shows only when its
+  // settings are all set. APPLE_CLIENT_ID is the Services ID; APPLE_PRIVATE_KEY the .p8 text.
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  APPLE_CLIENT_ID?: string;
+  APPLE_TEAM_ID?: string;
+  APPLE_KEY_ID?: string;
+  APPLE_PRIVATE_KEY?: string;
   // Not yet set (Phase 4a precheck, 2026-07-10): companion routes fall back to a
   // caller that errors cleanly until `wrangler secret put ANTHROPIC_API_KEY` runs.
   ANTHROPIC_API_KEY?: string;

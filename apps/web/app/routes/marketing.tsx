@@ -64,7 +64,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
   // Signed-in visitors get their dashboard; "/" stays the marketing page for
   // anonymous visitors (whose response is the one that gets edge-cached).
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   if (session?.user) throw redirect("/home");
   const [pick, browse, journal] = await Promise.all([
     catalogRepo.getTodaysPick(db),

@@ -66,3 +66,37 @@ export const verification = sqliteTable(
   },
   (t) => [index("verification_identifier_idx").on(t.identifier)],
 );
+
+// Better Auth's sign-in rate limit (site-runtime ./sign-in keeps it in the database, one
+// atomic count per request, never KV).
+export const rateLimit = sqliteTable("rate_limit", {
+  id: text("id").primaryKey(),
+  key: text("key").notNull().unique(),
+  count: integer("count").notNull(),
+  lastRequest: integer("last_request").notNull(),
+});
+
+// A person's passkeys (site-runtime ./sign-in, Better Auth's passkey plugin). The public
+// half only: the private key never leaves the person's device.
+export const passkey = sqliteTable(
+  "passkey",
+  {
+    id: text("id").primaryKey(),
+    name: text("name"),
+    publicKey: text("public_key").notNull(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    credentialID: text("credential_id").notNull(),
+    counter: integer("counter").notNull(),
+    deviceType: text("device_type").notNull(),
+    backedUp: integer("backed_up", { mode: "boolean" }).notNull(),
+    transports: text("transports"),
+    createdAt: integer("created_at", { mode: "timestamp_ms" }),
+    aaguid: text("aaguid"),
+  },
+  (t) => [
+    index("passkey_user_id_idx").on(t.userId),
+    index("passkey_credential_id_idx").on(t.credentialID),
+  ],
+);
