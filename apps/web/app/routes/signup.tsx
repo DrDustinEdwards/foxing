@@ -1,17 +1,12 @@
-import { useState } from "react";
+import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
 import {
   AuthDivider,
   AuthLink,
   AuthShell,
-  AuthSubmit,
-  Field,
-  GoogleButton,
   MagicLinkForm,
-  RevealLink,
+  SocialButtons,
 } from "~/components/auth-shell";
-import { TurnstileWidget } from "~/components/turnstile";
 import { cloudflareContext } from "~/context";
-import { signUp } from "~/lib/auth-client";
 import type { Route } from "./+types/signup";
 
 export function meta() {
@@ -20,62 +15,13 @@ export function meta() {
 
 export function loader({ context }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  return {
-    turnstile: {
-      enabled: String(env.TURNSTILE_ENABLED) === "true",
-      siteKey: env.TURNSTILE_SITE_KEY ?? "",
-    },
-  };
+  return { methods: signInMethods(env, { social: true }) };
 }
 
+// A new account starts from Google, Apple or an email link (which creates the account on its
+// first use); a passkey is offered once the person is in, since there is none to sign in with yet.
 export default function Signup({ loaderData }: Route.ComponentProps) {
-  const { turnstile } = loaderData;
-  const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
-  const [done, setDone] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState("");
-
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setPending(true);
-    setError(null);
-    const form = new FormData(event.currentTarget);
-    const res = await signUp.email(
-      {
-        name: String(form.get("name")),
-        email: String(form.get("email")),
-        password: String(form.get("password")),
-        callbackURL: "/onboarding",
-      },
-      turnstile.enabled ? { headers: { "x-captcha-response": captchaToken } } : undefined,
-    );
-    setPending(false);
-    if (res.error) {
-      // Treat "email already registered" identically to success so callers
-      // cannot enumerate whether an address is in use.
-      const isExisting =
-        (res.error as { code?: string }).code === "USER_ALREADY_EXISTS" ||
-        res.error.message?.toLowerCase().includes("already exists");
-      if (!isExisting) {
-        setError(res.error.message ?? "Sign up failed.");
-        return;
-      }
-    }
-    setDone(true);
-  }
-
-  if (done) {
-    return (
-      <AuthShell
-        title="Check your email"
-        subtitle="We sent a link to confirm your address. Open it to finish setting up your account."
-      >
-        <p className="ui">You can close this tab once you have confirmed.</p>
-      </AuthShell>
-    );
-  }
-
+  const { methods } = loaderData;
   return (
     <AuthShell
       title="Create your account"
@@ -87,35 +33,9 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
       }
     >
       <div className="stack">
-        <GoogleButton />
-        <AuthDivider />
-        <MagicLinkForm />
-
-        {showPassword ? (
-          <form onSubmit={onSubmit} className="fx-signup-form">
-            <Field label="Name" name="name" required autoComplete="name" />
-            <Field label="Email" name="email" type="email" required autoComplete="email" />
-            <Field
-              label="Password"
-              name="password"
-              type="password"
-              minLength={8}
-              required
-              autoComplete="new-password"
-            />
-            {turnstile.enabled ? (
-              <TurnstileWidget siteKey={turnstile.siteKey} onToken={setCaptchaToken} />
-            ) : null}
-            {error ? (
-              <p role="alert" className="error">
-                {error}
-              </p>
-            ) : null}
-            <AuthSubmit pending={pending}>{pending ? "Creating..." : "Create account"}</AuthSubmit>
-          </form>
-        ) : (
-          <RevealLink onClick={() => setShowPassword(true)}>Use a password instead</RevealLink>
-        )}
+        <SocialButtons methods={methods} />
+        {methods.google || methods.apple ? <AuthDivider /> : null}
+        <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} />
       </div>
     </AuthShell>
   );

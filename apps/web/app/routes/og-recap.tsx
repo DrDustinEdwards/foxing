@@ -14,7 +14,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const year = Number(params.year);
   if (!Number.isInteger(year)) throw new Response("Not found", { status: 404 });
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const data = await loadRecap(env, { username: params.username }, year, session?.user?.id ?? null);
   if (!data) throw new Response("Not found", { status: 404 });
 

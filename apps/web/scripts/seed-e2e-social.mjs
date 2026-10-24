@@ -12,8 +12,8 @@
 //
 // Required env:
 //   E2E_PLUS_EMAIL                        A's email (already seeded by seed-e2e-plus-user)
-//   E2E_B_EMAIL / E2E_B_PASSWORD          B's credentials (also CI secrets)
-//   E2E_C_EMAIL / E2E_C_PASSWORD          C's credentials (also CI secrets)
+//   E2E_B_EMAIL / E2E_C_EMAIL             B's and C's emails (also CI secrets)
+//   E2E_PASSKEY_PRIVATE_KEY               the e2e passkey (also a CI secret)
 //   E2E_SEED_BASE_URL                     the deployed preview URL (or PLAYWRIGHT_BASE_URL)
 //   E2E_BOOK_SLUG                         the readable book to use as the club's current read
 // Optional:
@@ -21,84 +21,38 @@
 //   E2E_SOCIAL_CLUB_ID                    stable club id (default e2e-social-club)
 //   E2E_D1_NAME                           D1 name (default foxing)
 //   E2E_D1_LOCAL=true                     operate on the LOCAL D1 instead of --remote
-import { execSync } from "node:child_process";
+import { d1, seedAccount } from "./e2e-account.mjs";
 
 const A_EMAIL = process.env.E2E_PLUS_EMAIL;
 const base = process.env.E2E_SEED_BASE_URL ?? process.env.PLAYWRIGHT_BASE_URL;
 const bookSlug = process.env.E2E_BOOK_SLUG;
 const clubId = process.env.E2E_SOCIAL_CLUB_ID ?? "e2e-social-club";
-const dbName = process.env.E2E_D1_NAME ?? "foxing";
-const scope = process.env.E2E_D1_LOCAL === "true" ? "--local" : "--remote";
 
 const accounts = [
   {
     key: "B",
     email: process.env.E2E_B_EMAIL,
-    password: process.env.E2E_B_PASSWORD,
     username: process.env.E2E_B_USERNAME ?? "foxing_e2e_b",
     name: "Foxing E2E B",
   },
   {
     key: "C",
     email: process.env.E2E_C_EMAIL,
-    password: process.env.E2E_C_PASSWORD,
     username: process.env.E2E_C_USERNAME ?? "foxing_e2e_c",
     name: "Foxing E2E C",
   },
 ];
 
-if (!A_EMAIL || !base || !bookSlug || accounts.some((a) => !a.email || !a.password)) {
+if (!A_EMAIL || !base || !bookSlug || accounts.some((a) => !a.email)) {
   console.error(
-    "Set E2E_PLUS_EMAIL, E2E_B_EMAIL/PASSWORD, E2E_C_EMAIL/PASSWORD, E2E_SEED_BASE_URL, and E2E_BOOK_SLUG.",
+    "Set E2E_PLUS_EMAIL, E2E_B_EMAIL, E2E_C_EMAIL, E2E_PASSKEY_PRIVATE_KEY, E2E_SEED_BASE_URL, and E2E_BOOK_SLUG.",
   );
   process.exit(1);
 }
 
-const origin = new URL(base).origin;
-
-function d1(sql) {
-  execSync(`npx wrangler d1 execute ${dbName} ${scope} --command "${sql.replace(/"/g, '\\"')}"`, {
-    stdio: "inherit",
-    shell: true,
-  });
-}
-
 // 1) Create B and C (verified + onboarded), the same way the plus account is seeded.
 for (const a of accounts) {
-  const signup = await fetch(new URL("/api/auth/sign-up/email", base), {
-    method: "POST",
-    headers: { "content-type": "application/json", origin },
-    body: JSON.stringify({ name: a.name, email: a.email, password: a.password }),
-  });
-  if (!signup.ok && signup.status !== 422) {
-    console.warn(`[${a.key}] sign-up returned ${signup.status}; the account may already exist.`);
-  }
-  d1(`UPDATE user SET email_verified = 1 WHERE email = '${a.email}';`);
-
-  const signin = await fetch(new URL("/api/auth/sign-in/email", base), {
-    method: "POST",
-    headers: { "content-type": "application/json", origin },
-    body: JSON.stringify({ email: a.email, password: a.password }),
-  });
-  const setCookies =
-    typeof signin.headers.getSetCookie === "function"
-      ? signin.headers.getSetCookie()
-      : [signin.headers.get("set-cookie")].filter(Boolean);
-  const cookie = setCookies.map((c) => String(c).split(";")[0]).join("; ");
-  if (signin.ok && cookie) {
-    const onboard = await fetch(new URL("/api/v1/me/onboard", base), {
-      method: "POST",
-      headers: { "content-type": "application/json", cookie, origin },
-      body: JSON.stringify({ username: a.username }),
-    });
-    if (!onboard.ok && onboard.status !== 409) {
-      console.warn(
-        `[${a.key}] onboard returned ${onboard.status}; complete once in the UI if needed.`,
-      );
-    }
-  } else {
-    console.warn(`[${a.key}] sign-in returned ${signin.status}; verify + onboard manually.`);
-  }
+  await seedAccount({ base, email: a.email, name: a.name, username: a.username });
 }
 
 // 2) Create the club (owned by A), pointed at the readable book as its CURRENT read, with

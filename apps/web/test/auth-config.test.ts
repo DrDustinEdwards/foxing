@@ -13,13 +13,12 @@ function testEnv() {
     BETTER_AUTH_SECRET: "test-secret-value-for-config-only",
     GOOGLE_CLIENT_ID: "test-google-client-id",
     GOOGLE_CLIENT_SECRET: "test-google-client-secret",
-    TURNSTILE_ENABLED: "false",
   } as unknown as Env;
 }
 
 describe("auth config", () => {
   it("serves the Google callback route (not a 404 fall-through)", async () => {
-    const auth = getAuth(testEnv());
+    const auth = await getAuth(testEnv());
     // No oauth state/code: the handler must recognise the route and redirect to its
     // error screen. A 404 would mean the provider was never registered.
     const res = await auth.handler(

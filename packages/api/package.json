@@ -12,10 +12,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#3febb511dd39c93f5e31531e35d3051979400592",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#89e9d588f28a58ece83ffb509609fff356e2b889",
     "@foxing/core": "workspace:*",
     "hono": "^4.12.0",
-    "zod": "^3.25.0"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.0.0",

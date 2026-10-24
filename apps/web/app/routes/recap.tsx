@@ -16,7 +16,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     throw new Response("Not found", { status: 404 });
   }
-  const session = await getAuth(env).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
   const data = await loadRecap(env, { username: params.username }, year, session?.user?.id ?? null);
   if (!data) throw new Response("Not found", { status: 404 });
   return { ...data, year, username: params.username };
