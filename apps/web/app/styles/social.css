@@ -299,7 +299,7 @@
 }
 .fx-list-detail-link-2,
 .fx-recap-link {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.75rem;
   color: var(--text);
@@ -308,7 +308,7 @@
   }
 }
 .fx-list-detail-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.75rem;
   color: var(--dim);
@@ -377,7 +377,7 @@
   }
 }
 .fx-me-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 2.25rem;
   @media (min-width: 40rem) {
@@ -482,7 +482,7 @@
   gap: 1.25rem;
 }
 .fx-u-profile-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 2.25rem;
   @media (min-width: 40rem) {
@@ -652,7 +652,7 @@
   padding-bottom: 0.5rem;
 }
 .fx-u-profile-title-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 1;
   color: var(--text);
@@ -682,7 +682,7 @@
   gap: 0.75rem;
 }
 .fx-vocabulary-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.75rem;
   font-weight: 600;
@@ -751,7 +751,7 @@
   gap: 1rem;
 }
 .fx-diary-link {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.75rem;
   color: var(--text);

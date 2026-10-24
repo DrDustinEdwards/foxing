@@ -5,7 +5,7 @@
   text-align: center;
 }
 .fx-hero-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 3rem;
   font-weight: 600;
   line-height: 1.05;
@@ -61,7 +61,7 @@
 .fx-cta-title {
   max-inline-size: 42rem;
   margin-inline: auto;
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   font-weight: 600;
   line-height: 1.2;
@@ -112,7 +112,7 @@
   scroll-margin-top: 6rem;
 }
 .fx-guide-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 1.25;
   color: var(--text);
@@ -181,13 +181,13 @@
   margin-bottom: 3.5rem;
 }
 .fx-app-guide-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 1.25;
   color: var(--text);
 }
 .fx-features-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 1.25;
   color: var(--text);

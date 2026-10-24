@@ -239,7 +239,7 @@
   color: var(--dim);
 }
 .fx-admin-user-detail-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 2.25rem;
   color: var(--text);
@@ -402,7 +402,7 @@
   }
 }
 .fx-admin-journal-edit-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 2.25rem;
   color: var(--text);

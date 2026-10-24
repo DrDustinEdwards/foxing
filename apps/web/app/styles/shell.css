@@ -13,7 +13,7 @@
   line-height: 1;
 }
 .fx-wordmark {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   font-weight: 600;
   line-height: 1;
@@ -252,7 +252,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   font-weight: 600;
 }
@@ -300,102 +300,7 @@
   text-align: center;
 }
 
-/* The search palette (cmdk, opened by Ctrl K or the header's Search). Capsomer's command menu
-   filters a fixed list, and this one queries the catalog as you type, so cmdk stays and wears
-   Capsomer's tokens here. */
-.fx-cmd-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-overlay);
-  background: var(--fx-scrim);
-  backdrop-filter: blur(4px);
-}
-.fx-cmd-content {
-  position: fixed;
-  inset: 0;
-  z-index: var(--z-overlay);
-  display: grid;
-  place-items: start center;
-  padding: 12vh 1rem 1rem;
-}
-.fx-cmd {
-  inline-size: 100%;
-  max-inline-size: 36rem;
-  overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--fx-radius-hero);
-  background: var(--surface);
-  box-shadow: var(--fx-shadow-md);
-}
-.fx-cmd-head {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-block-end: 1px solid var(--line);
-  padding-inline: 1rem;
-  color: var(--dim);
-}
-.fx-cmd-input {
-  inline-size: 100%;
-  border: 0;
-  background: transparent;
-  padding-block: 0.875rem;
+/* The search palette is Capsomer's command menu; its rows read in the UI face, not the body's. */
+.cap-cmd {
   font-family: var(--ui);
-  font-size: 1rem;
-  color: var(--text);
-  outline: none;
-}
-.fx-cmd-list {
-  max-block-size: min(24rem, 60vh);
-  overflow-y: auto;
-  padding: 0.5rem;
-}
-.fx-cmd-empty {
-  padding: 1.5rem 0.75rem;
-  text-align: center;
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--dim);
-}
-.fx-cmd [cmdk-group-heading] {
-  padding: 0.75rem 0.75rem 0.25rem;
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--dim);
-}
-.fx-cmd-item {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  border-radius: var(--radius-m);
-  padding: 0.5rem 0.75rem;
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-.fx-cmd-item[data-selected="true"] {
-  background: var(--fx-hover);
-  color: var(--text);
-}
-.fx-cmd-title {
-  font-family: var(--fx-display);
-  color: var(--text);
-}
-.fx-cmd-foot {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.75rem;
-  border-block-start: 1px solid var(--line);
-  padding: 0.5rem 1rem;
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-}
-.fx-cmd-foot kbd {
-  font: inherit;
 }
