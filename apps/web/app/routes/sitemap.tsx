@@ -1,17 +1,9 @@
-import { escapeHtml } from "@dustinedwards/site-runtime/html";
+import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
 import { catalogRepo } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
-
-type Url = { loc: string; lastmod?: string; priority?: string };
-
-function urlTag(origin: string, u: Url): string {
-  return `  <url><loc>${escapeHtml(absoluteUrl(origin, u.loc))}</loc>${
-    u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""
-  }${u.priority ? `<priority>${u.priority}</priority>` : ""}</url>`;
-}
 
 const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 
@@ -29,30 +21,31 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     catalogRepo.listTags(db),
   ]);
 
-  const urls: Url[] = [
-    { loc: "/", priority: "1.0" },
-    { loc: "/books", priority: "0.9" },
-    { loc: "/awards", priority: "0.7" },
-    { loc: "/picks", priority: "0.7" },
-    { loc: "/book-of-the-month", priority: "0.7" },
-    { loc: "/journal", priority: "0.7" },
-    { loc: "/journal/archive", priority: "0.5" },
-    { loc: "/about", priority: "0.3" },
-    { loc: "/features", priority: "0.4" },
+  // Paths here; Prelum's sitemapDocument takes absolute URLs, made below.
+  const urls: SitemapEntry[] = [
+    { loc: "/", priority: 1 },
+    { loc: "/books", priority: 0.9 },
+    { loc: "/awards", priority: 0.7 },
+    { loc: "/picks", priority: 0.7 },
+    { loc: "/book-of-the-month", priority: 0.7 },
+    { loc: "/journal", priority: 0.7 },
+    { loc: "/journal/archive", priority: 0.5 },
+    { loc: "/about", priority: 0.3 },
+    { loc: "/features", priority: 0.4 },
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,
-      lastmod: b.updatedAt.toISOString().slice(0, 10),
-      priority: "0.8",
+      lastmod: b.updatedAt,
+      priority: 0.8,
     })),
-    ...authors.map((slug) => ({ loc: `/authors/${slug}`, priority: "0.6" })),
-    ...awards.map((a) => ({ loc: `/awards/${a.slug}`, priority: "0.5" })),
-    ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, priority: "0.5" })),
+    ...authors.map((slug) => ({ loc: `/authors/${slug}`, priority: 0.6 })),
+    ...awards.map((a) => ({ loc: `/awards/${a.slug}`, priority: 0.5 })),
+    ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, priority: 0.5 })),
     ...posts.map((p) => ({
       loc: `/journal/${p.slug}`,
-      lastmod: p.updatedAt.toISOString().slice(0, 10),
-      priority: "0.6",
+      lastmod: p.updatedAt,
+      priority: 0.6,
     })),
-    ...tags.map((t) => ({ loc: journalTagPath(t.tag), priority: "0.4" })),
+    ...tags.map((t) => ({ loc: journalTagPath(t.tag), priority: 0.4 })),
   ];
 
   // IndexNow: ping only when the URL set actually changed since the last sitemap
@@ -71,10 +64,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     })(),
   );
 
-  const body = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((u) => urlTag(origin, u)).join("\n")}
-</urlset>`;
+  // Expanded: the compact layout writes no <priority>.
+  const body = sitemapDocument(
+    urls.map((u) => ({ ...u, loc: absoluteUrl(origin, u.loc) })),
+    { layout: "expanded" },
+  );
 
   return new Response(body, {
     headers: {
