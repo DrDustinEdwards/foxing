@@ -22,6 +22,7 @@ export function ShelfTabs({
   return (
     <ScrollView
       horizontal
+      style={{ flexGrow: 0 }}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ paddingHorizontal: 12, gap: 6, paddingBottom: 4 }}
     >

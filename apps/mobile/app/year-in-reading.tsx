@@ -115,7 +115,7 @@ export default function YearInReadingScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: C.bgBase }}>
-      <Screen style={{ flex: 1 }}>
+      <Screen style={{ flex: 1, backgroundColor: C.bgBase }}>
         <View
           style={{
             flexDirection: 'row',
