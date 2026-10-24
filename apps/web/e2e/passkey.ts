@@ -146,10 +146,16 @@ export async function signInWithPasskey(baseURL: string, email: string): Promise
 export async function signInThroughLogin(page: Page, email: string, baseURL: string) {
   await addPasskey(page, email, baseURL);
   await page.goto("/login");
-  // The page also offers the passkey to the email field's autofill, which can sign in before
-  // the click lands; either way the reader ends up signed in.
+  // The page also offers the passkey to the email field's autofill, and Chromium's virtual
+  // authenticator answers that at once. Click only if the autofill has not signed in, so one
+  // sign-in runs, then wait for the page it lands on to finish loading.
+  const leftLogin = () => !new URL(page.url()).pathname.startsWith("/login");
   await page
-    .getByRole("button", { name: /sign in with a passkey/i })
-    .click({ timeout: 5_000 })
+    .waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 3_000 })
     .catch(() => {});
+  if (!leftLogin()) {
+    await page.getByRole("button", { name: /sign in with a passkey/i }).click();
+    await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+  }
+  await page.waitForLoadState("networkidle");
 }
