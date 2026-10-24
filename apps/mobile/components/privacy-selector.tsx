@@ -75,10 +75,7 @@ export function PrivacySelector({ value, onChange, dense }: PrivacySelectorProps
   )
 }
 
-// Map the three-tier privacy back to the legacy is_public boolean that the
-// highlights and reviews tables currently use. Public = true; everything
-// else maps to false. Full 3-tier storage lands when those tables grow a
-// `privacy` text column.
-export function privacyToBool(tier: PrivacyTier): boolean {
-  return tier === 'public'
+// The three-tier picker as an annotation's audience on the server.
+export function privacyToVisibility(tier: PrivacyTier): 'public' | 'friends' | 'private' {
+  return tier === 'close_friends' ? 'friends' : tier
 }

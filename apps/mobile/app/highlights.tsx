@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useMyAnnotations } from '@foxing/client'
+import { useCallback } from 'react'
 import {
   View,
   Text,
@@ -9,29 +10,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import { CaretLeft } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { HeartButton } from '@/components/highlights/heart-button'
 
-interface HighlightRow {
-  id: string
-  cfi: string
-  text: string
-  color: string | null
-  note: string | null
-  chapter: string | null
-  like_count: number | null
-  user_id: string
-  created_at: string
-  book: { id: string; title: string; author: string } | null
-}
-
+// Every highlight the reader has made, newest first, from GET /annotations.
 export default function HighlightsScreen() {
   const colors = useColors()
   const router = useRouter()
-  const [rows, setRows] = useState<HighlightRow[]>([])
-  const [loading, setLoading] = useState(true)
+  const highlights = useMyAnnotations(['highlight'])
+  const rows = highlights.data ?? []
+  const loading = highlights.isPending
 
   const swatch = useCallback(
     (c: string | null) => {
@@ -48,32 +36,6 @@ export default function HighlightsScreen() {
     },
     [colors]
   )
-
-  useEffect(() => {
-    let cancelled = false
-    ;(async () => {
-      setLoading(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) {
-        if (!cancelled) {
-          setRows([])
-          setLoading(false)
-        }
-        return
-      }
-      const { data } = await supabase
-        .from('highlights')
-        .select(
-          'id, cfi, text, color, note, chapter, like_count, user_id, created_at, book:books(id, title, author)',
-        )
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-      if (cancelled) return
-      setRows((data as unknown as HighlightRow[]) ?? [])
-      setLoading(false)
-    })()
-    return () => { cancelled = true }
-  }, [])
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -103,8 +65,9 @@ export default function HighlightsScreen() {
                 textAlign: 'center',
               }}
             >
-              You haven't saved any highlights yet. Long press a passage while
-              reading to capture one.
+              {highlights.error
+                ? 'Could not load your highlights.'
+                : "You haven't saved any highlights yet. Long press a passage while reading to capture one."}
             </Text>
           </View>
         ) : (
@@ -112,12 +75,12 @@ export default function HighlightsScreen() {
             <Pressable
               key={h.id}
               onPress={() => {
-                if (h.book) router.push(`/reader/${h.book.id}`)
+                if (h.bookId) router.push(`/reader/${h.bookId}`)
               }}
               onLongPress={() => {
-                if (!h.book) return
+                if (!h.bookId || !h.selectedText) return
                 router.push(
-                  `/quote-card?bookId=${h.book.id}&bookTitle=${encodeURIComponent(h.book.title)}&author=${encodeURIComponent(h.book.author)}&passageText=${encodeURIComponent(h.text)}` as never,
+                  `/quote-card?bookId=${h.bookId}&bookTitle=${encodeURIComponent(h.bookTitle ?? '')}&author=${encodeURIComponent(h.bookAuthor ?? '')}&passageText=${encodeURIComponent(h.selectedText)}` as never,
                 )
               }}
               delayLongPress={350}
@@ -134,9 +97,9 @@ export default function HighlightsScreen() {
                   }}
                   numberOfLines={4}
                 >
-                  {h.text}
+                  {h.selectedText}
                 </Text>
-                {h.note ? (
+                {h.body ? (
                   <Text
                     style={{
                       fontFamily: Fonts.bodyItalic,
@@ -145,33 +108,24 @@ export default function HighlightsScreen() {
                       marginTop: 6,
                     }}
                   >
-                    “{h.note}”
+                    “{h.body}”
                   </Text>
                 ) : null}
                 <View
                   className="flex-row items-center justify-between"
                   style={{ marginTop: 8 }}
                 >
-                  {h.book ? (
-                    <Text
-                      style={{
-                        flex: 1,
-                        fontFamily: Fonts.ui,
-                        fontSize: 11,
-                        color: colors.textTertiary,
-                      }}
-                      numberOfLines={1}
-                    >
-                      {h.book.title} · {h.book.author}
-                    </Text>
-                  ) : (
-                    <View style={{ flex: 1 }} />
-                  )}
-                  <HeartButton
-                    highlightId={h.id}
-                    initialCount={h.like_count ?? 0}
-                    ownerId={h.user_id}
-                  />
+                  <Text
+                    style={{
+                      flex: 1,
+                      fontFamily: Fonts.ui,
+                      fontSize: 11,
+                      color: colors.textTertiary,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {[h.bookTitle ?? h.sourceTitle, h.bookAuthor].filter(Boolean).join(' · ')}
+                  </Text>
                 </View>
               </View>
             </Pressable>

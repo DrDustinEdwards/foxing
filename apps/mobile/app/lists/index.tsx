@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useMyLists } from '@foxing/client'
 import {
   View,
   Text,
@@ -7,78 +7,17 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useFocusEffect, useRouter } from 'expo-router'
-import { CaretLeft, Plus, Eye, EyeSlash, Globe } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { useRouter } from 'expo-router'
+import { CaretLeft, Plus, Eye, EyeSlash } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-interface ListRow {
-  id: string
-  title: string
-  description: string | null
-  is_public: boolean
-  like_count: number | null
-  book_count: number
-}
-
+// The reader's own lists from GET /lists; a create or delete elsewhere patches this.
 export default function MyListsScreen() {
   const colors = useColors()
   const router = useRouter()
-  const [rows, setRows] = useState<ListRow[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setRows([])
-      setLoading(false)
-      return
-    }
-    const { data: lists } = await supabase
-      .from('reading_lists')
-      .select('id, title, description, is_public, like_count')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-    const listRows =
-      ((lists ?? []) as Array<{
-        id: string
-        title: string
-        description: string | null
-        is_public: boolean
-        like_count: number | null
-      }>)
-    const ids = listRows.map((l) => l.id)
-    const counts = new Map<string, number>()
-    if (ids.length > 0) {
-      const { data: books } = await supabase
-        .from('reading_list_books')
-        .select('list_id')
-        .in('list_id', ids)
-      for (const b of (books as { list_id: string }[] | null) ?? []) {
-        counts.set(b.list_id, (counts.get(b.list_id) ?? 0) + 1)
-      }
-    }
-    setRows(
-      listRows.map((l) => ({
-        ...l,
-        book_count: counts.get(l.id) ?? 0,
-      })),
-    )
-    setLoading(false)
-  }, [])
-
-  useFocusEffect(
-    useCallback(() => {
-      void load()
-    }, [load]),
-  )
-  useEffect(() => {
-    void load()
-  }, [load])
+  const lists = useMyLists()
+  const rows = lists.data ?? []
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -98,22 +37,17 @@ export default function MyListsScreen() {
           My lists
         </Text>
         <Pressable
-          onPress={() => router.push('/lists/public' as never)}
-          hitSlop={10}
-          className="p-2"
-        >
-          <Globe color={colors.textSecondary} size={20} />
-        </Pressable>
-        <Pressable
           onPress={() => router.push('/lists/new' as never)}
           hitSlop={10}
           className="p-2"
+          accessibilityRole="button"
+          accessibilityLabel="New list"
         >
           <Plus color={colors.brandUi} size={22} weight="bold" />
         </Pressable>
       </View>
 
-      {loading ? (
+      {lists.isPending ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />
         </View>
@@ -127,7 +61,7 @@ export default function MyListsScreen() {
               textAlign: 'center',
             }}
           >
-            No lists yet. Create one to start curating.
+            {lists.error ? 'Could not load your lists.' : 'No lists yet. Create one to start curating.'}
           </Text>
         </View>
       ) : (
@@ -153,7 +87,7 @@ export default function MyListsScreen() {
                 >
                   {l.title}
                 </Text>
-                {l.is_public ? (
+                {l.isPublic ? (
                   <Eye color={colors.info} size={14} />
                 ) : (
                   <EyeSlash color={colors.textTertiary} size={14} />
@@ -179,10 +113,7 @@ export default function MyListsScreen() {
                   color: colors.textTertiary,
                 }}
               >
-                {l.book_count} book{l.book_count === 1 ? '' : 's'}
-                {l.is_public && (l.like_count ?? 0) > 0
-                  ? ` · ${l.like_count} like${l.like_count === 1 ? '' : 's'}`
-                  : ''}
+                {l.bookCount} book{l.bookCount === 1 ? '' : 's'}
               </Text>
             </Pressable>
           ))}

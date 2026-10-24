@@ -1,27 +1,21 @@
+import type * as W from '@foxing/types'
 import { View, Text, Pressable, Image } from 'react-native'
 import { BookOpen } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
 export function TrendingBookCard({
-  id,
-  title,
-  author,
-  coverUrl,
-  readerCount,
+  book,
   onPress,
 }: {
-  id: string
-  title: string
-  author: string
-  coverUrl: string | null
-  readerCount: number
-  onPress: (id: string) => void
+  book: W.BookCard
+  onPress: (slug: string) => void
 }) {
   const colors = useColors()
+  const { title, author, coverUrl } = book
   return (
     <Pressable
-      onPress={() => onPress(id)}
+      onPress={() => onPress(book.slug)}
       accessibilityRole="button"
       accessibilityLabel={`${title} by ${author}`}
       style={{ width: 120 }}
@@ -57,8 +51,9 @@ export function TrendingBookCard({
       </Text>
       <Text
         style={{ fontFamily: Fonts.ui, fontSize: 10, color: colors.textTertiary, marginTop: 2 }}
+        numberOfLines={1}
       >
-        {readerCount} reader{readerCount === 1 ? '' : 's'} this week
+        {author}
       </Text>
     </Pressable>
   )

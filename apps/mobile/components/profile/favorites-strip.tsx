@@ -1,23 +1,12 @@
-import { View, Text, Pressable, Image, Alert } from 'react-native'
-import { Plus } from 'phosphor-react-native'
+import type * as W from '@foxing/types'
+import { View, Text, Pressable, Image } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-type FavoriteSlot = {
-  position: number
-  book: { id: string; title: string; author: string; cover_url: string | null } | null
-}
-
-export function FavoritesStrip({
-  favorites,
-  onPickSlot,
-  onRemove,
-}: {
-  favorites: FavoriteSlot[]
-  onPickSlot: (position: number) => void
-  onRemove: (position: number) => void
-}) {
+// The books on the reader's public profile strip.
+export function FavoritesStrip({ books, onOpen }: { books: W.ProfileBook[]; onOpen: (slug: string) => void }) {
   const colors = useColors()
+  if (books.length === 0) return null
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
@@ -30,74 +19,37 @@ export function FavoritesStrip({
           marginBottom: 8,
         }}
       >
-        My 5 books
+        Favorites
       </Text>
       <View className="flex-row" style={{ gap: 8 }}>
-        {favorites.map((slot) => {
-          const filled = !!slot.book
-          return (
-            <Pressable
-              key={slot.position}
-              onPress={() => {
-                if (filled) {
-                  Alert.alert(slot.book!.title, undefined, [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Replace', onPress: () => onPickSlot(slot.position) },
-                    {
-                      text: 'Remove',
-                      style: 'destructive',
-                      onPress: () => onRemove(slot.position),
-                    },
-                  ])
-                } else {
-                  onPickSlot(slot.position)
-                }
-              }}
-              accessibilityRole="button"
-              accessibilityLabel={
-                filled
-                  ? `Favorite ${slot.position}: ${slot.book!.title}`
-                  : `Empty favorite slot ${slot.position}`
-              }
-              style={{
-                width: 56,
-                height: 84,
-                borderRadius: 6,
-                overflow: 'hidden',
-                borderWidth: filled ? 0 : 1.5,
-                borderColor: colors.borderBrand,
-                borderStyle: filled ? 'solid' : 'dashed',
-                backgroundColor: filled ? colors.bgSunken : colors.brandSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              {filled && slot.book?.cover_url ? (
-                <Image
-                  source={{ uri: slot.book.cover_url }}
-                  style={{ width: '100%', height: '100%' }}
-                  accessibilityRole="image"
-                  accessibilityLabel={`${slot.book.title} cover`}
-                />
-              ) : filled ? (
-                <Text
-                  style={{
-                    fontFamily: Fonts.display,
-                    fontSize: 10,
-                    color: colors.textTertiary,
-                    textAlign: 'center',
-                    paddingHorizontal: 4,
-                  }}
-                  numberOfLines={3}
-                >
-                  {slot.book?.title}
-                </Text>
-              ) : (
-                <Plus color={colors.brandUi} size={18} weight="bold" />
-              )}
-            </Pressable>
-          )
-        })}
+        {books.slice(0, 5).map((b) => (
+          <Pressable
+            key={b.bookId}
+            onPress={() => onOpen(b.slug)}
+            accessibilityRole="link"
+            accessibilityLabel={`${b.title} by ${b.author}`}
+            style={{
+              width: 56,
+              height: 84,
+              borderRadius: 6,
+              overflow: 'hidden',
+              backgroundColor: colors.bgSunken,
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {b.coverUrl ? (
+              <Image source={{ uri: b.coverUrl }} style={{ width: '100%', height: '100%' }} />
+            ) : (
+              <Text
+                style={{ fontFamily: Fonts.display, fontSize: 10, color: colors.textTertiary, textAlign: 'center', paddingHorizontal: 4 }}
+                numberOfLines={3}
+              >
+                {b.title}
+              </Text>
+            )}
+          </Pressable>
+        ))}
       </View>
     </View>
   )

@@ -24,7 +24,6 @@ import {
 } from 'react-native-readium'
 
 import type { HighlightColor } from '@/components/reader/floating-pill'
-import type { WordWiseHint } from '@/lib/claude'
 import type {
   ReaderRef,
   ReaderSettings,
@@ -57,7 +56,7 @@ import { decodeLocator, encodeLocator, settingsToReadiumPreferences, splitSenten
 //     Readium navigator matches the text against the rendered page
 //
 // What's stubbed (Phase 3.x follow-up):
-//   - WordWise hints, popular-highlight inline labels, passage-comment dots,
+//   - popular-highlight inline labels, passage-comment dots,
 //     bilingual paragraph translations: all require DecorationGroup rebuilds
 //     with custom DecorationStyle.html
 //   - Auto-scroll: Readium has no native API, would need to be simulated
@@ -520,13 +519,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
             }),
           )
         },
-        setWordWiseEnabled: () => {
-          // TODO Phase 3.x: rebuild Word Wise as a DecorationGroup with
-          // DecorationStyle.html containing inline hint chips
-        },
-        applyWordWiseHints: (_hints: WordWiseHint[]) => {
-          // TODO Phase 3.x
-        },
         setPassageComments: (
           comments: PassageCommentMarker[],
           colorHex?: string,
@@ -614,10 +606,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
               tint: '#FFE082',
             },
           })
-        },
-        setBilingualContent: (_translations: string[]) => {
-          // TODO Phase 3.x: per-paragraph DecorationStyle.html with italic
-          // translation block
         },
       }),
       [epubUrl],

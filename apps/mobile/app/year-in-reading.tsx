@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { MONTH_NAMES, useCompanion, useMyAnnotations, useRecap, useStreak } from '@foxing/client'
+import { useCallback, useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -7,7 +8,6 @@ import {
   Dimensions,
   ScrollView,
   ActivityIndicator,
-  Image,
   NativeScrollEvent,
   NativeSyntheticEvent,
 } from 'react-native'
@@ -16,15 +16,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   X as XIcon,
   Share as ShareIcon,
-  BookOpen,
   Flame,
   Highlighter,
   Sparkle,
   Books,
   Clock,
 } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
-import { Colors, useColors } from '@/constants/colors'
+import { Colors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
 interface Stats {
@@ -34,10 +32,16 @@ interface Stats {
   estimatedHours: number
   topGenre: string | null
   longestStreak: number
-  heatDays: Array<{ date: string; minutes: number }>
+  monthly: number[]
   mostHighlightedBook: { title: string; author: string; count: number } | null
-  personality: string | null
+  /** The book the companion reads the year through for the personality slide. */
+  anchorBookId: string | null
 }
+
+// Same reading-speed assumption as the reader's time estimates: 250 words a page,
+// 250 words a minute.
+const WORDS_PER_PAGE = 250
+const WORDS_PER_MINUTE = 250
 
 const SLIDE_COUNT = 7
 
@@ -45,29 +49,42 @@ const SLIDE_COUNT = 7
 const C = Colors.dark
 
 export default function YearInReadingScreen() {
-  const colors = useColors()
   const router = useRouter()
   const params = useLocalSearchParams<{ year?: string }>()
   const year = params.year ? parseInt(params.year, 10) : new Date().getFullYear()
 
   const { width } = Dimensions.get('window')
   const [index, setIndex] = useState(0)
-  const [stats, setStats] = useState<Stats | null>(null)
-  const [loading, setLoading] = useState(true)
+  const recap = useRecap(year)
+  const streak = useStreak().data
+  const highlights = useMyAnnotations(['highlight']).data
+  const personality = useCompanion()
+  const loading = recap.isPending
 
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const data = await collectStats(year)
-      if (mounted) {
-        setStats(data)
-        setLoading(false)
-      }
-    })()
-    return () => {
-      mounted = false
+  // GET /recap/:year (the same numbers as the web Year in Reading page), the all-time
+  // longest streak, and the year's highlights counted per book.
+  const stats = useMemo<Stats | null>(() => {
+    if (!recap.data) return null
+    const { recap: r, monthly, genres } = recap.data
+    const counts = new Map<string, { title: string; author: string; count: number }>()
+    for (const h of highlights ?? []) {
+      if (!h.bookId || new Date(h.createdAt).getFullYear() !== year) continue
+      const c = counts.get(h.bookId) ?? { title: h.bookTitle ?? '', author: h.bookAuthor ?? '', count: 0 }
+      c.count += 1
+      counts.set(h.bookId, c)
     }
-  }, [year])
+    return {
+      year,
+      totalBooks: r.booksFinished,
+      totalPages: Math.round(r.totalWords / WORDS_PER_PAGE),
+      estimatedHours: Math.round(r.totalWords / WORDS_PER_MINUTE / 60),
+      topGenre: genres[0]?.name ?? null,
+      longestStreak: streak?.longestStreak ?? 0,
+      monthly,
+      mostHighlightedBook: [...counts.values()].sort((a, b) => b.count - a.count)[0] ?? null,
+      anchorBookId: r.topBooks[0]?.bookId ?? r.finished.at(-1)?.bookId ?? null,
+    }
+  }, [recap.data, highlights, streak, year])
 
   const onScroll = useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -185,26 +202,29 @@ export default function YearInReadingScreen() {
               <Flame color={C.brandUi} size={28} weight="fill" />
             </View>
             <Text style={styles.heroLabel}>day{stats.longestStreak === 1 ? '' : 's'} in a row</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginTop: 24, justifyContent: 'center', maxWidth: 280 }}>
-              {stats.heatDays.map((d) => {
-                const filled = d.minutes > 0
-                const intensity = Math.min(1, d.minutes / 30)
-                return (
+            <View
+              style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, marginTop: 24, height: 72 }}
+              accessible
+              accessibilityLabel={`Books finished each month: ${stats.monthly.map((n, i) => `${MONTH_NAMES[i]} ${n}`).join(', ')}`}
+            >
+              {stats.monthly.map((n, i) => (
+                <View key={MONTH_NAMES[i]} style={{ alignItems: 'center', gap: 4 }}>
                   <View
-                    key={d.date}
                     style={{
                       width: 14,
-                      height: 14,
+                      height: Math.max(4, (n / Math.max(1, ...stats.monthly)) * 56),
                       borderRadius: 3,
-                      backgroundColor: filled ? C.brandUi : 'rgba(245,237,222,0.10)',
-                      opacity: filled ? 0.4 + intensity * 0.6 : 1,
+                      backgroundColor: n > 0 ? C.brandUi : 'rgba(245,237,222,0.10)',
                     }}
                   />
-                )
-              })}
+                  <Text style={{ fontFamily: Fonts.mono, fontSize: 9, color: C.textTertiary }}>
+                    {MONTH_NAMES[i][0]}
+                  </Text>
+                </View>
+              ))}
             </View>
             <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: C.textTertiary, marginTop: 8 }}>
-              Last 30 days
+              Books finished each month
             </Text>
           </Slide>
 
@@ -244,7 +264,7 @@ export default function YearInReadingScreen() {
           {/* Slide 6, reading personality */}
           <Slide width={width}>
             <Text style={styles.kicker}>YOUR READING PERSONALITY</Text>
-            {stats.personality ? (
+            {personality.text ? (
               <Text
                 style={{
                   fontFamily: Fonts.bodyItalic,
@@ -254,10 +274,30 @@ export default function YearInReadingScreen() {
                   textAlign: 'center',
                   paddingHorizontal: 12,
                 }}
-                numberOfLines={8}
+                numberOfLines={10}
               >
-                {stats.personality}
+                {personality.text}
               </Text>
+            ) : stats.anchorBookId ? (
+              <Pressable
+                onPress={() => {
+                  if (stats.anchorBookId) void personality.run({ action: 'reading_personality', bookId: stats.anchorBookId })
+                }}
+                disabled={personality.pending}
+                accessibilityRole="button"
+                style={{
+                  marginTop: 8,
+                  paddingHorizontal: 18,
+                  paddingVertical: 10,
+                  borderRadius: 999,
+                  backgroundColor: C.brandUi,
+                  opacity: personality.pending ? 0.7 : 1,
+                }}
+              >
+                <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: C.textOnBrand }}>
+                  {personality.pending ? 'Reading your year…' : 'Write my reading personality'}
+                </Text>
+              </Pressable>
             ) : (
               <Text
                 style={{
@@ -268,9 +308,17 @@ export default function YearInReadingScreen() {
                   paddingHorizontal: 24,
                 }}
               >
-                Tap "Refresh" on your profile to generate a reading personality from your highlights.
+                Finish a book this year and the companion can describe your reading.
               </Text>
             )}
+            {personality.error ? (
+              <Text
+                style={{ fontFamily: Fonts.ui, fontSize: 12, color: C.textSecondary, marginTop: 10, textAlign: 'center' }}
+                accessibilityRole="alert"
+              >
+                {personality.planRequired ? 'The reading personality is part of Foxing Plus.' : personality.error}
+              </Text>
+            ) : null}
           </Slide>
 
           {/* Slide 7, outro */}
@@ -372,143 +420,4 @@ const styles = {
     textAlign: 'center' as const,
     lineHeight: 38,
   } as const,
-}
-
-// ── Stats collection ─────────────────────────────────────────────────────
-
-async function collectStats(year: number): Promise<Stats> {
-  const yearStart = `${year}-01-01T00:00:00Z`
-  const yearEnd = `${year + 1}-01-01T00:00:00Z`
-  const heatStart = new Date()
-  heatStart.setUTCDate(heatStart.getUTCDate() - 30)
-
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return {
-      year,
-      totalBooks: 0,
-      totalPages: 0,
-      estimatedHours: 0,
-      topGenre: null,
-      longestStreak: 0,
-      heatDays: buildHeatDays(new Map()),
-      mostHighlightedBook: null,
-      personality: null,
-    }
-  }
-  const uid = user.id
-
-  const [finishedRes, sessionsRes, highlightsRes, streakRes, profileRes] = await Promise.all([
-    supabase
-      .from('user_books')
-      .select('book:books(id, title, author, word_count, subjects)')
-      .eq('user_id', uid)
-      .eq('status', 'finished')
-      .gte('finished_at', yearStart)
-      .lt('finished_at', yearEnd),
-    supabase
-      .from('reading_sessions')
-      .select('started_at, ended_at')
-      .eq('user_id', uid)
-      .gte('started_at', heatStart.toISOString()),
-    supabase
-      .from('highlights')
-      .select('book_id, book:books(title, author)')
-      .eq('user_id', uid)
-      .gte('created_at', yearStart)
-      .lt('created_at', yearEnd),
-    supabase
-      .from('reading_streaks')
-      .select('longest_streak')
-      .eq('user_id', uid)
-      .maybeSingle(),
-    supabase
-      .from('profiles')
-      .select('reading_personality')
-      .eq('id', uid)
-      .maybeSingle(),
-  ])
-
-  type FR = {
-    book: { id: string; title: string; author: string; word_count: number | null; subjects: string[] | null }
-      | Array<{ id: string; title: string; author: string; word_count: number | null; subjects: string[] | null }>
-      | null
-  }
-  const finishedRows = (((finishedRes.data ?? []) as unknown) as FR[]).map((r) => {
-    const b = Array.isArray(r.book) ? r.book[0] : r.book
-    return b
-  }).filter((b): b is NonNullable<typeof b> => !!b)
-
-  const totalBooks = finishedRows.length
-  const totalWords = finishedRows.reduce((acc, b) => acc + (b.word_count ?? 0), 0)
-  // ~250 wpm; pages computed at 250 words per page → keep in sync with the
-  // reader-time estimate on the book detail screen.
-  const totalPages = Math.round(totalWords / 250)
-  const estimatedHours = Math.round(totalWords / 250 / 60)
-
-  // Top genre, tally root subjects across finished books.
-  const genreCounts = new Map<string, number>()
-  for (const b of finishedRows) {
-    for (const s of b.subjects ?? []) {
-      const root = (s || '').split(/[\u2014\u2013\-:]/)[0].trim()
-      if (!root) continue
-      genreCounts.set(root, (genreCounts.get(root) ?? 0) + 1)
-    }
-  }
-  const topGenre = [...genreCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
-
-  // Heat map, minutes per day for last 30 days.
-  const dailyMinutes = new Map<string, number>()
-  for (const s of (sessionsRes.data ?? []) as Array<{ started_at: string; ended_at: string | null }>) {
-    if (!s.ended_at) continue
-    const key = s.started_at.slice(0, 10)
-    const mins = (new Date(s.ended_at).getTime() - new Date(s.started_at).getTime()) / 60_000
-    dailyMinutes.set(key, (dailyMinutes.get(key) ?? 0) + mins)
-  }
-  const heatDays = buildHeatDays(dailyMinutes)
-
-  // Most highlighted book, count highlight rows per book_id.
-  type HR = {
-    book_id: string
-    book: { title: string; author: string } | Array<{ title: string; author: string }> | null
-  }
-  const counts = new Map<string, { title: string; author: string; count: number }>()
-  for (const r of (((highlightsRes.data ?? []) as unknown) as HR[])) {
-    if (!r.book_id) continue
-    const b = Array.isArray(r.book) ? r.book[0] : r.book
-    const existing = counts.get(r.book_id)
-    if (existing) {
-      existing.count += 1
-    } else {
-      counts.set(r.book_id, { title: b?.title ?? '', author: b?.author ?? '', count: 1 })
-    }
-  }
-  const top = [...counts.values()].sort((a, b) => b.count - a.count)[0] ?? null
-
-  const longestStreak = (streakRes.data as { longest_streak: number | null } | null)?.longest_streak ?? 0
-  const personality = (profileRes.data as { reading_personality: string | null } | null)?.reading_personality ?? null
-
-  return {
-    year,
-    totalBooks,
-    totalPages,
-    estimatedHours,
-    topGenre,
-    longestStreak,
-    heatDays,
-    mostHighlightedBook: top,
-    personality,
-  }
-}
-
-function buildHeatDays(byDate: Map<string, number>): Array<{ date: string; minutes: number }> {
-  const out: Array<{ date: string; minutes: number }> = []
-  const today = new Date()
-  for (let i = 29; i >= 0; i--) {
-    const d = new Date(today)
-    d.setUTCDate(today.getUTCDate() - i)
-    const key = d.toISOString().slice(0, 10)
-    out.push({ date: key, minutes: byDate.get(key) ?? 0 })
-  }
-  return out
 }

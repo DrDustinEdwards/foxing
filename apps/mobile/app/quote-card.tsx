@@ -17,7 +17,6 @@ import {
   DownloadSimple,
   Check,
 } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { CardPreview } from '@/components/quote/card-preview'
@@ -149,44 +148,23 @@ export default function QuoteCardScreen() {
       return
     }
     setSaving(true)
-    // 1) Always persist the card row so it shows up in the user's card
-    //    library, regardless of whether the image save succeeds.
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const text =
-        cardType === 'quote'
-          ? passage.trim()
-          : cardType === 'finished'
-            ? `I just finished ${bookTitle}`
-            : cardType === 'reading'
-              ? `Currently reading ${bookTitle}`
-              : `Invited to ${clubName ?? bookTitle}`
-      const { error } = await supabase.from('quote_cards').insert({
-        user_id: user.id,
-        book_id: bookId,
-        passage_text: text.slice(0, 1200),
-        template,
-      })
-      if (error) console.warn('[quote-card] save row failed:', error.message)
-    }
-    // 2) Capture the preview and save to camera roll via MediaLibrary.
-    //    Permission gate first; on iOS the prompt covers Photos, on
-    //    Android it's the WRITE_EXTERNAL_STORAGE / Photos API.
-    let toastMessage = 'Saved to your card library.'
+    // Save the rendered card to Photos. Permission gate first; on iOS the prompt covers
+    // Photos, on Android the Photos API.
+    let toastMessage = 'Saved to Photos.'
     try {
       const perm = await MediaLibrary.requestPermissionsAsync()
       if (perm.status !== 'granted') {
-        toastMessage = 'Saved to your card library. (Allow Photos access to save the image.)'
+        toastMessage = 'Allow Photos access to save the card.'
       } else {
         const uri = await captureCard()
         if (uri) {
           await MediaLibrary.saveToLibraryAsync(uri)
-          toastMessage = 'Saved to your card library and Photos.'
+          toastMessage = 'Saved to Photos.'
         }
       }
     } catch (e) {
       console.warn('[quote-card] image save failed:', e instanceof Error ? e.message : e)
-      toastMessage = "Saved to your card library. Couldn't write the image to Photos."
+      toastMessage = "Couldn't save the card to Photos."
     }
     setSaved(true)
     setSaving(false)
@@ -195,7 +173,7 @@ export default function QuoteCardScreen() {
       setToast(null)
       setSaved(false)
     }, 3000)
-  }, [bookId, bookTitle, captureCard, cardType, clubName, passage, template])
+  }, [captureCard, cardType, passage])
 
   return (
     <Screen>

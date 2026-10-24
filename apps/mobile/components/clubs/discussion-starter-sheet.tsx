@@ -1,3 +1,4 @@
+import { useCompanion, useCreateThread } from '@foxing/client'
 import { useCallback, useEffect, useState } from 'react'
 import {
   View,
@@ -11,100 +12,73 @@ import { X as XIcon, Sparkle, ArrowsClockwise } from 'phosphor-react-native'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { friendlyAiError, getDiscussionStarter } from '@/lib/claude'
-import { createThread } from '@/lib/club-threads'
 
 interface DiscussionStarterSheetProps {
   visible: boolean
   clubId: string
-  clubName: string
   bookTitle: string | null
-  author: string | null
-  currentChapter: string | null
   bookId: string | null
   onClose: () => void
   onPosted?: (threadId: string) => void
 }
 
+// Drafts a discussion opener with the companion's discussion_starter (Plus), which
+// the member edits before posting it as a new thread. It never posts on its own.
 export function DiscussionStarterSheet({
   visible,
   clubId,
-  clubName,
   bookTitle,
-  author,
-  currentChapter,
   bookId,
   onClose,
   onPosted,
 }: DiscussionStarterSheetProps) {
   const colors = useColors()
-  const [generating, setGenerating] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const companion = useCompanion()
+  const createThread = useCreateThread()
+  const generating = companion.pending
+  const posting = createThread.pending
   const [title, setTitle] = useState('')
   const [opening, setOpening] = useState('')
   const [hasSpoilers, setHasSpoilers] = useState(false)
-  const [posting, setPosting] = useState(false)
+  const error = companion.planRequired
+    ? 'Discussion starters come with Plus. You can still write your own starter below.'
+    : companion.error
+      ? `${companion.error} You can still write your own starter below.`
+      : createThread.error
+        ? "Couldn't post the thread. Check that you're a member."
+        : null
 
-  // Auto-generate a draft as soon as the sheet opens. The user can re-roll
-  // or edit before posting; we never auto-post.
+  const { run } = companion
   const generate = useCallback(async () => {
-    if (!bookTitle || !author) {
-      setError('Set a current book on the club before generating a starter.')
-      return
-    }
-    setGenerating(true)
-    setError(null)
-    try {
-      const draft = await getDiscussionStarter({
-        bookTitle,
-        author,
-        currentChapter: currentChapter ?? undefined,
-        clubName,
-        bookId: bookId ?? undefined,
-      })
-      setTitle(draft.title)
-      setOpening(draft.opening)
-    } catch (e) {
-      const msg = friendlyAiError(e)
-      // Most likely: Edge Function doesn't implement `discussion_starter`
-      // yet. Tell the user but leave the form usable for a manual post.
-      setError(`${msg}. You can still write your own starter below.`)
-      setTitle((t) => t || `Discussion: ${currentChapter || bookTitle}`)
-      setOpening((o) => o || '')
-    } finally {
-      setGenerating(false)
-    }
-  }, [author, bookId, bookTitle, clubName, currentChapter])
+    if (!bookId) return
+    setOpening('')
+    const answer = await run({ action: 'discussion_starter', bookId })
+    if (answer) setOpening(answer.trim())
+  }, [bookId, run])
 
   useEffect(() => {
     if (visible) {
-      setTitle('')
+      setTitle(bookTitle ? `Discussion: ${bookTitle}` : '')
       setOpening('')
       setHasSpoilers(false)
-      setError(null)
-      setPosting(false)
-      generate()
+      createThread.reset()
+      void generate()
     }
-  }, [visible, generate])
+  }, [visible, generate, bookTitle, createThread.reset])
 
   const post = useCallback(async () => {
     if (!title.trim() || !opening.trim() || posting) return
-    setPosting(true)
-    const thread = await createThread({
+    const res = await createThread.run({
       clubId,
       title: title.trim(),
-      chapter: currentChapter ?? null,
-      openingPost: opening.trim(),
+      body: opening.trim(),
       hasSpoilers,
     })
-    setPosting(false)
-    if (thread) {
-      onPosted?.(thread.id)
+    if (res) {
+      onPosted?.(res.thread.id)
       onClose()
-    } else {
-      setError("Couldn't post the thread. Check that you're a member.")
     }
-  }, [clubId, currentChapter, hasSpoilers, onClose, onPosted, opening, posting, title])
+  }, [clubId, createThread, hasSpoilers, onClose, onPosted, opening, posting, title])
 
   return (
     <SheetScaffold
@@ -159,7 +133,7 @@ export function DiscussionStarterSheet({
               }}
             >
               {bookTitle
-                ? `Drafted for ${bookTitle}${currentChapter ? ` · ${currentChapter}` : ''}.`
+                ? `Drafted for ${bookTitle}.`
                 : 'No current book set, generation will fail until the club picks one.'}
             </Text>
 

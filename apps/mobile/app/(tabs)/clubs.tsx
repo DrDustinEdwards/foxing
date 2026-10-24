@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useClubsIndex } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useState } from 'react'
 import {
   View,
   Text,
@@ -9,61 +11,24 @@ import {
   RefreshControl,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter, useFocusEffect } from 'expo-router'
+import { useRouter } from 'expo-router'
 import { UsersThree, Plus, BookOpen } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  type ClubWithBook,
-  listMyClubs,
-  listPublicClubs,
-} from '@/lib/clubs'
 import { CreateClubSheet } from '@/components/clubs/create-club-sheet'
 
 type Tab = 'mine' | 'discover'
 
+// The reader's clubs and public clubs to join, from GET /clubs.
 export default function ClubsScreen() {
   const colors = useColors()
   const router = useRouter()
+  const index = useClubsIndex()
   const [tab, setTab] = useState<Tab>('mine')
-  const [mine, setMine] = useState<ClubWithBook[]>([])
-  const [discover, setDiscover] = useState<ClubWithBook[]>([])
-  const [viewerId, setViewerId] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
+  const loading = index.isPending
 
-  const load = useCallback(async (showSpinner: boolean) => {
-    if (showSpinner) setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    setViewerId(user?.id ?? null)
-    const [myRows, pubRows] = await Promise.all([
-      user ? listMyClubs(user.id) : Promise.resolve([] as ClubWithBook[]),
-      listPublicClubs(),
-    ])
-    setMine(myRows)
-    setDiscover(pubRows)
-    if (showSpinner) setLoading(false)
-  }, [])
-
-  useEffect(() => {
-    load(true)
-  }, [load])
-
-  useFocusEffect(
-    useCallback(() => {
-      load(false)
-    }, [load]),
-  )
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true)
-    await load(false)
-    setRefreshing(false)
-  }, [load])
-
-  const rows = tab === 'mine' ? mine : discover
+  const rows = (tab === 'mine' ? index.data?.mine : index.data?.discover) ?? []
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -135,8 +100,8 @@ export default function ClubsScreen() {
           ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
+              refreshing={index.isRefetching}
+              onRefresh={() => index.refetch()}
               tintColor={colors.brandUi}
               colors={[colors.brandUi]}
             />
@@ -144,7 +109,6 @@ export default function ClubsScreen() {
           ListEmptyComponent={
             <ClubsEmpty
               tab={tab}
-              hasViewer={!!viewerId}
               onCreate={() => setCreateOpen(true)}
             />
           }
@@ -154,23 +118,17 @@ export default function ClubsScreen() {
       <CreateClubSheet
         visible={createOpen}
         onClose={() => setCreateOpen(false)}
-        onCreated={(club) => {
+        onCreated={(clubId) => {
           setCreateOpen(false)
-          // Optimistically include the new club so the My tab isn't empty
-          // when the sheet closes. Full row is fetched on next focus.
-          setMine((prev) => [
-            { ...club, current_book: null } as ClubWithBook,
-            ...prev.filter((c) => c.id !== club.id),
-          ])
           setTab('mine')
-          router.push(`/clubs/${club.id}` as never)
+          router.push(`/clubs/${clubId}` as never)
         }}
       />
     </SafeAreaView>
   )
 }
 
-function ClubCard({ club, onPress }: { club: ClubWithBook; onPress: () => void }) {
+function ClubCard({ club, onPress }: { club: W.ClubCard; onPress: () => void }) {
   const colors = useColors()
   return (
     <Pressable
@@ -188,9 +146,9 @@ function ClubCard({ club, onPress }: { club: ClubWithBook; onPress: () => void }
           justifyContent: 'center',
         }}
       >
-        {club.current_book?.cover_url ? (
+        {club.currentBook?.coverUrl ?? club.coverUrl ? (
           <Image
-            source={{ uri: club.current_book.cover_url }}
+            source={{ uri: (club.currentBook?.coverUrl ?? club.coverUrl) as string }}
             style={{ width: '100%', height: '100%' }}
           />
         ) : (
@@ -204,7 +162,7 @@ function ClubCard({ club, onPress }: { club: ClubWithBook; onPress: () => void }
         >
           {club.name}
         </Text>
-        {club.current_book ? (
+        {club.currentBook ? (
           <View className="flex-row items-center" style={{ marginTop: 4 }}>
             <BookOpen color={colors.textTertiary} size={12} />
             <Text
@@ -216,7 +174,7 @@ function ClubCard({ club, onPress }: { club: ClubWithBook; onPress: () => void }
               }}
               numberOfLines={1}
             >
-              {club.current_book.title}
+              {club.currentBook.title}
             </Text>
           </View>
         ) : (
@@ -239,7 +197,7 @@ function ClubCard({ club, onPress }: { club: ClubWithBook; onPress: () => void }
             marginTop: 6,
           }}
         >
-          {club.member_count} member{club.member_count === 1 ? '' : 's'} · {club.pace}
+          {club.memberCount} member{club.memberCount === 1 ? '' : 's'}
         </Text>
       </View>
     </Pressable>
@@ -248,11 +206,9 @@ function ClubCard({ club, onPress }: { club: ClubWithBook; onPress: () => void }
 
 function ClubsEmpty({
   tab,
-  hasViewer,
   onCreate,
 }: {
   tab: Tab
-  hasViewer: boolean
   onCreate: () => void
 }) {
   const colors = useColors()
@@ -304,7 +260,7 @@ function ClubsEmpty({
           ? 'Start a club around a book you love, invite friends or open it to anyone.'
           : 'Public clubs will show up here as readers create them.'}
       </Text>
-      {tab === 'mine' && hasViewer ? (
+      {tab === 'mine' ? (
         <Pressable
           onPress={onCreate}
           className="flex-row items-center gap-1 px-4 py-2 rounded-full"

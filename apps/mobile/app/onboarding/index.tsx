@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
   View,
   Text,
@@ -9,81 +9,82 @@ import {
   ActivityIndicator,
 } from 'react-native'
 import { Screen } from '@/components/ui/screen'
-import { useRouter } from 'expo-router'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Check, CaretLeft, CaretRight, BookOpen } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
-import { reportWriteError } from '@/lib/db-write'
+import { Check, CaretLeft, CaretRight, BookOpen, X as XIcon } from 'phosphor-react-native'
+import { errorMessage, keys, useApi, useOnboarding, useUsernameAvailable } from '@foxing/client'
+import type { BookCard } from '@foxing/types'
+import { useQueryClient } from '@tanstack/react-query'
+import { authClient } from '@/lib/api'
 import { Colors, useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-// Onboarding key, _layout reads this on launch and routes here if missing.
-export const ONBOARDING_KEY = 'onboarding_complete'
+// The profile is created on the last step, so a reader who quits halfway comes back to
+// this flow (the root layout sends anyone signed in without a profile here).
+type StepId = 'welcome' | 'profile' | 'taste' | 'first_book'
+const STEP_ORDER: StepId[] = ['welcome', 'profile', 'taste', 'first_book']
 
-type StepId = 'welcome' | 'taste' | 'first_book'
-const STEP_ORDER: StepId[] = ['welcome', 'taste', 'first_book']
-
-const GENRES = [
-  'Classic Literature',
-  'Mystery & Crime',
-  'Science Fiction',
-  'Gothic Horror',
-  'Romance',
-  'Adventure',
-  'Philosophy',
-  'Poetry',
-  'Historical Fiction',
-  'Short Stories',
-]
-
-// Hardcoded starter library, title-matched against the catalog so missing
-// titles simply don't render. Each one is a well-known public-domain work.
-const STARTER_TITLES = [
-  'Frankenstein; Or, The Modern Prometheus',
-  'Frankenstein',
-  'Dracula',
-  'The Picture of Dorian Gray',
-  'The Adventures of Sherlock Holmes',
-  'Pride and Prejudice',
-  'Moby Dick; Or, The Whale',
-  'Moby-Dick; Or, The Whale',
-]
-
-interface StarterBook {
-  id: string
-  title: string
-  author: string
-  cover_url: string | null
-}
+const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
 
 export default function OnboardingScreen() {
   const colors = useColors()
-  const router = useRouter()
+  const api = useApi()
+  const qc = useQueryClient()
+  const { data: session } = authClient.useSession()
+  const onboarding = useOnboarding()
   const [step, setStep] = useState<StepId>('welcome')
   const idx = STEP_ORDER.indexOf(step)
   const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   // Persisted draft across steps.
+  const [username, setUsername] = useState('')
+  const [displayName, setDisplayName] = useState(session?.user?.name ?? '')
   const [genres, setGenres] = useState<Set<string>>(new Set())
-  // Goal merged into the Taste step per Section 3c. Number, 1-200 books.
   const [goalBooks, setGoalBooks] = useState<string>('12')
   const [picked, setPicked] = useState<Set<string>>(new Set())
 
-  const next = useCallback(async () => {
-    if (step === 'taste') {
-      await persistGenres(genres)
-      await persistGoal(goalBooks)
-    }
-    if (step === 'first_book') await persistStarterBooks(picked)
-    const i = STEP_ORDER.indexOf(step)
-    if (i === STEP_ORDER.length - 1) {
+  const handle = username.trim().toLowerCase()
+  const handleOk = USERNAME_RE.test(handle)
+  const available = useUsernameAvailable(handle, handleOk)
+
+  // One pass at the end: the profile, then the year goal and the picked books. The
+  // root layout moves on to the tabs once "me" shows the profile.
+  const finish = useCallback(
+    async (save: boolean) => {
       setSubmitting(true)
-      await AsyncStorage.setItem(ONBOARDING_KEY, 'true')
-      router.replace('/(tabs)' as never)
-    } else {
-      setStep(STEP_ORDER[i + 1])
-    }
-  }, [genres, goalBooks, picked, router, step])
+      setError(null)
+      try {
+        await api.post('/me/onboard', {
+          username: handle,
+          displayName: displayName.trim() || undefined,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          favoriteGenres: save ? [...genres] : undefined,
+        })
+        const target = parseInt(goalBooks, 10)
+        await Promise.all([
+          save && isValidGoal(goalBooks)
+            ? api.post('/goals', {
+                type: 'books',
+                target,
+                periodType: 'year',
+                year: new Date().getFullYear(),
+              })
+            : null,
+          ...(save ? [...picked] : []).map((id) => api.put(`/library/${id}`, { status: 'want' })),
+        ])
+        await qc.invalidateQueries({ queryKey: keys.me })
+      } catch (e) {
+        setError(errorMessage(e))
+        setSubmitting(false)
+      }
+    },
+    [api, displayName, genres, goalBooks, handle, picked, qc],
+  )
+
+  const next = useCallback(async () => {
+    const i = STEP_ORDER.indexOf(step)
+    if (i === STEP_ORDER.length - 1) await finish(true)
+    else setStep(STEP_ORDER[i + 1])
+  }, [finish, step])
 
   const back = useCallback(() => {
     const i = STEP_ORDER.indexOf(step)
@@ -92,6 +93,7 @@ export default function OnboardingScreen() {
 
   const canAdvance =
     step === 'welcome' ||
+    (step === 'profile' && handleOk && available === true) ||
     (step === 'taste' && genres.size >= 2 && isValidGoal(goalBooks)) ||
     step === 'first_book'
 
@@ -135,35 +137,58 @@ export default function OnboardingScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-        {step === 'taste' ? (
+        {step === 'profile' ? (
+          <ProfileStep
+            username={username}
+            setUsername={setUsername}
+            displayName={displayName}
+            setDisplayName={setDisplayName}
+            status={!handle ? null : !handleOk ? 'invalid' : available === null ? 'checking' : available ? 'available' : 'taken'}
+          />
+        ) : step === 'taste' ? (
           <TasteStep
             genres={genres}
             setGenres={setGenres}
+            options={(onboarding.data?.genres ?? []).map((g) => g.subject)}
             goalBooks={goalBooks}
             setGoalBooks={setGoalBooks}
           />
         ) : (
-          <FirstBookStep picked={picked} setPicked={setPicked} />
+          <FirstBookStep
+            books={onboarding.data?.starters ?? []}
+            loading={onboarding.isPending}
+            picked={picked}
+            setPicked={setPicked}
+          />
         )}
+        {error ? (
+          <View
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+            className="flex-row items-center gap-2 rounded-lg px-3 py-2 mt-4 bg-error-bg-light dark:bg-error-bg-dark"
+          >
+            <XIcon color={colors.error} size={16} />
+            <Text className="font-ui text-error-light dark:text-error-dark flex-1">{error}</Text>
+          </View>
+        ) : null}
       </ScrollView>
 
       <View
         className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
       >
         <Pressable
-          onPress={async () => {
-            // Skip = finish onboarding without saving the current step's data.
+          onPress={() => {
+            // Skip moves on without this step's picks; the profile itself is required.
             const i = STEP_ORDER.indexOf(step)
-            if (i === STEP_ORDER.length - 1) {
-              await AsyncStorage.setItem(ONBOARDING_KEY, 'true')
-              router.replace('/(tabs)' as never)
-            } else {
-              setStep(STEP_ORDER[i + 1])
-            }
+            if (i === STEP_ORDER.length - 1) void finish(false)
+            else setStep(STEP_ORDER[i + 1])
           }}
+          disabled={step === 'profile' || submitting}
           accessibilityRole="button"
           accessibilityLabel="Skip step"
+          accessibilityState={{ disabled: step === 'profile' || submitting }}
           className="px-4 py-2"
+          style={{ opacity: step === 'profile' ? 0 : 1 }}
         >
           <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textTertiary, fontSize: 13 }}>
             {step === 'first_book' ? 'Skip for now' : 'Skip'}
@@ -262,11 +287,13 @@ function Welcome({ onStart }: { onStart: () => void }) {
 function TasteStep({
   genres,
   setGenres,
+  options,
   goalBooks,
   setGoalBooks,
 }: {
   genres: Set<string>
   setGenres: (s: Set<string>) => void
+  options: string[]
   goalBooks: string
   setGoalBooks: (v: string) => void
 }) {
@@ -277,7 +304,7 @@ function TasteStep({
       <Heading>What do you love to read?</Heading>
       <Sub>Pick at least two so we can tailor your feed.</Sub>
       <View className="flex-row flex-wrap" style={{ gap: 10 }}>
-        {GENRES.map((g) => {
+        {options.map((g) => {
           const active = genres.has(g)
           return (
             <Pressable
@@ -352,36 +379,95 @@ function TasteStep({
   )
 }
 
+// ── Profile (username + display name) ────────────────────────────────────
+
+function ProfileStep({
+  username,
+  setUsername,
+  displayName,
+  setDisplayName,
+  status,
+}: {
+  username: string
+  setUsername: (v: string) => void
+  displayName: string
+  setDisplayName: (v: string) => void
+  status: 'invalid' | 'checking' | 'available' | 'taken' | null
+}) {
+  const colors = useColors()
+  const input =
+    'font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark'
+  const note =
+    status === 'invalid'
+      ? 'Use 3 to 30 lowercase letters, numbers, _ or -, not starting or ending with _ or -.'
+      : status === 'checking'
+        ? 'Checking...'
+        : status === 'available'
+          ? `${username.trim().toLowerCase()} is available`
+          : status === 'taken'
+            ? `${username.trim().toLowerCase()} is taken`
+            : null
+  return (
+    <View>
+      <Heading>Make your profile</Heading>
+      <Sub>Your username is how other readers find you. You can change your display name later.</Sub>
+      <View className="gap-4">
+        <View className="gap-1">
+          <TextInput
+            value={username}
+            onChangeText={setUsername}
+            placeholder="Username"
+            placeholderTextColor={colors.textTertiary}
+            autoCapitalize="none"
+            autoComplete="username"
+            autoCorrect={false}
+            maxLength={30}
+            accessibilityLabel="Username"
+            className={input}
+          />
+          {note ? (
+            <Text
+              accessibilityLiveRegion="polite"
+              className={`font-ui text-xs px-2 ${
+                status === 'available'
+                  ? 'text-success-light dark:text-success-dark'
+                  : status === 'checking'
+                    ? 'text-text-tertiary-light dark:text-text-tertiary-dark'
+                    : 'text-error-light dark:text-error-dark'
+              }`}
+            >
+              {note}
+            </Text>
+          ) : null}
+        </View>
+        <TextInput
+          value={displayName}
+          onChangeText={setDisplayName}
+          placeholder="Display name"
+          placeholderTextColor={colors.textTertiary}
+          maxLength={80}
+          accessibilityLabel="Display name"
+          className={input}
+        />
+      </View>
+    </View>
+  )
+}
+
 // ── First Book ───────────────────────────────────────────────────────────
 
 function FirstBookStep({
+  books,
+  loading,
   picked,
   setPicked,
 }: {
+  books: BookCard[]
+  loading: boolean
   picked: Set<string>
   setPicked: (s: Set<string>) => void
 }) {
   const colors = useColors()
-  const [books, setBooks] = useState<StarterBook[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    let mounted = true
-    ;(async () => {
-      const { data } = await supabase
-        .from('books')
-        .select('id, title, author, cover_url')
-        .in('title', STARTER_TITLES)
-        .limit(6)
-      if (!mounted) return
-      setBooks(((data ?? []) as StarterBook[]).slice(0, 6))
-      setLoading(false)
-    })()
-    return () => {
-      mounted = false
-    }
-  }, [])
-
   return (
     <View>
       <Heading>Start with a great book</Heading>
@@ -390,7 +476,7 @@ function FirstBookStep({
         <ActivityIndicator color={colors.brandUi} />
       ) : books.length === 0 ? (
         <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
-          The starter catalog isn't ingested yet, skip ahead and discover books later.
+          No starter books right now. Skip ahead and find one in Discover.
         </Text>
       ) : (
         <View className="flex-row flex-wrap" style={{ gap: 10 }}>
@@ -423,9 +509,9 @@ function FirstBookStep({
                     justifyContent: 'center',
                   }}
                 >
-                  {b.cover_url ? (
+                  {b.coverUrl ? (
                     <Image
-                      source={{ uri: b.cover_url }}
+                      source={{ uri: b.coverUrl }}
                       style={{ width: '100%', height: '100%' }}
                       accessibilityRole="image"
                       accessibilityLabel={`${b.title} cover`}
@@ -476,46 +562,6 @@ function FirstBookStep({
       )}
     </View>
   )
-}
-
-// ── Persistence helpers ──────────────────────────────────────────────────
-
-async function persistGenres(genres: Set<string>) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  await supabase
-    .from('profiles')
-    .update({ favorite_genres: [...genres] })
-    .eq('id', user.id)
-}
-
-async function persistGoal(goalBooks: string) {
-  const target = parseInt(goalBooks, 10)
-  if (!Number.isFinite(target) || target < 1 || target > 200) return
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const year = new Date().getFullYear()
-  // New schema uses type='books_per_year' per task.md Section 1f. Older rows
-  // with type='books_year' coexist; the upsert key includes type so they
-  // don't collide.
-  const { error } = await supabase.from('reading_goals').upsert(
-    { user_id: user.id, year, type: 'books_per_year', target },
-    { onConflict: 'user_id,year,type' },
-  )
-  reportWriteError(error, { op: 'upsert', table: 'reading_goals' })
-}
-
-async function persistStarterBooks(picked: Set<string>) {
-  if (picked.size === 0) return
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  const rows = [...picked].map((book_id) => ({
-    user_id: user.id,
-    book_id,
-    status: 'want_to_read' as const,
-  }))
-  const { error } = await supabase.from('user_books').upsert(rows, { onConflict: 'user_id,book_id' })
-  reportWriteError(error, { op: 'upsert', table: 'user_books', extra: { count: rows.length } })
 }
 
 // ── Reusable layout bits ─────────────────────────────────────────────────

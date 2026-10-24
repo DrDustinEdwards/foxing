@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useDiary, useLibrary } from '@foxing/client'
+import { useMemo } from 'react'
 import {
   View,
   Text,
@@ -9,66 +10,46 @@ import {
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
-import { CaretLeft, Star, BookOpen } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { CaretLeft, Star, StarHalf, BookOpen } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
 interface Row {
-  id: string
-  finished_at: string | null
-  rating: number | null
-  book: { id: string; title: string; author: string; cover_url: string | null } | null
+  bookId: string
+  slug: string
+  title: string
+  author: string
+  coverUrl: string | null
+  finishedAt: number | null
+  /** Half stars, 1 to 10, from the reader's latest diary entry for the book. */
+  ratingHalf: number | null
 }
 
+// Every finished book by the year it was finished: the library's finish dates with the
+// rating from the reader's diary.
 export default function ReadingTimelineScreen() {
   const colors = useColors()
   const router = useRouter()
-  const [rows, setRows] = useState<Row[]>([])
-  const [loading, setLoading] = useState(true)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setRows([])
-      setLoading(false)
-      return
+  const library = useLibrary()
+  const diary = useDiary()
+  const loading = library.isPending
+  const rows = useMemo<Row[]>(() => {
+    const rating = new Map<string, number>()
+    // The diary is newest first, so the first rating seen for a book is its latest.
+    for (const d of diary.data ?? []) {
+      if (d.ratingHalf && !rating.has(d.bookId)) rating.set(d.bookId, d.ratingHalf)
     }
-    const { data } = await supabase
-      .from('user_books')
-      .select('id, finished_at, rating, book:books(id, title, author, cover_url)')
-      .eq('user_id', user.id)
-      .eq('status', 'finished')
-      .order('finished_at', { ascending: false })
-    type R = {
-      id: string
-      finished_at: string | null
-      rating: number | null
-      book: { id: string; title: string; author: string; cover_url: string | null }
-        | Array<{ id: string; title: string; author: string; cover_url: string | null }>
-        | null
-    }
-    setRows(
-      (((data ?? []) as unknown) as R[]).map((r) => ({
-        id: r.id,
-        finished_at: r.finished_at,
-        rating: r.rating,
-        book: Array.isArray(r.book) ? r.book[0] ?? null : r.book,
-      })),
-    )
-    setLoading(false)
-  }, [])
+    return (library.data ?? [])
+      .filter((e) => e.status === 'finished')
+      .map((e) => ({ ...e, ratingHalf: rating.get(e.bookId) ?? null }))
+      .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))
+  }, [library.data, diary.data])
 
-  useEffect(() => {
-    load()
-  }, [load])
-
-  // Group by year of finished_at.
+  // Group by the year each book was finished.
   const grouped = useMemo(() => {
     const m = new Map<string, Row[]>()
     for (const r of rows) {
-      const year = r.finished_at ? new Date(r.finished_at).getFullYear().toString() : 'Undated'
+      const year = r.finishedAt ? new Date(r.finishedAt).getFullYear().toString() : 'Undated'
       const list = m.get(year) ?? []
       list.push(r)
       m.set(year, list)
@@ -128,8 +109,8 @@ export default function ReadingTimelineScreen() {
               </Text>
               {entries.map((e) => (
                 <Pressable
-                  key={e.id}
-                  onPress={() => e.book && router.push(`/book/${e.book.id}` as never)}
+                  key={e.bookId}
+                  onPress={() => router.push(`/book/${e.slug}` as never)}
                   className="flex-row items-center p-2 mb-1 rounded-xl"
                 >
                   <View
@@ -144,8 +125,8 @@ export default function ReadingTimelineScreen() {
                       justifyContent: 'center',
                     }}
                   >
-                    {e.book?.cover_url ? (
-                      <Image source={{ uri: e.book.cover_url }} style={{ width: '100%', height: '100%' }} />
+                    {e.coverUrl ? (
+                      <Image source={{ uri: e.coverUrl }} style={{ width: '100%', height: '100%' }} />
                     ) : (
                       <BookOpen color={colors.textTertiary} size={12} />
                     )}
@@ -155,7 +136,7 @@ export default function ReadingTimelineScreen() {
                       style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
                       numberOfLines={1}
                     >
-                      {e.book?.title ?? ''}
+                      {e.title}
                     </Text>
                     <Text
                       style={{
@@ -166,22 +147,31 @@ export default function ReadingTimelineScreen() {
                       }}
                       numberOfLines={1}
                     >
-                      {e.book?.author ?? ''}
-                      {e.finished_at
-                        ? ` · ${new Date(e.finished_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
+                      {e.author}
+                      {e.finishedAt
+                        ? ` · ${new Date(e.finishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
                         : ''}
                     </Text>
                   </View>
-                  {e.rating ? (
-                    <View className="flex-row" style={{ gap: 1 }}>
-                      {[1, 2, 3, 4, 5].map((n) => (
-                        <Star
-                          key={n}
-                          color={colors.brandSecondary}
-                          size={10}
-                          weight={n <= (e.rating ?? 0) ? 'fill' : 'regular'}
-                        />
-                      ))}
+                  {e.ratingHalf ? (
+                    <View
+                      className="flex-row"
+                      style={{ gap: 1 }}
+                      accessible
+                      accessibilityLabel={`Rated ${e.ratingHalf / 2} of 5`}
+                    >
+                      {[1, 2, 3, 4, 5].map((n) =>
+                        n * 2 - 1 === e.ratingHalf ? (
+                          <StarHalf key={n} color={colors.brandSecondary} size={10} weight="fill" />
+                        ) : (
+                          <Star
+                            key={n}
+                            color={colors.brandSecondary}
+                            size={10}
+                            weight={n * 2 <= (e.ratingHalf ?? 0) ? 'fill' : 'regular'}
+                          />
+                        ),
+                      )}
                     </View>
                   ) : null}
                 </Pressable>

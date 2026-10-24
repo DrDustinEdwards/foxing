@@ -1,55 +1,41 @@
+import { useSearch, useSetBookStatus, useSuggest } from '@foxing/client'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  TextInput,
-  ActivityIndicator,
-} from 'react-native'
+import { View, Text, Pressable, ScrollView, TextInput, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {
-  CaretLeft,
-  MagnifyingGlass,
-  X as XIcon,
-} from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
+import { CaretLeft, MagnifyingGlass, X as XIcon } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { joinClub } from '@/lib/clubs'
-import { BookResult, ClubResult, PersonResult, ResultsSection, ThreadResult } from '@/components/search/search-results'
-import type { BookHit, ClubHit, ProfileHit, ThreadHit } from '@/components/search/search-types'
+import { authClient } from '@/lib/api'
+import { AuthorResult, BookResult, ClubResult, PersonResult, ResultsSection } from '@/components/search/search-results'
 
-type FilterKey = 'all' | 'books' | 'people' | 'clubs' | 'discussions'
+type FilterKey = 'all' | 'books' | 'authors' | 'people' | 'clubs'
 
 const FILTERS: Array<{ id: FilterKey; label: string }> = [
   { id: 'all', label: 'All' },
   { id: 'books', label: 'Books' },
+  { id: 'authors', label: 'Authors' },
   { id: 'people', label: 'People' },
   { id: 'clubs', label: 'Clubs' },
-  { id: 'discussions', label: 'Discussions' },
 ]
 
 const RECENT_KEY = 'recent_searches'
 const MAX_RECENT = 10
 const DEBOUNCE_MS = 250
 
+// Search: books and authors from GET /search, people and clubs from the same
+// typeahead the web header uses.
 export default function SearchScreen() {
   const colors = useColors()
   const router = useRouter()
+  const session = authClient.useSession()
+  const setBookStatus = useSetBookStatus()
   const [query, setQuery] = useState('')
+  const [term, setTerm] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
-  const [books, setBooks] = useState<BookHit[]>([])
-  const [people, setPeople] = useState<ProfileHit[]>([])
-  const [clubs, setClubs] = useState<ClubHit[]>([])
-  const [threads, setThreads] = useState<ThreadHit[]>([])
-  const [autocomplete, setAutocomplete] = useState<BookHit[]>([])
-  const [searching, setSearching] = useState(false)
   const [recent, setRecent] = useState<string[]>([])
   const inputRef = useRef<TextInput>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     // Autofocus on open.
@@ -63,38 +49,13 @@ export default function SearchScreen() {
     })
   }, [])
 
-  // Debounced search across the selected tabs. Tabs that aren't visible
-  // still get queried in 'all' mode so the grouped view stays accurate.
   useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    const q = query.trim()
-    if (q.length < 2) {
-      setBooks([])
-      setPeople([])
-      setClubs([])
-      setThreads([])
-      setAutocomplete([])
-      return
-    }
-    setSearching(true)
-    debounceRef.current = setTimeout(async () => {
-      await Promise.all([
-        runBooks(q).then(setBooks),
-        filter === 'books' ? Promise.resolve() : runPeople(q).then(setPeople),
-        filter === 'books' || filter === 'people'
-          ? Promise.resolve()
-          : runClubs(q).then(setClubs),
-        filter === 'all' || filter === 'discussions'
-          ? runThreads(q).then(setThreads)
-          : Promise.resolve(),
-        runAutocomplete(q).then(setAutocomplete),
-      ])
-      setSearching(false)
-    }, DEBOUNCE_MS)
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-    }
-  }, [filter, query])
+    const t = setTimeout(() => setTerm(query.trim().length >= 2 ? query.trim() : ''), DEBOUNCE_MS)
+    return () => clearTimeout(t)
+  }, [query])
+  const search = useSearch(term)
+  const suggest = useSuggest(query)
+  const searching = term.length > 0 && search.isFetching
 
   const commitRecent = useCallback(async (term: string) => {
     const t = term.trim()
@@ -114,15 +75,13 @@ export default function SearchScreen() {
   )
 
   const showRecent = query.trim().length < 2 && recent.length > 0
-  const showAutocomplete =
-    query.trim().length >= 2 && autocomplete.length > 0 && filter !== 'people' && filter !== 'discussions'
-
-  const visibleBooks = filter === 'all' || filter === 'books' ? books : []
-  const visiblePeople = filter === 'all' || filter === 'people' ? people : []
-  const visibleClubs = filter === 'all' || filter === 'clubs' ? clubs : []
-  const visibleThreads = filter === 'all' || filter === 'discussions' ? threads : []
-  const totalResults =
-    visibleBooks.length + visiblePeople.length + visibleClubs.length + visibleThreads.length
+  const show = (f: FilterKey) => filter === 'all' || filter === f
+  const results = term ? search.data : undefined
+  const visibleBooks = show('books') ? (results?.books ?? []) : []
+  const visibleAuthors = show('authors') ? (results?.authors ?? []) : []
+  const visiblePeople = show('people') ? suggest.people : []
+  const visibleClubs = show('clubs') ? suggest.clubs : []
+  const totalResults = visibleBooks.length + visibleAuthors.length + visiblePeople.length + visibleClubs.length
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -196,46 +155,6 @@ export default function SearchScreen() {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
       >
-        {/* Autocomplete dropdown */}
-        {showAutocomplete ? (
-          <View
-            className="rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            style={{ marginBottom: 12 }}
-          >
-            {autocomplete.map((b, i) => (
-              <Pressable
-                key={b.id}
-                onPress={() => {
-                  commitRecent(b.title)
-                  router.push(`/book/${b.id}` as never)
-                }}
-                className="flex-row items-center px-3 py-2"
-                style={{ borderTopWidth: i === 0 ? 0 : 1, borderTopColor: colors.borderSubtle }}
-              >
-                <MagnifyingGlass color={colors.textTertiary} size={12} />
-                <Text
-                  style={{
-                    flex: 1,
-                    fontFamily: Fonts.body,
-                    fontSize: 13,
-                    color: colors.textPrimary,
-                    marginLeft: 8,
-                  }}
-                  numberOfLines={1}
-                >
-                  {b.title}
-                </Text>
-                <Text
-                  style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}
-                  numberOfLines={1}
-                >
-                  {b.author}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        ) : null}
-
         {/* Recent searches */}
         {showRecent ? (
           <View>
@@ -297,6 +216,11 @@ export default function SearchScreen() {
         ) : null}
 
         {/* Results */}
+        {results?.fuzzy && visibleBooks.length > 0 ? (
+          <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary }}>
+            No exact matches, so these are the closest.
+          </Text>
+        ) : null}
         {visibleBooks.length > 0 ? (
           <ResultsSection title="Books">
             {visibleBooks.map((b) => (
@@ -305,19 +229,22 @@ export default function SearchScreen() {
                 hit={b}
                 onPress={() => {
                   commitRecent(b.title)
-                  router.push(`/book/${b.id}` as never)
+                  router.push(`/book/${b.slug}` as never)
                 }}
-                onAdd={async () => {
-                  const { data: { user } } = await supabase.auth.getUser()
-                  if (!user) return
-                  await supabase
-                    .from('user_books')
-                    .upsert(
-                      { user_id: user.id, book_id: b.id, status: 'want_to_read' },
-                      { onConflict: 'user_id,book_id' },
-                    )
-                }}
+                onAdd={() =>
+                  session.data
+                    ? setBookStatus.fire({ bookId: b.id, status: 'want', book: b })
+                    : router.push('/(auth)/login' as never)
+                }
               />
+            ))}
+          </ResultsSection>
+        ) : null}
+
+        {visibleAuthors.length > 0 ? (
+          <ResultsSection title="Authors">
+            {visibleAuthors.map((a) => (
+              <AuthorResult key={a.slug} hit={a} onPress={() => router.push(`/author/${a.slug}` as never)} />
             ))}
           </ResultsSection>
         ) : null}
@@ -325,11 +252,7 @@ export default function SearchScreen() {
         {visiblePeople.length > 0 ? (
           <ResultsSection title="People">
             {visiblePeople.map((p) => (
-              <PersonResult
-                key={p.id}
-                hit={p}
-                onPress={() => router.push(`/user/${p.id}` as never)}
-              />
+              <PersonResult key={p.username} hit={p} onPress={() => router.push(`/u/${p.username}` as never)} />
             ))}
           </ResultsSection>
         ) : null}
@@ -337,28 +260,7 @@ export default function SearchScreen() {
         {visibleClubs.length > 0 ? (
           <ResultsSection title="Clubs">
             {visibleClubs.map((c) => (
-              <ClubResult
-                key={c.id}
-                hit={c}
-                onPress={() => router.push(`/clubs/${c.id}` as never)}
-                onJoin={async () => {
-                  await joinClub(c.id)
-                }}
-              />
-            ))}
-          </ResultsSection>
-        ) : null}
-
-        {visibleThreads.length > 0 ? (
-          <ResultsSection title="Discussions">
-            {visibleThreads.map((t) => (
-              <ThreadResult
-                key={t.id}
-                hit={t}
-                onPress={() =>
-                  router.push(`/clubs/${t.club_id}/thread/${t.id}` as never)
-                }
-              />
+              <ClubResult key={c.id} hit={c} onPress={() => router.push(`/clubs/${c.id}` as never)} />
             ))}
           </ResultsSection>
         ) : null}
@@ -372,78 +274,3 @@ export default function SearchScreen() {
     </SafeAreaView>
   )
 }
-
-// ── Queries ──────────────────────────────────────────────────────────────
-
-async function runBooks(q: string): Promise<BookHit[]> {
-  const ilike = `%${q}%`
-  const { data } = await supabase
-    .from('books')
-    .select('id, title, author, cover_url, subjects')
-    .or(`title.ilike.${ilike},author.ilike.${ilike}`)
-    .limit(10)
-  return ((data ?? []) as BookHit[])
-}
-
-async function runPeople(q: string): Promise<ProfileHit[]> {
-  const ilike = `%${q}%`
-  const { data } = await supabase
-    .from('profiles')
-    .select('id, display_name, username, avatar_url')
-    .or(`display_name.ilike.${ilike},username.ilike.${ilike}`)
-    .limit(10)
-  return ((data ?? []) as ProfileHit[])
-}
-
-async function runClubs(q: string): Promise<ClubHit[]> {
-  const ilike = `%${q}%`
-  const { data } = await supabase
-    .from('clubs')
-    .select('id, name, member_count, current_book:books!current_book_id(title)')
-    .ilike('name', ilike)
-    .eq('is_public', true)
-    .limit(10)
-  type R = {
-    id: string; name: string; member_count: number;
-    current_book: { title: string } | Array<{ title: string }> | null
-  }
-  return (((data ?? []) as unknown) as R[]).map((c) => ({
-    id: c.id,
-    name: c.name,
-    member_count: c.member_count,
-    current_book: Array.isArray(c.current_book) ? c.current_book[0] ?? null : c.current_book,
-  }))
-}
-
-async function runThreads(q: string): Promise<ThreadHit[]> {
-  const ilike = `%${q}%`
-  const { data } = await supabase
-    .from('club_threads')
-    .select('id, title, club_id, post_count, club:clubs!club_id(name)')
-    .ilike('title', ilike)
-    .limit(10)
-  type R = {
-    id: string; title: string; club_id: string; post_count: number;
-    club: { name: string } | Array<{ name: string }> | null
-  }
-  return (((data ?? []) as unknown) as R[]).map((t) => ({
-    id: t.id,
-    title: t.title,
-    club_id: t.club_id,
-    post_count: t.post_count,
-    club: Array.isArray(t.club) ? t.club[0] ?? null : t.club,
-  }))
-}
-
-async function runAutocomplete(q: string): Promise<BookHit[]> {
-  const ilike = `${q}%` // prefix match for typeahead
-  const { data } = await supabase
-    .from('books')
-    .select('id, title, author, cover_url, subjects')
-    .ilike('title', ilike)
-    .limit(5)
-  return ((data ?? []) as BookHit[])
-}
-
-// ── Components ───────────────────────────────────────────────────────────
-

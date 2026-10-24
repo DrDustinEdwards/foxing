@@ -58,6 +58,6 @@ export function decodeLocator(cfi: string | undefined): Locator | undefined {
   return undefined
 }
 
-export function encodeLocator(locator: Locator): string {
+export function encodeLocator(locator: Locator | Record<string, unknown>): string {
   return JSON.stringify(locator)
 }

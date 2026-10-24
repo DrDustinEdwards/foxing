@@ -6,7 +6,6 @@ export interface ExportableHighlight {
   note: string | null
   color: string | null
   chapter: string | null
-  created_at: string
 }
 
 export function exportAsText(
@@ -31,13 +30,12 @@ export function exportAsCsv(
   bookTitle: string,
   author: string,
 ): string {
-  const header = ['Chapter', 'Highlight', 'Note', 'Color', 'Date Added']
+  const header = ['Chapter', 'Highlight', 'Note', 'Color']
   const rows = highlights.map((h) => [
     h.chapter ?? '',
     h.text ?? '',
     h.note ?? '',
     h.color ?? '',
-    h.created_at ?? '',
   ])
   const titleRow = [`# ${bookTitle}${author ? `, ${author}` : ''}`]
   return [csvRow(titleRow), csvRow(header), ...rows.map(csvRow)].join('\n') + '\n'

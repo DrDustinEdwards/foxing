@@ -4,6 +4,7 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"],
+      "@foxing/client": ["../../packages/client/src/index.ts"],
       "@foxing/types": ["../../packages/types/src/index.ts"],
       "@foxing/utils": ["../../packages/utils/src/index.ts"]
     }

@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { newId, useBookAnnotations, useMe, usePassageComment } from '@foxing/client'
+import type * as W from '@foxing/types'
+import { useCallback, useEffect, useState } from 'react'
 import {
   View,
   Text,
@@ -11,85 +13,54 @@ import {
 } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  type PassageComment,
-  createComment,
-  createReply,
-  listCommentsAtCfi,
-  toggleCommentReaction,
-} from '@/lib/passage-comments'
+import { decodeLocator, encodeLocator } from './readium-helpers'
 import { PassageCommentComposer } from './passage-comment-composer'
 import { PassageCommentList } from './passage-comment-list'
-
-interface ClubChoice {
-  club_id: string
-  name: string
-}
 
 interface PassageCommentSheetProps {
   visible: boolean
   bookId: string
   cfi: string | null
   passageText: string
-  clubs: ClubChoice[]
-  // The club the new comment will be written to. Defaults to first in `clubs`.
-  // Reader screen sets this so the sheet doesn't need its own club picker
-  // when the viewer is in just one matching club.
-  defaultClubId?: string | null
+  /** The viewer's clubs reading this book; a comment goes to one of them. */
+  clubs: { id: string; name: string }[]
   onClose: () => void
 }
 
+// The club discussion on one passage: the comments anchored there (from the book's
+// annotation layers), their replies, and a composer. A new comment shows at once.
 export function PassageCommentSheet({
   visible,
   bookId,
   cfi,
   passageText,
   clubs,
-  defaultClubId,
   onClose,
 }: PassageCommentSheetProps) {
   const colors = useColors()
-  const [comments, setComments] = useState<PassageComment[]>([])
-  const [loading, setLoading] = useState(true)
+  const layers = useBookAnnotations(bookId)
+  const me = useMe()
+  const post = usePassageComment()
   const [body, setBody] = useState('')
   const [hasSpoilers, setHasSpoilers] = useState(false)
-  const [posting, setPosting] = useState(false)
-  const [replyTo, setReplyTo] = useState<PassageComment | null>(null)
-  // Spoiler reveal is per-comment / per-reply, keyed by id.
+  const [replyTo, setReplyTo] = useState<W.ResolvedComment | null>(null)
+  // Spoiler reveal is per comment, keyed by id.
   const [revealed, setRevealed] = useState<Set<string>>(new Set())
-  // When the viewer is in multiple matching clubs, let them pick which
-  // club the new comment posts to.
   const [activeClubId, setActiveClubId] = useState<string | null>(null)
 
-  const clubIds = useMemo(() => clubs.map((c) => c.club_id), [clubs])
-
-  // Reset state on open. We deliberately don't reset across visible→hidden→
-  // visible cycles so quickly toggling the sheet doesn't churn the list.
   useEffect(() => {
     if (visible) {
       setBody('')
       setHasSpoilers(false)
       setReplyTo(null)
       setRevealed(new Set())
-      setActiveClubId(defaultClubId ?? clubs[0]?.club_id ?? null)
+      setActiveClubId(clubs[0]?.id ?? null)
     }
-  }, [visible, defaultClubId, clubs])
+  }, [visible, clubs])
 
-  const load = useCallback(async () => {
-    if (!cfi) {
-      setComments([])
-      setLoading(false)
-      return
-    }
-    setLoading(true)
-    const rows = await listCommentsAtCfi({ bookId, clubIds, cfi })
-    setComments(rows)
-    setLoading(false)
-  }, [bookId, cfi, clubIds])
-
-  useEffect(() => {
-    if (visible) load()
-  }, [visible, load])
+  const all = layers.data?.comments ?? []
+  const comments = all.filter((c) => !c.parentId && c.locator && encodeLocator(c.locator) === cfi)
+  const replies = all.filter((c) => c.parentId && comments.some((p) => p.id === c.parentId))
 
   const toggleReveal = useCallback((key: string) => {
     setRevealed((prev) => {
@@ -100,79 +71,29 @@ export function PassageCommentSheet({
     })
   }, [])
 
-  const onReact = useCallback(
-    async (commentId: string, emoji: string) => {
-      // Optimistic, flip reacted/count on the matching reaction group.
-      setComments((prev) =>
-        prev.map((c) => {
-          if (c.id !== commentId) return c
-          const groups = c.reactions ?? []
-          const exists = groups.find((g) => g.emoji === emoji)
-          if (exists) {
-            return {
-              ...c,
-              reactions: groups
-                .map((g) =>
-                  g.emoji === emoji
-                    ? {
-                        ...g,
-                        count: g.count + (g.viewerReacted ? -1 : 1),
-                        viewerReacted: !g.viewerReacted,
-                      }
-                    : g,
-                )
-                .filter((g) => g.count > 0),
-            }
-          }
-          return {
-            ...c,
-            reactions: [...groups, { emoji, count: 1, viewerReacted: true }],
-          }
-        }),
-      )
-      const ok = await toggleCommentReaction(commentId, emoji)
-      if (!ok) load()
-    },
-    [load],
-  )
-
-  const send = useCallback(async () => {
-    if (!body.trim() || posting || !cfi) return
-    if (replyTo) {
-      // The live schema has no spoiler field on replies; hasSpoilers is
-      // ignored when replying. Top-level comments still carry the flag.
-      setPosting(true)
-      const reply = await createReply({
-        commentId: replyTo.id,
-        content: body.trim(),
-      })
-      setPosting(false)
-      if (reply) {
-        setBody('')
-        setReplyTo(null)
-        setHasSpoilers(false)
-        load()
-      }
-      return
-    }
-    if (!activeClubId) return
-    setPosting(true)
-    const created = await createComment({
+  const profile = me.data?.profile
+  const send = useCallback(() => {
+    const text = body.trim()
+    const clubId = replyTo?.clubId ?? activeClubId
+    if (!text || !clubId || !cfi || !profile) return
+    post.fire({
+      id: newId(),
+      clubId,
       bookId,
-      clubId: activeClubId,
-      cfi,
-      passageText,
-      comment: body.trim(),
-      visibility: 'club',
-      spoilerTagged: hasSpoilers,
+      body: text,
+      ...(replyTo ? { parentId: replyTo.id } : { locator: (decodeLocator(cfi) as unknown as W.Locator | undefined) ?? null }),
+      containsSpoilers: hasSpoilers,
+      you: {
+        id: profile.id,
+        username: profile.username,
+        displayName: profile.displayName,
+        avatarUrl: profile.avatarUrl,
+      },
     })
-    setPosting(false)
-    if (created) {
-      setBody('')
-      setHasSpoilers(false)
-      load()
-    }
-  }, [activeClubId, body, bookId, cfi, hasSpoilers, load, passageText, posting, replyTo])
+    setBody('')
+    setReplyTo(null)
+    setHasSpoilers(false)
+  }, [activeClubId, body, bookId, cfi, hasSpoilers, post, profile, replyTo])
 
   const canPost = !!activeClubId && !!cfi
 
@@ -188,7 +109,7 @@ export function PassageCommentSheet({
           onChangeBody={setBody}
           hasSpoilers={hasSpoilers}
           onChangeHasSpoilers={setHasSpoilers}
-          posting={posting}
+          posting={post.pending}
           canPost={canPost}
           replyTo={replyTo}
           onCancelReply={() => setReplyTo(null)}
@@ -238,11 +159,11 @@ export function PassageCommentSheet({
             contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 8, gap: 6 }}
           >
             {clubs.map((c) => {
-              const active = c.club_id === activeClubId
+              const active = c.id === activeClubId
               return (
                 <Pressable
-                  key={c.club_id}
-                  onPress={() => setActiveClubId(c.club_id)}
+                  key={c.id}
+                  onPress={() => setActiveClubId(c.id)}
                   className="px-3 py-1 rounded-full border"
                   style={{
                     backgroundColor: active ? colors.bgSelected : colors.bgSurface,
@@ -267,12 +188,17 @@ export function PassageCommentSheet({
         </>
       }
     >
+            {post.error ? (
+              <Text accessibilityRole="alert" style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.error, marginBottom: 8 }}>
+                {post.error}
+              </Text>
+            ) : null}
             <PassageCommentList
-              loading={loading}
+              loading={layers.isPending}
               comments={comments}
+              replies={replies}
               revealed={revealed}
               onToggleReveal={toggleReveal}
-              onReact={onReact}
               onReply={setReplyTo}
             />
     </SheetScaffold>

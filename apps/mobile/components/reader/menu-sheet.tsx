@@ -3,11 +3,13 @@ import { View, Text, Modal, Pressable, Share } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import {
   BookOpen,
+  Lightbulb,
+  Question,
+  Student,
   Users,
   Books,
   ImageSquare,
   Share as ShareIcon,
-  Sparkle,
   Moon,
   SpeakerHigh,
   MagnifyingGlass,
@@ -17,27 +19,40 @@ import {
 } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { CHAPTER_FEATURES } from './chapter-feature-sheet'
-import type { ChapterFeatureKind } from '@/lib/claude'
+
+/** Companion tools that open as one answer sheet (the server's action names). */
+export type CompanionTool =
+  | 'character_map'
+  | 'book_insight'
+  | 'semantic_search'
+  | 'chapter_feature'
+  | 'deep_dive'
+  | 'discussion_starter'
 
 export type MenuAction =
   | 'ask-chat'
-  | 'story-so-far'
-  | 'character-map'
+  | CompanionTool
   | 'highlights'
   | 'vocabulary'
-  | 'search'
   | 'quote-card'
   | 'my-clubs'
-  | 'chapter-features'
   | 'listen'
   | 'go-to'
   | 'sleep-timer'
 
-// The primary reading actions (Listen, Go To, Search, This Chapter)
-// moved to the top chrome bar. This sheet now surfaces the secondary
-// menu OR the chapter-features sub-grid, depending on initialView.
-export type MenuInitialView = 'secondary' | 'chapter-features'
+/** What each companion tool's sheet is called. */
+export const COMPANION_TOOL_TITLES: Record<CompanionTool, string> = {
+  character_map: 'Characters so far',
+  book_insight: 'An insight',
+  semantic_search: 'Find in the book',
+  chapter_feature: 'This chapter',
+  deep_dive: 'Go deeper',
+  discussion_starter: 'Discussion questions',
+}
+
+// The primary reading actions (Listen, Go To, Search) moved to the top chrome bar.
+// This sheet surfaces the secondary menu OR the companion hub, depending on initialView.
+export type MenuInitialView = 'secondary' | 'companion'
 
 interface MenuSheetProps {
   visible: boolean
@@ -45,15 +60,13 @@ interface MenuSheetProps {
   bookAuthor: string
   currentChapterTitle?: string
   // Which content to render when the sheet opens. The top bar's Sparkle
-  // icon opens it directly to the chapter-features grid; the bottom
+  // icon opens it directly to the companion hub; the bottom
   // bar's chevron-up opens it to the secondary menu list.
   initialView?: MenuInitialView
   // Clubs the viewer is in that are reading this book. Appends a "My
   // Clubs Reading This" tile to the secondary list when non-empty.
-  clubsReadingThis?: Array<{ club_id: string; name: string }>
+  clubsReadingThis?: Array<{ id: string; name: string }>
   onAction: (action: MenuAction) => void
-  // Channel for chapter-feature picks (timeline/quiz/etc).
-  onChapterFeature?: (kind: ChapterFeatureKind) => void
   // Plus gating. When `locked` (free tier), the AI hub entries show a lock
   // badge and route to `onUpgrade` instead of opening the gated sheet.
   locked?: boolean
@@ -63,12 +76,7 @@ interface MenuSheetProps {
 
 // Companion hub entries that are Plus-gated AI actions. The overflow utility
 // items (Listen, Sleep Timer, Vocabulary, Quote Card, Share) are not gated.
-const GATED_AI = new Set<MenuAction>([
-  'ask-chat',
-  'character-map',
-  'story-so-far',
-  'search',
-])
+const GATED_AI = new Set<MenuAction>(['ask-chat', ...(Object.keys(COMPANION_TOOL_TITLES) as CompanionTool[])])
 
 interface MenuItem {
   key: MenuAction | 'share'
@@ -85,13 +93,16 @@ const SECONDARY: MenuItem[] = [
   { key: 'share', Icon: ShareIcon, label: 'Share' },
 ]
 
-// The Companion hub "This book" tools, shown below the prominent Ask/Chat
-// button. Characters here is the whole-book CharacterMapSheet; the
-// chapter-scoped one lives in the grid as "Chapter Characters".
-const COMPANION_TOOLS: MenuItem[] = [
-  { key: 'character-map', Icon: Users, label: 'Characters' },
-  { key: 'story-so-far', Icon: BookOpen, label: 'Story So Far' },
-  { key: 'search', Icon: MagnifyingGlass, label: 'Search' },
+// The Companion hub tools, shown below the prominent Ask/Chat button.
+const BOOK_TOOLS: MenuItem[] = [
+  { key: 'character_map', Icon: Users, label: 'Characters' },
+  { key: 'book_insight', Icon: Lightbulb, label: 'Insight' },
+  { key: 'semantic_search', Icon: MagnifyingGlass, label: 'Find' },
+]
+const CHAPTER_TOOLS: MenuItem[] = [
+  { key: 'chapter_feature', Icon: BookOpen, label: 'This chapter' },
+  { key: 'deep_dive', Icon: Student, label: 'Go deeper' },
+  { key: 'discussion_starter', Icon: Question, label: 'Discuss' },
 ]
 
 export function MenuSheet({
@@ -102,21 +113,18 @@ export function MenuSheet({
   initialView = 'secondary',
   clubsReadingThis,
   onAction,
-  onChapterFeature,
   locked,
   onUpgrade,
   onClose,
 }: MenuSheetProps) {
   const colors = useColors()
-  const [showChapterSub, setShowChapterSub] = useState(
-    initialView === 'chapter-features',
-  )
+  const [showCompanion, setShowCompanion] = useState(initialView === 'companion')
   // Sync the sub-view with the initialView prop each time the sheet
   // opens; otherwise re-opening via a different entry point would show
   // the previous view's state.
   useEffect(() => {
     if (visible) {
-      setShowChapterSub(initialView === 'chapter-features')
+      setShowCompanion(initialView === 'companion')
     }
   }, [visible, initialView])
 
@@ -146,7 +154,7 @@ export function MenuSheet({
   }
 
   function handleClose() {
-    setShowChapterSub(false)
+    setShowCompanion(false)
     onClose()
   }
 
@@ -187,7 +195,7 @@ export function MenuSheet({
                 marginBottom: 10,
               }}
             />
-            {showChapterSub ? (
+            {showCompanion ? (
               <View style={{ paddingBottom: 4 }}>
                 <View style={{ paddingHorizontal: 12 }}>
                   <SectionLabel label="This book" />
@@ -230,31 +238,10 @@ export function MenuSheet({
                       <Lock color={colors.textOnBrand} size={16} weight="fill" />
                     ) : null}
                   </Pressable>
-                  <Row items={COMPANION_TOOLS} onSelect={handleSelect} locked={locked} />
+                  <Row items={BOOK_TOOLS} onSelect={handleSelect} locked={locked} />
                   <SectionLabel label="This chapter" />
+                  <Row items={CHAPTER_TOOLS} onSelect={handleSelect} locked={locked} />
                 </View>
-                <ChapterFeatureGrid
-                  hideHeader
-                  locked={locked}
-                  currentChapterTitle={currentChapterTitle}
-                  onPick={(kind) => {
-                    setShowChapterSub(false)
-                    if (locked) {
-                      onClose()
-                      onUpgrade?.('Chapter tools')
-                      return
-                    }
-                    onChapterFeature?.(kind)
-                    onClose()
-                  }}
-                  // The hub always opens directly to this view, so there is no
-                  // previous view to return to.
-                  onBack={
-                    initialView === 'chapter-features'
-                      ? undefined
-                      : () => setShowChapterSub(false)
-                  }
-                />
               </View>
             ) : (
               <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
@@ -374,125 +361,5 @@ function SectionLabel({ label }: { label: string }) {
     >
       {label}
     </Text>
-  )
-}
-
-interface ChapterFeatureGridProps {
-  currentChapterTitle?: string
-  onPick: (kind: ChapterFeatureKind) => void
-  // Optional Back affordance. When the grid is opened directly from the
-  // top-bar Sparkle icon there's no "previous view" to return to, so the
-  // host passes undefined and we just hide the Back label.
-  onBack?: () => void
-  // The hub provides its own "This chapter" section label, so it suppresses
-  // the grid's internal chapter-title header to avoid a double heading.
-  hideHeader?: boolean
-  // Plus gating: every chapter tool is gated, so a lock badge is shown on
-  // each tile for free users (the pick itself routes to the upgrade prompt).
-  locked?: boolean
-}
-
-function ChapterFeatureGrid({
-  currentChapterTitle,
-  onPick,
-  onBack,
-  hideHeader,
-  locked,
-}: ChapterFeatureGridProps) {
-  const colors = useColors()
-  return (
-    <View style={{ paddingHorizontal: 12, paddingBottom: 12 }}>
-      {hideHeader ? null : (
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 6,
-            paddingHorizontal: 4,
-          }}
-        >
-          <View style={{ width: 40 }}>
-            {onBack ? (
-              <Pressable onPress={onBack} hitSlop={8}>
-                <Text
-                  style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 13,
-                    color: colors.brandText,
-                  }}
-                >
-                  Back
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-          <Text
-            numberOfLines={1}
-            style={{
-              flex: 1,
-              textAlign: 'center',
-              fontFamily: Fonts.uiMedium,
-              fontSize: 12,
-              color: colors.textTertiary,
-              textTransform: 'uppercase',
-              letterSpacing: 0.6,
-            }}
-          >
-            {currentChapterTitle ?? 'This Chapter'}
-          </Text>
-          <View style={{ width: 40 }} />
-        </View>
-      )}
-      <View
-        style={{
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-        }}
-      >
-        {CHAPTER_FEATURES.map((f) => (
-          <Pressable
-            key={f.id}
-            onPress={() => onPick(f.id)}
-            accessibilityRole="button"
-            accessibilityLabel={locked ? `${f.label}, Plus feature` : f.label}
-            style={{
-              width: '30.5%',
-              alignItems: 'center',
-              paddingVertical: 10,
-              marginBottom: 4,
-              borderRadius: 14,
-            }}
-          >
-            <View
-              style={{
-                width: 38,
-                height: 38,
-                borderRadius: 14,
-                backgroundColor: colors.brandSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 6,
-              }}
-            >
-              <Sparkle color={colors.brandUi} size={18} />
-              {locked ? <LockBadge colors={colors} /> : null}
-            </View>
-            <Text
-              numberOfLines={1}
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 11,
-                color: colors.textSecondary,
-              }}
-            >
-              {/* Keep "Chapter Characters" full so it reads distinctly from the
-                  whole-book "Characters" tile; strip "Chapter " from the rest. */}
-              {f.id === 'characters' ? f.label : f.label.replace(/^Chapter /, '')}
-            </Text>
-          </Pressable>
-        ))}
-      </View>
-    </View>
   )
 }

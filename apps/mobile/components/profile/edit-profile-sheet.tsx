@@ -1,39 +1,17 @@
+import { useChangeUsername, useUpdateMe, useUsernameAvailable } from '@foxing/client'
+import type * as W from '@foxing/types'
 import { useEffect, useState, useCallback } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  ActivityIndicator,
-  Image,
-  Alert,
-} from 'react-native'
+import { View, Text, Pressable, TextInput, ActivityIndicator } from 'react-native'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import {
-  X as XIcon,
-  Check,
-  Camera,
-  Warning,
-} from 'phosphor-react-native'
-import * as DocumentPicker from 'expo-document-picker'
+import { Field, inputStyle } from '@/components/ui/form-field'
+import { X as XIcon, Check, Warning } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { supabase } from '@/lib/supabase'
-
-export interface EditableProfile {
-  id: string
-  display_name: string | null
-  username: string | null
-  avatar_url: string | null
-  bio: string | null
-  favorite_genres: string[] | null
-}
 
 interface Props {
   visible: boolean
-  profile: EditableProfile
+  profile: W.MyProfile
   onClose: () => void
-  onSaved: () => void
 }
 
 const GENRES: Array<{ slug: string; label: string }> = [
@@ -54,115 +32,51 @@ const GENRES: Array<{ slug: string; label: string }> = [
 ]
 
 const BIO_MAX = 160
-const USERNAME_RE = /^[a-z0-9_]{3,20}$/
+const USERNAME_RE = /^[a-z0-9_]{3,30}$/
 
 type UsernameStatus = 'idle' | 'same' | 'invalid' | 'checking' | 'available' | 'taken'
 
-// Exported so the avatar tap on the profile screen can reuse the same flow.
-export async function pickAndUploadAvatar(userId: string): Promise<string | null> {
-  const pick = await DocumentPicker.getDocumentAsync({
-    type: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
-    copyToCacheDirectory: true,
-    multiple: false,
-  })
-  if (pick.canceled) return null
-  const asset = pick.assets?.[0]
-  if (!asset?.uri) return null
-
-  const mime = asset.mimeType || 'image/jpeg'
-  const extFromMime = mime.split('/')[1]?.replace('jpeg', 'jpg') || 'jpg'
-  const path = `${userId}/avatar.${extFromMime}`
-
-  const response = await fetch(asset.uri)
-  const blob = await response.blob()
-
-  const { error: upErr } = await supabase.storage
-    .from('avatars')
-    .upload(path, blob, { upsert: true, contentType: mime })
-  if (upErr) throw upErr
-
-  const { data } = supabase.storage.from('avatars').getPublicUrl(path)
-  // Bust any HTTP cache so the new image actually shows up.
-  const url = `${data.publicUrl}?t=${Date.now()}`
-
-  const { error: profErr } = await supabase
-    .from('profiles')
-    .update({ avatar_url: url, updated_at: new Date().toISOString() })
-    .eq('id', userId)
-  if (profErr) throw profErr
-
-  return url
-}
-
-export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) {
+// Name, username, bio and favorite genres, saved through PATCH /me (and
+// /me/username when the username changed). The profile cache updates at once.
+export function EditProfileSheet({ visible, profile, onClose }: Props) {
   const colors = useColors()
+  const updateMe = useUpdateMe()
+  const changeUsername = useChangeUsername()
 
-  const [displayName, setDisplayName] = useState(profile.display_name ?? '')
-  const [username, setUsername] = useState(profile.username ?? '')
+  const [displayName, setDisplayName] = useState(profile.displayName ?? '')
+  const [username, setUsername] = useState(profile.username)
   const [bio, setBio] = useState(profile.bio ?? '')
-  const [genres, setGenres] = useState<string[]>(profile.favorite_genres ?? [])
-  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url)
-  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('same')
-  const [saving, setSaving] = useState(false)
-  const [uploading, setUploading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [genres, setGenres] = useState<string[]>(profile.favoriteGenres)
+  const saving = updateMe.pending || changeUsername.pending
+  const error = updateMe.error ?? changeUsername.error
 
   // Reset local state whenever the sheet opens with a (possibly new) profile.
   useEffect(() => {
     if (!visible) return
-    setDisplayName(profile.display_name ?? '')
-    setUsername(profile.username ?? '')
+    setDisplayName(profile.displayName ?? '')
+    setUsername(profile.username)
     setBio(profile.bio ?? '')
-    setGenres(profile.favorite_genres ?? [])
-    setAvatarUrl(profile.avatar_url)
-    setUsernameStatus('same')
-    setError(null)
+    setGenres(profile.favoriteGenres)
   }, [visible, profile])
 
-  // Debounced uniqueness check. Only fires when the user actually changed the
-  // username, typing back to the original is "same" not "taken".
-  useEffect(() => {
-    if (!visible) return
-    const initial = profile.username ?? ''
-    if (username === initial) {
-      setUsernameStatus('same')
-      return
-    }
-    if (!USERNAME_RE.test(username)) {
-      setUsernameStatus('invalid')
-      return
-    }
-    setUsernameStatus('checking')
-    const handle = setTimeout(async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', username)
-        .neq('id', profile.id)
-        .maybeSingle()
-      setUsernameStatus(data ? 'taken' : 'available')
-    }, 400)
-    return () => clearTimeout(handle)
-  }, [username, profile.username, profile.id, visible])
+  const changed = username !== profile.username
+  const valid = USERNAME_RE.test(username)
+  const available = useUsernameAvailable(username, visible && changed && valid)
+  const usernameStatus: UsernameStatus = !changed
+    ? 'same'
+    : !valid
+      ? 'invalid'
+      : available === null
+        ? 'checking'
+        : available
+          ? 'available'
+          : 'taken'
 
   const toggleGenre = useCallback((slug: string) => {
     setGenres((prev) =>
       prev.includes(slug) ? prev.filter((g) => g !== slug) : [...prev, slug]
     )
   }, [])
-
-  const handleAvatarUpload = useCallback(async () => {
-    try {
-      setUploading(true)
-      setError(null)
-      const url = await pickAndUploadAvatar(profile.id)
-      if (url) setAvatarUrl(url)
-    } catch (e: any) {
-      setError(e?.message ?? 'Avatar upload failed')
-    } finally {
-      setUploading(false)
-    }
-  }, [profile.id])
 
   const canSave =
     !saving &&
@@ -172,31 +86,19 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
 
   const handleSave = useCallback(async () => {
     if (!canSave) return
-    setSaving(true)
-    setError(null)
-    const { error: err } = await supabase
-      .from('profiles')
-      .update({
-        display_name: displayName.trim(),
-        username: username.trim().toLowerCase(),
-        bio: bio.trim() || null,
-        favorite_genres: genres,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', profile.id)
-    setSaving(false)
-    if (err) {
-      setError(err.message)
-      return
-    }
-    onSaved()
-    onClose()
-  }, [canSave, displayName, username, bio, genres, profile.id, onSaved, onClose])
+    if (changed && !(await changeUsername.run({ username }))) return
+    const ok = await updateMe.run({
+      displayName: displayName.trim(),
+      bio: bio.trim() || null,
+      favoriteGenres: genres,
+    })
+    if (ok !== undefined) onClose()
+  }, [canSave, changed, changeUsername, username, updateMe, displayName, bio, genres, onClose])
 
   const usernameMessage = () => {
     switch (usernameStatus) {
       case 'invalid':
-        return { text: '3 to 20 lowercase letters, numbers, underscores', color: colors.error }
+        return { text: '3 to 30 lowercase letters, numbers, underscores', color: colors.error }
       case 'checking':
         return { text: 'Checking…', color: colors.textTertiary }
       case 'available':
@@ -209,7 +111,6 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
   }
   const msg = usernameMessage()
 
-  const initial = (displayName || username || '?')[0]?.toUpperCase() ?? '?'
 
   return (
     <SheetScaffold
@@ -243,70 +144,6 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
         </View>
       }
     >
-            {/* Avatar */}
-            <View className="items-center mb-6">
-              <Pressable onPress={handleAvatarUpload} disabled={uploading}>
-                <View
-                  style={{
-                    width: 96,
-                    height: 96,
-                    borderRadius: 48,
-                    overflow: 'hidden',
-                    backgroundColor: colors.brandSubtle,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 2,
-                    borderColor: colors.borderSubtle,
-                  }}
-                >
-                  {avatarUrl ? (
-                    <Image source={{ uri: avatarUrl }} style={{ width: '100%', height: '100%' }} />
-                  ) : (
-                    <Text
-                      style={{ fontFamily: Fonts.display, fontSize: 36, color: colors.brandSubtleText }}
-                    >
-                      {initial}
-                    </Text>
-                  )}
-                  {uploading ? (
-                    <View
-                      style={{
-                        position: 'absolute',
-                        inset: 0 as any,
-                        backgroundColor: colors.overlay,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <ActivityIndicator color={colors.textOnBrand} />
-                    </View>
-                  ) : null}
-                </View>
-                <View
-                  style={{
-                    position: 'absolute',
-                    right: -2,
-                    bottom: -2,
-                    width: 32,
-                    height: 32,
-                    borderRadius: 16,
-                    backgroundColor: colors.brandUi,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderWidth: 2,
-                    borderColor: colors.bgElevated,
-                  }}
-                >
-                  <Camera color={colors.textOnBrand} size={16} />
-                </View>
-              </Pressable>
-              <Pressable onPress={handleAvatarUpload} disabled={uploading} hitSlop={8} className="mt-3">
-                <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>
-                  Change photo
-                </Text>
-              </Pressable>
-            </View>
-
             {/* Display name */}
             <Field label="Display name">
               <TextInput
@@ -330,7 +167,7 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
                     placeholderTextColor={colors.textTertiary}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    maxLength={20}
+                    maxLength={30}
                     style={{ ...inputStyle(colors), paddingLeft: 32, paddingRight: 36 }}
                   />
                   <Text
@@ -458,40 +295,4 @@ export function EditProfileSheet({ visible, profile, onClose, onSaved }: Props) 
             ) : null}
     </SheetScaffold>
   )
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  const colors = useColors()
-  return (
-    <View style={{ marginBottom: 16 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 12,
-          color: colors.textTertiary,
-          marginBottom: 6,
-          textTransform: 'uppercase',
-          letterSpacing: 0.5,
-        }}
-      >
-        {label}
-      </Text>
-      {children}
-    </View>
-  )
-}
-
-function inputStyle(colors: ReturnType<typeof useColors>) {
-  return {
-    fontFamily: Fonts.ui,
-    fontSize: 15,
-    color: colors.textPrimary,
-    backgroundColor: colors.bgSurface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    minHeight: 44,
-  } as const
 }

@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useAddListBook, useDeleteList, useListPage, useRemoveListBook, useSearch, useUpdateList } from '@foxing/client'
+import { useState } from 'react'
 import {
   View,
   Text,
@@ -11,7 +12,7 @@ import {
   Modal,
 } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import {
   CaretLeft,
   Plus,
@@ -21,178 +22,78 @@ import {
   MagnifyingGlass,
   PencilSimple,
 } from 'phosphor-react-native'
-import { supabase } from '@/lib/supabase'
-import { pickOne } from '@/lib/pick-one'
+import { authClient } from '@/lib/api'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 import { ListLikeButton } from '@/components/lists/list-like-button'
 
-interface ListInfo {
-  id: string
-  user_id: string
-  title: string
-  description: string | null
-  is_public: boolean
-  like_count: number | null
-}
-
-interface ListBookRow {
-  id: string
-  position: number | null
-  note: string | null
-  book: {
-    id: string
-    title: string
-    author: string
-    cover_url: string | null
-  } | null
-}
-
+// A reading list from GET /lists/:id. Its owner edits, adds and removes books in place;
+// everyone else can like it.
 export default function ListDetailScreen() {
   const colors = useColors()
   const router = useRouter()
   const { id } = useLocalSearchParams<{ id: string }>()
-  const [info, setInfo] = useState<ListInfo | null>(null)
-  const [books, setBooks] = useState<ListBookRow[]>([])
-  const [loading, setLoading] = useState(true)
-  const [userId, setUserId] = useState<string | null>(null)
+  const listQuery = useListPage(id ?? '')
+  const page = listQuery.data
+  const signedIn = Boolean(authClient.useSession().data)
+  const update = useUpdateList()
+  const del = useDeleteList()
+  const addBookTo = useAddListBook()
+  const removeBookFrom = useRemoveListBook()
   const [editing, setEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editPublic, setEditPublic] = useState(false)
   const [adding, setAdding] = useState(false)
   const [bookQuery, setBookQuery] = useState('')
-  const [bookResults, setBookResults] = useState<
-    Array<{ id: string; title: string; author: string; cover_url: string | null }>
-  >([])
+  const search = useSearch(bookQuery.trim().length >= 2 ? bookQuery : '')
+  const bookResults = (search.data?.books ?? []).slice(0, 10)
+  const info = page?.list ?? null
+  const books = page?.books ?? []
+  const loading = listQuery.isPending
 
-  const load = useCallback(async () => {
-    if (!id) return
-    setLoading(true)
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    setUserId(user?.id ?? null)
-    const { data: listData } = await supabase
-      .from('reading_lists')
-      .select('id, user_id, title, description, is_public, like_count')
-      .eq('id', id)
-      .maybeSingle()
-    if (!listData) {
-      setLoading(false)
-      return
-    }
-    const list = listData as ListInfo
-    setInfo(list)
-    setEditTitle(list.title)
-    setEditDescription(list.description ?? '')
-    setEditPublic(list.is_public)
-
-    const { data: bookData } = await supabase
-      .from('reading_list_books')
-      .select(
-        'id, position, note, book:book_id(id, title, author, cover_url)',
-      )
-      .eq('list_id', id)
-      .order('position', { ascending: true, nullsFirst: false })
-    const raw = ((bookData ?? []) as unknown) as Array<Record<string, unknown>>
-    setBooks(
-      raw.map((r) => ({
-        id: String(r.id),
-        position: (r.position as number | null) ?? null,
-        note: (r.note as string | null) ?? null,
-        book: pickOne(r.book),
-      })),
-    )
-    setLoading(false)
-  }, [id])
-
-  useFocusEffect(
-    useCallback(() => {
-      void load()
-    }, [load]),
-  )
-  useEffect(() => {
-    void load()
-  }, [load])
-
-  const searchBooks = useCallback(async (q: string) => {
-    if (q.trim().length < 2) {
-      setBookResults([])
-      return
-    }
-    const { data } = await supabase
-      .from('books')
-      .select('id, title, author, cover_url')
-      .ilike('title', `%${q.trim()}%`)
-      .limit(10)
-    setBookResults(
-      ((data ?? []) as Array<{
-        id: string
-        title: string
-        author: string
-        cover_url: string | null
-      }>),
-    )
-  }, [])
-
-  useEffect(() => {
-    const t = setTimeout(() => void searchBooks(bookQuery), 250)
-    return () => clearTimeout(t)
-  }, [bookQuery, searchBooks])
+  function startEditing() {
+    if (!info) return
+    setEditTitle(info.title)
+    setEditDescription(info.description ?? '')
+    setEditPublic(info.isPublic)
+    setEditing(true)
+  }
 
   async function addBook(bookId: string) {
     if (!info) return
-    const { error } = await supabase
-      .from('reading_list_books')
-      .insert({
-        list_id: info.id,
-        book_id: bookId,
-        position: books.length,
-      })
-    if (error) {
-      Alert.alert('Could not add', error.message)
+    if (!(await addBookTo.run({ listId: info.id, bookId }))) {
+      Alert.alert('Could not add the book', 'Check your connection and try again.')
       return
     }
     setBookQuery('')
-    setBookResults([])
     setAdding(false)
-    void load()
   }
 
-  async function removeBook(rowId: string) {
+  function removeBook(bookId: string) {
+    if (!info) return
     Alert.alert('Remove book?', 'It stays in your library.', [
       { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          await supabase.from('reading_list_books').delete().eq('id', rowId)
-          setBooks((prev) => prev.filter((b) => b.id !== rowId))
-        },
-      },
+      { text: 'Remove', style: 'destructive', onPress: () => removeBookFrom.fire({ listId: info.id, bookId }) },
     ])
   }
 
   async function saveEdit() {
     if (!info) return
-    const { error } = await supabase
-      .from('reading_lists')
-      .update({
-        title: editTitle.trim().slice(0, 80) || info.title,
-        description: editDescription.trim() || null,
-        is_public: editPublic,
-      })
-      .eq('id', info.id)
-    if (error) {
-      Alert.alert('Could not save', error.message)
+    const saved = await update.run({
+      id: info.id,
+      title: editTitle.trim().slice(0, 80) || info.title,
+      description: editDescription.trim() || null,
+      isPublic: editPublic,
+    })
+    if (!saved) {
+      Alert.alert('Could not save', 'Check your connection and try again.')
       return
     }
     setEditing(false)
-    void load()
   }
 
-  async function deleteList() {
+  function deleteList() {
     if (!info) return
     Alert.alert('Delete list?', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
@@ -200,8 +101,7 @@ export default function ListDetailScreen() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
-          await supabase.from('reading_lists').delete().eq('id', info.id)
-          router.back()
+          if (await del.run({ id: info.id })) router.back()
         },
       },
     ])
@@ -231,7 +131,7 @@ export default function ListDetailScreen() {
     )
   }
 
-  const isOwn = info.user_id === userId
+  const isOwn = page?.isOwner ?? false
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -253,18 +153,16 @@ export default function ListDetailScreen() {
         </Text>
         {isOwn ? (
           <Pressable
-            onPress={() => setEditing(true)}
+            onPress={startEditing}
+            accessibilityRole="button"
+            accessibilityLabel="Edit list"
             hitSlop={10}
             className="p-2"
           >
             <PencilSimple color={colors.textSecondary} size={20} />
           </Pressable>
         ) : (
-          <ListLikeButton
-            listId={info.id}
-            initialCount={info.like_count ?? 0}
-            ownerId={info.user_id}
-          />
+          <ListLikeButton listId={info.id} liked={page?.liked ?? false} count={page?.likeCount ?? 0} canLike={signedIn} />
         )}
       </View>
 
@@ -293,11 +191,11 @@ export default function ListDetailScreen() {
             }}
           >
             {books.length} book{books.length === 1 ? '' : 's'}
-            {info.is_public && (info.like_count ?? 0) > 0
-              ? ` · ${info.like_count} like${info.like_count === 1 ? '' : 's'}`
+            {info.isPublic && (page?.likeCount ?? 0) > 0
+              ? ` · ${page?.likeCount} like${page?.likeCount === 1 ? '' : 's'}`
               : ''}
           </Text>
-          {info.is_public ? (
+          {info.isPublic ? (
             <Eye color={colors.info} size={14} />
           ) : (
             <EyeSlash color={colors.textTertiary} size={14} />
@@ -325,12 +223,12 @@ export default function ListDetailScreen() {
 
         {books.map((b) => (
           <View
-            key={b.id}
+            key={b.bookId}
             className="flex-row p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
             <Pressable
               onPress={() => {
-                if (b.book?.id) router.push(`/book/${b.book.id}` as never)
+                if (b.book) router.push(`/book/${b.book.slug}` as never)
               }}
               style={{
                 width: 48,
@@ -340,9 +238,9 @@ export default function ListDetailScreen() {
                 backgroundColor: colors.bgSunken,
               }}
             >
-              {b.book?.cover_url ? (
+              {b.book?.coverUrl ? (
                 <Image
-                  source={{ uri: b.book.cover_url }}
+                  source={{ uri: b.book.coverUrl }}
                   style={{ width: '100%', height: '100%' }}
                 />
               ) : null}
@@ -385,7 +283,7 @@ export default function ListDetailScreen() {
             </View>
             {isOwn ? (
               <Pressable
-                onPress={() => removeBook(b.id)}
+                onPress={() => removeBook(b.bookId)}
                 hitSlop={10}
                 style={{ padding: 4 }}
               >
@@ -480,9 +378,9 @@ export default function ListDetailScreen() {
                     backgroundColor: colors.bgSunken,
                   }}
                 >
-                  {b.cover_url ? (
+                  {b.coverUrl ? (
                     <Image
-                      source={{ uri: b.cover_url }}
+                      source={{ uri: b.coverUrl }}
                       style={{ width: '100%', height: '100%' }}
                     />
                   ) : null}

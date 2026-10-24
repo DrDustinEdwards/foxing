@@ -1,24 +1,23 @@
+import { useSetBookStatus } from '@foxing/client'
+import type * as W from '@foxing/types'
 import { useColors } from '@/constants/colors'
 import { useCallback, useEffect, useState } from 'react'
-import { findBookFromUrl } from '@/lib/library-import'
-import { supabase } from '@/lib/supabase'
+import { api } from '@/lib/api'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native'
 import { Fonts } from '@/constants/fonts'
-import { Compass, LinkSimple, UploadSimple } from 'phosphor-react-native'
+import { Compass, LinkSimple } from 'phosphor-react-native'
 
 export function AddBookSheet({
   visible,
   onClose,
   onBrowse,
-  onImportEpub,
   onMatch,
 }: {
   visible: boolean
   onClose: () => void
   onBrowse: () => void
-  onImportEpub: () => void
-  onMatch: (bookId: string) => void
+  onMatch: (slug: string) => void
 }) {
   const colors = useColors()
   // Two-step sheet: 'choose' shows the three actions; 'url' swaps in a text
@@ -28,6 +27,7 @@ export function AddBookSheet({
   const [url, setUrl] = useState('')
   const [lookupBusy, setLookupBusy] = useState(false)
   const [lookupError, setLookupError] = useState<string | null>(null)
+  const setStatus = useSetBookStatus()
 
   useEffect(() => {
     if (!visible) {
@@ -46,27 +46,23 @@ export function AddBookSheet({
     setLookupBusy(true)
     setLookupError(null)
     try {
-      const match = await findBookFromUrl(trimmed)
+      const title = titleFromBookUrl(trimmed)
+      const match = title
+        ? (await api.get<W.SearchPage>(`/search?q=${encodeURIComponent(title)}`)).books[0]
+        : undefined
       if (!match) {
         setLookupError("This book isn't in the Foxing catalog yet.")
         return
       }
-      // Add to Want to Read for the signed-in user, then hand off to the
-      // book detail page so the user can decide to start reading.
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await supabase.from('user_books').upsert(
-          { user_id: user.id, book_id: match.id, status: 'want_to_read' },
-          { onConflict: 'user_id,book_id' },
-        )
-      }
-      onMatch(match.id)
+      // Add it to Want to Read, then open its page so the reader can start it.
+      setStatus.fire({ bookId: match.id, status: 'want', book: match })
+      onMatch(match.slug)
     } catch (e) {
       setLookupError(e instanceof Error ? e.message : 'Lookup failed.')
     } finally {
       setLookupBusy(false)
     }
-  }, [lookupBusy, onMatch, url])
+  }, [lookupBusy, onMatch, setStatus, url])
 
   return (
     <SheetScaffold
@@ -98,16 +94,9 @@ export function AddBookSheet({
                 onPress={onBrowse}
               />
               <AddOption
-                Icon={UploadSimple}
-                label="Import a book"
-                subtitle="Sideload an EPUB file from your device"
-                onPress={onImportEpub}
-                topBorder
-              />
-              <AddOption
                 Icon={LinkSimple}
                 label="Add from URL"
-                subtitle="Paste a Gutenberg, Standard Ebooks, Goodreads, or Open Library link"
+                subtitle="Paste a Standard Ebooks, Goodreads or Open Library link"
                 onPress={() => setMode('url')}
                 topBorder
               />
@@ -231,4 +220,21 @@ function AddOption({
       </View>
     </Pressable>
   )
+}
+
+// The book's title from a Standard Ebooks (/ebooks/{author}/{title}), Open Library
+// (/works/OL...W/{Title}) or Goodreads (/book/show/{id}.{Title}) link,
+// for a catalog search.
+function titleFromBookUrl(input: string): string | null {
+  let parsed: URL
+  try {
+    parsed = new URL(input)
+  } catch {
+    return null
+  }
+  const host = parsed.hostname.replace(/^www\./, '').toLowerCase()
+  let slug = parsed.pathname.split('/').filter(Boolean).pop() ?? ''
+  if (host.endsWith('goodreads.com')) slug = slug.replace(/^\d+[._-]/, '')
+  const title = slug.replace(/\.html?$/i, '').replace(/[._-]+/g, ' ').trim()
+  return title && !/^\d+$/.test(title) ? title : null
 }

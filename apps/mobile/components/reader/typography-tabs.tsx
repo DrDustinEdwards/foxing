@@ -288,14 +288,6 @@ export function CanvasTab({
         )}
       </Section>
 
-      <Section label="AI Word Wise">
-        <ToggleRow
-          value={prefs.wordWiseEnabled}
-          onValueChange={(v) => set('wordWiseEnabled', v)}
-          label="Show difficult-word hints inline"
-        />
-      </Section>
-
       <Section label="Popular highlights">
         <ToggleRow
           value={prefs.popularHighlightsEnabled}

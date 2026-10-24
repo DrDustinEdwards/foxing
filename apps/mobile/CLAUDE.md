@@ -1,7 +1,7 @@
 # Mobile App Rules
 
-Expo React Native reader. Expo SDK 56, New Architecture enabled,
-RN 0.85.3. Reader runs react-native-readium 5.0.0-rc.17.
+Expo React Native reader. Expo SDK 57, New Architecture enabled,
+RN 0.86.3. Reader runs react-native-readium 5.0.0-rc.17.
 
 ## Styling
 
@@ -23,12 +23,16 @@ inside `SheetScaffold` (its `KeyboardAwareScrollView` is the only scroller; pass
 
 ## Data layer
 
-All AI calls go through the `ai-companion` Supabase Edge Function. Never
-call the Anthropic API directly from the app -- the API key lives in the
-Edge Function's Supabase vault, not the bundle.
+Every read and write goes through the Worker's `/api/v1` with the shared
+`@foxing/client` hooks (TanStack Query), the same ones the web app uses; `lib/api.ts`
+is the one connection (Better Auth's Expo client, the query client, the offline sync
+queue). Writes patch the cache optimistically. Reader writes that must survive being
+offline (progress, sessions, highlights, words, library status) go through
+`queueWrite` and `/api/v1/sync`. A screen with no API behind it is removed, not stubbed.
 
-Custom hooks for all data fetching. No `fetch` or Supabase queries inside
-render bodies.
+All AI goes through `/api/v1/companion` (`useCompanion`). Never call the Anthropic API
+from the app; the key stays on the server. `supabase/` is the retired Edge Function
+source, kept for reference; nothing in the app calls it.
 
 ## Builds
 

@@ -1,11 +1,9 @@
 import { useColors } from '@/constants/colors'
-import { Pressable, Text, View } from 'react-native'
+import { Pressable, Text } from 'react-native'
 import { Fonts } from '@/constants/fonts'
-import type { UserBookStatus } from '@/lib/library'
+import type * as W from '@foxing/types'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { STATUS_SHELVES } from '@/components/library/library-types'
-import { useEffect, useState } from 'react'
-import { Star } from 'phosphor-react-native'
 
 export function BulkActionButton({
   Icon,
@@ -54,7 +52,7 @@ export function BulkShelfPicker({
 }: {
   visible: boolean
   onClose: () => void
-  onPick: (status: UserBookStatus) => void | Promise<void>
+  onPick: (status: W.ShelfStatus) => void | Promise<void>
 }) {
   const colors = useColors()
   return (
@@ -96,88 +94,6 @@ export function BulkShelfPicker({
               </Text>
             </Pressable>
           ))}
-    </SheetScaffold>
-  )
-}
-
-export function BulkRatePicker({
-  visible,
-  onClose,
-  onPick,
-}: {
-  visible: boolean
-  onClose: () => void
-  onPick: (rating: number) => void | Promise<void>
-}) {
-  const colors = useColors()
-  const [draft, setDraft] = useState(0)
-  useEffect(() => {
-    if (visible) setDraft(0)
-  }, [visible])
-  return (
-    <SheetScaffold
-      visible={visible}
-      onClose={onClose}
-      variant="bottom"
-      scroll={false}
-      contentContainerStyle={{ paddingHorizontal: 20 }}
-      header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: 'uppercase',
-            letterSpacing: 0.6,
-            marginBottom: 10,
-            paddingHorizontal: 20,
-          }}
-        >
-          Rate selected books
-        </Text>
-      }
-      footer={
-        <View className="flex-row justify-end" style={{ gap: 10 }}>
-          <Pressable onPress={onClose} className="px-4 py-2">
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
-              Cancel
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => onPick(draft)}
-            disabled={draft === 0}
-            className="px-4 py-2 rounded-full"
-            style={{
-              backgroundColor: draft > 0 ? colors.brandUi : colors.bgDisabled,
-            }}
-          >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-              Apply
-            </Text>
-          </Pressable>
-        </View>
-      }
-    >
-          <View className="flex-row justify-center" style={{ gap: 6, marginBottom: 16 }}>
-            {[1, 2, 3, 4, 5].map((n) => {
-              const filled = n <= draft
-              return (
-                <Pressable
-                  key={n}
-                  onPress={() => setDraft(n === draft ? 0 : n)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Rate ${n} ${n === 1 ? 'star' : 'stars'}`}
-                  hitSlop={6}
-                >
-                  <Star
-                    color={filled ? colors.brandSecondary : colors.textTertiary}
-                    weight={filled ? 'fill' : 'regular'}
-                    size={32}
-                  />
-                </Pressable>
-              )
-            })}
-          </View>
     </SheetScaffold>
   )
 }

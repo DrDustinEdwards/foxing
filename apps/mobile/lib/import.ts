@@ -1,235 +1,146 @@
-// CSV importers for shelf services. Each importer takes a picked CSV file
-// URI plus the signed-in user's id, parses the CSV, fuzz-matches each row
-// against the books table by title+author, and upserts a user_books row for
-// every match. Returns { imported, skipped } so the caller can show a result.
-//
-// Goodreads importer lives inline in app/settings/index.tsx (predates this
-// module). New importers go here and follow the same return shape.
+// Goodreads and StoryGraph CSV imports, and the catalog matcher the barcode scanner shares. Each row is matched against the Foxing catalog
+// through /search and lands as an offline user_book write (status, finish date, the
+// reader's review as private notes), so a long import survives a dropped connection.
+import type * as W from '@foxing/types'
+import { api, syncNow } from '@/lib/api'
+import { enqueue } from '@/lib/sync-queue'
 
-import * as FileSystem from 'expo-file-system/legacy'
-import { supabase } from '@/lib/supabase'
+export type ImportSource = 'Goodreads' | 'StoryGraph'
 
 export interface ImportResult {
   imported: number
   skipped: number
 }
 
-interface NormalizedRow {
+interface ImportRow {
   title: string
   author: string
-  rating: number
-  dateRead: string
-  shelves: string[]
+  status: W.ShelfStatus
+  finishedAt: number | null
   notes: string
 }
 
-// Tolerant RFC 4180-ish CSV parser. Handles quoted fields with embedded
-// commas, escaped double-quotes (""), and \r\n line endings. Kept here so
-// each importer has a single canonical parser.
-export function parseCsv(text: string): string[][] {
+// Tolerant RFC 4180 parser: quoted fields with embedded commas, line breaks and "".
+// Review columns routinely hold all three, so a naive split breaks.
+function parseCsv(text: string): string[][] {
   const out: string[][] = []
   let row: string[] = []
   let field = ''
-  let i = 0
   let inQuotes = false
-  while (i < text.length) {
+  for (let i = 0; i < text.length; i++) {
     const ch = text[i]
     if (inQuotes) {
       if (ch === '"' && text[i + 1] === '"') {
         field += '"'
-        i += 2
-        continue
-      }
-      if (ch === '"') {
-        inQuotes = false
-        i += 1
-        continue
-      }
-      field += ch
-      i += 1
-      continue
-    }
-    if (ch === '"') {
-      inQuotes = true
-      i += 1
-      continue
-    }
-    if (ch === ',') {
+        i++
+      } else if (ch === '"') inQuotes = false
+      else field += ch
+    } else if (ch === '"') inQuotes = true
+    else if (ch === ',') {
       row.push(field)
       field = ''
-      i += 1
-      continue
-    }
-    if (ch === '\n' || ch === '\r') {
+    } else if (ch === '\n' || ch === '\r') {
       row.push(field)
-      field = ''
       out.push(row)
       row = []
-      if (ch === '\r' && text[i + 1] === '\n') i += 2
-      else i += 1
-      continue
-    }
-    field += ch
-    i += 1
+      field = ''
+      if (ch === '\r' && text[i + 1] === '\n') i++
+    } else field += ch
   }
-  if (field.length > 0 || row.length > 0) {
+  if (field || row.length) {
     row.push(field)
     out.push(row)
   }
   return out
 }
 
-// Postgrest ilike treats _ and % as wildcards. Escape user-supplied search
-// terms so a title with these chars matches literally.
-export function escapeIlike(s: string): string {
-  return s.replace(/([%_\\])/g, '\\$1')
+// "Last, First & Other" to "First Last": the catalog stores one display author.
+function normalizeAuthor(raw: string): string {
+  const first = raw.split(/\s*[&;]\s*/)[0]?.trim() ?? ''
+  const [last, rest] = first.split(',').map((s) => s.trim())
+  return first.includes(',') && last && rest ? `${rest} ${last}` : first
 }
 
-// "Last, First" → "First Last". Handles "Last, First & Other, First" by
-// taking the first author only, our books table is single-author. Falls
-// through for already-normal "First Last" input and "Mononym" inputs.
-export function normalizeAuthor(raw: string): string {
-  const first = raw.split(/\s*&\s*|\s*;\s*/)[0]?.trim() ?? ''
-  if (!first) return ''
-  if (first.includes(',')) {
-    const [last, rest] = first.split(',').map((s) => s.trim())
-    if (last && rest) return `${rest} ${last}`
-  }
-  return first
-}
-
-function mapShelfToStatus(shelf: string): 'reading' | 'want_to_read' | 'finished' | 'abandoned' {
+function toStatus(shelf: string): W.ShelfStatus {
   const s = shelf.toLowerCase().trim()
-  if (s === 'read' || s === 'finished' || s === 'completed') return 'finished'
-  if (s === 'currently-reading' || s === 'reading' || s === 'currently reading') return 'reading'
-  if (s === 'abandoned' || s === 'did-not-finish' || s === 'dnf' || s === 'did not finish') return 'abandoned'
-  return 'want_to_read'
+  if (['read', 'finished', 'completed'].includes(s)) return 'finished'
+  if (['currently-reading', 'currently reading', 'reading'].includes(s)) return 'reading'
+  if (['did-not-finish', 'did not finish', 'dnf', 'abandoned'].includes(s)) return 'abandoned'
+  if (s === 'paused') return 'paused'
+  return 'want'
 }
 
-// Match-and-upsert loop shared by Calibre + StoryGraph importers. The match
-// strategy is ilike-on-title-and-author, same as the Goodreads importer
-// already in settings. We also forward any optional notes/tags via separate
-// best-effort calls so they don't block the basic shelf assignment.
-async function processRows(userId: string, rows: NormalizedRow[]): Promise<ImportResult> {
-  let imported = 0
-  let skipped = 0
-  for (const r of rows) {
-    if (!r.title) {
-      skipped += 1
-      continue
-    }
-    let q = supabase
-      .from('books')
-      .select('id')
-      .ilike('title', `%${escapeIlike(r.title)}%`)
-      .limit(1)
-    if (r.author) q = q.ilike('author', `%${escapeIlike(r.author)}%`)
-    const { data: match } = await q
-    const bookId = ((match ?? [])[0] as { id?: string } | undefined)?.id
-    if (!bookId) {
-      skipped += 1
-      continue
-    }
-    // Default to 'finished' when a date_read is present, otherwise treat
-    // the import as a want-to-read entry (Calibre rarely tracks status
-    // explicitly). Shelves can override when StoryGraph supplies them.
-    const status = r.shelves.length > 0
-      ? mapShelfToStatus(r.shelves[0])
-      : (r.dateRead ? 'finished' : 'want_to_read')
-    const finishedIso = r.dateRead ? new Date(r.dateRead).toISOString() : null
-    const { error } = await supabase.from('user_books').upsert(
-      {
-        user_id: userId,
-        book_id: bookId,
+function toTime(date: string): number | null {
+  const t = date ? Date.parse(date.replace(/\//g, '-')) : Number.NaN
+  return Number.isFinite(t) ? t : null
+}
+
+/** The two exports name their columns differently; this reads either. */
+function readRows(text: string, source: ImportSource): ImportRow[] {
+  const [header, ...rows] = parseCsv(text)
+  if (!header) return []
+  const names = header.map((h) => h.trim().toLowerCase())
+  const col = (...options: string[]) => options.map((o) => names.indexOf(o)).find((i) => i >= 0) ?? -1
+  const goodreads = source === 'Goodreads'
+  const title = col('title')
+  const author = goodreads ? col('author') : col('authors')
+  const shelf = goodreads ? col('exclusive shelf') : col('read status', 'shelves')
+  const date = goodreads ? col('date read') : col('last date read', 'date read')
+  const review = goodreads ? col('my review') : col('review')
+  const cell = (cols: string[], i: number) => (i >= 0 ? (cols[i] ?? '').trim() : '')
+  return rows
+    .filter((cols) => cell(cols, title))
+    .map((cols) => {
+      const status = toStatus(cell(cols, shelf).split(/[|,]/)[0] ?? '')
+      return {
+        title: cell(cols, title),
+        author: normalizeAuthor(cell(cols, author)),
         status,
-        rating: r.rating > 0 ? r.rating : null,
-        finished_at: status === 'finished' ? finishedIso : null,
-        started_at: status === 'reading' ? (finishedIso ?? new Date().toISOString()) : null,
-      },
-      { onConflict: 'user_id,book_id' },
-    )
-    if (error) {
-      console.warn('[import] upsert failed:', error.message)
-      skipped += 1
-      continue
-    }
-    imported += 1
-    // Best-effort: review/notes column. user_books has a `review` column;
-    // we land Calibre `comments` there if no public review exists yet.
-    if (r.notes && r.notes.trim()) {
-      try {
-        await supabase
-          .from('user_books')
-          .update({ review: r.notes.trim().slice(0, 2000) })
-          .eq('user_id', userId)
-          .eq('book_id', bookId)
-          .is('review', null)
-      } catch { /* column shape may differ, silent */ }
-    }
-    // Best-effort: tags / shelves. Optional table user_book_tags, if it
-    // doesn't exist the insert fails and we just skip the tags side-effect.
-    if (r.shelves.length > 0) {
-      try {
-        const rows = r.shelves.slice(0, 8).map((tag) => ({
-          user_id: userId,
-          book_id: bookId,
-          tag: tag.toLowerCase().trim(),
-        }))
-        await supabase.from('user_book_tags').upsert(rows, {
-          onConflict: 'user_id,book_id,tag',
-          ignoreDuplicates: true,
-        })
-      } catch { /* table optional */ }
-    }
-  }
-  return { imported, skipped }
+        finishedAt: status === 'finished' ? toTime(cell(cols, date)) : null,
+        notes: cell(cols, review),
+      }
+    })
 }
 
-// ── StoryGraph ───────────────────────────────────────────────────────────
-// Standard StoryGraph export: Title, Authors, My Rating, Date Read, Shelves,
-// Review. Rating is already 0..5 (half-star granularity). Shelves are
-// pipe- or comma-separated free text.
-export async function importFromStoryGraph(fileUri: string, userId: string): Promise<ImportResult> {
-  const csv = await FileSystem.readAsStringAsync(fileUri, {
-    encoding: FileSystem.EncodingType.UTF8,
-  })
-  const rows = parseCsv(csv)
-  if (rows.length < 2) return { imported: 0, skipped: 0 }
-  const header = rows[0].map((h) => h.trim().toLowerCase())
-  const col = (name: string) => header.indexOf(name)
-  const titleIdx = col('title')
-  const authorsIdx = col('authors')
-  const ratingIdx = col('star rating') >= 0 ? col('star rating') : col('my rating')
-  const dateIdx = col('last date read') >= 0 ? col('last date read') : col('date read')
-  const shelvesIdx = col('read status') >= 0 ? col('read status') : col('shelves')
-  const reviewIdx = col('review')
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 
-  const normalized: NormalizedRow[] = []
-  for (let r = 1; r < rows.length; r++) {
-    const cols = rows[r]
-    if (cols.length === 0) continue
-    const title = (titleIdx >= 0 ? cols[titleIdx] ?? '' : '').trim()
-    if (!title) continue
-    const authorsRaw = (authorsIdx >= 0 ? cols[authorsIdx] ?? '' : '').trim()
-    const ratingRaw = ratingIdx >= 0 ? cols[ratingIdx] ?? '' : ''
-    const ratingNum = parseFloat(ratingRaw)
-    const rating = Number.isFinite(ratingNum)
-      ? Math.max(0, Math.min(5, Math.round(ratingNum)))
-      : 0
-    const dateRead = (dateIdx >= 0 ? cols[dateIdx] ?? '' : '').trim()
-    const shelvesRaw = (shelvesIdx >= 0 ? cols[shelvesIdx] ?? '' : '').trim()
-    const shelves = shelvesRaw
-      ? shelvesRaw.split(/[|,]/).map((s) => s.trim()).filter(Boolean)
-      : []
-    const notes = (reviewIdx >= 0 ? cols[reviewIdx] ?? '' : '').trim()
-    normalized.push({
-      title,
-      author: normalizeAuthor(authorsRaw),
-      rating,
-      dateRead,
-      shelves,
-      notes,
-    })
+/** The catalog book with this title (series suffixes aside) and a shared author surname. */
+export async function findCatalogBook(rawTitle: string, author: string | null): Promise<W.BookCard | null> {
+  // Goodreads titles carry the series in brackets: "Dune (Dune, #1)".
+  const title = norm(rawTitle.replace(/\s*\([^)]*#\d+[^)]*\)\s*$/, ''))
+  const surname = norm(author ?? '').split(' ').pop() ?? ''
+  const page = await api.get<W.SearchPage>(`/search?q=${encodeURIComponent(`${title} ${surname}`.trim())}`)
+  return (
+    page.books.find((b) => norm(b.title).startsWith(title) && (!surname || norm(b.author).includes(surname))) ??
+    null
+  )
+}
+
+export async function importCsv(
+  text: string,
+  source: ImportSource,
+  onProgress?: (done: number, total: number) => void,
+): Promise<ImportResult> {
+  const rows = readRows(text, source)
+  let imported = 0
+  for (const [i, row] of rows.entries()) {
+    const bookId = (await findCatalogBook(row.title, row.author).catch(() => null))?.id
+    if (bookId) {
+      await enqueue({
+        resource: 'user_book',
+        verb: 'update',
+        payload: {
+          bookId,
+          status: row.status,
+          ...(row.finishedAt ? { finishedAt: row.finishedAt } : {}),
+          ...(row.notes ? { personalNotes: row.notes.slice(0, 2000) } : {}),
+        },
+      })
+      imported++
+    }
+    onProgress?.(i + 1, rows.length)
   }
-  return processRows(userId, normalized)
+  // One push for the whole import rather than one per book.
+  void syncNow()
+  return { imported, skipped: rows.length - imported }
 }

@@ -1,37 +1,33 @@
-import type { ClubPost } from '@/lib/clubs'
+import type * as W from '@foxing/types'
 import { useColors } from '@/constants/colors'
 import { Image, Pressable, Text, View } from 'react-native'
 import { Fonts } from '@/constants/fonts'
-import { relativeTime } from '@/lib/feed'
+import { relativeTime } from '@/lib/relative-time'
 import { ChatCircleDots, Eye, EyeSlash } from 'phosphor-react-native'
-
-const REACTION_EMOJI = ['👍', '❤️', '🤔', '😂']
 
 export function PostCard({
   post,
   nested,
   revealed,
-  viewerId,
+  canReply,
   onToggleReveal,
-  onReact,
   onReply,
   onOpenAuthor,
   onLongPress,
 }: {
-  post: ClubPost
+  post: W.ClubPostItem
   nested?: boolean
   revealed: boolean
-  viewerId: string | null
+  canReply: boolean
   onToggleReveal: () => void
-  onReact: (emoji: string) => void
   onReply?: () => void
-  onOpenAuthor: (id: string) => void
+  onOpenAuthor: (username: string) => void
   onLongPress?: () => void
 }) {
   const colors = useColors()
-  const name = post.author?.display_name ?? post.author?.username ?? 'Reader'
+  const name = post.author?.displayName ?? post.author?.username ?? 'Reader'
   const initial = (name || '?')[0]?.toUpperCase() ?? '?'
-  const hidden = post.has_spoiler && !revealed
+  const hidden = post.hasSpoiler && !revealed
 
   return (
     <Pressable
@@ -40,7 +36,7 @@ export function PostCard({
       className="flex-row p-3 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
       style={{ opacity: nested ? 0.98 : 1 }}
     >
-      <Pressable onPress={() => onOpenAuthor(post.author_id)} hitSlop={4}>
+      <Pressable onPress={() => post.author && onOpenAuthor(post.author.username)} hitSlop={4}>
         <View
           style={{
             width: nested ? 32 : 36,
@@ -53,9 +49,9 @@ export function PostCard({
             marginRight: 10,
           }}
         >
-          {post.author?.avatar_url ? (
+          {post.author?.avatarUrl ? (
             <Image
-              source={{ uri: post.author.avatar_url }}
+              source={{ uri: post.author.avatarUrl }}
               style={{ width: '100%', height: '100%' }}
             />
           ) : (
@@ -74,7 +70,7 @@ export function PostCard({
       <View style={{ flex: 1 }}>
         <View className="flex-row items-center" style={{ marginBottom: 2 }}>
           <Text
-            onPress={() => onOpenAuthor(post.author_id)}
+            onPress={() => post.author && onOpenAuthor(post.author.username)}
             style={{
               fontFamily: Fonts.uiMedium,
               fontSize: 13,
@@ -86,7 +82,8 @@ export function PostCard({
             {name}
           </Text>
           <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
-            {relativeTime(post.created_at)}
+            {relativeTime(post.createdAt)}
+            {post.isEdited ? ' · edited' : ''}
           </Text>
         </View>
 
@@ -124,7 +121,7 @@ export function PostCard({
             >
               {post.content}
             </Text>
-            {post.has_spoiler ? (
+            {post.hasSpoiler ? (
               <Pressable
                 onPress={onToggleReveal}
                 className="flex-row items-center gap-1 mt-2"
@@ -138,43 +135,12 @@ export function PostCard({
           </>
         )}
 
-        {/* Reaction row */}
         <View className="flex-row items-center mt-3 gap-1 flex-wrap">
-          {REACTION_EMOJI.map((emoji) => {
-            const group = post.reactions?.find((g) => g.emoji === emoji)
-            const reacted = !!group?.viewerReacted
-            return (
-              <Pressable
-                key={emoji}
-                onPress={() => onReact(emoji)}
-                disabled={!viewerId}
-                className="flex-row items-center gap-1 px-2 py-1 rounded-full border"
-                style={{
-                  borderColor: reacted ? colors.borderBrand : colors.borderSubtle,
-                  backgroundColor: reacted ? colors.bgSelected : 'transparent',
-                  opacity: viewerId ? 1 : 0.5,
-                }}
-              >
-                <Text style={{ fontSize: 14 }}>{emoji}</Text>
-                {group && group.count > 0 ? (
-                  <Text
-                    style={{
-                      fontFamily: Fonts.mono,
-                      fontSize: 11,
-                      color: reacted ? colors.brandText : colors.textTertiary,
-                    }}
-                  >
-                    {group.count}
-                  </Text>
-                ) : null}
-              </Pressable>
-            )
-          })}
-          {onReply && viewerId && !nested ? (
+          {onReply && canReply && !nested ? (
             <Pressable
               onPress={onReply}
               className="flex-row items-center gap-1 px-2 py-1 rounded-full border"
-              style={{ borderColor: colors.borderSubtle, marginLeft: 4 }}
+              style={{ borderColor: colors.borderSubtle }}
             >
               <ChatCircleDots color={colors.textTertiary} size={12} />
               <Text

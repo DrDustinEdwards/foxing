@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback } from 'react'
+import { errorMessage, useBookAnnotations } from '@foxing/client'
+import { useState, useCallback } from 'react'
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Share } from 'react-native'
 import { X as XIcon, Export } from 'phosphor-react-native'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { supabase } from '@/lib/supabase'
+import { encodeLocator } from '@/components/reader/readium-helpers'
 import { HIGHLIGHT_COLORS, type HighlightColor } from '@/components/reader/floating-pill'
 import {
   exportAsCsv,
@@ -20,7 +21,6 @@ interface HighlightRow {
   color: HighlightColor | string
   note: string | null
   chapter: string | null
-  created_at: string
 }
 
 interface HighlightsSheetProps {
@@ -45,9 +45,20 @@ export function HighlightsSheet({
   onClose,
 }: HighlightsSheetProps) {
   const colors = useColors()
-  const [rows, setRows] = useState<HighlightRow[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const layers = useBookAnnotations(bookId)
+  const loading = layers.isPending
+  const error = errorMessage(layers.error)
+  const rows: HighlightRow[] = (layers.data?.mine ?? [])
+    .filter((m) => (m.type === 'highlight' || m.type === 'note') && m.locator)
+    .map((m) => ({
+      id: m.id,
+      cfi: encodeLocator(m.locator!),
+      text: m.selectedText ?? '',
+      color: m.color ?? '',
+      note: m.body,
+      chapter: m.chapter,
+    }))
+    .reverse()
   const [filterColor, setFilterColor] = useState<HighlightColor | null>(null)
   const [formatPickerOpen, setFormatPickerOpen] = useState(false)
 
@@ -64,28 +75,6 @@ export function HighlightsSheet({
     }
   }, [colors])
 
-  useEffect(() => {
-    if (!visible) return
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    ;(async () => {
-      const { data, error: err } = await supabase
-        .from('highlights')
-        .select('id, cfi, text, color, note, chapter, created_at')
-        .eq('book_id', bookId)
-        .order('created_at', { ascending: false })
-      if (cancelled) return
-      if (err) {
-        setError(err.message)
-      } else {
-        setRows((data ?? []) as HighlightRow[])
-      }
-      setLoading(false)
-    })()
-    return () => { cancelled = true }
-  }, [visible, bookId])
-
   const filtered = filterColor ? rows.filter((r) => r.color === filterColor) : rows
 
   // Export uses the visible-filtered set so users can pull a single color's
@@ -98,7 +87,6 @@ export function HighlightsSheet({
         note: h.note,
         color: h.color ?? null,
         chapter: h.chapter,
-        created_at: h.created_at,
       }))
       let body: string
       if (format === 'csv') body = exportAsCsv(payload, bookTitle, bookAuthor)

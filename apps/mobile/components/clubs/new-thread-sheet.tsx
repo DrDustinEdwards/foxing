@@ -1,3 +1,4 @@
+import { useCreateThread } from '@foxing/client'
 import { useCallback, useEffect, useState } from 'react'
 import {
   View,
@@ -11,7 +12,6 @@ import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { X as XIcon } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { createThread } from '@/lib/club-threads'
 
 export function NewThreadSheet({
   visible,
@@ -31,7 +31,8 @@ export function NewThreadSheet({
   const [opening, setOpening] = useState('')
   const [chapter, setChapter] = useState(defaultChapter)
   const [hasSpoilers, setHasSpoilers] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const createThread = useCreateThread()
+  const busy = createThread.pending
 
   useEffect(() => {
     if (visible) {
@@ -39,23 +40,21 @@ export function NewThreadSheet({
       setOpening('')
       setChapter(defaultChapter)
       setHasSpoilers(false)
-      setBusy(false)
+      createThread.reset()
     }
-  }, [visible, defaultChapter])
+  }, [visible, defaultChapter, createThread.reset])
 
   const post = useCallback(async () => {
     if (!title.trim() || busy) return
-    setBusy(true)
-    const t = await createThread({
+    const res = await createThread.run({
       clubId,
       title: title.trim(),
-      chapter: chapter.trim() || null,
-      openingPost: opening.trim() || undefined,
+      chapter: chapter.trim() || undefined,
+      body: opening.trim() || undefined,
       hasSpoilers,
     })
-    setBusy(false)
-    if (t) onPosted(t.id)
-  }, [busy, chapter, clubId, hasSpoilers, onPosted, opening, title])
+    if (res) onPosted(res.thread.id)
+  }, [busy, chapter, clubId, createThread, hasSpoilers, onPosted, opening, title])
 
   return (
     <SheetScaffold
@@ -74,7 +73,12 @@ export function NewThreadSheet({
         </View>
       }
       footer={
-        <View className="flex-row items-center justify-end">
+        <View className="flex-row items-center justify-end" style={{ gap: 12 }}>
+          {createThread.error ? (
+            <Text style={{ flex: 1, fontFamily: Fonts.ui, fontSize: 12, color: colors.error }}>
+              {createThread.error}
+            </Text>
+          ) : null}
           <Pressable
             onPress={post}
             disabled={!title.trim() || busy}

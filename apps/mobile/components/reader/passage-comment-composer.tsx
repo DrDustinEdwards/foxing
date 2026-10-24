@@ -2,7 +2,7 @@ import { View, Text, TextInput, Pressable, ActivityIndicator, Switch } from 'rea
 import { PaperPlaneRight } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { type PassageComment } from '@/lib/passage-comments'
+import type * as W from '@foxing/types'
 
 export function PassageCommentComposer({
   body,
@@ -21,7 +21,7 @@ export function PassageCommentComposer({
   onChangeHasSpoilers: (value: boolean) => void
   posting: boolean
   canPost: boolean
-  replyTo: PassageComment | null
+  replyTo: W.ResolvedComment | null
   onCancelReply: () => void
   onSend: () => void
 }) {
@@ -43,7 +43,7 @@ export function PassageCommentComposer({
             }}
             numberOfLines={1}
           >
-            Replying to {replyTo.author?.display_name ?? replyTo.author?.username ?? 'reader'}
+            Replying to {replyTo.author.displayName ?? replyTo.author.username ?? 'reader'}
           </Text>
           <Pressable onPress={onCancelReply} hitSlop={8}>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}>

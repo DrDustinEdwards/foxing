@@ -9,18 +9,18 @@ import {
 } from 'react-native'
 import { X as XIcon, CaretRight, CaretLeft, Star, StarHalf } from 'phosphor-react-native'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import { supabase } from '@/lib/supabase'
-import { reportWriteError } from '@/lib/db-write'
+import { useCreateDiaryEntry } from '@foxing/client'
+import { queueWrite } from '@/lib/api'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-// Post-finish review metadata sheet, two pages per task.md Section H2.
-// Page 1 is rating + review; Page 2 collects optional mood/pacing/format
-// tags. Skip is always available on Page 2.
+// Post-finish review sheet, two pages. Page 1 is rating + review, saved as a
+// diary entry; Page 2 collects optional mood tags for the book on the shelf.
+// Skip is always available on Page 2.
 
 interface FinishReviewSheetProps {
   visible: boolean
-  userBookId: string
+  bookId: string
   bookTitle: string
   onClose: () => void
   onSaved?: () => void
@@ -40,25 +40,9 @@ const MOOD_CHIPS = [
 ] as const
 
 type Mood = (typeof MOOD_CHIPS)[number]
-type Pacing = 'slow' | 'medium' | 'fast'
-type Format = 'print' | 'audio' | 'ebook' | 'unknown'
-
-const PACING_OPTIONS: Array<{ id: Pacing; label: string }> = [
-  { id: 'slow', label: 'Slow' },
-  { id: 'medium', label: 'Medium' },
-  { id: 'fast', label: 'Fast' },
-]
-
-const FORMAT_OPTIONS: Array<{ id: Format; label: string }> = [
-  { id: 'print', label: 'Print' },
-  { id: 'audio', label: 'Audio' },
-  { id: 'ebook', label: 'Ebook' },
-  { id: 'unknown', label: 'Unknown' },
-]
-
 export function FinishReviewSheet({
   visible,
-  userBookId,
+  bookId,
   bookTitle,
   onClose,
   onSaved,
@@ -70,9 +54,8 @@ export function FinishReviewSheet({
   const [longForm, setLongForm] = useState(false)
   const [isPublic, setIsPublic] = useState(true)
   const [moods, setMoods] = useState<Set<Mood>>(new Set())
-  const [pacing, setPacing] = useState<Pacing | null>(null)
-  const [format, setFormat] = useState<Format | null>(null)
-  const [saving, setSaving] = useState(false)
+  const diary = useCreateDiaryEntry()
+  const saving = diary.pending
 
   useEffect(() => {
     if (!visible) return
@@ -82,47 +65,23 @@ export function FinishReviewSheet({
     setLongForm(false)
     setIsPublic(true)
     setMoods(new Set())
-    setPacing(null)
-    setFormat(null)
-    setSaving(false)
   }, [visible])
 
+  // Rating is 0..5 in half steps; the diary stores half stars, 1..10.
   const savePage1 = useCallback(async () => {
-    setSaving(true)
-    const ratingInt = rating === 0 ? null : Math.max(0, Math.min(5, Math.round(rating)))
-    const ratingHalf = rating === 0 ? null : rating
-    const { error } = await supabase
-      .from('user_books')
-      .update({
-        rating: ratingInt,
-        rating_half: ratingHalf,
-        review: review.trim() || null,
-        review_is_public: isPublic,
-      })
-      .eq('id', userBookId)
-    reportWriteError(error, { op: 'update', table: 'user_books', extra: { stage: 'review' } })
-    setSaving(false)
-  }, [isPublic, rating, review, userBookId])
+    if (rating === 0 && !review.trim()) return
+    await diary.run({
+      bookId,
+      ratingHalf: rating === 0 ? null : Math.round(rating * 2),
+      review: review.trim() || null,
+      visibility: isPublic ? 'public' : 'private',
+    })
+  }, [bookId, diary, isPublic, rating, review])
 
   const savePage2 = useCallback(async () => {
-    setSaving(true)
-    // Best-effort, these columns may not exist on older deployments. The
-    // update call returns an error in that case but doesn't surface it.
-    try {
-      const { error } = await supabase
-        .from('user_books')
-        .update({
-          mood_tags: moods.size > 0 ? [...moods] : null,
-          pacing: pacing ?? null,
-          format_read: format ?? null,
-        })
-        .eq('id', userBookId)
-      reportWriteError(error, { op: 'update', table: 'user_books', extra: { stage: 'review_meta' } })
-    } catch (e) {
-      console.warn('[finish-review] page 2 save failed:', e instanceof Error ? e.message : e)
-    }
-    setSaving(false)
-  }, [format, moods, pacing, userBookId])
+    if (moods.size === 0) return
+    await queueWrite({ resource: 'user_book', verb: 'update', payload: { bookId, moodTags: [...moods] } })
+  }, [bookId, moods])
 
   const onNext = useCallback(async () => {
     await savePage1()
@@ -364,71 +323,6 @@ export function FinishReviewSheet({
               })}
             </View>
 
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textTertiary, marginTop: 22, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-              Pace?
-            </Text>
-            <View className="flex-row" style={{ gap: 6 }}>
-              {PACING_OPTIONS.map((o) => {
-                const active = pacing === o.id
-                return (
-                  <Pressable
-                    key={o.id}
-                    onPress={() => setPacing(active ? null : o.id)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={`Pace ${o.label}`}
-                    className="flex-1 items-center py-2 rounded-full border"
-                    style={{
-                      backgroundColor: active ? colors.bgSelected : colors.bgSurface,
-                      borderColor: active ? colors.borderBrand : colors.borderSubtle,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 13,
-                        color: active ? colors.brandText : colors.textSecondary,
-                      }}
-                    >
-                      {o.label}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
-
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textTertiary, marginTop: 22, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-              Format you read?
-            </Text>
-            <View className="flex-row flex-wrap" style={{ gap: 6 }}>
-              {FORMAT_OPTIONS.map((o) => {
-                const active = format === o.id
-                return (
-                  <Pressable
-                    key={o.id}
-                    onPress={() => setFormat(active ? null : o.id)}
-                    accessibilityRole="radio"
-                    accessibilityState={{ selected: active }}
-                    accessibilityLabel={`Format ${o.label}`}
-                    className="px-4 py-2 rounded-full border"
-                    style={{
-                      backgroundColor: active ? colors.bgSelected : colors.bgSurface,
-                      borderColor: active ? colors.borderBrand : colors.borderSubtle,
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: Fonts.uiMedium,
-                        fontSize: 13,
-                        color: active ? colors.brandText : colors.textSecondary,
-                      }}
-                    >
-                      {o.label}
-                    </Text>
-                  </Pressable>
-                )
-              })}
-            </View>
           </>
         )}
     </SheetScaffold>

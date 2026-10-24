@@ -27,8 +27,6 @@ interface TypographySheetProps {
   // Book context, used by the Language tab for difficulty + Anki export.
   // Optional so non-reader callers can omit (the Language tab gates on it).
   bookId?: string
-  bookTitle?: string
-  bookAuthor?: string
   // Tablet layout, when true the sheet docks to the right edge as a 360-wide
   // side panel instead of sliding up from the bottom. Same content, different
   // wrapper. Caller decides based on useWindowDimensions().
@@ -42,8 +40,6 @@ export function TypographySheet({
   prefs,
   userId,
   bookId,
-  bookTitle,
-  bookAuthor,
   sidePanel = false,
   onChangePrefs,
   onClose,
@@ -198,10 +194,7 @@ export function TypographySheet({
               <LanguageTab
                 prefs={prefs}
                 set={set}
-                userId={userId}
                 bookId={bookId}
-                bookTitle={bookTitle}
-                bookAuthor={bookAuthor}
               />
             )}
           </ScrollView>

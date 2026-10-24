@@ -12,7 +12,7 @@ import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { X as XIcon, Trash, BookmarkSimple, ListBullets, NavigationArrow, MapPin } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import { deleteBookmark, listBookmarks, type BookmarkRow } from '@/lib/bookmarks'
+import { type BookmarkRow, useBookmarks, useReaderWrites } from '@/lib/reader-data'
 import type { PositionEntry } from '@/lib/position-history'
 
 type Tab = 'contents' | 'location' | 'places'
@@ -59,8 +59,8 @@ export function GoToSheet({
   const [tab, setTab] = useState<Tab>('contents')
   const [toc, setToc] = useState<TocItem[]>([])
   const [tocLoading, setTocLoading] = useState(false)
-  const [bookmarks, setBookmarks] = useState<BookmarkRow[]>([])
-  const [bookmarksLoading, setBookmarksLoading] = useState(false)
+  const { bookmarks, loading: bookmarksLoading } = useBookmarks(bookId)
+  const writes = useReaderWrites(bookId)
   const [percent, setPercent] = useState<string>('0')
   const [history, setHistory] = useState<PositionEntry[]>([])
 
@@ -73,16 +73,12 @@ export function GoToSheet({
       .then((items) => setToc(items))
       .catch(() => setToc([]))
       .finally(() => setTocLoading(false))
-    setBookmarksLoading(true)
-    listBookmarks(bookId)
-      .then(setBookmarks)
-      .finally(() => setBookmarksLoading(false))
     if (loadHistory) {
       loadHistory().then(setHistory).catch(() => setHistory([]))
     } else {
       setHistory([])
     }
-  }, [visible, bookId, currentProgress, loadToc, loadHistory])
+  }, [visible, currentProgress, loadToc, loadHistory])
 
   const onGoToPercent = useCallback(() => {
     const n = parseFloat(percent)
@@ -99,14 +95,11 @@ export function GoToSheet({
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: async () => {
-            const ok = await deleteBookmark(b.id)
-            if (ok) setBookmarks((prev) => prev.filter((x) => x.id !== b.id))
-          },
+          onPress: () => writes.removeAnnotation(b.id),
         },
       ])
     },
-    [],
+    [writes],
   )
 
   return (

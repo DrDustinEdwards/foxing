@@ -11,8 +11,8 @@ interface PeriodGoalCardProps {
   row: { target: number } | null
   finished: number
   saving: boolean
-  onSave: () => Promise<void>
-  onRemove: () => Promise<void>
+  onSave: () => void
+  onRemove: () => void
   max: number
   colors: ReturnType<typeof useColors>
 }

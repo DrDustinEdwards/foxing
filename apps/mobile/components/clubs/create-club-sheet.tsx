@@ -1,3 +1,5 @@
+import { useCreateClub, useSearch } from '@foxing/client'
+import type * as W from '@foxing/types'
 import { useCallback, useEffect, useState } from 'react'
 import {
   View,
@@ -12,14 +14,21 @@ import { X as XIcon, CaretLeft, CaretRight, Check, BookOpen } from 'phosphor-rea
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
-import {
-  type ClubBook,
-  type ClubPace,
-  type Club,
-  PACE_OPTIONS,
-  createClub,
-  searchBooks,
-} from '@/lib/clubs'
+
+type ClubPace = 'chill' | 'steady' | 'fast'
+
+const PACE_OPTIONS: Array<{ id: ClubPace; label: string; subtitle: string }> = [
+  { id: 'chill', label: 'Chill', subtitle: 'A chapter a week, no pressure.' },
+  { id: 'steady', label: 'Steady', subtitle: 'Two-to-three chapters a week.' },
+  { id: 'fast', label: 'Fast', subtitle: 'Daily reading, fast turnaround.' },
+]
+
+interface CreatedClub {
+  id: string
+  slug: string | null
+  name: string
+  isPublic: boolean
+}
 
 type Step = 'basics' | 'book' | 'pace' | 'invite'
 const STEP_ORDER: Step[] = ['basics', 'book', 'pace', 'invite']
@@ -28,7 +37,7 @@ interface DraftState {
   name: string
   description: string
   isPublic: boolean
-  book: ClubBook | null
+  book: W.BookCard | null
   pace: ClubPace
 }
 
@@ -43,16 +52,17 @@ const EMPTY_DRAFT: DraftState = {
 interface CreateClubSheetProps {
   visible: boolean
   onClose: () => void
-  onCreated?: (club: Club) => void
+  onCreated?: (clubId: string) => void
 }
 
 export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheetProps) {
   const colors = useColors()
   const [step, setStep] = useState<Step>('basics')
   const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT)
-  const [submitting, setSubmitting] = useState(false)
-  const [created, setCreated] = useState<Club | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const createClub = useCreateClub()
+  const submitting = createClub.pending
+  const [created, setCreated] = useState<CreatedClub | null>(null)
+  const error = createClub.error ? "Couldn't create the club. Try again." : null
 
   // Reset state every time the sheet (re)opens, a previous half-finished
   // draft shouldn't leak into a brand-new flow.
@@ -60,11 +70,10 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
     if (visible) {
       setStep('basics')
       setDraft(EMPTY_DRAFT)
-      setSubmitting(false)
       setCreated(null)
-      setError(null)
+      createClub.reset()
     }
-  }, [visible])
+  }, [visible, createClub.reset])
 
   const idx = STEP_ORDER.indexOf(step)
   const isLast = step === 'invite'
@@ -75,31 +84,26 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
     if (step === 'pace') {
       // Commit on transition into the Invite step so the user lands on the
       // "created" confirmation with the real club row in hand.
-      setSubmitting(true)
-      setError(null)
-      const club = await createClub({
+      const res = await createClub.run({
         name: draft.name.trim(),
-        description: draft.description.trim() || null,
-        current_book_id: draft.book?.id ?? null,
-        pace: draft.pace,
-        is_public: draft.isPublic,
+        description: draft.description.trim() || undefined,
+        currentBookId: draft.book?.id,
+        readingPace: draft.pace,
+        visibility: draft.isPublic ? 'public' : 'private',
       })
-      setSubmitting(false)
-      if (!club) {
-        setError("Couldn't create the club. Check your schema/RLS and try again.")
-        return
-      }
+      if (!res) return
+      const club = { ...res.club, name: draft.name.trim(), isPublic: draft.isPublic }
       setCreated(club)
       setStep('invite')
       return
     }
     if (isLast) {
-      if (created) onCreated?.(created)
+      if (created) onCreated?.(created.id)
       onClose()
       return
     }
     setStep(STEP_ORDER[idx + 1])
-  }, [created, draft, idx, isLast, onClose, onCreated, step])
+  }, [createClub, created, draft, idx, isLast, onClose, onCreated, step])
 
   const goBack = useCallback(() => {
     if (idx === 0) {
@@ -290,23 +294,15 @@ function BookStep({
 }) {
   const colors = useColors()
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<ClubBook[]>([])
-  const [busy, setBusy] = useState(false)
-
+  const [term, setTerm] = useState('')
   // Lightweight debounce, search after the user pauses typing.
   useEffect(() => {
-    const t = setTimeout(async () => {
-      if (query.trim().length < 2) {
-        setResults([])
-        return
-      }
-      setBusy(true)
-      const rows = await searchBooks(query)
-      setBusy(false)
-      setResults(rows)
-    }, 300)
+    const t = setTimeout(() => setTerm(query.trim().length >= 2 ? query.trim() : ''), 300)
     return () => clearTimeout(t)
   }, [query])
+  const search = useSearch(term)
+  const busy = term.length > 0 && search.isFetching
+  const results = term ? (search.data?.books ?? []).slice(0, 10) : []
 
   return (
     <View>
@@ -396,7 +392,7 @@ function BookStep({
   )
 }
 
-function BookCover({ book }: { book: ClubBook }) {
+function BookCover({ book }: { book: W.BookCard }) {
   const colors = useColors()
   return (
     <View
@@ -408,8 +404,8 @@ function BookCover({ book }: { book: ClubBook }) {
         backgroundColor: colors.bgSunken,
       }}
     >
-      {book.cover_url ? (
-        <Image source={{ uri: book.cover_url }} style={{ width: '100%', height: '100%' }} />
+      {book.coverUrl ? (
+        <Image source={{ uri: book.coverUrl }} style={{ width: '100%', height: '100%' }} />
       ) : (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <BookOpen color={colors.textTertiary} size={16} />
@@ -471,7 +467,7 @@ function PaceStep({
 
 // ── Invite ──────────────────────────────────────────────────────────────
 
-function InviteStep({ club }: { club: Club | null }) {
+function InviteStep({ club }: { club: CreatedClub | null }) {
   const colors = useColors()
   if (!club) {
     return (
@@ -485,7 +481,7 @@ function InviteStep({ club }: { club: Club | null }) {
     <View>
       <StepTitle>You're in</StepTitle>
       <StepHint>
-        {club.name} is live. {club.is_public ? 'Anyone can find and join.' : 'Share the link to invite readers.'}
+        {club.name} is live. {club.isPublic ? 'Anyone can find and join.' : 'Share the link to invite readers.'}
       </StepHint>
 
       <View
@@ -503,7 +499,7 @@ function InviteStep({ club }: { club: Club | null }) {
             marginTop: 6,
           }}
         >
-          foxing://clubs/{club.id}
+          https://foxing.app/clubs/{club.slug ?? club.id}
         </Text>
       </View>
     </View>

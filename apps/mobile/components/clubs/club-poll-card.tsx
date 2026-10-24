@@ -1,30 +1,11 @@
-import { View, Text, Pressable, Image } from 'react-native'
+import type * as W from '@foxing/types'
+import { View, Text, Pressable } from 'react-native'
 import { ChartBar } from 'phosphor-react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
 
-interface PollOption {
-  id: string
-  label: string
-  book_id: string | null
-  position: number | null
-  book: { title: string; cover_url: string | null } | null
-  vote_count: number
-}
-
-interface PollRow {
-  id: string
-  title: string
-  description: string | null
-  poll_type: string
-  closes_at: string | null
-  is_closed: boolean
-  options: PollOption[]
-  user_vote: string | null
-}
-
-function formatMeetingTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-US', {
+function formatMeetingTime(at: number): string {
+  return new Date(at).toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -36,12 +17,14 @@ export function ClubPollCard({
   p,
   onVote,
 }: {
-  p: PollRow
+  p: W.ClubPollItem
   onVote: (pollId: string, optionId: string) => void
 }) {
   const colors = useColors()
-  const total = p.options.reduce((sum, o) => sum + o.vote_count, 0)
-  const hasVoted = p.user_vote !== null
+  // Tallies count first preferences, so a ranked poll shows where it stands now.
+  const total = p.voteCount
+  const myChoice = p.myVote?.[0] ?? null
+  const hasVoted = myChoice !== null || p.isClosed
   return (
     <View
       className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
@@ -78,14 +61,17 @@ export function ClubPollCard({
       </View>
       <View style={{ marginTop: 10 }}>
         {p.options.map((o) => {
-          const pct = total > 0 ? Math.round((o.vote_count / total) * 100) : 0
-          const voted = p.user_vote === o.id
+          const votes = p.tallies[o.id] ?? 0
+          const pct = total > 0 ? Math.round((votes / total) * 100) : 0
+          const voted = myChoice === o.id
           return (
             <Pressable
               key={o.id}
               onPress={() => {
-                if (!hasVoted) void onVote(p.id, o.id)
+                if (!p.isClosed) onVote(p.id, o.id)
               }}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: voted, disabled: p.isClosed }}
               style={{
                 paddingHorizontal: 10,
                 paddingVertical: 8,
@@ -100,24 +86,6 @@ export function ClubPollCard({
                 className="flex-row items-center"
                 style={{ gap: 8 }}
               >
-                {o.book ? (
-                  <View
-                    style={{
-                      width: 26,
-                      height: 38,
-                      borderRadius: 3,
-                      overflow: 'hidden',
-                      backgroundColor: colors.bgSunken,
-                    }}
-                  >
-                    {o.book.cover_url ? (
-                      <Image
-                        source={{ uri: o.book.cover_url }}
-                        style={{ width: '100%', height: '100%' }}
-                      />
-                    ) : null}
-                  </View>
-                ) : null}
                 <Text
                   style={{
                     flex: 1,
@@ -127,7 +95,7 @@ export function ClubPollCard({
                   }}
                   numberOfLines={2}
                 >
-                  {o.book?.title ?? o.label}
+                  {o.label}
                 </Text>
                 {hasVoted ? (
                   <Text
@@ -137,7 +105,7 @@ export function ClubPollCard({
                       color: voted ? colors.brandSubtleText : colors.textTertiary,
                     }}
                   >
-                    {pct}% · {o.vote_count}
+                    {pct}% · {votes}
                   </Text>
                 ) : null}
               </View>
@@ -173,7 +141,7 @@ export function ClubPollCard({
         }}
       >
         {total} vote{total === 1 ? '' : 's'}
-        {p.closes_at ? ` · closes ${formatMeetingTime(p.closes_at)}` : ''}
+        {p.isClosed ? ' · closed' : p.closesAt ? ` · closes ${formatMeetingTime(p.closesAt)}` : ''}
       </Text>
     </View>
   )

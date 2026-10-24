@@ -38,7 +38,6 @@ export interface ReaderPrefs {
   rulerEnabled: boolean
   rulerColor: RulerColor
   rulerStyle: RulerStyle
-  wordWiseEnabled: boolean
   popularHighlightsEnabled: boolean
   pageAnim: PageAnim
   // Phase D additions, canvas/comfort toggles
@@ -47,9 +46,7 @@ export interface ReaderPrefs {
   autoScroll: boolean
   autoScrollWpm: number
   // Phase I, language learning
-  bilingualMode: boolean
   targetLanguage: string
-  grammarMode: boolean
 }
 
 export const DEFAULT_PREFS: ReaderPrefs = {
@@ -69,16 +66,13 @@ export const DEFAULT_PREFS: ReaderPrefs = {
   rulerEnabled: false,
   rulerColor: 'amber',
   rulerStyle: 'highlight',
-  wordWiseEnabled: false,
   popularHighlightsEnabled: false,
   pageAnim: 'slide',
   warmScreen: false,
   focusMode: false,
   autoScroll: false,
   autoScrollWpm: 220,
-  bilingualMode: false,
   targetLanguage: 'Spanish',
-  grammarMode: false,
 }
 
 export const LETTER_SPACING_EM: Record<LetterSpacingStep, number> = {
