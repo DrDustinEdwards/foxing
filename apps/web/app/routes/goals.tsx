@@ -6,6 +6,7 @@ import { createDb, libraryRepo } from "@foxing/core";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
+import { GoalPeriodSelect, useCreateGoal } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -317,43 +318,7 @@ function GoalItem({
 }
 
 function CreateGoal({ onChanged }: { onChanged: () => void }) {
-  const [target, setTarget] = useState(12);
-  const [period, setPeriod] = useState<"year" | "month" | "week">("year");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function add() {
-    setPending(true);
-    setError(null);
-    try {
-      const now = new Date();
-      const body: {
-        type: string;
-        target: number;
-        periodType: string;
-        year: number;
-        month?: number;
-        week?: number;
-      } = { type: "books", target, periodType: period, year: now.getFullYear() };
-      if (period === "month") body.month = now.getMonth() + 1;
-      if (period === "week") body.week = isoWeek(now);
-      const res = await fetch("/api/v1/goals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      // Do not swallow: a failed write must be visible, not a silent no-op.
-      if (!res.ok) {
-        setError("Could not save your goal. Try again.");
-        return;
-      }
-      onChanged();
-    } catch {
-      setError("Could not save your goal. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
-  }
+  const { target, setTarget, period, setPeriod, pending, error, add } = useCreateGoal(onChanged);
 
   return (
     <section className="card">
@@ -370,18 +335,7 @@ function CreateGoal({ onChanged }: { onChanged: () => void }) {
           />
         </label>
         <span className="ui">books</span>
-        <label className="sans small">
-          <span className="cap-sr-only">Goal period</span>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as "year" | "month" | "week")}
-            className="cap-select"
-          >
-            <option value="year">this year</option>
-            <option value="month">this month</option>
-            <option value="week">this week</option>
-          </select>
-        </label>
+        <GoalPeriodSelect value={period} onChange={setPeriod} />
         <button
           type="button"
           onClick={add}

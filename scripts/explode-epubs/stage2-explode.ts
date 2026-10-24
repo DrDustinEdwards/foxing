@@ -2,17 +2,17 @@
 // under reader/<slug>/. Idempotent (skips a book whose manifest.json already
 // exists in R2 unless --force). Mirrors the epub migrate script's S3 pattern.
 //
-//   pnpm tsx scripts/explode-epubs/stage2-explode.ts            # full run -> R2
-//   pnpm tsx scripts/explode-epubs/stage2-explode.ts --local    # write to out/ only
-//   pnpm tsx scripts/explode-epubs/stage2-explode.ts --slug slocum --local
-//   pnpm tsx scripts/explode-epubs/stage2-explode.ts --limit 20 --force
+//   node scripts/explode-epubs/stage2-explode.ts            # full run -> R2
+//   node scripts/explode-epubs/stage2-explode.ts --local    # write to out/ only
+//   node scripts/explode-epubs/stage2-explode.ts --slug slocum --local
+//   node scripts/explode-epubs/stage2-explode.ts --limit 20 --force
 //
 // R2 creds (S3 API) come from env: R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
-import { explodeEpub } from "./lib";
+import { explodeEpub } from "./lib.ts";
 
 const R2_ACCOUNT_ID = "f852925ce701e6c56f6feae83f0eb2d3";
 const R2_BUCKET = "foxing-epubs";

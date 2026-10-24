@@ -1,7 +1,7 @@
 // Stage 1: list readable catalog books (slug + epub_url) from D1 into
 // reports/work.json. Readable = source_type='catalog' AND epub_url present.
 // Uses wrangler d1 execute --remote --json (same auth as the import pipeline).
-// Run: pnpm tsx scripts/explode-epubs/stage1-list.ts
+// Run: node scripts/explode-epubs/stage1-list.ts
 import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";

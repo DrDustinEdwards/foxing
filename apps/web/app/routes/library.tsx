@@ -7,11 +7,12 @@ import { useState } from "react";
 import { Link, redirect, useRevalidator } from "react-router";
 import { BookStatusControl, type ShelfStatus } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
+import { GoalPeriodSelect, useCreateGoal } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { goalPeriodLabel, isoWeek } from "~/lib/goals";
+import { goalPeriodLabel } from "~/lib/goals";
 import type { GoalRow, Shelf, Streak } from "~/lib/library.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
@@ -171,43 +172,17 @@ function StreakCard({ streak }: { streak: Streak | null }) {
 }
 
 function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => void }) {
-  const [target, setTarget] = useState(12);
-  const [period, setPeriod] = useState<"year" | "month" | "week">("year");
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    target,
+    setTarget,
+    period,
+    setPeriod,
+    pending,
+    error,
+    setError,
+    add: addGoal,
+  } = useCreateGoal(onChanged);
 
-  async function addGoal() {
-    setPending(true);
-    setError(null);
-    try {
-      const now = new Date();
-      const body: {
-        type: string;
-        target: number;
-        periodType: string;
-        year: number;
-        month?: number;
-        week?: number;
-      } = { type: "books", target, periodType: period, year: now.getFullYear() };
-      if (period === "month") body.month = now.getMonth() + 1;
-      if (period === "week") body.week = isoWeek(now);
-      const res = await fetch("/api/v1/goals", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
-      // Do not swallow: a failed write must be visible, not a silent no-op.
-      if (!res.ok) {
-        setError("Could not save your goal. Try again.");
-        return;
-      }
-      onChanged();
-    } catch {
-      setError("Could not save your goal. Check your connection and try again.");
-    } finally {
-      setPending(false);
-    }
-  }
   async function del(id: string) {
     setError(null);
     try {
@@ -268,18 +243,7 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
             className="cap-input fx-library-input"
           />
         </label>
-        <label className="sans small">
-          <span className="cap-sr-only">Goal period</span>
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value as "year" | "month" | "week")}
-            className="cap-select"
-          >
-            <option value="year">this year</option>
-            <option value="month">this month</option>
-            <option value="week">this week</option>
-          </select>
-        </label>
+        <GoalPeriodSelect value={period} onChange={setPeriod} />
         <button
           type="button"
           onClick={addGoal}

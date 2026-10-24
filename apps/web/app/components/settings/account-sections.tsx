@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Card, inputClass } from "./settings-card";
+import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient } from "~/lib/auth-client";
 import { Link } from "react-router";
 
@@ -83,21 +83,14 @@ export function ProfileSection({
             className={inputClass}
           />
         </label>
-        <div className="row">
-          <button type="submit" disabled={pending} className="cap-btn">
-            {pending ? "Saving..." : "Save profile"}
-          </button>
-          {status === "saved" ? (
-            <span className="meta" role="status">
-              Saved.
-            </span>
-          ) : null}
-        </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <SubmitRow
+          disabled={pending}
+          pending={pending}
+          label="Save profile"
+          pendingLabel="Saving..."
+          done={status === "saved" ? "Saved." : null}
+          error={error}
+        />
       </form>
     </Card>
   );
@@ -194,25 +187,14 @@ export function UsernameSection({ initial }: { initial: string }) {
             ) : null}
           </span>
         </label>
-        <div className="row">
-          <button
-            type="submit"
-            disabled={!(changed && avail === "available") || pending}
-            className="cap-btn"
-          >
-            {pending ? "Saving..." : "Change username"}
-          </button>
-          {status === "saved" ? (
-            <span className="meta" role="status">
-              Saved.
-            </span>
-          ) : null}
-        </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <SubmitRow
+          disabled={!(changed && avail === "available") || pending}
+          pending={pending}
+          label="Change username"
+          pendingLabel="Saving..."
+          done={status === "saved" ? "Saved." : null}
+          error={error}
+        />
       </form>
     </Card>
   );
@@ -265,21 +247,14 @@ export function EmailSection({ initial }: { initial: string }) {
             className={inputClass}
           />
         </label>
-        <div className="row">
-          <button type="submit" disabled={pending || email.trim().length === 0} className="cap-btn">
-            {pending ? "Sending..." : "Change email"}
-          </button>
-          {status === "sent" ? (
-            <span className="meta" role="status">
-              Check your inbox to confirm.
-            </span>
-          ) : null}
-        </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <SubmitRow
+          disabled={pending || email.trim().length === 0}
+          pending={pending}
+          label="Change email"
+          pendingLabel="Sending..."
+          done={status === "sent" ? "Check your inbox to confirm." : null}
+          error={error}
+        />
       </form>
     </Card>
   );
@@ -380,25 +355,14 @@ export function PasswordSection() {
             </span>
           ) : null}
         </label>
-        <div className="row">
-          <button
-            type="submit"
-            disabled={pending || mismatch || next.length === 0}
-            className="cap-btn"
-          >
-            {pending ? "Changing..." : "Change password"}
-          </button>
-          {status === "changed" ? (
-            <span className="meta" role="status">
-              Password changed.
-            </span>
-          ) : null}
-        </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <SubmitRow
+          disabled={pending || mismatch || next.length === 0}
+          pending={pending}
+          label="Change password"
+          pendingLabel="Changing..."
+          done={status === "changed" ? "Password changed." : null}
+          error={error}
+        />
       </form>
     </Card>
   );

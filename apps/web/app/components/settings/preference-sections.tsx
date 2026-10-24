@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, inputClass, ToggleRow } from "./settings-card";
+import { Card, inputClass, SubmitRow, ToggleRow } from "./settings-card";
 import { ThemeSwitch } from "capsomer/react/theme-switch";
 import { THEME_PREF_KEY } from "~/components/page-shell";
 import { Link } from "react-router";
@@ -149,21 +149,14 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
             it.
           </span>
         </label>
-        <div className="row">
-          <button type="submit" disabled={pending} className="cap-btn">
-            {pending ? "Saving..." : "Save visibility"}
-          </button>
-          {status === "saved" ? (
-            <span className="meta" role="status">
-              Saved.
-            </span>
-          ) : null}
-        </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <SubmitRow
+          disabled={pending}
+          pending={pending}
+          label="Save visibility"
+          pendingLabel="Saving..."
+          done={status === "saved" ? "Saved." : null}
+          error={error}
+        />
       </form>
     </Card>
   );
@@ -269,21 +262,14 @@ export function NotificationsSection({
             </label>
           </div>
         ) : null}
-        <div className="row">
-          <button type="submit" disabled={pending} className="cap-btn">
-            {pending ? "Saving..." : "Save notifications"}
-          </button>
-          {status === "saved" ? (
-            <span className="meta" role="status">
-              Saved.
-            </span>
-          ) : null}
-        </div>
-        {error ? (
-          <p className="error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        <SubmitRow
+          disabled={pending}
+          pending={pending}
+          label="Save notifications"
+          pendingLabel="Saving..."
+          done={status === "saved" ? "Saved." : null}
+          error={error}
+        />
       </form>
     </Card>
   );
