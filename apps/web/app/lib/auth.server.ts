@@ -8,6 +8,14 @@ import { captcha, magicLink } from "better-auth/plugins";
 import { sendMagicLinkEmail, sendPasswordResetEmail, sendVerificationEmail } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
 
+const NO_OAUTH_TOKENS = {
+  accessToken: null,
+  refreshToken: null,
+  idToken: null,
+  accessTokenExpiresAt: null,
+  refreshTokenExpiresAt: null,
+};
+
 export function getAuth(env: Env) {
   const db = createDb(env.DB);
 
@@ -63,6 +71,15 @@ export function getAuth(env: Env) {
       accountLinking: {
         enabled: true,
         trustedProviders: ["google"],
+      },
+    },
+    // Google is sign-in only, and nothing reads its tokens, so none are stored (FX-3). Every
+    // account write Better Auth makes on a Google sign-in (createOAuthUser, linkAccount,
+    // updateAccount) runs these hooks; migration 0005 cleared the rows from before.
+    databaseHooks: {
+      account: {
+        create: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
+        update: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
       },
     },
     emailVerification: {
