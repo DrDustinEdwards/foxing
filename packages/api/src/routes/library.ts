@@ -156,6 +156,11 @@ libraryRoutes.patch("/vocabulary/:id", rateLimit("write"), async (c) => {
 
 // --- Streaks ---------------------------------------------------------------
 
+libraryRoutes.get("/stats", async (c) => {
+  const session = requireSession(c);
+  return c.json(await views.stats(c.get("db"), session.id));
+});
+
 libraryRoutes.get("/streaks/me", async (c) => {
   const session = requireSession(c);
   return c.json({ streak: await views.streak(c.get("db"), session.id) });

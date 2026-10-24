@@ -2,7 +2,7 @@
 // core; requireProfile gates access. Real stat tiles, a books-per-month chart and a genre
 // breakdown for the current year (inline SVG, no chart library), plus year progress against
 // any books-per-year goal. Read-only. Charts render only when their data exists in D1.
-import { createDb, libraryRepo } from "@foxing/core";
+import { createDb, libraryRepo, views } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -18,52 +18,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
   const db = createDb(env.DB);
-  const year = new Date().getUTCFullYear();
-  const yearStart = Date.UTC(year, 0, 1);
-  const yearEnd = Date.UTC(year + 1, 0, 1);
-
-  const [streak, finishedThisYear, goals, finishedBooks] = await Promise.all([
-    libraryRepo.getStreak(db, user.id),
-    libraryRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
+  const [stats, goals] = await Promise.all([
+    views.stats(db, user.id),
     libraryRepo.listGoals(db, user.id),
-    libraryRepo.listFinishedInRangeForStats(db, user.id, yearStart, yearEnd),
   ]);
-
-  // Books finished per month of the current year (12 buckets).
-  const monthly = Array<number>(12).fill(0);
-  for (const b of finishedBooks) {
-    if (b.finishedAt) monthly[b.finishedAt.getUTCMonth()] += 1;
-  }
-
-  // Genre breakdown from the subjects of this year's finished books (top 6).
-  const genreCounts = new Map<string, number>();
-  for (const b of finishedBooks) {
-    for (const s of b.subjects ?? []) {
-      const name = s.trim();
-      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
-    }
-  }
-  const genres = [...genreCounts.entries()]
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6);
-
-  const booksYearGoal = goals.find((g) => g.type === "books" && g.periodType === "year");
-
   return {
-    year,
-    finishedThisYear,
-    monthly,
-    genres,
-    booksYearGoalTarget: booksYearGoal?.target ?? null,
-    stats: {
-      currentStreak: streak?.currentStreak ?? 0,
-      longestStreak: streak?.longestStreak ?? 0,
-      totalBooksFinished: streak?.totalBooksFinished ?? 0,
-      totalPagesRead: streak?.totalPagesRead ?? 0,
-      totalHighlights: streak?.totalHighlights ?? 0,
-      totalWordsLookedUp: streak?.totalWordsLookedUp ?? 0,
-    },
+    ...stats,
     goals: goals.map((g) => ({
       id: g.id,
       type: g.type,
@@ -75,7 +35,15 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 const numberFormat = new Intl.NumberFormat("en-US");
 export default function Stats({ loaderData }: Route.ComponentProps) {
-  const { year, finishedThisYear, monthly, genres, booksYearGoalTarget, stats, goals } = loaderData;
+  const {
+    year,
+    finishedThisYear,
+    monthly,
+    genres,
+    booksYearGoalTarget,
+    streak: stats,
+    goals,
+  } = loaderData;
   const tiles = [
     { label: "current streak", value: stats.currentStreak },
     { label: "longest streak", value: stats.longestStreak },

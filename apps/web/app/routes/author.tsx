@@ -1,4 +1,4 @@
-import { catalogRepo } from "@foxing/core";
+import { views } from "@foxing/core";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
@@ -8,7 +8,7 @@ import type { Route } from "./+types/author";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, origin } = loaderBase(context, request);
-  const author = await catalogRepo.getAuthor(db, params.slug);
+  const author = await views.author(db, params.slug);
   if (!author) throw new Response("Not found", { status: 404 });
   return { origin, author };
 }

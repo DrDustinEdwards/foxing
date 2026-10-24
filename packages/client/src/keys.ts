@@ -29,4 +29,21 @@ export const keys = {
   list: (id: string) => ["lists", id] as const,
   suggest: (q: string) => ["suggest", q] as const,
   annotations: (bookId: string) => ["annotations", bookId] as const,
+  allMyAnnotations: ["annotations", "mine"] as const,
+  myAnnotations: (types: string) => ["annotations", "mine", types] as const,
+  stats: ["stats"] as const,
+  browse: (query: CatalogQuery) => ["books", "browse", query] as const,
+  search: (q: string, query: CatalogQuery) => ["books", "search", q, query] as const,
+  book: (idOrSlug: string) => ["books", "page", idOrSlug] as const,
+  author: (slug: string) => ["authors", slug] as const,
+  recommendations: ["recommendations"] as const,
 };
+
+/** The filters the catalog's browse and search pages take. */
+export interface CatalogQuery {
+  subject?: string;
+  era?: string;
+  length?: string;
+  sort?: "title" | "year-desc" | "year-asc";
+  page?: number;
+}

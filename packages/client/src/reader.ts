@@ -66,7 +66,7 @@ export function useCreateAnnotation() {
         ],
       })),
     ],
-    invalidates: ({ bookId }) => [keys.annotations(bookId), keys.streak],
+    invalidates: ({ bookId }) => [keys.annotations(bookId), keys.allMyAnnotations, keys.streak],
   });
 }
 
@@ -80,7 +80,7 @@ export function useUpdateAnnotation() {
         mine: l.mine.map((m) => (m.id === id ? { ...m, ...fields } : m)),
       })),
     ],
-    invalidates: ({ bookId }) => [keys.annotations(bookId)],
+    invalidates: ({ bookId }) => [keys.annotations(bookId), keys.allMyAnnotations],
   });
 }
 
@@ -91,7 +91,7 @@ export function useDeleteAnnotation() {
     optimistic: ({ bookId, id }) => [
       patchLayers(bookId, (l) => ({ ...l, mine: l.mine.filter((m) => m.id !== id) })),
     ],
-    invalidates: ({ bookId }) => [keys.annotations(bookId)],
+    invalidates: ({ bookId }) => [keys.annotations(bookId), keys.allMyAnnotations],
   });
 }
 

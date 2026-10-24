@@ -9,6 +9,7 @@ import {
   customShelfBooks,
   customShelves,
   readingGoals,
+  readingSessions,
   readingStreaks,
   userBooks,
   userFavorites,
@@ -198,6 +199,15 @@ export async function listFavoriteBooks(db: Db, userId: string, limit = 5): Prom
     .where(eq(userFavorites.userId, userId))
     .orderBy(asc(userFavorites.position))
     .limit(limit);
+}
+
+/** How many readers have the book in their library, on any shelf. */
+export async function countReaders(db: Db, bookId: string): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`COUNT(*)` })
+    .from(userBooks)
+    .where(eq(userBooks.bookId, bookId));
+  return Number(row?.n ?? 0);
 }
 
 /** Recently finished books, newest first, for the public profile library preview. */
@@ -588,4 +598,51 @@ export async function incrementBooksFinished(db: Db, userId: string): Promise<vo
     .update(readingStreaks)
     .set({ totalBooksFinished: existing.totalBooksFinished + 1, updatedAt: now })
     .where(eq(readingStreaks.userId, userId));
+}
+
+/** Write the day streak and add a session's pages, upserting the streak row. */
+export async function saveStreak(
+  db: Db,
+  userId: string,
+  next: {
+    currentStreak: number;
+    longestStreak: number;
+    lastReadDate: Date | null;
+    pagesRead: number;
+  },
+): Promise<void> {
+  const now = new Date();
+  await db
+    .insert(readingStreaks)
+    .values({
+      userId,
+      currentStreak: next.currentStreak,
+      longestStreak: next.longestStreak,
+      lastReadDate: next.lastReadDate,
+      totalPagesRead: next.pagesRead,
+      updatedAt: now,
+    })
+    .onConflictDoUpdate({
+      target: readingStreaks.userId,
+      set: {
+        currentStreak: next.currentStreak,
+        longestStreak: next.longestStreak,
+        lastReadDate: next.lastReadDate,
+        totalPagesRead: sql`${readingStreaks.totalPagesRead} + ${next.pagesRead}`,
+        updatedAt: now,
+      },
+    });
+}
+
+/** The reader's sessions that started at or after a moment, oldest first. */
+export async function listSessionsSince(db: Db, userId: string, sinceMs: number) {
+  return db
+    .select({
+      startedAt: readingSessions.startedAt,
+      endedAt: readingSessions.endedAt,
+      pagesRead: readingSessions.pagesRead,
+    })
+    .from(readingSessions)
+    .where(and(eq(readingSessions.userId, userId), sql`${readingSessions.startedAt} >= ${sinceMs}`))
+    .orderBy(asc(readingSessions.startedAt));
 }

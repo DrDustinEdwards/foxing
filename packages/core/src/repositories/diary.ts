@@ -99,6 +99,26 @@ export async function listEntriesForUser(
   return rows.filter((r) => allowedVisibilities.includes(r.visibility));
 }
 
+/** A book's newest public reviews (entries with review text), for the book page. */
+export async function listPublicReviewsForBook(
+  db: Db,
+  bookId: string,
+  limit = 3,
+): Promise<DiaryEntry[]> {
+  return db
+    .select()
+    .from(diaryEntries)
+    .where(
+      and(
+        eq(diaryEntries.bookId, bookId),
+        eq(diaryEntries.visibility, "public"),
+        isNotNull(diaryEntries.review),
+      ),
+    )
+    .orderBy(desc(diaryEntries.logDate))
+    .limit(limit);
+}
+
 export interface RatedSignalBook {
   bookId: string;
   title: string;

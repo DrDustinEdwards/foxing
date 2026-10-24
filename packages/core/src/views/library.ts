@@ -4,8 +4,11 @@
 // first paint and every later refetch are the same object.
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
+import * as annotationsRepo from "../repositories/annotations";
 import * as libraryRepo from "../repositories/library";
 import * as notificationsRepo from "../repositories/notifications";
+import * as profilesRepo from "../repositories/profiles";
+import { localDay } from "../domain/library";
 import { ms } from "./wire";
 
 export async function library(db: Db, userId: string): Promise<W.LibraryEntry[]> {
@@ -73,16 +76,79 @@ export async function goals(db: Db, userId: string): Promise<W.GoalWithProgress[
   );
 }
 
-export async function streak(db: Db, userId: string): Promise<W.Streak> {
-  const s = await libraryRepo.getStreak(db, userId);
+/** The day streak reads 0 once a full day has passed without reading. */
+export async function streak(db: Db, userId: string, now = Date.now()): Promise<W.Streak> {
+  const [s, profile] = await Promise.all([
+    libraryRepo.getStreak(db, userId),
+    profilesRepo.getProfileById(db, userId),
+  ]);
+  const tz = profile?.timezone ?? null;
+  const lapsed = !s?.lastReadDate || localDay(now, tz) - localDay(s.lastReadDate.getTime(), tz) > 1;
   return {
-    currentStreak: s?.currentStreak ?? 0,
+    currentStreak: lapsed ? 0 : (s?.currentStreak ?? 0),
     longestStreak: s?.longestStreak ?? 0,
     totalBooksFinished: s?.totalBooksFinished ?? 0,
     totalHighlights: s?.totalHighlights ?? 0,
     totalPagesRead: s?.totalPagesRead ?? 0,
     totalWordsLookedUp: s?.totalWordsLookedUp ?? 0,
     lastReadDate: ms(s?.lastReadDate),
+  };
+}
+
+const DAY_MS = 86_400_000;
+
+export async function stats(db: Db, userId: string, now = Date.now()): Promise<W.ReadingStats> {
+  const year = new Date(now).getUTCFullYear();
+  const today = Math.floor(now / DAY_MS) * DAY_MS;
+  const weekStart = today - 6 * DAY_MS;
+  const [finishedThisYear, goals, finished, s, sessions] = await Promise.all([
+    libraryRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }),
+    libraryRepo.listGoals(db, userId),
+    libraryRepo.listFinishedInRangeForStats(
+      db,
+      userId,
+      Date.UTC(year, 0, 1),
+      Date.UTC(year + 1, 0, 1),
+    ),
+    streak(db, userId, now),
+    libraryRepo.listSessionsSince(db, userId, weekStart),
+  ]);
+
+  const monthly = Array<number>(12).fill(0);
+  const genreCounts = new Map<string, number>();
+  for (const b of finished) {
+    if (b.finishedAt) monthly[b.finishedAt.getUTCMonth()] += 1;
+    for (const subject of b.subjects ?? []) {
+      const name = subject.trim();
+      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
+    }
+  }
+
+  const week = Array.from({ length: 7 }, (_, i) => ({
+    day: weekStart + i * DAY_MS,
+    minutes: 0,
+    pages: 0,
+  }));
+  for (const session of sessions) {
+    const start = session.startedAt.getTime();
+    const slot = week[Math.floor((start - weekStart) / DAY_MS)];
+    if (!slot) continue;
+    slot.pages += session.pagesRead;
+    if (session.endedAt) slot.minutes += Math.round((session.endedAt.getTime() - start) / 60_000);
+  }
+
+  return {
+    year,
+    finishedThisYear,
+    monthly,
+    genres: [...genreCounts.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6),
+    booksYearGoalTarget:
+      goals.find((g) => g.type === "books" && g.periodType === "year")?.target ?? null,
+    streak: s,
+    week,
   };
 }
 
@@ -137,4 +203,18 @@ export async function notifications(
     })),
     unread,
   };
+}
+
+export async function myAnnotations(
+  db: Db,
+  userId: string,
+  types: W.AnnotationType[],
+): Promise<W.MyAnnotation[]> {
+  const rows = await annotationsRepo.listForUser(db, userId, { types });
+  return rows.map((a) => ({
+    ...a,
+    type: a.type as W.AnnotationType,
+    visibility: a.visibility as W.MyAnnotation["visibility"],
+    createdAt: a.createdAt.getTime(),
+  }));
 }

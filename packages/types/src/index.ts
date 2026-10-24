@@ -147,6 +147,20 @@ export interface VocabularyWord {
   lookedUpAt: number;
 }
 
+/** GET /stats: the reader's year in numbers, and the last week of reading sessions. */
+export interface ReadingStats {
+  year: number;
+  finishedThisYear: number;
+  /** Books finished in each month of the year, January first. */
+  monthly: number[];
+  /** The most-read subjects among this year's finishes, most first. */
+  genres: { name: string; value: number }[];
+  booksYearGoalTarget: number | null;
+  streak: Streak;
+  /** The last 7 days, oldest first; day is the UTC midnight it starts on. */
+  week: { day: number; minutes: number; pages: number }[];
+}
+
 /** One book's place in the reader's library: status, shelves it is on, progress. */
 export interface MyBookState {
   status: ShelfStatus | null;
@@ -434,6 +448,112 @@ export interface SearchSuggest {
   clubs: { slug: string | null; name: string }[];
 }
 
+export interface GenreFacet {
+  subject: string;
+  count: number;
+}
+
+/** GET /books: the browsable catalog, one page at a time. */
+export interface BrowsePage {
+  books: BookCard[];
+  total: number;
+  page: number;
+  pageCount: number;
+  genres: GenreFacet[];
+}
+
+/** GET /search: full search, books plus matching authors. */
+export interface SearchPage extends BrowsePage {
+  q: string;
+  fuzzy: boolean;
+  authors: { slug: string; name: string; bookCount: number }[];
+}
+
+export interface AuthorPage {
+  slug: string;
+  name: string;
+  bookCount: number;
+  yearRange: { first: number; last: number } | null;
+  /** The author biography generated for their catalog books, when there is one. */
+  bio: string | null;
+  books: BookCard[];
+}
+
+export interface BookDetail extends BookCard {
+  description: string | null;
+  language: string;
+  wordCount: number | null;
+  subjects: string[];
+  moodTags: string[];
+  contentWarnings: string[];
+  pacing: string | null;
+  seriesName: string | null;
+  seriesOrder: number | null;
+  isbn13: string | null;
+  publisher: string | null;
+  /** Mean rating out of 5, from readers' latest diary entries. */
+  rating: number | null;
+  ratingCount: number;
+  /** Community books have a page but are not in the catalog and cannot be read here. */
+  community: boolean;
+}
+
+export interface BookReview {
+  id: string;
+  author: ProfileSummary | null;
+  ratingHalf: number | null;
+  review: string;
+  containsSpoilers: boolean;
+  logDate: number | null;
+}
+
+/** Where to buy or borrow a copy: Bookshop, then Amazon, then a library. */
+export interface BuyLink {
+  retailer: "bookshop" | "amazon" | "library";
+  label: string;
+  url: string;
+  sponsored: boolean;
+}
+
+/** GET /books/:idOrSlug: everything the book page shows that is the same for every
+ *  reader. The reader's own shelf state is GET /library/:bookId. */
+export interface BookPage {
+  book: BookDetail;
+  buys: BuyLink[];
+  awards: { awardSlug: string; awardName: string; year: number | null; distinction: string }[];
+  related: BookCard[];
+  moreByAuthor: BookCard[];
+  nextInSeries: BookCard | null;
+  /** Generated once per catalog book; null until it has been. */
+  ai: {
+    description: string | null;
+    authorBio: string | null;
+    similarBooks: string | null;
+    readingOrder: string | null;
+  };
+  reviews: BookReview[];
+  clubs: ClubCard[];
+  popular: PopularHighlight[];
+  readerCount: number;
+}
+
+export interface Recommendation {
+  bookId: string;
+  slug: string;
+  title: string;
+  author: string;
+  coverUrl: string | null;
+  publicationYear: number | null;
+  reason: string;
+}
+
+/** GET /recommendations: what to read next, personalised by AI for Plus readers. */
+export interface Recommendations {
+  recommendations: Recommendation[];
+  aiPersonalized: boolean;
+  isPlus: boolean;
+}
+
 // --- Reader annotations -----------------------------------------------------
 
 /** A reading position (Readium locator JSON); the server stores it as given. */
@@ -505,6 +625,24 @@ export interface ReaderAnnotations {
   others: ResolvedOther[];
   comments: ResolvedComment[];
   popular: PopularHighlight[];
+}
+
+/** GET /annotations?types=: the reader's own annotations across every book, newest
+ *  first (the highlights, commonplace and saved-passages pages). */
+export interface MyAnnotation {
+  id: string;
+  type: AnnotationType;
+  selectedText: string | null;
+  body: string | null;
+  color: string | null;
+  chapter: string | null;
+  sourceTitle: string | null;
+  visibility: "private" | "friends" | "club" | "public";
+  createdAt: number;
+  bookId: string | null;
+  bookTitle: string | null;
+  bookSlug: string | null;
+  bookAuthor: string | null;
 }
 
 // --- Club live socket -------------------------------------------------------

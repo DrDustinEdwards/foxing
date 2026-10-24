@@ -1,7 +1,7 @@
 // The signed-in reader's saved highlights (auth-gated, noindex). Reads run in-process via
 // core; requireProfile gates access. Each highlight shows its passage, a color swatch, and
 // its book context. Read-only.
-import { createDb, annotationsRepo } from "@foxing/core";
+import { createDb, views } from "@foxing/core";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import {
@@ -24,18 +24,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
   const db = createDb(env.DB);
-  const rows = await annotationsRepo.listForUser(db, user.id, { types: ["highlight"] });
-  const highlights = rows.map((a) => ({
-    id: a.id,
-    selectedText: a.selectedText,
-    color: a.color,
-    chapter: a.chapter,
-    sourceTitle: a.sourceTitle,
-    bookTitle: a.bookTitle,
-    bookSlug: a.bookSlug,
-    bookAuthor: a.bookAuthor,
-  }));
-  return { highlights };
+  return { highlights: await views.myAnnotations(db, user.id, ["highlight"]) };
 }
 
 // Highlight colors are user content (annotation swatches), not UI chrome, so the dot uses

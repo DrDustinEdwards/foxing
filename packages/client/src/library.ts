@@ -196,6 +196,34 @@ export function useStreak<S extends W.Streak | undefined = undefined>(seed?: S) 
   );
 }
 
+export function useStats<S extends W.ReadingStats | undefined = undefined>(seed?: S) {
+  const api = useApi();
+  return useSeededQuery(
+    { queryKey: keys.stats, queryFn: () => api.get<W.ReadingStats>("/stats") },
+    seed,
+  );
+}
+
+// --- The reader's own annotations, across books --------------------------------
+
+export function useMyAnnotations<S extends W.MyAnnotation[] | undefined = undefined>(
+  types: W.AnnotationType[],
+  seed?: S,
+) {
+  const api = useApi();
+  const list = types.join(",");
+  return useSeededQuery(
+    {
+      queryKey: keys.myAnnotations(list),
+      queryFn: () =>
+        api
+          .get<{ annotations: W.MyAnnotation[] }>(`/annotations?types=${list}`)
+          .then((r) => r.annotations),
+    },
+    seed,
+  );
+}
+
 // --- Vocabulary -------------------------------------------------------------
 
 export function useVocabulary<S extends W.VocabularyWord[] | undefined = undefined>(seed?: S) {

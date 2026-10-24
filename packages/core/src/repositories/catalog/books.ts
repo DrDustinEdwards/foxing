@@ -197,6 +197,24 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
   );
 }
 
+/** The next catalog book in the same series, by series order; null when there is none. */
+export async function getNextInSeries(db: Db, book: Book): Promise<BookCard | null> {
+  if (!book.seriesName) return null;
+  const conds = [
+    eq(books.seriesName, book.seriesName),
+    eq(books.sourceType, "catalog"),
+    sql`${books.id} != ${book.id}`,
+  ];
+  if (book.seriesOrder != null) conds.push(sql`${books.seriesOrder} > ${book.seriesOrder}`);
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(books)
+    .where(and(...conds))
+    .orderBy(sql`${books.seriesOrder} ASC NULLS LAST`)
+    .limit(1);
+  return rows[0] ? toCard(rows[0]) : null;
+}
+
 /**
  * Curated starter set for onboarding: award-winning catalog books with a cover,
  * readable ones first so the eventual "Read now" works. Deterministic order (most

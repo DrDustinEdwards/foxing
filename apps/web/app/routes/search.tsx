@@ -1,4 +1,4 @@
-import { catalogRepo } from "@foxing/core";
+import { views } from "@foxing/core";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
@@ -22,18 +22,13 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   };
 
   if (!q) return { origin, q, filters, result: null, authors: [], genres: [] };
-
-  const [result, authors, genres] = await Promise.all([
-    catalogRepo.searchCatalog(db, q, {
-      page,
-      subject: filters.genre,
-      era: filters.era,
-      length: filters.length,
-    }),
-    catalogRepo.searchAuthors(db, q, 8),
-    catalogRepo.getGenreFacets(db, 12),
-  ]);
-  return { origin, q, filters, result, authors, genres };
+  const result = await views.search(db, q, {
+    page,
+    subject: filters.genre,
+    era: filters.era,
+    length: filters.length,
+  });
+  return { origin, q, filters, result, authors: result.authors, genres: result.genres };
 }
 
 export function headers(): HeadersInit {

@@ -1,4 +1,4 @@
-import { catalogRepo } from "@foxing/core";
+import { catalogRepo, views } from "@foxing/core";
 import { Link } from "react-router";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
@@ -46,10 +46,7 @@ function query(filters: Filters, override: Partial<Record<string, string | null>
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, origin } = loaderBase(context, request);
   const filters = parseFilters(new URL(request.url));
-  const [result, genres] = await Promise.all([
-    catalogRepo.listBooks(db, filters),
-    catalogRepo.getGenreFacets(db, 18),
-  ]);
+  const { genres, ...result } = await views.browse(db, filters);
   return { origin, filters, result, genres };
 }
 

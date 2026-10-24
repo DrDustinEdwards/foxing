@@ -45,6 +45,11 @@ export async function publicClubs(db: Db, limit = 50): Promise<W.ClubCard[]> {
   return cards(db, await clubsRepo.listPublicClubs(db, limit));
 }
 
+/** Public clubs reading the book right now, for its page. */
+export async function clubsReading(db: Db, bookId: string): Promise<W.ClubCard[]> {
+  return cards(db, await clubsRepo.listPublicClubsReading(db, bookId));
+}
+
 /** The viewer's clubs, and public clubs they are not in yet. */
 export async function clubsIndex(db: Db, userId: string): Promise<W.ClubsIndex> {
   const [mine, discover] = await Promise.all([myClubs(db, userId), publicClubs(db)]);

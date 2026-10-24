@@ -1,6 +1,5 @@
 import { useMyBook, useShelves } from "@foxing/client";
-import { catalogRepo, views } from "@foxing/core";
-import { buyLinks } from "@foxing/core";
+import { views } from "@foxing/core";
 import { Link } from "react-router";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { BookShelvesPicker } from "~/components/book-shelves-picker";
@@ -15,16 +14,11 @@ import type { Route } from "./+types/book-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
-  const book = await catalogRepo.getBookBySlug(db, params.slug);
-  if (!book) throw new Response("Not found", { status: 404 });
-
-  const [awards, related] = await Promise.all([
-    catalogRepo.getBookAwards(db, book.id),
-    catalogRepo.getRelatedBooks(db, book, 6),
-  ]);
-
-  const readable = catalogRepo.isReadable(book);
-  const community = book.sourceType === "community";
+  const page = await views.bookPage(db, params.slug, affiliateConfig(env));
+  if (!page || page.book.slug !== params.slug) throw new Response("Not found", { status: 404 });
+  const { book, awards, related } = page;
+  const readable = book.readable;
+  const community = book.community;
 
   // Personalized shelf status + shelves. Anonymous requests are edge-cached (this
   // loader does not run), so this only fires for signed-in readers (cache bypassed).
@@ -45,7 +39,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     shelves,
     bookId: book.id,
     loginHref: `/login?redirect=/books/${book.slug}`,
-    buys: buyLinks(book, affiliateConfig(env)),
+    buys: page.buys,
     book: {
       slug: book.slug,
       title: book.title,
@@ -56,7 +50,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       publicationYear: book.publicationYear,
       language: book.language,
       wordCount: book.wordCount,
-      subjects: book.subjects ?? [],
+      subjects: book.subjects,
       isbn13: book.isbn13,
       publisher: book.publisher,
     },

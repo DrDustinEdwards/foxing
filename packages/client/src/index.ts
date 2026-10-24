@@ -5,6 +5,7 @@ export * from "./keys";
 export * from "./provider";
 export * from "./query";
 export * from "./library";
+export * from "./catalog";
 export * from "./clubs";
 export * from "./social";
 export * from "./me";

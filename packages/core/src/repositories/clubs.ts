@@ -146,6 +146,16 @@ export async function listPublicClubs(db: Db, limit = 50): Promise<Club[]> {
     .limit(limit);
 }
 
+/** Public clubs whose current read is the given book. */
+export async function listPublicClubsReading(db: Db, bookId: string, limit = 3): Promise<Club[]> {
+  return db
+    .select()
+    .from(clubs)
+    .where(and(eq(clubs.visibility, "public"), eq(clubs.currentBookId, bookId)))
+    .orderBy(desc(clubs.updatedAt))
+    .limit(limit);
+}
+
 /** Clubs the user is an active member of. */
 export async function listClubsForUser(db: Db, userId: string): Promise<Club[]> {
   return db
