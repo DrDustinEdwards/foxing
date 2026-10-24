@@ -87,10 +87,6 @@ export async function addPasskey(
       signCount: counter(),
     },
   });
-  return async () => {
-    await cdp.send("WebAuthn.removeVirtualAuthenticator", { authenticatorId });
-    await cdp.detach();
-  };
 }
 
 // Signs in through the passkey endpoints without a browser; returns the session cookie.
@@ -147,24 +143,28 @@ export async function signInWithPasskey(baseURL: string, email: string): Promise
 }
 
 // The visible sign-in, shared by every setup: the passkey button, then an authed page.
+//
+// It runs in a tab of its own. On the live site, a tab that has held Chromium's virtual
+// authenticator stops drawing frames once signed in (timers run, requestAnimationFrame never
+// does, even after a reload), so Playwright's next click there waits forever for the element
+// to settle. Another tab in the same context, holding the same session, draws normally.
 export async function signInThroughLogin(page: Page, email: string, baseURL: string) {
-  const removePasskey = await addPasskey(page, email, baseURL);
-  await page.goto("/login");
+  const signIn = await page.context().newPage();
+  await addPasskey(signIn, email, baseURL);
+  await signIn.goto("/login");
   // The page also offers the passkey to the email field's autofill, and Chromium's virtual
   // authenticator answers that at once. Click only if the autofill has not signed in, so one
-  // sign-in runs, then wait for the page it lands on to finish loading.
-  const leftLogin = () => !new URL(page.url()).pathname.startsWith("/login");
-  await page
+  // sign-in runs.
+  const leftLogin = () => !new URL(signIn.url()).pathname.startsWith("/login");
+  await signIn
     .waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 3_000 })
     .catch(() => {});
   if (!leftLogin()) {
-    await page.getByRole("button", { name: /sign in with a passkey/i }).click();
-    await page.waitForURL((url) => !url.pathname.startsWith("/login"));
+    await signIn.getByRole("button", { name: /sign in with a passkey/i }).click();
+    await signIn.waitForURL((url) => !url.pathname.startsWith("/login"));
   }
-  // Signed in. Take the authenticator away and load the page afresh, so a spec that goes on
-  // clicking starts from a plain signed-in page, not one the sign-in left behind (in CI the
-  // onboarding spec's next click waited two minutes for the page to settle).
-  await removePasskey();
-  await page.reload();
+  const landed = signIn.url();
+  await signIn.close();
+  await page.goto(landed);
   await page.waitForLoadState("networkidle");
 }

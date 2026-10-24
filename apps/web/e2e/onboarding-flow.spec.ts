@@ -68,62 +68,6 @@ test.describe("onboarding (ephemeral account)", () => {
     // numbers, and underscores."), so match a prefix, not the full string.
     const username = `e2eonb${Date.now().toString(36)}`;
     await page.getByLabel(/^username/i).fill(username);
-    // TEMP diagnostics for the CI-only hang on this click; removed once it is understood.
-    // Animation frames stall on this page (setTimeout runs, requestAnimationFrame never does).
-    // Compare: this page, a fresh tab in the same context, that tab with reduced motion (no
-    // view transitions), and a fresh context with no authenticator ever attached.
-    page.on("console", (m) => console.log(`[console ${m.type()}] ${m.text()}`));
-    page.on("pageerror", (e) => console.log(`[pageerror] ${e.message}`));
-    const probe = async (p: typeof page, label: string) => {
-      const out = await p.evaluate(async () => {
-        const raf = await Promise.race([
-          new Promise((r) => requestAnimationFrame(() => r("raf ok"))),
-          new Promise((r) => setTimeout(() => r("raf stalled"), 2000)),
-        ]);
-        const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming;
-        return {
-          raf,
-          url: location.pathname,
-          navType: nav?.type,
-          readyState: document.readyState,
-          viewTransition:
-            "activeViewTransition" in document
-              ? String((document as { activeViewTransition?: unknown }).activeViewTransition)
-              : "n/a",
-          pendingSheets: [...document.querySelectorAll('link[rel="stylesheet"]')]
-            .filter((l) => !(l as HTMLLinkElement).sheet)
-            .map((l) => (l as HTMLLinkElement).href),
-          renderBlocking: [...document.querySelectorAll("[blocking]")].map((e) =>
-            e.outerHTML.slice(0, 120),
-          ),
-          iframes: [...document.querySelectorAll("iframe")].map((f) => f.src.slice(0, 80)),
-        };
-      });
-      console.log(`[diag ${label}]`, JSON.stringify(out));
-    };
-    await probe(page, "onboarding after sign-in");
-    const tab = await page.context().newPage();
-    await tab.goto("/onboarding");
-    await probe(tab, "new tab, same context");
-    await tab.goto("/settings");
-    await probe(tab, "new tab, /settings");
-    await tab.emulateMedia({ reducedMotion: "reduce" });
-    await tab.goto("/onboarding");
-    await probe(tab, "new tab, reduced motion");
-    await tab.close();
-    const fresh = await page
-      .context()
-      .browser()
-      ?.newContext({
-        baseURL: base,
-        storageState: await page.context().storageState(),
-      });
-    if (fresh) {
-      const freshPage = await fresh.newPage();
-      await freshPage.goto("/onboarding");
-      await probe(freshPage, "fresh context");
-      await fresh.close();
-    }
     await page.getByRole("button", { name: /^continue$/i }).click();
 
     // Step 2: the starter-book handoff.
