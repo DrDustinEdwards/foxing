@@ -8,7 +8,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery, useWrite } from "./query";
 
 // --- Reads ------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ export function useThreadPage<S extends W.ThreadPage | undefined = undefined>(
 
 /** Patches every open page of one club. */
 function patchClub(clubId: string, update: (page: W.ClubPage) => W.ClubPage) {
-  return patch<W.ClubPage>(keys.clubPages, (page) =>
+  return patchAll<W.ClubPage>(keys.clubPages, (page) =>
     page.club.id === clubId ? update(page) : page,
   );
 }

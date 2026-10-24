@@ -95,10 +95,13 @@ export function AttributionPopover({
   const submit = async () => {
     const body = replyText.trim();
     if (!body || !clubId) return;
+    // The reply shows in the list at once, so the box empties at once too; a failed
+    // write puts the text back.
     setBusy(true);
+    setReplyText("");
     const ok = await onReply(clubId, body);
     setBusy(false);
-    if (ok) setReplyText("");
+    if (!ok) setReplyText(body);
   };
 
   return (

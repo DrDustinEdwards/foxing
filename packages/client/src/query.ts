@@ -12,7 +12,7 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { errorMessage } from "./http";
+import { writeErrorMessage } from "./http";
 
 /** With a seed the data is never undefined, so a seeded page reads `.data` directly. */
 export type SeededResult<T, S> = [S] extends [T]
@@ -44,17 +44,24 @@ export function useSeededQuery<T, S extends T | undefined = undefined>(
 }
 
 /** A cache patch: the key and how its data changes. Missing data stays missing. */
-export type Patch = readonly [QueryKey, (old: never) => unknown];
+export type Patch = readonly [QueryKey, (old: never) => unknown, boolean];
 
+/** Patches the one query at exactly this key: keys are prefixes, and ["library"] must
+ *  not reach ["library", "book", id], whose data has another shape. */
 export function patch<T>(key: QueryKey, update: (old: T) => T): Patch {
-  return [key, update as (old: never) => unknown];
+  return [key, update as (old: never) => unknown, true];
+}
+
+/** Patches every query under this prefix; each one must hold data of the same shape. */
+export function patchAll<T>(prefix: QueryKey, update: (old: T) => T): Patch {
+  return [prefix, update as (old: never) => unknown, false];
 }
 
 async function applyPatches(qc: QueryClient, patches: readonly Patch[]): Promise<() => void> {
   const saved: Array<[QueryKey, unknown]> = [];
-  for (const [key, update] of patches) {
-    await qc.cancelQueries({ queryKey: key });
-    for (const [k, data] of qc.getQueriesData({ queryKey: key })) {
+  for (const [key, update, exact] of patches) {
+    await qc.cancelQueries({ queryKey: key, exact });
+    for (const [k, data] of qc.getQueriesData({ queryKey: key, exact })) {
       saved.push([k, data]);
       if (data !== undefined) qc.setQueryData(k, (update as (old: unknown) => unknown)(data));
     }
@@ -104,7 +111,7 @@ export function useWrite<V = void, R = unknown>(spec: WriteSpec<V, R>) {
     run,
     fire,
     pending: m.isPending,
-    error: errorMessage(m.error),
+    error: writeErrorMessage(m.error),
     reset: m.reset,
   };
 }

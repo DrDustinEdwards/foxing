@@ -6,7 +6,7 @@ import type * as W from "@foxing/types";
 import { useQuery } from "@tanstack/react-query";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery, useWrite } from "./query";
 
 /** An id the server accepts as the annotation's own (createAnnotationInput.id). */
 export function newId(): string {
@@ -97,7 +97,7 @@ export function useUpdateAnnotation() {
         ...l,
         mine: l.mine.map((m) => (m.id === id ? { ...m, ...fields } : m)),
       })),
-      patch<W.MyAnnotation[]>(keys.allMyAnnotations, (list) =>
+      patchAll<W.MyAnnotation[]>(keys.allMyAnnotations, (list) =>
         list.map((a) =>
           a.id === id ? { ...a, ...fields, ...(visibility ? { visibility } : {}) } : a,
         ),
@@ -113,7 +113,7 @@ export function useDeleteAnnotation() {
     write: ({ id }) => api.delete(`/annotations/${id}`),
     optimistic: ({ bookId, id }) => [
       patchLayers(bookId, (l) => ({ ...l, mine: l.mine.filter((m) => m.id !== id) })),
-      patch<W.MyAnnotation[]>(keys.allMyAnnotations, (list) => list.filter((a) => a.id !== id)),
+      patchAll<W.MyAnnotation[]>(keys.allMyAnnotations, (list) => list.filter((a) => a.id !== id)),
     ],
     invalidates: ({ bookId }) => [keys.annotations(bookId), keys.allMyAnnotations],
   });

@@ -110,7 +110,8 @@ test.describe("social feed visibility (two real users)", () => {
     // --- B adds A as a close friend (Plus) from A's profile -------------------
     await page.goto(`/u/${aUsername}`);
     await page.getByRole("button", { name: /^add close friend$/i }).click();
-    await expect(page.getByRole("button", { name: /^close friend$/i })).toBeVisible();
+    // The label flips at once and the button stays disabled until the write has landed.
+    await expect(page.getByRole("button", { name: /^close friend$/i })).toBeEnabled();
 
     // --- A now sees the friends-only review; private stays hidden -------------
     await pageA.goto(`/u/${bUsername}`);
