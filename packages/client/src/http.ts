@@ -163,6 +163,14 @@ export function qs(params: Record<string, string | number | boolean | null | und
 }
 
 /** The message to show for a failed mutation or query, or null. */
+/** A failed write, worded for the reader: what failed first, then the server's reason. */
+export function writeErrorMessage(error: unknown): string | null {
+  if (!error) return null;
+  if (!(error instanceof ApiError)) return "Could not save. Try again.";
+  if (error.status === 0) return "Could not save. Check your connection and try again.";
+  return `Could not save: ${error.message}`;
+}
+
 export function errorMessage(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof ApiError) return error.message;

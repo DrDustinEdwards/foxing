@@ -1,7 +1,7 @@
 // The search palette: Capsomer's command menu, opened by Ctrl K, Cmd K, "/" or the header's
 // search button (which dispatches "foxing:search-open"). Recent searches and quick links are
-// its commands; typing federates catalog books, authors, people and clubs from /search/suggest
-// through the menu's live search.
+// its commands; typing federates catalog books, authors, people and clubs from
+// /api/v1/search/suggest through the menu's live search.
 import { type Command, CommandMenu } from "capsomer/react/command-menu";
 import { useEffect, useState } from "react";
 import { useNavigate, useRouteLoaderData } from "react-router";
@@ -94,7 +94,7 @@ export function CommandPalette() {
       run: runSearch(q),
     };
     if (q.length < 2) return [all];
-    const res = await fetch(`/search/suggest?q=${encodeURIComponent(q)}`, { signal });
+    const res = await fetch(`/api/v1/search/suggest?q=${encodeURIComponent(q)}`, { signal });
     const data = (await res.json()) as Suggest;
     return [
       all,

@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { qs } from "./http";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery, useWrite } from "./query";
 
 // --- Reads ------------------------------------------------------------------
 
@@ -146,7 +146,7 @@ function patchProfile(
   userId: string,
   update: (p: W.ProfilePage & { isPrivate: false }) => W.ProfilePage,
 ) {
-  return patch<W.ProfilePage>(keys.profiles, (page) =>
+  return patchAll<W.ProfilePage>(keys.profiles, (page) =>
     !page.isPrivate && page.profile.id === userId ? update(page) : page,
   );
 }
