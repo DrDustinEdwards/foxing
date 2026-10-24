@@ -8,8 +8,6 @@ export interface DiscordSession {
 
 declare const __FOXING_API__: string
 
-let sdk: DiscordSDK | null = null
-
 function clientId(): string {
   const id =
     (import.meta.env.VITE_DISCORD_CLIENT_ID as string | undefined) ?? ''
@@ -23,7 +21,7 @@ export async function authenticate(): Promise<DiscordSession | null> {
       'VITE_DISCORD_CLIENT_ID is not configured. Set it in the Discord activity environment.',
     )
   }
-  sdk = new DiscordSDK(id)
+  const sdk = new DiscordSDK(id)
   await sdk.ready()
   const { code } = await sdk.commands.authorize({
     client_id: id,
@@ -46,8 +44,4 @@ export async function authenticate(): Promise<DiscordSession | null> {
     | { needsLink: true }
   if ('needsLink' in data) return null
   return { token: data.token, userId: data.userId, username: data.username }
-}
-
-export function activeSdk(): DiscordSDK | null {
-  return sdk
 }

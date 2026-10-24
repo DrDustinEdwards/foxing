@@ -2,8 +2,8 @@
 // list, sample-parses manifests + position lists, and (when --base is given)
 // confirms the served asset path returns X-Robots-Tag: noindex (R3).
 //
-//   pnpm tsx scripts/explode-epubs/stage3-verify.ts
-//   pnpm tsx scripts/explode-epubs/stage3-verify.ts --base https://foxing.dustin-edwards.workers.dev
+//   node scripts/explode-epubs/stage3-verify.ts
+//   node scripts/explode-epubs/stage3-verify.ts --base https://foxing.dustin-edwards.workers.dev
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { GetObjectCommand, HeadObjectCommand, S3Client } from "@aws-sdk/client-s3";

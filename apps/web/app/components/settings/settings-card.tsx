@@ -41,3 +41,40 @@ export function Card({ title, children }: { title: string; children: React.React
 
 /** Capsomer's input, on the page's ground where a form sits on a card. */
 export const inputClass = "cap-input fx-input-ground";
+
+/** A settings form's submit button, its done note and its error. */
+export function SubmitRow({
+  disabled,
+  pending,
+  label,
+  pendingLabel,
+  done,
+  error,
+}: {
+  disabled: boolean;
+  pending: boolean;
+  label: string;
+  pendingLabel: string;
+  done: string | null;
+  error: string | null;
+}) {
+  return (
+    <>
+      <div className="row">
+        <button type="submit" disabled={disabled} className="cap-btn">
+          {pending ? pendingLabel : label}
+        </button>
+        {done ? (
+          <span className="meta" role="status">
+            {done}
+          </span>
+        ) : null}
+      </div>
+      {error ? (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
+}

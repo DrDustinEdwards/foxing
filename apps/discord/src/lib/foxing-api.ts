@@ -10,7 +10,7 @@ export interface ClubSummary {
   current_book: { id: string; title: string; author: string } | null
 }
 
-export interface MemberProgress {
+interface MemberProgress {
   user_id: string
   display_name: string
   avatar_url: string | null
@@ -18,13 +18,13 @@ export interface MemberProgress {
   status: string | null
 }
 
-export interface PollOption {
+interface PollOption {
   id: string
   label: string
   vote_count: number
 }
 
-export interface ActivePoll {
+interface ActivePoll {
   id: string
   title: string
   poll_type: string
