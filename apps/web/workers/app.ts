@@ -132,7 +132,7 @@ app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw));
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
 mountCarrel(app, reactRouterHandler);
 
-// The wired AUTH_RL class (5/min/IP). Applied to credential submissions below.
+// The auth rate-limit class (5/min/IP). Applied to credential submissions below.
 const authLimiter = rateLimit("auth");
 
 // The password reset link is a GET navigation Better Auth handles directly. If the
@@ -154,7 +154,7 @@ function friendlyResetRedirect(req: Request): Response {
 app.on(["GET", "POST"], "/api/auth/*", async (c) => {
   const req = c.req.raw;
   // Credential-stuffing defense: throttle credential submissions (POST: sign-in,
-  // sign-up, password-reset requests) with the wired AUTH_RL class (5/min/IP). GET
+  // sign-up, password-reset requests) with the auth rate-limit class (5/min/IP). GET
   // navigations (session checks, the reset callback) are not throttled. The class
   // throws AppError on limit; the root app has no onError, so convert it here.
   if (req.method === "POST") {
@@ -396,6 +396,8 @@ async function queue(
 // The ClubRoom Durable Object class must be a named export of the Worker's entry module
 // so the runtime can instantiate it for the CLUB_ROOM binding.
 export { ClubRoom } from "./club-room";
+// The rate limiter behind @foxing/api's rateLimit (the RATE_LIMITER binding).
+export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
 // Security headers on every response this Worker sends: pages, API, redirects, errors, 404s and
 // edge-cache hits (workers/security-headers.ts). Applied outside Hono, on what app.fetch returns:

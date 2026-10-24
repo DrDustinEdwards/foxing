@@ -20,8 +20,8 @@ function runD1(sql: string): string {
 }
 
 // The live site throttles credential POSTs (sign-in, sign-up) to 5 a minute per address
-// (AUTH_RL in workers/app.ts), and the setup projects' four sign-ins come from the same
-// runner in the same minute. A throttled attempt waits for the window to move on.
+// (the auth rate-limit class in workers/app.ts), and the setup projects' four sign-ins come
+// from the same runner in the same minute. A throttled attempt waits for the window to move on.
 const THROTTLE_WAIT = 20_000;
 
 async function provisionVerifiedAccount(baseURL: string) {
