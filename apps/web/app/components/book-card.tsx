@@ -12,8 +12,8 @@ export type BookCardData = {
 };
 
 /**
- * Content-card variant (design-system Rule 15): border-subtle -> border-interactive
- * on hover, title -> brand-text on hover. The whole card is the link target.
+ * Content-card variant (design-system Rule 15): the edge strengthens on hover and the
+ * title takes the accent text. The whole card is the link target.
  */
 export function BookCard({
   book,
@@ -25,13 +25,7 @@ export function BookCard({
   className?: string;
 }) {
   return (
-    <Link
-      to={`/books/${book.slug}`}
-      className={cn(
-        "group flex flex-col rounded-card border border-border-subtle bg-surface p-2.5 transition-colors hover:border-border-interactive",
-        className,
-      )}
-    >
+    <Link to={`/books/${book.slug}`} className={cn("fx-book-card", className)}>
       <CoverImage
         src={book.coverUrl}
         alt={`${book.title} by ${book.author}`}
@@ -39,14 +33,12 @@ export function BookCard({
         priority={priority}
         sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
       />
-      <div className="mt-3 px-0.5 pb-1">
-        <h3 className="font-display text-base leading-snug text-primary transition-colors group-hover:text-brand-text">
-          {book.title}
-        </h3>
-        <p className="mt-1 font-ui text-sm text-tertiary">
+      <div className="fx-book-card-body">
+        <h3 className="fx-book-card-title">{book.title}</h3>
+        <p className="mt-1 meta">
           {book.author}
           {book.publicationYear ? (
-            <span className="text-tertiary"> &middot; {book.publicationYear}</span>
+            <span className="dim"> &middot; {book.publicationYear}</span>
           ) : null}
         </p>
       </div>
@@ -56,9 +48,5 @@ export function BookCard({
 
 /** Responsive grid wrapper for book cards. */
 export function BookGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-      {children}
-    </div>
-  );
+  return <div className="fx-book-grid">{children}</div>;
 }

@@ -36,13 +36,13 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Books</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Books</h1>
       </div>
 
-      <div className="space-y-6">
+      <div className="stack-6">
         <AdminCard title="Search">
-          <form method="get" className="flex gap-2">
+          <form method="get" className="row-2">
             <input
               name="q"
               defaultValue={q}
@@ -57,9 +57,9 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Catalog">
           {books.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No books match this search.</p>
+            <p className="meta">No books match this search.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {books.map((b) => (
                 <BookRow key={b.id} book={b} onDone={reload} />
               ))}
@@ -83,22 +83,18 @@ function BookRow({
 
   return (
     <li className="py-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-ui text-sm font-medium text-primary">
+      <div className="row spread">
+        <div className="min-0">
+          <p className="sans small strong">
             {book.title}
-            {book.isStaffPick ? (
-              <span className="ml-2 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase text-brand-subtle-text">
-                Featured
-              </span>
-            ) : null}
+            {book.isStaffPick ? <span className="badge ml-2">Featured</span> : null}
           </p>
-          <p className="truncate font-ui text-sm text-tertiary">
+          <p className="truncate meta">
             {book.author}
             {book.publicationYear ? ` · ${book.publicationYear}` : ""} · {book.sourceType}
           </p>
         </div>
-        <div className="flex shrink-0 gap-2">
+        <div className="row-2 shrink-0">
           <AdminButton pending={pending} onClick={() => setEditing((v) => !v)}>
             {editing ? "Close" : "Edit metadata"}
           </AdminButton>
@@ -157,10 +153,10 @@ function BookEdit({
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-md border border-border-subtle bg-sunken p-4">
-      <div className="grid grid-cols-2 gap-3">
+    <div className="mt-3 fx-admin-books-card">
+      <div className="fx-admin-books-grid">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
+          <span className="fx-label">Title</span>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -168,7 +164,7 @@ function BookEdit({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Author</span>
+          <span className="fx-label">Author</span>
           <input
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
@@ -176,7 +172,7 @@ function BookEdit({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Publication year</span>
+          <span className="fx-label">Publication year</span>
           <input
             type="number"
             value={publicationYear}
@@ -185,7 +181,7 @@ function BookEdit({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Publisher</span>
+          <span className="fx-label">Publisher</span>
           <input
             value={publisher}
             onChange={(e) => setPublisher(e.target.value)}
@@ -194,7 +190,7 @@ function BookEdit({
         </label>
       </div>
       <label className="block">
-        <span className="mb-1 block font-ui text-sm text-secondary">Description</span>
+        <span className="fx-label">Description</span>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}

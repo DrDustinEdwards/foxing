@@ -95,20 +95,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       {/* Hero */}
-      <Container className="pb-6 pt-6">
-        <div className="mx-auto max-w-3xl text-center">
+      <Container className="py-6">
+        <div className="fx-hero">
           <Eyebrow className="mb-4">A reading home for the classics</Eyebrow>
-          <h1 className="font-display text-5xl leading-[1.05] sm:text-6xl">
-            Read the classics. Keep the record.
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-lg text-secondary">
+          <h1 className="fx-hero-title">Read the classics. Keep the record.</h1>
+          <p className="lead measure-xl center mt-5">
             {total.toLocaleString()} books, free to read. Track what you finish, mark the passages
             that stay with you, and follow the picks worth reading.
           </p>
-          <div className="mx-auto mt-8 max-w-xl">
+          <div className="measure-xl center mt-8">
             <SearchBox />
           </div>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
+          <div className="row wrap justify-center mt-5">
             <Button to="/books">Browse the library</Button>
             <Button to="/awards" variant="secondary">
               Award winners
@@ -122,8 +120,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* Today's Pick: a published Book of the Month, or a staff pick. */}
       {pick ? (
         <Container className="mt-16">
-          <article className="grid gap-6 rounded-hero border border-border-subtle bg-surface p-6 shadow-card-sm sm:grid-cols-[minmax(0,160px)_minmax(0,1fr)] sm:items-center sm:p-8">
-            <div className="mx-auto w-full max-w-[160px]">
+          <article className="card card-hero fx-pick">
+            <div className="fx-pick-cover">
               <Link to={`/books/${pick.book.slug}`}>
                 <CoverImage
                   src={pick.book.coverUrl}
@@ -135,20 +133,15 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
             <div>
               <Eyebrow>{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</Eyebrow>
-              <h2 className="mt-2 font-display text-2xl leading-tight">
-                <Link to={`/books/${pick.book.slug}`} className="hover:text-brand-text">
+              <h2 className="display-2 mt-2">
+                <Link to={`/books/${pick.book.slug}`} className="hover-accent">
                   {pick.book.title}
                 </Link>
               </h2>
-              <p className="mt-1 font-ui text-secondary">{pick.book.author}</p>
-              {pick.note ? (
-                <p className="mt-3 line-clamp-2 font-body text-secondary">{pick.note}</p>
-              ) : null}
+              <p className="mt-1 sans muted">{pick.book.author}</p>
+              {pick.note ? <p className="mt-3 clamp-2 muted">{pick.note}</p> : null}
               {pick.source === "botm" ? (
-                <Link
-                  to="/book-of-the-month"
-                  className="mt-3 inline-block font-ui text-sm text-brand-text hover:underline"
-                >
+                <Link to="/book-of-the-month" className="link sans small mt-3 block">
                   Why this book
                 </Link>
               ) : null}
@@ -159,9 +152,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {/* From the shelves */}
       <Container className="mt-16">
-        <div className="mb-6 flex items-end justify-between">
-          <h2 className="font-display text-2xl">From the shelves</h2>
-          <Link to="/books" className="font-ui text-sm text-brand-text hover:underline">
+        <div className="row spread items-end mb-6">
+          <h2 className="display-2">From the shelves</h2>
+          <Link to="/books" className="link sans small">
             See all
           </Link>
         </div>
@@ -175,25 +168,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* From the Journal */}
       {posts.length > 0 ? (
         <Container className="mt-16">
-          <div className="mb-6 flex items-end justify-between">
-            <h2 className="font-display text-2xl">From the Journal</h2>
-            <Link to="/journal" className="font-ui text-sm text-brand-text hover:underline">
+          <div className="row spread items-end mb-6">
+            <h2 className="display-2">From the Journal</h2>
+            <Link to="/journal" className="link sans small">
               All essays
             </Link>
           </div>
-          <div className="grid gap-6 sm:grid-cols-3">
+          <div className="grid-3">
             {posts.map((p) => (
-              <Link
-                key={p.slug}
-                to={`/journal/${p.slug}`}
-                className="group rounded-card border border-border-subtle bg-surface p-5 shadow-card-sm transition-shadow hover:shadow-card-md"
-              >
-                <h3 className="font-display text-lg leading-snug text-primary group-hover:text-brand-text">
-                  {p.title}
-                </h3>
-                {p.excerpt ? (
-                  <p className="mt-2 line-clamp-3 font-body text-secondary">{p.excerpt}</p>
-                ) : null}
+              <Link key={p.slug} to={`/journal/${p.slug}`} className="fx-entity">
+                <h3 className="display-0 fx-entity-title">{p.title}</h3>
+                {p.excerpt ? <p className="mt-2 clamp-3 muted">{p.excerpt}</p> : null}
               </Link>
             ))}
           </div>
@@ -204,24 +189,20 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           web rather than linking dead store pages. Swap in store badges when mobile
           ships. */}
       <Container className="mt-16">
-        <section className="rounded-hero border border-border-subtle bg-surface p-8 text-center shadow-card-sm sm:p-12">
+        <section className="card card-hero fx-cta">
           <Eyebrow className="mb-3">Start reading</Eyebrow>
-          <h2 className="mx-auto max-w-2xl font-display text-3xl leading-tight sm:text-4xl">
-            Read the classics. Finally understand them.
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-secondary">
+          <h2 className="fx-cta-title">Read the classics. Finally understand them.</h2>
+          <p className="measure-xl center mt-4 muted">
             Read free on the web today. The iOS and Android apps are on the way, with your library,
             highlights, and streak carried across.
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <div className="row wrap justify-center mt-6">
             <Button to="/signup">Join free on web</Button>
             <Button to="/books" variant="secondary">
               Browse the library
             </Button>
           </div>
-          <p className="mt-4 font-mono text-xs uppercase tracking-[0.08em] text-tertiary">
-            iOS and Android apps coming soon
-          </p>
+          <p className="mt-4 card-label">iOS and Android apps coming soon</p>
         </section>
       </Container>
     </PageShell>
@@ -272,7 +253,7 @@ function CompassIcon() {
 function ValueProps() {
   return (
     <Container className="mt-16">
-      <div className="grid gap-10 sm:grid-cols-3">
+      <div className="fx-values">
         <ValueColumn icon={<BookOpenIcon />} heading="1,400+ classic books, free.">
           Public domain literature, properly formatted for reading on the web. No subscription, no
           paywall, no account required to open a book.
@@ -300,10 +281,10 @@ function ValueColumn({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3">
-      <span className="text-brand-ui">{icon}</span>
-      <h2 className="font-display text-lg text-primary">{heading}</h2>
-      <p className="font-body text-base text-secondary">{children}</p>
+    <div className="stack-3">
+      <span className="accent-ui">{icon}</span>
+      <h2 className="display-0">{heading}</h2>
+      <p className="muted">{children}</p>
     </div>
   );
 }

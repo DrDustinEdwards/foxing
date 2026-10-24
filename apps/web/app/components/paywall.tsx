@@ -6,7 +6,6 @@
 // layer; it mirrors foxing/monetization.md.
 import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "react-router";
-import { cn } from "~/lib/cn";
 
 type Plan = "monthly" | "annual";
 
@@ -75,19 +74,19 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+    <div className="justify-center fx-paywall-row">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className="relative w-full max-w-md overflow-hidden rounded-hero bg-section-charcoal p-8 text-on-dark shadow-card-md"
+        className="relative fx-paywall-card"
       >
         <button
           ref={closeRef}
           type="button"
           onClick={onClose}
           aria-label="Dismiss"
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full text-on-dark/70 transition-colors hover:bg-white/10 hover:text-on-dark"
+          className="fx-paywall-btn"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <path
@@ -99,17 +98,15 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
           </svg>
         </button>
 
-        <p className="flex items-center gap-2 font-display text-2xl font-semibold">
+        <p className="fx-paywall-title">
           <span aria-hidden="true">🦊</span> Foxing Plus
         </p>
-        <p className="mt-1 font-body text-base italic text-on-dark/70">
-          your AI reading companion.
-        </p>
+        <p className="mt-1 italic fx-paywall-text">your AI reading companion.</p>
 
-        <ul className="mt-5 space-y-2">
+        <ul className="mt-5 fx-paywall-list">
           {FEATURES.map((f) => (
-            <li key={f} className="flex gap-2 font-ui text-sm text-on-dark/90">
-              <span aria-hidden="true" className="text-brand-ui">
+            <li key={f} className="fx-paywall-row-2">
+              <span aria-hidden="true" className="accent-ui">
                 +
               </span>
               {f}
@@ -118,10 +115,10 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
         </ul>
 
         <fieldset className="mt-6">
-          <legend id={titleId} className="sr-only">
+          <legend id={titleId} className="cap-sr-only">
             Choose a Foxing Plus plan
           </legend>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="fx-paywall-grid">
             {(Object.keys(PLANS) as Plan[]).map((key) => {
               const selected = plan === key;
               return (
@@ -130,21 +127,12 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
                   type="button"
                   aria-pressed={selected}
                   onClick={() => setPlan(key)}
-                  className={cn(
-                    "rounded-card border px-3 py-2 text-left transition-colors",
-                    selected
-                      ? "border-brand-ui bg-white/10"
-                      : "border-white/20 hover:border-white/40",
-                  )}
+                  className="fx-paywall-plan"
                 >
-                  <span className="block font-ui text-xs uppercase tracking-[0.08em] text-on-dark/70">
-                    {PLANS[key].label}
-                  </span>
-                  <span className="block font-ui text-sm font-medium">{PLANS[key].price}</span>
+                  <span className="block fx-paywall-label">{PLANS[key].label}</span>
+                  <span className="block fx-paywall-label-2">{PLANS[key].price}</span>
                   {PLANS[key].note ? (
-                    <span className="mt-0.5 inline-block rounded-full bg-brand-ui px-1.5 py-0.5 font-mono text-[0.625rem] text-on-brand">
-                      {PLANS[key].note}
-                    </span>
+                    <span className="fx-paywall-label-3">{PLANS[key].note}</span>
                   ) : null}
                 </button>
               );
@@ -156,29 +144,28 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
           type="button"
           onClick={startTrial}
           disabled={pending}
-          className="mt-5 w-full rounded-cover bg-brand-ui px-4 py-3 font-ui text-sm font-medium text-on-brand transition hover:opacity-90 disabled:opacity-60"
+          className="cap-btn mt-5 fx-paywall-btn-2"
+          data-variant="primary"
+          data-size="lg"
         >
           {pending ? "Starting..." : "Start free 7-day trial"}
         </button>
-        <p className="mt-2 text-center font-ui text-xs text-on-dark/60">
+        <p className="mt-2 text-center fx-paywall-text-2">
           No charge until trial ends. Cancel anytime.
         </p>
 
         {error ? (
-          <p
-            className="mt-3 rounded-md border border-brand-ui/60 px-3 py-2 text-center font-ui text-sm text-on-dark"
-            role="alert"
-          >
+          <p className="mt-3 py-2 text-center fx-paywall-text-3" role="alert">
             {error}
           </p>
         ) : null}
 
-        <p className="mt-4 text-center font-ui text-xs text-on-dark/60">
-          <Link to="/privacy" className="underline hover:text-on-dark">
+        <p className="mt-4 text-center fx-paywall-text-2">
+          <Link to="/privacy" className="fx-paywall-link">
             Privacy
           </Link>
           <span aria-hidden="true"> · </span>
-          <Link to="/terms" className="underline hover:text-on-dark">
+          <Link to="/terms" className="fx-paywall-link">
             Terms
           </Link>
         </p>

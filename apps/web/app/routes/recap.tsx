@@ -49,7 +49,7 @@ export default function Recap({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-3xl flex flex-col gap-10">
+      <Container className="stack-10">
         <PageHeader eyebrow={`Year in Reading ${year}`} title={`${displayName}'s reading year`} />
 
         {recap.booksFinished === 0 ? (
@@ -59,36 +59,25 @@ export default function Recap({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <section className="fx-recap-grid">
               {stats.map((s) => (
-                <div
-                  key={s.label}
-                  className="rounded-card border border-border-subtle bg-surface p-5 text-center"
-                >
-                  <p className="font-display text-3xl text-primary">{s.value}</p>
-                  <p className="mt-1 font-mono text-[0.65rem] uppercase tracking-wide text-tertiary">
-                    {s.label}
-                  </p>
+                <div key={s.label} className="text-center fx-recap-card">
+                  <p className="display-3">{s.value}</p>
+                  <p className="mt-1 fx-recap-caps">{s.label}</p>
                 </div>
               ))}
             </section>
 
             {recap.topBooks.length > 0 ? (
-              <section className="flex flex-col gap-4">
-                <h2 className="font-display text-2xl">Top books</h2>
-                <ol className="flex flex-col gap-2">
+              <section className="stack">
+                <h2 className="display-2">Top books</h2>
+                <ol className="stack-2">
                   {recap.topBooks.map((b) => (
-                    <li
-                      key={b.bookId}
-                      className="flex items-baseline justify-between gap-3 rounded-card border border-border-subtle bg-surface px-4 py-3"
-                    >
-                      <Link
-                        to={`/books/${b.slug}`}
-                        className="font-display text-lg text-primary hover:text-brand-text"
-                      >
+                    <li key={b.bookId} className="py-3 fx-recap-card-2">
+                      <Link to={`/books/${b.slug}`} className="fx-recap-link">
                         {b.title}
                       </Link>
-                      <span className="font-mono text-sm text-brand-text">
+                      <span className="fx-recap-label">
                         {b.ratingHalf != null ? `${(b.ratingHalf / 2).toFixed(1)}★` : ""}
                       </span>
                     </li>

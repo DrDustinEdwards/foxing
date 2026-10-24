@@ -29,14 +29,9 @@ function ClubRow({
   club: { slug: string | null; name: string; description: string | null };
 }) {
   return (
-    <Link
-      to={`/clubs/${club.slug}`}
-      className="block rounded-card border border-border-subtle bg-surface p-5 transition-colors hover:border-border-interactive"
-    >
-      <p className="font-display text-lg text-primary">{club.name}</p>
-      {club.description ? (
-        <p className="mt-1 line-clamp-2 font-body text-sm text-secondary">{club.description}</p>
-      ) : null}
+    <Link to={`/clubs/${club.slug}`} className="block fx-clubs-card">
+      <p className="display-0">{club.name}</p>
+      {club.description ? <p className="mt-1 fx-clubs-text">{club.description}</p> : null}
     </Link>
   );
 }
@@ -47,28 +42,23 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <h1 className="font-display text-4xl">Book clubs</h1>
-          <Link
-            to="/clubs/new"
-            className="rounded-cover bg-brand-text px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover dark:text-[color:var(--section-charcoal)]"
-          >
+        <div className="row-4 wrap spread">
+          <h1 className="display-4">Book clubs</h1>
+          <Link to="/clubs/new" className="cap-btn" data-variant="primary">
             New club
           </Link>
         </div>
 
         <section className="mt-10">
-          <h2 className="font-mono text-xs uppercase tracking-[0.14em] text-tertiary">
-            Your clubs
-          </h2>
+          <h2 className="fx-clubs-caps">Your clubs</h2>
           {mine.length === 0 ? (
-            <div className="mt-4 rounded-card border border-dashed border-border-subtle bg-surface p-8 text-center">
-              <p className="font-ui text-sm text-tertiary">
+            <div className="mt-4 text-center fx-clubs-card-2">
+              <p className="meta">
                 You have not joined a club yet. Join one below, or start your own.
               </p>
             </div>
           ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 fx-clubs-grid">
               {mine.map((club) => (
                 <ClubRow key={club.id} club={club} />
               ))}
@@ -77,11 +67,11 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
         </section>
 
         <section className="mt-12">
-          <h2 className="font-mono text-xs uppercase tracking-[0.14em] text-tertiary">Discover</h2>
+          <h2 className="fx-clubs-caps">Discover</h2>
           {discover.length === 0 ? (
-            <p className="mt-4 font-ui text-sm text-tertiary">No public clubs yet.</p>
+            <p className="mt-4 meta">No public clubs yet.</p>
           ) : (
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="mt-4 fx-clubs-grid">
               {discover.map((club) => (
                 <ClubRow key={club.id} club={club} />
               ))}

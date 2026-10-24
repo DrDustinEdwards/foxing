@@ -1,10 +1,9 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-// The signed-in app shell (nav authed state, secondary bar, /home dashboard). The
-// authed side (avatar instead of Sign in, "/" -> /home, /me in the shell) needs a
-// verified session, which this e2e cannot forge; that is exercised in the dogfood
-// gate. Here we lock the anonymous contracts, which are deterministic.
+// The anonymous app shell on Capsomer's site header. The signed-in side is
+// e2e/authed/shell.spec.ts. The header's own behaviour (panels, the phone sheet,
+// Escape) is Capsomer's and tested there; these lock what Foxing puts in it.
 test.describe("app shell", () => {
   test('"/" stays the marketing page for anonymous visitors', async ({ page }) => {
     await page.goto("/");
@@ -12,20 +11,13 @@ test.describe("app shell", () => {
     await expect(page.getByRole("heading", { level: 1, name: /read the classics/i })).toBeVisible();
   });
 
-  test("anonymous nav shows Sign in and Join free, not an avatar menu", async ({ page }) => {
+  test("anonymous header shows Sign in and Join free, not the account button", async ({ page }) => {
     await page.goto("/");
     // Scope to the header; "Sign in" also appears in the footer account column.
     const header = page.getByRole("banner");
     await expect(header.getByRole("link", { name: /^sign in$/i })).toBeVisible();
     await expect(header.getByRole("link", { name: /join free/i })).toBeVisible();
-    await expect(page.getByRole("button", { name: /account menu/i })).toHaveCount(0);
-  });
-
-  test("the Books nav dropdown opens Browse and era filters", async ({ page }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /^books$/i }).click();
-    await expect(page.getByRole("menuitem", { name: /all books/i })).toBeVisible();
-    await expect(page.getByRole("menuitem", { name: /before 1800/i })).toBeVisible();
+    await expect(header.getByRole("button", { name: /your account/i })).toHaveCount(0);
   });
 
   test("/home redirects anonymous visitors to sign in", async ({ page }) => {
@@ -34,18 +26,10 @@ test.describe("app shell", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("the Celebrity Picks nav dropdown opens featured clubs and View all picks", async ({
+  test("the Books and Celebrity Picks panels open, and every header link resolves", async ({
     page,
   }) => {
-    await page.goto("/");
-    await page.getByRole("button", { name: /celebrity picks/i }).click();
-    const menu = page.getByRole("menu", { name: /celebrity picks/i });
-    await expect(menu).toBeVisible();
-    await expect(menu.getByRole("menuitem", { name: /view all picks/i })).toBeVisible();
-  });
-
-  test("every rendered nav link resolves (no dead links)", async ({ page }) => {
-    await page.goto("/");
+    await page.goto("/", { waitUntil: "networkidle" });
     const header = page.getByRole("banner");
 
     const hrefs = new Set<string>();
@@ -59,10 +43,15 @@ test.describe("app shell", () => {
     }
 
     await collect(header);
-    await page.getByRole("button", { name: /^books$/i }).click();
-    await collect(page.getByRole("menu", { name: /^books$/i }));
-    await page.getByRole("button", { name: /celebrity picks/i }).click();
-    await collect(page.getByRole("menu", { name: /celebrity picks/i }));
+    await header.getByRole("button", { name: /^books$/i }).click();
+    const books = header.getByRole("group", { name: /^books$/i });
+    await expect(books.getByRole("link", { name: /all books/i })).toBeVisible();
+    await expect(books.getByRole("link", { name: /before 1800/i })).toBeVisible();
+    await collect(books);
+    await header.getByRole("button", { name: /celebrity picks/i }).click();
+    const picks = header.getByRole("group", { name: /celebrity picks/i });
+    await expect(picks.getByRole("link", { name: /view all picks/i })).toBeVisible();
+    await collect(picks);
 
     expect(hrefs.size).toBeGreaterThan(0);
     for (const href of hrefs) {
@@ -71,12 +60,13 @@ test.describe("app shell", () => {
     }
   });
 
-  test("the open Books mega-menu has no serious accessibility violations (WCAG AA)", async ({
+  test("the open Books panel has no serious accessibility violations (WCAG AA)", async ({
     page,
   }) => {
     await page.goto("/", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /^books$/i }).click();
-    await expect(page.getByRole("menu", { name: /^books$/i })).toBeVisible();
+    const header = page.getByRole("banner");
+    await header.getByRole("button", { name: /^books$/i }).click();
+    await expect(header.getByRole("group", { name: /^books$/i })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();
@@ -84,31 +74,5 @@ test.describe("app shell", () => {
       (v) => v.impact === "serious" || v.impact === "critical",
     );
     expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
-  });
-
-  test("the open Celebrity Picks mega-menu has no serious accessibility violations (WCAG AA)", async ({
-    page,
-  }) => {
-    await page.goto("/", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /celebrity picks/i }).click();
-    await expect(page.getByRole("menu", { name: /celebrity picks/i })).toBeVisible();
-    const results = await new AxeBuilder({ page })
-      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
-      .analyze();
-    const serious = results.violations.filter(
-      (v) => v.impact === "serious" || v.impact === "critical",
-    );
-    expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
-  });
-
-  test("the mobile drawer opens from the hamburger and closes on Escape", async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/");
-    await page.getByRole("button", { name: /open menu/i }).click();
-    const drawer = page.getByRole("dialog", { name: /^menu$/i });
-    await expect(drawer).toBeVisible();
-    await expect(drawer.getByRole("link", { name: /^books$/i })).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(drawer).not.toBeVisible();
   });
 });

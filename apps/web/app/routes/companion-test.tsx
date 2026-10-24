@@ -34,9 +34,9 @@ export default function CompanionTest({ loaderData }: Route.ComponentProps) {
   const [paywallOpen, setPaywallOpen] = useState(false);
   return (
     <PageShell>
-      <Container className="max-w-3xl">
-        <div className="mb-6 rounded-md border border-warning-border bg-warning-bg px-4 py-3">
-          <p className="font-ui text-sm text-warning">
+      <Container>
+        <div className="mb-6 py-3 fx-companion-test-box">
+          <p className="fx-companion-test-text">
             Test surface. Not a product page -- slated for removal once the reader hosts the
             companion. Your tier: <strong>{tier}</strong>.
           </p>
@@ -133,15 +133,15 @@ function RunAction({
   }
 
   return (
-    <section className="rounded-card border border-border-subtle bg-surface p-6">
-      <h2 className="font-display text-xl text-primary">Run an action</h2>
-      <form onSubmit={run} className="mt-4 space-y-4">
+    <section className="fx-companion-test-card">
+      <h2 className="display-1">Run an action</h2>
+      <form onSubmit={run} className="mt-4 fx-companion-test-form">
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Action</span>
+          <span className="fx-label">Action</span>
           <select
             value={action}
             onChange={(e) => setAction(e.target.value)}
-            className="w-full rounded-md border border-border-subtle bg-base px-3 py-2 font-ui text-sm text-primary"
+            className="cap-select py-2 fx-companion-test-select"
           >
             {actions.map((a) => (
               <option key={a} value={a}>
@@ -151,11 +151,11 @@ function RunAction({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">Book</span>
+          <span className="fx-label">Book</span>
           <select
             value={bookId}
             onChange={(e) => setBookId(e.target.value)}
-            className="w-full rounded-md border border-border-subtle bg-base px-3 py-2 font-ui text-sm text-primary"
+            className="cap-select py-2 fx-companion-test-select"
           >
             {books.map((b) => (
               <option key={b.id} value={b.id}>
@@ -165,41 +165,29 @@ function RunAction({
           </select>
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">
-            Message (chat-style actions)
-          </span>
+          <span className="fx-label">Message (chat-style actions)</span>
           <input
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            className="w-full rounded-md border border-border-subtle bg-base px-3 py-2 font-ui text-sm text-primary"
+            className="cap-input py-2 fx-companion-test-select"
           />
         </label>
         <label className="block">
-          <span className="mb-1 block font-ui text-sm text-secondary">
-            Selection text (word/passage actions)
-          </span>
+          <span className="fx-label">Selection text (word/passage actions)</span>
           <textarea
             value={selection}
             onChange={(e) => setSelection(e.target.value)}
             rows={2}
-            className="w-full rounded-md border border-border-subtle bg-base px-3 py-2 font-ui text-sm text-primary"
+            className="cap-input py-2 fx-companion-test-select"
           />
         </label>
-        <button
-          type="submit"
-          disabled={pending || !bookId}
-          className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending || !bookId} className="cap-btn">
           {pending ? "Streaming..." : "Run"}
         </button>
       </form>
-      {output ? (
-        <div className="mt-4 whitespace-pre-wrap rounded-md border border-border-subtle bg-base p-4 font-body text-sm text-primary">
-          {output}
-        </div>
-      ) : null}
+      {output ? <div className="mt-4 fx-companion-test-card-2">{output}</div> : null}
       {error ? (
-        <p className="mt-3 font-ui text-sm text-error" role="alert">
+        <p className="mt-3 error" role="alert">
           {error}
         </p>
       ) : null}
@@ -243,41 +231,36 @@ function CacheBatch() {
   }
 
   return (
-    <section className="mt-8 rounded-card border border-border-subtle bg-surface p-6">
-      <h2 className="font-display text-xl text-primary">Cache batch (admin)</h2>
-      <p className="mt-2 font-ui text-sm text-secondary">
+    <section className="mt-8 fx-companion-test-card">
+      <h2 className="display-1">Cache batch (admin)</h2>
+      <p className="mt-2 ui">
         Generate the 4 free-cached actions for up to a handful of catalog books missing them. Runs
         synchronously; keep this small.
       </p>
-      <div className="mt-4 flex items-center gap-3">
-        <label className="flex items-center gap-2">
-          <span className="font-ui text-sm text-secondary">Books</span>
+      <div className="mt-4 row">
+        <label className="row-2">
+          <span className="ui">Books</span>
           <input
             type="number"
             min={1}
             max={20}
             value={limit}
             onChange={(e) => setLimit(Number(e.target.value))}
-            className="w-20 rounded-md border border-border-subtle bg-base px-2 py-1 font-ui text-sm text-primary"
+            className="cap-input fx-companion-test-input"
           />
         </label>
-        <button
-          type="button"
-          onClick={run}
-          disabled={pending}
-          className="rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
-        >
+        <button type="button" onClick={run} disabled={pending} className="cap-btn">
           {pending ? "Running..." : "Run batch"}
         </button>
       </div>
       {result ? (
-        <p className="mt-4 font-ui text-sm text-secondary" role="status">
+        <p className="mt-4 fx-companion-test-text-2" role="status">
           {result.booksProcessed} books, {result.actionsGenerated} actions,{" "}
           {(result.totalCostCents / 100).toFixed(2)} USD.
         </p>
       ) : null}
       {error ? (
-        <p className="mt-3 font-ui text-sm text-error" role="alert">
+        <p className="mt-3 error" role="alert">
           {error}
         </p>
       ) : null}

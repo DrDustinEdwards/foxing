@@ -52,20 +52,20 @@ export default function ClubThread({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
-        <Link to={`/clubs/${club.slug}`} className="font-ui text-sm text-brand-text underline">
+      <Container>
+        <Link to={`/clubs/${club.slug}`} className="fx-club-thread-link">
           &larr; {club.name}
         </Link>
-        <h1 className="mt-3 font-display text-3xl">{thread.title}</h1>
+        <h1 className="mt-3 fx-club-thread-title">{thread.title}</h1>
 
-        <ul className="mt-8 space-y-4" data-testid="post-list">
+        <ul className="mt-8 fx-club-thread-list" data-testid="post-list">
           {posts.length === 0 ? (
-            <li className="font-ui text-sm text-tertiary">No posts yet. Start the conversation.</li>
+            <li className="meta">No posts yet. Start the conversation.</li>
           ) : (
             posts.map((p) => (
-              <li key={p.id} className="rounded-card border border-border-subtle bg-surface p-4">
-                <p className="whitespace-pre-wrap font-body text-primary">{p.content}</p>
-                <p className="mt-2 font-mono text-[0.625rem] uppercase tracking-wide text-tertiary">
+              <li key={p.id} className="card">
+                <p className="fx-club-thread-text">{p.content}</p>
+                <p className="mt-2 fx-club-thread-caps">
                   {p.authorId === viewerId ? "You" : "Member"} ·{" "}
                   {new Date(p.createdAt).toLocaleString()}
                 </p>
@@ -76,7 +76,7 @@ export default function ClubThread({ loaderData }: Route.ComponentProps) {
 
         {isMember ? (
           <form onSubmit={post} className="mt-8">
-            <label htmlFor="content" className="block font-ui text-sm font-medium text-primary">
+            <label htmlFor="content" className="block fx-club-thread-field">
               Add a reply
             </label>
             <textarea
@@ -84,20 +84,18 @@ export default function ClubThread({ loaderData }: Route.ComponentProps) {
               name="content"
               rows={3}
               required
-              className="mt-1.5 w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+              className="cap-input py-2 fx-club-thread-input"
             />
             {error ? (
-              <p
-                className="mt-2 rounded-md border border-danger/50 bg-danger-subtle px-3 py-1.5 font-ui text-xs text-danger-text"
-                role="alert"
-              >
+              <p className="mt-2 fx-club-thread-text-2" role="alert">
                 {error}
               </p>
             ) : null}
             <button
               type="submit"
               disabled={pending}
-              className="mt-2 rounded-cover bg-brand-text px-4 py-2 font-ui text-sm text-on-brand disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
+              className="cap-btn mt-2"
+              data-variant="primary"
             >
               {pending ? "Posting..." : "Post reply"}
             </button>

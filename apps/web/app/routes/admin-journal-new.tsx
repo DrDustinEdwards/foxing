@@ -69,14 +69,14 @@ export default function AdminJournalNew() {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">New post</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">New post</h1>
       </div>
 
       <AdminCard>
-        <div className="space-y-4">
+        <div className="stack">
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
+            <span className="fx-label">Title</span>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -84,18 +84,18 @@ export default function AdminJournalNew() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Slug</span>
+            <span className="fx-label">Slug</span>
             <input
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
               className={adminInputClass}
             />
-            <span className="mt-1 block font-ui text-xs text-tertiary">
+            <span className="mt-1 block fx-admin-journal-new-label">
               Lowercase letters, numbers, and hyphens only.
             </span>
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Excerpt (optional)</span>
+            <span className="fx-label">Excerpt (optional)</span>
             <textarea
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
@@ -104,18 +104,16 @@ export default function AdminJournalNew() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Content</span>
+            <span className="fx-label">Content</span>
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={14}
-              className={`${adminInputClass} font-mono`}
+              className={`${adminInputClass} mono`}
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">
-              Cover image URL (optional)
-            </span>
+            <span className="fx-label">Cover image URL (optional)</span>
             <input
               value={coverImageUrl}
               onChange={(e) => setCoverImageUrl(e.target.value)}
@@ -123,9 +121,7 @@ export default function AdminJournalNew() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">
-              Cover image alt (optional)
-            </span>
+            <span className="fx-label">Cover image alt (optional)</span>
             <input
               value={coverImageAlt}
               onChange={(e) => setCoverImageAlt(e.target.value)}
@@ -133,16 +129,14 @@ export default function AdminJournalNew() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">
-              Tags (comma separated)
-            </span>
+            <span className="fx-label">Tags (comma separated)</span>
             <input
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               className={adminInputClass}
             />
           </label>
-          <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+          <label className="row-2 ui">
             <input
               type="checkbox"
               checked={featured}
@@ -150,7 +144,7 @@ export default function AdminJournalNew() {
             />
             Featured
           </label>
-          <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+          <label className="row-2 ui">
             <input
               type="checkbox"
               checked={publish}

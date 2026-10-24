@@ -20,7 +20,7 @@ export function meta() {
 export default function ListNew({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader eyebrow="Lists" title="New reading list" />
         <ListForm mode="create" redirectTo={`/u/${loaderData.username}`} />
       </Container>

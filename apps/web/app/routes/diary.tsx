@@ -29,11 +29,7 @@ const fmtDate = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 function Stars({ ratingHalf }: { ratingHalf: number | null }) {
   if (ratingHalf == null) return null;
   return (
-    <span
-      role="img"
-      aria-label={`${ratingHalf / 2} stars`}
-      className="font-mono text-sm text-brand-text"
-    >
+    <span role="img" aria-label={`${ratingHalf / 2} stars`} className="fx-diary-label">
       {"★".repeat(Math.floor(ratingHalf / 2))}
       {ratingHalf % 2 === 1 ? "½" : ""}
     </span>
@@ -47,11 +43,7 @@ const VIS_LABEL: Record<string, string> = {
 };
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
-  return (
-    <span className="shrink-0 rounded-full border border-border-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-      {VIS_LABEL[visibility] ?? visibility}
-    </span>
-  );
+  return <span className="shrink-0 fx-diary-caps">{VIS_LABEL[visibility] ?? visibility}</span>;
 }
 
 type RatingFilter = "all" | "rated" | "unrated";
@@ -123,13 +115,10 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
-        <div className="mb-8 flex items-end justify-between gap-4">
+      <Container>
+        <div className="mb-8 items-end fx-diary-row">
           <PageHeader eyebrow="Reading" title="Your diary" className="mb-0" />
-          <Link
-            to="/diary/new"
-            className="shrink-0 rounded-md bg-brand-ui px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:opacity-90"
-          >
+          <Link to="/diary/new" className="cap-btn shrink-0" data-variant="primary">
             New entry
           </Link>
         </div>
@@ -141,49 +130,43 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <div className="mb-6 flex flex-wrap items-center gap-4">
-              <label className="font-ui text-sm text-secondary">
-                <span className="mr-2 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-                  Rating
-                </span>
+            <div className="mb-6 row-4 wrap">
+              <label className="ui">
+                <span className="fx-diary-caps-2">Rating</span>
                 <select
                   value={rating}
                   onChange={(e) => setRating(e.target.value as RatingFilter)}
-                  className="rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+                  className="cap-select"
                 >
                   <option value="all">All</option>
                   <option value="rated">Rated</option>
                   <option value="unrated">Unrated</option>
                 </select>
               </label>
-              <label className="font-ui text-sm text-secondary">
-                <span className="mr-2 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-                  Review
-                </span>
+              <label className="ui">
+                <span className="fx-diary-caps-2">Review</span>
                 <select
                   value={review}
                   onChange={(e) => setReview(e.target.value as ReviewFilter)}
-                  className="rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+                  className="cap-select"
                 >
                   <option value="all">All</option>
                   <option value="reviewed">With a review</option>
                 </select>
               </label>
-              <label className="font-ui text-sm text-secondary">
-                <span className="mr-2 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-tertiary">
-                  Sort
-                </span>
+              <label className="ui">
+                <span className="fx-diary-caps-2">Sort</span>
                 <select
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortOrder)}
-                  className="rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+                  className="cap-select"
                 >
                   <option value="newest">Newest</option>
                   <option value="oldest">Oldest</option>
                   <option value="rating">Highest rated</option>
                 </select>
               </label>
-              <span className="font-ui text-xs text-tertiary">
+              <span className="fine">
                 {shown.length} of {entries.length}
               </span>
             </div>
@@ -194,15 +177,11 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                 body="Try widening the filters."
               />
             ) : (
-              <div className="flex flex-col gap-8">
+              <div className="stack-8">
                 {groups.map((g) => (
-                  <section key={g.label ?? "all"} className="flex flex-col gap-4">
-                    {g.label ? (
-                      <h2 className="font-mono text-xs uppercase tracking-[0.12em] text-tertiary">
-                        {g.label}
-                      </h2>
-                    ) : null}
-                    <ul className="flex flex-col gap-4">
+                  <section key={g.label ?? "all"} className="stack">
+                    {g.label ? <h2 className="fx-diary-caps-3">{g.label}</h2> : null}
+                    <ul className="stack">
                       {g.items.map((e) => (
                         <EntryCard key={e.id} entry={e} reread={rereadIds.has(e.bookId)} />
                       ))}
@@ -219,17 +198,13 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
 }
 
 function RereadBadge() {
-  return (
-    <span className="shrink-0 rounded-full bg-brand-subtle px-2 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.08em] text-brand-subtle-text">
-      Re-read
-    </span>
-  );
+  return <span className="shrink-0 fx-diary-caps-4">Re-read</span>;
 }
 
 function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean }) {
   return (
-    <li className="flex gap-4 rounded-card border border-border-subtle bg-surface p-4">
-      <div className="w-16 shrink-0">
+    <li className="fx-diary-card">
+      <div className="shrink-0 fx-diary-box">
         {e.book ? (
           <Link to={`/books/${e.book.slug}`} className="block">
             <CoverImage
@@ -241,38 +216,28 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
           </Link>
         ) : null}
       </div>
-      <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+      <div className="fx-diary-box-2">
+        <div className="row spread top">
+          <div className="min-0">
+            <div className="row-2 wrap">
               {e.book ? (
-                <Link
-                  to={`/books/${e.book.slug}`}
-                  className="font-display text-lg text-primary hover:text-brand-text"
-                >
+                <Link to={`/books/${e.book.slug}`} className="fx-diary-link">
                   {e.book.title}
                 </Link>
               ) : (
-                <span className="font-display text-lg text-primary">Unknown book</span>
+                <span className="display-0">Unknown book</span>
               )}
               {reread ? <RereadBadge /> : null}
             </div>
-            <div className="mt-1 flex items-center gap-3">
+            <div className="mt-1 row">
               <Stars ratingHalf={e.ratingHalf} />
-              {e.logDate ? (
-                <span className="font-mono text-xs text-tertiary">{fmtDate.format(e.logDate)}</span>
-              ) : null}
+              {e.logDate ? <span className="mono fine">{fmtDate.format(e.logDate)}</span> : null}
             </div>
           </div>
           <VisibilityBadge visibility={e.visibility} />
         </div>
-        {e.review?.trim() ? (
-          <p className="mt-2 line-clamp-3 font-body text-sm text-secondary">{e.review}</p>
-        ) : null}
-        <Link
-          to={`/diary/${e.id}/edit`}
-          className="mt-2 inline-block font-ui text-xs text-tertiary hover:text-brand-text hover:underline"
-        >
+        {e.review?.trim() ? <p className="mt-2 fx-diary-text">{e.review}</p> : null}
+        <Link to={`/diary/${e.id}/edit`} className="mt-2 fx-diary-link-2">
           Edit
         </Link>
       </div>

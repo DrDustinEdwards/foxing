@@ -39,37 +39,32 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Dashboard</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Dashboard</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="fx-admin-grid">
         {tiles.map((t) => (
-          <div key={t.label} className="rounded-card border border-border-subtle bg-surface p-4">
-            <p className="font-display text-3xl text-primary">{t.value}</p>
-            <p className="mt-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-              {t.label}
-            </p>
-            {t.sub ? <p className="mt-1 font-ui text-xs text-secondary">{t.sub}</p> : null}
+          <div key={t.label} className="card">
+            <p className="display-3">{t.value}</p>
+            <p className="mt-1 fx-admin-caps">{t.label}</p>
+            {t.sub ? <p className="mt-1 fx-admin-text">{t.sub}</p> : null}
           </div>
         ))}
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8 fx-admin-grid-2">
         <AdminCard title="Recent signups">
           {stats.recentSignups.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No readers yet.</p>
+            <p className="meta">No readers yet.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {stats.recentSignups.map((u) => (
-                <li key={u.id} className="flex items-center justify-between gap-3 py-2">
-                  <Link
-                    to={`/admin/users/${u.id}`}
-                    className="font-ui text-sm text-secondary hover:text-brand-text"
-                  >
+                <li key={u.id} className="py-2 row spread">
+                  <Link to={`/admin/users/${u.id}`} className="fx-admin-link">
                     @{u.username}
                   </Link>
-                  <span className="font-mono text-xs text-tertiary">
+                  <span className="mono fine">
                     {u.tier === "plus" ? "Plus" : "Free"} · {fmt.format(u.createdAt)}
                   </span>
                 </li>
@@ -80,15 +75,13 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Recent admin actions">
           {audit.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No admin actions logged yet.</p>
+            <p className="meta">No admin actions logged yet.</p>
           ) : (
-            <ul className="divide-y divide-border-subtle">
+            <ul className="divided">
               {audit.map((a) => (
-                <li key={a.id} className="flex items-center justify-between gap-3 py-2">
-                  <span className="font-mono text-xs text-secondary">{a.action}</span>
-                  <span className="font-mono text-xs text-tertiary">
-                    {fmt.format(a.performedAt)}
-                  </span>
+                <li key={a.id} className="py-2 row spread">
+                  <span className="fx-admin-label">{a.action}</span>
+                  <span className="mono fine">{fmt.format(a.performedAt)}</span>
                 </li>
               ))}
             </ul>

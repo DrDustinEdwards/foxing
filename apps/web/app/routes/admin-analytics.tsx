@@ -37,18 +37,16 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Analytics</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Analytics</h1>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+      <div className="fx-admin-analytics-grid">
         {tiles.map((t) => (
-          <div key={t.label} className="rounded-card border border-border-subtle bg-surface p-4">
-            <p className="font-display text-3xl text-primary">{t.value}</p>
-            <p className="mt-1 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-              {t.label}
-            </p>
-            {t.sub ? <p className="mt-1 font-ui text-xs text-secondary">{t.sub}</p> : null}
+          <div key={t.label} className="card">
+            <p className="display-3">{t.value}</p>
+            <p className="mt-1 fx-admin-analytics-caps">{t.label}</p>
+            {t.sub ? <p className="mt-1 fx-admin-analytics-text">{t.sub}</p> : null}
           </div>
         ))}
       </div>
@@ -56,33 +54,23 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
       <div className="mt-8">
         <AdminCard title="Audit log">
           {audit.length === 0 ? (
-            <p className="font-ui text-sm text-tertiary">No admin actions logged yet.</p>
+            <p className="meta">No admin actions logged yet.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="fx-admin-analytics-box">
+              <table className="fx-admin-analytics-table">
                 <thead>
-                  <tr className="border-b border-border-subtle">
-                    <th className="pb-2 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-                      Action
-                    </th>
-                    <th className="pb-2 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-                      Actor
-                    </th>
-                    <th className="pb-2 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-                      When
-                    </th>
+                  <tr className="fx-admin-analytics-tr">
+                    <th className="fx-admin-analytics-caps-2">Action</th>
+                    <th className="fx-admin-analytics-caps-2">Actor</th>
+                    <th className="fx-admin-analytics-caps-2">When</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border-subtle">
+                <tbody className="divided">
                   {audit.map((a) => (
                     <tr key={a.id}>
-                      <td className="py-2 pr-4 font-mono text-xs text-secondary">{a.action}</td>
-                      <td className="py-2 pr-4 font-ui text-xs text-secondary">
-                        {a.actor ?? "System"}
-                      </td>
-                      <td className="whitespace-nowrap py-2 font-mono text-xs text-tertiary">
-                        {fmt.format(a.performedAt)}
-                      </td>
+                      <td className="py-2 fx-admin-analytics-td">{a.action}</td>
+                      <td className="py-2 fx-admin-analytics-td-2">{a.actor ?? "System"}</td>
+                      <td className="py-2 fx-admin-analytics-td-3">{fmt.format(a.performedAt)}</td>
                     </tr>
                   ))}
                 </tbody>

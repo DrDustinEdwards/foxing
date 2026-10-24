@@ -1,0 +1,51 @@
+/* Foxing's reset, under every Capsomer layer: the page's markup was written to start from zero
+   margins, unstyled lists and block media, so those defaults stay. Anything here loses to
+   Capsomer and to Foxing's own classes. */
+:where(body, h1, h2, h3, h4, h5, h6, p, blockquote, figure, dl, dd, ol, ul, pre, hr, fieldset) {
+  margin: 0;
+}
+:where(ol, ul, menu) {
+  padding: 0;
+  list-style: none;
+}
+:where(fieldset, legend) {
+  padding: 0;
+}
+:where(fieldset) {
+  border: 0;
+  min-inline-size: 0;
+}
+:where(img, svg, video, canvas, iframe) {
+  display: block;
+  max-inline-size: 100%;
+}
+:where(img, video) {
+  block-size: auto;
+}
+:where(h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  font-weight: inherit;
+}
+:where(a) {
+  color: inherit;
+  text-decoration: inherit;
+}
+:where(button) {
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+:where(hr) {
+  border: 0;
+  border-block-start: 1px solid var(--line);
+}
+:where(table) {
+  border-collapse: collapse;
+}
+:where(textarea) {
+  resize: vertical;
+}
+:where(input::placeholder, textarea::placeholder) {
+  color: var(--dim);
+  opacity: 1;
+}

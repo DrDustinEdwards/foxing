@@ -1,21 +1,11 @@
 // Shared chrome for the signed-out auth screens (login, signup, forgot/reset password).
-// A centered, branded card on the base background: Foxing wordmark, a surface card with
-// the same tokens as the rest of the app (rounded-card, border-border-subtle, bg-surface,
-// shadow-card-md), and a footer slot for the cross-links. Fields and the submit button
-// reuse the exact input + primary-button tokens from the design system so auth matches
-// settings and everywhere else. The fox emoji is allowed in auth chrome (Rule 9).
+// A centered, branded card on the ground: Foxing wordmark, a surface card, and a footer
+// slot for the cross-links. Fields and buttons are Capsomer's cap-input and cap-btn, the
+// same as settings and everywhere else. The fox emoji is allowed in auth chrome (Rule 9).
 import { useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { Link } from "react-router";
 import { signIn } from "~/lib/auth-client";
-
-/** Same input treatment as settings.tsx inputClass, plus a focus affordance. */
-const authInputClass =
-  "w-full rounded-md border border-border-subtle bg-base px-3 py-2.5 font-ui text-sm text-primary placeholder:text-tertiary transition-colors focus:border-border-interactive focus:outline-none";
-
-/** Primary CTA: the same tokens as ui.tsx Button's primary variant, full width. */
-const authButtonClass =
-  "inline-flex w-full items-center justify-center gap-2 rounded-cover px-5 py-2.5 font-ui text-sm font-medium transition bg-brand-text text-on-brand hover:bg-brand-hover dark:text-[color:var(--section-charcoal)] disabled:opacity-60";
 
 export function AuthShell({
   title,
@@ -29,23 +19,18 @@ export function AuthShell({
   footer?: ReactNode;
 }) {
   return (
-    <main className="grid min-h-[100dvh] place-items-center bg-base px-5 py-12">
-      <div className="w-full max-w-sm">
-        <Link
-          to="/"
-          className="mb-8 flex items-center justify-center gap-2 font-display text-2xl font-semibold text-primary"
-        >
+    <main className="fx-auth-shell-grid">
+      <div className="fx-auth-shell-box">
+        <Link to="/" className="mb-8 justify-center fx-auth-shell-link">
           <span aria-hidden="true">🦊</span>
           <span>Foxing</span>
         </Link>
-        <div className="rounded-card border border-border-subtle bg-surface p-7 shadow-card-md">
-          <h1 className="font-display text-2xl text-primary">{title}</h1>
-          {subtitle ? <p className="mt-1.5 font-ui text-sm text-secondary">{subtitle}</p> : null}
+        <div className="fx-auth-shell-card">
+          <h1 className="display-2">{title}</h1>
+          {subtitle ? <p className="fx-auth-shell-text">{subtitle}</p> : null}
           <div className="mt-6">{children}</div>
         </div>
-        {footer ? (
-          <div className="mt-5 text-center font-ui text-sm text-tertiary">{footer}</div>
-        ) : null}
+        {footer ? <div className="mt-5 text-center fx-auth-shell-box-2">{footer}</div> : null}
       </div>
     </main>
   );
@@ -58,8 +43,8 @@ export function Field({
 }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block">
-      <span className="mb-1.5 block font-ui text-sm font-medium text-secondary">{label}</span>
-      <input className={authInputClass} {...props} />
+      <span className="block fx-auth-shell-label">{label}</span>
+      <input className="cap-input fx-input-ground full" {...props} />
     </label>
   );
 }
@@ -67,7 +52,13 @@ export function Field({
 /** Full-width primary submit with a pending state. */
 export function AuthSubmit({ pending, children }: { pending?: boolean; children: ReactNode }) {
   return (
-    <button type="submit" disabled={pending} className={authButtonClass}>
+    <button
+      type="submit"
+      disabled={pending}
+      className="cap-btn full"
+      data-variant="primary"
+      data-size="lg"
+    >
       {children}
     </button>
   );
@@ -76,20 +67,19 @@ export function AuthSubmit({ pending, children }: { pending?: boolean; children:
 /** Inline brand link used in auth copy and footers. */
 export function AuthLink({ to, children }: { to: string; children: ReactNode }) {
   return (
-    <Link to={to} className="font-medium text-brand-text hover:underline">
+    <Link to={to} className="fx-auth-shell-link-2">
       {children}
     </Link>
   );
 }
 
-/** Secondary full-width button: bordered surface, used for the provider and reveal actions. */
-const authSecondaryButtonClass =
-  "inline-flex w-full items-center justify-center gap-2.5 rounded-cover border border-border-subtle bg-surface px-5 py-2.5 font-ui text-sm font-medium text-primary transition hover:border-border-interactive hover:bg-sunken disabled:opacity-60";
+/** Secondary full-width button, used for the provider and reveal actions. */
+const authSecondaryButtonClass = "cap-btn full";
 
 /** The four-colour Google "G", inline per the no-icon-libraries rule. */
 function GoogleGlyph() {
   return (
-    <svg aria-hidden="true" viewBox="0 0 18 18" className="h-[18px] w-[18px]">
+    <svg aria-hidden="true" viewBox="0 0 18 18" className="fx-auth-shell-icon">
       <path
         fill="#4285F4"
         d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z"
@@ -121,6 +111,7 @@ export function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       type="button"
       disabled={pending}
       className={authSecondaryButtonClass}
+      data-size="lg"
       onClick={async () => {
         setPending(true);
         await signIn.social({
@@ -142,10 +133,10 @@ export function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
 /** "or" rule between the provider button and the email options. */
 export function AuthDivider() {
   return (
-    <div className="flex items-center gap-3" aria-hidden="true">
-      <span className="h-px flex-1 bg-border-subtle" />
-      <span className="font-ui text-xs uppercase tracking-wide text-tertiary">or</span>
-      <span className="h-px flex-1 bg-border-subtle" />
+    <div className="row" aria-hidden="true">
+      <span className="fx-auth-shell-label-2" />
+      <span className="fx-auth-shell-label-3">or</span>
+      <span className="fx-auth-shell-label-2" />
     </div>
   );
 }
@@ -161,10 +152,7 @@ export function MagicLinkForm({ redirectTo = "/me" }: { redirectTo?: string }) {
 
   if (sent) {
     return (
-      <p
-        role="status"
-        className="rounded-md border border-border-subtle bg-sunken px-3 py-2.5 font-ui text-sm text-secondary"
-      >
+      <p role="status" className="fx-auth-shell-text-2">
         Check your email for a sign-in link. It expires in 10 minutes.
       </p>
     );
@@ -172,7 +160,7 @@ export function MagicLinkForm({ redirectTo = "/me" }: { redirectTo?: string }) {
 
   return (
     <form
-      className="space-y-3"
+      className="stack-3"
       onSubmit={async (event) => {
         event.preventDefault();
         setPending(true);
@@ -186,7 +174,7 @@ export function MagicLinkForm({ redirectTo = "/me" }: { redirectTo?: string }) {
       }}
     >
       <Field label="Email" name="email" type="email" required autoComplete="email" />
-      <button type="submit" disabled={pending} className={authSecondaryButtonClass}>
+      <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
         {pending ? "Sending..." : "Email me a sign-in link"}
       </button>
     </form>
@@ -197,11 +185,7 @@ export function MagicLinkForm({ redirectTo = "/me" }: { redirectTo?: string }) {
 export function RevealLink({ onClick, children }: { onClick: () => void; children: ReactNode }) {
   return (
     <div className="text-center">
-      <button
-        type="button"
-        onClick={onClick}
-        className="font-ui text-sm font-medium text-brand-text hover:underline"
-      >
+      <button type="button" onClick={onClick} className="fx-auth-shell-btn">
         {children}
       </button>
     </div>

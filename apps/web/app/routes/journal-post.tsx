@@ -84,7 +84,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-3xl">
+      <Container>
         <Breadcrumbs
           trail={[
             { label: "Home", to: "/" },
@@ -95,8 +95,8 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
         <article>
           <header className="mb-8">
             <Eyebrow>The Journal</Eyebrow>
-            <h1 className="mt-3 font-display text-4xl leading-tight sm:text-5xl">{post.title}</h1>
-            <div className="mt-4 flex flex-wrap items-center gap-2 font-ui text-sm text-tertiary">
+            <h1 className="mt-3 fx-journal-post-title">{post.title}</h1>
+            <div className="mt-4 fx-journal-post-row">
               {published ? <span>{published}</span> : null}
               {post.readingTimeMinutes ? (
                 <>
@@ -114,7 +114,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             <img
               src={post.coverImageUrl}
               alt={post.coverImageAlt ?? ""}
-              className="mb-10 aspect-[16/9] w-full rounded-card object-cover"
+              className="mb-10 fx-journal-post-img"
               loading="eager"
             />
           ) : null}

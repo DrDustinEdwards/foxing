@@ -43,13 +43,11 @@ export default function Awards({ loaderData }: Route.ComponentProps) {
           title="Literary awards"
           lede="The prizes that shaped the canon, mapped to books you can read now."
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="fx-awards-grid">
           {awards.map((a) => (
             <EntityCard key={a.slug} to={`/awards/${a.slug}`}>
-              <h2 className="font-display text-xl text-primary transition-colors group-hover:text-brand-text">
-                {a.name}
-              </h2>
-              <p className="mt-2 font-ui text-sm text-tertiary">
+              <h2 className="fx-awards-title">{a.name}</h2>
+              <p className="mt-2 meta">
                 {a.count} {a.count === 1 ? "title" : "titles"}
                 {a.scope ? ` · ${a.scope}` : ""}
               </p>

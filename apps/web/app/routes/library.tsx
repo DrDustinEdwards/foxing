@@ -61,12 +61,12 @@ export default function Library({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <h1 className="font-display text-4xl">Your library</h1>
+        <h1 className="display-4">Your library</h1>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="mt-8 fx-library-grid">
           <div>
             {/* Status tabs */}
-            <div className="flex flex-wrap gap-2" role="tablist" aria-label="Reading status">
+            <div className="cap-tabs-list" role="tablist" aria-label="Reading status">
               {STATUS_TABS.map((t) => (
                 <button
                   key={t.value}
@@ -74,33 +74,27 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                   role="tab"
                   aria-selected={tab === t.value}
                   onClick={() => setTab(t.value)}
-                  className="rounded-full border border-border-subtle px-4 py-1.5 font-ui text-sm aria-selected:border-border-interactive aria-selected:bg-selected"
+                  className="cap-tab"
                 >
                   {t.label}
                   {counts[t.value] ? (
-                    <span className="ml-1.5 text-tertiary">{counts[t.value]}</span>
+                    <span className="cap-tab-count">{counts[t.value]}</span>
                   ) : null}
                 </button>
               ))}
             </div>
 
             {shown.length === 0 ? (
-              <div className="mt-10 rounded-card border border-dashed border-border-subtle bg-surface p-10 text-center">
-                <p className="font-ui text-sm text-tertiary">{EMPTY_COPY[tab]}</p>
-                <Link
-                  to="/books"
-                  className="mt-2 inline-block font-ui text-sm text-brand-text hover:underline"
-                >
+              <div className="mt-10 text-center fx-library-card">
+                <p className="meta">{EMPTY_COPY[tab]}</p>
+                <Link to="/books" className="mt-2 fx-library-link">
                   Find a book
                 </Link>
               </div>
             ) : (
-              <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="mt-6 fx-library-grid-2">
                 {shown.map((e) => (
-                  <div
-                    key={e.bookId}
-                    className="flex flex-col rounded-card border border-border-subtle bg-surface p-2.5"
-                  >
+                  <div key={e.bookId} className="fx-library-card-2">
                     <Link to={`/books/${e.slug}`} className="relative block">
                       <CoverImage
                         src={e.coverUrl}
@@ -109,29 +103,26 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                         sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
                       />
                       {e.status === "paused" || e.status === "abandoned" ? (
-                        <span className="absolute right-2 top-2 rounded-full border border-border-subtle bg-surface/90 px-2 py-0.5 font-ui text-xs text-secondary">
+                        <span className="fx-library-label-2">
                           {e.status === "paused" ? "Paused" : "Set aside"}
                         </span>
                       ) : null}
                       {e.status === "reading" && e.progressPct > 0 ? (
-                        <span className="absolute inset-x-0 bottom-0 h-1 bg-sunken">
+                        <span className="fx-library-label-3">
                           <span
-                            className="block h-full bg-[color:var(--brand-ui)]"
+                            className="block fx-library-label-4"
                             style={{ width: `${Math.min(100, e.progressPct)}%` }}
                           />
                         </span>
                       ) : null}
                     </Link>
-                    <div className="mt-3 px-0.5">
-                      <Link
-                        to={`/books/${e.slug}`}
-                        className="font-display text-base leading-snug text-primary hover:text-brand-text"
-                      >
+                    <div className="mt-3 fx-library-box">
+                      <Link to={`/books/${e.slug}`} className="fx-library-link-2">
                         {e.title}
                       </Link>
-                      <p className="mt-1 font-ui text-sm text-tertiary">{e.author}</p>
+                      <p className="mt-1 meta">{e.author}</p>
                     </div>
-                    <div className="mt-2 px-0.5">
+                    <div className="mt-2 fx-library-box">
                       <BookStatusControl
                         bookId={e.bookId}
                         currentStatus={e.status as ShelfStatus}
@@ -147,7 +138,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Sidebar: streak, goals, shelves */}
-          <aside className="flex flex-col gap-6">
+          <aside className="stack-6">
             <StreakCard streak={streak} />
             <GoalsCard goals={goals} onChanged={refresh} />
             <ShelvesCard shelves={shelves} onChanged={refresh} />
@@ -161,17 +152,17 @@ export default function Library({ loaderData }: Route.ComponentProps) {
 function StreakCard({ streak }: { streak: Streak | null }) {
   const s = streak ?? { currentStreak: 0, longestStreak: 0, totalBooksFinished: 0 };
   return (
-    <section className="rounded-card border border-border-subtle bg-surface p-4">
+    <section className="card">
       <Eyebrow className="mb-3">Reading streak</Eyebrow>
-      <dl className="grid grid-cols-3 gap-2 text-center">
+      <dl className="text-center fx-library-grid-3">
         {[
           { k: "Current", v: s.currentStreak },
           { k: "Longest", v: s.longestStreak },
           { k: "Finished", v: s.totalBooksFinished },
         ].map((x) => (
           <div key={x.k}>
-            <dd className="font-display text-2xl">{x.v}</dd>
-            <dt className="font-ui text-xs text-tertiary">{x.k}</dt>
+            <dd className="display-2">{x.v}</dd>
+            <dt className="fine">{x.k}</dt>
           </div>
         ))}
       </dl>
@@ -232,61 +223,57 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
   }
 
   return (
-    <section className="rounded-card border border-border-subtle bg-surface p-4">
+    <section className="card">
       <Eyebrow className="mb-3">Reading goals</Eyebrow>
       {goals.length === 0 ? (
-        <p className="font-ui text-sm text-tertiary">No goals set.</p>
+        <p className="meta">No goals set.</p>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="stack-3">
           {goals.map(({ goal, progress }) => (
             <li key={goal.id}>
-              <div className="flex items-center justify-between font-ui text-sm">
+              <div className="fx-library-row">
                 <span>
                   {goal.target} {goal.type} in {goalPeriodLabel(goal)}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => del(goal.id)}
-                  className="text-xs text-tertiary hover:underline"
-                >
+                <button type="button" onClick={() => del(goal.id)} className="fx-library-btn">
                   Remove
                 </button>
               </div>
               <div
-                className="mt-1 h-2 overflow-hidden rounded-full bg-sunken"
+                className="mt-1 fx-library-box-2"
                 role="progressbar"
                 aria-valuenow={progress}
                 aria-valuemax={goal.target}
               >
                 <div
-                  className="h-full rounded-full bg-[color:var(--brand-ui)]"
+                  className="fx-library-box-3"
                   style={{ width: `${Math.min(100, (progress / goal.target) * 100)}%` }}
                 />
               </div>
-              <p className="mt-1 font-ui text-xs text-tertiary">
+              <p className="mt-1 fine">
                 {progress} of {goal.target}
               </p>
             </li>
           ))}
         </ul>
       )}
-      <div className="mt-3 flex items-center gap-2">
-        <label className="font-ui text-sm">
-          <span className="sr-only">Books</span>
+      <div className="mt-3 fx-library-row-2">
+        <label className="sans small">
+          <span className="cap-sr-only">Books</span>
           <input
             type="number"
             min={1}
             value={target}
             onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))}
-            className="w-14 rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+            className="cap-input fx-library-input"
           />
         </label>
-        <label className="font-ui text-sm">
-          <span className="sr-only">Goal period</span>
+        <label className="sans small">
+          <span className="cap-sr-only">Goal period</span>
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as "year" | "month" | "week")}
-            className="rounded-md border border-border-subtle bg-base px-2 py-1 text-sm"
+            className="cap-select"
           >
             <option value="year">this year</option>
             <option value="month">this month</option>
@@ -297,18 +284,19 @@ function GoalsCard({ goals, onChanged }: { goals: GoalRow[]; onChanged: () => vo
           type="button"
           onClick={addGoal}
           disabled={pending}
-          className="rounded-md border border-border-interactive px-3 py-1 font-ui text-sm hover:bg-hover disabled:opacity-50"
+          className="cap-btn"
+          data-size="sm"
         >
           Set
         </button>
       </div>
       {pending ? (
-        <p className="mt-2 font-ui text-xs text-tertiary" role="status">
+        <p className="mt-2 fx-library-text" role="status">
           Saving...
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 font-ui text-xs text-error" role="alert">
+        <p className="mt-2 error xsmall" role="alert">
           {error}
         </p>
       ) : null}
@@ -359,51 +347,48 @@ function ShelvesCard({ shelves, onChanged }: { shelves: Shelf[]; onChanged: () =
   }
 
   return (
-    <section className="rounded-card border border-border-subtle bg-surface p-4">
+    <section className="card">
       <Eyebrow className="mb-3">Shelves</Eyebrow>
       {shelves.length === 0 ? (
-        <p className="font-ui text-sm text-tertiary">No shelves yet.</p>
+        <p className="meta">No shelves yet.</p>
       ) : (
-        <ul className="flex flex-col gap-1.5">
+        <ul className="fx-library-stack">
           {shelves.map((s) => (
-            <li key={s.id} className="flex items-center justify-between font-ui text-sm">
-              <Link to={`/shelves/${s.id}`} className="hover:text-brand-text">
+            <li key={s.id} className="fx-library-row">
+              <Link to={`/shelves/${s.id}`} className="hover-accent">
                 {s.name}
               </Link>
-              <button
-                type="button"
-                onClick={() => del(s.id)}
-                className="text-xs text-tertiary hover:underline"
-              >
+              <button type="button" onClick={() => del(s.id)} className="fx-library-btn">
                 Remove
               </button>
             </li>
           ))}
         </ul>
       )}
-      <div className="mt-3 flex items-center gap-2">
+      <div className="mt-3 fx-library-row-2">
         <input
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="New shelf"
-          className="min-w-0 flex-1 rounded-md border border-border-subtle bg-base px-2 py-1 font-ui text-sm"
+          className="cap-input fx-library-input-2"
         />
         <button
           type="button"
           onClick={addShelf}
           disabled={pending}
-          className="rounded-md border border-border-interactive px-3 py-1 font-ui text-sm hover:bg-hover disabled:opacity-50"
+          className="cap-btn"
+          data-size="sm"
         >
           Add
         </button>
       </div>
       {pending ? (
-        <p className="mt-2 font-ui text-xs text-tertiary" role="status">
+        <p className="mt-2 fx-library-text" role="status">
           Saving...
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 font-ui text-xs text-error" role="alert">
+        <p className="mt-2 error xsmall" role="alert">
           {error}
         </p>
       ) : null}

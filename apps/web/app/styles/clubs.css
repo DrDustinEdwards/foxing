@@ -1,0 +1,477 @@
+.fx-club-schedule-btn {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--accent-text);
+  text-decoration-line: underline;
+}
+.fx-club-schedule-btn-2 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+  text-decoration-line: underline;
+}
+.fx-club-schedule-list {
+  & > * + * {
+    margin-top: 0.375rem;
+  }
+}
+.fx-club-schedule-label {
+  position: absolute;
+  left: 0;
+  background-color: var(--accent-soft);
+  transition-property: all;
+  transition-duration: 150ms;
+  top: 0;
+  bottom: 0;
+}
+.fx-club-schedule-label-2 {
+  z-index: 10;
+}
+.fx-club-schedule-label-3 {
+  z-index: 10;
+  font-variant-numeric: tabular-nums;
+  color: var(--dim);
+}
+.fx-club-schedule-card-2 {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 0.75rem;
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-club-schedule-text-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+}
+.fx-club-schedule-list-2 {
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-club-schedule-card-3 {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 0.75rem;
+}
+.fx-club-schedule-text-3,
+.fx-u-profile-label-6 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--text);
+}
+.fx-club-schedule-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.fx-club-schedule-card-4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding-inline: 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+.fx-club-schedule-form {
+  border-radius: var(--fx-radius-card);
+  border: 1px dashed var(--line);
+  padding: 0.75rem;
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+
+.fx-club-sections-text {
+  border-radius: 0.375rem;
+  border-width: 1px;
+  border-style: solid;
+  padding: 0.375rem 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  border-color: color-mix(in srgb, var(--crit) 50%, transparent);
+  background-color: var(--crit-soft);
+  color: var(--crit);
+}
+.fx-club-sections-box {
+  text-align: right;
+}
+.fx-club-sections-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding-inline: 0.75rem;
+  text-align: left;
+}
+.fx-club-sections-link {
+  color: var(--accent-text);
+  text-decoration-line: underline;
+}
+.fx-club-sections-btn {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+  text-decoration-line: underline;
+  &:hover {
+    color: var(--text);
+  }
+}
+.fx-club-sections-btn-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--accent-text);
+  text-decoration-line: underline;
+}
+.fx-club-sections-card-2 {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-club-sections-list {
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-club-sections-card-3 {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  &:hover {
+    border-color: var(--line-strong);
+  }
+}
+.fx-club-sections-caps {
+  margin-right: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--accent-soft);
+  padding: 0.125rem 0.5rem;
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--accent-text);
+}
+
+.fx-club-detail-text {
+  max-width: 42rem;
+  font-family: var(--fx-body);
+  color: var(--muted);
+}
+.fx-club-detail-label {
+  margin-left: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--accent-text);
+}
+.fx-club-detail-label-2 {
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background-color: var(--accent);
+}
+.fx-club-detail-grid {
+  display: grid;
+  gap: 2.5rem;
+  @media (min-width: 64rem) {
+    grid-template-columns: minmax(0, 1fr) 300px;
+  }
+}
+.fx-club-detail-box {
+  & > * + * {
+    margin-top: 2.5rem;
+  }
+}
+.fx-club-detail-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px dashed var(--line);
+  background-color: var(--surface);
+  padding: 2.5rem;
+}
+
+.fx-club-new-form {
+  & > * + * {
+    margin-top: 1.25rem;
+  }
+}
+.fx-club-new-field {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.fx-club-new-input-2,
+.fx-like-button-icon {
+  height: 1rem;
+  width: 1rem;
+}
+.fx-club-new-text-2 {
+  border-radius: 0.375rem;
+  border-width: 1px;
+  border-style: solid;
+  padding-inline: 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  border-color: color-mix(in srgb, var(--crit) 50%, transparent);
+  background-color: var(--crit-soft);
+  color: var(--crit);
+}
+
+.fx-club-thread-link {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--accent-text);
+  text-decoration-line: underline;
+}
+.fx-club-thread-title {
+  font-family: var(--fx-display);
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+}
+.fx-club-thread-list {
+  & > * + * {
+    margin-top: 1rem;
+  }
+}
+.fx-club-thread-text {
+  white-space: pre-wrap;
+  font-family: var(--fx-body);
+  color: var(--text);
+}
+.fx-club-thread-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--dim);
+}
+.fx-club-thread-field {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
+  color: var(--text);
+}
+.fx-club-thread-input {
+  margin-top: 0.375rem;
+  width: 100%;
+}
+.fx-club-thread-text-2 {
+  border-radius: 0.375rem;
+  border-width: 1px;
+  border-style: solid;
+  padding: 0.375rem 0.75rem;
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  border-color: color-mix(in srgb, var(--crit) 50%, transparent);
+  background-color: var(--crit-soft);
+  color: var(--crit);
+}
+
+.fx-clubs-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1.25rem;
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  &:hover {
+    border-color: var(--line-strong);
+  }
+}
+.fx-clubs-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-family: var(--fx-body);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+.fx-clubs-card-2 {
+  border-radius: var(--fx-radius-card);
+  border: 1px dashed var(--line);
+  background-color: var(--surface);
+  padding: 2rem;
+}
+.fx-clubs-grid {
+  display: grid;
+  gap: 0.75rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.fx-join-code-caps {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+.fx-join-code-title {
+  font-family: var(--fx-display);
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+}
+.fx-join-code-text {
+  font-family: var(--fx-body);
+  color: var(--muted);
+}
+.fx-join-code-text-2 {
+  font-family: var(--ui);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--dim);
+}
+
+.fx-pick-club-grid {
+  display: grid;
+  gap: 1.25rem;
+  @media (min-width: 40rem) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  @media (min-width: 64rem) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+.fx-pick-club-card {
+  display: flex;
+  gap: 1rem;
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+  box-shadow: var(--fx-shadow-sm);
+  transition-property: box-shadow;
+  transition-duration: 150ms;
+  &:hover {
+    box-shadow: var(--fx-shadow-md);
+  }
+}
+.fx-pick-club-link {
+  width: 5rem;
+}
+.fx-pick-club-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--dim);
+}
+.fx-pick-club-title {
+  font-family: var(--fx-display);
+  font-size: 1rem;
+  line-height: 1.375;
+  color: var(--text);
+  .group:hover & {
+    color: var(--accent-text);
+  }
+}
+.fx-pick-club-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-family: var(--fx-body);
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted);
+}
+
+/* A poll option: the vote share fills it from the start, a chosen option takes the strong edge. */
+.fx-poll-option {
+  position: relative;
+  display: flex;
+  inline-size: 100%;
+  align-items: center;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--fx-radius-card);
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+  font-family: var(--ui);
+  font-size: 0.875rem;
+}
+.fx-poll-option[aria-pressed="true"] {
+  border-color: var(--line-strong);
+}
+.fx-poll-option:disabled {
+  cursor: default;
+}
+
+.fx-club-schedule-card {
+  border-radius: var(--fx-radius-card);
+  border: 1px solid var(--line);
+  background-color: var(--surface);
+  padding: 1rem;
+  & > * + * {
+    margin-top: 0.5rem;
+  }
+}
+.fx-club-schedule-box {
+  & > * + * {
+    margin-top: 1rem;
+  }
+}
+.fx-club-schedule-caps {
+  font-family: var(--mono);
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  color: var(--dim);
+}
+.fx-club-schedule-btn-3 {
+  font-family: var(--ui);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--dim);
+  text-decoration-line: underline;
+  &:hover {
+    color: var(--text);
+  }
+}
+.fx-club-new-input {
+  margin-top: 0.375rem;
+  width: 100%;
+}
+.fx-clubs-caps {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--dim);
+}
+
+.fx-club-new-text {
+  font-family: var(--fx-body);
+  color: var(--muted);
+}

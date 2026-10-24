@@ -1,0 +1,77 @@
+/* Foxing's per-site layer,
+written by Capsomer's tokens/sites.mjs from the entry below. Capsomer
+   v0.14.0 does not carry a foxing site yet,
+so the generated file sits here until a Capsomer release
+   adds this entry to SITES; then this file goes and app.css imports "capsomer/site-foxing.css".
+   It passes sites.mjs --check (Capsomer's WCAG pairs on these colours over the fox family).
+
+     foxing: {
+       family: "fox",
+       on: "<html>",
+       note: "Foxing's cream and charcoal neutrals (design-system.md) and its faces: DM Sans for the UI, DM Mono, Source Serif 4 to read",
+       all: { ui: '"DM Sans", system-ui, sans-serif', "font-ui": '"DM Sans", system-ui, sans-serif', mono: '"DM Mono", ui-monospace, monospace' },
+       light: { ground: "#faf6ee", surface: "#ffffff", raised: "#ffffff", sunken: "#f2ead8", text: "#16100b", muted: "#3e3028", dim: "#815e41", line: "#e5d8bf", "line-strong": "#815e41" },
+       dark: { ground: "#16100b", surface: "#1f1710", raised: "#2a1f16", sunken: "#100d08", text: "#f5edde", muted: "#c4ae96", dim: "#a28269", line: "#3a2c22", "line-strong": "#a28269" },
+     },
+*/
+@layer cap.reset, cap.tokens, cap.base, cap.components, cap.utilities;
+@layer cap.tokens {
+  [data-cap-site="foxing"][data-cap-site],
+  [data-cap-site="foxing"][data-cap-site] :is([data-family], [data-density]) {
+    --ui: "DM Sans", system-ui, sans-serif;
+    --font-ui: "DM Sans", system-ui, sans-serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+    --ground: #faf6ee;
+    --surface: #ffffff;
+    --raised: #ffffff;
+    --sunken: #f2ead8;
+    --text: #16100b;
+    --muted: #3e3028;
+    --dim: #815e41;
+    --line: #e5d8bf;
+    --line-strong: #815e41;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) [data-cap-site="foxing"][data-cap-site],
+    :root:not([data-theme="light"])
+      [data-cap-site="foxing"][data-cap-site]
+      :is([data-family], [data-density]),
+    :root:not([data-theme="light"])[data-cap-site="foxing"][data-cap-site],
+    :root:not([data-theme="light"])[data-cap-site="foxing"][data-cap-site]
+      :is([data-family], [data-density]) {
+      --ground: #16100b;
+      --surface: #1f1710;
+      --raised: #2a1f16;
+      --sunken: #100d08;
+      --text: #f5edde;
+      --muted: #c4ae96;
+      --dim: #a28269;
+      --line: #3a2c22;
+      --line-strong: #a28269;
+    }
+  }
+  :root[data-theme="dark"] [data-cap-site="foxing"][data-cap-site],
+  :root[data-theme="dark"]
+    [data-cap-site="foxing"][data-cap-site]
+    :is([data-family], [data-density]),
+  :root[data-theme="dark"][data-cap-site="foxing"][data-cap-site],
+  :root[data-theme="dark"][data-cap-site="foxing"][data-cap-site]
+    :is([data-family], [data-density]),
+  [data-cap-theme="dark"] [data-cap-site="foxing"][data-cap-site],
+  [data-cap-theme="dark"]
+    [data-cap-site="foxing"][data-cap-site]
+    :is([data-family], [data-density]),
+  [data-cap-theme="dark"][data-cap-site="foxing"][data-cap-site],
+  [data-cap-theme="dark"][data-cap-site="foxing"][data-cap-site]
+    :is([data-family], [data-density]) {
+    --ground: #16100b;
+    --surface: #1f1710;
+    --raised: #2a1f16;
+    --sunken: #100d08;
+    --text: #f5edde;
+    --muted: #c4ae96;
+    --dim: #a28269;
+    --line: #3a2c22;
+    --line-strong: #a28269;
+  }
+}

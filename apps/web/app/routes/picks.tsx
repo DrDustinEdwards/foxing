@@ -43,16 +43,12 @@ export default function Picks({ loaderData }: Route.ComponentProps) {
           title="Book club picks"
           lede="The reading lists behind the famous book clubs, tracked and searchable."
         />
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="fx-picks-grid">
           {clubs.map((c) => (
             <EntityCard key={c.slug} to={`/picks/${c.slug}`}>
-              <h2 className="font-display text-xl text-primary transition-colors group-hover:text-brand-text">
-                {c.name}
-              </h2>
-              {c.curator ? (
-                <p className="mt-1 font-ui text-sm text-secondary">{c.curator}</p>
-              ) : null}
-              <p className="mt-3 font-mono text-[0.625rem] uppercase tracking-[0.12em] text-tertiary">
+              <h2 className="fx-picks-title">{c.name}</h2>
+              {c.curator ? <p className="mt-1 ui">{c.curator}</p> : null}
+              <p className="mt-3 fx-picks-caps">
                 {c.pickCount} {c.pickCount === 1 ? "pick" : "picks"}
                 {c.focus ? ` · ${c.focus}` : ""}
               </p>

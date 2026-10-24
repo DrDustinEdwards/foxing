@@ -58,18 +58,18 @@ export function BookShelvesPicker({
   }
 
   return (
-    <div className="rounded-card border border-border-subtle bg-surface p-4">
-      <p className="font-ui text-sm font-medium text-primary">Add to shelves</p>
+    <div className="card">
+      <p className="sans small strong">Add to shelves</p>
       {shelves.length === 0 ? (
-        <p className="mt-2 font-ui text-sm text-tertiary">
+        <p className="mt-2 meta">
           You have no shelves yet.{" "}
-          <Link to="/library" className="text-brand-text hover:underline">
+          <Link to="/library" className="link">
             Create one
           </Link>
           .
         </p>
       ) : (
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-3 fx-book-shelves-picker-row">
           {shelves.map((shelf) => {
             const on = members.has(shelf.id);
             return (
@@ -79,7 +79,7 @@ export function BookShelvesPicker({
                 onClick={() => toggle(shelf.id)}
                 disabled={pending === shelf.id}
                 aria-pressed={on}
-                className="rounded-full border px-3 py-1.5 font-ui text-sm transition-colors disabled:opacity-50 aria-pressed:border-border-interactive aria-pressed:bg-selected aria-[pressed=false]:border-border-subtle aria-[pressed=false]:hover:bg-hover"
+                className="cap-chip"
               >
                 {shelf.name}
               </button>
@@ -88,7 +88,7 @@ export function BookShelvesPicker({
         </div>
       )}
       {error ? (
-        <p className="mt-2 font-ui text-xs text-error" role="alert">
+        <p className="mt-2 error xsmall" role="alert">
           {error}
         </p>
       ) : null}

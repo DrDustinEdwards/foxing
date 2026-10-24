@@ -1,128 +1,77 @@
+import {
+  type HeaderExtra,
+  type HeaderSection,
+  type LinkProps,
+  SiteHeader,
+  SiteTabs,
+} from "capsomer/react/site-header";
 import { useState } from "react";
-import { Link, NavLink, useRouteLoaderData } from "react-router";
-import { cn } from "~/lib/cn";
+import { Link, useLocation, useRouteLoaderData } from "react-router";
+import { authClient } from "~/lib/auth-client";
 import type { loader as RootLoader } from "~/root";
 import { CommandPalette } from "./command-palette";
-import { AccountMenu } from "./nav/account-menu";
-import { BooksMenu } from "./nav/books-menu";
-import { MobileDrawer } from "./nav/mobile-drawer";
-import { primaryItemClass } from "./nav/nav-styles";
-import { PicksMenu } from "./nav/picks-menu";
-import { ThemeToggle } from "./theme-toggle";
+import { headerAccount } from "./nav/account-panel";
+import { BooksPanel, booksGroups, PicksPanel, picksGroups } from "./nav/header-panels";
 import { Container } from "./ui";
 
-// Primary desktop nav (md+): Books and Celebrity Picks are mega-menus; Clubs, People,
-// and Journal are plain links. Awards and Book of the Month are reached through the
-// mega-menus, not standalone entries. People also appears in the signed-in secondary bar.
-const PRIMARY_LINKS = [
-  { to: "/clubs", label: "Clubs" },
-  { to: "/people", label: "People" },
-  { to: "/journal", label: "Journal" },
+/** Where Capsomer's theme button remembers the choice; root.tsx's no-flash script reads it. */
+export const THEME_PREF_KEY = "foxing-theme";
+
+// The signed-in reader's own pages: a line of tabs under the header on a desktop, Capsomer's
+// bottom bar on a phone. Clubs sits in the header's sections; the rest of the personal pages
+// (goals, lists, stats, year) are in the account panel.
+const YOUR_FOXING = [
+  { href: "/home", label: "Home" },
+  { href: "/library", label: "Library" },
+  { href: "/diary", label: "Diary" },
+  { href: "/feed", label: "Feed" },
+  { href: "/people", label: "People" },
 ];
 
-// Compact horizontal-scroll primary nav for small screens, where the mega-menus collapse
-// to plain links. Every entry is a real route.
-const MOBILE_PRIMARY = [
-  { to: "/books", label: "Books" },
-  { to: "/picks", label: "Celebrity Picks" },
-  { to: "/clubs", label: "Clubs" },
-  { to: "/book-of-the-month", label: "Book of the Month" },
-  { to: "/awards", label: "Awards" },
-  { to: "/journal", label: "Journal" },
-];
+const isCurrent = (pathname: string, href: string) =>
+  pathname === href || pathname.startsWith(`${href}/`);
 
-// Signed-in app bar: the viewer's personal surfaces. Clubs sits in the primary nav. The
-// rest of the personal surfaces (goals, lists, stats, year) live in the account menu.
-const SECONDARY_LINKS = [
-  { to: "/home", label: "Home" },
-  { to: "/library", label: "Library" },
-  { to: "/diary", label: "Diary" },
-  { to: "/feed", label: "Feed" },
-  { to: "/people", label: "People" },
-];
-
-function Wordmark({ to }: { to: string }) {
+/** Capsomer's links as React Router's. */
+function renderLink({ href, children, ...rest }: LinkProps) {
   return (
-    <Link to={to} className="flex items-center gap-2 font-display text-xl font-semibold">
-      {/* Fox emoji is allowed in nav/footer chrome (Rule 9). */}
-      <span aria-hidden="true">🦊</span>
-      <span>Foxing</span>
+    <Link to={href} {...rest}>
+      {children}
     </Link>
   );
 }
 
-// Header notification entry point (signed-in only). Links to /notifications; no count is
-// shown because there is no unread-count source wired yet, and a fake badge is worse than
-// none. Legacy placed a bell here between search and the avatar.
-function NotificationBell() {
-  return (
-    <Link
-      to="/notifications"
-      aria-label="Notifications"
-      title="Notifications"
-      className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover hover:text-primary"
-    >
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path
-          d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-        <path
-          d="M10 20a2 2 0 0 0 4 0"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-        />
-      </svg>
-    </Link>
-  );
-}
+const SEARCH_ICON = (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-3.2-3.2" />
+  </svg>
+);
+// No count on the bell: there is no unread-count source yet, and a fake badge is worse than none.
+const BELL_ICON = (
+  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
+    <path d="M10 20a2 2 0 0 0 4 0" />
+  </svg>
+);
 
-// Desktop-only signed-out actions; mobile signed-out users reach these through the drawer.
-function SignedOutActions() {
+function YourFoxingBar({ pathname }: { pathname: string }) {
   return (
-    <div className="hidden items-center gap-2 md:flex">
-      <Link
-        to="/login"
-        className="inline-flex rounded-cover px-3 py-2 font-ui text-sm font-medium text-secondary transition-colors hover:text-primary"
-      >
-        Sign in
-      </Link>
-      <Link
-        to="/signup"
-        className="rounded-cover bg-brand-text px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover dark:text-[color:var(--section-charcoal)]"
-      >
-        Join free
-      </Link>
-    </div>
-  );
-}
-
-function SecondaryAuthBar() {
-  return (
-    <nav aria-label="Your Foxing" className="border-t border-border-subtle bg-sunken">
-      <Container className="flex h-11 items-center gap-1 overflow-x-auto">
-        {SECONDARY_LINKS.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "inline-flex h-7 items-center whitespace-nowrap rounded-md px-3 font-ui text-xs transition-colors",
-                isActive
-                  ? "bg-brand-subtle text-brand-subtle-text"
-                  : "text-tertiary hover:text-primary",
-              )
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+    <div className="fx-your-bar">
+      <Container>
+        <nav className="cap-tabs-list" data-variant="line" data-size="sm" aria-label="Your Foxing">
+          {YOUR_FOXING.map((item) => (
+            <Link
+              key={item.href}
+              to={item.href}
+              className="cap-tab"
+              aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </Container>
-    </nav>
+    </div>
   );
 }
 
@@ -130,105 +79,80 @@ function SiteNav() {
   const data = useRouteLoaderData<typeof RootLoader>("root");
   const user = data?.navUser ?? null;
   const menu = data?.navMenu ?? { featuredClubs: [], botm: null };
-  const [drawerOpen, setDrawerOpen] = useState(false);
+  const { pathname } = useLocation();
+  const [signingOut, setSigningOut] = useState(false);
+
+  async function signOut() {
+    setSigningOut(true);
+    await authClient.signOut();
+    // Full navigation so the root loader re-runs anonymous and the shell resets.
+    window.location.assign("/");
+  }
+
+  const sections: HeaderSection[] = [
+    {
+      id: "books",
+      label: "Books",
+      current: isCurrent(pathname, "/books") || isCurrent(pathname, "/awards"),
+      groups: booksGroups,
+      panel: <BooksPanel />,
+    },
+    {
+      id: "picks",
+      label: "Celebrity Picks",
+      current: isCurrent(pathname, "/picks") || isCurrent(pathname, "/book-of-the-month"),
+      groups: picksGroups(menu.featuredClubs, menu.botm),
+      panel: <PicksPanel featuredClubs={menu.featuredClubs} botm={menu.botm} />,
+    },
+    ...[
+      { id: "clubs", href: "/clubs", label: "Clubs" },
+      { id: "people", href: "/people", label: "People" },
+      { id: "journal", href: "/journal", label: "Journal" },
+    ].map((s) => ({ ...s, current: isCurrent(pathname, s.href) })),
+  ];
+
+  const extras: HeaderExtra[] = [
+    {
+      id: "search",
+      label: "Search the catalog",
+      icon: SEARCH_ICON,
+      keys: "Ctrl K",
+      onClick: () => window.dispatchEvent(new CustomEvent("foxing:search-open")),
+    },
+    user
+      ? { id: "notifications", label: "Notifications", icon: BELL_ICON, href: "/notifications" }
+      : { id: "join", label: "Join free", kind: "button", href: "/signup" },
+  ];
 
   return (
     <>
-      <header className="sticky top-0 z-40 border-b border-border-subtle bg-base/85 backdrop-blur-md">
-        <Container className="flex h-16 items-center justify-between gap-4">
-          <Wordmark to={user ? "/home" : "/"} />
-          <nav aria-label="Primary" className="hidden items-center gap-1 md:flex">
-            <BooksMenu />
-            <PicksMenu featuredClubs={menu.featuredClubs} botm={menu.botm} />
-            {PRIMARY_LINKS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => primaryItemClass(isActive)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Search the catalog"
-              title="Search (Ctrl+K)"
-              onClick={() => window.dispatchEvent(new CustomEvent("foxing:search-open"))}
-              className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
-                <path
-                  d="m20 20-3.2-3.2"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            {user ? <NotificationBell /> : null}
-            <ThemeToggle />
-            {user ? (
-              <AccountMenu user={user} />
-            ) : (
-              <>
-                <SignedOutActions />
-                <button
-                  type="button"
-                  aria-label="Open menu"
-                  aria-expanded={drawerOpen}
-                  onClick={() => setDrawerOpen(true)}
-                  className="grid h-9 w-9 place-items-center rounded-full border border-border-subtle text-secondary transition-colors hover:bg-hover md:hidden"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <path
-                      d="M4 7h16M4 12h16M4 17h16"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
-        </Container>
-        {/* Compact primary nav for small screens; the mega-menus collapse to plain links. */}
-        <nav
-          aria-label="Primary (compact)"
-          className="flex gap-1 overflow-x-auto border-t border-border-subtle px-4 py-2 md:hidden"
-        >
-          {MOBILE_PRIMARY.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "whitespace-nowrap rounded-full px-3 py-1 font-ui text-sm",
-                  isActive ? "bg-brand-subtle text-brand-subtle-text" : "text-secondary",
-                )
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
-        {/* Desktop secondary bar sits under the header; the mobile one is fixed to the
-            bottom of the viewport (rendered outside the sticky header, below). */}
-        {user ? (
-          <div className="hidden md:block">
-            <SecondaryAuthBar />
-          </div>
-        ) : null}
-      </header>
-      {user ? (
-        <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
-          <SecondaryAuthBar />
-        </div>
-      ) : null}
-      {user ? null : <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />}
+      <SiteHeader
+        logo={{
+          href: user ? "/home" : "/",
+          label: "Foxing",
+          // The fox is allowed in nav and footer chrome (Rule 9).
+          mark: (
+            <span className="fx-logo-mark" aria-hidden="true">
+              🦊
+            </span>
+          ),
+          wordmark: (
+            <span className="fx-wordmark" aria-hidden="true">
+              Foxing
+            </span>
+          ),
+        }}
+        links="center"
+        translucent
+        sections={sections}
+        extras={extras}
+        themePrefKey={THEME_PREF_KEY}
+        account={user ? headerAccount(user, signingOut, signOut) : undefined}
+        signIn={user ? undefined : { href: "/login" }}
+        skipTo="#main"
+        renderLink={renderLink}
+      />
+      {user ? <YourFoxingBar pathname={pathname} /> : null}
       <CommandPalette />
     </>
   );
@@ -236,18 +160,18 @@ function SiteNav() {
 
 function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-border-subtle bg-sunken">
-      <Container className="grid gap-8 py-12 sm:grid-cols-2 lg:grid-cols-6">
-        <div className="sm:col-span-2 lg:col-span-1">
-          <Wordmark to="/" />
-          <p className="mt-2 font-body text-base italic text-tertiary">reading, together.</p>
-          <p className="mt-3 max-w-xs text-sm text-tertiary">
+    <footer className="fx-footer">
+      <Container className="fx-footer-cols">
+        <div className="fx-footer-brand">
+          <Link to="/" className="fx-footer-mark">
+            <span aria-hidden="true">🦊</span>
+            <span>Foxing</span>
+          </Link>
+          <p className="fx-footer-motto">reading, together.</p>
+          <p className="mt-3 measure-xs small dim">
             A reading home for the classics and the conversations around them.
           </p>
-          <Link
-            to="/about"
-            className="mt-3 inline-block font-ui text-sm text-secondary hover:text-brand-text"
-          >
+          <Link to="/about" className="fx-footer-link mt-3 block">
             About
           </Link>
         </div>
@@ -291,7 +215,7 @@ function SiteFooter() {
           ]}
         />
       </Container>
-      <Container className="flex flex-col gap-2 border-t border-border-subtle py-6 text-xs text-tertiary sm:flex-row sm:items-center sm:justify-between">
+      <Container className="fx-footer-base">
         <p>&copy; {new Date().getFullYear()} Foxing. Read freely, keep the record.</p>
         <p>
           <span aria-hidden="true">🦊</span> Made for readers.
@@ -310,11 +234,11 @@ function FooterCol({
 }) {
   return (
     <div>
-      <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">{title}</p>
-      <ul className="mt-3 space-y-2">
+      <p className="group-label">{title}</p>
+      <ul className="stack-2 mt-3">
         {links.map((l) => (
           <li key={l.to}>
-            <Link to={l.to} className="font-ui text-sm text-secondary hover:text-brand-text">
+            <Link to={l.to} className="fx-footer-link">
               {l.label}
             </Link>
           </li>
@@ -324,24 +248,26 @@ function FooterCol({
   );
 }
 
-/** Full page frame: skip link, sticky nav, main landmark, footer. Signed-in pages get
- *  extra bottom padding on mobile so the fixed secondary bar never covers content. */
+/** Full page frame: Capsomer's header (with its skip link), the main landmark, the footer, and
+ *  for a signed-in reader Capsomer's bottom bar on a phone, last so it sticks to the bottom. */
 export function PageShell({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof RootLoader>("root");
   const signedIn = Boolean(data?.navUser);
+  const { pathname } = useLocation();
   return (
     <>
-      <a
-        href="#main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-cover focus:bg-brand focus:px-4 focus:py-2 focus:font-ui focus:text-sm focus:text-on-brand"
-      >
-        Skip to content
-      </a>
       <SiteNav />
-      <main id="main" className={cn("min-h-[60dvh] py-10", signedIn && "pb-24 md:pb-10")}>
+      <main id="main" className="fx-main">
         {children}
       </main>
       <SiteFooter />
+      {signedIn ? (
+        <SiteTabs
+          label="Your Foxing"
+          renderLink={renderLink}
+          tabs={YOUR_FOXING.map((t) => ({ ...t, current: isCurrent(pathname, t.href) }))}
+        />
+      ) : null}
     </>
   );
 }

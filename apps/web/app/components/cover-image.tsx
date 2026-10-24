@@ -25,10 +25,7 @@ export function CoverImage({ src, alt, fallbackLabel, priority, sizes, className
 
   return (
     <div
-      className={cn(
-        "cover-img relative aspect-[2/3] overflow-hidden rounded-cover bg-sunken shadow-card-sm ring-1 ring-border-subtle",
-        className,
-      )}
+      className={cn("cover-img", className)}
       style={placeholder ? { backgroundImage: `url("${placeholder}")` } : undefined}
       data-loaded={loaded ? "true" : "false"}
     >
@@ -44,16 +41,11 @@ export function CoverImage({ src, alt, fallbackLabel, priority, sizes, className
           fetchPriority={priority ? "high" : "auto"}
           decoding={priority ? "auto" : "async"}
           onLoad={() => setLoaded(true)}
-          className={cn(
-            "h-full w-full object-cover transition-opacity duration-500 motion-reduce:transition-none",
-            loaded ? "opacity-100" : "opacity-0",
-          )}
+          className="cover-img-photo"
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center p-3 text-center">
-          <span className="line-clamp-4 font-display text-sm leading-tight text-tertiary">
-            {fallbackLabel ?? alt}
-          </span>
+        <div className="cover-img-fallback">
+          <span>{fallbackLabel ?? alt}</span>
         </div>
       )}
     </div>

@@ -42,60 +42,50 @@ export function ListForm({
   }
 
   return (
-    <form onSubmit={submit} className="flex flex-col gap-6">
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-tertiary">
-          Title
-        </span>
+    <form onSubmit={submit} className="stack-6">
+      <label className="stack-2">
+        <span className="group-label">Title</span>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           maxLength={200}
           placeholder="Books that broke my heart"
-          className="rounded-cover border border-border-interactive bg-surface px-3 py-2 font-ui text-primary"
+          className="cap-input py-2"
         />
       </label>
 
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-[0.6875rem] uppercase tracking-[0.14em] text-tertiary">
-          Description
-        </span>
+      <label className="stack-2">
+        <span className="group-label">Description</span>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
-          className="rounded-card border border-border-interactive bg-surface px-3 py-2 font-body text-primary"
+          className="cap-input py-2"
         />
       </label>
 
-      <label className="flex items-center gap-2 font-ui text-sm text-secondary">
+      <label className="row-2 ui">
         <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
         Make this list public
       </label>
 
       {error ? (
-        <p
-          role="alert"
-          className="rounded-md border border-danger/50 bg-danger-subtle px-3 py-2 font-ui text-sm text-danger-text"
-        >
+        <p role="alert" className="py-2 fx-list-form-text">
           {error}
         </p>
       ) : null}
 
-      <div className="flex items-center gap-3">
+      <div className="row">
         <button
           type="submit"
           disabled={pending || title.trim() === ""}
-          className="rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
+          className="cap-btn"
+          data-variant="primary"
         >
           {pending ? "Saving..." : mode === "create" ? "Create list" : "Save changes"}
         </button>
-        <button
-          type="button"
-          onClick={() => navigate(redirectTo)}
-          className="font-ui text-sm text-secondary hover:text-primary"
-        >
+        <button type="button" onClick={() => navigate(redirectTo)} className="fx-list-form-btn">
           Cancel
         </button>
       </div>

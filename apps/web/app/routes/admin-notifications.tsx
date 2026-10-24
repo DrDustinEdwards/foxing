@@ -61,18 +61,18 @@ export default function AdminNotifications() {
   return (
     <AdminShell>
       <div className="mb-6">
-        <p className="font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">Admin</p>
-        <h1 className="font-display text-3xl text-primary">Notifications</h1>
+        <p className="group-label">Admin</p>
+        <h1 className="display-3">Notifications</h1>
       </div>
 
       <AdminCard title="Broadcast">
-        <div className="space-y-4">
-          <p className="rounded-md border border-border-subtle bg-sunken p-3 font-ui text-sm text-secondary">
+        <div className="stack">
+          <p className="fx-admin-notifications-text">
             This sends one in-app notification to every active reader. It cannot be recalled.
             Confirm the text below before you send.
           </p>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Title</span>
+            <span className="fx-label">Title</span>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -80,7 +80,7 @@ export default function AdminNotifications() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">Body (optional)</span>
+            <span className="fx-label">Body (optional)</span>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
@@ -89,9 +89,7 @@ export default function AdminNotifications() {
             />
           </label>
           <label className="block">
-            <span className="mb-1 block font-ui text-sm text-secondary">
-              Type {CONFIRM_WORD} to confirm
-            </span>
+            <span className="fx-label">Type {CONFIRM_WORD} to confirm</span>
             <input
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
@@ -102,7 +100,7 @@ export default function AdminNotifications() {
             {pending ? "Sending..." : "Send broadcast"}
           </AdminButton>
           {sent !== null ? (
-            <p className="font-ui text-sm text-brand-subtle-text" role="status">
+            <p className="fx-admin-notifications-text-2" role="status">
               Sent to {sent} readers.
             </p>
           ) : null}

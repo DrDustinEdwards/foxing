@@ -62,22 +62,22 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
-        <div className="mb-10 flex items-end justify-between gap-4">
+      <Container>
+        <div className="mb-10 items-end fx-notifications-row">
           <PageHeader eyebrow="Activity" title="Notifications" className="mb-0" />
           {unread > 0 ? (
             <button
               type="button"
               onClick={markAllRead}
               disabled={pending}
-              className="shrink-0 rounded-md border border-border-interactive px-4 py-2 font-ui text-sm hover:bg-hover disabled:opacity-50"
+              className="cap-btn shrink-0"
             >
               {pending ? "Marking..." : "Mark all read"}
             </button>
           ) : null}
         </div>
         {error ? (
-          <p className="mb-4 font-ui text-sm text-error" role="alert">
+          <p className="mb-4 fx-notifications-text" role="alert">
             {error}
           </p>
         ) : null}
@@ -87,26 +87,14 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
             body="Replies, follows, and club activity will show up here."
           />
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="stack-2">
             {notifications.map((n) => (
-              <li
-                key={n.id}
-                className="flex items-start gap-3 rounded-card border border-border-subtle bg-surface p-4"
-              >
-                <span
-                  aria-hidden="true"
-                  className={
-                    n.isRead
-                      ? "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-border-strong"
-                      : "mt-1.5 h-2 w-2 shrink-0 rounded-full bg-brand-ui"
-                  }
-                />
-                <div className="min-w-0">
-                  <p className="font-ui text-sm font-medium text-primary">{n.title}</p>
-                  {n.body ? (
-                    <p className="mt-0.5 font-ui text-sm text-secondary">{n.body}</p>
-                  ) : null}
-                  <p className="mt-1 font-mono text-xs text-tertiary">
+              <li key={n.id} className="items-start fx-notifications-card">
+                <span aria-hidden="true" className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"} />
+                <div className="min-0">
+                  <p className="sans small strong">{n.title}</p>
+                  {n.body ? <p className="fx-notifications-text-2">{n.body}</p> : null}
+                  <p className="mt-1 fx-notifications-text-3">
                     {dateFormat.format(new Date(n.createdAt))}
                   </p>
                 </div>

@@ -49,28 +49,21 @@ export function PollsSection({
 
   return (
     <section>
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl">Polls</h2>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="font-ui text-sm text-brand-text underline"
-        >
+      <div className="row spread">
+        <h2 className="display-2">Polls</h2>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "New poll"}
         </button>
       </div>
 
       {open ? (
-        <form
-          onSubmit={create}
-          className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-4"
-        >
+        <form onSubmit={create} className="mt-3 fx-club-schedule-card">
           <input
             name="title"
             required
             placeholder="Poll question"
             aria-label="Poll question"
-            className="w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+            className="cap-input"
           />
           {Array.from({ length: optionCount }, (_, i) => (
             <input
@@ -80,15 +73,15 @@ export function PollsSection({
               required={i < 2}
               placeholder={`Option ${i + 1}`}
               aria-label={`Option ${i + 1}`}
-              className="w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+              className="cap-input"
             />
           ))}
-          <div className="flex items-center gap-3">
+          <div className="row">
             {optionCount < 6 ? (
               <button
                 type="button"
                 onClick={() => setOptionCount((n) => n + 1)}
-                className="font-ui text-xs text-tertiary underline"
+                className="fx-club-schedule-btn-2"
               >
                 Add option
               </button>
@@ -96,7 +89,9 @@ export function PollsSection({
             <button
               type="submit"
               disabled={pending}
-              className="rounded-cover bg-brand-text px-4 py-1.5 font-ui text-sm text-on-brand disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
+              className="cap-btn"
+              data-variant="primary"
+              data-size="sm"
             >
               Create poll
             </button>
@@ -106,35 +101,30 @@ export function PollsSection({
       ) : null}
 
       {polls.length === 0 ? (
-        <p className="mt-4 font-ui text-sm text-tertiary">No polls yet.</p>
+        <p className="mt-4 meta">No polls yet.</p>
       ) : (
-        <div className="mt-4 space-y-4">
+        <div className="mt-4 fx-club-schedule-box">
           {polls.map(({ poll, tallies, myVote }) => {
             const live = liveTallies[poll.id] ?? tallies;
             const total = Object.values(live).reduce((a, b) => a + b, 0);
             return (
-              <div
-                key={poll.id}
-                className="rounded-card border border-border-subtle bg-surface p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-ui font-medium text-primary">{poll.title}</p>
+              <div key={poll.id} className="card">
+                <div className="row spread">
+                  <p className="strong sans">{poll.title}</p>
                   {poll.isClosed ? (
-                    <span className="font-mono text-[0.625rem] uppercase tracking-wide text-tertiary">
-                      Closed
-                    </span>
+                    <span className="fx-club-schedule-caps">Closed</span>
                   ) : canModerate || poll.createdBy === viewerId ? (
                     <button
                       type="button"
                       onClick={() => close(poll.id)}
                       disabled={pending}
-                      className="font-ui text-xs text-tertiary underline hover:text-primary"
+                      className="fx-club-schedule-btn-3"
                     >
                       Close poll
                     </button>
                   ) : null}
                 </div>
-                <ul className="mt-3 space-y-1.5">
+                <ul className="mt-3 fx-club-schedule-list">
                   {(poll.options ?? []).map((opt) => {
                     const count = live[opt.id] ?? 0;
                     const pct = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -146,18 +136,15 @@ export function PollsSection({
                           disabled={poll.isClosed || pending}
                           onClick={() => vote(poll.id, opt.id)}
                           aria-pressed={mine}
-                          className="group relative flex w-full items-center justify-between overflow-hidden rounded-card border border-border-subtle px-3 py-2 text-left font-ui text-sm aria-pressed:border-border-interactive disabled:cursor-default"
+                          className="fx-poll-option"
                         >
                           <span
                             aria-hidden="true"
-                            className="absolute inset-y-0 left-0 bg-brand-subtle transition-all"
+                            className="fx-club-schedule-label"
                             style={{ width: `${pct}%` }}
                           />
-                          <span className="relative z-10">{opt.label}</span>
-                          <span
-                            className="relative z-10 tabular-nums text-tertiary"
-                            aria-live="polite"
-                          >
+                          <span className="relative fx-club-schedule-label-2">{opt.label}</span>
+                          <span className="relative fx-club-schedule-label-3" aria-live="polite">
                             {count}
                           </span>
                         </button>
@@ -207,38 +194,33 @@ export function MeetingsSection({
 
   return (
     <section>
-      <div className="flex items-center justify-between">
-        <h2 className="font-display text-xl">Meetings</h2>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className="font-ui text-sm text-brand-text underline"
-        >
+      <div className="row spread">
+        <h2 className="display-1">Meetings</h2>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "Add"}
         </button>
       </div>
       {open ? (
-        <form
-          onSubmit={create}
-          className="mt-3 space-y-2 rounded-card border border-border-subtle bg-surface p-3"
-        >
+        <form onSubmit={create} className="mt-3 fx-club-schedule-card-2">
           <input
             name="title"
             required
             placeholder="Meeting title"
             aria-label="Meeting title"
-            className="w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+            className="cap-input"
           />
           <input
             name="date"
             type="datetime-local"
             aria-label="Meeting date and time"
-            className="w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+            className="cap-input"
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded-cover bg-brand-text px-3 py-1.5 font-ui text-sm text-on-brand disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
+            className="cap-btn"
+            data-variant="primary"
+            data-size="sm"
           >
             Schedule
           </button>
@@ -246,30 +228,28 @@ export function MeetingsSection({
         </form>
       ) : null}
       {meetings.length === 0 ? (
-        <p className="mt-3 font-ui text-sm text-tertiary">No meetings scheduled.</p>
+        <p className="mt-3 fx-club-schedule-text-2">No meetings scheduled.</p>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 fx-club-schedule-list-2">
           {meetings.map((m) => (
-            <li key={m.id} className="rounded-card border border-border-subtle bg-surface p-3">
-              <p className="font-ui text-sm text-primary">{m.title}</p>
-              <p className="font-ui text-xs text-tertiary">
-                {new Date(m.meetingDate).toLocaleString()}
-              </p>
+            <li key={m.id} className="fx-club-schedule-card-3">
+              <p className="fx-club-schedule-text-3">{m.title}</p>
+              <p className="fine">{new Date(m.meetingDate).toLocaleString()}</p>
               {!m.isCancelled ? (
-                <div className="mt-2 flex gap-2">
+                <div className="mt-2 fx-club-schedule-row">
                   {(["going", "maybe", "not_going"] as const).map((s) => (
                     <button
                       key={s}
                       type="button"
                       onClick={() => rsvp(m.id, s)}
-                      className="rounded-full border border-border-subtle px-2.5 py-0.5 font-ui text-xs text-secondary hover:bg-hover"
+                      className="cap-chip"
                     >
                       {s === "not_going" ? "Can't" : s}
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="mt-1 font-ui text-xs text-tertiary">Cancelled</p>
+                <p className="mt-1 fine">Cancelled</p>
               )}
             </li>
           ))}
@@ -311,20 +291,17 @@ export function ScheduleSection({
 
   return (
     <section>
-      <h2 className="font-display text-xl">Reading schedule</h2>
+      <h2 className="display-1">Reading schedule</h2>
       {schedule.length === 0 ? (
-        <p className="mt-3 font-ui text-sm text-tertiary">No schedule set.</p>
+        <p className="mt-3 fx-club-schedule-text-2">No schedule set.</p>
       ) : (
-        <ul className="mt-3 space-y-1.5">
+        <ul className="mt-3 fx-club-schedule-list">
           {schedule.map((s) => {
             const unlocked = new Date(s.unlockDate).getTime() <= now;
             return (
-              <li
-                key={s.id}
-                className="flex items-center justify-between rounded-card border border-border-subtle bg-surface px-3 py-2 font-ui text-sm"
-              >
-                <span className={unlocked ? "text-primary" : "text-tertiary"}>{s.chapterName}</span>
-                <span className="font-mono text-[0.625rem] uppercase tracking-wide text-tertiary">
+              <li key={s.id} className="py-2 fx-club-schedule-card-4">
+                <span className={unlocked ? "ink" : "dim"}>{s.chapterName}</span>
+                <span className="fx-club-schedule-caps">
                   {unlocked ? "Unlocked" : new Date(s.unlockDate).toLocaleDateString()}
                 </span>
               </li>
@@ -333,27 +310,26 @@ export function ScheduleSection({
         </ul>
       )}
       {canModerate ? (
-        <form
-          onSubmit={add}
-          className="mt-3 space-y-2 rounded-card border border-dashed border-border-subtle p-3"
-        >
+        <form onSubmit={add} className="mt-3 fx-club-schedule-form">
           <input
             name="chapter"
             required
             placeholder="Chapter or section"
             aria-label="Chapter or section"
-            className="w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+            className="cap-input"
           />
           <input
             name="unlock"
             type="datetime-local"
             aria-label="Unlock date"
-            className="w-full rounded-card border border-border-subtle bg-base px-3 py-2 font-ui text-sm"
+            className="cap-input"
           />
           <button
             type="submit"
             disabled={pending}
-            className="rounded-cover bg-brand-text px-3 py-1.5 font-ui text-sm text-on-brand disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
+            className="cap-btn"
+            data-variant="primary"
+            data-size="sm"
           >
             Add
           </button>

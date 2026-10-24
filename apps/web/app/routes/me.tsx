@@ -49,21 +49,17 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="flex flex-col gap-8">
-        <header className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+      <Container className="stack-8">
+        <header className="items-start fx-me-stack">
           <Avatar src={profile.avatarUrl} name={name} size="lg" />
-          <div className="min-w-0">
-            <h1 className="font-display text-3xl sm:text-4xl">{name}</h1>
-            <p className="mt-1 font-mono text-sm text-tertiary">@{profile.username}</p>
-            {joined ? (
-              <p className="mt-2 font-ui text-sm text-secondary">
-                Reading on Foxing since {joined}
-              </p>
-            ) : null}
+          <div className="min-0">
+            <h1 className="fx-me-title">{name}</h1>
+            <p className="mt-1 fx-me-text">@{profile.username}</p>
+            {joined ? <p className="mt-2 ui">Reading on Foxing since {joined}</p> : null}
           </div>
         </header>
 
-        <nav className="flex flex-wrap gap-2" aria-label="Your Foxing shortcuts">
+        <nav className="row-2 wrap" aria-label="Your Foxing shortcuts">
           {[
             { to: `/u/${profile.username}`, label: "Public profile" },
             { to: "/diary/new", label: "Log a book" },
@@ -71,34 +67,26 @@ export default function Me({ loaderData }: Route.ComponentProps) {
             { to: "/people", label: "People" },
             { to: "/year", label: "Year in reading" },
           ].map((l) => (
-            <Link
-              key={l.to}
-              to={l.to}
-              className="rounded-cover border border-border-subtle px-3 py-1.5 font-ui text-sm text-secondary transition hover:border-border-interactive hover:text-primary"
-            >
+            <Link key={l.to} to={l.to} className="cap-btn" data-size="sm">
               {l.label}
             </Link>
           ))}
         </nav>
 
-        {profile.bio ? (
-          <p className="max-w-2xl font-body text-lg text-secondary">{profile.bio}</p>
-        ) : null}
+        {profile.bio ? <p className="fx-me-text-2">{profile.bio}</p> : null}
 
-        <section className="rounded-hero border border-border-subtle bg-surface p-6">
+        <section className="fx-me-card">
           <Eyebrow className="mb-4">Your reading</Eyebrow>
-          <dl className="grid grid-cols-3 gap-4 text-center">
+          <dl className="text-center fx-me-grid">
             {statTiles.map((tile) => (
               <div key={tile.label}>
-                <dd className="font-display text-2xl text-primary">{tile.value}</dd>
-                <dt className="mt-0.5 font-mono text-[0.625rem] uppercase tracking-[0.08em] text-tertiary">
-                  {tile.label}
-                </dt>
+                <dd className="display-2">{tile.value}</dd>
+                <dt className="fx-me-caps">{tile.label}</dt>
               </div>
             ))}
           </dl>
-          <div className="mt-5 border-t border-border-subtle pt-4">
-            <Link to="/library" className="font-ui text-sm text-brand-text hover:underline">
+          <div className="mt-5 fx-me-box">
+            <Link to="/library" className="link sans small">
               Go to your library
             </Link>
           </div>
@@ -107,7 +95,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         {profile.favoriteGenres.length > 0 ? (
           <section>
             <Eyebrow className="mb-3">Favorite genres</Eyebrow>
-            <div className="flex flex-wrap gap-2">
+            <div className="row-2 wrap">
               {profile.favoriteGenres.map((g) => (
                 <Chip key={g}>{g}</Chip>
               ))}
@@ -115,7 +103,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
           </section>
         ) : null}
 
-        <p className="font-ui text-sm text-tertiary">Signed in as {email}</p>
+        <p className="meta">Signed in as {email}</p>
       </Container>
     </PageShell>
   );

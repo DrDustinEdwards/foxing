@@ -14,14 +14,14 @@ test.describe("settings (signed in)", () => {
     await expect(page.getByRole("heading", { name: /^close friends$/i })).toBeVisible();
   });
 
-  test("the appearance section exposes a theme toggle", async ({ page }) => {
+  test("the appearance section offers the light and dark themes", async ({ page }) => {
     await page.goto("/settings");
     const appearance = page
       .getByRole("heading", { name: /^appearance$/i })
       .locator("xpath=ancestor::section");
-    await expect(
-      appearance.getByRole("button", { name: /switch to (light|dark) mode/i }),
-    ).toBeVisible();
+    const theme = appearance.getByRole("group", { name: /^theme$/i });
+    await expect(theme.getByRole("radio", { name: /^light$/i })).toBeVisible();
+    await expect(theme.getByRole("radio", { name: /^dark$/i })).toBeVisible();
   });
 
   test("saving visibility round-trips and confirms", async ({ page }) => {

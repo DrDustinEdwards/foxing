@@ -31,7 +31,7 @@ export default function ListEdit({ loaderData }: Route.ComponentProps) {
   const { list } = loaderData;
   return (
     <PageShell>
-      <Container className="max-w-2xl">
+      <Container>
         <PageHeader eyebrow="Lists" title="Edit list" />
         <ListForm
           mode="edit"

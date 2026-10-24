@@ -70,26 +70,21 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
   return (
     <div className="relative">
       <Form method="get" action="/search" role="search" onSubmit={() => setOpen(false)}>
-        <label htmlFor="q" className="sr-only">
+        <label htmlFor="q" className="cap-sr-only">
           Search books and authors
         </label>
-        <div className="flex items-center gap-2 rounded-cover border border-border-interactive bg-surface px-4 py-3 focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[color:var(--border-focus)]">
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-            className="text-tertiary"
-          >
-            <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
-            <path
-              d="m20 20-3.2-3.2"
-              stroke="currentColor"
-              strokeWidth="1.7"
-              strokeLinecap="round"
-            />
-          </svg>
+        <div className="cap-input-group fx-search-field">
+          <div className="cap-input-addon" data-align="inline-start">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
+              <path
+                d="m20 20-3.2-3.2"
+                stroke="currentColor"
+                strokeWidth="1.7"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
           <input
             id="q"
             name="q"
@@ -106,7 +101,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
             aria-controls={listId}
             aria-autocomplete="list"
             aria-activedescendant={active >= 0 ? `${listId}-${active}` : undefined}
-            className="w-full bg-transparent font-ui text-base text-primary outline-none placeholder:text-tertiary"
+            className="cap-input"
           />
         </div>
       </Form>
@@ -115,11 +110,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
         // WAI-ARIA combobox popup: listbox with option children on generic elements.
         // Focus stays on the input and moves via aria-activedescendant; options carry
         // tabIndex={-1} so they are programmatically focusable but out of the tab order.
-        <div
-          id={listId}
-          role="listbox"
-          className="absolute z-30 mt-2 w-full overflow-hidden rounded-card border border-border-subtle bg-elevated shadow-card-lg"
-        >
+        <div id={listId} role="listbox" className="cap-listbox fx-suggest">
           {items.map((s, i) => (
             <div
               key={s.slug}
@@ -127,7 +118,8 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
               role="option"
               tabIndex={-1}
               aria-selected={active === i}
-              className={`cursor-pointer px-4 py-2.5 ${active === i ? "bg-hover" : ""}`}
+              className="cap-option"
+              data-active={active === i ? "" : undefined}
               onMouseEnter={() => setActive(i)}
               onMouseDown={(e) => {
                 e.preventDefault();
@@ -135,8 +127,10 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
                 setOpen(false);
               }}
             >
-              <span className="font-display text-sm text-primary">{s.title}</span>
-              <span className="font-ui text-sm text-tertiary"> · {s.author}</span>
+              <span className="cap-option-label">
+                <span className="display-s">{s.title}</span>
+                <span className="meta"> · {s.author}</span>
+              </span>
             </div>
           ))}
         </div>

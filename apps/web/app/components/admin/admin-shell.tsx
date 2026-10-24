@@ -4,7 +4,6 @@
 import { NavLink } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
-import { cn } from "~/lib/cn";
 
 const ADMIN_SECTIONS = [
   { to: "/admin", label: "Dashboard", end: true },
@@ -21,25 +20,12 @@ const ADMIN_SECTIONS = [
 
 function AdminSidebar() {
   return (
-    <nav aria-label="Admin sections" className="lg:sticky lg:top-24 lg:self-start">
-      <p className="mb-2 font-mono text-[0.625rem] uppercase tracking-[0.14em] text-tertiary">
-        Admin
-      </p>
-      <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+    <nav aria-label="Admin sections" className="fx-admin-shell-nav">
+      <p className="mb-2 group-label">Admin</p>
+      <ul className="fx-admin-shell-row">
         {ADMIN_SECTIONS.map((s) => (
           <li key={s.to}>
-            <NavLink
-              to={s.to}
-              end={"end" in s ? s.end : false}
-              className={({ isActive }) =>
-                cn(
-                  "block whitespace-nowrap rounded-md px-3 py-2 font-ui text-sm transition-colors",
-                  isActive
-                    ? "bg-brand-subtle text-brand-subtle-text"
-                    : "text-secondary hover:bg-hover hover:text-primary",
-                )
-              }
-            >
+            <NavLink to={s.to} end={"end" in s ? s.end : false} className="fx-admin-nav-link">
               {s.label}
             </NavLink>
           </li>
@@ -53,9 +39,9 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   return (
     <PageShell>
       <Container>
-        <div className="grid gap-8 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <div className="fx-admin-shell-grid">
           <AdminSidebar />
-          <div className="min-w-0">{children}</div>
+          <div className="min-0">{children}</div>
         </div>
       </Container>
     </PageShell>
@@ -73,10 +59,10 @@ export function AdminCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-border-subtle bg-surface p-6">
+    <section className="fx-admin-shell-card">
       {title || action ? (
-        <div className="mb-4 flex items-center justify-between gap-4">
-          {title ? <h2 className="font-display text-xl text-primary">{title}</h2> : <span />}
+        <div className="mb-4 row-4 spread">
+          {title ? <h2 className="display-1">{title}</h2> : <span />}
           {action}
         </div>
       ) : null}

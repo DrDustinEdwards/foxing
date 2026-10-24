@@ -22,22 +22,18 @@ export function CloseFriendToggle({
   }
 
   return (
-    <span className="inline-flex flex-col items-end gap-1">
+    <span className="items-end fx-close-friend-toggle-label">
       <button
         type="button"
         onClick={toggle}
         disabled={pending}
         aria-pressed={isClose}
-        className={
-          isClose
-            ? "rounded-full bg-brand-subtle px-3 py-1 font-ui text-xs text-brand-subtle-text transition hover:bg-selected disabled:opacity-50"
-            : "rounded-full border border-border-subtle px-3 py-1 font-ui text-xs text-secondary transition hover:border-border-interactive disabled:opacity-50"
-        }
+        className="cap-chip"
       >
         {isClose ? "Close friend" : "Add close friend"}
       </button>
       {error ? (
-        <span role="alert" className="font-ui text-[0.65rem] text-error">
+        <span role="alert" className="fx-close-friend-toggle-label-2">
           {error}
         </span>
       ) : null}

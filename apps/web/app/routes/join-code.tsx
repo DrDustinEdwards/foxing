@@ -48,15 +48,11 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-md text-center">
-        <p className="font-mono text-xs uppercase tracking-[0.14em] text-tertiary">
-          You have been invited to
-        </p>
-        <h1 className="mt-2 font-display text-4xl">{club.name}</h1>
-        {club.description ? (
-          <p className="mt-3 font-body text-secondary">{club.description}</p>
-        ) : null}
-        <p className="mt-3 font-ui text-sm text-tertiary">
+      <Container className="text-center">
+        <p className="fx-join-code-caps">You have been invited to</p>
+        <h1 className="mt-2 fx-join-code-title">{club.name}</h1>
+        {club.description ? <p className="mt-3 fx-join-code-text">{club.description}</p> : null}
+        <p className="mt-3 fx-join-code-text-2">
           {memberCount} {memberCount === 1 ? "member" : "members"}
         </p>
 
@@ -64,7 +60,8 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
           <button
             type="button"
             onClick={() => navigate(`/clubs/${club.slug}`)}
-            className="mt-8 rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand dark:text-[color:var(--section-charcoal)]"
+            className="cap-btn mt-8"
+            data-variant="primary"
           >
             Open club
           </button>
@@ -73,13 +70,14 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
             type="button"
             onClick={join}
             disabled={pending}
-            className="mt-8 rounded-cover bg-brand-text px-5 py-2.5 font-ui text-sm font-medium text-on-brand transition hover:bg-brand-hover disabled:opacity-60 dark:text-[color:var(--section-charcoal)]"
+            className="cap-btn mt-8"
+            data-variant="primary"
           >
             {pending ? "Joining..." : "Join this club"}
           </button>
         )}
         {error ? (
-          <p className="mt-3 font-ui text-sm text-danger-text" role="alert">
+          <p className="mt-3 fx-join-code-text-3" role="alert">
             {error}
           </p>
         ) : null}

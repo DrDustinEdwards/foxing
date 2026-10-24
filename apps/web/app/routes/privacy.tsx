@@ -33,10 +33,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 export default function Privacy() {
   return (
     <PageShell>
-      <Container className="max-w-prose">
+      <Container className="measure-prose">
         <PageHeader eyebrow={`Last updated ${LAST_UPDATED}`} title="Privacy" />
 
-        <div className="space-y-8 font-ui text-base leading-relaxed text-secondary">
+        <div className="fx-privacy-box">
           <Section heading="What we collect">
             Your account email and name, the books on your shelves and their reading status, your
             reading progress and streaks, the highlights and notes you save, the reading goals you
@@ -99,7 +99,7 @@ export default function Privacy() {
           </Section>
 
           <Section heading="Contact">
-            <a href={`mailto:${PRIVACY_EMAIL}`} className="text-brand-text hover:underline">
+            <a href={`mailto:${PRIVACY_EMAIL}`} className="link">
               {PRIVACY_EMAIL}
             </a>
           </Section>
@@ -112,7 +112,7 @@ export default function Privacy() {
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="font-display text-xl text-primary">{heading}</h2>
+      <h2 className="display-1">{heading}</h2>
       <p className="mt-2">{children}</p>
     </section>
   );

@@ -48,13 +48,10 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-2xl">
-        <div className="mb-10 flex items-end justify-between gap-4">
+      <Container>
+        <div className="mb-10 items-end fx-lists-row">
           <PageHeader eyebrow="Reading" title="Your lists" className="mb-0" />
-          <Link
-            to="/lists/new"
-            className="shrink-0 rounded-md bg-brand-ui px-4 py-2 font-ui text-sm font-medium text-on-brand transition hover:opacity-90"
-          >
+          <Link to="/lists/new" className="cap-btn shrink-0" data-variant="primary">
             New list
           </Link>
         </div>
@@ -65,7 +62,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <nav aria-label="Filter lists" className="mb-6 flex flex-wrap gap-2">
+            <nav aria-label="Filter lists" className="mb-6 fx-lists-row-2">
               <FilterTab active={filter === "all"} onClick={() => setFilter("all")}>
                 All {lists.length}
               </FilterTab>
@@ -76,27 +73,23 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                 Private {lists.length - publicCount}
               </FilterTab>
             </nav>
-            <ul className="flex flex-col gap-3">
+            <ul className="stack-3">
               {shown.map((l) => (
                 <li key={l.id}>
                   <EntityCard to={`/lists/${l.id}`}>
-                    <div className="flex gap-4">
+                    <div className="fx-lists-row-3">
                       {l.covers.length > 0 ? <CoverStack covers={l.covers} /> : null}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <h2 className="font-display text-lg text-primary">{l.title}</h2>
+                      <div className="fx-lists-box">
+                        <div className="fx-lists-row-4">
+                          <h2 className="display-0">{l.title}</h2>
                           {!l.isPublic ? (
-                            <span className="shrink-0 font-mono text-[0.6875rem] uppercase tracking-[0.08em] text-tertiary">
-                              Private
-                            </span>
+                            <span className="shrink-0 fx-lists-caps">Private</span>
                           ) : null}
                         </div>
                         {l.description ? (
-                          <p className="mt-1 line-clamp-2 font-ui text-sm text-secondary">
-                            {l.description}
-                          </p>
+                          <p className="mt-1 fx-lists-text">{l.description}</p>
                         ) : null}
-                        <p className="mt-2 font-mono text-xs text-tertiary">
+                        <p className="mt-2 fx-lists-text-2">
                           {l.bookCount} {l.bookCount === 1 ? "book" : "books"}
                           {" · "}
                           {l.isPublic ? "public" : "private"}
@@ -124,12 +117,7 @@ function FilterTab({
   children: ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className="rounded-full border px-3 py-1 font-ui text-sm transition-colors aria-pressed:border-border-interactive aria-pressed:bg-selected aria-pressed:text-primary border-border-subtle text-secondary hover:border-border-interactive hover:text-primary"
-    >
+    <button type="button" onClick={onClick} aria-pressed={active} className="cap-chip">
       {children}
     </button>
   );
@@ -139,14 +127,14 @@ function FilterTab({
 // title carries the link's meaning), so the images are alt-empty.
 function CoverStack({ covers }: { covers: string[] }) {
   return (
-    <div className="flex shrink-0 -space-x-3">
+    <div className="shrink-0 fx-lists-row-5">
       {covers.map((src, i) => (
         <img
           key={src}
           src={src}
           alt=""
           loading="lazy"
-          className="h-16 w-11 rounded-sm border border-border-subtle bg-sunken object-cover shadow-sm"
+          className="fx-lists-img"
           style={{ zIndex: covers.length - i }}
         />
       ))}

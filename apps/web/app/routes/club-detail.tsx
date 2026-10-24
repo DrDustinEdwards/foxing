@@ -52,18 +52,18 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="max-w-4xl">
-        <div className="flex flex-wrap items-start justify-between gap-4">
+      <Container>
+        <div className="items-start fx-club-detail-row">
           <div>
-            <h1 className="font-display text-4xl">{club.name}</h1>
+            <h1 className="display-4">{club.name}</h1>
             {club.description ? (
-              <p className="mt-2 max-w-2xl font-body text-secondary">{club.description}</p>
+              <p className="mt-2 fx-club-detail-text">{club.description}</p>
             ) : null}
-            <p className="mt-2 font-ui text-sm text-tertiary">
+            <p className="mt-2 meta">
               {memberCount} {memberCount === 1 ? "member" : "members"}
               {isMember && connected ? (
-                <span className="ml-3 inline-flex items-center gap-1.5 text-brand-text">
-                  <span aria-hidden="true" className="h-2 w-2 rounded-full bg-brand-ui" />
+                <span className="fx-club-detail-label">
+                  <span aria-hidden="true" className="fx-club-detail-label-2" />
                   <span aria-live="polite">{presence.length} here now</span>
                 </span>
               ) : null}
@@ -81,8 +81,8 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
         </div>
 
         {isMember ? (
-          <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="space-y-10">
+          <div className="mt-10 fx-club-detail-grid">
+            <div className="fx-club-detail-box">
               <ThreadsSection
                 clubId={club.id}
                 slug={club.slug ?? ""}
@@ -98,7 +98,7 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
                 onChange={refresh}
               />
             </div>
-            <aside className="space-y-10">
+            <aside className="fx-club-detail-box">
               <MeetingsSection clubId={club.id} meetings={meetings} onChange={refresh} />
               <ScheduleSection
                 clubId={club.id}
@@ -109,10 +109,8 @@ export default function ClubDetail({ loaderData }: Route.ComponentProps) {
             </aside>
           </div>
         ) : (
-          <div className="mt-10 rounded-card border border-dashed border-border-subtle bg-surface p-10 text-center">
-            <p className="font-ui text-sm text-tertiary">
-              Join this club to read its discussions, polls, and meetings.
-            </p>
+          <div className="mt-10 text-center fx-club-detail-card">
+            <p className="meta">Join this club to read its discussions, polls, and meetings.</p>
           </div>
         )}
       </Container>
