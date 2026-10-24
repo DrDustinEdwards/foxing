@@ -1,3 +1,4 @@
+import { MONTH_ABBR } from "@foxing/client";
 import { catalogRepo } from "@foxing/core";
 import { Link } from "react-router";
 import { CoverImage } from "~/components/cover-image";
@@ -6,7 +7,6 @@ import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
 import { breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/pick-club";
-import { MONTH_ABBR } from "~/lib/months";
 
 function pickDate(year: number | null, month: number | null): string | null {
   if (!year) return null;

@@ -1,7 +1,7 @@
 // The signed-in reader's own reading lists index (auth-gated, noindex). Reads run
-// in-process via core; requireProfile gates access. Each list links to its detail page;
-// a "New list" action links to the create route.
-import { createDb, socialRepo } from "@foxing/core";
+// in-process through the same core view GET /lists serves the app; requireProfile gates
+// access. Each list links to its detail page; "New list" links to the create route.
+import { createDb, views } from "@foxing/core";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { Link } from "react-router";
@@ -20,20 +20,7 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
-  const db = createDb(env.DB);
-  const [rows, summaries] = await Promise.all([
-    socialRepo.listListsForUser(db, user.id),
-    socialRepo.listSummariesForUser(db, user.id),
-  ]);
-  const summ = new Map(summaries.map((s) => [s.listId, s]));
-  const lists = rows.map((l) => ({
-    id: l.id,
-    title: l.title,
-    description: l.description,
-    isPublic: l.isPublic,
-    bookCount: summ.get(l.id)?.bookCount ?? 0,
-    covers: summ.get(l.id)?.covers ?? [],
-  }));
+  const lists = await views.myLists(createDb(env.DB), user.id);
   return { lists };
 }
 

@@ -22,6 +22,7 @@ export async function library(db: Db, userId: string): Promise<W.LibraryEntry[]>
     slug: e.slug,
     coverUrl: e.coverUrl,
     updatedAt: e.updatedAt.getTime(),
+    finishedAt: ms(e.finishedAt),
   }));
 }
 
@@ -97,23 +98,19 @@ export async function streak(db: Db, userId: string, now = Date.now()): Promise<
 
 const DAY_MS = 86_400_000;
 
-export async function stats(db: Db, userId: string, now = Date.now()): Promise<W.ReadingStats> {
-  const year = new Date(now).getUTCFullYear();
-  const today = Math.floor(now / DAY_MS) * DAY_MS;
-  const weekStart = today - 6 * DAY_MS;
-  const [finishedThisYear, goals, finished, s, sessions] = await Promise.all([
-    libraryRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }),
-    libraryRepo.listGoals(db, userId),
-    libraryRepo.listFinishedInRangeForStats(
-      db,
-      userId,
-      Date.UTC(year, 0, 1),
-      Date.UTC(year + 1, 0, 1),
-    ),
-    streak(db, userId, now),
-    libraryRepo.listSessionsSince(db, userId, weekStart),
-  ]);
-
+/** Books finished in each month of a year and the year's most-read subjects, the shape
+ *  both the stats page and the Year in Reading recap chart. */
+export async function finishedSpread(
+  db: Db,
+  userId: string,
+  year: number,
+): Promise<Pick<W.ReadingStats, "monthly" | "genres">> {
+  const finished = await libraryRepo.listFinishedInRangeForStats(
+    db,
+    userId,
+    Date.UTC(year, 0, 1),
+    Date.UTC(year + 1, 0, 1),
+  );
   const monthly = Array<number>(12).fill(0);
   const genreCounts = new Map<string, number>();
   for (const b of finished) {
@@ -123,6 +120,26 @@ export async function stats(db: Db, userId: string, now = Date.now()): Promise<W
       if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
     }
   }
+  return {
+    monthly,
+    genres: [...genreCounts.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 6),
+  };
+}
+
+export async function stats(db: Db, userId: string, now = Date.now()): Promise<W.ReadingStats> {
+  const year = new Date(now).getUTCFullYear();
+  const today = Math.floor(now / DAY_MS) * DAY_MS;
+  const weekStart = today - 6 * DAY_MS;
+  const [finishedThisYear, goals, spread, s, sessions] = await Promise.all([
+    libraryRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }),
+    libraryRepo.listGoals(db, userId),
+    finishedSpread(db, userId, year),
+    streak(db, userId, now),
+    libraryRepo.listSessionsSince(db, userId, weekStart),
+  ]);
 
   const week = Array.from({ length: 7 }, (_, i) => ({
     day: weekStart + i * DAY_MS,
@@ -140,11 +157,7 @@ export async function stats(db: Db, userId: string, now = Date.now()): Promise<W
   return {
     year,
     finishedThisYear,
-    monthly,
-    genres: [...genreCounts.entries()]
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 6),
+    ...spread,
     booksYearGoalTarget:
       goals.find((g) => g.type === "books" && g.periodType === "year")?.target ?? null,
     streak: s,

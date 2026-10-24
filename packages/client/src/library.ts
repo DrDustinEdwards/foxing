@@ -54,7 +54,11 @@ export function useSetBookStatus() {
       patch<W.LibraryEntry[]>(keys.library, (list) => {
         if (status === null) return list.filter((e) => e.bookId !== bookId);
         if (list.some((e) => e.bookId === bookId)) {
-          return list.map((e) => (e.bookId === bookId ? { ...e, status } : e));
+          return list.map((e) =>
+            e.bookId === bookId
+              ? { ...e, status, finishedAt: status === "finished" ? Date.now() : e.finishedAt }
+              : e,
+          );
         }
         if (!book) return list;
         return [
@@ -67,6 +71,7 @@ export function useSetBookStatus() {
             slug: book.slug,
             coverUrl: book.coverUrl,
             updatedAt: Date.now(),
+            finishedAt: status === "finished" ? Date.now() : null,
           },
           ...list,
         ];
@@ -101,8 +106,8 @@ export function useShelf<S extends W.ShelfDetail | undefined = undefined>(id: st
 
 export function useCreateShelf() {
   const api = useApi();
-  return useWrite<{ name: string; description?: string; isPublic?: boolean }>({
-    write: (input) => api.post("/shelves", input),
+  return useWrite<{ name: string; description?: string; isPublic?: boolean }, { shelf: W.Shelf }>({
+    write: (input) => api.post<{ shelf: W.Shelf }>("/shelves", input),
     invalidates: () => [keys.shelves],
   });
 }

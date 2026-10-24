@@ -11,7 +11,7 @@ import * as diaryRepo from "../repositories/diary";
 import * as libraryRepo from "../repositories/library";
 import * as profilesRepo from "../repositories/profiles";
 import * as readerSocial from "../repositories/reader-social";
-import { clubsReading } from "./clubs";
+import { clubsReading, publicClubs } from "./clubs";
 import { ms } from "./wire";
 
 /** Only public profiles and public clubs are returned. */
@@ -33,7 +33,35 @@ export async function suggest(db: Db, q: string): Promise<W.SearchSuggest> {
     })),
     authors: authors.map((a) => ({ slug: a.authorSlug, name: a.author, bookCount: a.bookCount })),
     people: people.map((p) => ({ username: p.username, displayName: p.displayName ?? p.username })),
-    clubs: clubs.map((c) => ({ slug: c.slug, name: c.name })),
+    clubs: clubs.map((c) => ({ id: c.id, slug: c.slug, name: c.name })),
+  };
+}
+
+/** The catalog's front shelf: today's pick, curated and trending rows, active clubs,
+ *  and the facets to browse by. */
+export async function discover(db: Db, now = Date.now()): Promise<W.DiscoverPage> {
+  const [todaysPick, staffPicks, awardWinners, trending, newest, clubs, genres] = await Promise.all(
+    [
+      catalogRepo.getTodaysPick(db),
+      catalogRepo.listStaffPicks(db, 10),
+      catalogRepo.listStarterBooks(db, 10),
+      catalogRepo.listTrending(db, now - 30 * 86_400_000, 10),
+      catalogRepo.listNewest(db, 10),
+      publicClubs(db, 6),
+      catalogRepo.getGenreFacets(db, 18),
+    ],
+  );
+  const bucket = ({ slug, label }: catalogRepo.Bucket) => ({ slug, label });
+  return {
+    todaysPick,
+    staffPicks,
+    awardWinners,
+    trending,
+    newest,
+    clubs,
+    genres,
+    eras: catalogRepo.ERA_BUCKETS.map(bucket),
+    lengths: catalogRepo.LENGTH_BUCKETS.map(bucket),
   };
 }
 
@@ -201,5 +229,35 @@ export async function bookPage(
       locator: p.locator,
     })),
     readerCount,
+  };
+}
+
+/** The reader's opening state: the readable book, the saved position and the clubs a
+ *  passage comment can go to. Null when the book is missing or has no file. */
+export async function readerPage(
+  db: Db,
+  userId: string | null,
+  idOrSlug: string,
+): Promise<W.ReaderPage | null> {
+  const book =
+    (await catalogRepo.getBookById(db, idOrSlug)) ??
+    (await catalogRepo.getBookBySlug(db, idOrSlug));
+  if (!book || !catalogRepo.isReadable(book) || !book.epubUrl) return null;
+  const [userBook, shareableClubs] = userId
+    ? await Promise.all([
+        libraryRepo.getUserBook(db, userId, book.id),
+        readerSocial.shareableClubsForBook(db, userId, book.id),
+      ])
+    : [null, []];
+  return {
+    book: {
+      id: book.id,
+      slug: book.slug,
+      title: book.title,
+      author: book.author,
+      epubUrl: book.epubUrl,
+    },
+    initialLocator: (userBook?.progress as W.Locator | null | undefined) ?? null,
+    shareableClubs,
   };
 }

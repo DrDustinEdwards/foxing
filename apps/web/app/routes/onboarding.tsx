@@ -1,7 +1,7 @@
 import { useOnboard, useSetBookStatus } from "@foxing/client";
 import { useState } from "react";
 import { Link, redirect, useNavigate } from "react-router";
-import { catalogRepo, createDb, profilesRepo } from "@foxing/core";
+import { createDb, profilesRepo, views } from "@foxing/core";
 import { CoverImage } from "~/components/cover-image";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
@@ -18,11 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const existing = await profilesRepo.getProfileById(db, session.user.id);
   if (existing) throw redirect("/me");
-  const [starters, genres] = await Promise.all([
-    catalogRepo.listStarterBooks(db, 6),
-    catalogRepo.getGenreFacets(db, 12),
-  ]);
-  return { suggested: session.user.name ?? "", starters, genres };
+  return { suggested: session.user.name ?? "", ...(await views.onboarding(db)) };
 }
 
 /** Minimal onboarding frame: wordmark + centred card. Not the full nav shell, because

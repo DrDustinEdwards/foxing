@@ -2,7 +2,7 @@
 // search-as-you-type. Follow and close-friend toggles patch every open screen that
 // shows them, so a toggle never reloads the page.
 import type * as W from "@foxing/types";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { qs } from "./http";
 import { keys } from "./keys";
@@ -23,6 +23,40 @@ export function useFeed<S extends W.FeedPage | undefined = undefined>(
     },
     seed,
   );
+}
+
+/** The whole feed as pages, for an infinite list (mobile); `fetchNextPage` loads older rows. */
+export function useFeedPages() {
+  const api = useApi();
+  return useInfiniteQuery({
+    queryKey: [...keys.feed, "pages"],
+    queryFn: ({ pageParam }) => api.get<W.FeedPage>(`/feed${qs({ cursor: pageParam })}`),
+    initialPageParam: null as number | null,
+    getNextPageParam: (last) => last.nextCursor,
+  });
+}
+
+/** The words after the actor's name on a feed row, the same on web and mobile. */
+export function activityText(row: Extract<W.FeedRow, { kind: "activity" }>): string {
+  const title = typeof row.data.title === "string" ? row.data.title : "a book";
+  switch (row.type) {
+    case "finished_book":
+      return `finished ${title}`;
+    case "started_book":
+      return `started reading ${title}`;
+    case "reviewed":
+      return `reviewed ${title}`;
+    case "rated":
+      return `rated ${title}`;
+    case "highlighted":
+      return `highlighted a passage in ${title}`;
+    case "joined_club":
+      return "joined a club";
+    case "list_created":
+      return `created a list${typeof row.data.title === "string" ? `: ${row.data.title}` : ""}`;
+    default:
+      return row.type.replace(/_/g, " ");
+  }
 }
 
 export function useProfilePage<S extends W.ProfilePage | undefined = undefined>(
@@ -54,6 +88,23 @@ export function useDiary<S extends W.DiaryEntry[] | undefined = undefined>(seed?
       queryKey: keys.diary,
       queryFn: () => api.get<{ entries: W.DiaryEntry[] }>("/diary").then((r) => r.entries),
     },
+    seed,
+  );
+}
+
+/** The reader's own Year in Reading for one year. */
+export function useRecap(year: number) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.recap(year),
+    queryFn: () => api.get<W.RecapPage>(`/recap/${year}`),
+  });
+}
+
+export function useMyLists<S extends W.MyList[] | undefined = undefined>(seed?: S) {
+  const api = useApi();
+  return useSeededQuery(
+    { queryKey: keys.myLists, queryFn: () => api.get<W.MyList[]>("/lists") },
     seed,
   );
 }
@@ -185,7 +236,7 @@ export function useCreateList() {
   const api = useApi();
   return useWrite<ListInput, { list: { id: string } }>({
     write: (input) => api.post("/lists", { ...input }),
-    invalidates: () => [keys.profiles, keys.feed],
+    invalidates: () => [keys.myLists, keys.profiles, keys.feed],
   });
 }
 
@@ -196,7 +247,7 @@ export function useUpdateList() {
     optimistic: ({ id, ...input }) => [
       patch<W.ListPage>(keys.list(id), (l) => ({ ...l, list: { ...l.list, ...input } })),
     ],
-    invalidates: ({ id }) => [keys.list(id), keys.profiles],
+    invalidates: ({ id }) => [keys.list(id), keys.myLists, keys.profiles],
   });
 }
 
@@ -204,7 +255,10 @@ export function useDeleteList() {
   const api = useApi();
   return useWrite<{ id: string }>({
     write: ({ id }) => api.delete(`/lists/${id}`),
-    invalidates: ({ id }) => [keys.list(id), keys.profiles],
+    optimistic: ({ id }) => [
+      patch<W.MyList[]>(keys.myLists, (ls) => ls.filter((l) => l.id !== id)),
+    ],
+    invalidates: ({ id }) => [keys.list(id), keys.myLists, keys.profiles],
   });
 }
 
@@ -212,7 +266,7 @@ export function useAddListBook() {
   const api = useApi();
   return useWrite<{ listId: string; bookId: string; note?: string }>({
     write: ({ listId, ...input }) => api.put(`/lists/${listId}/books`, input),
-    invalidates: ({ listId }) => [keys.list(listId)],
+    invalidates: ({ listId }) => [keys.list(listId), keys.myLists],
   });
 }
 
@@ -226,7 +280,7 @@ export function useRemoveListBook() {
         books: l.books.filter((b) => b.bookId !== bookId),
       })),
     ],
-    invalidates: ({ listId }) => [keys.list(listId)],
+    invalidates: ({ listId }) => [keys.list(listId), keys.myLists],
   });
 }
 

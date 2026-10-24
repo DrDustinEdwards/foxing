@@ -1,4 +1,5 @@
-// Catalog hooks: browse, search, a book page, an author page and recommendations.
+// Catalog hooks: discover, browse, search, a book page, an author page and
+// recommendations.
 // All but recommendations are the same for every reader.
 import type * as W from "@foxing/types";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
@@ -6,6 +7,11 @@ import { qs } from "./http";
 import { type CatalogQuery, keys } from "./keys";
 import { useApi } from "./provider";
 import { useSeededQuery, useWrite } from "./query";
+
+export function useDiscover() {
+  const api = useApi();
+  return useQuery({ queryKey: keys.discover, queryFn: () => api.get<W.DiscoverPage>("/discover") });
+}
 
 export function useBrowse(query: CatalogQuery) {
   const api = useApi();

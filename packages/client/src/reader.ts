@@ -3,6 +3,7 @@
 // carry a client-made id, so the new highlight is on the page before the server
 // answers, and a failure takes it back off with the error shown.
 import type * as W from "@foxing/types";
+import { useQuery } from "@tanstack/react-query";
 import { keys } from "./keys";
 import { useApi } from "./provider";
 import { patch, useSeededQuery, useWrite } from "./query";
@@ -26,6 +27,17 @@ export function useBookAnnotations<S extends W.ReaderAnnotations | undefined = u
     },
     seed,
   );
+}
+
+/** The book's file, saved position and passage-comment clubs, for opening the reader.
+ *  Read once per opening: page turns save the position without reloading this. */
+export function useReaderPage(idOrSlug: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.readerPage(idOrSlug),
+    queryFn: () => api.get<W.ReaderPage>(`/books/${idOrSlug}/reader`),
+    staleTime: Number.POSITIVE_INFINITY,
+  });
 }
 
 function patchLayers(bookId: string, update: (l: W.ReaderAnnotations) => W.ReaderAnnotations) {
@@ -72,13 +84,24 @@ export function useCreateAnnotation() {
 
 export function useUpdateAnnotation() {
   const api = useApi();
-  return useWrite<{ bookId: string; id: string; color?: string; body?: string | null }>({
+  return useWrite<{
+    bookId: string;
+    id: string;
+    color?: string;
+    body?: string | null;
+    visibility?: W.MyAnnotation["visibility"];
+  }>({
     write: ({ id, bookId: _bookId, ...fields }) => api.patch(`/annotations/${id}`, fields),
-    optimistic: ({ bookId, id, ...fields }) => [
+    optimistic: ({ bookId, id, visibility, ...fields }) => [
       patchLayers(bookId, (l) => ({
         ...l,
         mine: l.mine.map((m) => (m.id === id ? { ...m, ...fields } : m)),
       })),
+      patch<W.MyAnnotation[]>(keys.allMyAnnotations, (list) =>
+        list.map((a) =>
+          a.id === id ? { ...a, ...fields, ...(visibility ? { visibility } : {}) } : a,
+        ),
+      ),
     ],
     invalidates: ({ bookId }) => [keys.annotations(bookId), keys.allMyAnnotations],
   });
@@ -90,6 +113,7 @@ export function useDeleteAnnotation() {
     write: ({ id }) => api.delete(`/annotations/${id}`),
     optimistic: ({ bookId, id }) => [
       patchLayers(bookId, (l) => ({ ...l, mine: l.mine.filter((m) => m.id !== id) })),
+      patch<W.MyAnnotation[]>(keys.allMyAnnotations, (list) => list.filter((a) => a.id !== id)),
     ],
     invalidates: ({ bookId }) => [keys.annotations(bookId), keys.allMyAnnotations],
   });
@@ -129,6 +153,7 @@ export function usePassageComment() {
     parentId?: string;
     locator?: W.Locator | null;
     chapter?: string | null;
+    containsSpoilers?: boolean;
     you: W.AnnotationAuthor;
   }>({
     write: ({ chapter: _chapter, you: _you, ...input }) => api.post("/annotations/comments", input),
@@ -145,7 +170,7 @@ export function usePassageComment() {
             body: c.body,
             chapter: c.chapter ?? null,
             isPinned: false,
-            containsSpoilers: false,
+            containsSpoilers: !!c.containsSpoilers,
             gate: { spoiler: false, ahead: false },
             author: c.you,
             createdAt: Date.now(),

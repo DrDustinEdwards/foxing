@@ -59,16 +59,16 @@ export async function searchClubs(
   db: Db,
   query: string,
   limit = 4,
-): Promise<{ slug: string; name: string }[]> {
+): Promise<{ id: string; slug: string; name: string }[]> {
   const q = query.trim();
   if (q.length < 2) return [];
   const term = `%${q.replace(/[%_]/g, "")}%`;
   const rows = await db
-    .select({ slug: clubs.slug, name: clubs.name })
+    .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
     .from(clubs)
     .where(and(like(clubs.name, term), eq(clubs.visibility, "public"), isNotNull(clubs.slug)))
     .limit(limit);
-  return rows.filter((r): r is { slug: string; name: string } => r.slug != null);
+  return rows.filter((r): r is { id: string; slug: string; name: string } => r.slug != null);
 }
 
 export async function createClub(

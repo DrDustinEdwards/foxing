@@ -15,6 +15,8 @@ export const companionInput = z.object({
   threadId: z.string().min(1).optional(),
   message: z.string().max(4000).optional(),
   selection: companionSelection.optional(),
+  /** Where the reader is, for chapter-scoped actions sent without a selection. */
+  chapter: z.string().max(200).optional(),
   targetLanguage: z.string().max(40).optional(),
 });
 export type CompanionInput = z.infer<typeof companionInput>;

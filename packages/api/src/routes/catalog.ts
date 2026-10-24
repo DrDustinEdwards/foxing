@@ -26,6 +26,10 @@ catalogRoutes.get("/search/suggest", async (c) => {
   return c.json(await views.suggest(c.get("db"), c.req.query("q") ?? ""), 200, EDGE_CACHE);
 });
 
+catalogRoutes.get("/discover", async (c) => {
+  return c.json(await views.discover(c.get("db")), 200, EDGE_CACHE);
+});
+
 catalogRoutes.get("/search", async (c) => {
   const page = await views.search(c.get("db"), c.req.query("q") ?? "", catalogQuery(c));
   return c.json(page, 200, EDGE_CACHE);
@@ -42,6 +46,17 @@ catalogRoutes.get("/books/:idOrSlug", async (c) => {
   });
   if (!page) throw errors.notFound("Book not found.");
   return c.json(page, 200, EDGE_CACHE);
+});
+
+// Per reader (saved position, their clubs), so never edge-cached.
+catalogRoutes.get("/books/:idOrSlug/reader", async (c) => {
+  const page = await views.readerPage(
+    c.get("db"),
+    c.get("session")?.id ?? null,
+    c.req.param("idOrSlug"),
+  );
+  if (!page) throw errors.notFound("Book not found.");
+  return c.json(page);
 });
 
 catalogRoutes.get("/authors/:slug", async (c) => {

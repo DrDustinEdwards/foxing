@@ -4,6 +4,7 @@
 // shelves, goals) patch the cache at once and refetch only what they touched, so the
 // page never reloads. Status transitions emit events server-side.
 import {
+  goalPeriodLabel,
   useCreateShelf,
   useDeleteGoal,
   useDeleteShelf,
@@ -22,7 +23,6 @@ import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { goalPeriodLabel } from "~/lib/goals";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";

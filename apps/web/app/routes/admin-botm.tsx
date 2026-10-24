@@ -2,6 +2,7 @@
 // publish/unpublish, and delete. A published row with a book is what makes Today's Pick
 // and the BOTM surfaces render. Reads in-process; writes to /api/v1/admin/botm with a
 // visible error on failure.
+import { MONTH_NAMES } from "@foxing/client";
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
@@ -16,7 +17,6 @@ import { BookPicker } from "~/components/admin/book-picker";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-botm";
-import { MONTH_NAMES } from "~/lib/months";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);

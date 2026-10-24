@@ -3,7 +3,7 @@
 // rev 3). Readability is derived (catalog AND epub_url present), never a column.
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { chunked, type Db } from "../../db";
-import { bookAwards, books } from "../../schema";
+import { bookAwards, books, userBooks } from "../../schema";
 import { resolveEra, resolveLength } from "./facets";
 
 export type Book = typeof books.$inferSelect;
@@ -213,6 +213,41 @@ export async function getNextInSeries(db: Db, book: Book): Promise<BookCard | nu
     .orderBy(sql`${books.seriesOrder} ASC NULLS LAST`)
     .limit(1);
   return rows[0] ? toCard(rows[0]) : null;
+}
+
+/** Catalog books the staff picked, most recently picked first. */
+export async function listStaffPicks(db: Db, limit = 10): Promise<BookCard[]> {
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(books)
+    .where(and(eq(books.sourceType, "catalog"), eq(books.isStaffPick, true)))
+    .orderBy(desc(books.updatedAt))
+    .limit(limit);
+  return rows.map(toCard);
+}
+
+/** The newest catalog books with a cover. */
+export async function listNewest(db: Db, limit = 10): Promise<BookCard[]> {
+  const rows = await db
+    .select(CARD_COLUMNS)
+    .from(books)
+    .where(and(eq(books.sourceType, "catalog"), isNotNull(books.coverUrl)))
+    .orderBy(desc(books.createdAt))
+    .limit(limit);
+  return rows.map(toCard);
+}
+
+/** Catalog books most often shelved in the given window, most first. */
+export async function listTrending(db: Db, sinceMs: number, limit = 10): Promise<BookCard[]> {
+  const rows = await db
+    .select({ ...CARD_COLUMNS, n: sql<number>`COUNT(*)` })
+    .from(userBooks)
+    .innerJoin(books, eq(books.id, userBooks.bookId))
+    .where(and(eq(books.sourceType, "catalog"), sql`${userBooks.createdAt} >= ${sinceMs}`))
+    .groupBy(books.id)
+    .orderBy(desc(sql`COUNT(*)`))
+    .limit(limit);
+  return rows.map(toCard);
 }
 
 /**

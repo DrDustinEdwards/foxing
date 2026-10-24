@@ -62,6 +62,11 @@ socialRoutes.get("/people", async (c) => {
 
 // -- Reading lists ----------------------------------------------------------
 
+socialRoutes.get("/lists", async (c) => {
+  const session = requireSession(c);
+  return c.json(await views.myLists(c.get("db"), session.id));
+});
+
 socialRoutes.post("/lists", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createListInput);

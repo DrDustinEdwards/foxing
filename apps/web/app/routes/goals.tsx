@@ -3,7 +3,17 @@
 // list lives in the @foxing/client cache and every edit patches it in place. Books-type
 // goals show progress against finishes in their period. Active goals (their period
 // covers today) are separated from past ones.
-import { useDeleteGoal, useGoals, useStreak, useUpdateGoal } from "@foxing/client";
+import {
+  goalPacing,
+  goalPeriodLabel,
+  isoWeek,
+  MONTH_ABBR,
+  periodElapsedFraction,
+  useDeleteGoal,
+  useGoals,
+  useStreak,
+  useUpdateGoal,
+} from "@foxing/client";
 import { createDb, libraryRepo, views } from "@foxing/core";
 import type { Goal, GoalWithProgress } from "@foxing/types";
 import type { ReactNode } from "react";
@@ -12,10 +22,8 @@ import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { goalPacing, goalPeriodLabel, isoWeek, periodElapsedFraction } from "~/lib/goals";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
-import { MONTH_ABBR } from "~/lib/months";
 
 export function meta() {
   return [{ title: "Reading goals | Foxing" }, { name: "robots", content: "noindex" }];

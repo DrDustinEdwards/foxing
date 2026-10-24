@@ -1,5 +1,5 @@
 // The AI companion endpoint. Server assembles ALL context; the client
-// sends only { action, book_id, thread_id?, message?, selection?, target_language? }
+// sends only { action, bookId, threadId?, message?, selection?, chapter?, targetLanguage? }
 // and never a prompt or system prompt -- this is what the D10 adversarial eval
 // checks. Tier-gated (D11 Plus actions) and quota-gated (cost-based, not request-
 // count, security-open-items.md item 4). Streams via SSE.
@@ -68,7 +68,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
       subjects: book.subjects,
     },
     selection: input.selection ?? null,
-    chapter: input.selection?.chapter ?? null,
+    chapter: input.selection?.chapter ?? input.chapter ?? null,
     message: input.message ?? null,
     targetLanguage: input.targetLanguage ?? null,
     history: recent.map((m) => ({ role: m.role as "user" | "assistant", content: m.content })),

@@ -149,13 +149,17 @@ export async function removeFromLibrary(db: Db, userId: string, bookId: string):
   return rows.length > 0;
 }
 
-export async function listLibrary(db: Db, userId: string): Promise<LibraryEntry[]> {
+export async function listLibrary(
+  db: Db,
+  userId: string,
+): Promise<(LibraryEntry & { finishedAt: Date | null })[]> {
   return db
     .select({
       bookId: userBooks.bookId,
       status: userBooks.status,
       progressPct: userBooks.progressPct,
       updatedAt: userBooks.updatedAt,
+      finishedAt: userBooks.finishedAt,
       title: books.title,
       author: books.author,
       slug: books.slug,

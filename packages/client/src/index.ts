@@ -10,3 +10,6 @@ export * from "./clubs";
 export * from "./social";
 export * from "./me";
 export * from "./reader";
+export * from "./companion";
+export * from "./goals";
+export * from "./months";

@@ -72,6 +72,13 @@ export interface MyProfile {
   createdAt: number;
 }
 
+/** GET /me/onboarding: what the first-run flow offers before the profile exists. */
+export interface OnboardingPage {
+  /** Award-winning catalog books with covers, readable ones first. */
+  starters: BookCard[];
+  genres: GenreFacet[];
+}
+
 /** A club the reader created, who may take it over, and the default pick: what the
  *  delete-account flow asks before the account goes. */
 export interface ClubHandover {
@@ -98,6 +105,8 @@ export interface LibraryEntry {
   slug: string;
   coverUrl: string | null;
   updatedAt: number;
+  /** When it was last finished, for a finished book. */
+  finishedAt: number | null;
 }
 
 export interface Shelf {
@@ -145,6 +154,37 @@ export interface VocabularyWord {
   contextSentence: string | null;
   mastered: boolean;
   lookedUpAt: number;
+}
+
+export interface RecapBook {
+  bookId: string;
+  title: string;
+  author: string;
+  slug: string;
+  coverUrl: string | null;
+  ratingHalf: number | null;
+}
+
+/** GET /recap/:year (the reader's own) and /u/:username/recap/:year: Year in Reading. */
+export interface RecapPage {
+  recap: {
+    year: number;
+    booksFinished: number;
+    totalWords: number;
+    distinctAuthors: number;
+    /** In stars (0 to 5), over the year's rated finishes. */
+    averageRating: number | null;
+    /** The highest-rated finishes, up to five. */
+    topBooks: RecapBook[];
+    /** Every finish, oldest first. */
+    finished: RecapBook[];
+  };
+  displayName: string;
+  username: string;
+  /** Books finished in each month, January first. */
+  monthly: number[];
+  /** The year's most-read subjects, most first. */
+  genres: { name: string; value: number }[];
 }
 
 /** GET /stats: the reader's year in numbers, and the last week of reading sessions. */
@@ -372,6 +412,16 @@ export interface ListSummary {
   isPublic: boolean;
 }
 
+/** GET /lists: one of the reader's own lists, with a count and up to four covers. */
+export interface MyList {
+  id: string;
+  title: string;
+  description: string | null;
+  isPublic: boolean;
+  bookCount: number;
+  covers: string[];
+}
+
 export interface ActivityItem {
   id: string;
   type: string;
@@ -445,7 +495,7 @@ export interface SearchSuggest {
   books: { id: string; slug: string; title: string; author: string; coverUrl: string | null }[];
   authors: { slug: string | null; name: string; bookCount: number }[];
   people: { username: string; displayName: string }[];
-  clubs: { slug: string | null; name: string }[];
+  clubs: { id: string; slug: string | null; name: string }[];
 }
 
 export interface GenreFacet {
@@ -467,6 +517,32 @@ export interface SearchPage extends BrowsePage {
   q: string;
   fuzzy: boolean;
   authors: { slug: string; name: string; bookCount: number }[];
+}
+
+/** GET /discover: the catalog's front shelf, the same for every reader. */
+export interface DiscoverPage {
+  /** The Book of the Month, or else the latest staff pick. */
+  todaysPick: {
+    source: "botm" | "staff";
+    book: {
+      slug: string;
+      title: string;
+      author: string;
+      coverUrl: string | null;
+      description: string | null;
+      publicationYear: number | null;
+    };
+    note: string | null;
+  } | null;
+  staffPicks: BookCard[];
+  awardWinners: BookCard[];
+  /** Most shelved in the last 30 days. */
+  trending: BookCard[];
+  newest: BookCard[];
+  clubs: ClubCard[];
+  genres: GenreFacet[];
+  eras: { slug: string; label: string }[];
+  lengths: { slug: string; label: string }[];
 }
 
 export interface AuthorPage {
@@ -615,6 +691,15 @@ export interface PopularHighlight {
   normalizedText: string;
   count: number;
   locator: Locator | null;
+}
+
+/** GET /books/:idOrSlug/reader: what opening a book in the reader needs. */
+export interface ReaderPage {
+  book: { id: string; slug: string; title: string; author: string; epubUrl: string };
+  /** Where the reader left off; null when signed out or never opened. */
+  initialLocator: Locator | null;
+  /** The viewer's clubs reading this book, where passage comments can go. */
+  shareableClubs: { id: string; name: string }[];
 }
 
 /** GET /books/:id/annotations: every layer the viewer is entitled to, resolved

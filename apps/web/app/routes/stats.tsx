@@ -2,13 +2,13 @@
 // core; requireProfile gates access. Real stat tiles, a books-per-month chart and a genre
 // breakdown for the current year (inline SVG, no chart library), plus year progress against
 // any books-per-year goal. Read-only. Charts render only when their data exists in D1.
+import { MONTH_INITIALS, MONTH_NAMES } from "@foxing/client";
 import { createDb, libraryRepo, views } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/stats";
-import { MONTH_INITIALS, MONTH_NAMES } from "~/lib/months";
 
 export function meta() {
   return [{ title: "Reading stats | Foxing" }, { name: "robots", content: "noindex" }];

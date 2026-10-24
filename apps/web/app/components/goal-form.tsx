@@ -1,9 +1,8 @@
 // Shared by the goals page and the library's goals card: a books goal for the current
 // period, and the period picker. The write goes through @foxing/client, which refetches
 // the goals list; no page reload.
-import { useCreateGoal } from "@foxing/client";
+import { isoWeek, useCreateGoal } from "@foxing/client";
 import { useState } from "react";
-import { isoWeek } from "~/lib/goals";
 
 type Period = "year" | "month" | "week";
 

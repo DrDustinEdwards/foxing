@@ -112,7 +112,14 @@ export function useCreateClub() {
 export function useCreateThread() {
   const api = useApi();
   return useWrite<
-    { clubId: string; title: string; body?: string; chapter?: string; bookId?: string },
+    {
+      clubId: string;
+      title: string;
+      body?: string;
+      chapter?: string;
+      bookId?: string;
+      hasSpoilers?: boolean;
+    },
     { thread: { id: string } }
   >({
     write: ({ clubId, ...input }) => api.post(`/clubs/${clubId}/threads`, input),
@@ -122,7 +129,12 @@ export function useCreateThread() {
 
 export function useCreatePost() {
   const api = useApi();
-  return useWrite<{ threadId: string; content: string; parentPostId?: string }>({
+  return useWrite<{
+    threadId: string;
+    content: string;
+    parentPostId?: string;
+    hasSpoiler?: boolean;
+  }>({
     write: ({ threadId, ...input }) => api.post(`/threads/${threadId}/posts`, input),
     invalidates: ({ threadId }) => [keys.thread(threadId)],
   });
@@ -149,6 +161,7 @@ export function useCreatePoll() {
   return useWrite<{
     clubId: string;
     title: string;
+    description?: string;
     pollType: "single" | "irv";
     options: { id: string; label: string; bookId?: string }[];
   }>({
@@ -196,7 +209,15 @@ export function useClosePoll() {
 
 export function useCreateMeeting() {
   const api = useApi();
-  return useWrite<{ clubId: string; title: string; meetingDate: number; description?: string }>({
+  return useWrite<{
+    clubId: string;
+    title: string;
+    meetingDate: number;
+    description?: string;
+    meetingType?: "virtual" | "in_person" | "hybrid";
+    locationName?: string;
+    locationUrl?: string;
+  }>({
     write: ({ clubId, ...input }) => api.post(`/clubs/${clubId}/meetings`, input),
     invalidates: () => [keys.clubPages],
   });

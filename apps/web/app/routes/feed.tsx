@@ -2,9 +2,8 @@
 // people whose close-friends list includes you (friends-only), plus your own new-follower
 // notices. Visibility resolves entirely server-side in core; the loader receives only
 // what the viewer is entitled to see.
-import { useFeed } from "@foxing/client";
+import { activityText, useFeed } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import type { FeedRow } from "@foxing/types";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Avatar, Container, EmptyState, PageHeader } from "~/components/ui";
@@ -23,28 +22,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function meta() {
   return [{ title: "Your feed | Foxing" }, { name: "robots", content: "noindex" }];
-}
-
-function activityText(row: Extract<FeedRow, { kind: "activity" }>): string {
-  const title = typeof row.data.title === "string" ? row.data.title : "a book";
-  switch (row.type) {
-    case "finished_book":
-      return `finished ${title}`;
-    case "started_book":
-      return `started reading ${title}`;
-    case "reviewed":
-      return `reviewed ${title}`;
-    case "rated":
-      return `rated ${title}`;
-    case "highlighted":
-      return `highlighted a passage in ${title}`;
-    case "joined_club":
-      return "joined a club";
-    case "list_created":
-      return `created a list${typeof row.data.title === "string" ? `: ${row.data.title}` : ""}`;
-    default:
-      return row.type.replace(/_/g, " ");
-  }
 }
 
 export default function Feed({ loaderData }: Route.ComponentProps) {

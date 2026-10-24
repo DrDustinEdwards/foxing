@@ -76,12 +76,71 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     return (data ?? {}) as T;
   }
 
+  /** POSTs and reads a server-sent event stream, handing each event to onEvent. */
+  async function stream(
+    path: string,
+    body: Body,
+    onEvent: (event: string, data: string) => void,
+    signal?: AbortSignal,
+  ): Promise<void> {
+    const headers: Record<string, string> = {
+      Accept: "text/event-stream",
+      "Content-Type": "application/json",
+    };
+    Object.assign(headers, await opts.headers?.());
+    let res: Response;
+    try {
+      res = await doFetch(`${base}${path}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        credentials: opts.credentials,
+        signal,
+      });
+    } catch (err) {
+      if (signal?.aborted) throw err;
+      throw new ApiError(0, "network", OFFLINE_MESSAGE);
+    }
+    if (!res.ok || !res.body) {
+      const data = (await res.json().catch(() => null)) as {
+        error?: { code?: string; message?: string; details?: unknown };
+      } | null;
+      throw new ApiError(
+        res.status,
+        data?.error?.code ?? "http_error",
+        data?.error?.message ?? `Request failed (${res.status}). Try again.`,
+        data?.error?.details,
+      );
+    }
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (value) buffer += decoder.decode(value, { stream: !done });
+      const events = buffer.split("\n\n");
+      buffer = done ? "" : (events.pop() ?? "");
+      for (const raw of events) {
+        let event = "message";
+        const data: string[] = [];
+        for (const line of raw.split("\n")) {
+          if (line.startsWith("event:")) event = line.slice(6).trim();
+          // A multi-line payload arrives as several data lines; one leading space is framing.
+          else if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /, ""));
+        }
+        if (data.length > 0) onEvent(event, data.join("\n"));
+      }
+      if (done) return;
+    }
+  }
+
   return {
     get: <T>(path: string, signal?: AbortSignal) => request<T>("GET", path, undefined, signal),
     post: <T>(path: string, body: Body = {}) => request<T>("POST", path, body),
     put: <T>(path: string, body?: Body) => request<T>("PUT", path, body),
     patch: <T>(path: string, body: Body) => request<T>("PATCH", path, body),
     delete: <T>(path: string, body?: Body) => request<T>("DELETE", path, body),
+    stream,
     /** A WebSocket to an /api/v1 path, on the same origin as the requests. */
     socket: (path: string): WebSocket => {
       const origin = opts.baseUrl || globalThis.location.origin;

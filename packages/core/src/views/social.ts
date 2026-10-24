@@ -12,6 +12,7 @@ import * as libraryRepo from "../repositories/library";
 import * as profilesRepo from "../repositories/profiles";
 import * as reactionsRepo from "../repositories/reactions";
 import * as socialRepo from "../repositories/social";
+import { finishedSpread } from "./library";
 import { bookRefs, ms } from "./wire";
 
 /** The viewer's activity feed, with actor identity and book cards. */
@@ -230,6 +231,23 @@ export async function people(db: Db, viewerId: string): Promise<W.PeoplePage> {
   };
 }
 
+/** The reader's own lists, newest first, public and private. */
+export async function myLists(db: Db, userId: string): Promise<W.MyList[]> {
+  const [rows, summaries] = await Promise.all([
+    socialRepo.listListsForUser(db, userId),
+    socialRepo.listSummariesForUser(db, userId),
+  ]);
+  const summary = new Map(summaries.map((s) => [s.listId, s]));
+  return rows.map((l) => ({
+    id: l.id,
+    title: l.title,
+    description: l.description,
+    isPublic: l.isPublic,
+    bookCount: summary.get(l.id)?.bookCount ?? 0,
+    covers: summary.get(l.id)?.covers ?? [],
+  }));
+}
+
 /** A reading list, or null when it is private and not the viewer's. */
 export async function listPage(
   db: Db,
@@ -278,7 +296,7 @@ export async function recap(
   target: { userId: string } | { username: string },
   year: number,
   viewerId: string | null,
-): Promise<{ recap: recapDomain.Recap; displayName: string; username: string } | null> {
+): Promise<W.RecapPage | null> {
   const p =
     "userId" in target
       ? await profilesRepo.getProfileById(db, target.userId)
@@ -291,9 +309,9 @@ export async function recap(
   ) {
     return null;
   }
-  return {
-    recap: await recapDomain.getRecap(db, p.id, year),
-    displayName: p.displayName ?? p.username,
-    username: p.username,
-  };
+  const [recap, spread] = await Promise.all([
+    recapDomain.getRecap(db, p.id, year),
+    finishedSpread(db, p.id, year),
+  ]);
+  return { recap, displayName: p.displayName ?? p.username, username: p.username, ...spread };
 }

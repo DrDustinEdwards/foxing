@@ -25,6 +25,12 @@ profileRoutes.get("/me", (c) => {
   return c.json(views.me(session, c.get("profile")));
 });
 
+// GET /me/onboarding - the starter books and genres the first-run flow offers.
+profileRoutes.get("/me/onboarding", async (c) => {
+  requireSession(c);
+  return c.json(await views.onboarding(c.get("db")));
+});
+
 // POST /me/onboard - creates the profile row and emits profile.onboarded.
 profileRoutes.post("/me/onboard", rateLimit("write"), async (c) => {
   const session = requireSession(c);

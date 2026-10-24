@@ -3,7 +3,7 @@
 // pending + role=alert error, never a silent no-op.
 import { getAuthenticatorName } from "@better-auth/passkey";
 import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
-import { createDb, pushDomain, views } from "@foxing/core";
+import { createDb, views } from "@foxing/core";
 import { useState } from "react";
 import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
@@ -33,7 +33,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user, profile } = await requireProfile(env, request);
   const isPlus = profile.subscriptionTier === "plus";
-  const vis = profile.visibility ?? {};
   const auth = await getAuth(env);
   const [people, passkeys, accounts] = await Promise.all([
     views.people(createDb(env.DB), user.id),
@@ -43,14 +42,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const methods = signInMethods(env, { social: true });
   // The joined account's own id, which Disconnect names.
   const linked = new Map(accounts.map((a) => [a.providerId, a.id]));
-  // Effective notification prefs: each category's stored override, or its quiet default.
-  const notifPrefs = profile.notificationPrefs ?? null;
-  const notifications = {
-    categories: Object.fromEntries(
-      pushDomain.PUSH_CATEGORIES.map((cat) => [cat, pushDomain.categoryEnabled(cat, notifPrefs)]),
-    ) as Record<(typeof pushDomain.PUSH_CATEGORIES)[number], boolean>,
-    quietHours: notifPrefs?.quietHours ?? null,
-  };
+  // The same resolved visibility and push switches GET /me sends the mobile app.
+  const { visibility, notificationPrefs } = views.myProfile(profile);
   return {
     username: profile.username,
     email: user.email,
@@ -65,18 +58,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
           profile.subscriptionPeriodEnd,
         )
       : null,
-    visibility: {
-      profile: vis.profile === "private" ? ("private" as const) : ("public" as const),
-      progress: vis.progress === "private" ? ("private" as const) : ("public" as const),
-      defaultAnnotation:
-        vis.defaultAnnotation === "friends"
-          ? ("friends" as const)
-          : vis.defaultAnnotation === "public"
-            ? ("public" as const)
-            : ("private" as const),
-    },
+    visibility: visibility as Required<typeof visibility>,
     people,
-    notifications,
+    notifications: {
+      categories: notificationPrefs.categories ?? {},
+      quietHours: notificationPrefs.quietHours ?? null,
+    },
     signIn: {
       // Named by the reader, else by the password manager or device that holds it.
       passkeys: passkeys.map((p) => ({

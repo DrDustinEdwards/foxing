@@ -2,15 +2,15 @@
 // recap aggregation that powers the public /u/:username/recap/:year, targeted by user id
 // so it is always the viewer's own. /year shows the current year; /year/:year picks one.
 // A year picker links between years. The shareable public version lives on the profile.
-import { createDb, libraryRepo, views } from "@foxing/core";
-import type { RecapBook } from "@foxing/core";
+import { MONTH_INITIALS, MONTH_NAMES } from "@foxing/client";
+import { createDb, views } from "@foxing/core";
+import type { RecapBook } from "@foxing/types";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/year";
-import { MONTH_INITIALS, MONTH_NAMES } from "~/lib/months";
 
 export function meta() {
   return [{ title: "Your year in reading | Foxing" }, { name: "robots", content: "noindex" }];
@@ -28,39 +28,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const data = await views.recap(createDb(env.DB), { userId: user.id }, year, user.id);
   if (!data) throw new Response("Not found", { status: 404 });
 
-  // The finish dates + subjects for the selected year power the month strip and genre
-  // spread (same query the stats page uses). Finished on the recap's finishedAt basis.
-  const db = createDb(env.DB);
-  const finishedBooks = await libraryRepo.listFinishedInRangeForStats(
-    db,
-    user.id,
-    Date.UTC(year, 0, 1),
-    Date.UTC(year + 1, 0, 1),
-  );
-  const monthly = Array<number>(12).fill(0);
-  const genreCounts = new Map<string, number>();
-  for (const b of finishedBooks) {
-    if (b.finishedAt) monthly[b.finishedAt.getUTCMonth()] += 1;
-    for (const s of b.subjects ?? []) {
-      const name = s.trim();
-      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
-    }
-  }
-  const genres = [...genreCounts.entries()]
-    .map(([name, value]) => ({ name, value }))
-    .sort((a, b) => b.value - a.value)
-    .slice(0, 6);
-
   // Year picker spans this year back six, always including the selected one.
   const years = new Set<number>([year]);
   for (let y = thisYear; y >= thisYear - 6; y--) years.add(y);
   return {
-    recap: data.recap,
-    displayName: data.displayName,
-    username: data.username,
+    ...data,
     year,
-    monthly,
-    genres,
     years: [...years].sort((a, b) => b - a),
   };
 }
