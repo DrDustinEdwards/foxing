@@ -22,6 +22,7 @@
     "@foxing/api": "workspace:*",
     "@foxing/core": "workspace:*",
     "@readium/navigator": "^2.6.1",
+    "@readium/navigator-html-injectables": "^2.5.0",
     "@readium/shared": "^2.2.3",
     "better-auth": "^1.6.23",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.16.0",
