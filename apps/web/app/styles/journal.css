@@ -11,7 +11,7 @@
   margin-block-start: 1.25em;
 }
 .article-prose :is(h2, h3) {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   color: var(--text);
   line-height: 1.2;
   margin-block-start: 1.8em;
@@ -147,7 +147,7 @@
   color: var(--dim);
 }
 .fx-journal-tag-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.375;
   color: var(--text);
@@ -228,7 +228,7 @@
   background-color: var(--sunken);
 }
 .fx-journal-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 1.25;
   color: var(--text);
@@ -267,7 +267,7 @@
   object-fit: cover;
 }
 .fx-journal-title-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   line-height: 1.375;
   color: var(--text);

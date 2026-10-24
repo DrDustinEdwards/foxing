@@ -204,6 +204,7 @@ export function headerAccount(
   return {
     name: user.displayName,
     initials: initials(user.displayName),
+    avatar: user.avatarUrl ?? undefined,
     detail: `@${user.username}`,
     onSignOut,
     signOutDisabled: signingOut,

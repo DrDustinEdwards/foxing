@@ -36,7 +36,7 @@ test.describe("search depth", () => {
     await page.goto("/books", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /search the catalog/i }).click();
 
-    const dialog = page.getByRole("dialog", { name: /search foxing/i });
+    const dialog = page.getByRole("dialog", { name: /command menu/i });
     await expect(dialog).toBeVisible();
 
     await dialog.getByRole("combobox").fill(query);
@@ -49,7 +49,7 @@ test.describe("search depth", () => {
   test("the command palette opens with the Ctrl+K shortcut", async ({ page }) => {
     await page.goto("/books", { waitUntil: "networkidle" });
     await page.keyboard.press("Control+k");
-    await expect(page.getByRole("dialog", { name: /search foxing/i })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /command menu/i })).toBeVisible();
   });
 
   test("the search results page has no serious accessibility violations (WCAG AA)", async ({
@@ -71,7 +71,7 @@ test.describe("search depth", () => {
   }) => {
     await page.goto("/books", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /search the catalog/i }).click();
-    await expect(page.getByRole("dialog", { name: /search foxing/i })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /command menu/i })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
       .analyze();

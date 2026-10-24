@@ -22,7 +22,7 @@
   padding: 0 0.125rem 0.25rem;
 }
 .fx-book-card-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1rem;
   line-height: 1.35;
   color: var(--text);
@@ -93,7 +93,7 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
   overflow: hidden;
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 0.875rem;
   line-height: 1.25;
   color: var(--dim);
@@ -211,7 +211,7 @@
   }
 }
 .fx-grouped-results-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1rem;
   line-height: 1.5rem;
   color: var(--text);
@@ -234,7 +234,7 @@
 }
 
 .fx-awards-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   line-height: 1.75rem;
   color: var(--text);
@@ -273,7 +273,7 @@
 }
 .fx-book-detail-title,
 .fx-journal-post-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 2.25rem;
   line-height: 1.25;
   @media (min-width: 40rem) {
@@ -322,7 +322,7 @@
   margin-top: 5rem;
 }
 .fx-book-detail-title-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 2rem;
 }
@@ -392,7 +392,7 @@
   }
 }
 .fx-botm-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.875rem;
   line-height: 1.25;
 }
@@ -410,7 +410,7 @@
   color: var(--muted);
 }
 .fx-botm-title-2 {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.5rem;
   line-height: 2rem;
 }
@@ -492,7 +492,7 @@
 }
 .fx-find-next-book-title,
 .fx-journal-archive-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1rem;
   line-height: 1.375;
   color: var(--text);
@@ -524,7 +524,7 @@
   }
 }
 .fx-picks-title {
-  font-family: var(--fx-display);
+  font-family: var(--display);
   font-size: 1.25rem;
   line-height: 1.75rem;
   color: var(--text);

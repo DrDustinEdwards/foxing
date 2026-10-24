@@ -26,12 +26,6 @@ on:
       - "biome.json"
       - "package.json"
 
-# Capsomer is a git dependency built on install (its prepare script), and npm 12 refuses the git
-# dependency in Capsomer's own devDependencies unless allow-git says so; "root" allows only that
-# package's direct ones. pnpm hands the prepare step this variable.
-env:
-  NPM_CONFIG_ALLOW_GIT: root
-
 jobs:
   check:
     runs-on: ubuntu-latest
