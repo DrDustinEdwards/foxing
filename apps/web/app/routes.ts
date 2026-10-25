@@ -100,6 +100,8 @@ export default [
   route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
+  route("ai.txt", "routes/ai-txt.tsx"),
+  route("llms.txt", "routes/llms.tsx"),
   route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),
 
   // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).

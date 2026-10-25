@@ -134,3 +134,6 @@ export function itemListLd(
     items.map((it) => ({ name: it.title, path: it.path })),
   );
 }
+
+/** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
+export const ROBOTS_DISALLOW = ["/me", "/onboarding", "/search", "/companion-test"];

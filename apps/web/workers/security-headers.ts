@@ -3,6 +3,7 @@
 // beside its reason, and the Content-Security-Policy built from the list below of what Foxing really
 // loads. workers/app.ts calls withSecurityHeaders on every response, redirects, API, errors and cache
 // hits included. No other file sets a security header.
+import { TDM_RESERVATION_HEADERS } from "@drdustinedwards/site-helpers/robots";
 import {
   applyHeaderSet,
   buildSecurityHeaders,
@@ -42,25 +43,30 @@ const SITE_SOURCES: CspSources = {
   frame: [TURNSTILE_ORIGIN],
 };
 
-/** The set every response carries, with passkey sign-in allowed on Foxing's own pages (OSHP's
+/** The set every response carries (Prelum's TDMRep header among them, reserving training rights as
+ *  /ai.txt says), with passkey sign-in allowed on Foxing's own pages (OSHP's
  *  Permissions-Policy turns it off; site-runtime's PASSKEY_OVERRIDES carries the reason). */
-export const securityHeaders: Readonly<Record<string, string>> = buildSecurityHeaders({
-  overrides: PASSKEY_OVERRIDES,
-});
+export const securityHeaders: Readonly<Record<string, string>> = {
+  ...buildSecurityHeaders({ overrides: PASSKEY_OVERRIDES }),
+  ...TDM_RESERVATION_HEADERS,
+};
 
 /**
  * Images only: the OG cards (/og/*, og.foxing.app) are embedded by other sites, and a link preview
  * that a browser loads straight from here would be refused under same-origin.
  */
-const imageHeaders: Readonly<Record<string, string>> = buildSecurityHeaders({
-  overrides: {
-    "Cross-Origin-Resource-Policy": {
-      value: "cross-origin",
-      reason:
-        "OG cards and other images are embedded by other sites' link previews; same-origin would block them in the reader's browser",
+const imageHeaders: Readonly<Record<string, string>> = {
+  ...buildSecurityHeaders({
+    overrides: {
+      "Cross-Origin-Resource-Policy": {
+        value: "cross-origin",
+        reason:
+          "OG cards and other images are embedded by other sites' link previews; same-origin would block them in the reader's browser",
+      },
     },
-  },
-});
+  }),
+  ...TDM_RESERVATION_HEADERS,
+};
 
 /** The site policy for this response: its nonce when it is a rendered page, none otherwise. */
 export function contentSecurityPolicy(nonce?: string): string {
