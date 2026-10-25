@@ -300,8 +300,8 @@ importers:
         specifier: github:DrDustinEdwards/site-api#v0.8.1
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/f750dc3726b8c4eff16dde1662858b2bd48e99ae
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#89e9d588f28a58ece83ffb509609fff356e2b889
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/89e9d588f28a58ece83ffb509609fff356e2b889(@better-auth/passkey@1.7.12(@better-auth/core@1.7.12(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-call@1.4.4(zod@4.6.7))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))(better-call@1.4.4(zod@4.6.7))(nanostores@1.4.0))(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))
+        specifier: github:DrDustinEdwards/site-runtime#21df131a63b06cfc2ec5a97b4b39ae1fde8ee220
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/21df131a63b06cfc2ec5a97b4b39ae1fde8ee220
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -397,8 +397,8 @@ importers:
   packages/api:
     dependencies:
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#89e9d588f28a58ece83ffb509609fff356e2b889
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/89e9d588f28a58ece83ffb509609fff356e2b889(@better-auth/passkey@1.7.12(@better-auth/core@1.7.12(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-call@1.4.4(zod@4.6.7))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))(better-call@1.4.4(zod@4.6.7))(nanostores@1.4.0))(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))
+        specifier: github:DrDustinEdwards/site-runtime#21df131a63b06cfc2ec5a97b4b39ae1fde8ee220
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/21df131a63b06cfc2ec5a97b4b39ae1fde8ee220
       '@foxing/core':
         specifier: workspace:*
         version: link:../core
@@ -1368,23 +1368,15 @@ packages:
     version: 0.8.1
     engines: {node: '>=26.11.1'}
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248}
-    version: 0.11.0
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/21df131a63b06cfc2ec5a97b4b39ae1fde8ee220':
+    resolution: {gitHosted: true, integrity: sha512-+gBjkfw/lnS78ZuTXQeUtB+eC6WA5pPQaEA/XSGtYWEo3Umj6y8Ogag2jkrmxD7USjeckQpbYvWRyQJY1aVwzw==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/21df131a63b06cfc2ec5a97b4b39ae1fde8ee220}
+    version: 0.18.1
     hasBin: true
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/89e9d588f28a58ece83ffb509609fff356e2b889':
-    resolution: {gitHosted: true, integrity: sha512-kNcmHB7KFgOeW9kWNAZ+6Ig5LPxLXqNCzqFG5cJ6/Y95elpRdTJZPAOus9jM2/RSOPDTvWP0Nw/thTpzCzX5Xw==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/89e9d588f28a58ece83ffb509609fff356e2b889}
-    version: 0.16.0
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248':
+    resolution: {gitHosted: true, integrity: sha512-UnXDRkGZuE++cBOwPQ+T5tEr/gosq88KG+eGx7c/GnyJVWJmIsSZErSbhsOZsh7iOeBy+50H8L95dQ2w/tJnpg==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248}
+    version: 0.11.0
     hasBin: true
-    peerDependencies:
-      '@better-auth/passkey': ^1.7.12
-      better-auth: ^1.7.12
-    peerDependenciesMeta:
-      '@better-auth/passkey':
-        optional: true
-      better-auth:
-        optional: true
 
   '@egjs/hammerjs@2.0.17':
     resolution: {integrity: sha512-XQsZgjm2EcVUiZQf11UBJQfmZeEmOW8DpI1gsFeln6w0ae0ii4dMQEQ0kjl6DspdWX1aGY1/loyXnP0JS06e/A==}
@@ -8459,12 +8451,9 @@ snapshots:
       diff: 9.0.0
       zod: 4.6.7
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248': {}
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/21df131a63b06cfc2ec5a97b4b39ae1fde8ee220': {}
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/89e9d588f28a58ece83ffb509609fff356e2b889(@better-auth/passkey@1.7.12(@better-auth/core@1.7.12(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-call@1.4.4(zod@4.6.7))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))(better-call@1.4.4(zod@4.6.7))(nanostores@1.4.0))(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))':
-    optionalDependencies:
-      '@better-auth/passkey': 1.7.12(@better-auth/core@1.7.12(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-call@1.4.4(zod@4.6.7))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))(better-call@1.4.4(zod@4.6.7))(nanostores@1.4.0)
-      better-auth: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/82bb2cf86c9fa5562ebc7844428a0dfbe57fb248': {}
 
   '@egjs/hammerjs@2.0.17':
     dependencies:
@@ -10220,8 +10209,8 @@ snapshots:
     dependencies:
       '@react-native/js-polyfills': 0.86.3
       '@react-native/metro-babel-transformer': 0.86.3(@babel/core@7.29.7)
-      metro-config: 0.84.4
-      metro-runtime: 0.84.4
+      metro-config: 0.84.5
+      metro-runtime: 0.84.5
     transitivePeerDependencies:
       - '@babel/core'
       - supports-color
