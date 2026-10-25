@@ -4,7 +4,7 @@
 // Canonical, OG and JSON-LD URLs always name https://foxing.app, never the request's
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
-import { absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
+import { headTags, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
 import { article, breadcrumbs, itemList, thing } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { SITE_ORIGIN } from "./origins";
@@ -24,11 +24,19 @@ export function journalTagPath(tag: string): string {
   return `/journal/tag/${encodeURIComponent(tag)}`;
 }
 
+/** The site-wide share card (routes/og-site.tsx), for a page without a card of its own. */
+const SITE_CARD = {
+  url: "/og/site",
+  width: 1200,
+  height: 630,
+  alt: "Foxing: read the classics, free.",
+};
+
 type MetaInput = {
   title: string;
   description?: string;
   pathname: string;
-  /** Absolute or site-relative card image; without one the Twitter card is `summary`. */
+  /** Absolute or site-relative card image; without one the page shares the site card. */
   image?: string;
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
@@ -36,7 +44,7 @@ type MetaInput = {
   noindex?: boolean;
 };
 
-/** The full standard head: title, description, canonical, Open Graph, Twitter. */
+/** The full standard head from Prelum's headTags: title, description, canonical, Open Graph, Twitter. */
 export function buildMeta(input: MetaInput): MetaDescriptor[] {
   const {
     title,
@@ -44,33 +52,19 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     pathname,
     image,
     imageAlt,
-    type = "website",
+    type,
     noindex,
   } = input;
-  const canonical = absoluteUrl(pathname);
-  const fullTitle = pathname === "/" ? title : `${title} | ${SITE_NAME}`;
-  const img = image ? absoluteUrl(image) : undefined;
-
-  const tags: MetaDescriptor[] = [
-    { title: fullTitle },
-    { name: "description", content: description },
-    { tagName: "link", rel: "canonical", href: canonical },
-    { property: "og:site_name", content: SITE_NAME },
-    { property: "og:type", content: type },
-    { property: "og:title", content: fullTitle },
-    { property: "og:description", content: description },
-    { property: "og:url", content: canonical },
-    { name: "twitter:card", content: img ? "summary_large_image" : "summary" },
-    { name: "twitter:title", content: fullTitle },
-    { name: "twitter:description", content: description },
-  ];
-  if (img) {
-    tags.push({ property: "og:image", content: img });
-    tags.push({ name: "twitter:image", content: img });
-    if (imageAlt) tags.push({ property: "og:image:alt", content: imageAlt });
-  }
-  if (noindex) tags.push({ name: "robots", content: "noindex, follow" });
-  return tags;
+  return headTags({
+    origin: SITE_ORIGIN,
+    path: pathname,
+    title: pathname === "/" ? title : `${title} | ${SITE_NAME}`,
+    description,
+    image: image ? { url: image, alt: imageAlt } : SITE_CARD,
+    siteName: SITE_NAME,
+    type,
+    noindex,
+  });
 }
 
 /** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */

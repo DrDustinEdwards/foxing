@@ -95,6 +95,7 @@ export default [
   route("features", "routes/features.tsx"),
 
   // SEO + share surfaces.
+  route("og/site", "routes/og-site.tsx"),
   route("og/book/:slug", "routes/og-book.tsx"),
   route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
