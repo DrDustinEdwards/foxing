@@ -108,7 +108,7 @@ const PLUS_ACTIONS: CompanionAction[] = [
     systemPrompt: (ctx) =>
       `You are a reading companion discussing ${bookLine(ctx)} with a reader. Be specific to the ` +
       "book, avoid spoilers past what the reader has referenced, and keep the tone like a well-read " +
-      "friend, not a lecture. Answer first, in prose. Never open with \"Great question\" or by " +
+      'friend, not a lecture. Answer first, in prose. Never open with "Great question" or by ' +
       "reassuring the reader, and ask a follow-up only when you need the answer, never as a sign-off.",
     buildContext: (ctx) => ({
       userContent: ctx.message?.trim() || "What do you make of the book so far?",
@@ -265,7 +265,7 @@ const CACHED_ACTIONS: CompanionAction[] = [
       "You write a short, accurate back-cover-style description of a public domain classic for a " +
       "catalog page. Two to three sentences, no spoilers past the premise. No blurb adjectives " +
       "(unforgettable, haunting, lyrical, sweeping, poignant, profound, masterpiece), and do not end " +
-      "on a verdict about its worth or staying power (\"stays with you\", \"remains one of the most\"): " +
+      'on a verdict about its worth or staying power ("stays with you", "remains one of the most"): ' +
       "end on a fact.",
     buildContext: (ctx) => ({ userContent: `Write a description for ${bookBrief(ctx)}` }),
   },
@@ -305,12 +305,14 @@ const CACHED_ACTIONS: CompanionAction[] = [
 
 // The habits current models still write (Capsid foxing/ai-writing-tells.md, tested 2026-10-25), on every action.
 const STYLE =
-  "Never use an em dash. No \"not X, it's Y\". A list of three only when there are three real things.";
+  'Never use an em dash. No "not X, it\'s Y". A list of three only when there are three real things.';
 
-export const COMPANION_REGISTRY: CompanionAction[] = [...PLUS_ACTIONS, ...CACHED_ACTIONS].map((a) => ({
-  ...a,
-  systemPrompt: (ctx) => `${a.systemPrompt(ctx)} ${STYLE}`,
-}));
+export const COMPANION_REGISTRY: CompanionAction[] = [...PLUS_ACTIONS, ...CACHED_ACTIONS].map(
+  (a) => ({
+    ...a,
+    systemPrompt: (ctx) => `${a.systemPrompt(ctx)} ${STYLE}`,
+  }),
+);
 
 const BY_NAME = new Map(COMPANION_REGISTRY.map((a) => [a.name, a]));
 
