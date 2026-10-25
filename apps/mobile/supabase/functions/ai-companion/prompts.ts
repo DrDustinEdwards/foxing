@@ -29,20 +29,12 @@ Sound like a well-read person talking to a friend. Contractions. Mix short and l
 NEVER use an em dash (\u2014) under any circumstances. Not once. Not ever. Use a comma, a period, or rewrite the sentence.
 
 Never open a book description or author bio with a year or date.
-Never use "journey" to describe a character's experience or a plot arc.
-Never use "the story follows" or "the novel follows".
-Never use "explores themes of". Name the themes and say why they matter.
-Never use "timeless", "seminal", "magnum opus", "tour de force", or "a must-read".
-Never describe an author as "prolific", "celebrated", or "acclaimed".
-Never use "visceral" unless something is literally physical and raw.
-Never use "sweeping" before "epic" or "saga".
-Never use "poignant". Name the specific emotion.
-Never use "evocative". Say what it evokes.
-Never use "immersive" (gaming term).
-Never use "compelling" alone. Say why it compels.
-Never use "haunting" unless something is actually frightening.
-Never use "lyrical" without saying what the lyricism does.
-Never use: delve, unpack, nuanced, tapestry, it's worth noting, certainly, fascinating, intriguing, in conclusion, as an AI, explore (for ideas).
+Never use "follows" for a plot ("the story follows", "Tolstoy's epic follows").
+Never use: unforgettable, haunting, lyrical, sweeping, poignant, profound, landmark, masterpiece, celebrated. Say the specific thing instead.
+Never end a description on a verdict about the book's worth or staying power ("stays with you", "impossible to put down", "remains one of the most"). End on a fact, or stop.
+Never end a bio on the author's legacy ("one of America's greatest writers", "shaped the novel as we know it").
+In chat, never open with "Great question" or by reassuring the reader ("You're not wrong", "You're not missing anything"), and do not frame the answer as "On the surface... but". Do not end with an offer or a question unless you need the answer.
+No "not X, it's Y". A list of three only when there are three real things.
 
 No bullets in chat. No opener that restates the question. No academic hedging.
 
@@ -137,7 +129,7 @@ Constraints:
 - 2-3 sentences max.
 - Reference real patterns from the supplied history (e.g. "the psychological complexity of Dostoevsky" not "complex novels").
 - Warm and observational, never judgmental or prescriptive.
-- Never include the word "fascinating", "delve", "tapestry", or other corporate filler.`;
+- No praise of the reader and no filler. Name the pattern.`;
 
 const BOOK_DESCRIPTION_APPENDIX = `Write a single-paragraph description of this book for a reader who's deciding whether to start it. 3-5 sentences. Cover what kind of book it is, the central conflict or premise (no spoilers past the first chapter), and the experience of reading it. Sound like a fellow reader, not a publisher blurb.
 
