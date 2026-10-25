@@ -16,12 +16,14 @@ test.describe("auth flows", () => {
     await expect(page).toHaveURL(/\/login/);
   });
 
-  test("magic-link request always shows the neutral check-your-email state", async ({ page }) => {
+  // The live site has Turnstile on, so a link request without a passed check is refused
+  // before any mail goes out, which is what this browser, like any bot, gets.
+  test("a sign-in link request without the bot check sends nothing", async ({ page }) => {
     await page.goto("/login");
-    // Enumeration-safe: the same confirmation shows whether or not the address exists.
     await page.getByLabel("Email").fill("nobody-magic@example.com");
     await page.getByRole("button", { name: /email me a sign-in link/i }).click();
-    await expect(page.getByText(/check your email for a sign-in link/i)).toBeVisible();
+    await expect(page.getByRole("alert")).toHaveText(/complete the check/i);
+    await expect(page.getByText(/check your email for a sign-in link/i)).toHaveCount(0);
   });
 
   // REGRESSION (2026-07-09): a sign-in returned a raw 500 (a transient D1 read fault in the
