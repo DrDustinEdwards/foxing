@@ -10,7 +10,7 @@ const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 // Sitemap over live catalog data. Catalog books only (source_type='catalog');
 // community books are excluded by the repository queries, never listed here.
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, env, ctx, origin } = loaderBase(context, request);
+  const { db, env, ctx } = loaderBase(context, request);
 
   const [books, authors, awards, clubs, posts, tags] = await Promise.all([
     catalogRepo.listSitemapBooks(db),
@@ -58,15 +58,15 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       if (currentHash === previousHash) return;
       await env.APP_KV.put(SITEMAP_HASH_KEY, currentHash);
       await pingIndexNow(
-        origin,
-        urls.map((u) => absoluteUrl(origin, u.loc)),
+        request.url,
+        urls.map((u) => absoluteUrl(u.loc)),
       );
     })(),
   );
 
   // Expanded: the compact layout writes no <priority>.
   const body = sitemapDocument(
-    urls.map((u) => ({ ...u, loc: absoluteUrl(origin, u.loc) })),
+    urls.map((u) => ({ ...u, loc: absoluteUrl(u.loc) })),
     { layout: "expanded" },
   );
 

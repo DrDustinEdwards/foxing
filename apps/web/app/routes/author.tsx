@@ -7,22 +7,21 @@ import { absoluteUrl, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/author";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const author = await views.author(db, params.slug);
   if (!author) throw new Response("Not found", { status: 404 });
-  return { origin, author };
+  return { author };
 }
 
 export const headers = catalogPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Author not found | Foxing" }];
-  const { author, origin } = data;
+  const { author } = data;
   return [
     ...buildMeta({
       title: author.name,
       description: `${author.name} on Foxing: ${author.bookCount} ${author.bookCount === 1 ? "book" : "books"} to read and track.`,
-      origin,
       pathname: location.pathname,
       type: "profile",
     }),
@@ -30,11 +29,11 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       "@context": "https://schema.org",
       "@type": "Person",
       name: author.name,
-      url: absoluteUrl(origin, `/authors/${author.slug}`),
+      url: absoluteUrl(`/authors/${author.slug}`),
       knowsAbout: "Literature",
     }),
     ldJson(
-      breadcrumbLd(origin, [
+      breadcrumbLd([
         { name: "Home", path: "/" },
         { name: "Books", path: "/books" },
         { name: author.name, path: `/authors/${author.slug}` },

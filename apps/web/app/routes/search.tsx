@@ -11,7 +11,7 @@ import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/search";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") ?? "").trim();
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
@@ -21,14 +21,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     length: url.searchParams.get("length") || undefined,
   };
 
-  if (!q) return { origin, q, filters, result: null, authors: [], genres: [] };
+  if (!q) return { q, filters, result: null, authors: [], genres: [] };
   const result = await views.search(db, q, {
     page,
     subject: filters.genre,
     era: filters.era,
     length: filters.length,
   });
-  return { origin, q, filters, result, authors: result.authors, genres: result.genres };
+  return { q, filters, result, authors: result.authors, genres: result.genres };
 }
 
 export function headers(): HeadersInit {
@@ -41,7 +41,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return buildMeta({
     title: q ? `Search: ${q}` : "Search",
     description: "Search the Foxing catalog by title or author.",
-    origin: data?.origin ?? "",
     pathname: location.pathname,
     noindex: true,
   });

@@ -5,22 +5,16 @@
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
-import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/features";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const { origin } = loaderBase(context, request);
-  return { origin };
-}
-
 export const headers = staticPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
+export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "What Foxing does",
     description: "Everything on this page is available today, free.",
-    origin: data?.origin ?? "",
     pathname: location.pathname,
   });
 }

@@ -12,7 +12,7 @@ describe("journal tag URLs in the sitemap", () => {
   });
 
   it("a <loc> is valid XML whatever the tag", () => {
-    const loc = escapeHtml(absoluteUrl("https://foxing.test", journalTagPath("<b>&")));
-    expect(loc).toBe("https://foxing.test/journal/tag/%3Cb%3E%26");
+    const loc = escapeHtml(absoluteUrl(journalTagPath("<b>&")));
+    expect(loc).toBe("https://foxing.app/journal/tag/%3Cb%3E%26");
   });
 });

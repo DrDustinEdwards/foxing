@@ -4,26 +4,19 @@
 // available. Catalog sourcing and governing law carry over unchanged.
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { staticPageHeaders } from "~/lib/loader.server";
 import { LEGAL_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/terms";
 
 const LAST_UPDATED = "10 July 2026";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const { origin } = loaderBase(context, request);
-  return { origin };
-}
-
 export const headers = staticPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
-  if (!data) return [{ title: "Terms of service | Foxing" }];
+export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "Terms of service",
     description: "The agreement for using Foxing: your account, your content, and the catalog.",
-    origin: data.origin,
     pathname: location.pathname,
   });
 }

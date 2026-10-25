@@ -5,27 +5,20 @@
 // features ship, phrased in the future so nothing overstates today.
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { staticPageHeaders } from "~/lib/loader.server";
 import { PRIVACY_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/privacy";
 
 const LAST_UPDATED = "10 July 2026";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const { origin } = loaderBase(context, request);
-  return { origin };
-}
-
 export const headers = staticPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
-  if (!data) return [{ title: "Privacy | Foxing" }];
+export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "Privacy",
     description:
       "What Foxing collects, where your data is stored, and the rights you have over it.",
-    origin: data.origin,
     pathname: location.pathname,
   });
 }

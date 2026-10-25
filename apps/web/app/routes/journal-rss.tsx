@@ -1,20 +1,21 @@
 import { rssDocument } from "@drdustinedwards/site-helpers/feeds";
 import { catalogRepo } from "@foxing/core";
+import { SITE_ORIGIN } from "~/lib/origins";
 import { SITE_NAME, absoluteUrl } from "~/lib/seo";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import type { Route } from "./+types/journal-rss";
 
 // Resource route (loader only, no component): serves the Journal RSS 2.0 feed (Prelum's rssDocument).
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const posts = await catalogRepo.listRssPosts(db, 30);
 
   const body = rssDocument({
     title: `${SITE_NAME} Journal`,
-    link: absoluteUrl(origin, "/journal"),
+    link: absoluteUrl("/journal"),
     description: `Essays and close readings from ${SITE_NAME}.`,
-    selfUrl: absoluteUrl(origin, "/journal/rss.xml"),
-    origin,
+    selfUrl: absoluteUrl("/journal/rss.xml"),
+    origin: SITE_ORIGIN,
     itemPath: "/journal",
     posts: posts.map((p) => ({
       slug: p.slug,

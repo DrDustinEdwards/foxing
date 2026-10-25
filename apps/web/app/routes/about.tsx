@@ -1,22 +1,16 @@
 import { PageShell } from "~/components/page-shell";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { staticPageHeaders } from "~/lib/loader.server";
 import { HELLO_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/about";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const { origin } = loaderBase(context, request);
-  return { origin };
-}
-
 export const headers = staticPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
+export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "About",
     description: "Foxing is a reading home for the classics, built by one person.",
-    origin: data?.origin ?? "",
     pathname: location.pathname,
   });
 }

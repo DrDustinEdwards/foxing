@@ -1,23 +1,17 @@
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
-import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
+import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/guide";
 
-export async function loader({ context, request }: Route.LoaderArgs) {
-  const { origin } = loaderBase(context, request);
-  return { origin };
-}
-
 export const headers = staticPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
+export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "Using Foxing on the web",
     description:
       "How to find books, track your reading, join clubs, and follow other readers on foxing.app.",
-    origin: data?.origin ?? "",
     pathname: location.pathname,
   });
 }

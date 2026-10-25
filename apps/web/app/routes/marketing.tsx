@@ -61,7 +61,7 @@ const FAQ_SCHEMA = {
 };
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, env, origin } = loaderBase(context, request);
+  const { db, env } = loaderBase(context, request);
   // Signed-in visitors get their dashboard; "/" stays the marketing page for
   // anonymous visitors (whose response is the one that gets edge-cached).
   const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
@@ -71,18 +71,17 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
     catalogRepo.listPublishedPosts(db, { pageSize: 3 }),
   ]);
-  return { origin, pick, books: browse.books, total: browse.total, posts: journal.posts };
+  return { pick, books: browse.books, total: browse.total, posts: journal.posts };
 }
 
 export const headers = listingPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
+export function meta({ location }: Route.MetaArgs) {
   return [
     ...buildMeta({
       title: "Foxing",
       description:
         "Foxing is a reading home for the classics: read free, track what you finish, and follow the conversations around great books.",
-      origin: data?.origin ?? "",
       pathname: location.pathname,
     }),
     ldJson(FAQ_SCHEMA),

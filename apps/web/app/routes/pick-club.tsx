@@ -14,26 +14,25 @@ function pickDate(year: number | null, month: number | null): string | null {
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const club = await catalogRepo.getClubBySlug(db, params.clubSlug);
   if (!club) throw new Response("Not found", { status: 404 });
-  return { origin, club };
+  return { club };
 }
 
 export const headers = staticPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book club not found | Foxing" }];
-  const { club, origin } = data;
+  const { club } = data;
   return [
     ...buildMeta({
       title: `${club.name} picks`,
       description: club.description ?? `Every ${club.name} book club pick, tracked on Foxing.`,
-      origin,
       pathname: location.pathname,
     }),
     ldJson(
-      breadcrumbLd(origin, [
+      breadcrumbLd([
         { name: "Home", path: "/" },
         { name: "Picks", path: "/picks" },
         { name: club.name, path: `/picks/${club.slug}` },

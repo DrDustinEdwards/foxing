@@ -13,9 +13,9 @@ function monthLabel(year: number, month: number): string {
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const all = await catalogRepo.listBotm(db);
-  return { origin, current: all[0] ?? null, archive: all.slice(1) };
+  return { current: all[0] ?? null, archive: all.slice(1) };
 }
 
 export const headers = catalogPageHeaders;
@@ -28,7 +28,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     description: current?.book
       ? `This month on Foxing: ${current.book.title} by ${current.book.author}.`
       : "Foxing's monthly reading pick.",
-    origin: data?.origin ?? "",
     pathname: location.pathname,
   });
 }

@@ -13,7 +13,7 @@ import { bookLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/book-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db, env, origin } = loaderBase(context, request);
+  const { db, env } = loaderBase(context, request);
   const page = await views.bookPage(db, params.slug, affiliateConfig(env));
   if (!page || page.book.slug !== params.slug) throw new Response("Not found", { status: 404 });
   const { book, awards, related } = page;
@@ -29,7 +29,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     : [undefined, []];
 
   return {
-    origin,
     community,
     readable,
     awards,
@@ -61,7 +60,7 @@ export const headers = catalogPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book not found | Foxing" }];
-  const { book, origin, community } = data;
+  const { book, community } = data;
   const description =
     book.description?.slice(0, 200) ??
     `${book.title} by ${book.author} on Foxing. Read the classics and track your reading.`;
@@ -69,16 +68,15 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     ...buildMeta({
       title: `${book.title} by ${book.author}`,
       description,
-      origin,
       pathname: location.pathname,
       image: `/og/book/${book.slug}`,
       imageAlt: `${book.title} by ${book.author}`,
       type: "book",
       noindex: community,
     }),
-    ldJson(bookLd(origin, book)),
+    ldJson(bookLd(book)),
     ldJson(
-      breadcrumbLd(origin, [
+      breadcrumbLd([
         { name: "Home", path: "/" },
         { name: "Books", path: "/books" },
         { name: book.title, path: `/books/${book.slug}` },
