@@ -50,7 +50,7 @@ describe("rankCandidates - tier 1 (taste) and baseline", () => {
     expect(ranked[0].reason).toBe("Popular in gothic");
   });
 
-  it("an award winner in a favourite genre reads as 'Award winner in <genre>'", () => {
+  it("an award winner in a favorite genre reads as 'Award winner in <genre>'", () => {
     const signals: RankSignals = { ...NO_SIGNALS, favoriteGenres: ["Gothic"] };
     const ranked = rankCandidates(
       [cand({ id: "g", subjects: ["Gothic"], weightedRating: 4 })],
@@ -70,8 +70,8 @@ describe("rankCandidates - tier 1 (taste) and baseline", () => {
   });
 });
 
-describe("rankCandidates - tier 2 (behaviour) boosting", () => {
-  it("a favourite author outranks a higher-rated stranger, with a 'More from' reason", () => {
+describe("rankCandidates - tier 2 (behavior) boosting", () => {
+  it("a favorite author outranks a higher-rated stranger, with a 'More from' reason", () => {
     const signals: RankSignals = {
       ...NO_SIGNALS,
       favoriteAuthors: ["mary shelley"],
@@ -100,7 +100,7 @@ describe("rankCandidates - tier 2 (behaviour) boosting", () => {
     expect(ranked[0].reason).toBe("Because you rated Frankenstein highly");
   });
 
-  it("boosts a genre the reader actually reads with a behaviour reason", () => {
+  it("boosts a genre the reader actually reads with a behavior reason", () => {
     const signals: RankSignals = { ...NO_SIGNALS, behaviorGenres: ["Gothic"] };
     const ranked = rankCandidates([cand({ id: "g", subjects: ["Gothic"] })], signals, new Set());
     expect(ranked[0].reason).toBe("More Gothic, which you read");

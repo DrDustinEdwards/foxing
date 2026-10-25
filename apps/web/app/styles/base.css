@@ -1,5 +1,5 @@
 /* Foxing's own tokens, its element defaults and the small vocabulary every page uses: the page
-   column, stacks and rows, the text roles of design-system.md and the card. Colours, the display
+   column, stacks and rows, the text roles of design-system.md and the card. Colors, the display
    face and the on state of Rule 05 are Capsomer's tokens (the fox family under Capsomer's foxing
    site layer); Foxing adds only what Capsomer has no token for: the reading canvas. */
 :root {
@@ -36,7 +36,7 @@
 
 /* Element defaults, in Capsomer's base layer after its own, so every Capsomer component still
    wins over them: the body reads in Source Serif, headings are Fraunces, links take their
-   colour from where they sit. */
+   color from where they sit. */
 @layer cap.base {
   html {
     -webkit-text-size-adjust: 100%;
@@ -63,7 +63,7 @@
   a:hover {
     color: inherit;
   }
-  /* Rule 03: the focus ring is always visible, 3px in the focus colour. */
+  /* Rule 03: the focus ring is always visible, 3px in the focus color. */
   :focus-visible {
     outline: 3px solid var(--ring);
     outline-offset: 2px;
@@ -113,7 +113,7 @@
   text-align: center;
 }
 
-/* Stacks (a column with a gap) and rows (a line of items, centred, with a gap). */
+/* Stacks (a column with a gap) and rows (a line of items, centered, with a gap). */
 .stack {
   display: flex;
   flex-direction: column;

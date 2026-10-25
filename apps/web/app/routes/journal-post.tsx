@@ -1,5 +1,5 @@
 import { catalogRepo } from "@foxing/core";
-import { marked } from "marked";
+import { render } from "@drdustinedwards/site-helpers/render/nomath";
 import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
@@ -19,8 +19,13 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     context.get(journalPreviewContext) ?? (await catalogRepo.getPostBySlug(db, params.slug));
   if (!post) throw new Response("Not found", { status: 404 });
 
-  // Journal content is trusted, admin-authored Markdown (CMS). Render at the edge.
-  const html = marked.parse(post.content, { async: false, gfm: true }) as string;
+  // The journal's Markdown, through Prelum's render as every site's writing is (no math: `$` stays text). The
+  // journal stores no image sizes, so its images are written unsized.
+  const { html } = await render({
+    file: `journal/${post.slug}`,
+    body: post.content,
+    resolveImage: async () => null,
+  });
 
   return {
     html,

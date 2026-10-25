@@ -148,7 +148,7 @@ export async function author(db: Db, slug: string): Promise<W.AuthorPage | null>
   return { ...found, bio: cachedText(bio ?? undefined) };
 }
 
-/** The book page, found by id or slug: detail, awards, neighbours, the generated
+/** The book page, found by id or slug: detail, awards, neighbors, the generated
  *  catalog text, public reviews, clubs reading it and its popular passages. */
 export async function bookPage(
   db: Db,

@@ -132,7 +132,7 @@ describe("getRecommendations - data tiers (no AI)", () => {
 
   it("boosts a returning author from reading history with a 'More from' reason", async () => {
     await seedUser("hist", "free", null);
-    // Finished a Mary Shelley book -> she becomes a favourite author. That finished book
+    // Finished a Mary Shelley book -> she becomes a favorite author. That finished book
     // is owned (excluded); her *other* catalog book should surface with an author reason.
     await db().insert(schema.userBooks).values({
       id: "ub-fin",

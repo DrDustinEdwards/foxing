@@ -101,12 +101,12 @@ export const ReaderWebView = forwardRef<ReaderRef, ReaderWebViewProps>(function 
     [goNext, goPrevious, goToLocation, changeTheme, changeFontSize]
   )
 
-  // Build defaultTheme once per mount from initial settings. The Reader
-  // applies defaultTheme on first display only; runtime updates go through
+  // Build the Reader's defaultTheme once per mount from initial settings. The
+  // Reader applies it on first display only; runtime updates go through
   // changeTheme / changeFontSize via applySettings(). Re-emitting a new
-  // defaultTheme on every parent render would re-flow the rendition and
+  // theme on every parent render would re-flow the rendition and
   // can leave page-turn gestures stuck mid-transition.
-  const defaultTheme = useMemo(
+  const initialTheme = useMemo(
     () => buildTheme(initialSettings),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
@@ -122,7 +122,7 @@ export const ReaderWebView = forwardRef<ReaderRef, ReaderWebViewProps>(function 
       src={epubUrl}
       fileSystem={useFileSystem}
       initialLocation={safeInitialLocation}
-      defaultTheme={defaultTheme}
+      defaultTheme={initialTheme}
       flow="paginated"
       enableSwipe={true}
       enableSelection

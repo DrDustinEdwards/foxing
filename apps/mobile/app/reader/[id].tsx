@@ -451,16 +451,16 @@ export default function Reader() {
   // if the user later toggles back to single in the Aa sheet.
   useEffect(() => {
     if (!isTablet || !userId || readerState !== 'ready') return
-    let cancelled = false
+    let canceled = false
     AsyncStorage.getItem(`foxing.tablet-columns-applied.${userId}`).then((applied) => {
-      if (cancelled || applied === 'true') return
+      if (canceled || applied === 'true') return
       if (prefs.columnMode === 'single') {
         changePrefs({ ...prefs, columnMode: 'two' })
       }
       AsyncStorage.setItem(`foxing.tablet-columns-applied.${userId}`, 'true').catch(() => {})
     })
     return () => {
-      cancelled = true
+      canceled = true
     }
     // changePrefs intentionally excluded, it's stable enough for this
     // one-shot and re-adding it would re-fire when prefs change.

@@ -4,8 +4,8 @@
 // in-process from web/mobile loaders; writes are called by the API after the domain
 // layer authorized them.
 import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import type { Db } from "../db";
+import { uniqueSlug } from "../domain/slug";
 import {
   activityEvents,
   books,
@@ -117,15 +117,6 @@ export async function listCloseFriendOfIds(db: Db, viewerId: string): Promise<st
 
 // -- Reading lists ----------------------------------------------------------
 
-function slugify(title: string): string {
-  const base = title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  return `${base || "list"}-${nanoid(6).toLowerCase()}`;
-}
-
 export async function createList(
   db: Db,
   userId: string,
@@ -141,7 +132,7 @@ export async function createList(
     .values({
       userId,
       title: input.title,
-      slug: slugify(input.title),
+      slug: uniqueSlug(input.title, "list"),
       description: input.description ?? null,
       coverUrl: input.coverUrl ?? null,
       isPublic: input.isPublic ?? false,

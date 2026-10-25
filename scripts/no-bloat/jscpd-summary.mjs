@@ -1,4 +1,4 @@
-// Summarises jscpd's JSON report against the committed baseline, for the CI log.
+// Summarizes jscpd's JSON report against the committed baseline, for the CI log.
 // Run after: jscpd --baseline scripts/no-bloat/jscpd-baseline.json
 // Prints how many files jscpd read, so "0 new clones" can never mean "0 files
 // read" (capsid/conventions.md 3.3). Report only: exits 1 when duplication is

@@ -18,7 +18,7 @@ import type { Env } from "../types";
 export const stripeWebhookRoutes = new Hono<Env>();
 
 /** Stripe sends period ends as UNIX seconds; the profile stores ms Date. */
-function toDate(unixSeconds: number | null): Date | null {
+function fromUnixSeconds(unixSeconds: number | null): Date | null {
   return unixSeconds ? new Date(unixSeconds * 1000) : null;
 }
 
@@ -31,7 +31,7 @@ async function applyIntent(db: Db, client: BillingClient, intent: BillingIntent)
         await profilesRepo.setSubscriptionState(db, intent.userId, {
           tier: billing.tierForStatus(sub.status),
           status: sub.status,
-          periodEnd: toDate(sub.currentPeriodEnd),
+          periodEnd: fromUnixSeconds(sub.currentPeriodEnd),
         });
       }
       return;
@@ -44,7 +44,7 @@ async function applyIntent(db: Db, client: BillingClient, intent: BillingIntent)
       await profilesRepo.setSubscriptionState(db, profile.id, {
         tier: intent.tier,
         status: intent.status,
-        periodEnd: toDate(intent.periodEnd),
+        periodEnd: fromUnixSeconds(intent.periodEnd),
       });
       return;
     }

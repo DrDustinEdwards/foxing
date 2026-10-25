@@ -19,7 +19,7 @@ function testEnv() {
 describe("auth config", () => {
   it("serves the Google callback route (not a 404 fall-through)", async () => {
     const auth = await getAuth(testEnv());
-    // No oauth state/code: the handler must recognise the route and redirect to its
+    // No oauth state/code: the handler must recognize the route and redirect to its
     // error screen. A 404 would mean the provider was never registered.
     const res = await auth.handler(
       new Request("https://foxing.app/api/auth/callback/google", { redirect: "manual" }),

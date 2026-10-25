@@ -1,11 +1,7 @@
+// /<key>.txt, the IndexNow key file: Prelum's keyFileResponse, the key as the whole body.
+import { keyFileResponse } from "@drdustinedwards/site-helpers/indexnow";
 import { INDEXNOW_KEY } from "~/lib/indexnow";
 
-// IndexNow ownership verification: the key file's entire body must be the key itself.
 export function loader() {
-  return new Response(INDEXNOW_KEY, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=86400",
-    },
-  });
+  return keyFileResponse(INDEXNOW_KEY, { "Cache-Control": "public, max-age=0, s-maxage=86400" });
 }

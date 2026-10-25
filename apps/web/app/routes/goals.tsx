@@ -33,7 +33,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
 
-  // Reading-activity heatmap: 53 weeks of days, coloured by books finished that day. Finish
+  // Reading-activity heatmap: 53 weeks of days, colored by books finished that day. Finish
   // dates are the only real per-day reading signal in D1 (reading_sessions are unpopulated
   // on web), so they drive the grid. Weeks are Sunday-first, GitHub-style.
   const db = createDb(env.DB);

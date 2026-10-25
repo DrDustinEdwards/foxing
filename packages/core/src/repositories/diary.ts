@@ -3,20 +3,11 @@
 // profile ratings derive from the LATEST entry per (user, book). Pure DB access; event
 // emission + authorization live in domain/diary.ts.
 import { and, desc, eq, isNotNull } from "drizzle-orm";
-import { nanoid } from "nanoid";
 import type { Db } from "../db";
+import { uniqueSlug } from "../domain/slug";
 import { books, diaryEntries } from "../schema";
 
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
-
-function slugify(bookTitle: string): string {
-  const base = bookTitle
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  return `${base || "entry"}-${nanoid(6).toLowerCase()}`;
-}
 
 export async function createEntry(
   db: Db,
@@ -41,7 +32,7 @@ export async function createEntry(
       review: input.review ?? null,
       containsSpoilers: input.containsSpoilers ?? false,
       visibility: input.visibility ?? "private",
-      slug: slugify(input.bookTitle),
+      slug: uniqueSlug(input.bookTitle, "entry"),
     })
     .returning();
   return row;
@@ -128,7 +119,7 @@ export interface RatedSignalBook {
 }
 
 /** Rated diary entries with the book's author + subjects, for the recommender's
- *  behaviour signals ("because you rated X highly"). */
+ *  behavior signals ("because you rated X highly"). */
 export async function listRatedForSignals(db: Db, userId: string): Promise<RatedSignalBook[]> {
   return db
     .select({

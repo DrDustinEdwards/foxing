@@ -21,7 +21,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { suggested: session.user.name ?? "", ...(await views.onboarding(db)) };
 }
 
-/** Minimal onboarding frame: wordmark + centred card. Not the full nav shell, because
+/** Minimal onboarding frame: wordmark + centered card. Not the full nav shell, because
  *  the user has no profile yet, so the signed-in nav would show a "Sign in" prompt. */
 function Frame({ step, children }: { step: 1 | 2; children: React.ReactNode }) {
   return (

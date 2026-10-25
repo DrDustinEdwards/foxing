@@ -2,7 +2,7 @@
 // Object instance per club (addressed by idFromName(clubId)), so cross-club isolation
 // is structural: a ClubRoom only ever holds one club's sockets, and a broadcast can
 // never reach another club. The Phase 5 task originally proposed a single shared hub
-// partitioned by club_id; Fable overrode that in favour of the spec's per-club object,
+// partitioned by club_id; Fable overrode that in favor of the spec's per-club object,
 // which removes the partitioning bug surface and the single-contention point.
 //
 // INVARIANT: the DO is fan-out ONLY. It NEVER writes D1. Every mutation goes through

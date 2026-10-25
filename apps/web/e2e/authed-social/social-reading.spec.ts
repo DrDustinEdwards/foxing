@@ -36,7 +36,7 @@ type FrameParagraph = {
 // Every paragraph of a content frame, run inside the frame. `marked`: a highlight range
 // touches it (the reader draws highlights with the CSS Custom Highlight API, so a drawn
 // decoration is a range in CSS.highlights). `points`: set only when the paragraph lies
-// wholly on the frame's shown page and the frame hit-tests its centre and its tap point
+// wholly on the frame's shown page and the frame hit-tests its center and its tap point
 // to it, the same check a real click makes.
 function frameParagraphs(line: number): FrameParagraph[] {
   const ranges = Array.from(CSS.highlights?.values() ?? []).flatMap((h) => Array.from(h));
@@ -75,7 +75,7 @@ function position(page: Page): Promise<string | null> {
   return page.getByTestId("reader-container").getAttribute("data-position");
 }
 
-// The shown page has landed: the frame on top at the centre of the reading column is
+// The shown page has landed: the frame on top at the center of the reading column is
 // fully faded in (Readium keeps a pool of frames and fades the shown one in) and holds text.
 async function waitForShownPage(page: Page): Promise<void> {
   await expect

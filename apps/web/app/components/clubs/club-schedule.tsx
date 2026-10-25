@@ -238,7 +238,7 @@ export function MeetingsSection({
                   ))}
                 </div>
               ) : (
-                <p className="mt-1 fine">Cancelled</p>
+                <p className="mt-1 fine">Canceled</p>
               )}
             </li>
           ))}

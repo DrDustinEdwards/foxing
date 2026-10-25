@@ -33,7 +33,7 @@ export function useSeededQuery<T, S extends T | undefined = undefined>(
   // it replaces what the cache holds for the same key.
   const last = useRef(seed);
   const key = JSON.stringify(options.queryKey);
-  // biome-ignore lint/correctness/useExhaustiveDependencies: the serialised key stands in for options.queryKey.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the serialized key stands in for options.queryKey.
   useEffect(() => {
     if (seed !== undefined && seed !== last.current) {
       last.current = seed;

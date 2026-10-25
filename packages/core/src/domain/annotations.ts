@@ -20,7 +20,7 @@ export type AnnotationVisibility = "private" | "friends" | "public";
 export type ExplicitAnnotationVisibility = AnnotationVisibility | "club";
 
 /** The audience a new highlight/note starts with for this user, from their default
- *  pref. Anything unrecognised (or absent) falls back to private, the safe default. */
+ *  pref. Anything unrecognized (or absent) falls back to private, the safe default. */
 export function resolveDefaultAnnotationVisibility(profile: Profile): AnnotationVisibility {
   const pref = profile.visibility?.defaultAnnotation;
   return pref === "friends" || pref === "public" ? pref : "private";

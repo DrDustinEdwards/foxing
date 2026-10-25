@@ -23,7 +23,7 @@ export const operatorMw = createMiddleware<Env>(async (c, next) => {
   if (!match) throw refused("Send the operator token as: Authorization: Bearer <token>.");
   const expected = c.env.ADMIN_OPERATOR_TOKEN;
   if (!expected) throw refused("Operator access is not configured on this Worker.");
-  if (!(await safeEqual(match[1], expected))) throw refused("Operator token not recognised.");
+  if (!(await safeEqual(match[1], expected))) throw refused("Operator token not recognized.");
 
   const actorId = c.req.header(OPERATOR_ACTOR_HEADER)?.trim();
   if (!actorId) throw refused(`Name the acting admin's user id in ${OPERATOR_ACTOR_HEADER}.`);

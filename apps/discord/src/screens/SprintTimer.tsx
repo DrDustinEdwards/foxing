@@ -28,18 +28,18 @@ export function SprintTimer({ clubId, session }: Props) {
   }, [])
 
   useEffect(() => {
-    let cancelled = false
+    let canceled = false
     if (!sprint) return
     const interval = setInterval(async () => {
       try {
         const next = await fetchSprint(session.token, sprint.id)
-        if (!cancelled) setSprint(next)
+        if (!canceled) setSprint(next)
       } catch {
         // network blips are non-fatal
       }
     }, 10000)
     return () => {
-      cancelled = true
+      canceled = true
       clearInterval(interval)
     }
   }, [sprint?.id])

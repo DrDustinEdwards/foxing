@@ -9,6 +9,7 @@ import { getAuth } from "~/lib/auth.server";
 import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/recap";
 import { SITE_ORIGIN } from "~/lib/origins";
+import { buildMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -27,17 +28,16 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   return { ...data, year, username: params.username };
 }
 
-export function meta({ loaderData: data }: Route.MetaArgs) {
-  if (!data) return [{ title: "Year in Reading | Foxing" }];
-  const title = `${data.displayName}'s ${data.year} in reading | Foxing`;
-  const ogImage = `${SITE_ORIGIN}/og/recap/${data.username}/${data.year}`;
-  return [
-    { title },
-    { property: "og:title", content: title },
-    { property: "og:image", content: ogImage },
-    { name: "twitter:card", content: "summary_large_image" },
-    { name: "twitter:image", content: ogImage },
-  ];
+export function meta({ loaderData: data, params }: Route.MetaArgs) {
+  const pathname = `/u/${params.username}/recap/${params.year}`;
+  if (!data) return buildMeta({ title: "Year in Reading", pathname });
+  return buildMeta({
+    title: `${data.displayName}'s ${data.year} in reading`,
+    pathname,
+    image: `${SITE_ORIGIN}/og/recap/${data.username}/${data.year}`,
+    imageAlt: `${data.displayName}'s ${data.year} in reading on Foxing`,
+    type: "profile",
+  });
 }
 
 export default function Recap({ loaderData }: Route.ComponentProps) {

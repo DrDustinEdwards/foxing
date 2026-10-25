@@ -5,7 +5,7 @@ import { backupStatus, runBackup } from "../app/lib/backup.server";
 import { healthResponse } from "@dustinedwards/site-runtime/health";
 
 // Real D1 (with the real migrations, FTS5 tables and triggers included) and real R2, in
-// Miniflare. One test per behaviour: a good run, an emptied database, a stale run, and the
+// Miniflare. One test per behavior: a good run, an emptied database, a stale run, and the
 // exclude list against the schema.
 const workerEnv = env as unknown as Env;
 const now = Date.now();
@@ -87,6 +87,8 @@ async function health(at?: Date) {
     ping: () => workerEnv.DB.prepare("SELECT 1").first(),
     backup: () => backupStatus(workerEnv, at),
     now: at,
+    // Each case reads the bucket afresh; the route holds a read for five minutes per isolate.
+    backupTtlMs: 0,
   });
   return {
     status: res.status,

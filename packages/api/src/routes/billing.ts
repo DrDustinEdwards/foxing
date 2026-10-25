@@ -32,7 +32,7 @@ billingRoutes.post("/billing/checkout", rateLimit("write"), async (c) => {
       clientReferenceId: session.id,
       existingCustomerId: profile?.stripeCustomerId ?? null,
       successUrl: `${origin}/settings?billing=success`,
-      cancelUrl: `${origin}/settings?billing=cancelled`,
+      cancelUrl: `${origin}/settings?billing=canceled`,
     });
     return c.json({ url });
   } catch (err) {

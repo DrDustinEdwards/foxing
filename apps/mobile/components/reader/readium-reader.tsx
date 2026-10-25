@@ -365,20 +365,20 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     // Deps: epubUrl only. onError is read via ref so a host re-render that
     // changes the inline lambda's identity doesn't re-trigger the effect.
     useEffect(() => {
-      let cancelled = false
+      let canceled = false
       ;(async () => {
         try {
           const uri = await ensureEpubLocalUri(epubUrl)
-          if (!cancelled) setLocalUri(uri)
+          if (!canceled) setLocalUri(uri)
         } catch (e) {
-          if (cancelled) return
+          if (canceled) return
           const message = e instanceof Error ? e.message : 'EPUB download failed'
           console.warn('[readium-reader] local download failed:', message)
           onErrorRef.current?.(message)
         }
       })()
       return () => {
-        cancelled = true
+        canceled = true
       }
     }, [epubUrl])
 

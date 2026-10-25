@@ -556,8 +556,8 @@ export async function cancelMeeting(
   } else {
     await requireActive(db, meeting.clubId, actor.userId);
   }
-  const cancelled = await clubsRepo.cancelMeeting(db, meetingId);
-  return cancelled as clubsRepo.ClubMeeting;
+  const canceled = await clubsRepo.cancelMeeting(db, meetingId);
+  return canceled as clubsRepo.ClubMeeting;
 }
 
 export async function rsvpMeeting(

@@ -8,7 +8,7 @@ import { normalizeText } from "../domain/text";
 import { annotations, diaryEntries, readingSessions, userBooks, vocabulary } from "../schema";
 import type { SyncOp } from "../validators/sync";
 
-const toDate = (n: number | null | undefined): Date | null => (n == null ? null : new Date(n));
+const msToDate = (n: number | null | undefined): Date | null => (n == null ? null : new Date(n));
 
 /** Minimal existence + freshness probe for the LWW decision. updatedAt is epoch ms. */
 export type Existing = { updatedAt: number } | null;
@@ -103,11 +103,11 @@ function userBookValues(p: Record<string, unknown>, clientTs: number) {
   if ("status" in p) v.status = p.status;
   if ("progress" in p) v.progress = p.progress;
   if ("progressPct" in p) v.progressPct = p.progressPct;
-  if ("startedAt" in p) v.startedAt = toDate(p.startedAt as number | null);
-  if ("finishedAt" in p) v.finishedAt = toDate(p.finishedAt as number | null);
-  if ("pausedAt" in p) v.pausedAt = toDate(p.pausedAt as number | null);
+  if ("startedAt" in p) v.startedAt = msToDate(p.startedAt as number | null);
+  if ("finishedAt" in p) v.finishedAt = msToDate(p.finishedAt as number | null);
+  if ("pausedAt" in p) v.pausedAt = msToDate(p.pausedAt as number | null);
   if ("pausedNote" in p) v.pausedNote = p.pausedNote;
-  if ("abandonedAt" in p) v.abandonedAt = toDate(p.abandonedAt as number | null);
+  if ("abandonedAt" in p) v.abandonedAt = msToDate(p.abandonedAt as number | null);
   if ("moodTags" in p) v.moodTags = p.moodTags;
   if ("personalNotes" in p) v.personalNotes = p.personalNotes;
   return v;
@@ -178,7 +178,7 @@ const sessionAdapter: SyncAdapter = {
       userId,
       bookId: p.bookId as string,
       startedAt: new Date(p.startedAt as number),
-      endedAt: toDate(p.endedAt as number | null),
+      endedAt: msToDate(p.endedAt as number | null),
       pagesRead: (p.pagesRead as number) ?? 0,
       avgWpm: (p.avgWpm as number | null) ?? null,
       lastWpm: (p.lastWpm as number | null) ?? null,
@@ -278,7 +278,7 @@ const diaryAdapter: SyncAdapter = {
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
     const set: Record<string, unknown> = { updatedAt: new Date(op.clientTs) };
-    if ("logDate" in p) set.logDate = toDate(p.logDate as number | null);
+    if ("logDate" in p) set.logDate = msToDate(p.logDate as number | null);
     for (const k of ["ratingHalf", "review", "containsSpoilers", "visibility"]) {
       if (k in p) set[k] = p[k];
     }

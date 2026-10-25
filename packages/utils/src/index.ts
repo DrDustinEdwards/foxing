@@ -19,13 +19,6 @@ export function truncate(str: string, maxLength: number): string {
   return str.slice(0, maxLength).trimEnd() + '...'
 }
 
-export function slugify(str: string): string {
-  return str
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
 export function formatRating(rating: number | null): string {
   if (rating === null) return ''
   return rating.toFixed(1)
