@@ -15,12 +15,12 @@ function tagLabel(tag: string): string {
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const tag = params.tag;
   if (!tag) throw redirect("/journal/archive");
   const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
   const result = await catalogRepo.listPostsByTag(db, tag, { page });
-  return { origin, tag, result };
+  return { tag, result };
 }
 
 export const headers = listingPageHeaders;
@@ -30,7 +30,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return buildMeta({
     title: label,
     description: `Journal essays tagged ${label.toLowerCase()}.`,
-    origin: data?.origin ?? "",
     pathname: location.pathname,
   });
 }

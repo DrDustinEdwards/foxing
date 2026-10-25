@@ -12,7 +12,7 @@ import { FollowButton } from "~/components/social/follow-button";
 import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
-import { ldJson } from "~/lib/seo";
+import { absoluteUrl, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/u-profile";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -21,11 +21,11 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const viewerId = session?.user?.id ?? null;
   const page = await views.profilePage(createDb(env.DB), params.username, viewerId);
   if (!page) throw new Response("Not found", { status: 404 });
-  return { page, signedIn: !!viewerId, origin: new URL(request.url).origin };
+  return { page, signedIn: !!viewerId };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  const data = loaderData ? { ...loaderData.page, origin: loaderData.origin } : undefined;
+  const data = loaderData?.page;
   const name = data?.profile.displayName ?? data?.profile.username ?? "Reader";
   const base = [
     { title: `${name} | Foxing` },
@@ -41,7 +41,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
           "@type": "Person",
           name,
           alternateName: `@${data.profile.username}`,
-          url: `${data.origin}/u/${data.profile.username}`,
+          url: absoluteUrl(`/u/${data.profile.username}`),
           ...(data.profile.avatarUrl ? { image: data.profile.avatarUrl } : {}),
           ...(data.profile.bio ? { description: data.profile.bio } : {}),
         },

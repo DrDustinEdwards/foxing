@@ -7,22 +7,21 @@ import { buildMeta, journalTagPath } from "~/lib/seo";
 import type { Route } from "./+types/journal-archive";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
   const [result, tags] = await Promise.all([
     catalogRepo.listPublishedPosts(db, { page, pageSize: 30 }),
     catalogRepo.listTags(db),
   ]);
-  return { origin, result, tags };
+  return { result, tags };
 }
 
 export const headers = listingPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
+export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "All articles",
     description: "Every published essay from the Foxing Journal, browsable by tag.",
-    origin: data?.origin ?? "",
     pathname: location.pathname,
   });
 }

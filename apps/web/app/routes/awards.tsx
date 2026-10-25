@@ -6,9 +6,9 @@ import { buildMeta, itemListLd, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/awards";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const awards = await catalogRepo.listAwards(db);
-  return { origin, awards };
+  return { awards };
 }
 
 export const headers = staticPageHeaders;
@@ -20,12 +20,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: "Literary awards",
       description:
         "Nobel, Pulitzer, Newbery, and more. Browse award-winning classics you can read on Foxing.",
-      origin: data.origin,
       pathname: location.pathname,
     }),
     ldJson(
       itemListLd(
-        data.origin,
         "Literary awards",
         data.awards.map((a) => ({ title: a.name, path: `/awards/${a.slug}` })),
       ),

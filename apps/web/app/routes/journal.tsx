@@ -12,21 +12,20 @@ function fmtDate(d: Date | null): string | null {
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
   const result = await catalogRepo.listPublishedPosts(db, { page });
-  return { origin, result };
+  return { result };
 }
 
 export const headers = listingPageHeaders;
 
-export function meta({ loaderData: data, location }: Route.MetaArgs) {
+export function meta({ location }: Route.MetaArgs) {
   return [
     ...buildMeta({
       title: "The Journal",
       description:
         "Essays and close readings from Foxing: what the great books mean and why they endure.",
-      origin: data?.origin ?? "",
       pathname: location.pathname,
     }),
     { tagName: "link", rel: "alternate", type: "application/rss+xml", href: "/journal/rss.xml" },

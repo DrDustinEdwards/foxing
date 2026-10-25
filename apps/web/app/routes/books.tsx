@@ -44,10 +44,10 @@ function query(filters: Filters, override: Partial<Record<string, string | null>
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const filters = parseFilters(new URL(request.url));
   const { genres, ...result } = await views.browse(db, filters);
-  return { origin, filters, result, genres };
+  return { filters, result, genres };
 }
 
 export const headers = () => publicCacheHeaders(1800, 86400);
@@ -61,12 +61,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     ...buildMeta({
       title: label,
       description: `Browse ${data.result.total.toLocaleString()} readable classics on Foxing. Filter by genre, era, and length.`,
-      origin: data.origin,
       pathname: location.pathname,
     }),
     ldJson(
       itemListLd(
-        data.origin,
         label,
         data.result.books.map((b) => ({ title: b.title, path: `/books/${b.slug}` })),
       ),

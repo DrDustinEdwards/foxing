@@ -6,9 +6,9 @@ import { buildMeta, itemListLd, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/picks";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   const clubs = await catalogRepo.listExternalClubs(db);
-  return { origin, clubs };
+  return { clubs };
 }
 
 export const headers = staticPageHeaders;
@@ -20,12 +20,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: "Celebrity and retailer book club picks",
       description:
         "Every pick from Oprah, Reese, Jenna, Belletrist, and more, gathered in one place on Foxing.",
-      origin: data.origin,
       pathname: location.pathname,
     }),
     ldJson(
       itemListLd(
-        data.origin,
         "Book club picks",
         data.clubs.map((c) => ({ title: c.name, path: `/picks/${c.slug}` })),
       ),

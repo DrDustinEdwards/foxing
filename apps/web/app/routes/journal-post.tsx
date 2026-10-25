@@ -13,7 +13,7 @@ function fmtDate(d: Date | null): string | null {
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db, origin } = loaderBase(context, request);
+  const { db } = loaderBase(context, request);
   // The Carrel preview sets an unsaved post in-process; an ordinary request never has one.
   const post =
     context.get(journalPreviewContext) ?? (await catalogRepo.getPostBySlug(db, params.slug));
@@ -23,7 +23,6 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const html = marked.parse(post.content, { async: false, gfm: true }) as string;
 
   return {
-    origin,
     html,
     post: {
       slug: post.slug,
@@ -46,11 +45,10 @@ export const headers = listingPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Essay not found | Foxing" }];
-  const { post, origin } = data;
+  const { post } = data;
   const meta = buildMeta({
     title: post.ogTitle ?? post.title,
     description: post.ogDescription ?? post.excerpt ?? `${post.title}, from the Foxing Journal.`,
-    origin,
     pathname: location.pathname,
     image: post.coverImageUrl ?? undefined,
     imageAlt: post.coverImageAlt ?? undefined,
@@ -59,7 +57,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
   return [
     ...meta,
     ldJson(
-      articleLd(origin, {
+      articleLd({
         slug: post.slug,
         title: post.title,
         excerpt: post.excerpt,
@@ -69,7 +67,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       }),
     ),
     ldJson(
-      breadcrumbLd(origin, [
+      breadcrumbLd([
         { name: "Home", path: "/" },
         { name: "Journal", path: "/journal" },
         { name: post.title, path: `/journal/${post.slug}` },

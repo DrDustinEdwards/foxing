@@ -1,5 +1,5 @@
 // Shared loader plumbing for public catalog routes: the per-request Drizzle handle,
-// the env, the request origin (for canonical/OG URLs), and affiliate config.
+// the env, the request origin (for same-origin asset URLs; canonical and OG URLs use SITE_ORIGIN), and affiliate config.
 import type { AffiliateConfig } from "@foxing/core";
 import { createDb } from "@foxing/core";
 import type { RouterContextProvider } from "react-router";

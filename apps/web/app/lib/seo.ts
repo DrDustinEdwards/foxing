@@ -1,17 +1,21 @@
 // SEO helpers: canonical URLs, Open Graph / Twitter tags, and JSON-LD builders,
 // all emitted through React Router's meta() so a route declares its SEO in one place.
 //
-// Canonical/OG URLs are built from the request origin passed down by the loader, so
-// they are correct on the workers.dev preview AND on foxing.app after cutover, with
-// no environment coupling.
+// Canonical, OG and JSON-LD URLs always name https://foxing.app, never the request's
+// origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
+// The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
+import { absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
+import { article, breadcrumbs, itemList, thing } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
+import { SITE_ORIGIN } from "./origins";
 
 export const SITE_NAME = "Foxing";
 const DEFAULT_DESCRIPTION =
   "Foxing is a reading home for the classics: browse the catalog, follow literary awards and celebrity picks, and read the conversations around great books.";
 
-export function absoluteUrl(origin: string, path: string): string {
-  return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
+/** A path on foxing.app made absolute. */
+export function absoluteUrl(path: string): string {
+  return prelumAbsoluteUrl(SITE_ORIGIN, path);
 }
 
 /** A journal tag's page. Tags are free text, so the segment is encoded: a space or "&" in a
@@ -23,9 +27,8 @@ export function journalTagPath(tag: string): string {
 type MetaInput = {
   title: string;
   description?: string;
-  origin: string;
   pathname: string;
-  /** Absolute or origin-relative OG image path (defaults to the site OG image). */
+  /** Absolute or site-relative card image; without one the Twitter card is `summary`. */
   image?: string;
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
@@ -38,16 +41,15 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
   const {
     title,
     description = DEFAULT_DESCRIPTION,
-    origin,
     pathname,
     image,
     imageAlt,
     type = "website",
     noindex,
   } = input;
-  const canonical = absoluteUrl(origin, pathname);
+  const canonical = absoluteUrl(pathname);
   const fullTitle = pathname === "/" ? title : `${title} | ${SITE_NAME}`;
-  const img = image ? (image.startsWith("http") ? image : absoluteUrl(origin, image)) : undefined;
+  const img = image ? absoluteUrl(image) : undefined;
 
   const tags: MetaDescriptor[] = [
     { title: fullTitle },
@@ -72,99 +74,69 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
 }
 
 /** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */
-export function ldJson(schema: Record<string, unknown>): MetaDescriptor {
-  return { "script:ld+json": schema };
-}
+export { jsonLd as ldJson } from "@drdustinedwards/site-helpers/schema";
 
 export function breadcrumbLd(
-  origin: string,
   crumbs: Array<{ name: string; path: string }>,
 ): Record<string, unknown> {
-  return {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: crumbs.map((c, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: c.name,
-      item: absoluteUrl(origin, c.path),
-    })),
-  };
+  return breadcrumbs(SITE_ORIGIN, crumbs);
 }
 
-export function bookLd(
-  origin: string,
-  book: {
-    slug: string;
-    title: string;
-    author: string;
-    authorSlug: string | null;
-    description: string | null;
-    coverUrl: string | null;
-    publicationYear: number | null;
-    isbn13: string | null;
-    language: string | null;
-  },
-): Record<string, unknown> {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Book",
+export function bookLd(book: {
+  slug: string;
+  title: string;
+  author: string;
+  authorSlug: string | null;
+  description: string | null;
+  coverUrl: string | null;
+  publicationYear: number | null;
+  isbn13: string | null;
+  language: string | null;
+}): Record<string, unknown> {
+  return thing("Book", {
     name: book.title,
-    url: absoluteUrl(origin, `/books/${book.slug}`),
+    url: absoluteUrl(`/books/${book.slug}`),
     author: {
       "@type": "Person",
       name: book.author,
-      ...(book.authorSlug ? { url: absoluteUrl(origin, `/authors/${book.authorSlug}`) } : {}),
+      ...(book.authorSlug ? { url: absoluteUrl(`/authors/${book.authorSlug}`) } : {}),
     },
-    ...(book.description ? { description: book.description } : {}),
-    ...(book.coverUrl ? { image: book.coverUrl } : {}),
-    ...(book.publicationYear ? { datePublished: String(book.publicationYear) } : {}),
-    ...(book.isbn13 ? { isbn: book.isbn13 } : {}),
-    ...(book.language ? { inLanguage: book.language } : {}),
+    description: book.description,
+    image: book.coverUrl,
+    datePublished: book.publicationYear ? String(book.publicationYear) : undefined,
+    isbn: book.isbn13,
+    inLanguage: book.language,
     publisher: { "@type": "Organization", name: SITE_NAME },
-  };
+  });
 }
 
-export function articleLd(
-  origin: string,
-  post: {
-    slug: string;
-    title: string;
-    excerpt: string | null;
-    coverImageUrl: string | null;
-    publishedAt: Date | null;
-    updatedAt: Date | null;
-  },
-): Record<string, unknown> {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Article",
+export function articleLd(post: {
+  slug: string;
+  title: string;
+  excerpt: string | null;
+  coverImageUrl: string | null;
+  publishedAt: Date | null;
+  updatedAt: Date | null;
+}): Record<string, unknown> {
+  return article({
+    url: absoluteUrl(`/journal/${post.slug}`),
     headline: post.title,
-    url: absoluteUrl(origin, `/journal/${post.slug}`),
-    ...(post.excerpt ? { description: post.excerpt } : {}),
-    ...(post.coverImageUrl ? { image: post.coverImageUrl } : {}),
-    ...(post.publishedAt ? { datePublished: post.publishedAt.toISOString() } : {}),
-    ...(post.updatedAt ? { dateModified: post.updatedAt.toISOString() } : {}),
+    description: post.excerpt,
+    image: post.coverImageUrl ?? undefined,
+    published: post.publishedAt,
+    modified: post.updatedAt,
     author: { "@type": "Organization", name: SITE_NAME },
     publisher: { "@type": "Organization", name: SITE_NAME },
-  };
+  });
 }
 
 export function itemListLd(
-  origin: string,
   name: string,
   items: Array<{ title: string; path: string }>,
 ): Record<string, unknown> {
-  return {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
+  return itemList(
+    SITE_ORIGIN,
     name,
-    numberOfItems: items.length,
-    itemListElement: items.map((it, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: it.title,
-      url: absoluteUrl(origin, it.path),
-    })),
-  };
+    items.map((it) => ({ name: it.title, path: it.path })),
+  );
 }
