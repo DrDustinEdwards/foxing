@@ -1,4 +1,5 @@
 import { submitIndexNow } from "@drdustinedwards/site-helpers/indexnow";
+import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
 import { SITE_ORIGIN } from "./origins";
 
 // IndexNow: tells Bing/Yandex/Seznam (and any other participating engine) about URL
@@ -18,8 +19,6 @@ export async function pingIndexNow(from: string, urls: string[]): Promise<void> 
 }
 
 /** Cheap, stable hash of the URL set, used to detect a real sitemap change in KV. */
-export async function hashUrls(urls: string[]): Promise<string> {
-  const data = new TextEncoder().encode(urls.slice().sort().join("\n"));
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+export function hashUrls(urls: string[]): Promise<string> {
+  return sha256Hex(urls.slice().sort().join("\n"));
 }
