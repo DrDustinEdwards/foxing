@@ -7,6 +7,7 @@
 import { and, desc, eq, inArray, isNotNull, like, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import { chunked, type Db } from "../db";
+import { uniqueSlug } from "../domain/slug";
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
 import {
   clubBooks,
@@ -34,22 +35,10 @@ export type ClubScheduleRow = typeof clubSchedule.$inferSelect;
 // Join codes are short, unambiguous, and URL/deep-link safe (no lookalike chars).
 const joinCodeAlphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
 const makeJoinCode = customAlphabet(joinCodeAlphabet, 10);
-// nanoid's own alphabet has "_" and "-", which put "_" or "--" into a club's URL.
-const makeSlugSuffix = customAlphabet("abcdefghijklmnopqrstuvwxyz0123456789", 6);
 
 /** A fresh, collision-resistant invite code. */
 export function generateJoinCode(): string {
   return makeJoinCode();
-}
-
-function slugify(name: string): string {
-  const base = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-  // Suffix guarantees uniqueness without a collision-retry loop.
-  return `${base || "club"}-${makeSlugSuffix()}`;
 }
 
 // -- Clubs ------------------------------------------------------------------
@@ -96,7 +85,7 @@ export async function createClub(
     .values({
       id,
       name: input.name,
-      slug: slugify(input.name),
+      slug: uniqueSlug(input.name, "club"),
       description: input.description ?? null,
       coverUrl: input.coverUrl ?? null,
       creatorId,

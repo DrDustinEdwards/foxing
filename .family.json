@@ -1,0 +1,12 @@
+{
+  "spelling": {
+    "contracts": [
+      "[\"'`]cancelled[\"'`]",
+      "\\w+[cC]ancelled\\w*|[cC]ancelled[A-Z_]\\w*|CANCELLED",
+      "\\w*[fF]avourite_\\w*|\\w+Favourite\\w*"
+    ],
+    "skip": [
+      "packages/core/migrations/**"
+    ]
+  }
+}

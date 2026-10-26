@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 // The anonymous app shell on Capsomer's site header. The signed-in side is
-// e2e/authed/shell.spec.ts. The header's own behaviour (panels, the phone sheet,
+// e2e/authed/shell.spec.ts. The header's own behavior (panels, the phone sheet,
 // Escape) is Capsomer's and tested there; these lock what Foxing puts in it.
 test.describe("app shell", () => {
   test('"/" stays the marketing page for anonymous visitors', async ({ page }) => {

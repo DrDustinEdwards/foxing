@@ -376,7 +376,7 @@ export function listRecCandidatesByRating(db: Db, limit = 400): Promise<RecCandi
     .limit(limit);
 }
 
-/** Readable catalog books by any of the given authors (case-insensitive), so behaviour
+/** Readable catalog books by any of the given authors (case-insensitive), so behavior
  *  signals like "more from this author" always have candidates in the pool. */
 export function listRecCandidatesByAuthors(
   db: Db,
@@ -401,7 +401,7 @@ export function listRecCandidatesByAuthors(
 }
 
 /** Readable catalog books whose subjects overlap any of the given genres
- *  (case-insensitive), so favourite/behaviour genres always have candidates. */
+ *  (case-insensitive), so favorite/behavior genres always have candidates. */
 export function listRecCandidatesBySubjects(
   db: Db,
   subjects: string[],

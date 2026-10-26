@@ -101,7 +101,7 @@ export default function YearInReadingScreen() {
     try {
       await Share.share({ message: summary })
     } catch {
-      /* user cancelled */
+      /* user canceled */
     }
   }, [stats, year])
 

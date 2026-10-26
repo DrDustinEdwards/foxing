@@ -103,6 +103,7 @@ export default [
   route("ai.txt", "routes/ai-txt.tsx"),
   route("llms.txt", "routes/llms.tsx"),
   route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),
+  route(".well-known/security.txt", "routes/security-txt.tsx"),
 
   // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).
   route("health", "routes/health.ts"),

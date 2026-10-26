@@ -15,11 +15,11 @@ export function App() {
   const [activeClubId, setActiveClubId] = useState<string | null>(null)
 
   useEffect(() => {
-    let cancelled = false
+    let canceled = false
     async function init() {
       try {
         const session = await authenticate()
-        if (cancelled) return
+        if (canceled) return
         if (!session) {
           setStage({
             kind: 'needs_link',
@@ -28,10 +28,10 @@ export function App() {
           return
         }
         const clubs = await fetchClubs(session.token)
-        if (cancelled) return
+        if (canceled) return
         setStage({ kind: 'ready', session, clubs })
       } catch (err) {
-        if (cancelled) return
+        if (canceled) return
         setStage({
           kind: 'error',
           message: err instanceof Error ? err.message : 'Failed to start.',
@@ -40,7 +40,7 @@ export function App() {
     }
     void init()
     return () => {
-      cancelled = true
+      canceled = true
     }
   }, [])
 

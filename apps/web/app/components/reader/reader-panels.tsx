@@ -253,7 +253,7 @@ export function TypographyControls({
                 type="button"
                 aria-pressed={settings.columns === n}
                 onClick={() => onChange({ columns: n as 1 | 2 })}
-                // Selected: the accent-soft fill with its own text colour, so it reads on
+                // Selected: the accent-soft fill with its own text color, so it reads on
                 // every reading canvas (the panel's inherited text is not used).
                 className="fx-reader-cols"
               >

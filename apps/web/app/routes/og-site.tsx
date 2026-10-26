@@ -1,5 +1,5 @@
 // The site-wide share card: what a page without a book or post card of its own shows when
-// shared. The same layout, fonts and colours as og-book, without the cover.
+// shared. The same layout, fonts and colors as og-book, without the cover.
 import { edgeCache } from "~/lib/cache.server";
 import { loadOgFonts, renderOgPng } from "~/lib/og.server";
 import { OG_CACHE_ORIGIN } from "~/lib/origins";

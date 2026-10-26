@@ -148,12 +148,12 @@ describe("what each tool sends", () => {
       book_id: "b1",
       title: "Persuasion",
       publication_year: 1817,
-      staff_pick: { on: true, note: "A favourite" },
+      staff_pick: { on: true, note: "A favorite" },
     });
     assert.equal(path(0), "PATCH /api/v1/admin/books/b1");
     assert.deepEqual(foxing.calls[0].body, { title: "Persuasion", publicationYear: 1817 });
     assert.equal(path(1), "POST /api/v1/admin/books/b1/staff-pick");
-    assert.deepEqual(foxing.calls[1].body, { on: true, note: "A favourite" });
+    assert.deepEqual(foxing.calls[1].body, { on: true, note: "A favorite" });
     assert.deepEqual(out.structuredContent, {
       book_id: "b1",
       applied: { fields: ["title", "publicationYear"], staff_pick: true },

@@ -1,5 +1,5 @@
 // Federated search results grouped by entity (Books, Authors). Each group is a
-// labelled section with its own heading + count; a polite live region announces the
+// labeled section with its own heading + count; a polite live region announces the
 // totals so a screen-reader user hears the result set change (an AA gap in legacy).
 import type { SearchPage } from "@foxing/types";
 import { Link } from "react-router";

@@ -227,7 +227,7 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
     const pendingRequestsRef = useRef(new Map<string, { resolve: (v: unknown) => void; reject: (e: Error) => void }>())
 
     useEffect(() => {
-      let cancelled = false
+      let canceled = false
       ;(async () => {
         try {
           console.log('[foliate] boot start, fetching runtime + epub', { epubUrl })
@@ -243,20 +243,20 @@ export const FoliateReaderWebView = forwardRef<ReaderRef, FoliateReaderWebViewPr
             epubBase64Len: epub.base64.length,
             cached: epub.cached,
           })
-          if (cancelled) return
+          if (canceled) return
           setReaderHtmlUri(uri)
           setBase64(epub.base64)
         } catch (e) {
           const message = e instanceof Error ? e.message : 'reader boot failed'
           console.warn('[foliate] boot error', message)
-          if (!cancelled) {
+          if (!canceled) {
             setBootError(message)
             onError?.(message)
           }
         }
       })()
       return () => {
-        cancelled = true
+        canceled = true
       }
     }, [epubUrl])
 

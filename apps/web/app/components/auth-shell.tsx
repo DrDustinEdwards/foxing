@@ -47,7 +47,7 @@ export function AuthShell({
   );
 }
 
-/** Labelled text input matching the settings form rows. */
+/** Labeled text input matching the settings form rows. */
 export function Field({
   label,
   ...props
@@ -87,7 +87,7 @@ export function AuthLink({ to, children }: { to: string; children: ReactNode }) 
 /** Secondary full-width button, used for the provider and reveal actions. */
 const authSecondaryButtonClass = "cap-btn full";
 
-/** The four-colour Google "G", inline per the no-icon-libraries rule. */
+/** The four-color Google "G", inline per the no-icon-libraries rule. */
 function GoogleGlyph() {
   return (
     <svg aria-hidden="true" viewBox="0 0 18 18" className="fx-auth-shell-icon">
@@ -142,7 +142,7 @@ export function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   );
 }
 
-/** Apple's logo, inline per the no-icon-libraries rule, in the text colour (Apple's guidelines
+/** Apple's logo, inline per the no-icon-libraries rule, in the text color (Apple's guidelines
  *  allow a monochrome logo beside "Continue with Apple" on a plain button). */
 function AppleGlyph() {
   return (
@@ -198,7 +198,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       window.location.assign(redirectTo);
       return;
     }
-    // A cancelled prompt is the person choosing another way, not a failure to show.
+    // A canceled prompt is the person choosing another way, not a failure to show.
     if (!autoFill && !("code" in res.error && res.error.code === "AUTH_CANCELLED")) {
       setError("That passkey didn't work. Try again, or use another way below.");
     }

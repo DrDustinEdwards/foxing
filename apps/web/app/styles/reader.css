@@ -630,7 +630,7 @@
 /* Reader engine frame sizing. @readium/navigator tags its content iframes with
    .readium-navigator-iframe but ships no CSS and never sets their size, so without this they fall
    back to the intrinsic 300x150 and ReadiumCSS lays the book out in that 300px viewport. Fill the
-   (centred, max-width) reader container so the book paginates across the real reading width. */
+   (centered, max-width) reader container so the book paginates across the real reading width. */
 .readium-navigator-iframe {
   position: absolute;
   inset: 0;
@@ -698,7 +698,7 @@
 }
 
 /* The reader's toolbar toggles and layer chips take their edges from the canvas's own text
-   colour, so they read on every reading theme. */
+   color, so they read on every reading theme. */
 .fx-reader-toggle,
 .fx-reader-layer {
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent);

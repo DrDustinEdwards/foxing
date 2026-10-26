@@ -15,3 +15,6 @@ export const FONT_CACHE_ORIGIN = "https://fontcache.foxing.app";
 export const HELLO_EMAIL = "hello@foxing.app";
 export const PRIVACY_EMAIL = "privacy@foxing.app";
 export const LEGAL_EMAIL = "legal@foxing.app";
+/** The vulnerability contact /.well-known/security.txt lists, and the date it is next confirmed by (the family check warns first). */
+export const SECURITY_CONTACT = "security@dustinedwards.info";
+export const SECURITY_TXT_EXPIRES = "2027-09-28T00:00:00Z";

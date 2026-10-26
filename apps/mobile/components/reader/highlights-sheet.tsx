@@ -95,7 +95,7 @@ export function HighlightsSheet({
       try {
         await Share.share({ message: body })
       } catch {
-        /* user cancelled */
+        /* user canceled */
       }
     },
     [bookAuthor, bookTitle, filtered],

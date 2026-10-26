@@ -14,16 +14,16 @@
  *                          apiHandler checks the audience, re-checks the
  *                          administrator, rate limits and hands off
  *   /authorize /callback   consent and the Cloudflare Access sign-in, login-handler.ts
- *   /register              rate limited per address, then the provider, which
- *                          refuses any redirect URI not allowlisted exactly
+ *   /register              site-runtime's registrationLimited (per address and
+ *                          overall), then the provider, which refuses any
+ *                          redirect URI not allowlisted exactly
  *   /token, /.well-known/* the provider
  *   /health                liveness
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
-import { registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
-
-import { checkRateLimit, refuse } from "@dustinedwards/site-runtime/mcp-server";
+import { DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
+import { refuse } from "@dustinedwards/site-runtime/mcp-server";
 
 import { apiHandler, publicOrigin, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
@@ -34,9 +34,6 @@ export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-li
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
 
 export type { Env };
-
-/** How many registrations one address may make per minute. */
-const REGISTRATIONS_PER_MINUTE = 5;
 
 const providers = new Map<string, OAuthProvider<Env>>();
 
@@ -76,7 +73,8 @@ function providerFor(env: Env): OAuthProvider<Env> {
       // when the specification removes DCR.
       clientRegistrationEndpoint: "/register",
       clientRegistrationCallback: ({ clientMetadata }) => {
-        const why = registrationRefusal(env.DCR_REDIRECT_URIS, clientMetadata);
+        // The callbacks every user shares (Grok, ChatGPT, Gemini) and this server's own DCR_REDIRECT_URIS.
+        const why = registrationRefusal([...DCR_CALLBACKS, env.DCR_REDIRECT_URIS].join(","), clientMetadata);
         if (!why) return undefined;
         console.log(JSON.stringify({ audit: "registration-refused", why }));
         return { code: "invalid_redirect_uri", description: why };
@@ -95,16 +93,9 @@ export default {
     if (!publicOrigin(env)) {
       return refuse("Foxing Admin is not configured: PUBLIC_ORIGIN is unset. Not configured means not open.", 503);
     }
-    if (url.pathname === "/register") {
-      const ip = request.headers.get("cf-connecting-ip") ?? "unknown";
-      const limit = await checkRateLimit(env.MCP_RATE_LIMIT, `register:${ip}`, REGISTRATIONS_PER_MINUTE);
-      if (!limit.allowed) {
-        return refuse(
-          `Rate limited. This server allows ${REGISTRATIONS_PER_MINUTE} client registrations per minute per address.`,
-          429,
-          { "retry-after": String(limit.retryAfter) },
-        );
-      }
+    if (url.pathname === "/register" && request.method === "POST") {
+      const limited = await registrationLimited(request, env.OAUTH_KV);
+      if (limited) return limited;
     }
     return providerFor(env).fetch(request, env, ctx);
   },

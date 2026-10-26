@@ -191,7 +191,7 @@ function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
   );
 }
 
-// Top genres of the year as labelled horizontal bars, widths relative to the most-read.
+// Top genres of the year as labeled horizontal bars, widths relative to the most-read.
 function GenreSpread({ genres }: { genres: Array<{ name: string; value: number }> }) {
   const max = Math.max(1, ...genres.map((g) => g.value));
   return (

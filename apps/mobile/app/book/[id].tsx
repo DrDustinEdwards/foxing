@@ -908,7 +908,7 @@ export default function BookDetail() {
                   message: `I'm reading "${book.title}" by ${book.author} on Foxing. https://foxing.app/books/${book.slug}`,
                 })
               } catch {
-                /* user cancelled */
+                /* user canceled */
               }
             },
           },
@@ -920,7 +920,7 @@ export default function BookDetail() {
               try {
                 await Share.share({ message: `https://foxing.app/books/${book.slug}` })
               } catch {
-                /* user cancelled */
+                /* user canceled */
               }
             },
           },

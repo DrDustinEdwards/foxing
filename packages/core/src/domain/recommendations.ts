@@ -1,7 +1,7 @@
 // Find next book: a tiered recommendation engine.
 //   Tier 1 (taste)    - favourite_genres -> award winners + most-loved in those genres.
 //                       Empty genres fall back to a cross-genre curated starter set.
-//   Tier 2 (behaviour)- finished/rated books -> favourite authors + top genres boost.
+//   Tier 2 (behavior)- finished/rated books -> favorite authors + top genres boost.
 //   Tier 3 (AI)       - Plus + ANTHROPIC_API_KEY only: the companion re-ranks the top
 //                       data candidates with a personalised reason each. Cached in KV
 //                       (7 days); any parse/API/quota failure falls back to the data
@@ -77,14 +77,14 @@ export interface RankedRec {
 // cache is per reader, survives the candidate list changing, is re-resolved against the
 // current pool on every read, and costs nothing against the daily quota on a hit.
 const AI_CACHE_TTL = 7 * 24 * 60 * 60; // 7 days
-const REFRESH_THROTTLE = 30; // seconds between honoured refreshes
+const REFRESH_THROTTLE = 30; // seconds between honored refreshes
 const RATED_HIGH = 7; // rating_half >= 7 (3.5 stars) counts as "liked"
 const TARGET = 16;
 const AI_CANDIDATES = 40;
 
 /**
  * Pure ranker for tiers 1 + 2. Scores each candidate by rating quality, awards, staff
- * pick, taste-genre match, behaviour-genre match, and author match, and derives a reason
+ * pick, taste-genre match, behavior-genre match, and author match, and derives a reason
  * from the strongest signal. Deterministic order for stable pages.
  */
 export function rankCandidates(
@@ -268,7 +268,7 @@ function buildProfilePrompt(
 ): string {
   const lines: string[] = [];
   lines.push(
-    `Favourite genres: ${favoriteGenres.length ? favoriteGenres.join(", ") : "(none set)"}`,
+    `Favorite genres: ${favoriteGenres.length ? favoriteGenres.join(", ") : "(none set)"}`,
   );
   const read = [
     ...rated
@@ -294,7 +294,7 @@ async function aiOverlay(
   if (!caller || !kv) return null;
   const now = deps.now ?? new Date();
 
-  // Refresh throttle: honour a refresh at most once per window; otherwise serve cache.
+  // Refresh throttle: honor a refresh at most once per window; otherwise serve cache.
   let refresh = deps.refresh ?? false;
   if (refresh) {
     const tkey = `recs-refresh:${userId}`;
