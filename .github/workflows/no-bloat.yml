@@ -1,8 +1,7 @@
 name: No-bloat report (warn-only)
 
-# Knip and jscpd through devkit-no-bloat --warn-only, each count against the baseline in .no-bloat.json. A count above
-# its baseline is a ::warning:: and the job still passes. This is devkit's no-bloat.yml with a pnpm install; it moves to
-# calling that workflow once devkit's takes pnpm (as worker-size.yml does). Docs-only changes do not trigger it.
+# Knip and jscpd through devkit's no-bloat.yml, each count against the baseline in .no-bloat.json. warn-only: a count
+# above its baseline is a ::warning:: and the job still passes. Docs-only changes do not trigger it.
 on:
   pull_request:
     paths:
@@ -27,17 +26,9 @@ concurrency:
 
 jobs:
   report:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
+    uses: DrDustinEdwards/devkit/.github/workflows/no-bloat.yml@19a0131efae68afe76491545928f2f0dd366beca # v0.13.3
+    with:
+      package-manager: pnpm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
-      - run: pnpm install --frozen-lockfile --ignore-scripts
-      - run: pnpm run check:bloat
+      install: pnpm install --frozen-lockfile --ignore-scripts
+      warn-only: true

@@ -1,4 +1,4 @@
-import { escapeHtml } from "@dustinedwards/site-runtime/html";
+import { cardText } from "@dustinedwards/site-runtime/share-card";
 import { catalogRepo } from "@foxing/core";
 import { edgeCache } from "~/lib/cache.server";
 import { coverSrc } from "~/lib/images";
@@ -46,8 +46,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     return Response.redirect(book.coverUrl ?? SITE_ORIGIN, 302);
   }
 
-  const title = escapeHtml(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
-  const author = escapeHtml(book.author);
+  const title = cardText(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
+  const author = cardText(book.author);
 
   // Single line, no whitespace between tags: satori counts whitespace text nodes as
   // children and requires display:flex on any multi-child element.
