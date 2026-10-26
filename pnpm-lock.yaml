@@ -1403,7 +1403,7 @@ packages:
 
   '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/426522e707da5d0ea9ac620b5ef6d24229267570':
     resolution: {gitHosted: true, integrity: sha512-/LRPssY/Ue/bWFT9E13QWfP7kG48Lf07ObIl9LBeiFasJt1vS0ONxpq90YOJFB2dZz+20SixnKuQWrJ8obEAGw==, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/426522e707da5d0ea9ac620b5ef6d24229267570}
-    version: 0.13.1
+    version: 0.13.2
     hasBin: true
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/e80e979ec483256d20ab36216e76bf6e78a29e2f':
