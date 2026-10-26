@@ -1,4 +1,4 @@
-import { escapeHtml } from "@dustinedwards/site-runtime/html";
+import { cardText } from "@dustinedwards/site-runtime/share-card";
 // OG image for a Year in Reading recap at /og/recap/:username/:year, through the same
 // pipeline as og-book (lib/og.server). Only public profiles render; others 404
 // (crawlers get nothing to leak).
@@ -34,8 +34,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const [display, ui] = fonts;
   if (!display && !ui) return Response.redirect(SITE_ORIGIN, 302);
 
-  const name = escapeHtml(data.displayName);
-  const top = data.recap.topBooks.slice(0, 3).map((b) => escapeHtml(b.title));
+  const name = cardText(data.displayName);
+  const top = data.recap.topBooks.slice(0, 3).map((b) => cardText(b.title));
   const titleFamily = display ? "Fraunces" : "DM Sans";
   const topBlock = top
     .map(
