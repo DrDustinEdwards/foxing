@@ -321,8 +321,8 @@ importers:
         specifier: 1.7.12
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
-        specifier: github:DrDustinEdwards/capsomer#v0.22.0
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/738eec58884fa3f14b790c2c40adc2b82926e03b(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: github:DrDustinEdwards/capsomer#v0.23.0
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/7b1101162bbd1211e8d46364dce47ef4636fc7b5(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       hast-util-to-string:
         specifier: 3.0.1
         version: 3.0.1
@@ -4265,9 +4265,9 @@ packages:
   caniuse-lite@1.0.30001792:
     resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/738eec58884fa3f14b790c2c40adc2b82926e03b:
-    resolution: {gitHosted: true, integrity: sha512-s8nFtOqsCAD+xgAbAH/SQ65fDRXVlwVva7CMOnrsKn2d7lHLIFmdOioTufhejPJEagVAgNSWB0POjNW25sRk7w==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/738eec58884fa3f14b790c2c40adc2b82926e03b}
-    version: 0.22.0
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/7b1101162bbd1211e8d46364dce47ef4636fc7b5:
+    resolution: {gitHosted: true, integrity: sha512-AnPbhqgiwZw/mRquDEb1rnRlL4Onxkr0UdHv4EPK7UZzPJvq9NpmR/Sk1uXsmbHkL6zgpChLRlZRvEkzmwWtTg==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/7b1101162bbd1211e8d46364dce47ef4636fc7b5}
+    version: 0.23.0
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
@@ -11018,7 +11018,7 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/738eec58884fa3f14b790c2c40adc2b82926e03b(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/7b1101162bbd1211e8d46364dce47ef4636fc7b5(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.61.1)
       '@playwright/test': 1.61.1
