@@ -1,6 +1,6 @@
-// Knip: unused files, exports and dependencies. Report only (no-bloat phase 0,
-// capsid/decisions "no bloat, as a standing plan"); CI runs it warn-only in
-// .github/workflows/no-bloat.yml. Removals follow capsid/conventions.md 1.4 and 3.6.
+// Knip: unused files, exports and dependencies. Report only: CI runs it with jscpd
+// through devkit-no-bloat --warn-only against .no-bloat.json
+// (.github/workflows/no-bloat.yml). Removals follow capsid/conventions.md 1.4 and 3.6.
 //
 // Framework entries. Knip's plugins enable themselves from each workspace's
 // package.json. Checked against knip.dev and the plugin sources on 2026-10-09:
