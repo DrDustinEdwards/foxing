@@ -16,8 +16,7 @@
     "type-check": "pnpm --filter mobile exec tsc --noEmit && pnpm --filter web run type-check",
     "lint": "turbo lint",
     "lint:cf": "biome check packages/core packages/api packages/client packages/types apps/web",
-    "check:knip": "knip --no-exit-code --reporter compact --reporter ./scripts/no-bloat/knip-summary.mjs",
-    "check:jscpd": "jscpd --baseline scripts/no-bloat/jscpd-baseline.json && node scripts/no-bloat/jscpd-summary.mjs",
+    "check:bloat": "devkit-no-bloat --warn-only",
     "check:page-weight": "devkit-route-weight --client apps/web/build/client"
   },
   "devDependencies": {
@@ -25,11 +24,8 @@
     "@biomejs/biome": "^2.0.0",
     "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.13.2",
     "fast-xml-parser": "^5.8.0",
-    "jscpd": "5.3.2",
     "jszip": "^3.10.1",
-    "knip": "6.38.0",
     "p-limit": "^6.2.0",
-    "ts-morph": "^28.0.0",
     "turbo": "2.9.16",
     "typescript": "^5.0.0"
   }

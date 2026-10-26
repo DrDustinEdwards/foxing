@@ -1,16 +1,8 @@
 name: No-bloat report (warn-only)
 
-# Knip (unused files, exports, dependencies) and jscpd (duplicated code) on every
-# pull request that touches source. WARN-ONLY (capsid decisions, 2026-10-01, "no
-# bloat, as a standing plan"): each check step is continue-on-error, so a finding
-# never fails the job and never blocks a merge. Each check prints a summary to the
-# log and the job summary, with the count of files it read and the numbers in
-# scripts/no-bloat/baseline.json as the reference. Exit codes of the check steps:
-# 0 at or under the baseline, 1 above it, 2 could not run (see the Outcome step).
-#
-# Separate from ci-cf.yml on purpose, so it runs while that workflow's Lint (biome)
-# step is red on main. The paths cover every workspace Knip and jscpd read, mobile
-# included; docs-only changes do not trigger it.
+# Knip and jscpd through devkit-no-bloat --warn-only, each count against the baseline in .no-bloat.json. A count above
+# its baseline is a ::warning:: and the job still passes. This is devkit's no-bloat.yml with a pnpm install; it moves to
+# calling that workflow once devkit's takes pnpm (as worker-size.yml does). Docs-only changes do not trigger it.
 on:
   pull_request:
     paths:
@@ -22,6 +14,7 @@ on:
       - "pnpm-workspace.yaml"
       - "knip.jsonc"
       - ".jscpd.json"
+      - ".no-bloat.json"
       - ".github/workflows/no-bloat.yml"
       - "!**/*.md"
 
@@ -35,9 +28,8 @@ concurrency:
 jobs:
   report:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      # Same pinned actions as ci-cf.yml.
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
@@ -46,19 +38,6 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      # No lifecycle scripts: Knip reads sources and configs, and jscpd's binary
-      # comes from an optional dependency, so neither needs a postinstall.
+      # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
       - run: pnpm install --frozen-lockfile --ignore-scripts
-      - name: Knip (warn-only)
-        id: knip
-        continue-on-error: true
-        run: pnpm run check:knip
-      - name: jscpd (warn-only)
-        id: jscpd
-        continue-on-error: true
-        run: pnpm run check:jscpd
-      - name: Outcome
-        if: always()
-        run: |
-          echo "knip step: ${{ steps.knip.outcome }} (warn-only; the job continues)"
-          echo "jscpd step: ${{ steps.jscpd.outcome }} (warn-only; the job continues)"
+      - run: pnpm run check:bloat

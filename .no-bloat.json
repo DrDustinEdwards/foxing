@@ -1,0 +1,20 @@
+{
+  "tools": {
+    "knip": "knip@6.38.0",
+    "jscpd": "jscpd@5.3.2"
+  },
+  "baseline": {
+    "measured_at": "2d352fc",
+    "knip": {
+      "Unused files": 5,
+      "Unused dependencies": 1,
+      "Unused devDependencies": 2,
+      "Unused exports": 10,
+      "Unused exported types": 4
+    },
+    "jscpd": {
+      "clones": 347,
+      "percentage": 4.45
+    }
+  }
+}
