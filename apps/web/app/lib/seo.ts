@@ -4,7 +4,11 @@
 // Canonical, OG and JSON-LD URLs always name https://foxing.app, never the request's
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
-import { headTags, searchTitle, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
+import {
+  headTags,
+  searchTitle,
+  absoluteUrl as prelumAbsoluteUrl,
+} from "@drdustinedwards/site-helpers/head";
 import { article, breadcrumbs, itemList, thing } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { SITE_ORIGIN } from "./origins";
