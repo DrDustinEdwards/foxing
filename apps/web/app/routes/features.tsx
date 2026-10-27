@@ -4,7 +4,8 @@
 // do not describe the reader, AI companion, or clubs as if they exist (deferred_items).
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
-import { Container, Eyebrow, PageHeader } from "~/components/ui";
+import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
+import { Container, PageHeader } from "~/components/ui";
 import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/features";
@@ -36,13 +37,7 @@ export default function Features() {
           lede="Everything on this page is available today, free. This page grows as more of Foxing ships."
         />
 
-        <nav aria-label="Sections" className="fx-features-row">
-          {NAV_ANCHORS.map((a) => (
-            <a key={a.href} href={a.href} className="fx-features-link">
-              {a.label}
-            </a>
-          ))}
-        </nav>
+        <GuideNav anchors={NAV_ANCHORS} />
 
         <Section id="read" eyebrow="Read" heading="1,400+ classic books, free to read">
           <Prose>
@@ -97,7 +92,7 @@ export default function Features() {
           />
         </Section>
 
-        <p className="mt-16 fx-features-text">
+        <p className="mt-16 fx-guide-text">
           Free to join.{" "}
           <Link to="/signup" className="link">
             Create an account
@@ -110,44 +105,5 @@ export default function Features() {
         </p>
       </Container>
     </PageShell>
-  );
-}
-
-function Section({
-  id,
-  eyebrow,
-  heading,
-  children,
-}: {
-  id: string;
-  eyebrow: string;
-  heading: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="fx-features-section">
-      <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
-      <h2 className="fx-features-title">{heading}</h2>
-      <div className="mt-4 stack">{children}</div>
-    </section>
-  );
-}
-
-function Prose({ children }: { children: React.ReactNode }) {
-  return <p className="fx-features-text-2">{children}</p>;
-}
-
-function FeatureList({ items }: { items: string[] }) {
-  return (
-    <ul className="stack-2">
-      {items.map((item) => (
-        <li key={item} className="fx-features-row-2">
-          <span aria-hidden="true" className="accent-ui">
-            &middot;
-          </span>
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
   );
 }
