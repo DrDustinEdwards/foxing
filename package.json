@@ -16,7 +16,7 @@
     "type-check": "pnpm --filter mobile exec tsc --noEmit && pnpm --filter web run type-check",
     "lint": "turbo lint",
     "lint:cf": "biome check packages/core packages/api packages/client packages/types apps/web",
-    "check:bloat": "devkit-no-bloat --warn-only",
+    "check:bloat": "devkit-no-bloat",
     "check:page-weight": "devkit-route-weight --client apps/web/build/client"
   },
   "devDependencies": {
