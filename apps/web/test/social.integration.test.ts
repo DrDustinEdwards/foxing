@@ -1,78 +1,15 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
 import { createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { callApi, seedUser, testApi } from "./test-api";
 
 // Social write paths, exercised web -> api -> core -> D1 against local D1.
 // Verifies: diary event emission RESPECTS visibility (private emits nothing; friends /
 // public emit the right event), follow emits a new_follower notification, and list likes
 // go through the reactions table.
 
-function apiWith() {
-  return createApi({
-    resolveSession: async (req) => {
-      const id = req.headers.get("x-test-user");
-      return id ? { id, email: `${id}@example.com` } : null;
-    },
-    resolveCompanionCaller: () =>
-      // biome-ignore lint/correctness/useYield: unused in this suite
-      async function* unused() {
-        throw new Error("not used in this suite");
-      },
-    resolveBilling: () => ({
-      client: {
-        async createCheckoutSession() {
-          return { url: "" };
-        },
-        async createPortalSession() {
-          return { url: "" };
-        },
-        async verifyWebhook() {
-          throw new Error("unused");
-        },
-        async getSubscription() {
-          throw new Error("unused");
-        },
-      },
-      prices: { monthly: "", annual: "" },
-    }),
-  });
-}
-
-type Req = { method?: string; user?: string; body?: unknown };
-async function call(path: string, { method = "GET", user, body }: Req = {}) {
-  const api = apiWith();
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (user) headers["x-test-user"] = user;
-  return api.fetch(
-    new Request(`https://test.local${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }),
-    env as never,
-  );
-}
-
-async function seedUser(id: string, tier: "free" | "plus" = "free") {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: id,
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await db.insert(schema.profiles).values({
-    id,
-    username: id,
-    subscriptionTier: tier,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
+const call = (path: string, req?: Parameters<typeof callApi>[2]) => callApi(testApi(), path, req);
 
 async function seedBook(id: string) {
   const db = createDb(env.DB);

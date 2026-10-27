@@ -5,10 +5,9 @@
 import { useSetMastered, useVocabulary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { VocabularyWord } from "@foxing/types";
-import type { ReactNode } from "react";
 import { useState } from "react";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, PageHeader } from "~/components/ui";
+import { Container, EmptyState, FilterTab, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/vocabulary";
@@ -77,22 +76,6 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
         )}
       </Container>
     </PageShell>
-  );
-}
-
-function FilterTab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button type="button" onClick={onClick} aria-pressed={active} className="cap-chip">
-      {children}
-    </button>
   );
 }
 

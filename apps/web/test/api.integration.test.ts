@@ -1,29 +1,12 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
-import { billing, createDb, schema } from "@foxing/core";
+import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { testApi } from "./test-api";
 
 // A stub session resolver: the Worker normally injects a Better Auth-backed one.
 // Here the test sets an x-test-user header to act as that user.
-const api = createApi({
-  resolveSession: async (req) => {
-    const id = req.headers.get("x-test-user");
-    return id ? { id, email: `${id}@example.com` } : null;
-  },
-  // This suite never calls /companion; a stub that errors if invoked is enough to
-  // satisfy ApiDeps without a network call or a key.
-  resolveCompanionCaller: () =>
-    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
-    async function* unused() {
-      throw new Error("not used in this suite");
-    },
-  // Not used in this suite; the not-configured stub satisfies ApiDeps without keys.
-  resolveBilling: () => ({
-    client: billing.notConfiguredBilling(),
-    prices: { monthly: "", annual: "" },
-  }),
-});
+const api = testApi();
 
 // The bare api app serves routes at the root (/me, /u/:username); the Worker mounts
 // it under /api/v1. Tests call it directly, so no prefix here.

@@ -21,6 +21,48 @@ const COLOR_MEANING: Record<HighlightColor, string> = {
   purple: "Disagree",
 };
 
+/**
+ * A popover anchored to the tapped passage: centered under it, flipped above when there is no
+ * room below, clamped to the viewport, and closed by Escape. Measured after render so its real
+ * size is used (pos stays null until then, to avoid a flash at the origin); a change in
+ * `remeasure` measures it again.
+ */
+function useAnchoredPopover(
+  anchor: DecorationRect | null,
+  onClose: () => void,
+  remeasure: string = "",
+) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: remeasure is the content-size trigger
+  useLayoutEffect(() => {
+    if (!anchor || !ref.current) {
+      setPos(null);
+      return;
+    }
+    const pad = 8;
+    const el = ref.current;
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const centerX = anchor.left + anchor.width / 2;
+    const left = Math.max(pad, Math.min(centerX - w / 2, window.innerWidth - w - pad));
+    const below = anchor.top + anchor.height + pad;
+    const top = below + h + pad <= window.innerHeight ? below : Math.max(pad, anchor.top - h - pad);
+    setPos({ top, left });
+  }, [anchor, remeasure]);
+
+  return { ref, pos };
+}
+
 function authorName(a: AnnotationAuthor): string {
   return a.displayName ?? a.username ?? "A reader";
 }
@@ -54,38 +96,16 @@ export function AttributionPopover({
   onReply: (clubId: string, body: string) => Promise<boolean>;
   onClose: () => void;
 }) {
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [replyText, setReplyText] = useState("");
   const [clubId, setClubId] = useState(shareableClubs[0]?.id ?? "");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  // Re-measure when the popover's content changes size (a reply typed, the note
-  // revealed, a reply added), so it stays anchored to the passage.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: content-size triggers are intentional re-measures
-  useLayoutEffect(() => {
-    if (!anchor || !ref.current) {
-      setPos(null);
-      return;
-    }
-    const pad = 8;
-    const el = ref.current;
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    const centerX = anchor.left + anchor.width / 2;
-    const left = Math.max(pad, Math.min(centerX - w / 2, window.innerWidth - w - pad));
-    const below = anchor.top + anchor.height + pad;
-    const top = below + h + pad <= window.innerHeight ? below : Math.max(pad, anchor.top - h - pad);
-    setPos({ top, left });
-  }, [anchor, replyText, revealed, replies.length]);
+  // Re-measured when the content changes size (a reply typed, the note revealed, a reply
+  // added), so it stays anchored to the passage.
+  const { ref, pos } = useAnchoredPopover(
+    anchor,
+    onClose,
+    `${replies.length}|${revealed}|${replyText}`,
+  );
 
   const gated = other.gate.spoiler || (progressGateEnabled && other.gate.ahead);
   const gateLabel = other.gate.spoiler ? "Contains spoilers" : "Ahead of where you are";
@@ -361,35 +381,7 @@ export function EditPopover({
   onClose: () => void;
 }) {
   const [body, setBody] = useState(annotation.body ?? "");
-  const ref = useRef<HTMLDivElement | null>(null);
-  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  // Anchor to the tapped passage: centered under it, flipped above when there is
-  // no room below, clamped to the viewport. Measured post-render so the popover's
-  // real size is used; hidden until measured to avoid a flash at the origin.
-  useLayoutEffect(() => {
-    if (!anchor || !ref.current) {
-      setPos(null);
-      return;
-    }
-    const pad = 8;
-    const el = ref.current;
-    const w = el.offsetWidth;
-    const h = el.offsetHeight;
-    const centerX = anchor.left + anchor.width / 2;
-    const left = Math.max(pad, Math.min(centerX - w / 2, window.innerWidth - w - pad));
-    const below = anchor.top + anchor.height + pad;
-    const top = below + h + pad <= window.innerHeight ? below : Math.max(pad, anchor.top - h - pad);
-    setPos({ top, left });
-  }, [anchor]);
+  const { ref, pos } = useAnchoredPopover(anchor, onClose);
 
   const anchored = anchor != null;
   // No full-screen backdrop: it would intercept every reader click and read as a

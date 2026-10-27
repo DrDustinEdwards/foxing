@@ -50,6 +50,23 @@ export function Chip({ children, className }: { children: React.ReactNode; class
   return <span className={cn("fx-chip", className)}>{children}</span>;
 }
 
+/** A filter choice in a row of chips; pressed when it is the one shown. */
+export function FilterTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={active} className="cap-chip">
+      {children}
+    </button>
+  );
+}
+
 type ButtonProps = {
   children: React.ReactNode;
   to?: string;

@@ -47,44 +47,8 @@ export type AnnotationCard = {
 };
 
 /** A user's own annotations of the given types, newest first, with book context. */
-export async function listForUser(
-  db: Db,
-  userId: string,
-  opts: { types?: string[]; limit?: number } = {},
-): Promise<AnnotationCard[]> {
-  const conds = [eq(annotations.userId, userId)];
-  if (opts.types && opts.types.length > 0) conds.push(inArray(annotations.type, opts.types));
-  const rows = await db
-    .select({
-      id: annotations.id,
-      type: annotations.type,
-      selectedText: annotations.selectedText,
-      body: annotations.body,
-      color: annotations.color,
-      chapter: annotations.chapter,
-      sourceTitle: annotations.sourceTitle,
-      visibility: annotations.visibility,
-      createdAt: annotations.createdAt,
-      bookId: annotations.bookId,
-      bookTitle: books.title,
-      bookSlug: books.slug,
-      bookAuthor: books.author,
-    })
-    .from(annotations)
-    .leftJoin(books, eq(annotations.bookId, books.id))
-    .where(and(...conds))
-    .orderBy(desc(annotations.createdAt))
-    .limit(Math.min(opts.limit ?? 200, 500));
-  return rows;
-}
-
-/** A user's public highlights, newest first, with book context, for the profile
- *  highlights preview. Visibility-filtered so only shareable highlights appear. */
-export async function listPublicHighlights(
-  db: Db,
-  userId: string,
-  limit = 6,
-): Promise<AnnotationCard[]> {
+/** Annotations with their book's title, slug and author: the AnnotationCard columns. */
+function selectCards(db: Db) {
   return db
     .select({
       id: annotations.id,
@@ -102,7 +66,30 @@ export async function listPublicHighlights(
       bookAuthor: books.author,
     })
     .from(annotations)
-    .leftJoin(books, eq(annotations.bookId, books.id))
+    .leftJoin(books, eq(annotations.bookId, books.id));
+}
+
+export async function listForUser(
+  db: Db,
+  userId: string,
+  opts: { types?: string[]; limit?: number } = {},
+): Promise<AnnotationCard[]> {
+  const conds = [eq(annotations.userId, userId)];
+  if (opts.types && opts.types.length > 0) conds.push(inArray(annotations.type, opts.types));
+  return selectCards(db)
+    .where(and(...conds))
+    .orderBy(desc(annotations.createdAt))
+    .limit(Math.min(opts.limit ?? 200, 500));
+}
+
+/** A user's public highlights, newest first, with book context, for the profile
+ *  highlights preview. Visibility-filtered so only shareable highlights appear. */
+export async function listPublicHighlights(
+  db: Db,
+  userId: string,
+  limit = 6,
+): Promise<AnnotationCard[]> {
+  return selectCards(db)
     .where(
       and(
         eq(annotations.userId, userId),

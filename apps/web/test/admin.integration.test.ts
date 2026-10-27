@@ -1,29 +1,16 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
-import { billing, createDb, schema } from "@foxing/core";
+import { createDb, schema } from "@foxing/core";
 import { desc, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { testApi } from "./test-api";
 
 // The admin write surface is gated on profiles.is_admin and logs every mutation to
 // admin_audit_log. This drives the API contract directly (the x-test-user stub stands in
 // for the Better Auth session the Worker injects). The visible admin UI is covered by the
 // Playwright admin specs, which need a seeded admin account.
-const api = createApi({
+const api = testApi({
   // Cloudflare Access let the request through, unless the test says it did not.
   checkAdminAccess: async (req) => req.headers.get("x-test-no-access") === null,
-  resolveSession: async (req) => {
-    const id = req.headers.get("x-test-user");
-    return id ? { id, email: `${id}@example.com` } : null;
-  },
-  resolveCompanionCaller: () =>
-    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
-    async function* unused() {
-      throw new Error("not used in this suite");
-    },
-  resolveBilling: () => ({
-    client: billing.notConfiguredBilling(),
-    prices: { monthly: "", annual: "" },
-  }),
 });
 
 const call = (pathname: string, init?: RequestInit) =>

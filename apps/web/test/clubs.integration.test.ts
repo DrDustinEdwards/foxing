@@ -1,8 +1,9 @@
 import { env } from "cloudflare:test";
-import { type ClubLiveHub, createApi } from "@foxing/api";
+import type { ClubLiveHub } from "@foxing/api";
 import { type LiveMessage, createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { callApi, seedUser, testApi } from "./test-api";
 
 // Captures every live broadcast so tests can assert the write -> commit -> notify path
 // fires with the right message, without a real Durable Object.
@@ -22,70 +23,13 @@ function captureHub(): { hub: ClubLiveHub; sent: { clubId: string; message: Live
 }
 
 function apiWith(hub?: ClubLiveHub) {
-  return createApi({
-    resolveSession: async (req) => {
-      const id = req.headers.get("x-test-user");
-      return id ? { id, email: `${id}@example.com` } : null;
-    },
-    resolveCompanionCaller: () =>
-      // biome-ignore lint/correctness/useYield: throws on first iteration by design
-      async function* unused() {
-        throw new Error("not used in this suite");
-      },
-    resolveBilling: () => ({
-      client: {
-        async createCheckoutSession() {
-          return { url: "" };
-        },
-        async createPortalSession() {
-          return { url: "" };
-        },
-        async verifyWebhook() {
-          throw new Error("unused");
-        },
-        async getSubscription() {
-          throw new Error("unused");
-        },
-      },
-      prices: { monthly: "", annual: "" },
-    }),
+  return testApi({
     resolveHub: hub ? () => hub : undefined,
   });
 }
 
-async function seedUser(id: string, tier: "free" | "plus" = "free") {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: id,
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await db.insert(schema.profiles).values({
-    id,
-    username: id,
-    subscriptionTier: tier,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
-
-type Req = { method?: string; user?: string; body?: unknown };
-async function call(path: string, { method = "GET", user, body }: Req = {}, hub?: ClubLiveHub) {
-  const api = apiWith(hub);
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (user) headers["x-test-user"] = user;
-  return api.fetch(
-    new Request(`https://test.local${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }),
-    env as never,
-  );
-}
+const call = (path: string, req?: Parameters<typeof callApi>[2], hub?: ClubLiveHub) =>
+  callApi(apiWith(hub), path, req);
 
 async function createClub(user: string, overrides: Record<string, unknown> = {}) {
   const res = await call("/clubs", {

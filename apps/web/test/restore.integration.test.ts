@@ -1,9 +1,9 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
-import { billing, createDb, schema } from "@foxing/core";
+import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { legacyRedirectTarget } from "../app/lib/redirects";
+import { testApi } from "./test-api";
 
 // The restoration pass: legacy path 301s (one hop, no chains), admin user-detail operator mutations, and the
 // settings username change/availability endpoints. Redirects are a pure function; the
@@ -31,22 +31,9 @@ describe("legacy redirect map", () => {
   });
 });
 
-const api = createApi({
+const api = testApi({
   // Cloudflare Access let the request through, unless the test says it did not.
   checkAdminAccess: async (req) => req.headers.get("x-test-no-access") === null,
-  resolveSession: async (req) => {
-    const id = req.headers.get("x-test-user");
-    return id ? { id, email: `${id}@example.com` } : null;
-  },
-  resolveCompanionCaller: () =>
-    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
-    async function* unused() {
-      throw new Error("not used in this suite");
-    },
-  resolveBilling: () => ({
-    client: billing.notConfiguredBilling(),
-    prices: { monthly: "", annual: "" },
-  }),
 });
 
 const call = (pathname: string, user: string | null, init?: RequestInit) =>

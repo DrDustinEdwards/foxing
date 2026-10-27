@@ -2,11 +2,10 @@
 // in-process through the same core view GET /lists serves the app; requireProfile gates
 // access. Each list links to its detail page; "New list" links to the create route.
 import { createDb, views } from "@foxing/core";
-import type { ReactNode } from "react";
 import { useState } from "react";
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, EntityCard, PageHeader } from "~/components/ui";
+import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/lists";
@@ -91,22 +90,6 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
         )}
       </Container>
     </PageShell>
-  );
-}
-
-function FilterTab({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button type="button" onClick={onClick} aria-pressed={active} className="cap-chip">
-      {children}
-    </button>
   );
 }
 

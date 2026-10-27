@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
-import { Container, Eyebrow, PageHeader } from "~/components/ui";
+import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
+import { Container, PageHeader } from "~/components/ui";
 import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/app-guide";
@@ -34,13 +35,7 @@ export default function AppGuide() {
           lede="How the Foxing mobile app works: reading offline, highlights and notes, vocabulary, sync across devices, and notifications."
         />
 
-        <nav aria-label="Sections" className="fx-app-guide-row">
-          {NAV_ANCHORS.map((a) => (
-            <a key={a.href} href={a.href} className="fx-app-guide-link">
-              {a.label}
-            </a>
-          ))}
-        </nav>
+        <GuideNav anchors={NAV_ANCHORS} />
 
         <Section id="reading" eyebrow="Reading" heading="Reading offline">
           <Prose>
@@ -102,7 +97,7 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <p className="mt-16 fx-app-guide-text">
+        <p className="mt-16 fx-guide-text">
           New to Foxing?{" "}
           <Link to="/guide" className="link">
             Read the web guide
@@ -115,44 +110,5 @@ export default function AppGuide() {
         </p>
       </Container>
     </PageShell>
-  );
-}
-
-function Section({
-  id,
-  eyebrow,
-  heading,
-  children,
-}: {
-  id: string;
-  eyebrow: string;
-  heading: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="fx-app-guide-section">
-      <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
-      <h2 className="fx-app-guide-title">{heading}</h2>
-      <div className="mt-4 stack">{children}</div>
-    </section>
-  );
-}
-
-function Prose({ children }: { children: React.ReactNode }) {
-  return <p className="fx-app-guide-text-2">{children}</p>;
-}
-
-function FeatureList({ items }: { items: string[] }) {
-  return (
-    <ul className="stack-2">
-      {items.map((item) => (
-        <li key={item} className="fx-app-guide-row-2">
-          <span aria-hidden="true" className="accent-ui">
-            &middot;
-          </span>
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
   );
 }

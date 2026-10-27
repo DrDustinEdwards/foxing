@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 import { PageShell } from "~/components/page-shell";
-import { Container, Eyebrow, PageHeader } from "~/components/ui";
+import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
+import { Container, PageHeader } from "~/components/ui";
 import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/guide";
@@ -34,13 +35,7 @@ export default function Guide() {
           lede="How the foxing.app web platform works: finding books, tracking your reading, joining clubs, and following other readers."
         />
 
-        <nav aria-label="Sections" className="fx-guide-row">
-          {NAV_ANCHORS.map((a) => (
-            <a key={a.href} href={a.href} className="fx-guide-link">
-              {a.label}
-            </a>
-          ))}
-        </nav>
+        <GuideNav anchors={NAV_ANCHORS} />
 
         <Section id="find" eyebrow="Find books" heading="Finding what to read next">
           <Prose>
@@ -120,44 +115,5 @@ export default function Guide() {
         </p>
       </Container>
     </PageShell>
-  );
-}
-
-function Section({
-  id,
-  eyebrow,
-  heading,
-  children,
-}: {
-  id: string;
-  eyebrow: string;
-  heading: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section id={id} className="fx-guide-section">
-      <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
-      <h2 className="fx-guide-title">{heading}</h2>
-      <div className="mt-4 fx-guide-stack">{children}</div>
-    </section>
-  );
-}
-
-function Prose({ children }: { children: React.ReactNode }) {
-  return <p className="fx-guide-text-2">{children}</p>;
-}
-
-function FeatureList({ items }: { items: string[] }) {
-  return (
-    <ul className="stack-2">
-      {items.map((item) => (
-        <li key={item} className="fx-guide-row-2">
-          <span aria-hidden="true" className="accent-ui">
-            &middot;
-          </span>
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
   );
 }
