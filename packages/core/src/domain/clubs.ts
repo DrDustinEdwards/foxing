@@ -22,11 +22,6 @@ export type LiveMessage =
   | { t: "tally"; poll_id: string; tallies: Record<string, number>; closed?: boolean }
   | { t: "notice"; kind: string; [k: string]: unknown };
 
-async function bookTitle(db: Db, bookId: string): Promise<string> {
-  const [row] = await db.select({ title: books.title }).from(books).where(eq(books.id, bookId));
-  return row?.title ?? "";
-}
-
 /** Load the actor's membership and require it be active. Throws forbidden otherwise. */
 async function requireActive(
   db: Db,

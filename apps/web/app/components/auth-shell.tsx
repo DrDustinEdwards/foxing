@@ -48,30 +48,12 @@ export function AuthShell({
 }
 
 /** Labeled text input matching the settings form rows. */
-export function Field({
-  label,
-  ...props
-}: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
+function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block">
       <span className="block fx-auth-shell-label">{label}</span>
       <input className="cap-input fx-input-ground full" {...props} />
     </label>
-  );
-}
-
-/** Full-width primary submit with a pending state. */
-export function AuthSubmit({ pending, children }: { pending?: boolean; children: ReactNode }) {
-  return (
-    <button
-      type="submit"
-      disabled={pending}
-      className="cap-btn full"
-      data-variant="primary"
-      data-size="lg"
-    >
-      {children}
-    </button>
   );
 }
 
@@ -116,7 +98,7 @@ function GoogleGlyph() {
  * on /onboarding, an existing one on /me; a failed handshake returns to /login with Better
  * Auth's ?error= code (SignInError reads it).
  */
-export function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
+function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   const [pending, setPending] = useState(false);
   return (
     <button
@@ -158,7 +140,7 @@ function AppleGlyph() {
 }
 
 /** "Continue with Apple", the same redirect as Google's. */
-export function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
+function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   const [pending, setPending] = useState(false);
   return (
     <button

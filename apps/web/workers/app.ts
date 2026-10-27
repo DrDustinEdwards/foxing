@@ -15,7 +15,6 @@ import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { legacyRedirectTarget } from "../app/lib/redirects";
-import { ClubRoom } from "./club-room";
 import { runBackup } from "../app/lib/backup.server";
 import {
   CSP_REPORT_PATH,

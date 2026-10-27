@@ -24,12 +24,12 @@ export function privateKey(): KeyObject {
   return createPrivateKey({ key: Buffer.from(pkcs8, "base64"), format: "der", type: "pkcs8" });
 }
 
-export function credentialIdFor(email: string): Buffer {
+function credentialIdFor(email: string): Buffer {
   return sha256(`foxing-e2e:${email.toLowerCase()}`);
 }
 
 // The public key as COSE (an EC2 P-256 map), base64, which is how the passkey table stores it.
-export function cosePublicKey(key: KeyObject): string {
+function cosePublicKey(key: KeyObject): string {
   const jwk = createPublicKey(key).export({ format: "jwk" });
   const x = Buffer.from(String(jwk.x), "base64url");
   const y = Buffer.from(String(jwk.y), "base64url");
