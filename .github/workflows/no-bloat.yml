@@ -1,7 +1,7 @@
-name: No-bloat report (warn-only)
+name: no-bloat
 
-# Knip and jscpd through devkit's no-bloat.yml, each count against the baseline in .no-bloat.json. warn-only: a count
-# above its baseline is a ::warning:: and the job still passes. Docs-only changes do not trigger it.
+# Knip and jscpd through devkit's no-bloat.yml, each count against the baseline in .no-bloat.json: a count above it
+# fails. Lower it with `npx devkit-no-bloat --write-baseline` when a count goes down. Docs-only changes do not trigger it.
 on:
   pull_request:
     paths:
@@ -31,4 +31,3 @@ jobs:
       package-manager: pnpm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
       install: pnpm install --frozen-lockfile --ignore-scripts
-      warn-only: true
