@@ -15,7 +15,7 @@ import { AppState } from 'react-native'
 import { enqueue, flush, type SyncTransport } from './sync-queue'
 
 /** The Foxing Worker. EXPO_PUBLIC_API_URL points a dev build at a preview. */
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://foxing.app'
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://foxing.app'
 
 export const authClient = createAuthClient({
   baseURL: API_URL,

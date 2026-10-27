@@ -26,9 +26,4 @@ config.resolver.nodeModulesPaths = [
   path.resolve(workspaceRoot, 'node_modules'),
 ]
 
-// Treat the foliate WebView HTML harness as an asset so
-// expo-asset's Asset.fromModule(require('./reader.html')) resolves to
-// a bundled-file URI we can copy onto FileSystem at runtime.
-config.resolver.assetExts.push('html')
-
 module.exports = withNativeWind(config, { input: './global.css' })

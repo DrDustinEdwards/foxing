@@ -1,7 +1,5 @@
 import { useColorScheme } from 'react-native'
 
-export type ColorScheme = 'light' | 'dark'
-
 interface ColorTokens {
   // Brand
   brandUi: string
@@ -300,9 +298,4 @@ export const Colors: { light: ColorTokens; dark: ColorTokens } = {
 export function useColors(): ColorTokens {
   const scheme = useColorScheme()
   return scheme === 'dark' ? Colors.dark : Colors.light
-}
-
-export function useColorSchemeName(): ColorScheme {
-  const scheme = useColorScheme()
-  return scheme === 'dark' ? 'dark' : 'light'
 }

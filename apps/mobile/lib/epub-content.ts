@@ -249,15 +249,3 @@ export async function getChapterContent(
     paragraphs: htmlToParagraphs(html),
   }
 }
-
-// Convenience: when no specific chapter is named, return the first spine
-// item's content. Used as a sane default for "open TTS without first
-// turning a page" cases.
-export async function getFirstChapterContent(
-  remoteUrl: string,
-): Promise<ChapterContent> {
-  const opened = await openEpub(remoteUrl)
-  const first = opened.spine[0]
-  if (!first) return { text: '', paragraphs: [] }
-  return getChapterContent(remoteUrl, first.href)
-}

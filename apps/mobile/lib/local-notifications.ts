@@ -44,11 +44,7 @@ try {
   Notifications = null
 }
 
-export function localNotificationsAvailable(): boolean {
-  return Notifications !== null
-}
-
-export async function ensureNotificationPermission(): Promise<boolean> {
+async function ensureNotificationPermission(): Promise<boolean> {
   if (!Notifications) return false
   try {
     const existing = await Notifications.getPermissionsAsync()
@@ -138,11 +134,4 @@ export async function rescheduleAll(): Promise<void> {
       console.warn('[local-notif] streak risk schedule failed:', e instanceof Error ? e.message : e)
     }
   }
-}
-
-export async function cancelAll(): Promise<void> {
-  if (!Notifications) return
-  try {
-    await Notifications.cancelAllScheduledNotificationsAsync()
-  } catch {}
 }

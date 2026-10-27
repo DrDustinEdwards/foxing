@@ -1,5 +1,5 @@
 import { useColors } from '@/constants/colors'
-import { Pressable, Text, TextInput, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { Fonts } from '@/constants/fonts'
 import { useState } from 'react'
 
@@ -89,36 +89,5 @@ export function ExpandableText({ text }: { text: string }) {
         </Pressable>
       ) : null}
     </View>
-  )
-}
-
-export function NoteInput({
-  value,
-  onChangeText,
-}: {
-  value: string
-  onChangeText: (v: string) => void
-}) {
-  const colors = useColors()
-  return (
-    <TextInput
-      value={value}
-      onChangeText={onChangeText}
-      placeholder="Add a note (optional)"
-      placeholderTextColor={colors.textTertiary}
-      multiline
-      style={{
-        fontFamily: Fonts.body,
-        fontSize: 14,
-        color: colors.textPrimary,
-        backgroundColor: colors.bgBase,
-        borderColor: colors.borderSubtle,
-        borderWidth: 1,
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        minHeight: 60,
-      }}
-    />
   )
 }

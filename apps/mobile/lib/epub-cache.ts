@@ -89,12 +89,6 @@ async function cleanupOrphans(): Promise<void> {
   }
 }
 
-export interface CachedEpub {
-  base64: string
-  bytes: number
-  cached: boolean // true if already on disk before this call
-}
-
 // Downloads (if needed) and returns the file:// URI of the cached EPUB.
 // Used by ReadiumView which only accepts local file paths -- it cannot
 // open an HTTPS URL directly. Skips the Base64 read that
@@ -135,14 +129,4 @@ export async function ensureEpubLocalUri(remoteUrl: string): Promise<string> {
 
   console.log(`[epub-cache] ${cached ? 'hit' : 'miss'} ${epub}`)
   return epub
-}
-
-export async function ensureEpubLocallyCached(remoteUrl: string): Promise<CachedEpub> {
-  const path = await ensureEpubLocalUri(remoteUrl)
-  const base64 = await FileSystem.readAsStringAsync(path, {
-    encoding: FileSystem.EncodingType.Base64,
-  })
-  // base64 length × 3/4 ≈ original byte size.
-  const bytes = Math.floor(base64.length * 0.75)
-  return { base64, bytes, cached: true }
 }

@@ -10,8 +10,6 @@
     "**/.expo/**",
     "**/worker-configuration.d.ts",
     "**/*.gen.ts",
-    "apps/mobile/libs/**",
-    "apps/mobile/assets/foliate/**",
     "packages/core/migrations/**",
     ".claude/**",
     ".github/**",
