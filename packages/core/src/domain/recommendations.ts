@@ -284,7 +284,6 @@ function buildProfilePrompt(
 }
 
 async function aiOverlay(
-  db: Db,
   userId: string,
   deps: RecDeps,
   dataRanked: RankedRec[],
@@ -466,7 +465,7 @@ export async function getRecommendations(
   if (isPlus && deps.caller) {
     try {
       const profilePrompt = buildProfilePrompt(favoriteGenres, finished, rated, signals);
-      const ai = await aiOverlay(db, userId, deps, dataRanked, profilePrompt);
+      const ai = await aiOverlay(userId, deps, dataRanked, profilePrompt);
       if (ai && ai.length) return { recommendations: ai, aiPersonalized: true, isPlus };
     } catch {
       // fall through to the data ranking
