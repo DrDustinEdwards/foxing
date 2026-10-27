@@ -1,3 +1,0 @@
-[submodule "libs/foliate-js"]
-	path = apps/mobile/libs/foliate-js
-	url = https://github.com/johnfactotum/foliate-js

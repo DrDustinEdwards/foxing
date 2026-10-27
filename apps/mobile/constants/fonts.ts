@@ -1,5 +1,3 @@
-import { Platform } from 'react-native'
-
 // Each weight Expo Google Fonts ships is registered under its own
 // React Native font family name. RN does not synthesize bold from a single
 // fontFamily, the family string must include the weight suffix or the
@@ -29,16 +27,3 @@ export const Fonts = {
   mono: 'DMMono_400Regular',
   monoMedium: 'DMMono_500Medium',
 } as const
-
-const serifFallback = Platform.select({ ios: 'Georgia', android: 'serif', default: 'serif' })!
-const sansFallback = Platform.select({ ios: 'System', android: 'sans-serif', default: 'system-ui' })!
-const monoFallback = Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' })!
-
-export const FontFallbacks = {
-  display: serifFallback,
-  body: serifFallback,
-  ui: sansFallback,
-  mono: monoFallback,
-} as const
-
-export type FontRole = keyof typeof Fonts

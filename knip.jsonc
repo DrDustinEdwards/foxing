@@ -52,12 +52,10 @@
         "metro.config.js",
         "tailwind.config.js"
       ],
-      // libs/foliate-js is a git submodule (vendored); assets/foliate is a built
-      // bundle; supabase/functions is Deno code with URL imports, deployed by the
+      // supabase/functions is Deno code with URL imports, deployed by the
       // Supabase CLI, outside Node resolution.
       "project": [
         "**/*.{ts,tsx,js,mjs,cjs,css}",
-        "!libs/**",
         "!assets/**",
         "!supabase/**"
       ],

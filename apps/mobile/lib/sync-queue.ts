@@ -11,7 +11,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 export type SyncResource = 'annotation' | 'user_book' | 'session' | 'vocabulary' | 'diary'
 export type SyncVerb = 'create' | 'update' | 'delete'
 
-export interface SyncOp {
+interface SyncOp {
   id: string
   resource: SyncResource
   verb: SyncVerb
@@ -101,10 +101,6 @@ export async function enqueue(input: {
   cur.push(op)
   await writeQueue(cur)
   return op.id
-}
-
-export async function pendingCount(): Promise<number> {
-  return (await readQueue()).length
 }
 
 // -- push (flush) -----------------------------------------------------------

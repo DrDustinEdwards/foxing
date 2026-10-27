@@ -281,6 +281,27 @@ function logCompanionResponse(opts: LogContext, response: string): void {
 // Action handlers
 // =====================================================================
 
+// One user turn: the reply with any thinking removed, and for the JSON-shaped
+// actions any markdown fence too, logged before it is returned.
+async function ask(
+  system: string,
+  userMessage: string,
+  maxTokens: number,
+  log: Omit<LogContext, "userMessage">,
+  json = false,
+): Promise<string> {
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: maxTokens,
+    system,
+    messages: [{ role: "user", content: userMessage }],
+  });
+  const raw = message.content[0].type === "text" ? message.content[0].text : "";
+  const response = json ? stripJsonFences(stripThinking(raw)) : stripThinking(raw);
+  logCompanionResponse({ ...log, userMessage }, response);
+  return response;
+}
+
 async function wordLookup(
   p: WordLookupPayload,
   log: Omit<LogContext, "userMessage">,
@@ -294,18 +315,7 @@ async function wordLookup(
     providedContext,
   });
   const userMessage = `Define "${p.word}" as it's used here.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 500,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text"
-    ? message.content[0].text
-    : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 500, log);
 }
 
 async function passageAnalysis(
@@ -331,18 +341,7 @@ async function passageAnalysis(
     providedContext,
   });
   const userMessage = lensLabel[p.analysisType];
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 800,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text"
-    ? message.content[0].text
-    : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 800, log);
 }
 
 async function chapterSummary(
@@ -362,18 +361,7 @@ async function chapterSummary(
   const userMessage = p.timing === "before"
     ? `Catch me up on what's happened so far before I start "${p.chapterTitle}".`
     : `Recap what just happened in "${p.chapterTitle}".`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 800,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text"
-    ? message.content[0].text
-    : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 800, log);
 }
 
 // JSON-shaped actions don't go through stripThinking, instead they go
@@ -399,16 +387,7 @@ async function characterMap(
     providedContext,
   });
   const userMessage = `Give me a spoiler-free character map for "${p.bookTitle}" up to ${p.currentChapter || "where I am"}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 1500,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 1500, log, true);
 }
 
 async function wordWise(
@@ -427,16 +406,7 @@ async function wordWise(
     providedContext,
   });
   const userMessage = `Pick the 3-5 hardest words on this page and give a short contextual hint for each.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 400,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 400, log, true);
 }
 
 async function semanticSearch(
@@ -455,16 +425,7 @@ async function semanticSearch(
     providedContext,
   });
   const userMessage = `Which chapters most likely contain: "${p.query}"?`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 600,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 600, log, true);
 }
 
 async function discussionStarter(
@@ -484,16 +445,7 @@ async function discussionStarter(
     providedContext,
   });
   const userMessage = `Write a discussion-starter thread title and opening post for ${p.bookTitle}${p.currentChapter ? `, focused on ${p.currentChapter}` : ""}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 600,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 600, log, true);
 }
 
 function summarizeHistory(p: RecommendationsPayload): string {
@@ -548,16 +500,7 @@ async function recommendations(
     providedContext,
   });
   const userMessage = `Recommend 6 public-domain books for this reader.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 900,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 900, log, true);
 }
 
 async function readingPersonality(
@@ -573,16 +516,7 @@ async function readingPersonality(
     providedContext,
   });
   const userMessage = `Describe this reader's reading personality in 2-3 sentences.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 300,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 300, log);
 }
 
 async function bookDescription(
@@ -598,16 +532,7 @@ async function bookDescription(
     providedContext,
   });
   const userMessage = `Write a short description of "${p.bookTitle}" by ${p.author}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 400,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 400, log);
 }
 
 async function bookInsight(
@@ -623,16 +548,7 @@ async function bookInsight(
     providedContext,
   });
   const userMessage = `Lens: ${p.lens}. Book: "${p.bookTitle}" by ${p.author}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 500,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 500, log);
 }
 
 async function similarBooks(
@@ -648,16 +564,7 @@ async function similarBooks(
     providedContext,
   });
   const userMessage = `Recommend 5 public-domain books readers of "${p.bookTitle}" would also love.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 700,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 700, log, true);
 }
 
 async function authorBio(
@@ -673,16 +580,7 @@ async function authorBio(
     providedContext,
   });
   const userMessage = `Write a short biography of ${p.authorName}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 700,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 700, log);
 }
 
 async function chapterFeature(
@@ -706,16 +604,7 @@ Provided Context: ${providedContext}`;
   const userMessage = `For "${p.chapterTitle}" of ${p.bookTitle}: generate the ${p.kind} feature.`;
   // Quiz returns JSON, be generous with tokens. Others are short prose.
   const maxTokens = p.kind === "quiz" ? 1400 : 700;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: maxTokens,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const cleaned = p.kind === "quiz" ? stripJsonFences(stripThinking(raw)) : stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, cleaned);
-  return cleaned;
+  return ask(system, userMessage, maxTokens, log, p.kind === "quiz");
 }
 
 async function deepDive(
@@ -738,16 +627,7 @@ async function deepDive(
   // appendix manually so each kind gets its own framing.
   const fullSystem = `${system}\n\n${appendix}`;
   const userMessage = `Write the ${p.kind} for "${p.bookTitle}" by ${p.author}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 1400,
-    system: fullSystem,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(fullSystem, userMessage, 1400, log);
 }
 
 async function bilingualParagraph(
@@ -764,16 +644,7 @@ async function bilingualParagraph(
     providedContext,
   });
   const userMessage = `Translate the ${paragraphs.length} paragraphs above into ${p.targetLanguage}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 2400,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 2400, log, true);
 }
 
 async function languageDifficulty(
@@ -792,16 +663,7 @@ async function languageDifficulty(
     providedContext,
   });
   const userMessage = `Rate the CEFR difficulty of reading "${p.bookTitle}" by ${p.author}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 400,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 400, log);
 }
 
 async function wordAspect(
@@ -825,16 +687,7 @@ Provided Context: ${providedContext}`;
   const userMessage = p.aspect === "translation"
     ? `Translate "${p.word}" to ${p.targetLanguage ?? "Spanish"}.`
     : `${p.aspect.charAt(0).toUpperCase()}${p.aspect.slice(1)} for "${p.word}".`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 400,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripThinking(raw);
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 400, log);
 }
 
 async function deleteAccount(
@@ -873,16 +726,7 @@ async function readingOrder(
     providedContext,
   });
   const userMessage = `Suggest a reading order across these works by ${p.authorName}.`;
-  const message = await client.messages.create({
-    model: MODEL,
-    max_tokens: 800,
-    system,
-    messages: [{ role: "user", content: userMessage }],
-  });
-  const raw = message.content[0].type === "text" ? message.content[0].text : "";
-  const response = stripJsonFences(stripThinking(raw));
-  logCompanionResponse({ ...log, userMessage }, response);
-  return response;
+  return ask(system, userMessage, 800, log, true);
 }
 
 async function chat(
