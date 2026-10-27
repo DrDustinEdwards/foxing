@@ -7,14 +7,14 @@ import type {
   WriteResult,
 } from "@dustinedwards/site-api";
 import { runConformance } from "@dustinedwards/site-api/conformance";
-import { createApi } from "@foxing/api";
-import { adminRepo, billing, createDb, schema } from "@foxing/core";
+import { adminRepo, createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it } from "vitest";
 import { journalPreviewContext } from "../app/context";
 import { sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
+import { testApi } from "./test-api";
 
 // Carrel's site API on the Worker, composed as workers/app.ts composes it: mountCarrel first, then
 // /api/v1 with the real Better Auth session resolver, then a stand-in for the React Router
@@ -53,17 +53,8 @@ function worker(): Hono<{ Bindings: Env }> {
   });
   app.route(
     "/api/v1",
-    createApi({
+    testApi({
       resolveSession: (req, e) => sessionUserFromRequest(req, e as unknown as Env),
-      resolveCompanionCaller: () =>
-        // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
-        async function* unused() {
-          throw new Error("not used in this suite");
-        },
-      resolveBilling: () => ({
-        client: billing.notConfiguredBilling(),
-        prices: { monthly: "", annual: "" },
-      }),
     }),
   );
   app.all("*", (c) => c.text("page", 200));

@@ -1,8 +1,8 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
 import { createDb, loadReaderAnnotations, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { testApi } from "./test-api";
 
 // The reader social-layer resolution matrix, run against local D1 so the ENTITLEMENT is
 // proven where it actually lives: in the SQL. Every "NOT returned" cell asserts the row
@@ -482,34 +482,7 @@ describe("reader social-layer resolution matrix (local D1)", () => {
 
 describe("GET /api/v1/books/:id/annotations (endpoint wiring + optional session)", () => {
   function apiWith() {
-    return createApi({
-      resolveSession: async (req) => {
-        const id = req.headers.get("x-test-user");
-        return id ? { id, email: `${id}@example.com` } : null;
-      },
-      resolveCompanionCaller: () =>
-        // biome-ignore lint/correctness/useYield: unused in this suite
-        async function* unused() {
-          throw new Error("not used in this suite");
-        },
-      resolveBilling: () => ({
-        client: {
-          async createCheckoutSession() {
-            return { url: "" };
-          },
-          async createPortalSession() {
-            return { url: "" };
-          },
-          async verifyWebhook() {
-            throw new Error("unused");
-          },
-          async getSubscription() {
-            throw new Error("unused");
-          },
-        },
-        prices: { monthly: "", annual: "" },
-      }),
-    });
+    return testApi();
   }
 
   async function call(path: string, user?: string) {
@@ -586,34 +559,7 @@ describe("GET /api/v1/books/:id/annotations (endpoint wiring + optional session)
 // banned) -> 403.
 describe("POST /api/v1/annotations/comments (assertActiveMember gate)", () => {
   function apiWith() {
-    return createApi({
-      resolveSession: async (req) => {
-        const id = req.headers.get("x-test-user");
-        return id ? { id, email: `${id}@example.com` } : null;
-      },
-      resolveCompanionCaller: () =>
-        // biome-ignore lint/correctness/useYield: unused in this suite
-        async function* unused() {
-          throw new Error("not used in this suite");
-        },
-      resolveBilling: () => ({
-        client: {
-          async createCheckoutSession() {
-            return { url: "" };
-          },
-          async createPortalSession() {
-            return { url: "" };
-          },
-          async verifyWebhook() {
-            throw new Error("unused");
-          },
-          async getSubscription() {
-            throw new Error("unused");
-          },
-        },
-        prices: { monthly: "", annual: "" },
-      }),
-    });
+    return testApi();
   }
 
   async function post(path: string, user: string, body: unknown) {

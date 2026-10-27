@@ -1,8 +1,8 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
 import { createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { callApi, seedUser, testApi } from "./test-api";
 
 // Offline sync + push, exercised web -> api -> core -> D1 against local D1. This
 // is the device-independent proof of the sync protocol: idempotent create replay,
@@ -10,72 +10,9 @@ import { beforeEach, describe, expect, it } from "vitest";
 // pull-by-cursor, and push token registration. Device behavior (airplane-mode queue +
 // real push receipt) is a separate human gate.
 
-function apiWith() {
-  return createApi({
-    resolveSession: async (req) => {
-      const id = req.headers.get("x-test-user");
-      return id ? { id, email: `${id}@example.com` } : null;
-    },
-    resolveCompanionCaller: () =>
-      // biome-ignore lint/correctness/useYield: unused in this suite
-      async function* unused() {
-        throw new Error("not used in this suite");
-      },
-    resolveBilling: () => ({
-      client: {
-        async createCheckoutSession() {
-          return { url: "" };
-        },
-        async createPortalSession() {
-          return { url: "" };
-        },
-        async verifyWebhook() {
-          throw new Error("unused");
-        },
-        async getSubscription() {
-          throw new Error("unused");
-        },
-      },
-      prices: { monthly: "", annual: "" },
-    }),
-  });
-}
-
-type Req = { method?: string; user?: string; body?: unknown };
-async function call(path: string, { method = "GET", user, body }: Req = {}) {
-  const api = apiWith();
-  const headers: Record<string, string> = { "content-type": "application/json" };
-  if (user) headers["x-test-user"] = user;
-  return api.fetch(
-    new Request(`https://test.local${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    }),
-    env as never,
-  );
-}
+const call = (path: string, req?: Parameters<typeof callApi>[2]) => callApi(testApi(), path, req);
 
 const db = () => createDb(env.DB);
-
-async function seedUser(id: string) {
-  const d = db();
-  await d.insert(schema.user).values({
-    id,
-    name: id,
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await d.insert(schema.profiles).values({
-    id,
-    username: id,
-    subscriptionTier: "free",
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
 
 async function seedBook(id: string) {
   await db()

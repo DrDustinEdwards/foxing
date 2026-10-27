@@ -1,29 +1,15 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
-import { billing, createDb, schema } from "@foxing/core";
+import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { testApi } from "./test-api";
 
 // Personal surfaces. The cut-feature redirects are tested with the rest of the legacy map
 // in restore.integration.test.ts; the goal-edit contract drives the API directly (x-test-user stands
 // in for the Better Auth session the Worker injects). The visible /diary, /goals, and
 // /year UI are covered by the Playwright authed spec with the real login fixture.
 
-const api = createApi({
-  resolveSession: async (req) => {
-    const id = req.headers.get("x-test-user");
-    return id ? { id, email: `${id}@example.com` } : null;
-  },
-  resolveCompanionCaller: () =>
-    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
-    async function* unused() {
-      throw new Error("not used in this suite");
-    },
-  resolveBilling: () => ({
-    client: billing.notConfiguredBilling(),
-    prices: { monthly: "", annual: "" },
-  }),
-});
+const api = testApi();
 
 const call = (pathname: string, user: string | null, init?: RequestInit) =>
   api.fetch(

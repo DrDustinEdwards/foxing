@@ -1,8 +1,8 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
 import { type BillingClient, createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { testApi } from "./test-api";
 
 // Stub Stripe: no network, no keys. verifyWebhook returns whatever event the test
 // supplies; getSubscription reports an active trial so a checkout.completed link flips
@@ -34,16 +34,7 @@ function stubBilling(event?: BillingEventLite): {
 }
 
 function apiWith(billing: ReturnType<typeof stubBilling>) {
-  return createApi({
-    resolveSession: async (req) => {
-      const id = req.headers.get("x-test-user");
-      return id ? { id, email: `${id}@example.com` } : null;
-    },
-    resolveCompanionCaller: () =>
-      // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
-      async function* unused() {
-        throw new Error("not used in this suite");
-      },
+  return testApi({
     resolveBilling: () => billing,
   });
 }

@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
-import { createApi } from "@foxing/api";
-import { billing, companion, companionRepo, createDb, schema } from "@foxing/core";
+import { companion, companionRepo, createDb, schema } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
+import { testApi } from "./test-api";
 
 // Companion route: API-contract layer only (status codes, SSE stream shape), tested
 // through a forged x-test-user session -- the same accepted pattern as
@@ -110,16 +110,8 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
   });
 
   function apiWith(caller: companion.CompanionCaller) {
-    return createApi({
-      resolveSession: async (req) => {
-        const id = req.headers.get("x-test-user");
-        return id ? { id, email: `${id}@example.com` } : null;
-      },
+    return testApi({
       resolveCompanionCaller: () => caller,
-      resolveBilling: () => ({
-        client: billing.notConfiguredBilling(),
-        prices: { monthly: "", annual: "" },
-      }),
     });
   }
 
