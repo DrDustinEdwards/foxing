@@ -8,5 +8,9 @@
     "skip": [
       "packages/core/migrations/**"
     ]
+  },
+  "tokens": {
+    "--text": "the Discord activity is its own embedded app, styled for Discord's client, not a family page",
+    "--dim": "Foxing keeps its own look on its own domain (Dustin 2026-10-26)"
   }
 }
