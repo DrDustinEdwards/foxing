@@ -14,6 +14,8 @@ on:
       # Lint config and the lint:cf script decide what the Lint (biome) step checks.
       - "biome.json"
       - "package.json"
+      # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
+      - "pnpm-lock.yaml"
   pull_request:
     paths:
       - "packages/core/**"
@@ -25,6 +27,8 @@ on:
       # Lint config and the lint:cf script decide what the Lint (biome) step checks.
       - "biome.json"
       - "package.json"
+      # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
+      - "pnpm-lock.yaml"
 
 jobs:
   check:
