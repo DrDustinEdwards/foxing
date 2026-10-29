@@ -5,7 +5,7 @@ Foxing: a reading app and web platform ("Letterboxd for books"), foxing.app.
 ## Rules that come first
 
 - Tests: keep the minimal set (a few browser tests for flows that must never break, one integration test per real behavior, unit tests only for tricky logic, shared code tested once where it lives), and remove any test that pins design, repeats coverage or has never caught a real mistake, unless it guards a harm that cannot be undone.
-- Read `foxing/core.md` in Capsid with this file. Before writing anything another site might have, read what the family shares: https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's family check fails on a copy). Rulings go in `foxing/decisions.md`; read `foxing/design-system.md` before design work.
+- Read `foxing/core.md` in Capsid with this file. Before writing anything another site might have, read what the family shares: https://github.com/DrDustinEdwards/devkit/blob/shared-list/SHARED.md (CI's family check fails on a copy). Read `foxing/design-system.md` before design work.
 
 ## Layout
 
@@ -44,5 +44,14 @@ Never export `annotations_fts`, `books_fts` or FTS shadow tables. Restore by han
 
 ## Hard rules
 
+A rule stays here only if it stops a real, costly mistake that nothing else catches. Earlier rulings are in the version history of Capsid `foxing/decisions.md` (retired 2026-10-29).
+
 1. Affiliate links carry `rel="sponsored noopener noreferrer"`. Bookshop.org always before Amazon.
 2. Web tasks never touch `apps/mobile/`, mobile never `apps/web/`.
+3. Public domain books only: no licensing, publisher deals, royalties or ISBNs in the catalog. EPUBs are fetched once and stored in our R2, never deep-linked to Project Gutenberg, because its Terms of Use forbid it.
+4. The Anthropic API key never ships in a client, and the Anthropic SDK stays out of the React Native bundle. The client sends only the minimal fields (action, bookId, threadId, message, selection, targetLanguage); the server builds every prompt and its context.
+5. Reads are core repositories called from React Router loaders; writes are /api/v1 Hono routes. A failed read is never swallowed into an empty state.
+6. Marketing copy describes only what the current build does. `club_threads.is_ai_starter` marks AI-generated starters only, never a thread a person posts.
+7. Free is the whole reading and social product; Plus is the AI companion. Prices and what moves between tiers are Dustin's call.
+8. e2e signs in through the visible form, and the seeded account e2e@foxing.app stays on the free tier.
+9. Do not delete or build on `apps/discord` until Dustin decides what Discord is for.
