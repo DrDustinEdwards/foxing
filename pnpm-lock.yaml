@@ -4237,7 +4237,7 @@ packages:
 
   capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/807014d42abf2bcd0ca1993078aed9870f405b93:
     resolution: {gitHosted: true, integrity: sha512-4QCC7ck3n6E6eBeyBXMGYHj2EupdKPe+uaPPdmc0oGCUywnXsiIeNfIxJ3oRbAt1B0Od0QmjIqi4+mV9A7dKWQ==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/807014d42abf2bcd0ca1993078aed9870f405b93}
-    version: 0.34.1
+    version: 0.35.0
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
