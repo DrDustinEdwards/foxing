@@ -2,6 +2,14 @@ import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@f
 import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
+// Foxing's faces from its own origin (Fontsource, the files Google Fonts serves, bundled under /assets/): no
+// stylesheet from fonts.googleapis.com blocking the first paint, and no second origin to connect to. The variable
+// files carry Fraunces' and Source Serif's optical sizes, as the Google request asked for.
+import "@fontsource-variable/fraunces/opsz.css";
+import "@fontsource-variable/source-serif-4/opsz.css";
+import "@fontsource-variable/dm-sans/wght.css";
+import "@fontsource/dm-mono/400.css";
+import "@fontsource/dm-mono/500.css";
 import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
@@ -18,12 +26,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Source+Serif+4:opsz,wght@8..60,400..600&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap",
-  },
   { rel: "stylesheet", href: stylesheet },
   { rel: "preconnect", href: COVER_ORIGIN },
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },

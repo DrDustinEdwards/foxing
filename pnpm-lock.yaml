@@ -269,6 +269,18 @@ importers:
       '@dustinedwards/site-runtime':
         specifier: github:DrDustinEdwards/site-runtime#v0.29.0
         version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/205cd78d67bb10508db0a3428aaf3cd23829eed8
+      '@fontsource-variable/dm-sans':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource-variable/fraunces':
+        specifier: 5.3.0
+        version: 5.3.0
+      '@fontsource-variable/source-serif-4':
+        specifier: 5.3.1
+        version: 5.3.1
+      '@fontsource/dm-mono':
+        specifier: 5.3.0
+        version: 5.3.0
       '@foxing/api':
         specifier: workspace:*
         version: link:../../packages/api
@@ -297,8 +309,8 @@ importers:
         specifier: 1.7.12
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
-        specifier: github:DrDustinEdwards/capsomer#v0.44.1
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/5bd0b00fa7d2f0057a0bb5602afd6ccf0e567af1(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: github:DrDustinEdwards/capsomer#v0.44.2
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/908056677236391179e9ec641e76a605d228da2d(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       hast-util-to-string:
         specifier: 3.0.1
         version: 3.0.1
@@ -2521,6 +2533,18 @@ packages:
     resolution: {integrity: sha512-4aQzz9vgxcNXFfo/iyNgDDYfsU5XGKKxWxZopw0cVotHiW+U8IJbIxMaxsINs6bHhtkG3StKNPcOrn3eBuxKPw==}
     hasBin: true
 
+  '@fontsource-variable/dm-sans@5.3.0':
+    resolution: {integrity: sha512-BpUG5bqePiDFMBM4ZtLSlPdAIOM990uB1dlXzIf4aw21yQR7BmykedLXXXMqGWsR18aMLOsbWccwJNh3ztTQaA==}
+
+  '@fontsource-variable/fraunces@5.3.0':
+    resolution: {integrity: sha512-9BYGySn4AHEJdgp9Z28tQ3X+laJMEOITXkQarZXeloWQZDq5oOvXJ3kDA8c7MGIfpogIaZfjrQBqmda8POOCKA==}
+
+  '@fontsource-variable/source-serif-4@5.3.1':
+    resolution: {integrity: sha512-4Rtay22SC4lMvw11r/+9kxANB6P3M0X8s1NudBC2v0J1KU2y3DcMoNcT3lBoZ/CqLirzf+StlO6UlJilyrvaUg==}
+
+  '@fontsource/dm-mono@5.3.0':
+    resolution: {integrity: sha512-OINjI8C1S/wpchhQxl7njZdMn4+hnDCpQ4YtvvOpKNARo+0J8O1x1IcrChxNjHOhfVv1by8C/FQoy3hXK+C1Ug==}
+
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
 
@@ -4238,9 +4262,9 @@ packages:
   caniuse-lite@1.0.30001792:
     resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/5bd0b00fa7d2f0057a0bb5602afd6ccf0e567af1:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/5bd0b00fa7d2f0057a0bb5602afd6ccf0e567af1}
-    version: 0.44.1
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/908056677236391179e9ec641e76a605d228da2d:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/908056677236391179e9ec641e76a605d228da2d}
+    version: 0.44.2
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
@@ -9272,6 +9296,14 @@ snapshots:
       chalk: 4.1.2
       js-yaml: 4.1.1
 
+  '@fontsource-variable/dm-sans@5.3.0': {}
+
+  '@fontsource-variable/fraunces@5.3.0': {}
+
+  '@fontsource-variable/source-serif-4@5.3.1': {}
+
+  '@fontsource/dm-mono@5.3.0': {}
+
   '@hexagon/base64@1.1.28': {}
 
   '@img/colour@1.1.0': {}
@@ -10906,7 +10938,7 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/5bd0b00fa7d2f0057a0bb5602afd6ccf0e567af1(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/908056677236391179e9ec641e76a605d228da2d(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.61.1)
       '@playwright/test': 1.61.1

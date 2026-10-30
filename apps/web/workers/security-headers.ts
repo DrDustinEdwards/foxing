@@ -26,7 +26,6 @@ const CSP_ENDPOINT_NAME = "csp-endpoint";
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
- * - style, font: Google Fonts, the stylesheet link in app/root.tsx and the files it names.
  * - img: book covers, every one on the R2 custom domain covers.foxing.app (app/lib/images.ts; all
  *   2,209 cover_url rows in production D1 are on it). Avatars are profiles.avatar_url, empty in
  *   production today; one on another host would be blocked (an empty avatar circle) until it is
@@ -38,8 +37,6 @@ const CSP_ENDPOINT_NAME = "csp-endpoint";
  */
 const SITE_SOURCES: CspSources = {
   script: [TURNSTILE_ORIGIN],
-  style: ["https://fonts.googleapis.com"],
-  font: ["https://fonts.gstatic.com"],
   img: [COVER_ORIGIN],
   frame: [TURNSTILE_ORIGIN],
 };
