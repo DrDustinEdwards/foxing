@@ -6,7 +6,7 @@ import { FilterBar } from "~/components/search/filter-bar";
 import { GroupedResults } from "~/components/search/grouped-results";
 import { Pagination } from "~/components/search/pagination";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase } from "~/lib/loader.server";
+import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/search";
 
@@ -33,7 +33,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function headers(): HeadersInit {
   // Query pages: cache briefly at the edge but keep them out of the index (meta).
-  return { "Cache-Control": "public, max-age=0, s-maxage=120, stale-while-revalidate=600" };
+  return publicCacheHeaders(120, 600);
 }
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {

@@ -1,4 +1,5 @@
 import { robotsDocument } from "@drdustinedwards/site-helpers/robots";
+import { publicCacheHeaders } from "~/lib/loader.server";
 import { SITE_ORIGIN } from "~/lib/origins";
 import { ROBOTS_DISALLOW } from "~/lib/seo";
 import type { Route } from "./+types/robots";
@@ -16,7 +17,7 @@ export function loader({ request }: Route.LoaderArgs) {
   return new Response(body, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=86400",
+      ...publicCacheHeaders(86400, 0),
     },
   });
 }

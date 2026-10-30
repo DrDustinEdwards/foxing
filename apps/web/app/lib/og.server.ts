@@ -4,6 +4,7 @@
 import { googleFont, shareCardResponse } from "@dustinedwards/site-runtime/share-card";
 import { ImageResponse } from "workers-og";
 import { edgeCache } from "~/lib/cache.server";
+import { publicCacheHeaders } from "~/lib/loader.server";
 import { FONT_CACHE_ORIGIN } from "~/lib/origins";
 
 /** What a card's HTML needs to know about the fonts: the family its title can use. */
@@ -28,7 +29,7 @@ async function loadOgFonts() {
  * The card under `cacheKey` from the edge cache, else drawn from `build`'s HTML and kept there. Fonts load, and
  * `build` runs, only on a miss. A card that cannot be drawn (no font, a render error) is a 503 with Retry-After.
  */
-export function ogCard(
+export async function ogCard(
   cacheKey: Request,
   build: (fonts: OgCardFonts) => string | Promise<string>,
 ): Promise<Response> {
@@ -37,10 +38,17 @@ export function ogCard(
     loaded ??= loadOgFonts();
     return loaded;
   };
-  return shareCardResponse(ImageResponse, {
+  const card = await shareCardResponse(ImageResponse, {
     cacheKey,
     cache: edgeCache(),
     fonts: async () => (await fonts()).fonts,
     html: async () => build(await fonts()),
   });
+  if (card.status !== 200) return card;
+  // The card at its /og address is a public page too (workers/app.ts): stored a week, purged with the
+  // pages. Set after the card is kept under its own key above, which needs the zone cache's s-maxage.
+  const headers = new Headers(card.headers);
+  for (const [name, value] of Object.entries(publicCacheHeaders(604800, 0)))
+    headers.set(name, value);
+  return new Response(card.body, { status: card.status, headers });
 }

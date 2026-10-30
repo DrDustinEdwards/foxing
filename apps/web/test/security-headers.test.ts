@@ -1,6 +1,6 @@
 // The security headers on rendered responses (workers/security-headers.ts): the real Worker entry,
 // the real root Layout and server entry (test/server-build.stub.ts), graded by the shared
-// package's own check. Every kind of response the Worker sends is here: a page, a cache hit of
+// package's own check. Every kind of response the Worker sends is here: a page, a stored copy of
 // that page, the reader, a redirect, a 404, the API, an image, and the report sink.
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { checkSecurityHeaders, failures } from "@dustinedwards/site-runtime/check";
@@ -68,7 +68,7 @@ describe("security headers on rendered responses", () => {
     );
   });
 
-  it("a cache hit gets a fresh nonce, in its header and on every script, so readers never share one", async () => {
+  it("a stored page is re-issued a fresh nonce, in its header and on every script, so readers never share one", async () => {
     const first = await fetchPath("/");
     const second = await fetchPath("/");
     expect(failed(second.response.headers)).toEqual([]);
