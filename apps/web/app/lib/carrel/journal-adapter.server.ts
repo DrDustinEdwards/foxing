@@ -5,8 +5,9 @@
 // journalInput schema the admin routes parse with, and audited in admin_audit_log with Carrel's
 // changeId. Nothing here writes journal_posts by a path of its own.
 //
-// Media: Journal cover images are pasted URLs, not uploads, so there is no media store to offer and
-// the adapter has no `media`; the package answers that group 501.
+// Media: the Journal's media library (journal-media-adapter.server.ts), so a post's cover and inline
+// images can be uploaded from Carrel. A cover may still be any pasted https address, and book covers
+// are not part of it.
 
 import {
   ContentId,
@@ -31,6 +32,7 @@ import {
   type JournalFields,
 } from "./journal-source";
 import { SITE_ORIGIN } from "../origins";
+import { journalMediaAdapter } from "./journal-media-adapter.server";
 
 type JournalPost = catalogRepo.JournalPost;
 
@@ -386,5 +388,6 @@ export function journalSiteAdapter(options: {
     site: { id: "foxing", name: "Foxing", origin: FOXING_ORIGIN },
     content,
     preview: { render },
+    media: journalMediaAdapter({ env, audit }),
   };
 }

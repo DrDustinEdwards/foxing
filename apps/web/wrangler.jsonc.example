@@ -19,13 +19,20 @@
     }
   ],
   "kv_namespaces": [{ "binding": "APP_KV", "id": "<KV_NAMESPACE_ID>" }],
-  // Reader assets (exploded RWPM) and all media live in the foxing-epubs R2 bucket.
-  // Nightly D1 dumps (app/lib/backup.server.ts) go to their own private bucket, never to a
-  // bucket served on a public domain.
+  // Reader assets (exploded RWPM, under reader/) and the Journal's media library (under journal/,
+  // served at /media/journal/..., app/lib/carrel/journal-media-adapter.server.ts) live in the
+  // foxing-epubs R2 bucket. Nightly D1 dumps (app/lib/backup.server.ts, under backups/json/) go to
+  // their own private bucket, never to a bucket served on a public domain; the Journal library's
+  // earlier and deleted bytes are kept there too, under journal-media/.
   "r2_buckets": [
     { "binding": "MEDIA", "bucket_name": "foxing-epubs" },
     { "binding": "BACKUPS", "bucket_name": "foxing-backups" }
   ],
+  // The Journal's media library: Cloudflare Images measures, turns, mirrors and shrinks its
+  // pictures (site-runtime ./image editImage), and Workers AI suggests their alt text and tags,
+  // through the AI Gateway that AI_GATEWAY_BASE_URL names when it is set.
+  "images": { "binding": "IMAGES" },
+  "ai": { "binding": "AI" },
   // The live layer: one ClubRoom Durable Object per club (fan-out only, never writes
   // D1). See workers/club-room.ts. RATE_LIMITER is site-runtime's exact counter behind
   // @foxing/api's rateLimit (packages/api/src/middleware/rate-limit.ts).

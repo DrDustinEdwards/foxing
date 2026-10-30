@@ -152,8 +152,8 @@ describe("Carrel site API: conformance", () => {
     });
     const failed = report.checks.filter((c) => !c.ok);
     expect(failed).toEqual([]);
-    // Foxing serves no media, so the suite's media group never runs.
-    expect(report.checks.filter((c) => c.name.startsWith("media"))).toEqual([]);
+    // The Journal's media library is offered, so the suite's media probes run (and pass, above).
+    expect(report.checks.some((c) => c.name.startsWith("media"))).toBe(true);
     expect(report.ok).toBe(true);
     // Every write the suite sends is refused: nothing changed.
     expect(await auditRows()).toEqual([]);
@@ -405,11 +405,6 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("<h1>Preview me</h1><p>/journal/carrel-preview</p>");
     expect(await db().select().from(schema.journalPosts)).toEqual([]);
-  });
-
-  it("answers the media group 501: Journal covers are URLs, not uploads", async () => {
-    const res = await call(`${PREFIX}/media`, withKey());
-    expect(res.status).toBe(501);
   });
 });
 
