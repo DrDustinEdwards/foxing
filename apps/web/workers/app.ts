@@ -215,6 +215,30 @@ app.get("/reader-assets/*", async (c) => {
   return res;
 });
 
+// The Journal's media library (app/lib/carrel/journal-media-adapter.server.ts): the pictures Carrel
+// uploads for Journal posts, from the MEDIA bucket under journal/ only, so no other key (a reader
+// asset, say) is ever served from here. A replace or a turn keeps the address, so browsers keep a
+// copy an hour at most, and revalidate by the object's etag.
+app.get("/media/journal/*", async (c) => {
+  let key: string;
+  try {
+    key = decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length));
+  } catch {
+    return c.notFound();
+  }
+  if (key.split("/").some((part) => part === "" || part === "." || part === ".."))
+    return c.notFound();
+  const object = await c.env.MEDIA.get(key, { onlyIf: c.req.raw.headers });
+  if (!object) return c.notFound();
+  const headers = new Headers({
+    "Cache-Control": "public, max-age=3600",
+    ETag: object.httpEtag,
+  });
+  object.writeHttpMetadata(headers);
+  if (!("body" in object)) return new Response(null, { status: 304, headers });
+  return new Response(object.body, { headers });
+});
+
 app.all("*", async (c) => {
   const req = c.req.raw;
   const url = new URL(req.url);

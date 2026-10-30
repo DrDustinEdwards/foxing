@@ -73,3 +73,5 @@ export type {
   Announcement,
   AuditRow,
 } from "./admin";
+
+export * as journalMediaRepo from "./journal-media";
