@@ -3,7 +3,7 @@
    face and the on state of Rule 05 are Capsomer's tokens (the fox family under Capsomer's foxing
    site layer); Foxing adds only what Capsomer has no token for: the reading canvas. */
 :root {
-  --fx-body: "Source Serif 4", Georgia, serif;
+  --fx-body: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
   --fx-radius-card: 0.75rem;
   --fx-radius-hero: 1rem;
   --fx-radius-cover: 0.375rem;

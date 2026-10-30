@@ -18,12 +18,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export const links: Route.LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400..600&family=Source+Serif+4:opsz,wght@8..60,400..600&family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap",
-  },
   { rel: "stylesheet", href: stylesheet },
   { rel: "preconnect", href: COVER_ORIGIN },
 ];
