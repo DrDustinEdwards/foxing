@@ -197,8 +197,8 @@ app.get("/reader-assets/*", async (c) => {
   const key = `reader/${rest}`;
 
   const cache = edgeCache();
-  const cacheKey = new Request(url.toString(), { method: "GET" });
-  const cached = await cache.match(cacheKey);
+  const mediaRequest = new Request(url.toString(), { method: "GET" });
+  const cached = await cache.match(mediaRequest);
   if (cached) return cached;
 
   const obj = await c.env.MEDIA.get(key);
@@ -221,7 +221,7 @@ app.get("/reader-assets/*", async (c) => {
       ETag: obj.httpEtag,
     },
   });
-  c.executionCtx.waitUntil(cache.put(cacheKey, res.clone()));
+  c.executionCtx.waitUntil(cache.put(mediaRequest, res.clone()));
   return res;
 });
 

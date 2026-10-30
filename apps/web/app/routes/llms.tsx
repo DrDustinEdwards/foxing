@@ -1,5 +1,6 @@
-import { llmsDocument } from "@drdustinedwards/site-helpers/llms";
+import { llmsResponse } from "@drdustinedwards/site-helpers/llms";
 import { SITE_ORIGIN } from "~/lib/origins";
+import type { Route } from "./+types/llms";
 
 // llms.txt (llmstxt.org) from Prelum: Foxing's public hubs for answer engines. Each book, author and
 // award page is in /sitemap.xml; this names the places they hang from.
@@ -37,8 +38,10 @@ const HUBS = [
   { path: "/about", title: "About", description: "What Foxing is and who makes it." },
 ];
 
-export function loader() {
-  const body = llmsDocument({
+export function loader({ request }: Route.LoaderArgs) {
+  return llmsResponse({
+    origin: SITE_ORIGIN,
+    request,
     title: "Foxing",
     summary:
       "Foxing is a reading home for the classics: read public-domain books free, track what you finish, and follow the conversations around great books.",
@@ -46,11 +49,5 @@ export function loader() {
     sections: [
       { heading: "Site", links: HUBS.map((hub) => ({ ...hub, url: `${SITE_ORIGIN}${hub.path}` })) },
     ],
-  });
-  return new Response(body, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=86400",
-    },
   });
 }
