@@ -3,7 +3,7 @@
 // any signed-in viewer can like the list (reactions, target_type='reading_list').
 import { useListPage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { AddBookToList } from "~/components/social/add-book-to-list";
 import { LikeButton } from "~/components/social/like-button";

@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { cn } from "~/lib/cn";
 import { CoverImage } from "./cover-image";
 

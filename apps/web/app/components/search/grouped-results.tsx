@@ -2,7 +2,7 @@
 // labeled section with its own heading + count; a polite live region announces the
 // totals so a screen-reader user hears the result set change (an AA gap in legacy).
 import type { SearchPage } from "@foxing/types";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { BookCard, type BookCardData, BookGrid } from "~/components/book-card";
 import { EmptyState } from "~/components/ui";
 

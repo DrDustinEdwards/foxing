@@ -5,7 +5,8 @@
 // open a confirmation showing the server's preview before anything changes.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
-import { Link, useNavigate, useRevalidator } from "react-router";
+import { useNavigate, useRevalidator } from "react-router";
+import { Link } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,

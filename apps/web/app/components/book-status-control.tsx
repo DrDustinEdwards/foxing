@@ -5,7 +5,7 @@
 import { useSetBookStatus } from "@foxing/client";
 import type { BookRef, ShelfStatus } from "@foxing/types";
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 const STATUSES = [
   { value: "want", label: "Want to read" },

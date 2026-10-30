@@ -1,6 +1,6 @@
 import { useMyBook, useShelves } from "@foxing/client";
 import { views } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { BookShelvesPicker } from "~/components/book-shelves-picker";
 import { BookStatusControl } from "~/components/book-status-control";

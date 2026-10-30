@@ -1,5 +1,5 @@
 import type { HighlightColor } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import type { TocEntry } from "~/lib/reader/engine.client";
 import { type Locator, tintFor } from "~/lib/reader/locator";
 import {

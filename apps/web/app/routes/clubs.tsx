@@ -3,7 +3,8 @@
 // "New club" button routes to /clubs/new; joining happens on the club detail page.
 import { useClubsIndex } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link, redirect } from "react-router";
+import { redirect } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";

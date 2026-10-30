@@ -2,7 +2,7 @@
 // unbuilt product: reader, AI companion, clubs, social, vocabulary, stats charts).
 // This page describes only what ships in this build today. It grows as slices land;
 // do not describe the reader, AI companion, or clubs as if they exist (deferred_items).
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
 import { Container, PageHeader } from "~/components/ui";

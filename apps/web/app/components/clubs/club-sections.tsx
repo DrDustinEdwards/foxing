@@ -1,7 +1,7 @@
 import { useCreateThread, useJoinClub, useLeaveClub, useRotateInviteCode } from "@foxing/client";
 import type { ClubMembership, ClubThreadItem } from "@foxing/types";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 export function ErrorText({ error }: { error: string | null }) {
   if (!error) return null;

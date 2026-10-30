@@ -6,7 +6,7 @@
 // panel renders server-side; the Book of the Month card shows only when a published pick exists.
 // Every item is a link, so the header's panel closes on its own when one is followed.
 import type { HeaderGroup } from "capsomer/react/site-header";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import type { NavBotm, NavFeaturedClub } from "~/lib/nav.server";
 
 const BOOKS_BROWSE = [

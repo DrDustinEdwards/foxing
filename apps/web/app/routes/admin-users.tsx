@@ -3,7 +3,8 @@
 // the server's preview, then writes to /api/v1/admin/users/:id/suspend with the token,
 // with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
-import { Link, useRevalidator } from "react-router";
+import { useRevalidator } from "react-router";
+import { Link } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { AdminButton, AdminError, adminInputClass } from "~/components/admin/admin-form";
 import { useRoleChange } from "~/components/admin/confirm-change";

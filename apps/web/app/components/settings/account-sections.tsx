@@ -9,7 +9,8 @@ import type { ClubHandover } from "@foxing/types";
 import { useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient } from "~/lib/auth-client";
-import { Link, useRevalidator } from "react-router";
+import { useRevalidator } from "react-router";
+import { Link } from "capsomer/react/link";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;

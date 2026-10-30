@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Card, inputClass, SubmitRow, ToggleRow } from "./settings-card";
 import { ThemeSwitch } from "capsomer/react/theme-switch";
 import { THEME_PREF_KEY } from "~/components/page-shell";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { Avatar } from "~/components/ui";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 

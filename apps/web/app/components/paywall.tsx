@@ -6,7 +6,7 @@
 // layer; it mirrors foxing/monetization.md.
 import { useCheckout } from "@foxing/client";
 import { useEffect, useId, useRef, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 type Plan = "monthly" | "annual";
 

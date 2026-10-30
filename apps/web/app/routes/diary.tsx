@@ -6,7 +6,7 @@ import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";

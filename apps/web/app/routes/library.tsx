@@ -15,7 +15,8 @@ import {
 } from "@foxing/client";
 import type { GoalWithProgress, Shelf, ShelfStatus, Streak } from "@foxing/types";
 import { useState } from "react";
-import { Link, redirect } from "react-router";
+import { redirect } from "react-router";
+import { Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";

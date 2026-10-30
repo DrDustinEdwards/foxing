@@ -1,6 +1,6 @@
 import { MONTH_NAMES } from "@foxing/client";
 import { catalogRepo } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Button, Container, EmptyState, Eyebrow, PageHeader } from "~/components/ui";

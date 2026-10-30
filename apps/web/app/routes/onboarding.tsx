@@ -1,6 +1,7 @@
 import { useOnboard, useSetBookStatus } from "@foxing/client";
 import { useState } from "react";
-import { Link, redirect, useNavigate } from "react-router";
+import { redirect, useNavigate } from "react-router";
+import { Link } from "capsomer/react/link";
 import { createDb, profilesRepo, views } from "@foxing/core";
 import { CoverImage } from "~/components/cover-image";
 import { cloudflareContext } from "~/context";

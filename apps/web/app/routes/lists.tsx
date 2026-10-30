@@ -3,7 +3,7 @@
 // access. Each list links to its detail page; "New list" links to the create route.
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";

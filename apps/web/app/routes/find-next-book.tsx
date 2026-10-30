@@ -4,7 +4,7 @@
 // get data-driven picks with a subtle upgrade affordance; Plus readers get AI-personalised
 // reasons. Refresh busts the AI cache (rate-limited in core).
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";

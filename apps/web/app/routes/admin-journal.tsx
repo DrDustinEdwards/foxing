@@ -2,7 +2,8 @@
 // a link to create or edit. Reads in-process via adminRepo; the publish toggle writes to
 // /api/v1/admin/journal/:id/publish with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
-import { Link, useRevalidator } from "react-router";
+import { useRevalidator } from "react-router";
+import { Link } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { AdminButton, AdminError, useAdminAction } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";

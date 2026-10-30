@@ -8,7 +8,7 @@
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { signIn } from "~/lib/auth-client";
 
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */

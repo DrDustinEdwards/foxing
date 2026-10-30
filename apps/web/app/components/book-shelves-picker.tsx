@@ -4,7 +4,7 @@
 // shelves are created.
 import { useToggleShelfBook } from "@foxing/client";
 import type { Shelf } from "@foxing/types";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 export function BookShelvesPicker({
   bookId,

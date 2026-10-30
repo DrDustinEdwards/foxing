@@ -1,7 +1,7 @@
 // Shared by the commonplace and highlights pages: the search and book filter row, and the
 // filtered annotations grouped under their book.
 import type { ReactNode } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 type BookFields = {
   id: string;
