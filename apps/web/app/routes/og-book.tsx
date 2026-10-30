@@ -23,12 +23,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const book = await catalogRepo.getBookBySlug(db, params.slug);
   if (!book) throw new Response("Not found", { status: 404 });
 
-  const cacheKey = new Request(
+  const cardRequest = new Request(
     `${OG_CACHE_ORIGIN}/book/${book.slug}?v=${book.updatedAt?.getTime() ?? 0}`,
   );
   // The card, or when it cannot be drawn (no font, a render error), the cover (or home), so
   // crawlers still get art. The cover is fetched only on a cache miss.
-  const card = await ogCard(cacheKey, async ({ titleFamily }) => {
+  const card = await ogCard(cardRequest, async ({ titleFamily }) => {
     const cover = book.coverUrl ? await coverDataUri(book.coverUrl) : null;
     const title = cardText(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
     const author = cardText(book.author);

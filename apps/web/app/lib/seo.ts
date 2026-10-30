@@ -4,11 +4,7 @@
 // Canonical, OG and JSON-LD URLs always name https://foxing.app, never the request's
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
-import {
-  headTags,
-  searchTitle,
-  absoluteUrl as prelumAbsoluteUrl,
-} from "@drdustinedwards/site-helpers/head";
+import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
 import { article, breadcrumbs, itemList, thing } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { SITE_ORIGIN } from "./origins";
@@ -28,13 +24,14 @@ export function journalTagPath(tag: string): string {
   return `/journal/tag/${encodeURIComponent(tag)}`;
 }
 
-/** The site-wide share card (routes/og-site.tsx), for a page without a card of its own. */
-const SITE_CARD = {
-  url: "/og/site",
-  width: 1200,
-  height: 630,
-  alt: "Foxing: read the classics, free.",
-};
+/** Prelum's head builder with the site-wide share card (routes/og-site.tsx), for a page without a card
+ *  of its own. A long title drops the suffix and is cut at a word for search; the share card keeps it whole. */
+const head = defineHead({
+  origin: SITE_ORIGIN,
+  siteName: SITE_NAME,
+  image: { url: "/og/site", width: 1200, height: 630, alt: "Foxing: read the classics, free." },
+  suffix: ` | ${SITE_NAME}`,
+});
 
 type MetaInput = {
   title: string;
@@ -48,7 +45,7 @@ type MetaInput = {
   noindex?: boolean;
 };
 
-/** The full standard head from Prelum's headTags: title, description, canonical, Open Graph, Twitter. */
+/** The full standard head from Prelum's defineHead: title, description, canonical, Open Graph, Twitter. */
 export function buildMeta(input: MetaInput): MetaDescriptor[] {
   const {
     title,
@@ -61,15 +58,13 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
   } = input;
   // Routes pass location.pathname, so /x/ would name /x/ as canonical; the page is /x.
   const path = pathname.replace(/\/+$/, "") || "/";
-  return headTags({
-    origin: SITE_ORIGIN,
+  return head({
     path,
-    // A long title drops the suffix and is cut at a word for search; the share card keeps it whole.
-    title: path === "/" ? title : searchTitle(title, ` | ${SITE_NAME}`),
-    socialTitle: title,
+    // The home page's title is already whole.
+    title,
+    fullTitle: path === "/",
     description,
-    image: image ? { url: image, alt: imageAlt } : SITE_CARD,
-    siteName: SITE_NAME,
+    image: image ? { url: image, alt: imageAlt } : undefined,
     type,
     noindex,
   });

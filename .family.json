@@ -12,5 +12,8 @@
   "tokens": {
     "--text": "the Discord activity is its own embedded app, styled for Discord's client, not a family page",
     "--dim": "Foxing keeps its own look on its own domain (Dustin 2026-10-26)"
+  },
+  "copies": {
+    "apps/mobile/lib/epub-cache.ts": "cacheKey here names a downloaded EPUB's file on the phone, not site-runtime's edge-cache key; web work never touches apps/mobile (CLAUDE.md, hard rule 2)"
   }
 }
