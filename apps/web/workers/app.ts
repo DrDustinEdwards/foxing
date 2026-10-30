@@ -128,7 +128,7 @@ const api = createApi({
 const app = new Hono<{ Bindings: Env }>();
 
 // The Content-Security-Policy report sink the policy names.
-app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw));
+app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.

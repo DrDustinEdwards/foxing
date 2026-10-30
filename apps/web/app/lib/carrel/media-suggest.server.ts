@@ -5,6 +5,7 @@
 // the Carrel key, are ever sent; no reader's data reaches the model.
 
 import { anthropicRoute } from "@dustinedwards/site-runtime/ai-gateway";
+import { toBase64 } from "@dustinedwards/site-runtime/encoding";
 import { editImage } from "@dustinedwards/site-runtime/image";
 
 /** The vision model: natively multimodal, Cloudflare-hosted, with no license prompt to accept first. */
@@ -44,11 +45,7 @@ async function viewOf(env: Env, body: ReadableStream): Promise<string> {
     format: "image/jpeg",
     quality: 80,
   });
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  let binary = "";
-  for (let i = 0; i < bytes.length; i += 0x8000)
-    binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-  return `data:image/jpeg;base64,${btoa(binary)}`;
+  return `data:image/jpeg;base64,${toBase64(await response.arrayBuffer())}`;
 }
 
 /** The model's answer as tags and alt, from its JSON, wherever in the text it put it. */

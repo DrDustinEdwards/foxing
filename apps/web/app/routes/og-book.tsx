@@ -1,3 +1,4 @@
+import { toBase64 } from "@dustinedwards/site-runtime/encoding";
 import { cardText } from "@dustinedwards/site-runtime/share-card";
 import { catalogRepo } from "@foxing/core";
 import { edgeCache } from "~/lib/cache.server";
@@ -11,13 +12,8 @@ async function coverDataUri(url: string): Promise<string | null> {
   try {
     const res = await fetch(coverSrc(url, 480));
     if (!res.ok) return null;
-    const buf = new Uint8Array(await res.arrayBuffer());
-    let binary = "";
-    for (let i = 0; i < buf.length; i += 8192) {
-      binary += String.fromCharCode(...buf.subarray(i, i + 8192));
-    }
     const type = res.headers.get("content-type") ?? "image/jpeg";
-    return `data:${type};base64,${btoa(binary)}`;
+    return `data:${type};base64,${toBase64(await res.arrayBuffer())}`;
   } catch {
     return null;
   }
