@@ -2,7 +2,7 @@
 // in-process via core; requireProfile sends anonymous visitors to /login and
 // signed-in-without-profile users to /onboarding (never renders a null profile).
 import { createDb, libraryRepo } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Avatar, Chip, Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";

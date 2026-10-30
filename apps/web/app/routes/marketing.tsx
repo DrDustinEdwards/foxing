@@ -1,6 +1,7 @@
 import { faqPage } from "@drdustinedwards/site-helpers/schema";
 import { catalogRepo } from "@foxing/core";
-import { Link, redirect } from "react-router";
+import { redirect } from "react-router";
+import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";

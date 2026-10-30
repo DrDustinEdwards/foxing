@@ -5,7 +5,7 @@
 // library, Rule 10).
 import type { HeaderAccount } from "capsomer/react/site-header";
 import type { ReactElement } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 

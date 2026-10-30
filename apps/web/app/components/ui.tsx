@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { cn } from "~/lib/cn";
 
 /** Page-width container. One measure for every catalog surface. */

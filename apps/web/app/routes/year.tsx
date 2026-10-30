@@ -5,7 +5,7 @@
 import { MONTH_INITIALS, MONTH_NAMES } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { RecapBook } from "@foxing/types";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";

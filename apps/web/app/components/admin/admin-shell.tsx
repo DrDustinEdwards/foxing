@@ -1,7 +1,7 @@
 // Admin chrome: the site PageShell plus an operator sidebar. Every admin page renders
 // inside <AdminShell current="...">. Sections match the launch-critical set; cut legacy
 // sections (author-claims, giveaways, bookstores, 404s, mcp) are intentionally absent.
-import { NavLink } from "react-router";
+import { NavLink } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 

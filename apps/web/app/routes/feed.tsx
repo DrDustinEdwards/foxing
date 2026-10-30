@@ -4,7 +4,7 @@
 // what the viewer is entitled to see.
 import { activityText, useFeed } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Avatar, Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";

@@ -3,7 +3,8 @@
 // visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
-import { Link, useRevalidator } from "react-router";
+import { useRevalidator } from "react-router";
+import { Link } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,

@@ -1,6 +1,6 @@
 // Numbered prev/next pagination for query results. Crawlable links (rel prev/next)
 // whose hrefs preserve the query and active filters via the caller's hrefFor.
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 
 export function Pagination({
   page,

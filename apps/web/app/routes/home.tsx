@@ -2,7 +2,7 @@
 // the shell (nav, secondary bar) comes from the root loader. Anonymous visitors are
 // sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
 import { useEffect, useState } from "react";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Button, Container, Eyebrow } from "~/components/ui";

@@ -1,5 +1,5 @@
 import { views } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
 import { FilterBar } from "~/components/search/filter-bar";

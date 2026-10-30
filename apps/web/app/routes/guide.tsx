@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
 import { Container, PageHeader } from "~/components/ui";

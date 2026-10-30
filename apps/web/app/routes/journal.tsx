@@ -1,5 +1,5 @@
 import { catalogRepo } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";

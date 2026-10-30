@@ -6,7 +6,8 @@ import {
   SiteTabs,
 } from "capsomer/react/site-header";
 import { useState } from "react";
-import { Link, useLocation, useRouteLoaderData } from "react-router";
+import { useLocation, useRouteLoaderData } from "react-router";
+import { Link } from "capsomer/react/link";
 import { authClient } from "~/lib/auth-client";
 import type { loader as RootLoader } from "~/root";
 import { CommandPalette } from "./command-palette";

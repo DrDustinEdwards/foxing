@@ -2,7 +2,7 @@
 // loader so the form has a title to show and an id to submit. Without a valid book the
 // page explains how to start (from a book page). The form POSTs /api/v1/diary.
 import { catalogRepo, createDb } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { DiaryBookPicker } from "~/components/social/diary-book-picker";
 import { DiaryForm } from "~/components/social/diary-form";

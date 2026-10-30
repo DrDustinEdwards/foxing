@@ -4,7 +4,7 @@
 // cache; a toggle patches every list here in place.
 import { usePeople } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "react-router";
+import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 import { FollowButton } from "~/components/social/follow-button";
