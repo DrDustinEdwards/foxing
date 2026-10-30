@@ -6,11 +6,12 @@
 // Order matters: API routes register before the React Router catch-all.
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
+import { preloads } from "@dustinedwards/site-runtime/preload";
 import { slashRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
 import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
-import { RouterContextProvider, createRequestHandler } from "react-router";
+import { RouterContextProvider, type ServerBuild, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
@@ -64,10 +65,8 @@ function cacheKeyFor(url: URL): Request {
   return new Request(keyUrl.toString(), { method: "GET" });
 }
 
-const reactRouterHandler = createRequestHandler(
-  () => import("virtual:react-router/server-build"),
-  import.meta.env.MODE,
-);
+const serverBuild = () => import("virtual:react-router/server-build") as Promise<ServerBuild>;
+const reactRouterHandler = createRequestHandler(serverBuild, import.meta.env.MODE);
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
@@ -286,6 +285,13 @@ app.all("*", async (c) => {
   // Headers applied before the cache put, so a cached page keeps the nonce it was rendered with
   // and withSecurityHeaders can re-issue it on every hit.
   const res = withSecurityHeaders(await reactRouterHandler(req, context), req);
+  // Early Hints: on a zone with Early Hints on, a page carrying a preload Link header is answered with a 103 first,
+  // so the browser starts the render-blocking stylesheet while the Worker still renders (site-runtime ./preload).
+  if (res.headers.get("Content-Type")?.startsWith("text/html")) {
+    const stylesheets = (await serverBuild()).assets.routes.root?.css ?? [];
+    const { header } = preloads(stylesheets.map((href) => ({ href, as: "style" as const })));
+    if (header) res.headers.append("Link", header);
+  }
 
   // Only cache successful responses that opted in with an s-maxage directive.
   if (
