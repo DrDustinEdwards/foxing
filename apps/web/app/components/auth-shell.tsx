@@ -5,6 +5,7 @@
 //
 // The ways in are the family's one sign-in (site-runtime ./sign-in): a passkey first, Google
 // and Apple, and an emailed link (with Turnstile once its keys are set). No passwords.
+import { SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
@@ -261,7 +262,7 @@ export function AuthDivider() {
  */
 export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
   const [pending, setPending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [sentTo, setSentTo] = useState<string | null>(null);
   const [checkFailed, setCheckFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const widget = useRef<HTMLDivElement>(null);
@@ -273,13 +274,7 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
     return mountTurnstile(widget.current, turnstileSiteKey);
   }, [turnstileSiteKey, attempt]);
 
-  if (sent) {
-    return (
-      <p role="status" className="fx-auth-shell-text-2">
-        Check your email for a sign-in link. It expires in 5 minutes.
-      </p>
-    );
-  }
+  if (sentTo) return <SignInCodeForm email={sentTo} />;
 
   return (
     <form
@@ -289,11 +284,12 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
         setPending(true);
         setCheckFailed(false);
         const form = new FormData(event.currentTarget);
+        const email = String(form.get("email"));
         const token = String(form.get("cf-turnstile-response") ?? "");
         const res = await signIn
           .magicLink(
             {
-              email: String(form.get("email")),
+              email,
               callbackURL: AFTER_LINK,
               newUserCallbackURL: AFTER_LINK_NEW,
             },
@@ -309,7 +305,7 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
           setAttempt((n) => n + 1);
           return;
         }
-        setSent(true);
+        setSentTo(email);
       }}
     >
       <Field label="Email" name="email" type="email" required autoComplete="email webauthn" />
@@ -321,6 +317,57 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
       ) : null}
       <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
         {pending ? "Sending..." : "Email me a sign-in link"}
+      </button>
+    </form>
+  );
+}
+
+/**
+ * After the link is sent: the same mail carries a six-digit code, for when the link opens in
+ * another browser (the mail app's, a phone). Typed here, it signs this tab in, a new address
+ * included (it then lands on /onboarding through /me). Three wrong codes spend it; the link
+ * still works.
+ */
+function SignInCodeForm({ email }: { email: string }) {
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
+  return (
+    <form
+      className="stack-3"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setPending(true);
+        setFailed(false);
+        const otp = String(new FormData(event.currentTarget).get("code") ?? "").trim();
+        const res = await signIn.emailOtp({ email, otp }).catch(() => null);
+        if (res && !res.error) {
+          window.location.assign(AFTER_LINK);
+          return;
+        }
+        setPending(false);
+        setFailed(true);
+      }}
+    >
+      <p role="status" className="fx-auth-shell-text-2">
+        Check your email. Open the sign-in link, or type the code from the same email here. Both
+        work for {SIGN_IN_EXPIRES_IN_WORDS}.
+      </p>
+      <Field
+        label="Code"
+        name="code"
+        required
+        inputMode="numeric"
+        autoComplete="one-time-code"
+        pattern="[0-9]{6}"
+        maxLength={6}
+      />
+      {failed ? (
+        <p role="alert" className="error">
+          That code did not work. Check it, or open the link in the email.
+        </p>
+      ) : null}
+      <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
+        {pending ? "Signing in..." : "Sign in with the code"}
       </button>
     </form>
   );

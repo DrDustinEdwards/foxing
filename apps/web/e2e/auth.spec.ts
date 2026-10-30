@@ -23,7 +23,7 @@ test.describe("auth flows", () => {
     await page.getByLabel("Email").fill("nobody-magic@example.com");
     await page.getByRole("button", { name: /email me a sign-in link/i }).click();
     await expect(page.getByRole("alert")).toHaveText(/complete the check/i);
-    await expect(page.getByText(/check your email for a sign-in link/i)).toHaveCount(0);
+    await expect(page.getByText(/check your email/i)).toHaveCount(0);
   });
 
   // REGRESSION (2026-07-09): a sign-in returned a raw 500 (a transient D1 read fault in the
