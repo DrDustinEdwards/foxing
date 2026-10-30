@@ -4,6 +4,7 @@
 // virtual:react-router/server-build here, so what the security-headers test grades is what the
 // real document shell renders, its inline scripts and nonces included.
 import { createElement as h } from "react";
+import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
 import { UNSAFE_withErrorBoundaryProps, type ServerBuild } from "react-router";
 import * as entryServer from "../app/entry.server";
 import * as rootModule from "../app/root";
@@ -12,7 +13,7 @@ const Page = () =>
   h("main", { id: "main" }, h("img", { src: "https://covers.foxing.app/x.jpg", alt: "" }));
 const publicPage = {
   default: Page,
-  headers: () => ({ "Cache-Control": "public, max-age=0, s-maxage=600" }),
+  headers: () => publicPageHeaders(),
 };
 
 function assetRoute(id: string, path: string | undefined, hasLoader: boolean, parentId?: string) {

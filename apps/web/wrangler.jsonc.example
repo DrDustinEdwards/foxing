@@ -10,6 +10,18 @@
   "assets": { "directory": "./build/client" },
   "observability": { "enabled": true, "traces": { "enabled": true } },
   "upload_source_maps": true,
+  // The public pages' edge cache (workers/app.ts, site-runtime ./edge-cache). The default export
+  // is the GATEWAY, cache disabled, so it runs on every request: the APIs, auth, writes, media,
+  // reader assets and every signed-in request answer there and are never stored. An anonymous GET
+  // of a public catalog page goes to the Renderer with its path and query as the cache key, and the
+  // Renderer's responses are stored when a route marks them shared (publicPageHeaders). Carrel's
+  // and the admin API's writes purge the "pages" tag. No `cross_version_cache`, so the Worker
+  // version stays in the key and every deploy starts cold.
+  "cache": { "enabled": true },
+  "exports": {
+    "default": { "type": "worker", "cache": { "enabled": false } },
+    "Renderer": { "type": "worker", "cache": { "enabled": true } }
+  },
   "d1_databases": [
     {
       "binding": "DB",

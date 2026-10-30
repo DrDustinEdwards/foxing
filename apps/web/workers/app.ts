@@ -4,7 +4,19 @@
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
+// aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
+import { WorkerEntrypoint } from "cloudflare:workers";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import {
+  EDGE_CACHE_HEADER,
+  PAGES_CACHE_TAG,
+  SHARED_CACHE_CONTROL,
+  UNCACHED,
+  cacheKey,
+  forReader,
+  purgeTags,
+  settleCacheHeaders,
+} from "@dustinedwards/site-runtime/edge-cache";
 import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
 import { preloads } from "@dustinedwards/site-runtime/preload";
 import { slashRedirect } from "@dustinedwards/site-runtime/url";
@@ -26,8 +38,9 @@ import {
   withSecurityHeaders,
 } from "./security-headers";
 
-// Public catalog surfaces are anonymous and safe to cache at the edge. Segment
-// prefixes match the path or any child (/books, /books/x), not lookalikes (/booksy).
+// The public catalog surfaces: an anonymous GET of one goes to the Renderer, whose responses the
+// Workers cache stores when the route marks them shared (publicPageHeaders). Segment prefixes match
+// the path or any child (/books, /books/x), not lookalikes (/booksy).
 const PUBLIC_EXACT = new Set([
   "/",
   "/sitemap.xml",
@@ -55,11 +68,11 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
-// Injected at build time (vite define). Namespaces the edge cache per deploy.
+// Injected at build time (vite define). Namespaces the search suggestions' cache per deploy.
 declare const __CACHE_VERSION__: string;
 
-/** Cache key = the request URL plus the build id, so a new deploy starts fresh. */
-function cacheKeyFor(url: URL): Request {
+/** The search suggestions' cache key: the request URL plus the build id, so a new deploy starts fresh. */
+function suggestKeyFor(url: URL): Request {
   const keyUrl = new URL(url.toString());
   keyUrl.searchParams.set("__v", __CACHE_VERSION__);
   return new Request(keyUrl.toString(), { method: "GET" });
@@ -130,6 +143,21 @@ const api = createApi({
 
 const app = new Hono<{ Bindings: Env }>();
 
+// The writes that can change a stored page: Carrel's (the Journal and its pictures) and the admin
+// API's (catalog, picks, awards, book of the month), the admin MCP's included. Each accepted one
+// purges every stored page; a failed purge is a log line and a page stale until it expires. A purge
+// reaches only the cache of the entrypoint that calls it, so the Renderer runs it, over RPC.
+const PAGE_WRITERS = ["/api/carrel/v1", "/api/v1/admin"];
+app.use("*", async (c, next) => {
+  await next();
+  const { method } = c.req;
+  if (method === "GET" || method === "HEAD" || !c.res.ok) return;
+  const { pathname } = new URL(c.req.url);
+  if (!PAGE_WRITERS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
+  const renderer = (c.executionCtx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer;
+  if (renderer) c.executionCtx.waitUntil(renderer.purgePages(`${method} ${pathname}`));
+});
+
 // The Content-Security-Policy report sink the policy names.
 app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
@@ -152,7 +180,7 @@ app.use("/api/v1/*", async (c, next) => refuseCrossOrigin(c.req.raw) ?? next());
 // clubs only), so they come from the edge cache for everyone, signed in or not.
 app.get("/api/v1/search/suggest", async (c, next) => {
   const cache = edgeCache();
-  const key = cacheKeyFor(new URL(c.req.url));
+  const key = suggestKeyFor(new URL(c.req.url));
   const hit = await cache.match(key);
   if (hit) return hit;
   await next();
@@ -264,27 +292,32 @@ app.all("*", async (c) => {
       return c.redirect(dest.toString(), 301);
     }
   }
-  // Cache anonymous GETs on public paths. A Better Auth session cookie means the
-  // request may be personalized later, so bypass the cache to stay correct.
-  const authed = (req.headers.get("Cookie") ?? "").includes("better-auth");
-  const cacheable = req.method === "GET" && isPublicPath(url.pathname) && !authed;
-  const cache = edgeCache();
-  const key = cacheKeyFor(url);
-
-  if (cacheable) {
-    const hit = await cache.match(key);
-    if (hit) return hit;
+  // An anonymous GET of a public page goes through the Workers cache: the Renderer's response is
+  // stored under the path and query, and a stored one is answered without rendering. A Better Auth
+  // session cookie means the page may be personalized, so a signed-in request is rendered here,
+  // never served from or stored in the cache.
+  const ctx = c.executionCtx as unknown as ExecutionContext;
+  const signedIn = (req.headers.get("Cookie") ?? "").includes("better-auth");
+  if (req.method === "GET" && isPublicPath(url.pathname) && !signedIn) {
+    // No Renderer entrypoint (the vitest pool runs the Worker without ctx.exports): render a copy
+    // here, as the Renderer would see it, stored nowhere.
+    const renderer = (ctx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer;
+    const page = renderer
+      ? await renderer.fetch(req, { cf: { cacheKey: cacheKey(url) } })
+      : await renderShared(new Request(req), c.env, ctx);
+    return forReader(page, req);
   }
+  return storedNowhere(await renderPage(req, c.env, ctx));
+});
 
+/** A page rendered by React Router, with the security headers and the Early Hints Link header. */
+async function renderPage(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const context = new RouterContextProvider();
-  context.set(cloudflareContext, {
-    env: c.env,
-    ctx: c.executionCtx as unknown as ExecutionContext,
-  });
-  context.set(cspNonceContext, cspNonceFor(req));
-  // Headers applied before the cache put, so a cached page keeps the nonce it was rendered with
-  // and withSecurityHeaders can re-issue it on every hit.
-  const res = withSecurityHeaders(await reactRouterHandler(req, context), req);
+  context.set(cloudflareContext, { env, ctx });
+  context.set(cspNonceContext, cspNonceFor(request));
+  // The policy is set here with the nonce the page was rendered with, so a stored page keeps it and
+  // withSecurityHeaders, run again on the way out (handleFetch), re-issues a fresh one per reader.
+  const res = withSecurityHeaders(await reactRouterHandler(request, context), request);
   // Early Hints: on a zone with Early Hints on, a page carrying a preload Link header is answered with a 103 first,
   // so the browser starts the render-blocking stylesheet while the Worker still renders (site-runtime ./preload).
   if (res.headers.get("Content-Type")?.startsWith("text/html")) {
@@ -292,17 +325,42 @@ app.all("*", async (c) => {
     const { header } = preloads(stylesheets.map((href) => ({ href, as: "style" as const })));
     if (header) res.headers.append("Link", header);
   }
-
-  // Only cache successful responses that opted in with an s-maxage directive.
-  if (
-    cacheable &&
-    res.status === 200 &&
-    (res.headers.get("Cache-Control") ?? "").includes("s-maxage")
-  ) {
-    c.executionCtx.waitUntil(cache.put(key, res.clone()));
-  }
   return res;
-});
+}
+
+/** The Renderer's answer: a page the cache may store only when its route marked it shared and it is a 200 with no cookie. */
+async function renderShared(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const page = await renderPage(request, env, ctx);
+  if (page.headers.has("Set-Cookie")) page.headers.set("Cache-Control", UNCACHED);
+  return settleCacheHeaders(page);
+}
+
+/** A page rendered in the gateway (signed in, or not a public path) is stored nowhere, even under a shared route. */
+function storedNowhere(response: Response): Response {
+  const settled = settleCacheHeaders(response);
+  if (settled.headers.get("Cache-Control") === SHARED_CACHE_CONTROL) {
+    settled.headers.set("Cache-Control", UNCACHED);
+    settled.headers.delete(EDGE_CACHE_HEADER);
+    settled.headers.delete("Cache-Tag");
+  }
+  return settled;
+}
+
+/**
+ * The cacheable entrypoint (wrangler.jsonc.example, `exports`): the public pages, rendered and then
+ * stored by the Workers cache under the key the gateway names. Only the gateway calls it, and only
+ * for an anonymous GET of a public path.
+ */
+export class Renderer extends WorkerEntrypoint<Env> {
+  override fetch(request: Request): Promise<Response> {
+    return renderShared(request, this.env, this.ctx);
+  }
+
+  /** Drops every stored page. Called over RPC from the gateway, which stores nothing; RPC methods bypass the cache. */
+  async purgePages(why: string): Promise<void> {
+    await purgeTags(this.ctx.cache, [PAGES_CACHE_TAG], why);
+  }
+}
 
 // The companion cache pipeline. Cron finds catalog books missing a cached action
 // and enqueues one message per book; the queue consumer generates the 4 free-cached
@@ -408,8 +466,9 @@ export { ClubRoom } from "./club-room";
 // The rate limiter behind @foxing/api's rateLimit (the RATE_LIMITER binding).
 export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
+// THE GATEWAY (wrangler.jsonc.example, `exports.default`, cache disabled): it runs on every request.
 // Security headers on every response this Worker sends: pages, API, redirects, errors, 404s and
-// edge-cache hits (workers/security-headers.ts). Applied outside Hono, on what app.fetch returns:
+// stored pages (workers/security-headers.ts). Applied outside Hono, on what app.fetch returns:
 // Hono's own error and not-found answers included, and no middleware can copy an older header back.
 async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   return withSecurityHeaders(await app.fetch(request, env, ctx), request);

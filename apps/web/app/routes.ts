@@ -68,7 +68,7 @@ export default [
   // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
   route("companion-test", "routes/companion-test.tsx"),
 
-  // Public catalog (edge SSR + Cache API). Slugs for SEO (mobile uses ids).
+  // Public catalog (stored at the edge, workers/app.ts). Slugs for SEO (mobile uses ids).
   route("books", "routes/books.tsx"),
   route("books/:slug", "routes/book-detail.tsx"),
   route("authors/:slug", "routes/author.tsx"),
