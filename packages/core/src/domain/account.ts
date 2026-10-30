@@ -11,7 +11,7 @@
 // anything not enumerated; the explicit deletes make erasure deterministic
 // regardless of foreign-key enforcement in a given environment.
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
-import { and, eq, getTableName, inArray, or } from "drizzle-orm";
+import { and, eq, getTableName, inArray, lt, or } from "drizzle-orm";
 import type { BatchItem } from "drizzle-orm/batch";
 import { domainErrors } from "./errors";
 import { rankSuccessors } from "./membership";
@@ -328,4 +328,14 @@ export async function deleteAccount(
     db.delete(user).where(eq(user.id, userId)),
   ];
   await db.batch(stmts as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
+}
+
+/** Expired sessions and one-time sign-in values, deleted once a day. Nothing else removes them,
+ *  so they piled up (230 expired verification rows and 181 expired sessions on 2026-10-30).
+ *  The same cleanup as EmDash 1.4.0 (emdash-cms/emdash#4287, MIT). */
+export async function deleteExpiredAuthRows(db: Db, now: Date): Promise<void> {
+  await db.batch([
+    db.delete(session).where(lt(session.expiresAt, now)),
+    db.delete(verification).where(lt(verification.expiresAt, now)),
+  ]);
 }
