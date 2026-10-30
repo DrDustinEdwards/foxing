@@ -301,11 +301,11 @@ async function aiOverlay(
     else await kv.put(tkey, "1", { expirationTtl: REFRESH_THROTTLE });
   }
 
-  const cacheKey = `recs:${userId}`;
+  const recsCacheKey = `recs:${userId}`;
   const byId = new Map(dataRanked.map((r) => [r.candidate.id, r]));
 
   if (!refresh) {
-    const cached = await kv.get(cacheKey);
+    const cached = await kv.get(recsCacheKey);
     if (cached) {
       const resolved = resolveCached(cached, byId);
       if (resolved) return resolved;
@@ -369,7 +369,7 @@ async function aiOverlay(
     dataRanked,
   );
   await kv.put(
-    cacheKey,
+    recsCacheKey,
     JSON.stringify(recs.map((r) => ({ bookId: r.bookId, reason: r.reason }))),
     { expirationTtl: AI_CACHE_TTL },
   );

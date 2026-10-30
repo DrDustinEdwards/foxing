@@ -22,7 +22,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   );
   if (!data) throw new Response("Not found", { status: 404 });
 
-  const cardKey = new Request(
+  const cardRequest = new Request(
     `${OG_CACHE_ORIGIN}/recap/${params.username}/${year}?b=${data.recap.booksFinished}`,
   );
   const name = cardText(data.displayName);
@@ -36,7 +36,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   // The card, or home when it cannot be drawn (no font, a render error).
   const card = await ogCard(
-    cardKey,
+    cardRequest,
     ({ titleFamily }) =>
       `<div style="display:flex;flex-direction:column;width:100%;height:100%;background:#FAF6EE;font-family:'DM Sans';padding:72px;box-sizing:border-box;justify-content:space-between;">` +
       `<div style="display:flex;color:#B04A1C;font-size:26px;font-weight:500;letter-spacing:2px;">FOXING - YEAR IN READING ${year}</div>` +

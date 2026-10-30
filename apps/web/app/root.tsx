@@ -1,4 +1,5 @@
 import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
+import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
@@ -15,6 +16,7 @@ import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "./lib/nonce";
 import { COVER_ORIGIN } from "./lib/origins";
+import { SITE_NAME } from "./lib/seo";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
 // the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous
@@ -23,6 +25,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const [navUser, navMenu] = await Promise.all([getNavUser(env, request), getNavMenu(env)]);
   return { navUser, navMenu };
+}
+
+// The error path's title (an unmatched address matches no route but the root); every page sets its own.
+export function meta({ error }: Route.MetaArgs) {
+  return error ? [{ title: errorTitle(error, SITE_NAME) }] : [];
 }
 
 export const links: Route.LinksFunction = () => [
@@ -82,23 +89,7 @@ export default function App() {
   );
 }
 
+// Capsomer's error page. No site header: Foxing's reads the root loader's data, which the error path lacks.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  const isRouteError =
-    error && typeof error === "object" && "status" in error && "statusText" in error;
-  const status = isRouteError ? (error as { status: number }).status : 500;
-  const title = status === 404 ? "Page not found" : "Something went wrong";
-  const message =
-    status === 404
-      ? "That page has wandered off the shelf."
-      : "An unexpected error occurred. Try again in a moment.";
-  return (
-    <main className="fx-error">
-      <p className="eyebrow">Error {status}</p>
-      <h1 className="display-4">{title}</h1>
-      <p className="lead">{message}</p>
-      <a href="/" className="cap-btn mt-2" data-variant="primary" data-size="lg">
-        Back to Foxing
-      </a>
-    </main>
-  );
+  return <ErrorPage error={error} home="/" dev={import.meta.env.DEV} />;
 }

@@ -286,20 +286,6 @@
   }
 }
 
-/* The error page. */
-.fx-error {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  min-block-size: 70dvh;
-  max-inline-size: 42rem;
-  margin-inline: auto;
-  padding-inline: 1.5rem;
-  text-align: center;
-}
-
 /* The search palette is Capsomer's command menu; its rows read in the UI face, not the body's. */
 .cap-cmd {
   font-family: var(--ui);

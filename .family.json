@@ -14,7 +14,6 @@
     "--dim": "Foxing keeps its own look on its own domain (Dustin 2026-10-26)"
   },
   "copies": {
-    "apps/mobile/lib/epub-cache.ts": "cacheKey here names a downloaded EPUB's file on the phone, not an edge-cache key",
-    "packages/core/src/domain/recommendations.ts": "cacheKey here is a reader's recommendations key in KV, not an edge-cache key"
+    "apps/mobile/lib/epub-cache.ts": "cacheKey here names a downloaded EPUB's file on the phone, not site-runtime's edge-cache key; web work never touches apps/mobile (CLAUDE.md, hard rule 2)"
   }
 }
