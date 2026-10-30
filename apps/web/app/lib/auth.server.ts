@@ -1,24 +1,16 @@
 // Better Auth with the family's one sign-in (site-runtime ./sign-in): a passkey first, an
-// emailed link before one exists (Turnstile on it once its keys are set), Google and Apple,
-// no passwords. Accounts are joined only by a signed-in person. The app adds two of its own:
-// the Expo plugin, which hands a Google or Apple sign-in back to the app through foxing://,
-// and a six-digit email code, since a link opens in the phone's browser and not the app.
+// emailed link and code before one exists (Turnstile on it once its keys are set), Google and
+// Apple, no passwords, no OAuth tokens stored. Accounts are joined only by a signed-in person.
+// The app's own way in: `appCode` opens the six-digit code request the phone uses (a link opens
+// in the phone's browser, not the app), held to three a minute; and the Expo plugin hands a
+// Google or Apple sign-in back to the app through foxing://.
 import { expo } from "@better-auth/expo";
 import { createDb, schema } from "@foxing/core";
 import { signInOptions } from "@dustinedwards/site-runtime/sign-in";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { emailOTP } from "better-auth/plugins";
 import { sendMagicLinkEmail, sendSignInCodeEmail, sendVerificationEmail } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
-
-const NO_OAUTH_TOKENS = {
-  accessToken: null,
-  refreshToken: null,
-  idToken: null,
-  accessTokenExpiresAt: null,
-  refreshTokenExpiresAt: null,
-};
 
 /** The app's scheme (apps/mobile app.json), where a sign-in started in the app returns. */
 const APP_ORIGIN = "foxing://";
@@ -30,8 +22,12 @@ async function buildAuth(env: Env) {
   const signIn = await signInOptions(env, {
     siteName: "Foxing",
     social: true,
-    sendMagicLink: async ({ email, url }) => {
-      await sendMagicLinkEmail(env, email, url);
+    sendMagicLink: async ({ email, url, token, code }) => {
+      await sendMagicLinkEmail(env, email, { url, token, code });
+    },
+    appCode: true,
+    sendSignInCode: async ({ email, code }) => {
+      await sendSignInCodeEmail(env, email, code);
     },
   });
 
@@ -47,32 +43,7 @@ async function buildAuth(env: Env) {
       // D1 has limited transaction support; the adapter must not wrap in txns.
       transaction: false,
     }),
-    plugins: [
-      ...signIn.plugins,
-      expo(),
-      emailOTP({
-        otpLength: 6,
-        expiresIn: 60 * 5,
-        sendVerificationOTP: async ({ email, otp, type }) => {
-          if (type === "sign-in") await sendSignInCodeEmail(env, email, otp);
-        },
-      }),
-    ],
-    rateLimit: {
-      ...signIn.rateLimit,
-      // The code is the one mail the app sends a stranger with no Turnstile in front of it
-      // (the app can't show the widget), so it is held tighter than the default.
-      customRules: { "/email-otp/send-verification-otp": { window: 60, max: 3 } },
-    },
-    // Google and Apple are sign-in only, and nothing reads their tokens, so none are stored
-    // (FX-3). Every account write Better Auth makes on a social sign-in (createOAuthUser,
-    // linkAccount, updateAccount) runs these hooks; migration 0005 cleared the rows from before.
-    databaseHooks: {
-      account: {
-        create: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
-        update: { before: async () => ({ data: NO_OAUTH_TOKENS }) },
-      },
-    },
+    plugins: [...signIn.plugins, expo()],
     // Only the change-email flow sends this now: the new address confirms itself.
     emailVerification: {
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {

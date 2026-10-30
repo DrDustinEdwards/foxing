@@ -5,6 +5,7 @@
 // then writes only while the row still holds the previewed value, so a token that is
 // unknown, spent, expired, stale, or minted for another actor, target or change cannot
 // perform anything.
+import { toHex } from "@dustinedwards/site-runtime/encoding";
 import { errors } from "./error";
 
 export type RoleChangeKind = "admin" | "tier" | "suspend";
@@ -28,8 +29,7 @@ export const CONFIRM_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
 const KEY_PREFIX = "admin-confirm:";
 
 function newToken(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return toHex(crypto.getRandomValues(new Uint8Array(32)));
 }
 
 export async function mintConfirmation(

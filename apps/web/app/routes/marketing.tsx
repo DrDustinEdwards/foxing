@@ -1,3 +1,4 @@
+import { faqPage } from "@drdustinedwards/site-helpers/schema";
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -14,52 +15,33 @@ import type { Route } from "./+types/marketing";
 // FAQ structured data (schema.org FAQPage). Restores the rich result the legacy
 // landing emitted. Availability is phrased for web-now, apps-coming-soon since the
 // mobile app is not shipping yet. Plus pricing stays in sync with billing/config.
-const FAQ_SCHEMA = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: [
-    {
-      "@type": "Question",
-      name: "Where can I read classic books for free?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Foxing offers 1,400+ public domain classic books completely free, including Frankenstein, Pride and Prejudice, Sherlock Holmes, and Dracula. No subscription is required to read. Foxing is available on the web at foxing.app, with iOS and Android apps coming soon.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What classic books are available to read online free?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Foxing includes all major public domain works: Jane Austen (Pride and Prejudice, Sense and Sensibility, Emma), Charles Dickens, Mary Shelley (Frankenstein), Bram Stoker (Dracula), Arthur Conan Doyle (Sherlock Holmes), Mark Twain, Charlotte Bronte (Jane Eyre), and 1,400+ more titles from Standard Ebooks and Project Gutenberg.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "What is Foxing?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Foxing is a reading home for classic literature. It offers 1,400+ free public domain books, an AI companion that helps you understand what you are reading, book clubs with chapter-by-chapter discussions, and a reading community. Available on the web, with mobile apps coming soon.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Is Foxing free to use?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. The complete reading and social product is free: the reader, all 1,400+ classic books, tracking and stats, and the entire clubs layer (unlimited clubs, discussions, and shared annotations). Foxing Plus ($12.99/month) adds the AI reading companion. A 7-day free trial is available.",
-      },
-    },
-    {
-      "@type": "Question",
-      name: "Does Foxing have an AI for reading?",
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: "Yes. Foxing includes an AI companion. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. The AI companion is a Foxing Plus feature.",
-      },
-    },
-  ],
-};
+const FAQ_SCHEMA = faqPage([
+  {
+    question: "Where can I read classic books for free?",
+    answer:
+      "Foxing offers 1,400+ public domain classic books completely free, including Frankenstein, Pride and Prejudice, Sherlock Holmes, and Dracula. No subscription is required to read. Foxing is available on the web at foxing.app, with iOS and Android apps coming soon.",
+  },
+  {
+    question: "What classic books are available to read online free?",
+    answer:
+      "Foxing includes all major public domain works: Jane Austen (Pride and Prejudice, Sense and Sensibility, Emma), Charles Dickens, Mary Shelley (Frankenstein), Bram Stoker (Dracula), Arthur Conan Doyle (Sherlock Holmes), Mark Twain, Charlotte Bronte (Jane Eyre), and 1,400+ more titles from Standard Ebooks and Project Gutenberg.",
+  },
+  {
+    question: "What is Foxing?",
+    answer:
+      "Foxing is a reading home for classic literature. It offers 1,400+ free public domain books, an AI companion that helps you understand what you are reading, book clubs with chapter-by-chapter discussions, and a reading community. Available on the web, with mobile apps coming soon.",
+  },
+  {
+    question: "Is Foxing free to use?",
+    answer:
+      "Yes. The complete reading and social product is free: the reader, all 1,400+ classic books, tracking and stats, and the entire clubs layer (unlimited clubs, discussions, and shared annotations). Foxing Plus ($12.99/month) adds the AI reading companion. A 7-day free trial is available.",
+  },
+  {
+    question: "Does Foxing have an AI for reading?",
+    answer:
+      "Yes. Foxing includes an AI companion. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. The AI companion is a Foxing Plus feature.",
+  },
+]);
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env } = loaderBase(context, request);

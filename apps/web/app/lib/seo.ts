@@ -59,11 +59,13 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     type,
     noindex,
   } = input;
+  // Routes pass location.pathname, so /x/ would name /x/ as canonical; the page is /x.
+  const path = pathname.replace(/\/+$/, "") || "/";
   return headTags({
     origin: SITE_ORIGIN,
-    path: pathname,
+    path,
     // A long title drops the suffix and is cut at a word for search; the share card keeps it whole.
-    title: pathname === "/" ? title : searchTitle(title, ` | ${SITE_NAME}`),
+    title: path === "/" ? title : searchTitle(title, ` | ${SITE_NAME}`),
     socialTitle: title,
     description,
     image: image ? { url: image, alt: imageAlt } : SITE_CARD,

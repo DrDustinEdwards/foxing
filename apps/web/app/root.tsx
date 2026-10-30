@@ -28,6 +28,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
   { rel: "preconnect", href: COVER_ORIGIN },
+  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 ];
 
 // Set data-theme before paint so there is no theme flash. Stored preference wins;

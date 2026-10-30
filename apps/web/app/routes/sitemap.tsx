@@ -50,16 +50,19 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   // IndexNow: ping only when the URL set actually changed since the last sitemap
   // request (tracked in KV; no cron infra exists to run this on a schedule). Never
-  // blocks the response.
+  // blocks the response. Journal posts are left out: a Carrel publish submits its post
+  // at once (site-api's indexNowHook, lib/carrel/site-api.server.ts).
+  const postLocs = new Set(posts.map((p) => `/journal/${p.slug}`));
+  const pingUrls = urls.filter((u) => !postLocs.has(u.loc));
   ctx.waitUntil(
     (async () => {
-      const currentHash = await hashUrls(urls.map((u) => u.loc));
+      const currentHash = await hashUrls(pingUrls.map((u) => u.loc));
       const previousHash = await env.APP_KV.get(SITEMAP_HASH_KEY);
       if (currentHash === previousHash) return;
       await env.APP_KV.put(SITEMAP_HASH_KEY, currentHash);
       await pingIndexNow(
         request.url,
-        urls.map((u) => absoluteUrl(u.loc)),
+        pingUrls.map((u) => absoluteUrl(u.loc)),
       );
     })(),
   );
