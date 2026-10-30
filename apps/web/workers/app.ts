@@ -5,7 +5,7 @@
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
-import { WorkerEntrypoint, cache as workersCache } from "cloudflare:workers";
+import { WorkerEntrypoint } from "cloudflare:workers";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import {
   EDGE_CACHE_HEADER,
@@ -145,7 +145,8 @@ const app = new Hono<{ Bindings: Env }>();
 
 // The writes that can change a stored page: Carrel's (the Journal and its pictures) and the admin
 // API's (catalog, picks, awards, book of the month), the admin MCP's included. Each accepted one
-// purges every stored page; a failed purge is a log line and a page stale until it expires.
+// purges every stored page; a failed purge is a log line and a page stale until it expires. A purge
+// reaches only the cache of the entrypoint that calls it, so the Renderer runs it, over RPC.
 const PAGE_WRITERS = ["/api/carrel/v1", "/api/v1/admin"];
 app.use("*", async (c, next) => {
   await next();
@@ -153,7 +154,8 @@ app.use("*", async (c, next) => {
   if (method === "GET" || method === "HEAD" || !c.res.ok) return;
   const { pathname } = new URL(c.req.url);
   if (!PAGE_WRITERS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
-  c.executionCtx.waitUntil(purgeTags(workersCache, [PAGES_CACHE_TAG], `${method} ${pathname}`));
+  const renderer = (c.executionCtx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer;
+  if (renderer) c.executionCtx.waitUntil(renderer.purgePages(`${method} ${pathname}`));
 });
 
 // The Content-Security-Policy report sink the policy names.
@@ -352,6 +354,11 @@ function storedNowhere(response: Response): Response {
 export class Renderer extends WorkerEntrypoint<Env> {
   override fetch(request: Request): Promise<Response> {
     return renderShared(request, this.env, this.ctx);
+  }
+
+  /** Drops every stored page. Called over RPC from the gateway, which stores nothing; RPC methods bypass the cache. */
+  async purgePages(why: string): Promise<void> {
+    await purgeTags(this.ctx.cache, [PAGES_CACHE_TAG], why);
   }
 }
 
