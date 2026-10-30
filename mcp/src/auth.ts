@@ -5,10 +5,11 @@
  * do. A client-leg failure (this grant is not the administrator's) and an API
  * refusal (the admin API said no) mean different things and read differently.
  *
- * Free of MCP and OAuth imports so the grant logic is testable on its own.
+ * The per-call ownership and scope check (rule 12.1, 12.3) is site-runtime's
+ * authorizeCall, run by its invokeTool for every tool call (mcp-handler.ts).
  */
 
-import { authorizeCall as checkCall, mcpScopes } from "@dustinedwards/site-runtime/mcp-server";
+import { mcpScopes } from "@dustinedwards/site-runtime/mcp-server";
 
 /** The Cloudflare Access identity carried on an OAuth grant, set at sign-in. */
 export interface Props extends Record<string, unknown> {
@@ -27,25 +28,7 @@ export interface Props extends Record<string, unknown> {
 export const SCOPES = mcpScopes("foxing");
 export const SCOPE_READ = SCOPES.read;
 export const SCOPE_WRITE = SCOPES.write;
-export type Scope = typeof SCOPE_READ | typeof SCOPE_WRITE;
 
 /** Who is making one tool call, as the request boundary established it. Never read from the request. */
 export type Caller = { kind: "admin"; props: Props; scopes: readonly string[] };
 
-export { callerName } from "@dustinedwards/site-runtime/mcp-server";
-
-/**
- * THE PER-CALL OWNERSHIP CHECK. Ruling mcp-2026-10-10, rule 12.1.
- *
- * Every id a tool takes (a user, a book, a Book of the Month entry, a pick)
- * names a foxing.app record that only a Foxing admin may act on. So proving the
- * caller owns the id is proving the caller IS the configured administrator, on
- * every call rather than once at the door: a grant is long lived. The admin API
- * then re-checks the acting Foxing account's is_admin from D1, so a revoked
- * admin is refused there too.
- *
- * Returns null when the call may proceed, or the refusal to show the caller.
- */
-export function authorizeCall(env: { ADMIN_EMAIL?: string }, caller: Caller | undefined, scope: Scope): string | null {
-  return checkCall(env, caller, scope, { site: "foxing.app", scopes: SCOPES });
-}

@@ -20,23 +20,15 @@
  * create_journal_post is dropped for good: Carrel owns writing (rule 11). Book
  * of the Month delete stays in the admin screen.
  *
- * EVERY CALL GOES THROUGH invokeTool, which proves the caller owns what the
- * tool names (rule 12.1), checks the scope (12.3), and writes the append-only
- * log before and after (12.4).
+ * EVERY CALL GOES THROUGH site-runtime's invokeTool (mcp-handler.ts), which
+ * proves the caller owns what the tool names (rule 12.1), checks the scope each
+ * tool declares (12.3), and writes the append-only log before and after (12.4).
  */
 
-import { appendAudit, loggedArgs, loggedResult, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";
+import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
 import { z } from "zod";
 
 import { ApiLegError, callAdmin, type ApiCallResult, type ApiEnv } from "./api-client";
-import {
-  authorizeCall,
-  callerName,
-  SCOPE_READ,
-  SCOPE_WRITE,
-  type Caller,
-  type Scope,
-} from "./auth";
 
 export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & { ADMIN_EMAIL?: string };
 
@@ -135,14 +127,18 @@ type Annotations = {
   openWorldHint: boolean;
 };
 
+type Level = "read" | "write";
+
 export interface ToolDefinition {
   name: string;
-  /** The scope a call needs. A function where the action decides it. */
-  scope: Scope | ((args: Record<string, unknown>) => Scope);
+  /** The scope a call needs, never inferred from an annotation. A function where the action decides it. */
+  scope: Level | ((args: Record<string, unknown>) => Level);
   config: {
     title: string;
     description: string;
     inputSchema: z.ZodObject<z.ZodRawShape>;
+    /** The shape of structuredContent on success (the SDK validates it); a refusal is isError and unchecked. */
+    outputSchema: z.ZodObject<z.ZodRawShape>;
     annotations: Annotations;
   };
   handler: (env: ToolEnv, args: Record<string, unknown>) => Promise<ToolOutput>;
@@ -183,6 +179,24 @@ const offsetSchema = z
     "Optional. How many records to skip: pass next_offset from the previous page. Defaults to 0.",
   );
 
+/** One record as the admin API returns it; its fields are the API's to change. */
+const record = z.record(z.string(), z.unknown());
+
+/** A page from the admin API (`page` in packages/api/src/routes/admin.ts). */
+const apiPage = z.looseObject({
+  items: z.array(record),
+  has_more: z.boolean(),
+  next_offset: z.number().int().nullable(),
+});
+
+/** A page this server cuts from a whole list (pageOf). */
+const localPage = z.object({
+  items: z.array(z.unknown()),
+  total: z.number().int(),
+  has_more: z.boolean(),
+  next_offset: z.number().int().nullable(),
+});
+
 const yearSchema = z.number().int().min(2000).max(2100);
 const monthSchema = z.number().int().min(1).max(12);
 
@@ -215,7 +229,7 @@ function botmBody(args: Record<string, unknown>): Record<string, unknown> {
 export const TOOLS: ToolDefinition[] = [
   {
     name: "foxing_get_health",
-    scope: SCOPE_READ,
+    scope: "read",
     config: {
       title: "Foxing platform snapshot",
       description:
@@ -224,6 +238,17 @@ export const TOOLS: ToolDefinition[] = [
         "the ten newest sign-ups (id, username, tier, when). Read only. It does not yet report errors, " +
         "logs or the deploy: the admin API has no route for those.",
       inputSchema: z.object({}),
+      outputSchema: z.looseObject({
+        totalUsers: z.number(),
+        plusUsers: z.number(),
+        suspendedUsers: z.number(),
+        totalBooks: z.number(),
+        staffPicks: z.number(),
+        totalClubs: z.number(),
+        publishedJournal: z.number(),
+        publishedBotm: z.number(),
+        recentSignups: z.array(record),
+      }),
       annotations: READ_ONLY,
     },
     handler: (env) => single(env, "GET", "/stats", {}, READER_DATA_NOTE),
@@ -231,7 +256,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_find_user",
-    scope: SCOPE_READ,
+    scope: "read",
     config: {
       title: "Find Foxing users",
       description:
@@ -239,6 +264,7 @@ export const TOOLS: ToolDefinition[] = [
         "username, displayName, tier (free or plus), isAdmin, isSuspended and createdAt. Pass a user's " +
         "id to foxing_get_user_state for everything about them.",
       inputSchema: z.object({ query: querySchema, limit: limitSchema, offset: offsetSchema }),
+      outputSchema: apiPage,
       annotations: READ_ONLY,
     },
     handler: (env, args) =>
@@ -259,7 +285,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_get_user_state",
-    scope: SCOPE_READ,
+    scope: "read",
     config: {
       title: "Read one user's state",
       description:
@@ -267,6 +293,7 @@ export const TOOLS: ToolDefinition[] = [
         "timezone and the rest), email, last active (latest session start), and activity counts (books " +
         "finished, highlights, clubs joined, diary entries). A 404 means no user has that id.",
       inputSchema: z.object({ user_id: idSchema("user") }),
+      outputSchema: z.looseObject({ user: record, activity: record }),
       annotations: READ_ONLY,
     },
     handler: (env, args) =>
@@ -281,7 +308,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_inspect_book",
-    scope: SCOPE_READ,
+    scope: "read",
     config: {
       title: "Find catalog books",
       description:
@@ -289,6 +316,7 @@ export const TOOLS: ToolDefinition[] = [
         "has id, title, author, slug (its page is foxing.app/books/<slug>), sourceType, isStaffPick and " +
         "publicationYear. Use the id with foxing_edit_book or foxing_set_book_of_month.",
       inputSchema: z.object({ query: querySchema, limit: limitSchema, offset: offsetSchema }),
+      outputSchema: apiPage,
       annotations: READ_ONLY,
     },
     handler: (env, args) =>
@@ -303,7 +331,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_edit_book",
-    scope: SCOPE_WRITE,
+    scope: "write",
     config: {
       title: "Edit a book's metadata or staff pick",
       description:
@@ -326,6 +354,10 @@ export const TOOLS: ToolDefinition[] = [
             note: z.string().max(500).nullable().optional(),
           })
           .optional(),
+      }),
+      outputSchema: z.object({
+        book_id: z.string(),
+        applied: z.object({ fields: z.array(z.string()).optional(), staff_pick: z.boolean().optional() }),
       }),
       annotations: {
         readOnlyHint: false,
@@ -383,7 +415,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_set_book_of_month",
-    scope: (args) => (args.action === "list" || args.action === "get" ? SCOPE_READ : SCOPE_WRITE),
+    scope: (args) => (args.action === "list" || args.action === "get" ? "read" : "write"),
     config: {
       title: "Keep Foxing's Book of the Month",
       description:
@@ -405,6 +437,16 @@ export const TOOLS: ToolDefinition[] = [
         limit: limitSchema,
         offset: offsetSchema,
       }),
+      outputSchema: z
+        .looseObject({
+          items: z.array(z.unknown()).optional(),
+          total: z.number().int().optional(),
+          has_more: z.boolean().optional(),
+          next_offset: z.number().int().nullable().optional(),
+          id: z.string().optional(),
+          ok: z.boolean().optional(),
+        })
+        .describe("list: a page; get: the entry; create: its id; update, publish, unpublish: ok."),
       annotations: {
         readOnlyHint: false,
         // Destructive: update overwrites a curator note or link with no history.
@@ -448,7 +490,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_review_club_picks",
-    scope: SCOPE_READ,
+    scope: "read",
     config: {
       title: "Review celebrity book club picks",
       description:
@@ -460,6 +502,7 @@ export const TOOLS: ToolDefinition[] = [
         limit: limitSchema,
         offset: offsetSchema,
       }),
+      outputSchema: z.object({ clubs: z.array(z.unknown()), picks: localPage }),
       annotations: READ_ONLY,
     },
     handler: (env, args) =>
@@ -480,7 +523,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_publish_club_pick",
-    scope: SCOPE_WRITE,
+    scope: "write",
     config: {
       title: "Publish or edit a celebrity pick",
       description:
@@ -493,6 +536,10 @@ export const TOOLS: ToolDefinition[] = [
         notes: z.string().max(5000).nullable().optional(),
         curator_quote: z.string().max(2000).nullable().optional(),
         category: z.string().max(200).nullable().optional(),
+      }),
+      outputSchema: z.object({
+        pick_id: z.string(),
+        applied: z.object({ fields: z.array(z.string()).optional(), published: z.boolean().optional() }),
       }),
       annotations: {
         readOnlyHint: false,
@@ -538,7 +585,7 @@ export const TOOLS: ToolDefinition[] = [
 
   {
     name: "foxing_read_audit_log",
-    scope: SCOPE_READ,
+    scope: "read",
     config: {
       title: "Read Foxing's admin audit log",
       description:
@@ -546,6 +593,7 @@ export const TOOLS: ToolDefinition[] = [
         "params, actor (the admin's user id), source IP and when. Changes made through this server carry " +
         'params.via "operator". This is the site\'s log; the MCP server keeps its own call log as well.',
       inputSchema: z.object({ limit: limitSchema, offset: offsetSchema }),
+      outputSchema: apiPage,
       annotations: READ_ONLY,
     },
     handler: (env, args) =>
@@ -560,81 +608,3 @@ export const TOOLS: ToolDefinition[] = [
       ),
   },
 ];
-
-/**
- * THE ONE DOOR TO A TOOL HANDLER.
- *
- * In order: prove the caller owns what the tool names and holds its scope (a
- * refusal is logged and nothing is sent), write the `started` row (and refuse
- * if the log cannot be written, so no call runs unlogged), run the tool, write
- * the `finished` row. Log rows name the caller and never carry a credential.
- */
-export async function invokeTool(
-  env: ToolEnv,
-  caller: Caller | undefined,
-  tool: ToolDefinition,
-  args: Record<string, unknown>,
-): Promise<ToolOutput> {
-  const scope = typeof tool.scope === "function" ? tool.scope(args) : tool.scope;
-  const refused = authorizeCall(env, caller, scope);
-  const callId = crypto.randomUUID();
-  const who = caller ? callerName(caller) : "unknown";
-  const logged = await loggedArgs(args);
-
-  if (refused || !caller) {
-    const output = inputError(refused ?? "Refused.");
-    // A refusal sent nothing, so a failed log write here is reported, not fatal.
-    await appendAudit(env, {
-      callId,
-      phase: "refused",
-      caller: who,
-      tool: tool.name,
-      args: logged,
-      result: loggedResult(output),
-    }).catch((cause) =>
-      console.error(
-        JSON.stringify({
-          audit: "tool-call-log-refusal-failed",
-          callId,
-          caller: who,
-          tool: tool.name,
-          error: String(cause),
-        }),
-      ),
-    );
-    return output;
-  }
-
-  try {
-    await appendAudit(env, { callId, phase: "started", caller: who, tool: tool.name, args: logged });
-  } catch (cause) {
-    return inputError(
-      `Refused: the tool-call log could not be written (${cause instanceof Error ? cause.message : String(cause)}), ` +
-        "and no tool runs unlogged. Nothing was sent to foxing.app.",
-    );
-  }
-
-  const output = await tool.handler(env, args);
-
-  try {
-    await appendAudit(env, {
-      callId,
-      phase: "finished",
-      caller: who,
-      tool: tool.name,
-      args: logged,
-      result: loggedResult(output),
-    });
-  } catch (cause) {
-    console.error(
-      JSON.stringify({
-        audit: "tool-call-log-finish-failed",
-        callId,
-        caller: who,
-        tool: tool.name,
-        error: cause instanceof Error ? cause.message : String(cause),
-      }),
-    );
-  }
-  return output;
-}

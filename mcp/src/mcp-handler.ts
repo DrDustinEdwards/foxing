@@ -6,20 +6,31 @@
  * shim's removal condition: drop `isLegacyRequest` below to go modern-only.
  */
 
-import { routeMcpEra } from "@dustinedwards/site-runtime/mcp-server";
+import {
+  invokeTool,
+  mcpCacheHints,
+  routeMcpEra,
+  toolScopeChallenge,
+  type McpServerInfo,
+} from "@dustinedwards/site-runtime/mcp-server";
 import { isLegacyRequest, McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 
-import type { Caller } from "./auth";
-import { invokeTool, TOOLS, type ToolEnv } from "./tools";
+import { SCOPES, type Caller } from "./auth";
+import { TOOLS, type ToolEnv } from "./tools";
 
 export const MCP_ROUTE = "/mcp";
 
-const SERVER_INFO = {
+export const SERVER_INFO = {
   name: "foxing-admin-mcp",
   title: "Foxing Admin",
   version: "0.1.0",
-} as const;
+  websiteUrl: "https://foxing.app",
+  icons: [{ src: "https://foxing.app/favicon.svg", mimeType: "image/svg+xml" }],
+};
+
+/** This server as refusals, the step-up challenge and the tool-call log name it. */
+const SERVER: McpServerInfo = { site: "foxing.app", scopes: SCOPES, name: SERVER_INFO.name, version: SERVER_INFO.version };
 
 const INSTRUCTIONS =
   "Runs foxing.app for its administrator: the platform snapshot, finding readers and reading their " +
@@ -34,10 +45,26 @@ const INSTRUCTIONS =
 function buildServer(env: ToolEnv, caller: Caller | undefined) {
   return () => {
     // The element cap on tool arguments (GHSA-46jr-4wx8-v453): the SDK leaves it off by default.
-    const server = new McpServer(SERVER_INFO, { instructions: INSTRUCTIONS, maxToolInputElements: 10_000 });
+    // Results are per administrator, so every cache hint is private; the list changes only on deploy.
+    const server = new McpServer(SERVER_INFO, {
+      instructions: INSTRUCTIONS,
+      maxToolInputElements: 10_000,
+      cacheHints: mcpCacheHints({ ttlMs: 3_600_000 }),
+    });
     for (const tool of TOOLS) {
-      server.registerTool(tool.name, tool.config, (args: Record<string, unknown>) =>
-        invokeTool(env, caller, tool, args ?? {}),
+      // A grant without the tool's scope gets the 403 step-up before the tool runs (scopeChallenge);
+      // invokeTool still checks the scope, for a caller with no OAuth grant behind it.
+      server.registerTool(
+        tool.name,
+        { ...tool.config, scopeChallenge: toolScopeChallenge(env, SERVER, tool) },
+        (args: Record<string, unknown>, ctx) =>
+          invokeTool(env, SERVER, {
+            caller,
+            tool,
+            args: args ?? {},
+            meta: ctx.mcpReq._meta as { traceparent?: unknown } | undefined,
+            run: () => tool.handler(env, args ?? {}),
+          }),
       );
     }
     return server;

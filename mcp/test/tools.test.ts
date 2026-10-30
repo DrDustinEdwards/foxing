@@ -1,32 +1,20 @@
 /**
- * The tools against a fake foxing Worker: what each one sends, how a refusal
- * comes back, and the security floor (rule 12) in invokeTool.
+ * The tools against a fake foxing Worker: what each one sends and how a
+ * refusal comes back. The security floor (rule 12) around them is
+ * site-runtime's invokeTool, tested there; its wiring is in mcp-handler.test.ts.
  */
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
-import { invokeTool, TOOLS, type ToolEnv } from "../src/tools.ts";
-import {
-  FOXING_ADMIN_ID,
-  READER,
-  STRANGER,
-  TOKEN,
-  WRITER,
-  fakeFoxing,
-  fakeLog,
-  freshEnv,
-  type FakeFoxing,
-  type FakeLog,
-} from "./fakes.ts";
+import { TOOLS, type ToolEnv } from "../src/tools.ts";
+import { FOXING_ADMIN_ID, TOKEN, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
 
 let foxing: FakeFoxing;
-let log: FakeLog;
 let env: ToolEnv;
 
 beforeEach(() => {
   foxing = fakeFoxing();
-  log = fakeLog();
-  env = freshEnv(foxing, log);
+  env = freshEnv(foxing, fakeLog());
 });
 
 const tool = (name: string) => {
@@ -34,8 +22,7 @@ const tool = (name: string) => {
   assert.ok(found, `no tool ${name}`);
   return found;
 };
-const call = (name: string, args: Record<string, unknown> = {}, caller = WRITER) =>
-  invokeTool(env, caller, tool(name), args);
+const call = (name: string, args: Record<string, unknown> = {}) => tool(name).handler(env, args);
 const path = (i = 0) => `${foxing.calls[i].method} ${foxing.calls[i].url.pathname}${foxing.calls[i].url.search}`;
 
 describe("every request", () => {
@@ -49,51 +36,14 @@ describe("every request", () => {
     assert.equal(sent.headers.get("x-foxing-admin-id"), FOXING_ADMIN_ID);
   });
 
-  test("the token appears in no tool output and no log row", async () => {
+  test("the token appears in no tool output", async () => {
     foxing.reply({ status: 403, body: { error: { code: "forbidden", message: "Admin only." } } });
     const outputs = [await call("foxing_get_health"), await call("foxing_find_user", { query: "a" })];
     for (const out of outputs) assert.ok(!JSON.stringify(out).includes(TOKEN));
-    assert.ok(!JSON.stringify(log.rows).includes(TOKEN));
   });
 });
 
-describe("the security floor (rule 12)", () => {
-  test("PLANT 12.1: a grant that is not the administrator's runs no request", async () => {
-    const out = await call("foxing_get_user_state", { user_id: "reader-1" }, STRANGER);
-    assert.equal(out.isError, true);
-    assert.match(out.content[0].text, /does not belong to the administrator/);
-    assert.equal(foxing.calls.length, 0);
-    assert.deepEqual(log.rows.map((r) => r.phase), ["refused"]);
-  });
-
-  test("PLANT 12.3: a read-only grant is refused a write and sends nothing", async () => {
-    const out = await call("foxing_edit_book", { book_id: "b1", title: "New" }, READER);
-    assert.equal(out.isError, true);
-    assert.match(out.content[0].text, /read access only/);
-    assert.equal(foxing.calls.length, 0);
-  });
-
-  test("a read-only grant may still use a tool's read actions", async () => {
-    foxing.reply({ body: { items: [] } });
-    const out = await call("foxing_set_book_of_month", { action: "list" }, READER);
-    assert.equal(out.isError, undefined);
-    assert.equal(path(), "GET /api/v1/admin/botm");
-  });
-
-  test("PLANT 12.4: an allowed call is logged before and after", async () => {
-    await call("foxing_get_health");
-    assert.deepEqual(log.rows.map((r) => r.phase), ["started", "finished"]);
-    assert.equal(log.rows[0].caller, "access:admin@example.com");
-  });
-
-  test("PLANT 12.4: when the log cannot be written, no request is sent", async () => {
-    log.fail = true;
-    const out = await call("foxing_get_health");
-    assert.equal(out.isError, true);
-    assert.match(out.content[0].text, /no tool runs unlogged/);
-    assert.equal(foxing.calls.length, 0);
-  });
-
+describe("reader data (rule 12.5)", () => {
   test("12.5: reader-written text is marked as data", async () => {
     foxing.reply({ body: { items: [], has_more: false, next_offset: null } });
     const out = await call("foxing_find_user", { query: "x" });
