@@ -1,13 +1,16 @@
 import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
 import { catalogRepo } from "@foxing/core";
+import { hashUrls, pingIndexNow } from "~/lib/indexnow";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
 
+const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
+
 // Sitemap over live catalog data. Catalog books only (source_type='catalog');
 // community books are excluded by the repository queries, never listed here.
 export async function loader({ context, request }: Route.LoaderArgs) {
-  const { db } = loaderBase(context, request);
+  const { db, env, ctx } = loaderBase(context, request);
 
   const [books, authors, awards, clubs, posts, tags] = await Promise.all([
     catalogRepo.listSitemapBooks(db),
@@ -44,6 +47,25 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     })),
     ...tags.map((t) => ({ loc: journalTagPath(t.tag), priority: 0.4 })),
   ];
+
+  // IndexNow: ping only when the URL set actually changed since the last sitemap
+  // request (tracked in KV; no cron infra exists to run this on a schedule). Never
+  // blocks the response. Journal posts are left out: a Carrel publish submits its post
+  // at once (site-api's indexNowHook, lib/carrel/site-api.server.ts).
+  const postLocs = new Set(posts.map((p) => `/journal/${p.slug}`));
+  const pingUrls = urls.filter((u) => !postLocs.has(u.loc));
+  ctx.waitUntil(
+    (async () => {
+      const currentHash = await hashUrls(pingUrls.map((u) => u.loc));
+      const previousHash = await env.APP_KV.get(SITEMAP_HASH_KEY);
+      if (currentHash === previousHash) return;
+      await env.APP_KV.put(SITEMAP_HASH_KEY, currentHash);
+      await pingIndexNow(
+        request.url,
+        pingUrls.map((u) => absoluteUrl(u.loc)),
+      );
+    })(),
+  );
 
   // Expanded: the compact layout writes no <priority>.
   const body = sitemapDocument(
