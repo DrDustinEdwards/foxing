@@ -31,7 +31,7 @@ export * as recapDomain from "./recap";
 export type { Recap, RecapBook } from "./recap";
 
 export * as recommendationsDomain from "./recommendations";
-export { getRecommendations, rankCandidates, parseAiSelection } from "./recommendations";
+export { getRecommendations, rankCandidates } from "./recommendations";
 export type {
   Recommendation,
   RecommendationSet,

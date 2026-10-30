@@ -96,6 +96,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
         system,
         messages: [...ctx.history, { role: "user", content: userContent }],
         maxTokens,
+        feature: `companion:${input.action}`,
       })) {
         if (event.type === "text") {
           assistantText += event.delta;
