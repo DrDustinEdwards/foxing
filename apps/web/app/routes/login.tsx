@@ -13,7 +13,7 @@ import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/login";
 
 export function meta() {
-  return [{ title: "Sign in to Foxing" }];
+  return [{ title: "Sign in to Foxing" }, { name: "robots", content: "noindex" }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {

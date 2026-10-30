@@ -308,7 +308,7 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
         setSentTo(email);
       }}
     >
-      <Field label="Email" name="email" type="email" required autoComplete="email webauthn" />
+      <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
       {turnstileSiteKey ? <div ref={widget} /> : null}
       {checkFailed ? (
         <p role="alert" className="error">
