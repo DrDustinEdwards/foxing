@@ -21,7 +21,14 @@ import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
 import { preloads } from "@dustinedwards/site-runtime/preload";
 import { slashRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
-import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
+import {
+  billing,
+  catalogRepo,
+  companion,
+  createDb,
+  deleteExpiredAuthRows,
+  push,
+} from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, type ServerBuild, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
@@ -415,8 +422,9 @@ async function scheduled(
     return;
   }
 
-  // Daily cron: enqueue catalog books needing cached AI generation.
+  // Daily cron: clear expired sign-in rows, then enqueue catalog books needing cached AI generation.
   const db = createDb(env.DB);
+  ctx.waitUntil(deleteExpiredAuthRows(db, new Date()));
   const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
   const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
   for (const book of books) {
