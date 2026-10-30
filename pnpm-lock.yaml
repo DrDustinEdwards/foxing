@@ -297,8 +297,8 @@ importers:
         specifier: 1.7.12
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
-        specifier: github:DrDustinEdwards/capsomer#v0.42.0
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/68608a480f7ecca7519c8ee0e1b833e612906763(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: github:DrDustinEdwards/capsomer#v0.44.0
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/3bd33944a42bbdde59a841c5d848ace6360f1189(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       hast-util-to-string:
         specifier: 3.0.1
         version: 3.0.1
@@ -4235,8 +4235,8 @@ packages:
   caniuse-lite@1.0.30001792:
     resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/68608a480f7ecca7519c8ee0e1b833e612906763:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/68608a480f7ecca7519c8ee0e1b833e612906763}
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/3bd33944a42bbdde59a841c5d848ace6360f1189:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/3bd33944a42bbdde59a841c5d848ace6360f1189}
     version: 0.42.0
     engines: {node: '>=24.14.1'}
     hasBin: true
@@ -10901,7 +10901,7 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/68608a480f7ecca7519c8ee0e1b833e612906763(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/3bd33944a42bbdde59a841c5d848ace6360f1189(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.61.1)
       '@playwright/test': 1.61.1
