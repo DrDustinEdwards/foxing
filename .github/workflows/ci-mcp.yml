@@ -12,6 +12,9 @@ on:
       - "mcp/**"
       - ".github/workflows/ci-mcp.yml"
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest

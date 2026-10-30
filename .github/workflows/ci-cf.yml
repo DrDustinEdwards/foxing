@@ -30,6 +30,11 @@ on:
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "pnpm-lock.yaml"
 
+# Read only for every job. None comments, writes checks or uses OIDC; the e2e
+# artifact upload uses the runner's own token, not this one.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
