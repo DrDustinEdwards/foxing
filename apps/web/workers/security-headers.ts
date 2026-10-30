@@ -16,6 +16,7 @@ import {
   type CspSources,
 } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
+import { ipKey, limit } from "@dustinedwards/site-runtime/rate-limit";
 import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 
@@ -182,13 +183,25 @@ export function withSecurityHeaders(response: Response, request: Request): Respo
   return new Response(body, { status: response.status, statusText: response.statusText, headers });
 }
 
+/** Reports one address may send a minute before the rest are dropped (still 204). */
+const CSP_REPORTS_PER_MINUTE = 20;
+
 /**
  * The report sink: the family's one receiver (@dustinedwards/site-runtime/csp-report). It answers
  * every POST 204, reads at most 16 KB, logs at most 10 violations as trimmed JSON lines (origin and
- * path only; no address, user agent or cookie) and stores nothing. No limiter is passed: the web
- * app's limiters are the auth, write and companion budgets, and spending a reader's login budget
- * on their browser's violation reports would be wrong.
+ * path only; no address, user agent or cookie) and stores nothing. Per address, on its own
+ * `csp-report` bucket of the RATE_LIMITER Durable Object, so it never spends a reader's write or
+ * companion budget. It fails open: a limiter outage costs only log lines.
  */
-export function handleCspReport(request: Request): Promise<Response> {
-  return receiveCspReport(request, { headers: securityHeaders });
+export function handleCspReport(request: Request, env: Env): Promise<Response> {
+  const allow = async (r: Request) => {
+    const verdict = await limit(
+      env.RATE_LIMITER,
+      ipKey("csp-report", r).key,
+      [{ limit: CSP_REPORTS_PER_MINUTE, windowSeconds: 60 }],
+      { onUnavailable: "allow" },
+    );
+    return verdict.status !== "limited";
+  };
+  return receiveCspReport(request, { headers: securityHeaders, allow });
 }

@@ -5,14 +5,18 @@
 // stand in for a session on an admin, user, club or /api/v1 route, now or after a later change
 // to how sessions are read.
 
+import { submitIndexNow } from "@drdustinedwards/site-helpers/indexnow";
 import {
   createSiteApi,
+  indexNowHook,
   insidePrefix,
   MIN_KEY_LENGTH,
   type RateLimiter,
 } from "@dustinedwards/site-api";
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import type { Context, Hono, Next } from "hono";
+import { INDEXNOW_KEY } from "../indexnow";
+import { SITE_ORIGIN } from "../origins";
 import { journalSiteAdapter, type RenderDocument } from "./journal-adapter.server";
 
 type WorkerEnv = { Bindings: Env };
@@ -31,6 +35,9 @@ function carrelLimiter(env: Env): RateLimiter {
   };
 }
 
+/** A published change tells IndexNow at once; a request from a preview origin sends nothing. */
+const HOOKS = [indexNowHook({ submit: submitIndexNow, origin: SITE_ORIGIN, key: INDEXNOW_KEY })];
+
 /** One Carrel request, answered by the package over the Journal adapter. */
 function handleCarrelRequest(
   request: Request,
@@ -47,8 +54,9 @@ function handleCarrelRequest(
     }),
     key: env.CARREL_SITE_KEY,
     limiter: carrelLimiter(env),
+    hooks: HOOKS,
   });
-  return api.handle(request);
+  return api.handle(request, ctx);
 }
 
 /**

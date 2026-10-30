@@ -4,12 +4,14 @@
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
+import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
+import { slashRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
 import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
-import { adminAccessOk } from "../app/lib/access.server";
 import { anthropicCaller } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
@@ -69,7 +71,9 @@ const reactRouterHandler = createRequestHandler(
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
-  checkAdminAccess: (req, env, email) => adminAccessOk(env as unknown as Env, req, email),
+  // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).
+  checkAdminAccess: async (req, env, email) =>
+    (await accessAdmin(req, env as unknown as Env, { admins: [email] })) !== null,
   // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
   // other route works normally; only an actual companion call fails, cleanly, until
   // `wrangler secret put ANTHROPIC_API_KEY` runs.
@@ -128,7 +132,7 @@ const api = createApi({
 const app = new Hono<{ Bindings: Env }>();
 
 // The Content-Security-Policy report sink the policy names.
-app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw));
+app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
@@ -137,6 +141,13 @@ mountCarrel(app, reactRouterHandler);
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
 // minute per address, counted in D1 (site-runtime ./sign-in).
 app.on(["GET", "POST"], "/api/auth/*", async (c) => (await getAuth(c.env)).handler(c.req.raw));
+
+// Every write is an /api/v1 route (the admin API included), none reached through React Router's
+// own Origin check, so a browser write from another origin is refused here. An absent Origin
+// passes: the mobile app's fetch, the admin MCP's bearer calls and Stripe's webhook send none.
+// Better Auth (/api/auth) checks origins against its trustedOrigins itself, and Carrel's site
+// API is a bearer-key server call, so neither comes through this.
+app.use("/api/v1/*", async (c, next) => refuseCrossOrigin(c.req.raw) ?? next());
 
 // Search-as-you-type answers do not depend on the viewer (public books, profiles and
 // clubs only), so they come from the edge cache for everyone, signed in or not.
@@ -242,6 +253,9 @@ app.get("/media/journal/*", async (c) => {
 app.all("*", async (c) => {
   const req = c.req.raw;
   const url = new URL(req.url);
+  // One address per page: /books/ answers with a redirect to /books.
+  const slash = slashRedirect(req);
+  if (slash) return slash;
   // Legacy path 301s (GET navigations only). Preserve the query string; one hop.
   if (req.method === "GET") {
     const target = legacyRedirectTarget(url.pathname);

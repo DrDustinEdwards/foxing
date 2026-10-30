@@ -67,6 +67,6 @@ export type ApiDeps = {
   resolveHub?: (env: Bindings) => ClubLiveHub;
   // Whether Cloudflare Access let this request through for `email` (the signed-in
   // admin), checked on /admin/* and /ops/* (middleware/admin-access.ts). The Worker
-  // verifies Access's signed token (app/lib/access.server.ts). Absent: refused.
+  // verifies Access's signed token (site-runtime ./access accessAdmin). Absent: refused.
   checkAdminAccess?: (req: Request, env: Bindings, email: string) => Promise<boolean>;
 };
