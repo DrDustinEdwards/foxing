@@ -32,7 +32,7 @@ interface Env {
   // Operator bearer for /api/v1/admin/* (the admin MCP Worker). Unset: every bearer
   // request to the admin API is refused.
   ADMIN_OPERATOR_TOKEN?: string;
-  // Cloudflare Access in front of the admin pages and API (app/lib/access.server.ts): the
+  // Cloudflare Access in front of the admin pages and API (site-runtime ./access accessAdmin): the
   // team domain (https://<team>.cloudflareaccess.com) and the Access application's AUD tag.
   // Either unset: no browser reaches them (fails closed).
   ACCESS_TEAM_DOMAIN?: string;
