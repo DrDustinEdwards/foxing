@@ -115,7 +115,7 @@ export default function Login() {
           {sentTo ? (
             <>
               <Text className="font-ui text-center text-text-secondary-light dark:text-text-secondary-dark">
-                We sent a six-digit code to {sentTo}. It works for five minutes.
+                We sent a six-digit code to {sentTo}. It works for 15 minutes.
               </Text>
               <TextInput
                 value={code}
