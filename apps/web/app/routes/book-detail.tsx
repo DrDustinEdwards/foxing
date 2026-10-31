@@ -1,3 +1,4 @@
+import { preloads } from "@dustinedwards/site-runtime/preload";
 import { useMyBook, useShelves } from "@foxing/client";
 import { views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
@@ -8,9 +9,25 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
 import { getAuth } from "~/lib/auth.server";
+import { coverSrc, coverSrcSet } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { bookLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
+import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
+
+/**
+ * The LCP cover's preload for the Link header, so Early Hints starts it before the HTML arrives
+ * (site-runtime ./preload). None with a srcset, whose width the browser picks, and none for a
+ * cover URL a Link header cannot carry (preloads refuses it), which would otherwise fail the page.
+ */
+function coverLink(src: string | null): string {
+  if (!src || coverSrcSet(src)) return "";
+  try {
+    return preloads([{ href: coverSrc(src), as: "image" }]).header;
+  } catch {
+    return "";
+  }
+}
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env } = loaderBase(context, request);
@@ -28,35 +45,42 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     ? await Promise.all([views.myBook(db, userId, book.id), views.shelves(db, userId)])
     : [undefined, []];
 
-  return {
-    community,
-    readable,
-    awards,
-    related,
-    signedIn: !!userId,
-    myBook,
-    shelves,
-    bookId: book.id,
-    loginHref: `/login?redirect=/books/${book.slug}`,
-    buys: page.buys,
-    book: {
-      slug: book.slug,
-      title: book.title,
-      author: book.author,
-      authorSlug: book.authorSlug,
-      description: book.description,
-      coverUrl: book.coverUrl,
-      publicationYear: book.publicationYear,
-      language: book.language,
-      wordCount: book.wordCount,
-      subjects: book.subjects,
-      isbn13: book.isbn13,
-      publisher: book.publisher,
+  const link = coverLink(book.coverUrl);
+  return data(
+    {
+      community,
+      readable,
+      awards,
+      related,
+      signedIn: !!userId,
+      myBook,
+      shelves,
+      bookId: book.id,
+      loginHref: `/login?redirect=/books/${book.slug}`,
+      buys: page.buys,
+      book: {
+        slug: book.slug,
+        title: book.title,
+        author: book.author,
+        authorSlug: book.authorSlug,
+        description: book.description,
+        coverUrl: book.coverUrl,
+        publicationYear: book.publicationYear,
+        language: book.language,
+        wordCount: book.wordCount,
+        subjects: book.subjects,
+        isbn13: book.isbn13,
+        publisher: book.publisher,
+      },
     },
-  };
+    link ? { headers: { Link: link } } : undefined,
+  );
 }
 
-export const headers = catalogPageHeaders;
+export const headers: Route.HeadersFunction = ({ loaderHeaders }) => {
+  const link = loaderHeaders.get("Link");
+  return { ...catalogPageHeaders(), ...(link ? { Link: link } : {}) };
+};
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book not found | Foxing" }];
