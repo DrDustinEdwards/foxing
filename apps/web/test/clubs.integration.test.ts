@@ -3,6 +3,7 @@ import type { ClubLiveHub } from "@foxing/api";
 import { type LiveMessage, createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { type ClubRoom, clubRoomHub } from "../workers/club-room";
 import { callApi, seedUser, testApi } from "./test-api";
 
 // Captures every live broadcast so tests can assert the write -> commit -> notify path
@@ -303,17 +304,10 @@ describe("clubs API (web -> api -> core -> D1)", () => {
   });
 
   it("a member's live socket upgrades through the API to the club's ClubRoom", async () => {
-    // The hub as the Worker builds it: the upgrade is forwarded to the real Durable Object,
-    // whose 101 carries the socket and headers that cannot be changed.
-    const ns = (env as unknown as { CLUB_ROOM: DurableObjectNamespace }).CLUB_ROOM;
-    const hub: ClubLiveHub = {
-      async broadcast() {},
-      async connect(clubId, userId, request) {
-        const url = new URL(request.url);
-        url.searchParams.set("uid", userId);
-        return ns.getByName(clubId).fetch(new Request(url, request));
-      },
-    };
+    // The Worker's own hub: the upgrade goes to the real Durable Object, whose 101
+    // carries the socket and headers that cannot be changed.
+    const ns = (env as unknown as { CLUB_ROOM: DurableObjectNamespace<ClubRoom> }).CLUB_ROOM;
+    const hub = clubRoomHub(ns);
     await seedUser("liveowner", "plus");
     const { body } = await createClub("liveowner");
     const res = await apiWith(hub).fetch(

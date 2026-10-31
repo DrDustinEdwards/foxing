@@ -37,6 +37,7 @@ import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.serv
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { runBackup, runMediaBackup } from "../app/lib/backup.server";
+import { clubRoomHub } from "./club-room";
 import {
   CSP_REPORT_PATH,
   cspNonceFor,
@@ -127,25 +128,8 @@ const api = createApi({
     }
     return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
   },
-  // The live layer. One ClubRoom Durable Object per club; the API calls
-  // broadcast() only AFTER a write commits to D1 (write -> commit -> notify), and
-  // connect() forwards a membership-checked upgrade to that club's object. The DO
-  // never writes D1.
-  resolveHub: (env) => {
-    const ns = (env as unknown as Env).CLUB_ROOM;
-    return {
-      async broadcast(clubId, message) {
-        await ns.getByName(clubId).broadcast(message);
-      },
-      async connect(clubId, userId, request) {
-        // Pass the verified user id on the URL; new Request(url, request) preserves the
-        // WebSocket upgrade so the ClubRoom can accept it.
-        const url = new URL(request.url);
-        url.searchParams.set("uid", userId);
-        return ns.getByName(clubId).fetch(new Request(url, request));
-      },
-    };
-  },
+  // The live layer: one ClubRoom Durable Object per club (clubRoomHub). The DO never writes D1.
+  resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
 });
 
 const app = new Hono<{ Bindings: Env }>();
