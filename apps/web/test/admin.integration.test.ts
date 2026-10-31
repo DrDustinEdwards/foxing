@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { testApi } from "./test-api";
 
-// The admin write surface is gated on profiles.is_admin and logs every mutation to
+// The admin write surface is gated on the admin list (ADMIN_EMAILS, else profiles.is_admin) and logs every mutation to
 // admin_audit_log. This drives the API contract directly (the x-test-user stub stands in
 // for the Better Auth session the Worker injects). The visible admin UI is covered by the
 // Playwright admin specs, which need a seeded admin account.
@@ -56,6 +56,16 @@ describe("admin write surface gate + audit log", () => {
     await db.delete(schema.user);
     await seedUser("admin", { isAdmin: true });
     await seedUser("reader", { isAdmin: false });
+  });
+
+  it("lets ADMIN_EMAILS decide once it is set, in any case, over profiles.is_admin", async () => {
+    const asUser = (user: string) =>
+      api.fetch(
+        new Request("https://test.local/admin/users", { headers: { "x-test-user": user } }),
+        { ...env, ADMIN_EMAILS: " Reader@Example.com " } as never,
+      );
+    expect((await asUser("reader")).status).toBe(200);
+    expect((await asUser("admin")).status).toBe(403);
   });
 
   it("rejects an anonymous request with 401", async () => {

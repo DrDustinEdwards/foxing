@@ -32,6 +32,10 @@ interface Env {
   // Operator bearer for /api/v1/admin/* (the admin MCP Worker). Unset: every bearer
   // request to the admin API is refused.
   ADMIN_OPERATOR_TOKEN?: string;
+  // Who is an admin: comma-separated emails, compared lower case (core isAdminAccount, through
+  // site-runtime's adminEmails), checked in code as well as by Access. A secret. Unset:
+  // profiles.is_admin decides, with an admin_list_unset warning in the log.
+  ADMIN_EMAILS?: string;
   // Cloudflare Access in front of the admin pages and API (site-runtime ./access accessAdmin): the
   // team domain (https://<team>.cloudflareaccess.com) and the Access application's AUD tag.
   // Either unset: no browser reaches them (fails closed).

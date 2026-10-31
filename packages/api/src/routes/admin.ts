@@ -5,7 +5,7 @@
 // (actor + source ip, plus via: "operator" for bearer calls). Every write returns a
 // plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
 // changes (suspend, tier, admin) are preview then perform; see below.
-import { adminRepo, type Db, deleteAccount } from "@foxing/core";
+import { adminListIsSet, adminRepo, type Db, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { z } from "zod";
@@ -86,7 +86,7 @@ adminRoutes.get("/admin/users", async (c) => {
   const query = parseQuery(c, pageQuery);
   return c.json(
     await page(query, (limit, offset) =>
-      adminRepo.listUsers(c.get("db"), { q: query.q, limit, offset }),
+      adminRepo.listUsers(c.get("db"), { q: query.q, limit, offset, admins: c.env }),
     ),
   );
 });
@@ -264,6 +264,9 @@ adminRoutes.post("/admin/users/:id/admin", rateLimit("write"), async (c) => {
   const admin = requireAdmin(c);
   const id = c.req.param("id");
   const { on, confirm } = await parseJson(c, z.object({ on: z.boolean(), confirm: confirmToken }));
+  // Once ADMIN_EMAILS is set it alone decides, and this flag no longer does anything.
+  if (adminListIsSet(c.env))
+    throw errors.conflict("Admins come from the ADMIN_EMAILS setting. Change it there.");
   // Guard against locking yourself out by revoking your own admin here.
   if (!on && id === admin.id) throw errors.validation({ id: "You cannot revoke your own admin." });
   return previewOrPerform(c, admin, confirm, {

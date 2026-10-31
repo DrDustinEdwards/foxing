@@ -1,5 +1,5 @@
 // Admin gate for the /admin/* loaders. Builds on requireProfile, then enforces
-// profiles.is_admin and Cloudflare Access (site-runtime ./access). A signed-in non-admin is
+// the admin list (core isAdminAccount: ADMIN_EMAILS, else profiles.is_admin) and Cloudflare Access (site-runtime ./access). A signed-in non-admin is
 // sent to /home (the admin surface is not secret, just operator-only); an admin whose
 // request Access did not sign for them is refused; anonymous and un-onboarded users are
 // handled upstream by requireProfile (to /login, /onboarding). Reads inside admin loaders run in-process via

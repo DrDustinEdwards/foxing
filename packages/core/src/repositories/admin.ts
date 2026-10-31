@@ -10,6 +10,7 @@
 import { and, desc, eq, like, or, sql, type SQL } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import type { Db } from "../db";
+import { type AdminSettings, isAdminAccount } from "../domain/admins";
 import {
   adminAuditLog,
   annotations,
@@ -126,9 +127,11 @@ export type AdminUserRow = {
   createdAt: Date;
 };
 
+/** `isAdmin` is the admin list's answer (isAdminAccount: ADMIN_EMAILS in `admins`, else the
+ *  profiles.is_admin flag). */
 export async function listUsers(
   db: Db,
-  opts: { q?: string; limit?: number; offset?: number } = {},
+  opts: { q?: string; limit?: number; offset?: number; admins?: AdminSettings } = {},
 ): Promise<AdminUserRow[]> {
   const limit = Math.min(opts.limit ?? 50, 100);
   const q = opts.q?.trim();
@@ -141,15 +144,20 @@ export async function listUsers(
       isAdmin: profiles.isAdmin,
       isSuspended: profiles.isSuspended,
       createdAt: profiles.createdAt,
+      email: user.email,
     })
     .from(profiles)
+    .leftJoin(user, eq(user.id, profiles.id))
     .where(
       q ? or(like(profiles.username, `%${q}%`), like(profiles.displayName, `%${q}%`)) : undefined,
     )
     .orderBy(desc(profiles.createdAt))
     .limit(limit)
     .offset(opts.offset ?? 0);
-  return rows;
+  return rows.map(({ email, ...row }) => ({
+    ...row,
+    isAdmin: isAdminAccount(opts.admins ?? {}, email ?? "", row.isAdmin),
+  }));
 }
 
 /** The account behind an operator call's named actor (api operator bearer). Only the
