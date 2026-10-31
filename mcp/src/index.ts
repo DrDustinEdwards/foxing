@@ -2,8 +2,9 @@
  * Foxing Admin: the admin MCP server for foxing.app.
  *
  * Ruling capsid/rulings/mcp-2026-10-10.md and capsid/research/design-mcp-servers.md
- * section 5. Its own Worker (rule 9 as amended): it holds no Stripe key, no D1,
- * no R2 and no Foxing data binding. Its only route to Foxing is the FOXING
+ * section 5. Its own Worker (rule 9 as amended): it holds no Stripe key, no D1
+ * and no Foxing data binding (its one R2 bucket holds only copies of its own
+ * tool-call log). Its only route to Foxing is the FOXING
  * service binding to /api/v1/admin, which owns every rule and re-checks the
  * acting admin on every call. If this Worker vanished, nothing about what is
  * allowed on foxing.app would change.
@@ -34,6 +35,7 @@ import { MCP_ROUTE } from "./mcp-handler";
 
 export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
+import { exportAuditLog } from "@dustinedwards/site-runtime/audit-log";
 
 export type { Env };
 
@@ -96,6 +98,12 @@ export default {
     allowReport: async (request, env) =>
       (await checkRateLimit(env.MCP_RATE_LIMIT, `csp-report:${request.headers.get("CF-Connecting-IP") ?? "unknown"}`)).allowed,
   }),
+  // The daily copy of the tool-call log to R2 and the 90-day prune (L6-L7); a failed write throws, so the run shows failed.
+  scheduled: async (_controller, env) => {
+    if (!env.AUDIT_BUCKET) throw new Error("AUDIT_BUCKET is not bound; the tool-call log is not copied");
+    const done = await exportAuditLog(env, env.AUDIT_BUCKET);
+    console.log(JSON.stringify({ event: "tool_call_log_exported", exported: done.exported, pruned: done.pruned }));
+  },
 } satisfies ExportedHandler<Env>;
 
 async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

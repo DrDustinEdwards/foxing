@@ -27,6 +27,8 @@ export interface Env
   PUBLIC_ORIGIN?: string;
   /** Comma-separated redirect URIs a dynamically registered client may use, matched exactly. */
   DCR_REDIRECT_URIS?: string;
+  /** The tool-call log's copies in R2 (index.ts's scheduled export, L6-L7). */
+  AUDIT_BUCKET?: R2Bucket;
 }
 
 /** The configured origin, or "" when unset. There is no default: an unset origin serves nothing. */

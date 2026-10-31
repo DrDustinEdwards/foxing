@@ -6,13 +6,7 @@
  * shim's removal condition: drop `isLegacyRequest` below to go modern-only.
  */
 
-import {
-  invokeTool,
-  mcpCacheHints,
-  routeMcpEra,
-  toolScopeChallenge,
-  type McpServerInfo,
-} from "@dustinedwards/site-runtime/mcp-server";
+import { mcpCacheHints, registerTools, routeMcpEra, type McpServerInfo } from "@dustinedwards/site-runtime/mcp-server";
 import { isLegacyRequest, McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 
@@ -24,7 +18,7 @@ export const MCP_ROUTE = "/mcp";
 export const SERVER_INFO = {
   name: "foxing-admin-mcp",
   title: "Foxing Admin",
-  version: "0.1.0",
+  version: "0.2.0",
   websiteUrl: "https://foxing.app",
   icons: [{ src: "https://foxing.app/favicon.svg", mimeType: "image/svg+xml" }],
 };
@@ -53,22 +47,10 @@ function buildServer(env: ToolEnv, caller: Caller | undefined) {
       maxToolInputElements: 10_000,
       cacheHints: mcpCacheHints({ ttlMs: 3_600_000 }),
     });
-    for (const tool of TOOLS) {
-      // A grant without the tool's scope gets the 403 step-up before the tool runs (scopeChallenge);
-      // invokeTool still checks the scope, for a caller with no OAuth grant behind it.
-      server.registerTool(
-        tool.name,
-        { ...tool.config, scopeChallenge: toolScopeChallenge(env, SERVER, tool) },
-        (args: Record<string, unknown>, ctx) =>
-          invokeTool(env, SERVER, {
-            caller,
-            tool,
-            args: args ?? {},
-            meta: ctx.mcpReq._meta,
-            run: () => tool.handler(env, args ?? {}),
-          }),
-      );
-    }
+    // site-runtime's registerTools: only the tools the grant can call are listed (T7), each with the server's icon
+    // (T9), the 403 step-up before a tool runs, and invokeTool, which still checks the scope (for a caller with no OAuth
+    // grant behind it), logs the call and hands the handler the request's abort signal (P11).
+    registerTools(server as unknown as Parameters<typeof registerTools>[0], TOOLS, { env, server: SERVER, caller, icons: SERVER_INFO.icons });
     return server;
   };
 }

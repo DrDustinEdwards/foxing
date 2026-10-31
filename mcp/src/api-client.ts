@@ -65,7 +65,7 @@ export async function callAdmin(
   env: Partial<ApiEnv>,
   method: "GET" | "POST" | "PATCH",
   path: string,
-  options: { query?: Query; body?: Record<string, unknown> } = {},
+  options: { query?: Query; body?: Record<string, unknown>; signal?: AbortSignal } = {},
 ): Promise<ApiCallResult> {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(options.query ?? {})) {
@@ -75,6 +75,8 @@ export async function callAdmin(
     method,
     headers: { [ACTOR_HEADER]: env.FOXING_ADMIN_ID?.trim() ?? "" },
     json: options.body,
+    // The call's abort signal (checklist P11): a client that closes the stream stops the request to the API.
+    signal: options.signal,
   });
   if (ok) return { status, ok: true, data: body };
 

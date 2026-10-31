@@ -36,8 +36,10 @@ describe("bindings", () => {
         "secrets_store_secrets",
       ].includes(k),
     );
-    assert.deepEqual(keys.sort(), ["durable_objects", "kv_namespaces", "services"]);
+    assert.deepEqual(keys.sort(), ["durable_objects", "kv_namespaces", "r2_buckets", "services"]);
     assert.deepEqual(config.services, [{ binding: "FOXING", service: "foxing" }]);
+    // The one bucket is this server's own copy of its tool-call log (L6), never one of Foxing's.
+    assert.deepEqual(config.r2_buckets, [{ binding: "AUDIT_BUCKET", bucket_name: "foxing-admin-mcp-tool-calls" }]);
     assert.deepEqual(
       config.kv_namespaces.map((k: { binding: string }) => k.binding),
       ["OAUTH_KV"],
