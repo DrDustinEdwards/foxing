@@ -15,6 +15,9 @@ const full: JournalFields = {
   coverImageAlt: "A worn copy of Middlemarch",
   tags: ["essays", "classics"],
   featured: true,
+  authors: ["Ada Reader"],
+  series: "Rereading Eliot",
+  seriesPart: 2,
   content: "## Opening\n\n---\n\nA rule inside the body is body text.\n",
 };
 
@@ -28,6 +31,9 @@ describe("journal source mapping", () => {
       coverImageAlt: null,
       tags: [],
       featured: false,
+      authors: [],
+      series: null,
+      seriesPart: null,
     };
     expect(sourceToJournal(journalToSource(empty))).toEqual(empty);
   });

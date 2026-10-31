@@ -1,13 +1,19 @@
 // The React Router server build, for tests that run the real Worker entry (workers/app.ts): the
 // real server entry and the real root (its Layout, loader and error boundary) around two stand-in
-// pages, a cacheable public page and the reader. vitest.config.ts aliases
+// pages, a cacheable public page and the reader, and the real journal post route, which Carrel's
+// preview draws. vitest.config.ts aliases
 // virtual:react-router/server-build here, so what the security-headers test grades is what the
 // real document shell renders, its inline scripts and nonces included.
 import { createElement as h } from "react";
 import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
-import { UNSAFE_withErrorBoundaryProps, type ServerBuild } from "react-router";
+import {
+  UNSAFE_withComponentProps,
+  UNSAFE_withErrorBoundaryProps,
+  type ServerBuild,
+} from "react-router";
 import * as entryServer from "../app/entry.server";
 import * as rootModule from "../app/root";
+import * as journalPost from "../app/routes/journal-post";
 
 const Page = () =>
   h("main", { id: "main" }, h("img", { src: "https://covers.foxing.app/x.jpg", alt: "" }));
@@ -46,6 +52,12 @@ const build = {
     },
     home: { id: "home", parentId: "root", index: true, module: publicPage },
     read: { id: "read", parentId: "root", path: "read/:slug", module: { default: Page } },
+    journal: {
+      id: "journal",
+      parentId: "root",
+      path: "journal/:slug",
+      module: { ...journalPost, default: UNSAFE_withComponentProps(journalPost.default as never) },
+    },
   },
   assets: {
     entry: { imports: [], module: "/stub-entry.js" },
@@ -53,6 +65,7 @@ const build = {
       root: assetRoute("root", "", true),
       home: assetRoute("home", undefined, false, "root"),
       read: assetRoute("read", "read/:slug", false, "root"),
+      journal: assetRoute("journal", "journal/:slug", true, "root"),
     },
     url: "/stub-manifest.js",
     version: "stub",
