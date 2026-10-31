@@ -38,7 +38,7 @@ const SITE_SOURCES: CspSources = {
 };
 
 /** The site policy for this response: its nonce when it is a rendered page, none otherwise. */
-export function contentSecurityPolicy(nonce?: string): string {
+function contentSecurityPolicy(nonce?: string): string {
   return buildContentSecurityPolicy({
     sources: SITE_SOURCES,
     nonce,

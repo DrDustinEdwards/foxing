@@ -12,7 +12,7 @@ export function requireSession(c: Context<Env>): SessionUser {
 }
 
 /** The ceiling for an /api/v1 JSON body: far past a journal post or a 20,000-character review. */
-export const BODY_MAX_BYTES = 1024 * 1024;
+const BODY_MAX_BYTES = 1024 * 1024;
 
 /** A sync push: up to 500 queued writes, each with up to 20,000 characters of text. */
 export const SYNC_BODY_MAX_BYTES = 16 * 1024 * 1024;
