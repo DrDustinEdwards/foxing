@@ -17,6 +17,7 @@ import type { GoalWithProgress, Shelf, ShelfStatus, Streak } from "@foxing/types
 import { useState } from "react";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
+import { Meter } from "capsomer/react/meter";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
@@ -212,20 +213,13 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
                   Remove
                 </button>
               </div>
-              <div
-                className="mt-1 fx-library-box-2"
-                role="progressbar"
-                aria-valuenow={progress}
-                aria-valuemax={goal.target}
-              >
-                <div
-                  className="fx-library-box-3"
-                  style={{ width: `${Math.min(100, (progress / goal.target) * 100)}%` }}
-                />
-              </div>
-              <p className="mt-1 fine">
-                {progress} of {goal.target}
-              </p>
+              <Meter
+                className="mt-1"
+                label="Progress"
+                value={progress}
+                max={goal.target}
+                valueText={`${progress} of ${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
+              />
             </li>
           ))}
         </ul>
