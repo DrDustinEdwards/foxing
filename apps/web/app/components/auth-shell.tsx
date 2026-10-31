@@ -5,7 +5,7 @@
 //
 // The ways in are the family's one sign-in (site-runtime ./sign-in): a passkey first, Google
 // and Apple, and an emailed link (with Turnstile once its keys are set). No passwords.
-import { SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
+import { CONFIRM_PATH, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
@@ -15,9 +15,9 @@ import { signIn } from "~/lib/auth-client";
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
 
-/** After an email link: offer a passkey (/passkey skips straight on once one exists). */
-const AFTER_LINK = "/passkey?next=/me";
-const AFTER_LINK_NEW = "/passkey?next=/onboarding";
+/** After an email link: offer a passkey (/passkey skips straight on once one exists), then `next`. */
+const afterLink = (next: string) => `/passkey?next=${encodeURIComponent(next)}`;
+const AFTER_LINK_NEW = afterLink("/onboarding");
 
 export function AuthShell({
   title,
@@ -222,11 +222,11 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
 }
 
 /** Google and Apple, each when the site has its settings. */
-export function SocialButtons({ methods }: { methods: SignInMethods }) {
+export function SocialButtons({ methods, next }: { methods: SignInMethods; next?: string }) {
   return (
     <>
-      {methods.google ? <GoogleButton /> : null}
-      {methods.apple ? <AppleButton /> : null}
+      {methods.google ? <GoogleButton redirectTo={next} /> : null}
+      {methods.apple ? <AppleButton redirectTo={next} /> : null}
     </>
   );
 }
@@ -260,7 +260,13 @@ export function AuthDivider() {
  * field also offers saved passkeys (autocomplete "webauthn"). With Turnstile on, its widget
  * sits above the button and its token goes as Better Auth's x-captcha-response header.
  */
-export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function MagicLinkForm({
+  turnstileSiteKey,
+  next = "/me",
+}: {
+  turnstileSiteKey: string | null;
+  next?: string;
+}) {
   const [pending, setPending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [checkFailed, setCheckFailed] = useState(false);
@@ -274,7 +280,7 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
     return mountTurnstile(widget.current, turnstileSiteKey);
   }, [turnstileSiteKey, attempt]);
 
-  if (sentTo) return <SignInCodeForm email={sentTo} />;
+  if (sentTo) return <SignInCodeForm email={sentTo} next={next} />;
 
   return (
     <form
@@ -290,8 +296,10 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
           .magicLink(
             {
               email,
-              callbackURL: AFTER_LINK,
+              callbackURL: afterLink(next),
               newUserCallbackURL: AFTER_LINK_NEW,
+              // A spent or expired link shows its own message on the confirm page.
+              errorCallbackURL: CONFIRM_PATH,
             },
             turnstileSiteKey ? { headers: { "x-captcha-response": token } } : undefined,
           )
@@ -328,7 +336,7 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
  * included (it then lands on /onboarding through /me). Three wrong codes spend it; the link
  * still works.
  */
-function SignInCodeForm({ email }: { email: string }) {
+function SignInCodeForm({ email, next }: { email: string; next: string }) {
   const [pending, setPending] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
@@ -341,7 +349,7 @@ function SignInCodeForm({ email }: { email: string }) {
         const otp = String(new FormData(event.currentTarget).get("code") ?? "").trim();
         const res = await signIn.emailOtp({ email, otp }).catch(() => null);
         if (res && !res.error) {
-          window.location.assign(AFTER_LINK);
+          window.location.assign(afterLink(next));
           return;
         }
         setPending(false);

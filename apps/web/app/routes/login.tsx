@@ -10,26 +10,29 @@ import {
   signInErrorMessage,
 } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
+import { safeNextPath } from "~/lib/auth-client";
 import type { Route } from "./+types/login";
 
 export function meta() {
   return [{ title: "Sign in to Foxing" }, { name: "robots", content: "noindex" }];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
+// `next` is where to return after signing in again (signInAgainIfStale), else /me.
+export function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  return { methods: signInMethods(env, { social: true }) };
+  const next = new URL(request.url).searchParams.get("next");
+  return { methods: signInMethods(env, { social: true }), next: next ? safeNextPath(next) : null };
 }
 
 export default function Login({ loaderData }: Route.ComponentProps) {
-  const { methods } = loaderData;
+  const { methods, next } = loaderData;
   const [params] = useSearchParams();
   const error = signInErrorMessage(params.get("error"));
 
   return (
     <AuthShell
       title="Sign in"
-      subtitle="Welcome back to Foxing."
+      subtitle={next ? "Sign in again to go on." : "Welcome back to Foxing."}
       footer={
         <>
           New to Foxing? <AuthLink to="/signup">Create an account</AuthLink>
@@ -43,10 +46,10 @@ export default function Login({ loaderData }: Route.ComponentProps) {
       ) : null}
 
       <div className="stack">
-        <PasskeyButton />
-        <SocialButtons methods={methods} />
+        <PasskeyButton redirectTo={next ?? undefined} />
+        <SocialButtons methods={methods} next={next ?? undefined} />
         <AuthDivider />
-        <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} />
+        <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} next={next ?? undefined} />
       </div>
     </AuthShell>
   );
