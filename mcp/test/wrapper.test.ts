@@ -110,8 +110,13 @@ describe("apiHandler", () => {
     assert.match(await response.text(), /does not belong to its administrator/);
   });
 
-  test("with the right audience and administrator, it reaches the rate limiter, which fails closed unbound", async () => {
-    const response = await apiHandler.fetch(request(), env(), ctxWith(`${ORIGIN}/mcp`));
+  test("with the right audience and administrator, it reaches the rate limiter, which fails closed unbound and logs the refusal", async () => {
+    const log = fakeLog();
+    const response = await apiHandler.fetch(request(), { ...env(), TOOL_CALL_LOG: log.binding }, ctxWith(`${ORIGIN}/mcp`));
     assert.equal(response.status, 429);
+    assert.deepEqual(
+      log.rows.map((row) => [row.phase, row.caller]),
+      [["rate-limited", `access:${WRITER.props.email}`]],
+    );
   });
 });
