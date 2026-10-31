@@ -14,6 +14,7 @@ import {
   type RateLimiter,
 } from "@dustinedwards/site-api";
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
+import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import type { Context, Hono, Next } from "hono";
 import { INDEXNOW_KEY } from "../indexnow";
 import { SITE_ORIGIN } from "../origins";
@@ -80,7 +81,14 @@ async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<b
 export function mountCarrel(app: Hono<WorkerEnv>, renderDocument: RenderDocument | null): void {
   app.use("*", async (c: Context<WorkerEnv>, next: Next) => {
     if (await presentsCarrelKeyOffPrefix(c.req.raw, c.env)) {
-      console.warn(JSON.stringify({ siteApi: "refused", reason: "key-off-prefix" }));
+      logEvent(
+        OWASP_EVENTS.authorizationFailure,
+        {
+          ...requestFields(c.req.raw),
+          reason: "carrel-key-off-prefix",
+        },
+        { level: "warn" },
+      );
       return c.json(
         { error: "unauthorized", message: "The Carrel key is accepted only under /api/carrel/v1." },
         401,

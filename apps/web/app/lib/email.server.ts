@@ -2,6 +2,7 @@
 // No API key: the binding sends from the onboarded foxing.app domain.
 
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 
 type Mail = { subject: string; text: string; html: string };
@@ -16,7 +17,7 @@ async function send(env: Env, to: string, mail: Mail, secrets: string[] = []): P
     let message = e.message ?? String(err);
     for (const secret of [...secrets, to])
       if (secret) message = message.split(secret).join("[cut]");
-    console.error(`EMAIL.send failed: code=${e.code ?? "unknown"} message=${message}`);
+    logEvent("email_send_failed", { code: e.code ?? "unknown", message }, { level: "error" });
     throw err;
   }
 }
