@@ -9,6 +9,7 @@ import type { ClubHandover } from "@foxing/types";
 import { useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient, signInAgainIfStale } from "~/lib/auth-client";
+import { signalUnknownCredential } from "@dustinedwards/site-runtime/sign-in-client";
 import { useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
 
@@ -231,7 +232,7 @@ export function AdminSection() {
 }
 
 export type SignInSettings = {
-  passkeys: { id: string; name: string; createdAt: string | null }[];
+  passkeys: { id: string; credentialId: string; name: string; createdAt: string | null }[];
   /** The providers the site offers, and whether this account is joined to each. */
   providers: { id: "google" | "apple"; label: string; accountId: string | null }[];
 };
@@ -241,7 +242,9 @@ export type SignInSettings = {
  * to the account. Joining happens only here, while signed in, never by a matching email at
  * sign-in. The email link always works, so nothing here can lock a reader out.
  */
-export function SignInSection({ initial }: { initial: SignInSettings }) {
+/** One auth change at a time (keyed, for its button's label): a stale sign-in goes to sign in
+ *  again, an error shows in the section, success reloads the settings. */
+function useAuthAction() {
   const revalidator = useRevalidator();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -269,6 +272,12 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
     }
   }
 
+  return { busy, error, run };
+}
+
+export function SignInSection({ initial }: { initial: SignInSettings }) {
+  const { busy, error, run } = useAuthAction();
+
   return (
     <Card title="Sign-in">
       <div className="stack">
@@ -289,7 +298,16 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                   onClick={() =>
                     void run(
                       p.id,
-                      () => authClient.passkey.deletePasskey({ id: p.id }),
+                      async () => {
+                        const res = await authClient.passkey.deletePasskey({ id: p.id });
+                        // Gone here, so the password manager stops offering it.
+                        if (!res.error)
+                          void signalUnknownCredential({
+                            rpId: location.hostname,
+                            credentialId: p.credentialId,
+                          });
+                        return res;
+                      },
                       "The passkey was not removed.",
                     )
                   }
@@ -354,6 +372,95 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
             )}
           </div>
         ))}
+        {error ? (
+          <p role="alert" className="error">
+            {error}
+          </p>
+        ) : null}
+      </div>
+    </Card>
+  );
+}
+
+export type SessionSettings = {
+  token: string;
+  device: string;
+  location: string | null;
+  current: boolean;
+  signedIn: string;
+  lastActive: string;
+}[];
+
+/**
+ * Where the reader is signed in (site-runtime ./sign-in sessionRows), this device first. Listing
+ * them needs a recent sign-in, so `null` offers one. Signing a device out ends its session.
+ */
+export function SessionsSection({ sessions }: { sessions: SessionSettings | null }) {
+  const { busy, error, run } = useAuthAction();
+
+  if (!sessions)
+    return (
+      <Card title="Signed-in devices">
+        <p className="ui">To see where you are signed in, sign in again.</p>
+        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+          Sign in again
+        </Link>
+      </Card>
+    );
+
+  const others = sessions.filter((s) => !s.current).length;
+  return (
+    <Card title="Signed-in devices">
+      <div className="stack">
+        <ul className="stack-3">
+          {sessions.map((s) => (
+            <li key={s.token} className="row">
+              <span className="ui grow">
+                <span className="strong">{s.device}</span>
+                {s.current ? " (this device)" : null}
+                <span className="block small dim">
+                  {s.location ? `${s.location}. ` : ""}Signed in {s.signedIn}, last active{" "}
+                  {s.lastActive}.
+                </span>
+              </span>
+              {s.current ? null : (
+                <button
+                  type="button"
+                  className="cap-btn"
+                  data-size="sm"
+                  disabled={busy !== null}
+                  onClick={() =>
+                    void run(
+                      s.token,
+                      () => authClient.revokeSession({ token: s.token }),
+                      "The device was not signed out.",
+                    )
+                  }
+                >
+                  Sign out<span className="cap-sr-only"> {s.device}</span>
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+        {others > 0 ? (
+          <div>
+            <button
+              type="button"
+              className="cap-btn"
+              disabled={busy !== null}
+              onClick={() =>
+                void run(
+                  "others",
+                  () => authClient.revokeOtherSessions(),
+                  "The other devices were not signed out.",
+                )
+              }
+            >
+              {busy === "others" ? "Signing out..." : "Sign out all other devices"}
+            </button>
+          </div>
+        ) : null}
         {error ? (
           <p role="alert" className="error">
             {error}

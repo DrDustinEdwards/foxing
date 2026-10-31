@@ -1,8 +1,7 @@
 // Account settings (auth-gated, noindex): profile fields, plan, visibility, appearance,
-// close friends, sign-in (passkeys, Google and Apple), data export, and account deletion. Every write shows a visible
-// pending + role=alert error, never a silent no-op.
-import { getAuthenticatorName } from "@better-auth/passkey";
-import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
+// close friends, sign-in (passkeys, Google and Apple), signed-in devices, data export, and
+// account deletion. Every write shows a visible pending + role=alert error, never a silent no-op.
+import { passkeyLabel, sessionRows, signInMethods } from "@dustinedwards/site-runtime/sign-in";
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
 import { PageShell } from "~/components/page-shell";
@@ -18,6 +17,7 @@ import {
   DataSection,
   EmailSection,
   ProfileSection,
+  SessionsSection,
   SignInSection,
   UsernameSection,
 } from "../components/settings/account-sections";
@@ -34,10 +34,17 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user, profile } = await requireProfile(env, request);
   const isPlus = profile.subscriptionTier === "plus";
   const auth = await getAuth(env);
-  const [people, passkeys, accounts] = await Promise.all([
+  const [people, passkeys, accounts, current, sessions] = await Promise.all([
     views.people(createDb(env.DB), user.id),
     auth.api.listPasskeys({ headers: request.headers }),
     auth.api.listUserAccounts({ headers: request.headers }),
+    auth.api.getSession({ headers: request.headers }),
+    // Listing sessions needs a sign-in from the last 10 minutes; past that it is null and the
+    // section asks for one. Any other failure fails the page.
+    auth.api.listSessions({ headers: request.headers }).catch((err: unknown) => {
+      if ((err as { body?: { code?: string } }).body?.code === "SESSION_NOT_FRESH") return null;
+      throw err;
+    }),
   ]);
   const methods = signInMethods(env, { social: true });
   // The joined account's own id, which Disconnect names.
@@ -54,9 +61,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     tier: isPlus ? ("plus" as const) : ("free" as const),
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd
-      ? new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(
-          profile.subscriptionPeriodEnd,
-        )
+      ? dateLabel.format(profile.subscriptionPeriodEnd)
       : null,
     visibility: visibility as Required<typeof visibility>,
     people,
@@ -68,7 +73,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       // Named by the reader, else by the password manager or device that holds it.
       passkeys: passkeys.map((p) => ({
         id: p.id,
-        name: p.name || getAuthenticatorName(p.aaguid) || "Passkey",
+        credentialId: p.credentialID,
+        name: passkeyLabel(p),
         createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : null,
       })),
       providers: [
@@ -80,8 +86,21 @@ export async function loader({ context, request }: Route.LoaderArgs) {
           : []),
       ],
     },
+    // This device first, then the most recently active.
+    sessions: sessions
+      ? sessionRows(sessions, current?.session.token).map((row) => ({
+          token: row.token,
+          device: row.device ?? "Unknown device",
+          location: row.location,
+          current: row.current,
+          signedIn: dateLabel.format(row.signedInAt),
+          lastActive: dateLabel.format(row.lastActiveAt),
+        }))
+      : null,
   };
 }
+
+const dateLabel = new Intl.DateTimeFormat("en-US", { dateStyle: "long" });
 
 export function meta() {
   return [{ title: "Settings | Foxing" }, { name: "robots", content: "noindex" }];
@@ -108,6 +127,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <AppearanceSection />
           <CloseFriendsSection people={loaderData.people} />
           <SignInSection initial={loaderData.signIn} />
+          <SessionsSection sessions={loaderData.sessions} />
           <DataSection />
           {loaderData.isAdmin ? <AdminSection /> : null}
           <DangerSection />
