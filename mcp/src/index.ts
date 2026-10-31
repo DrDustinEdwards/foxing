@@ -19,12 +19,14 @@
  *                          overall), then the provider, which refuses any
  *                          redirect URI not allowlisted exactly
  *   /token, /.well-known/* the provider
- *   /health                liveness and the deployed commit (login-handler.ts)
+ *   /health                site-runtime's healthResponse: the deployed commit and a check per
+ *                          binding (login-handler.ts)
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
 import { checkRateLimit, mcpOriginRefusal, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
+import { withRequestLog } from "@dustinedwards/site-runtime/log";
 import { foxingMcp } from "@dustinedwards/site-runtime/sites";
 
 import { apiHandler, publicOrigin, type Env } from "./api-handler";
@@ -87,14 +89,19 @@ function providerFor(env: Env): OAuthProvider<Env> {
   return provider;
 }
 
-// Every response, 404s included, leaves with the family set, noindex, no-store and the consent page's policy; the
-// wrapper also answers /.well-known/security.txt and /csp-report.
+// Every response, 404s included, leaves with the network's set, noindex, no-store and the consent page's policy; the
+// wrapper also answers /.well-known/security.txt and /csp-report. withRequestLog writes one `request` line per request
+// (site-runtime ./log: path, status, ms and the deployed commit; never a query).
+const door = withMcpHeaders<Env>((request, env, ctx) => route(request, env, ctx as ExecutionContext), {
+  site: foxingMcp,
+  securityTxt: { contact: "security@dustinedwards.info", expires: "2027-09-28T00:00:00Z" },
+  allowReport: async (request, env) =>
+    (await checkRateLimit(env.MCP_RATE_LIMIT, `csp-report:${request.headers.get("CF-Connecting-IP") ?? "unknown"}`)).allowed,
+});
+
 export default {
-  fetch: withMcpHeaders<Env>((request, env, ctx) => route(request, env, ctx as ExecutionContext), {
-    site: foxingMcp,
-    securityTxt: { contact: "security@dustinedwards.info", expires: "2027-09-28T00:00:00Z" },
-    allowReport: async (request, env) =>
-      (await checkRateLimit(env.MCP_RATE_LIMIT, `csp-report:${request.headers.get("CF-Connecting-IP") ?? "unknown"}`)).allowed,
+  fetch: withRequestLog((request: Request, env: Env, ctx: ExecutionContext) => door(request, env, ctx), {
+    sha: (env) => env.DEPLOY_SHA,
   }),
 } satisfies ExportedHandler<Env>;
 
