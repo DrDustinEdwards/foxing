@@ -9,6 +9,8 @@ type Props = {
   fallbackLabel?: string;
   /** Only the page's LCP image: eager + high priority. Everything else lazy. */
   priority?: boolean;
+  /** Above the fold but not the LCP: loads at once, at normal priority. */
+  eager?: boolean;
   /** coverThumb for covers shown at 80px or less. */
   use?: "cover" | "coverThumb";
   sizes?: string;
@@ -20,7 +22,16 @@ type Props = {
  * and a typographic placeholder when a cover is missing (community-book covers, per the deferred
  * Stage 3 backfill).
  */
-export function CoverImage({ src, alt, fallbackLabel, priority, use, sizes, className }: Props) {
+export function CoverImage({
+  src,
+  alt,
+  fallbackLabel,
+  priority,
+  eager,
+  use,
+  sizes,
+  className,
+}: Props) {
   return (
     <div className={cn("cover-img", className)}>
       {src ? (
@@ -30,6 +41,7 @@ export function CoverImage({ src, alt, fallbackLabel, priority, use, sizes, clas
           use={use}
           sizes={sizes}
           priority={priority}
+          eager={eager}
           className="cover-img-photo"
         />
       ) : (

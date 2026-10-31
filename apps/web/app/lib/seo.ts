@@ -30,7 +30,13 @@ export function journalTagPath(tag: string): string {
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: SITE_NAME,
-  image: { url: "/og/site", width: 1200, height: 630, alt: "Foxing: read the classics, free." },
+  image: {
+    url: "/og/site",
+    width: 1200,
+    height: 630,
+    type: "image/png",
+    alt: "Foxing: read the classics, free.",
+  },
   suffix: ` | ${SITE_NAME}`,
   // The sections a page's BreadcrumbList passes through; Prelum builds the only one a page has.
   sections: { "/books": "Books", "/awards": "Awards", "/picks": "Picks", "/journal": "Journal" },
