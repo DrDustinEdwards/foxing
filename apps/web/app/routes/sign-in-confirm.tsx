@@ -1,12 +1,17 @@
 // Where the emailed sign-in link opens (site-runtime ./sign-in, CONFIRM_PATH). The link's GET
 // only shows this page, so a mail scanner that opens every link spends nothing; the button's POST
-// signs in through confirmSignInLink. A spent or expired link comes back here with ?error=.
-import { SIGN_IN_EXPIRES_IN_WORDS, confirmSignInLink } from "@dustinedwards/site-runtime/sign-in";
+// signs in through confirmSignInLink. A refused link comes back here with ?error= and the time it
+// was mailed, so the page can tell a used link from an expired one (signInLinkProblem).
+import {
+  SIGN_IN_LINK_WORDS,
+  confirmSignInLink,
+  signInLinkProblem,
+} from "@dustinedwards/site-runtime/sign-in";
 import { Link } from "capsomer/react/link";
-import { data, useSearchParams } from "react-router";
-import { AuthShell, signInErrorMessage } from "~/components/auth-shell";
+import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
+import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/sign-in-confirm";
 
 export function meta() {
@@ -14,67 +19,46 @@ export function meta() {
 }
 
 // The page's URL holds the token.
-export const headers = () => ({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex" });
+export const headers = linkPageHeaders;
+
+export async function loader({ context, request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  // Only a refused link asks whether this browser is signed in already.
+  if (!url.searchParams.has("error")) return { problem: signInLinkProblem(url) };
+  const { env } = context.get(cloudflareContext);
+  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  return { problem: signInLinkProblem(url, { signedIn: Boolean(session?.user) }) };
+}
 
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  const res = await confirmSignInLink(await getAuth(env), request);
-  // Better Auth's redirect (signed in, or back here with ?error=), or its per-IP limit.
-  if (res.status !== 429) return res;
-  return data({ limited: true }, { status: 429 });
+  // Better Auth's redirect (done, or back here with ?error=), or its per-IP limit.
+  return redirectOrLimited(await confirmSignInLink(await getAuth(env), request));
 }
 
-/**
- * What a refused link says. Better Auth answers INVALID_TOKEN for a used link and an expired one
- * alike (better-auth 1.7.12 plugins/magic-link: the token is deleted on use, and an expired one
- * is swept before it is read), and the token carries no time, so the page names both.
- */
-function linkRefusal(error: string | null): { title: string; subtitle: string } {
-  if (!error)
-    return {
-      title: "This link is not complete",
-      subtitle:
-        "Part of the link is missing. Open it from the email again, or send yourself a new one.",
-    };
-  if (error === "INVALID_TOKEN")
-    return {
-      title: "This link no longer works",
-      subtitle: `It has been used already, or more than ${SIGN_IN_EXPIRES_IN_WORDS} have passed: a sign-in link works once, for ${SIGN_IN_EXPIRES_IN_WORDS}. Send yourself a new one.`,
-    };
-  return {
-    title: "Sign-in did not complete",
-    subtitle: signInErrorMessage(error) ?? "Try again or use another way.",
-  };
-}
+export default function SignInConfirm({ loaderData, actionData }: Route.ComponentProps) {
+  const { problem } = loaderData;
 
-export default function SignInConfirm({ actionData }: Route.ComponentProps) {
-  const [params] = useSearchParams();
-  const error = params.get("error");
-
-  if (error || !params.get("token")) {
-    const { title, subtitle } = linkRefusal(error);
+  if (problem) {
+    const { title, text } = SIGN_IN_LINK_WORDS[problem];
     return (
-      <AuthShell title={title} subtitle={subtitle}>
-        <Link to="/login" className="cap-btn full" data-variant="primary" data-size="lg">
-          Get a new link
-        </Link>
+      <AuthShell title={title} subtitle={text}>
+        {problem === "signed-in" ? (
+          <Link to="/me" className="cap-btn full" data-variant="primary" data-size="lg">
+            Go to Foxing
+          </Link>
+        ) : (
+          <Link to="/login" className="cap-btn full" data-variant="primary" data-size="lg">
+            Get a new link
+          </Link>
+        )}
       </AuthShell>
     );
   }
 
   return (
     <AuthShell title="Sign in to Foxing">
-      {/* A plain form: it posts to this URL, token and all, and the browser follows the redirect. */}
-      <form method="post" className="stack-3">
-        {actionData?.limited ? (
-          <p role="alert" className="error">
-            Too many tries. Wait a minute, then try again.
-          </p>
-        ) : null}
-        <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
-          Sign in
-        </button>
-      </form>
+      <ConfirmButtonForm label="Sign in" limited={actionData?.limited} />
     </AuthShell>
   );
 }

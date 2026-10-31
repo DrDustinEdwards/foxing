@@ -1,5 +1,5 @@
 // Better Auth with the family's one sign-in (site-runtime ./sign-in): a passkey first, an
-// emailed link and code before one exists (Turnstile on it once its keys are set), Google and
+// emailed link and code before one exists (Turnstile in front of it), Google and
 // Apple, no passwords, no OAuth tokens stored. Accounts are joined only by a signed-in person.
 // The app's own way in: `appCode` opens the six-digit code request the phone uses (a link opens
 // in the phone's browser, not the app), held to three a minute; and the Expo plugin hands a
@@ -9,6 +9,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { type ClubSuccessors, createDb, eraseAccountData, schema } from "@foxing/core";
 import {
   SessionNotFresh,
+  emailConfirmURL,
   requireFreshSession,
   signInOptions,
 } from "@dustinedwards/site-runtime/sign-in";
@@ -49,9 +50,9 @@ async function buildAuth(env: Env) {
     // Each auth event is also a row in auth_events (migration 0012): Settings' security history,
     // /health's spike check, and new-device and recovery notices read it.
     eventsDb: env.DB,
-    // The link request is unchecked by Turnstile until Dustin creates the keys
-    // (TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY); each request logs a warning until then.
-    turnstile: "off-until-keys",
+    // Each session keeps its coarse place and a device id, and a read moves its last-active time
+    // (migration 0014): the signed-in devices list and the new-device notice read them.
+    sessionDetails: true,
     // A passkey, Google or Apple, the email, the sessions or the account changed: tell the reader.
     sendSecurityNotice: async (_kind, { user, detail }) => {
       await sendSecurityNoticeEmail(env, user.email, detail);
@@ -83,10 +84,12 @@ async function buildAuth(env: Env) {
     // the answer does not wait for a security notice's mail.
     advanced: { ...signIn.advanced, backgroundTasks: { handler: waitUntil } },
     // Only the change-email flow sends this now, to the new address, once the current one has
-    // approved the change. The link is good for an hour (Better Auth's default).
+    // approved the change. The link is good for an hour (Better Auth's default). Better Auth's own
+    // link acts on a GET, so a mail scanner could confirm it; the mail carries /email/confirm
+    // instead, where only the button's POST does (site-runtime emailConfirmURL).
     emailVerification: {
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
-        await sendVerificationEmail(env, user.email, url);
+        await sendVerificationEmail(env, user.email, emailConfirmURL(url));
       },
     },
     user: {
@@ -105,7 +108,7 @@ async function buildAuth(env: Env) {
           newEmail: string;
           url: string;
         }) => {
-          await sendChangeEmailConfirmation(env, user.email, newEmail, url);
+          await sendChangeEmailConfirmation(env, user.email, newEmail, emailConfirmURL(url));
         },
       },
       // Deleting the account is Better Auth's /delete-user, called only from DELETE
@@ -138,6 +141,18 @@ export function getAuth(env: Env): Promise<Auth> {
 }
 
 /**
+ * What a server-side getSession reads: on a GET the request too, so the session's place follows
+ * the reader (site-runtime sessionDetails; the last-active time moves either way). Any other
+ * method leaves it out: Better Auth would hold the request to /get-session's GET and POST, and
+ * could read a POST's body before the action does.
+ */
+export function sessionLookup(request: Request): { headers: Headers; request?: Request } {
+  return request.method === "GET"
+    ? { headers: request.headers, request }
+    : { headers: request.headers };
+}
+
+/**
  * The signed-in user behind an /api/v1 request, from the Better Auth session cookie; null when
  * there is none. The Worker's createApi resolveSession, and the Carrel key isolation tests.
  */
@@ -145,7 +160,7 @@ export async function sessionUserFromRequest(
   req: Request,
   env: Env,
 ): Promise<{ id: string; email: string } | null> {
-  const session = await (await getAuth(env)).api.getSession({ headers: req.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(req));
   if (!session?.user) return null;
   return { id: session.user.id, email: session.user.email };
 }

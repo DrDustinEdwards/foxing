@@ -80,6 +80,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       quietHours: notificationPrefs.quietHours ?? null,
     },
     signIn: {
+      email: user.email,
+      displayName: profile.displayName ?? "",
       // site-runtime's accountPasskeys rows (name, provider, created, last used), kept with each
       // passkey's credential id so a removed one can be signaled to the password manager.
       passkeys: passkeyRows(passkeys, lastUsed).map((p) => ({
