@@ -1,3 +1,4 @@
+import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import { LinkPrefetch } from "capsomer/react/link";
@@ -36,7 +37,7 @@ export function meta({ error }: Route.MetaArgs) {
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
   { rel: "preconnect", href: COVER_ORIGIN },
-  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  ...iconLinks(),
 ];
 
 // Set data-theme before paint so there is no theme flash. Stored preference wins;
