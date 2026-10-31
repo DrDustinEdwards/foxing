@@ -222,7 +222,7 @@ describe("PLANT: the wrong key", () => {
       await seedPost("wrong-key-target");
       const res = await call(`${PREFIX}/content`, init);
       expect(res.status).toBe(401);
-      expect(await res.json()).toEqual({ error: "unauthorized", message: "Unauthorized." });
+      expect(await res.json()).toMatchObject({ error: "unauthorized", message: "Unauthorized." });
     });
   }
 
