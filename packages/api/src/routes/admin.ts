@@ -431,53 +431,6 @@ adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- Journal ------------------------------------------------------------------
-
-// Exported for the Carrel site API, which validates every save against the same rules.
-export const journalInput = z.object({
-  title: z.string().min(1).max(500),
-  slug: z
-    .string()
-    .min(1)
-    .max(200)
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens."),
-  content: z.string().min(1),
-  excerpt: z.string().max(1000).nullable().optional(),
-  coverImageUrl: z.string().url().max(1000).nullable().optional(),
-  coverImageAlt: z.string().max(500).nullable().optional(),
-  tags: z.array(z.string().max(60)).max(20).nullable().optional(),
-  featured: z.boolean().optional(),
-  isPublished: z.boolean().optional(),
-});
-
-adminRoutes.post("/admin/journal", rateLimit("write"), async (c) => {
-  const admin = requireAdmin(c);
-  const input = await parseJson(c, journalInput);
-  const existing = await adminRepo.getJournalBySlug(c.get("db"), input.slug);
-  if (existing) throw errors.conflict("A post with that slug already exists.");
-  const id = await adminRepo.createJournalPost(c.get("db"), input, admin.id);
-  await audit(c, "journal.create", { id, slug: input.slug });
-  return c.json({ id }, 201);
-});
-
-adminRoutes.patch("/admin/journal/:id", rateLimit("write"), async (c) => {
-  const admin = requireAdmin(c);
-  const id = c.req.param("id");
-  const input = await parseJson(c, journalInput.partial());
-  await adminRepo.updateJournalPost(c.get("db"), id, input, admin.id);
-  await audit(c, "journal.update", { id, fields: Object.keys(input) });
-  return c.json({ ok: true });
-});
-
-adminRoutes.post("/admin/journal/:id/publish", rateLimit("write"), async (c) => {
-  requireAdmin(c);
-  const id = c.req.param("id");
-  const { on } = await parseJson(c, onOff);
-  await adminRepo.setJournalPublished(c.get("db"), id, on);
-  await audit(c, on ? "journal.publish" : "journal.unpublish", { id });
-  return c.json({ ok: true });
-});
-
 // ---- Broadcast notifications --------------------------------------------------
 
 adminRoutes.post("/admin/notifications/broadcast", rateLimit("write"), async (c) => {

@@ -35,6 +35,8 @@ export const journalMedia = sqliteTable(
     /** As the picture's own metadata says: with an offset where it names one. */
     takenAt: text("taken_at"),
     uploadedAt: ts("uploaded_at").notNull(),
+    /** The focal point, "XxY" from the top left (site-api's MediaFocus); a cropped cover keeps it in view. */
+    focus: text("focus"),
     /** In the trash since; null in the library. A trashed file is still served. */
     trashedAt: ts("trashed_at"),
   },

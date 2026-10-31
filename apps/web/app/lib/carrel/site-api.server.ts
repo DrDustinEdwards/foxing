@@ -1,5 +1,7 @@
 // Mounts Carrel's site API (@dustinedwards/site-api) on the Worker: the Journal adapter, the
-// CARREL_SITE_KEY secret and the CARREL_RATE_LIMIT binding. The key reaches only /api/carrel/v1.
+// CARREL_SITE_KEY secret and the CARREL_RATE_LIMIT binding, with its preview links at
+// /preview/<token>. The key reaches only /api/carrel/v1; a preview link carries no key, its token
+// is the address, and it shows one post's current source until it expires or Carrel revokes it.
 // Inside the prefix the package guards in order: prefix, rate limit, key, route. Outside it, a
 // request that presents the key is refused before any other handler runs, so the key can never
 // stand in for a session on an admin, user, club or /api/v1 route, now or after a later change
@@ -11,14 +13,19 @@ import {
   indexNowHook,
   insidePrefix,
   MIN_KEY_LENGTH,
+  PREVIEW_LINK_PATH,
   type RateLimiter,
+  type SiteApi,
+  webmentionHook,
 } from "@dustinedwards/site-api";
+import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
+import { schedulePurgeHook } from "@dustinedwards/site-runtime/edge-cache";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import type { Context, Hono, Next } from "hono";
 import { INDEXNOW_KEY } from "../indexnow";
 import { SITE_ORIGIN } from "../origins";
-import { journalSiteAdapter, type RenderDocument } from "./journal-adapter.server";
+import { journalSiteAdapter } from "./journal-adapter.server";
 
 type WorkerEnv = { Bindings: Env };
 
@@ -36,28 +43,43 @@ function carrelLimiter(env: Env): RateLimiter {
   };
 }
 
-/** A published change tells IndexNow at once; a request from a preview origin sends nothing. */
-const HOOKS = [indexNowHook({ submit: submitIndexNow, origin: SITE_ORIGIN, key: INDEXNOW_KEY })];
-
-/** One Carrel request, answered by the package over the Journal adapter. */
-function handleCarrelRequest(
-  request: Request,
-  options: { env: Env; ctx: ExecutionContext; renderDocument: RenderDocument | null },
-): Promise<Response> {
-  const { env, ctx, renderDocument } = options;
-  const api = createSiteApi({
-    adapter: journalSiteAdapter({
-      env,
-      ctx,
-      origin: new URL(request.url).origin,
-      sourceIp: request.headers.get("cf-connecting-ip"),
-      renderDocument,
-    }),
+/**
+ * One site API over the Journal, for a Carrel request, a preview link and the cron alike. The
+ * store (packages/core/migrations/0011_site_api_store.sql) makes every write safe to send again
+ * under its change id, keeps the preview links and the webmentions each post sent, and holds a
+ * failed hook for the cron to retry. The hooks run after a write that changes a public page: a
+ * published change tells IndexNow at once (a request from a preview origin sends nothing), and
+ * the pages a post links to hear of it by webmention. The stored pages are purged by the gateway
+ * after every Carrel write (workers/app.ts), and after a schedule the cron puts live by
+ * schedulePurgeHook, since a schedule has no request behind it.
+ */
+function carrelSiteApi(
+  env: Env,
+  options: { sourceIp: string | null; stylesheets?: string[] },
+): SiteApi {
+  const store = d1SiteApiStore(env.DB);
+  return createSiteApi({
+    adapter: journalSiteAdapter({ env, ...options }),
     key: env.CARREL_SITE_KEY,
     limiter: carrelLimiter(env),
-    hooks: HOOKS,
+    store,
+    hooks: [
+      indexNowHook({ submit: submitIndexNow, origin: SITE_ORIGIN, key: INDEXNOW_KEY }),
+      webmentionHook({ store }),
+      schedulePurgeHook(),
+    ],
   });
-  return api.handle(request, ctx);
+}
+
+/**
+ * The per-minute cron's job (workers/app.ts): every scheduled post and update whose time has come
+ * goes live, with the hooks a Carrel publish runs; the hooks that failed earlier run again; the
+ * posts 30 days in the trash are deleted; and the replay store is pruned. A schedule that fails
+ * fails the job, and is tried next minute.
+ */
+export async function runCarrelSchedules(env: Env, now: Date): Promise<void> {
+  const run = await carrelSiteApi(env, { sourceIp: null }).runSchedules({ now });
+  if (run.failed > 0) throw new Error(`${run.failed} Carrel schedule(s) failed`);
 }
 
 /**
@@ -75,10 +97,11 @@ async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<b
 }
 
 /**
- * Registers the off-prefix refusal and the /api/carrel/v1 handler. Call it before any other route
- * or middleware on the Worker's root app, so the refusal runs first.
+ * Registers the off-prefix refusal, the /api/carrel/v1 handler and the preview links. Call it
+ * before any other route or middleware on the Worker's root app, so the refusal runs first.
+ * `stylesheets` are the root route's, which a preview is drawn in.
  */
-export function mountCarrel(app: Hono<WorkerEnv>, renderDocument: RenderDocument | null): void {
+export function mountCarrel(app: Hono<WorkerEnv>, stylesheets: () => Promise<string[]>): void {
   app.use("*", async (c: Context<WorkerEnv>, next: Next) => {
     if (await presentsCarrelKeyOffPrefix(c.req.raw, c.env)) {
       logEvent(
@@ -97,12 +120,18 @@ export function mountCarrel(app: Hono<WorkerEnv>, renderDocument: RenderDocument
     await next();
   });
 
-  const handler = (c: Context<WorkerEnv>) =>
-    handleCarrelRequest(c.req.raw, {
-      env: c.env,
-      ctx: c.executionCtx as unknown as ExecutionContext,
-      renderDocument,
+  const handler = async (c: Context<WorkerEnv>) => {
+    const api = carrelSiteApi(c.env, {
+      sourceIp: c.req.header("cf-connecting-ip") ?? null,
+      stylesheets: await stylesheets(),
     });
+    // A preview link: noindex, private, no-store and no-referrer from the package (the security
+    // headers' Referrer-Policy is no-referrer too), so the token, which is the address, is never
+    // sent on.
+    if (api.matchesPreviewLink(c.req.raw)) return api.servePreviewLink(c.req.raw);
+    return api.handle(c.req.raw, c.executionCtx as unknown as ExecutionContext);
+  };
   app.all("/api/carrel/v1", handler);
   app.all("/api/carrel/v1/*", handler);
+  app.get(`${PREVIEW_LINK_PATH}*`, handler);
 }

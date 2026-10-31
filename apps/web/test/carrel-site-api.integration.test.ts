@@ -1,25 +1,27 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
-import type {
-  ContentDoc,
-  Diff,
-  ErrorBody,
-  RevisionList,
-  WriteResult,
+import {
+  createSiteApi,
+  type ContentDoc,
+  type Diff,
+  type ErrorBody,
+  type PublishEvent,
+  type RevisionList,
+  type WriteResult,
 } from "@dustinedwards/site-api";
 import { runConformance } from "@dustinedwards/site-api/conformance";
-import { adminRepo, createDb, schema } from "@foxing/core";
-import { eq } from "drizzle-orm";
+import { d1SiteApiStore } from "@dustinedwards/site-api/store";
+import { adminRepo, catalogRepo, createDb, schema } from "@foxing/core";
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it } from "vitest";
-import { journalPreviewContext } from "../app/context";
 import { sessionUserFromRequest } from "../app/lib/auth.server";
+import { journalSiteAdapter } from "../app/lib/carrel/journal-adapter.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { testApi } from "./test-api";
 
-// Carrel's site API on the Worker, composed as workers/app.ts composes it: mountCarrel first, then
-// /api/v1 with the real Better Auth session resolver, then a stand-in for the React Router
-// catch-all. The planted tests (PLANT:) each send a request a guard must refuse and check that
-// nothing in D1 changed.
+// Carrel's site API on the Worker, composed as workers/app.ts composes it: mountCarrel first, with
+// site-api's D1 store (so the conformance suite's replay checks run), then /api/v1 with the real
+// Better Auth session resolver, then a stand-in for the React Router catch-all. The planted tests
+// (PLANT:) each send a request a guard must refuse and check that nothing in D1 changed.
 
 // Fake test data only: not a real key.
 const KEY = "test-carrel-key-0123456789abcdefghijklmnop";
@@ -44,13 +46,7 @@ function testEnv(overrides: Record<string, unknown> = {}): Env {
 
 function worker(): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
-  // The preview renders through the journal route; this stand-in echoes the draft it was handed.
-  mountCarrel(app, async (request, context) => {
-    const post = context.get(journalPreviewContext);
-    return new Response(`<h1>${post?.title}</h1><p>${new URL(request.url).pathname}</p>`, {
-      headers: { "content-type": "text/html" },
-    });
-  });
+  mountCarrel(app, async () => ["/assets/root.css"]);
   app.route(
     "/api/v1",
     testApi({
@@ -111,34 +107,12 @@ async function auditRows() {
   return db().select().from(schema.adminAuditLog);
 }
 
-async function seedAdmin(id: string) {
-  await db()
-    .insert(schema.user)
-    .values({
-      id,
-      name: "Admin",
-      email: `${id}@example.com`,
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-  await db().insert(schema.profiles).values({
-    id,
-    username: id,
-    displayName: id,
-    isAdmin: true,
-    onboardedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
-
 beforeEach(async () => {
+  await env.DB.prepare("DELETE FROM scheduled_updates").run();
+  await db().delete(schema.journalSlugRedirects);
   await db().delete(schema.journalPostVersions);
   await db().delete(schema.journalPosts);
   await db().delete(schema.adminAuditLog);
-  await db().delete(schema.profiles);
-  await db().delete(schema.user);
 });
 
 describe("Carrel site API: conformance", () => {
@@ -187,25 +161,6 @@ describe("PLANT: the key off its prefix", () => {
     const res = await call("/journal");
     expect(res.status).toBe(200);
     expect(await res.text()).toBe("page");
-  });
-});
-
-describe("PLANT: the key against an admin route", () => {
-  it("cannot publish or edit a Journal post through /api/v1/admin", async () => {
-    // An admin exists, so a key that leaked into the session path would have someone to act as.
-    await seedAdmin("owner");
-    const post = await seedPost("admin-target");
-    const publish = await call(
-      `/api/v1/admin/journal/${post.id}/publish`,
-      json("POST", { on: true }),
-    );
-    expect(publish.status).toBe(401);
-    const edit = await call(`/api/v1/admin/journal/${post.id}`, json("PATCH", { title: "Taken" }));
-    expect(edit.status).toBe(401);
-    const after = await adminRepo.getJournalById(db(), post.id);
-    expect(after?.isPublished).toBe(false);
-    expect(after?.title).toBe(post.title);
-    expect(await auditRows()).toEqual([]);
   });
 });
 
@@ -312,6 +267,14 @@ describe("Carrel site API: the rate limit", () => {
 
 describe("Carrel site API: the Journal adapter", () => {
   it("creates a draft, first-publishes it, and records Carrel's changeId", async () => {
+    // What the Journal's rules refuse is refused, naming the field.
+    const bad = await call(
+      `${PREFIX}/content/Bad_Slug/draft`,
+      json("PUT", { source: source("T"), expectedVersion: null, changeId: "ch-bad" }),
+    );
+    expect(bad.status).toBe(422);
+    expect((await body(bad)).message).toContain("the id (slug)");
+
     const created = await call(
       `${PREFIX}/content/new-essay/draft`,
       json("PUT", {
@@ -379,51 +342,128 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(diff.patch).toContain("+Edited body.");
   });
 
-  it("refuses what the admin routes refuse, and a schedule", async () => {
-    const bad = await call(
-      `${PREFIX}/content/Bad_Slug/draft`,
-      json("PUT", { source: source("T"), expectedVersion: null, changeId: "ch-bad" }),
+  it("schedules a draft, which the cron publishes at its time and not before, under that time, with the hooks", async () => {
+    const draft = await seedPost("dated");
+    const publishAt = "2030-01-01T15:00:00.000Z";
+    const scheduled = await body<WriteResult>(
+      call(
+        `${PREFIX}/content/dated/schedule`,
+        json("POST", {
+          expectedVersion: String(draft.updatedAt.getTime()),
+          changeId: "ch-schedule",
+          publishAt,
+        }),
+      ),
     );
-    expect(bad.status).toBe(422);
-    expect((await body(bad)).message).toContain("the id (slug)");
+    expect(scheduled.status).toBe("scheduled");
+    const doc = await body<ContentDoc>(call(`${PREFIX}/content/dated`, withKey()));
+    expect([doc.status, doc.publishAt, doc.version]).toEqual([
+      "scheduled",
+      publishAt,
+      scheduled.version,
+    ]);
 
-    const post = await seedPost("dated");
-    const schedule = await call(
-      `${PREFIX}/content/dated/schedule`,
-      json("POST", {
-        expectedVersion: String(post.updatedAt.getTime()),
-        changeId: "ch-schedule",
-        publishAt: new Date(Date.now() + 86_400_000).toISOString(),
-      }),
+    // The cron's site API, as runCarrelSchedules builds it, with a spy for its hooks.
+    const heard: PublishEvent[] = [];
+    const cron = createSiteApi({
+      adapter: journalSiteAdapter({ env: testEnv(), sourceIp: null }),
+      key: KEY,
+      limiter: allowAll,
+      store: d1SiteApiStore(env.DB),
+      hooks: [{ name: "spy", run: (event) => void heard.push(event) }],
+      log: () => {},
+    });
+    expect((await cron.runSchedules({ now: new Date("2030-01-01T14:59:00Z") })).applied).toEqual(
+      [],
     );
-    expect(schedule.status).toBe(422);
-    expect((await adminRepo.getJournalById(db(), post.id))?.isPublished).toBe(false);
+    expect(await catalogRepo.getPostBySlug(db(), "dated")).toBeNull();
+    expect(
+      (await cron.runSchedules({ now: new Date("2030-01-01T15:00:30Z") })).applied,
+    ).toHaveLength(1);
+    const live = await catalogRepo.getPostBySlug(db(), "dated");
+    expect(live?.publishedAt?.toISOString()).toBe(publishAt);
+    expect(heard.map((e) => [e.action, e.trigger, e.path])).toEqual([
+      ["publish", "schedule", "/journal/dated"],
+    ]);
+    expect((await body<ContentDoc>(call(`${PREFIX}/content/dated`, withKey()))).status).toBe(
+      "published",
+    );
+    expect((await cron.runSchedules({ now: new Date("2030-01-01T15:01:00Z") })).applied).toEqual(
+      [],
+    );
   });
 
-  it("previews an unsaved draft through the journal route without writing", async () => {
+  it("previews an unsaved draft in the journal's markup, never indexed, without writing", async () => {
     const res = await call(`${PREFIX}/preview`, json("POST", { source: source("Preview me") }));
     expect(res.status).toBe(200);
-    expect(await res.text()).toBe("<h1>Preview me</h1><p>/journal/carrel-preview</p>");
+    const html = await res.text();
+    expect(html).toContain('<meta name="robots" content="noindex">');
+    expect(html).toContain('<link rel="stylesheet" href="https://foxing.app/assets/root.css">');
+    expect(html).toContain('<h1 class="mt-3 fx-journal-post-title">Preview me</h1>');
+    expect(html).toContain("<p>New body.</p>");
     expect(await db().select().from(schema.journalPosts)).toEqual([]);
   });
 });
 
-describe("the admin Journal write functions after the shared guard change", () => {
-  it("still save, snapshot and publish when called as the admin routes call them", async () => {
-    await seedAdmin("admin");
-    const post = await seedPost("admin-edit");
-    // No guard: the admin routes pass none.
-    expect(await adminRepo.updateJournalPost(db(), post.id, { title: "By admin" }, "admin")).toBe(
-      true,
+describe("Carrel site API: v0.17.0 over the Journal", () => {
+  const post = (id: string, op: string, b: unknown) =>
+    call(`${PREFIX}/content/${id}/${op}`, json("POST", b));
+
+  it("renames a live post with a 301 at its old address; a trashed one leaves the Journal and is deleted only from the trash", async () => {
+    const live = await seedPost("old-name", { isPublished: true });
+    const renamed = await post("old-name", "rename", {
+      newId: "new-name",
+      expectedVersion: String(live.updatedAt.getTime()),
+      changeId: "ch-rename",
+    });
+    expect(renamed.status, await renamed.clone().text()).toBe(200);
+    const moved = await body<WriteResult & { previousPath: string | null }>(renamed);
+    expect(moved).toMatchObject({
+      id: "new-name",
+      status: "published",
+      previousPath: "/journal/old-name",
+    });
+    expect(await catalogRepo.getJournalSlugRedirect(db(), "old-name")).toBe("new-name");
+    expect((await call(`${PREFIX}/content/old-name`, withKey())).status).toBe(404);
+
+    const del = (version: string, changeId: string) =>
+      call(`${PREFIX}/content/new-name?expectedVersion=${version}&changeId=${changeId}`, {
+        ...withKey(),
+        method: "DELETE",
+      });
+    expect((await del(moved.version, "ch-del-1")).status).toBe(422);
+    const trashed = await body<WriteResult>(
+      post("new-name", "trash", { expectedVersion: moved.version, changeId: "ch-trash" }),
     );
-    expect(await adminRepo.setJournalPublished(db(), post.id, true)).toBe(true);
-    const after = await adminRepo.getJournalById(db(), post.id);
-    expect(after).toMatchObject({ title: "By admin", isPublished: true });
-    expect(after?.updatedAt.getTime()).toBeGreaterThan(post.updatedAt.getTime());
-    const versions = await db()
-      .select()
-      .from(schema.journalPostVersions)
-      .where(eq(schema.journalPostVersions.postId, post.id));
-    expect(versions.map((v) => [v.title, v.savedBy])).toEqual([[post.title, "admin"]]);
+    expect(trashed.status).toBe("draft");
+    expect(await catalogRepo.getPostBySlug(db(), "new-name")).toBeNull();
+    const listed = await body<{ items: Array<{ id: string }>; filtered: string[] }>(
+      call(`${PREFIX}/content?trashed=true`, withKey()),
+    );
+    expect([listed.items.map((i) => i.id), listed.filtered]).toEqual([["new-name"], ["trashed"]]);
+    expect((await del(trashed.version, "ch-del-2")).status).toBe(200);
+    expect(await adminRepo.getJournalById(db(), live.id)).toBeNull();
+    expect(await catalogRepo.getJournalSlugRedirect(db(), "old-name")).toBeNull();
+  });
+
+  it("opens a preview link without the key, never indexed, until its post goes to the trash", async () => {
+    const draft = await seedPost("shared-draft");
+    const made = await call(
+      `${PREFIX}/preview-links`,
+      json("POST", { id: "shared-draft", changeId: "ch-link" }),
+    );
+    expect(made.status, await made.clone().text()).toBe(201);
+    const { url } = await body<{ url: string }>(made);
+    const path = new URL(url).pathname;
+    const open = await call(path);
+    expect(open.status).toBe(200);
+    expect(open.headers.get("x-robots-tag")).toContain("noindex");
+    expect(await open.text()).toContain("Original body.");
+
+    await post("shared-draft", "trash", {
+      expectedVersion: String(draft.updatedAt.getTime()),
+      changeId: "ch-trash-link",
+    });
+    expect((await call(path)).status).toBe(410);
   });
 });
