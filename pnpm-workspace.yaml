@@ -7,6 +7,7 @@ nodeLinker: hoisted
 overrides:
   react: 19.2.7
   react-dom: 19.2.7
+  '@dustinedwards/site-runtime': file:/tmp/claude-0/-home-user/8026cdc9-e5aa-5da2-930a-c07b06e0466c/scratchpad/dustinedwards-site-runtime-0.56.0.tgz
 # Readium pulls @edrlab/thorium-locales via a git URL from @readium/shared.
 # That subdep is legitimate, so allow exotic sub-deps for the workspace.
 blockExoticSubdeps: false
