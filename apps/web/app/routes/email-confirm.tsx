@@ -12,10 +12,10 @@ import { signalCurrentUserDetails } from "@dustinedwards/site-runtime/sign-in-cl
 import { createDb, profilesRepo } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { useEffect } from "react";
-import { data } from "react-router";
-import { AuthShell } from "~/components/auth-shell";
+import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/email-confirm";
 
 export function meta() {
@@ -23,7 +23,7 @@ export function meta() {
 }
 
 // The page's URL holds the token.
-export const headers = () => ({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex" });
+export const headers = linkPageHeaders;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const result = emailLinkResult(request.url);
@@ -38,10 +38,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  const res = await confirmEmailLink(await getAuth(env), request);
-  // Better Auth's redirect back here (done or refused), or its per-IP limit.
-  if (res.status !== 429) return res;
-  return data({ limited: true }, { status: 429 });
+  // Better Auth's redirect (done, or back here with ?error=), or its per-IP limit.
+  return redirectOrLimited(await confirmEmailLink(await getAuth(env), request));
 }
 
 /** What a refused link says. Email change links are Better Auth's, good for an hour. */
@@ -127,17 +125,7 @@ export default function EmailConfirm({ loaderData, actionData }: Route.Component
       title="Confirm your email change"
       subtitle="Nothing changes until you press the button."
     >
-      {/* A plain form: it posts to this URL, token and all, and the browser follows the redirect. */}
-      <form method="post" className="stack-3">
-        {actionData?.limited ? (
-          <p role="alert" className="error">
-            Too many tries. Wait a minute, then try again.
-          </p>
-        ) : null}
-        <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
-          Confirm
-        </button>
-      </form>
+      <ConfirmButtonForm label="Confirm" limited={actionData?.limited} />
     </AuthShell>
   );
 }

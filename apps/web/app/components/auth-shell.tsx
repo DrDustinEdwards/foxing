@@ -50,6 +50,23 @@ export function AuthShell({
   );
 }
 
+/** An emailed link's confirm button: a plain form that posts to the page's own URL, token and
+ *  all, so the browser follows Better Auth's redirect. */
+export function ConfirmButtonForm({ label, limited }: { label: string; limited?: boolean }) {
+  return (
+    <form method="post" className="stack-3">
+      {limited ? (
+        <p role="alert" className="error">
+          Too many tries. Wait a minute, then try again.
+        </p>
+      ) : null}
+      <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
+        {label}
+      </button>
+    </form>
+  );
+}
+
 /** Labeled text input matching the settings form rows. */
 function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (

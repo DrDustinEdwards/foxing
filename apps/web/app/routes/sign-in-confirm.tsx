@@ -8,10 +8,10 @@ import {
   signInLinkProblem,
 } from "@dustinedwards/site-runtime/sign-in";
 import { Link } from "capsomer/react/link";
-import { data } from "react-router";
-import { AuthShell } from "~/components/auth-shell";
+import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
+import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/sign-in-confirm";
 
 export function meta() {
@@ -19,7 +19,7 @@ export function meta() {
 }
 
 // The page's URL holds the token.
-export const headers = () => ({ "Cache-Control": "no-store", "X-Robots-Tag": "noindex" });
+export const headers = linkPageHeaders;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const url = new URL(request.url);
@@ -32,10 +32,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  const res = await confirmSignInLink(await getAuth(env), request);
-  // Better Auth's redirect (signed in, or back here with ?error=), or its per-IP limit.
-  if (res.status !== 429) return res;
-  return data({ limited: true }, { status: 429 });
+  // Better Auth's redirect (done, or back here with ?error=), or its per-IP limit.
+  return redirectOrLimited(await confirmSignInLink(await getAuth(env), request));
 }
 
 export default function SignInConfirm({ loaderData, actionData }: Route.ComponentProps) {
@@ -60,17 +58,7 @@ export default function SignInConfirm({ loaderData, actionData }: Route.Componen
 
   return (
     <AuthShell title="Sign in to Foxing">
-      {/* A plain form: it posts to this URL, token and all, and the browser follows the redirect. */}
-      <form method="post" className="stack-3">
-        {actionData?.limited ? (
-          <p role="alert" className="error">
-            Too many tries. Wait a minute, then try again.
-          </p>
-        ) : null}
-        <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
-          Sign in
-        </button>
-      </form>
+      <ConfirmButtonForm label="Sign in" limited={actionData?.limited} />
     </AuthShell>
   );
 }
