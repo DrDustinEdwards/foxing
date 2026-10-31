@@ -3,7 +3,7 @@
 // run in-process via adminRepo; every write goes to /api/v1/admin/users/:id/* with an
 // audit-log entry and a visible pending + role=alert error. Suspend, tier and admin
 // open a confirmation showing the server's preview before anything changes.
-import { adminRepo, createDb } from "@foxing/core";
+import { adminListIsSet, adminRepo, createDb, isAdminAccount } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -23,10 +23,12 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   await requireAdmin(env, request);
   const db = createDb(env.DB);
-  const user = await adminRepo.getUserDetail(db, params.id);
-  if (!user) throw new Response("Not found", { status: 404 });
+  const row = await adminRepo.getUserDetail(db, params.id);
+  if (!row) throw new Response("Not found", { status: 404 });
   const stats = await adminRepo.getUserActivityStats(db, params.id);
-  return { user, stats };
+  // Once ADMIN_EMAILS is set it decides who is an admin, and Grant/Revoke is hidden.
+  const user = { ...row, isAdmin: isAdminAccount(env, row.email ?? "", Boolean(row.isAdmin)) };
+  return { user, stats, adminListSet: adminListIsSet(env) };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -129,7 +131,8 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
           userId={user.id}
           username={user.username}
           isPlus={user.subscriptionTier === "plus"}
-          isAdmin={Boolean(user.isAdmin)}
+          isAdmin={user.isAdmin}
+          adminListSet={loaderData.adminListSet}
         />
       </div>
     </AdminShell>
@@ -141,11 +144,13 @@ function OperatorControls({
   username,
   isPlus,
   isAdmin,
+  adminListSet,
 }: {
   userId: string;
   username: string;
   isPlus: boolean;
   isAdmin: boolean;
+  adminListSet: boolean;
 }) {
   const revalidator = useRevalidator();
   const navigate = useNavigate();
@@ -193,18 +198,20 @@ function OperatorControls({
             >
               {isPlus ? "Downgrade to Free" : "Upgrade to Plus"}
             </AdminButton>
-            <AdminButton
-              pending={admin.pending}
-              onClick={() =>
-                admin.request(
-                  `/users/${userId}/admin`,
-                  { on: !isAdmin },
-                  isAdmin ? "Revoke admin" : "Grant admin",
-                )
-              }
-            >
-              {isAdmin ? "Revoke admin" : "Grant admin"}
-            </AdminButton>
+            {adminListSet ? null : (
+              <AdminButton
+                pending={admin.pending}
+                onClick={() =>
+                  admin.request(
+                    `/users/${userId}/admin`,
+                    { on: !isAdmin },
+                    isAdmin ? "Revoke admin" : "Grant admin",
+                  )
+                }
+              >
+                {isAdmin ? "Revoke admin" : "Grant admin"}
+              </AdminButton>
+            )}
           </div>
           <AdminError error={tier.error ?? admin.error} />
           {tier.dialog}

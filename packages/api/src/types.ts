@@ -4,6 +4,7 @@ import type { limit } from "@dustinedwards/site-runtime/rate-limit";
 import type {
   BillingClient,
   BillingPriceConfig,
+  ClubSuccessors,
   CompanionCaller,
   Db,
   LiveMessage,
@@ -28,6 +29,8 @@ export type Bindings = {
   // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
   // every bearer request to /admin/* is refused (operator.ts).
   ADMIN_OPERATOR_TOKEN?: string;
+  // Who is an admin, comma-separated emails (core isAdminAccount). Unset: profiles.is_admin.
+  ADMIN_EMAILS?: string;
   // Affiliate ids appended to buy links (core config/affiliate.ts); vars, both optional.
   AMAZON_ASSOC_TAG?: string;
   BOOKSHOP_AFFILIATE_ID?: string;
@@ -47,6 +50,8 @@ export type Variables = {
   structuredCompanion: StructuredCaller | null;
   billing: { client: BillingClient; prices: BillingPriceConfig };
   hub: ClubLiveHub;
+  deleteUser: ApiDeps["deleteUser"];
+  isFresh: ApiDeps["isFresh"];
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -74,4 +79,15 @@ export type ApiDeps = {
   // admin), checked on /admin/* and /ops/* (middleware/admin-access.ts). The Worker
   // verifies Access's signed token (site-runtime ./access accessAdmin). Absent: refused.
   checkAdminAccess?: (req: Request, env: Bindings, email: string) => Promise<boolean>;
+  // The reader's own deletion (DELETE /account): the Worker runs Better Auth's deleteUser, which
+  // needs a sign-in from the last 10 minutes and runs core eraseAccountData with `successors`
+  // first. "not_fresh": refused, nothing deleted.
+  // Whether the reader signed in within the last 10 minutes (site-runtime requireFreshSession),
+  // for the account export. Deletion checks its own, in Better Auth's deleteUser.
+  isFresh: (req: Request, env: Bindings) => Promise<boolean>;
+  deleteUser: (
+    req: Request,
+    env: Bindings,
+    input: { userId: string; successors: ClubSuccessors },
+  ) => Promise<"deleted" | "not_fresh">;
 };

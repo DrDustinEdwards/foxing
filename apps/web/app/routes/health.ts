@@ -1,6 +1,7 @@
 import { cronCheck } from "@dustinedwards/site-runtime/cron";
 import {
   aiCheck,
+  authSpikeCheck,
   durableObjectCheck,
   healthResponse,
   imagesCheck,
@@ -19,8 +20,9 @@ import type { Route } from "./+types/health";
 // (under `backup`), the MEDIA and COVERS buckets, APP_KV, Images (cover and journal picture sizes),
 // Workers AI and the companion cache queue (the companion only), the ClubRoom and rate limiter
 // Durable Objects (live club updates, and the API's limits), and a cron job that failed, overran,
-// went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts). durableObjectCheck mints an
-// id and sends nothing, queueCheck sends nothing and aiCheck runs nothing, so none is billed. Left
+// went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts), and a spike of failed
+// sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck).
+// durableObjectCheck mints an id and sends nothing, queueCheck sends nothing and aiCheck runs nothing, so none is billed. Left
 // out: EMAIL (send_email has nothing to read, and a probe would send mail) and CARREL_RATE_LIMIT
 // (the rate-limiting binding has no read, and a probe would spend Carrel's budget). `sha` is the
 // deployed commit, which CI's deploy passes as DEPLOY_SHA (devkit's worker-deploy.yml; a manual
@@ -46,6 +48,7 @@ export function loader({ context }: Route.LoaderArgs) {
         jobs: [...CRON_WATCHED],
         deployedAt: deployed ? new Date(deployed) : undefined,
       }),
+      authSpikeCheck(env.DB),
     ].map((check) => ({ ...check, level: "warn" as const })),
   });
 }

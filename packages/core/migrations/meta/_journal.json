@@ -92,6 +92,13 @@
       "when": 1793443112127,
       "tag": "0012_journal_media_placeholder",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1793446182265,
+      "tag": "0013_auth_events",
+      "breakpoints": true
     }
   ]
 }

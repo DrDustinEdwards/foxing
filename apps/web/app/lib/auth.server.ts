@@ -5,18 +5,27 @@
 // in the phone's browser, not the app), held to three a minute; and the Expo plugin hands a
 // Google or Apple sign-in back to the app through foxing://.
 import { expo } from "@better-auth/expo";
-import { createDb, schema } from "@foxing/core";
-import { signInOptions } from "@dustinedwards/site-runtime/sign-in";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { type ClubSuccessors, createDb, eraseAccountData, schema } from "@foxing/core";
+import {
+  SessionNotFresh,
+  requireFreshSession,
+  signInOptions,
+} from "@dustinedwards/site-runtime/sign-in";
 import { betterAuth } from "better-auth";
 import { waitUntil } from "cloudflare:workers";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
+  sendChangeEmailConfirmation,
   sendMagicLinkEmail,
   sendSecurityNoticeEmail,
   sendSignInCodeEmail,
   sendVerificationEmail,
 } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
+
+/** The club hand-over of the deletion running now, for beforeDelete (deleteUserAccount). */
+const leaving = new AsyncLocalStorage<ClubSuccessors>();
 
 /** The app's scheme (apps/mobile app.json), where a sign-in started in the app returns. */
 const APP_ORIGIN = "foxing://";
@@ -35,8 +44,14 @@ async function buildAuth(env: Env) {
     sendSignInCode: async ({ email, code }) => {
       await sendSignInCodeEmail(env, email, code);
     },
-    // Five sign-in mails an hour and ten typed codes a day per address.
+    // Five sign-in mails an hour, and wrong codes three an hour and ten a day, per address.
     emailLimiter: env.RATE_LIMITER,
+    // Each auth event is also a row in auth_events (migration 0012): Settings' security history,
+    // /health's spike check, and new-device and recovery notices read it.
+    eventsDb: env.DB,
+    // The link request is unchecked by Turnstile until Dustin creates the keys
+    // (TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY); each request logs a warning until then.
+    turnstile: "off-until-keys",
     // A passkey, Google or Apple, the email, the sessions or the account changed: tell the reader.
     sendSecurityNotice: async (_kind, { user, detail }) => {
       await sendSecurityNoticeEmail(env, user.email, detail);
@@ -56,29 +71,51 @@ async function buildAuth(env: Env) {
       transaction: false,
     }),
     plugins: [...signIn.plugins, expo()],
+    // Only the /api/v1 route deletes an account (its club hand-over comes in its body), and
+    // the verification mail is only the email change's second step, never sent on request.
+    disabledPaths: [
+      ...signIn.disabledPaths,
+      "/delete-user",
+      "/delete-user/callback",
+      "/send-verification-email",
+    ],
     // The instance outlives a request, so the request's waitUntil comes from cloudflare:workers:
     // the answer does not wait for a security notice's mail.
     advanced: { ...signIn.advanced, backgroundTasks: { handler: waitUntil } },
-    // Only the change-email flow sends this now: the new address confirms itself.
+    // Only the change-email flow sends this now, to the new address, once the current one has
+    // approved the change. The link is good for an hour (Better Auth's default).
     emailVerification: {
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
         await sendVerificationEmail(env, user.email, url);
       },
     },
     user: {
-      // Email change requires confirmation. The link goes to the current address so
-      // the account owner approves the switch; the new address takes effect on click.
+      // Changing the email takes two links (better-auth 1.7.12 update-user.mjs, changeEmail):
+      // the current address approves first, then the new address confirms itself, and only
+      // then does the email change. A person with only a stolen session cannot move the account
+      // to an address of their own. site-runtime ./sign-in tells both addresses after.
       changeEmail: {
         enabled: true,
-        sendChangeEmailVerification: async ({
+        sendChangeEmailConfirmation: async ({
           user,
+          newEmail,
           url,
         }: {
           user: { email: string };
           newEmail: string;
           url: string;
         }) => {
-          await sendVerificationEmail(env, user.email, url);
+          await sendChangeEmailConfirmation(env, user.email, newEmail, url);
+        },
+      },
+      // Deleting the account is Better Auth's /delete-user, called only from DELETE
+      // /api/v1/account (deleteUserAccount), with a sign-in from the last 10 minutes.
+      // beforeDelete erases Foxing's own data and hands over the clubs first; Better Auth then
+      // removes the sessions, the Google and Apple links and the user (passkeys go with it).
+      deleteUser: {
+        enabled: true,
+        beforeDelete: async (user: { id: string }) => {
+          await eraseAccountData(db, user.id, leaving.getStore() ?? {});
         },
       },
     },
@@ -111,4 +148,36 @@ export async function sessionUserFromRequest(
   const session = await (await getAuth(env)).api.getSession({ headers: req.headers });
   if (!session?.user) return null;
   return { id: session.user.id, email: session.user.email };
+}
+
+/**
+ * DELETE /api/v1/account's deletion: Better Auth's deleteUser for the signed-in reader, with
+ * `successors` handed to beforeDelete. "not_fresh" when the last sign-in is over 10 minutes old
+ * (site-runtime ./sign-in FRESH_SECONDS), and nothing is deleted.
+ */
+export async function deleteUserAccount(
+  req: Request,
+  env: Env,
+  successors: ClubSuccessors,
+): Promise<"deleted" | "not_fresh"> {
+  const auth = await getAuth(env);
+  try {
+    await leaving.run(successors, () => auth.api.deleteUser({ headers: req.headers, body: {} }));
+    return "deleted";
+  } catch (err) {
+    const code = (err as { body?: { code?: string } }).body?.code;
+    if (code === "SESSION_EXPIRED" || code === "SESSION_NOT_FRESH") return "not_fresh";
+    throw err;
+  }
+}
+
+/** Whether the request's session was made in the last 10 minutes (site-runtime
+ *  requireFreshSession), for the account export. */
+export async function isFreshSession(req: Request, env: Env): Promise<boolean> {
+  try {
+    return (await requireFreshSession(await getAuth(env), req)) !== null;
+  } catch (err) {
+    if (err instanceof SessionNotFresh) return false;
+    throw err;
+  }
 }

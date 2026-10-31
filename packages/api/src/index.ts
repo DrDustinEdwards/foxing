@@ -57,6 +57,12 @@ export function createApi(deps: ApiDeps) {
   app.use("*", companionDepsMw(deps));
   app.use("*", billingDepsMw(deps));
   app.use("*", hubDepsMw(deps.resolveHub));
+  // The account routes' ties to Better Auth (the Worker's deleteUser and isFresh).
+  app.use("*", async (c, next) => {
+    c.set("deleteUser", deps.deleteUser);
+    c.set("isFresh", deps.isFresh);
+    await next();
+  });
 
   app.route("/", catalogRoutes);
   app.route("/", profileRoutes);

@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient, signInAgainIfStale } from "~/lib/auth-client";
 import { signalUnknownCredential } from "@dustinedwards/site-runtime/sign-in-client";
-import { useFetcher, useRevalidator } from "react-router";
+import { useFetcher, useRevalidator, useSearchParams } from "react-router";
 import { Link } from "capsomer/react/link";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
@@ -160,21 +160,67 @@ export function UsernameSection({ initial }: { initial: string }) {
   );
 }
 
+/** Where both of the email change's links return: the new address rides along, so the page can
+ *  tell the first step (approved by the current address) from the last (changed). */
+const EMAIL_CHANGE_PARAM = "email-change";
+
+/** What an email change link's return says, from Better Auth's ?error= codes
+ *  (better-auth 1.7.12 email-verification.mjs verifyEmail); null when it did not return here. */
+function emailChangeNotice(
+  params: URLSearchParams,
+  current: string,
+): { error: boolean; text: string } | null {
+  const pending = params.get(EMAIL_CHANGE_PARAM);
+  if (pending === null) return null;
+  switch (params.get("error")) {
+    case null:
+      return pending.toLowerCase() === current.toLowerCase()
+        ? { error: false, text: `Done. Your account email is now ${current}.` }
+        : {
+            error: false,
+            text: `Approved. Now open the link Foxing sent to ${pending} to finish the change.`,
+          };
+    case "TOKEN_EXPIRED":
+      return {
+        error: true,
+        text: "That link has expired: email change links work for an hour. Ask for the change again below.",
+      };
+    case "USER_NOT_FOUND":
+      return {
+        error: true,
+        text: "That link has been used already, so it no longer works. Your account email is shown below.",
+      };
+    case "INVALID_USER":
+      return {
+        error: true,
+        text: "That link belongs to a different Foxing account than the one signed in here. Sign out, then open it again.",
+      };
+    default:
+      return {
+        error: true,
+        text: "That link is not complete or not valid. Open it from the email again, or ask for the change again below.",
+      };
+  }
+}
+
 export function EmailSection({ initial }: { initial: string }) {
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"sent" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [params] = useSearchParams();
+  const returned = emailChangeNotice(params, initial);
 
   async function change(event: React.FormEvent) {
     event.preventDefault();
     setPending(true);
     setStatus(null);
     setError(null);
+    const newEmail = email.trim();
     try {
       const res = await authClient.changeEmail({
-        newEmail: email.trim(),
-        callbackURL: "/settings",
+        newEmail,
+        callbackURL: `/settings?${EMAIL_CHANGE_PARAM}=${encodeURIComponent(newEmail)}`,
       });
       if (res.error) {
         setError(res.error.message ?? "Could not change your email.");
@@ -191,9 +237,15 @@ export function EmailSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Email">
-      <p className="ui">
-        Your account email is <span className="strong">{initial}</span>. Changing it sends a
-        confirmation link to your current address.
+      {returned ? (
+        <p role={returned.error ? "alert" : "status"} className={returned.error ? "error" : "ui"}>
+          {returned.text}
+        </p>
+      ) : null}
+      <p className={returned ? "mt-4 ui" : "ui"}>
+        Your account email is <span className="strong">{initial}</span>. To change it, approve the
+        change from a link sent to this address, then confirm the new address from a link sent
+        there.
       </p>
       <form onSubmit={change} className="mt-4 fx-account-sections-form">
         <label className="block">
@@ -212,7 +264,7 @@ export function EmailSection({ initial }: { initial: string }) {
           pending={pending}
           label="Change email"
           pendingLabel="Sending..."
-          done={status === "sent" ? "Check your inbox to confirm." : null}
+          done={status === "sent" ? `Check ${initial} for the link to approve the change.` : null}
           error={error}
         />
       </form>
@@ -232,7 +284,16 @@ export function AdminSection() {
 }
 
 export type SignInSettings = {
-  passkeys: { id: string; credentialId: string; name: string; createdAt: string | null }[];
+  passkeys: {
+    id: string;
+    credentialId: string;
+    name: string;
+    provider: string;
+    created: string | null;
+    lastUsed: string | null;
+  }[];
+  /** Exactly one passkey: suggest a second, on another device. */
+  secondPasskey: boolean;
   /** The providers the site offers, and whether this account is joined to each. */
   providers: { id: "google" | "apple"; label: string; accountId: string | null }[];
 };
@@ -277,6 +338,7 @@ function useAuthAction() {
 
 export function SignInSection({ initial }: { initial: SignInSettings }) {
   const { busy, error, run } = useAuthAction();
+  const [renaming, setRenaming] = useState<string | null>(null);
 
   return (
     <Card title="Sign-in">
@@ -287,36 +349,103 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
         </p>
         {initial.passkeys.length > 0 ? (
           <ul className="stack-3">
-            {initial.passkeys.map((p) => (
-              <li key={p.id} className="row">
-                <span className="ui grow">{p.name}</span>
-                <button
-                  type="button"
-                  className="cap-btn"
-                  data-size="sm"
-                  disabled={busy !== null}
-                  onClick={() =>
-                    void run(
-                      p.id,
-                      async () => {
-                        const res = await authClient.passkey.deletePasskey({ id: p.id });
-                        // Gone here, so the password manager stops offering it.
-                        if (!res.error)
-                          void signalUnknownCredential({
-                            rpId: location.hostname,
-                            credentialId: p.credentialId,
-                          });
-                        return res;
-                      },
-                      "The passkey was not removed.",
-                    )
-                  }
-                >
-                  Remove passkey<span className="cap-sr-only"> {p.name}</span>
-                </button>
-              </li>
-            ))}
+            {initial.passkeys.map((p) =>
+              renaming === p.id ? (
+                <li key={p.id}>
+                  <form
+                    className="row"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      const name = String(
+                        new FormData(event.currentTarget).get("name") ?? "",
+                      ).trim();
+                      if (!name) return;
+                      setRenaming(null);
+                      void run(
+                        p.id,
+                        () => authClient.passkey.updatePasskey({ id: p.id, name }),
+                        "The passkey was not renamed.",
+                      );
+                    }}
+                  >
+                    <label className="grow">
+                      <span className="cap-sr-only">Passkey name</span>
+                      <input
+                        name="name"
+                        defaultValue={p.name}
+                        maxLength={60}
+                        required
+                        // biome-ignore lint/a11y/noAutofocus: the field the Rename button opened
+                        autoFocus
+                        className={inputClass}
+                      />
+                    </label>
+                    <button type="submit" className="cap-btn" data-variant="primary" data-size="sm">
+                      Save name
+                    </button>
+                    <button
+                      type="button"
+                      className="cap-btn"
+                      data-size="sm"
+                      onClick={() => setRenaming(null)}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                </li>
+              ) : (
+                <li key={p.id} className="row">
+                  <span className="ui grow">
+                    <span className="strong">{p.name}</span>
+                    <span className="block small dim">
+                      {p.provider !== p.name ? `${p.provider}. ` : ""}
+                      {p.created ? `Added ${p.created}. ` : ""}
+                      {p.lastUsed ? `Last used ${p.lastUsed}.` : "Not used to sign in yet."}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    className="cap-btn"
+                    data-size="sm"
+                    disabled={busy !== null}
+                    onClick={() => setRenaming(p.id)}
+                  >
+                    Rename<span className="cap-sr-only"> {p.name}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="cap-btn"
+                    data-size="sm"
+                    disabled={busy !== null}
+                    onClick={() =>
+                      void run(
+                        p.id,
+                        async () => {
+                          const res = await authClient.passkey.deletePasskey({ id: p.id });
+                          // Gone here, so the password manager stops offering it.
+                          if (!res.error && p.credentialId)
+                            void signalUnknownCredential({
+                              rpId: location.hostname,
+                              credentialId: p.credentialId,
+                            });
+                          return res;
+                        },
+                        "The passkey was not removed.",
+                      )
+                    }
+                  >
+                    Remove<span className="cap-sr-only"> {p.name}</span>
+                  </button>
+                </li>
+              ),
+            )}
           </ul>
+        ) : null}
+        {initial.secondPasskey ? (
+          <p className="ui small">
+            Add a passkey on a second device too, so you can still use a passkey if you lose this
+            one.
+          </p>
         ) : null}
         <div>
           <button
@@ -328,7 +457,11 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
               void run("add", () => authClient.passkey.addPasskey(), "The passkey was not saved.")
             }
           >
-            {busy === "add" ? "Waiting for your device..." : "Create a passkey"}
+            {busy === "add"
+              ? "Waiting for your device..."
+              : initial.passkeys.length > 0
+                ? "Add another passkey"
+                : "Create a passkey"}
           </button>
         </div>
         {initial.providers.map((provider) => (
@@ -470,16 +603,60 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
   );
 }
 
-export function DataSection() {
+export type SecurityActivity = {
+  what: string;
+  when: string;
+  device: string | null;
+  location: string | null;
+}[];
+
+/** The last ten sign-ins and sign-in changes (site-runtime securityHistory), newest first, so a
+ *  reader can spot one that was not theirs. */
+export function SecurityHistorySection({ activity }: { activity: SecurityActivity }) {
+  return (
+    <Card title="Recent security activity">
+      {activity.length === 0 ? (
+        <p className="ui">Nothing yet. Sign-ins and changes to how you sign in will show here.</p>
+      ) : (
+        <ul className="stack-3">
+          {activity.map((a, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: a fixed, newest-first list that never reorders on screen
+            <li key={i} className="ui">
+              <span className="strong">{a.what}</span>
+              <span className="block small dim">
+                {[a.when, a.device, a.location].filter(Boolean).join(". ")}.
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-4 small dim">
+        Something you do not recognize? Sign out the other devices above and remove any passkey you
+        did not add.
+      </p>
+    </Card>
+  );
+}
+
+/** The export needs a sign-in from the last 10 minutes; past that, `fresh` is false and the
+ *  section offers one first. */
+export function DataSection({ fresh }: { fresh: boolean }) {
   return (
     <Card title="Your data">
       <p className="ui">
         Download a JSON archive of everything tied to your account: your profile, library, reading
         history, highlights, notes, and goals.
+        {fresh ? null : " It holds everything, so sign in again first."}
       </p>
-      <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
-        Download your data
-      </a>
+      {fresh ? (
+        <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
+          Download your data
+        </a>
+      ) : (
+        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+          Sign in again
+        </Link>
+      )}
     </Card>
   );
 }
@@ -534,7 +711,9 @@ function ClubHandoverFields({
   );
 }
 
-export function DangerSection() {
+/** Deleting needs a sign-in from the last 10 minutes (Better Auth's deleteUser); past that,
+ *  `fresh` is false and the section offers one first, as Signed-in devices does. */
+export function DangerSection({ fresh }: { fresh: boolean }) {
   const [confirm, setConfirm] = useState("");
   const [choice, setChoice] = useState<Record<string, string>>({});
   const [leaving, setLeaving] = useState(false);
@@ -560,6 +739,20 @@ export function DangerSection() {
     await authClient.signOut();
     window.location.assign("/");
   }
+
+  if (!fresh)
+    return (
+      <section className="fx-account-sections-card">
+        <h2 className="fx-account-sections-title">Delete account</h2>
+        <p className="mt-4 fx-account-sections-text">
+          This permanently removes your account and all of your data. To keep someone else from
+          doing it on a device you left signed in, sign in again first.
+        </p>
+        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+          Sign in again
+        </Link>
+      </section>
+    );
 
   return (
     <section className="fx-account-sections-card">

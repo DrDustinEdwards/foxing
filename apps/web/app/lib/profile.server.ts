@@ -5,7 +5,7 @@
 // self-fetch the Worker's own /api/v1 (that loopback returns a 404 HTML page, not
 // JSON, unconditionally, which is what crashed /me before this gate existed).
 import type { Profile } from "@foxing/core";
-import { createDb, profilesRepo } from "@foxing/core";
+import { createDb, isAdminAccount, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { getAuth } from "./auth.server";
 
@@ -22,8 +22,10 @@ export interface ProfileContext {
 // Resolve the profile for a known user id, or redirect to onboarding when absent.
 // Split from session resolution so it can be tested against D1 without Better Auth.
 export async function requireProfileForUser(env: Env, user: SessionUser): Promise<ProfileContext> {
-  const profile = await profilesRepo.getProfileById(createDb(env.DB), user.id);
-  if (!profile) throw redirect("/onboarding");
+  const row = await profilesRepo.getProfileById(createDb(env.DB), user.id);
+  if (!row) throw redirect("/onboarding");
+  // Admin is the ADMIN_EMAILS setting once it is set (core isAdminAccount).
+  const profile = { ...row, isAdmin: isAdminAccount(env, user.email, row.isAdmin) };
   return { user, profile };
 }
 

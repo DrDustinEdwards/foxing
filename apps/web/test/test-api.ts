@@ -1,6 +1,6 @@
 import { env } from "cloudflare:test";
 import { type ApiDeps, createApi } from "@foxing/api";
-import { billing, createDb, schema } from "@foxing/core";
+import { billing, createDb, deleteAccount, schema } from "@foxing/core";
 
 // The API as the integration suites build it: the caller is whoever the x-test-user header
 // names, and the companion and billing are stubs that fail if a suite reaches them. A suite
@@ -16,6 +16,13 @@ export function testApi(deps: Partial<ApiDeps> = {}) {
       async function* unused() {
         throw new Error("not used in this suite");
       },
+    // Every test caller signed in just now.
+    isFresh: async () => true,
+    // The real one is Better Auth's deleteUser (security-notice.integration.test.ts).
+    deleteUser: async (_req, e, { userId, successors }) => {
+      await deleteAccount(createDb(e.DB), userId, successors);
+      return "deleted";
+    },
     resolveBilling: () => ({
       client: billing.notConfiguredBilling(),
       prices: { monthly: "", annual: "" },

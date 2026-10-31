@@ -17,7 +17,8 @@ import {
 const brand: Brand = { name: "Foxing", family: "fox" };
 
 /** Sends one mail. A link or code in it signs in, so a send error is logged with each of
- *  `secrets` (and the recipient) cut out of its message, never the body. */
+ *  `secrets` (and the recipient) cut out of its message, never the body, and what is thrown
+ *  is a plain error that holds none of the provider's words: Better Auth logs it as it is. */
 async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []): Promise<void> {
   try {
     await env.EMAIL.send({ to, from: { email: env.EMAIL_FROM, name: "Foxing" }, ...mail });
@@ -26,8 +27,10 @@ async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []
     let message = e.message ?? String(err);
     for (const secret of [...secrets, to])
       if (secret) message = message.split(secret).join("[cut]");
-    logEvent("email_send_failed", { code: e.code ?? "unknown", message }, { level: "error" });
-    throw err;
+    // The binding's error codes are short names (E_SENDER_NOT_VERIFIED); anything else is cut.
+    const code = /^[\w.-]{1,64}$/.test(e.code ?? "") ? (e.code as string) : "unknown";
+    logEvent("email_send_failed", { code, message }, { level: "error" });
+    throw new Error(`Email not sent (${code}).`);
   }
 }
 
@@ -69,16 +72,49 @@ export function sendSignInCodeEmail(env: Env, to: string, code: string): Promise
   return send(env, to, renderEmail(signInCode, { brand, to, code }), [code]);
 }
 
-// Not Capsomer's verification template, which says its link works once: Better Auth's is a
-// stateless JWT good for an hour (better-auth 1.7.12 dist/api/routes/email-verification.mjs).
+// Not Capsomer's verification template, which says its link works once: Better Auth's are
+// stateless JWTs good for an hour (better-auth 1.7.12 dist/api/routes/email-verification.mjs).
+// The email change sends two: the current address approves, then the new address confirms.
+const approveEmailChange: Template<{ newEmail: string; url: string }> = {
+  name: "approve-email-change",
+  subject: () => "Approve the change to your Foxing email",
+  blocks: (d) => [
+    { type: "heading", text: "Approve the change to your email" },
+    {
+      type: "paragraph",
+      text: `Someone signed in to your Foxing account asked to change its email to ${d.newEmail}. If that was you, approve it, then open the link Foxing sends to the new address.`,
+    },
+    { type: "button", label: "Approve the change", url: d.url },
+    {
+      type: "fine",
+      text: "The link works for an hour. If you did not ask for this, ignore this message and your email stays the same, then check your signed-in devices in Settings.",
+    },
+  ],
+};
+
+export function sendChangeEmailConfirmation(
+  env: Env,
+  to: string,
+  newEmail: string,
+  url: string,
+): Promise<void> {
+  return send(env, to, renderEmail(approveEmailChange, { brand, to, newEmail, url }), [url]);
+}
+
 const confirmEmail: Template<{ url: string }> = {
   name: "confirm-email",
-  subject: () => "Confirm your email for Foxing",
+  subject: () => "Confirm your new email for Foxing",
   blocks: (d) => [
-    { type: "heading", text: "Confirm your email address" },
-    { type: "paragraph", text: "Welcome to Foxing. Use the button to confirm the address." },
-    { type: "button", label: "Confirm your email address", url: d.url },
-    { type: "fine", text: "If you did not create an account, ignore this message." },
+    { type: "heading", text: "Confirm your new email address" },
+    {
+      type: "paragraph",
+      text: "Your current address approved the change. Use the button to make this your Foxing email.",
+    },
+    { type: "button", label: "Confirm this address", url: d.url },
+    {
+      type: "fine",
+      text: "The link works for an hour. If you did not ask for this, ignore this message.",
+    },
   ],
 };
 

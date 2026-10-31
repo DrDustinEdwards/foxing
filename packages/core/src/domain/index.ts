@@ -56,3 +56,4 @@ export {
   computePollResult,
   firstPreferenceTallies,
 } from "./poll-result";
+export * from "./admins";
