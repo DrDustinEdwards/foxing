@@ -7,16 +7,16 @@
     "measured_at": "6ed6e39",
     "knip": {
       "Unused files": 2,
-      "Unused devDependencies": 1
+      "Unused devDependencies": 0
     },
     "jscpd": {
       "clones": 289,
-      "lines": 2907,
-      "percentage": 3.47
+      "lines": 2908,
+      "percentage": 3.43
     },
     "tests": {
       "files": 73,
-      "cases": 403
+      "cases": 405
     },
     "comments": {
       "lines": 5607,
