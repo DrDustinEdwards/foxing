@@ -1,46 +1,27 @@
 name: access-drift
 
-# The weekly Access drift check (I2, site-runtime-access-drift): the Cloudflare Access application
-# in front of the admin must let in exactly the addresses in the ADMIN_EMAILS secret, kept equal to
-# the Worker's own ADMIN_EMAILS. A failed run is the alert. The token reads Access apps and policies
-# only; until the ACCESS_READ_TOKEN secret is set, the run skips with a notice.
+# The daily Access drift check (area 3, I2), devkit's reusable workflow: the Access application in front
+# of /admin must let in exactly the addresses on the Worker's ADMIN_EMAILS, which the site serves hashed at
+# /admin/access-drift to the Access service token (workers/app.ts). No copy of the list is kept in GitHub.
+# Until all four secrets are set the job fails, by design.
 
 on:
   schedule:
-    - cron: "17 6 * * 1"
+    - cron: "41 6 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
 
-concurrency:
-  group: access-drift
-  cancel-in-progress: false
-
 jobs:
   drift:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      CLOUDFLARE_API_TOKEN: ${{ secrets.ACCESS_READ_TOKEN }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-      ADMIN_EMAILS: ${{ secrets.ADMIN_EMAILS }}
-      ACCESS_APP_NAME: ${{ vars.ACCESS_APP_NAME }}
-    steps:
-      - name: Skip until the token is set
-        if: env.CLOUDFLARE_API_TOKEN == ''
-        run: echo "::notice title=access-drift skipped::ACCESS_READ_TOKEN is not set, so the Access drift check did not run."
-      - if: env.CLOUDFLARE_API_TOKEN != ''
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-      - if: env.CLOUDFLARE_API_TOKEN != ''
-        uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: 24
-      # The same site-runtime tag the web app pins, so the check moves with the app's bumps.
-      - name: Compare Access with ADMIN_EMAILS
-        if: env.CLOUDFLARE_API_TOKEN != ''
-        run: |
-          spec=$(node -p 'require("./apps/web/package.json").dependencies["@dustinedwards/site-runtime"]')
-          npx --yes --package "$spec" site-runtime-access-drift --account "$CLOUDFLARE_ACCOUNT_ID" --app "$ACCESS_APP_NAME"
+    uses: DrDustinEdwards/devkit/.github/workflows/access-drift.yml@005509b56d9830b785f17ba496f4a3c223fc392c # v0.20.19
+    with:
+      app: foxing-login
+      admins-url: https://foxing.app/admin/access-drift
+      site-runtime-ref: v0.59.0
+    secrets:
+      ACCESS_READ_TOKEN: ${{ secrets.ACCESS_READ_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ACCESS_CLIENT_ID: ${{ secrets.ACCESS_CLIENT_ID }}
+      ACCESS_CLIENT_SECRET: ${{ secrets.ACCESS_CLIENT_SECRET }}

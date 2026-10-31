@@ -74,7 +74,8 @@ export function sendSignInCodeEmail(env: Env, to: string, code: string): Promise
 
 // Not Capsomer's verification template, which says its link works once: Better Auth's are
 // stateless JWTs good for an hour (better-auth 1.7.12 dist/api/routes/email-verification.mjs).
-// The email change sends two: the current address approves, then the new address confirms.
+// The email change sends two: the current address approves, then the new address confirms. Each
+// link opens /email/confirm, whose button does the step (auth.server.ts, emailConfirmURL).
 const approveEmailChange: Template<{ newEmail: string; url: string }> = {
   name: "approve-email-change",
   subject: () => "Approve the change to your Foxing email",

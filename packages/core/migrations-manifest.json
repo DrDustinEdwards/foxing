@@ -15,6 +15,7 @@
     "0010_journal_trash_and_renames.sql": "3ca08b5094bab95ad2f10f1aed1486acfea0b134a3aab0a94fc84e9b79fa5f72",
     "0011_site_api_store.sql": "9b4795c0e2da9e7b4a64d998d518490d9d83cad54ddc6c106f502d2d81bba1bd",
     "0012_journal_media_placeholder.sql": "c617e218b1ff8b1e9764411c0f2db49e9961e4eadf0a00b3df16792b676c9562",
-    "0013_auth_events.sql": "6ba5b8c559ecfac1823a16d2fca2b0c4cd123cae467335c73646e78ad617ec95"
+    "0013_auth_events.sql": "6ba5b8c559ecfac1823a16d2fca2b0c4cd123cae467335c73646e78ad617ec95",
+    "0014_session_details.sql": "7a3e2191c6cf8fff629d35b7c3cb16aabc35d0b112326f7b5b2157753188d583"
   }
 }
