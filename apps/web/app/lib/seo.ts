@@ -5,7 +5,7 @@
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
-import { article, breadcrumbs, itemList, thing } from "@drdustinedwards/site-helpers/schema";
+import { article, itemList, thing } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { SITE_ORIGIN } from "./origins";
 
@@ -31,6 +31,8 @@ const head = defineHead({
   siteName: SITE_NAME,
   image: { url: "/og/site", width: 1200, height: 630, alt: "Foxing: read the classics, free." },
   suffix: ` | ${SITE_NAME}`,
+  // The sections a page's BreadcrumbList passes through; Prelum builds the only one a page has.
+  sections: { "/books": "Books", "/awards": "Awards", "/picks": "Picks", "/journal": "Journal" },
 });
 
 type MetaInput = {
@@ -43,6 +45,10 @@ type MetaInput = {
   type?: "website" | "article" | "book" | "profile";
   /** Set true to keep a page out of the index (community book pages). */
   noindex?: boolean;
+  /** "CollectionPage" for a list; WebPage otherwise. */
+  pageType?: string;
+  /** The trail from home, where it is not the one the URL's sections give. */
+  breadcrumbs?: Array<{ name: string; path: string }>;
 };
 
 /** The full standard head from Prelum's defineHead: title, description, canonical, Open Graph, Twitter. */
@@ -55,6 +61,8 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     imageAlt,
     type,
     noindex,
+    pageType,
+    breadcrumbs,
   } = input;
   // Routes pass location.pathname, so /x/ would name /x/ as canonical; the page is /x.
   const path = pathname.replace(/\/+$/, "") || "/";
@@ -67,17 +75,13 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     image: image ? { url: image, alt: imageAlt } : undefined,
     type,
     noindex,
+    pageType,
+    breadcrumbs,
   });
 }
 
 /** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */
 export { jsonLd as ldJson } from "@drdustinedwards/site-helpers/schema";
-
-export function breadcrumbLd(
-  crumbs: Array<{ name: string; path: string }>,
-): Record<string, unknown> {
-  return breadcrumbs(SITE_ORIGIN, crumbs);
-}
 
 export function bookLd(book: {
   slug: string;

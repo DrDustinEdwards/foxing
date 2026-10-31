@@ -62,6 +62,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: label,
       description: `Browse ${data.result.total.toLocaleString()} readable classics on Foxing. Filter by genre, era, and length.`,
       pathname: location.pathname,
+      pageType: "CollectionPage",
     }),
     ldJson(
       itemListLd(

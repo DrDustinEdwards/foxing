@@ -21,6 +21,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       description:
         "Every pick from Oprah, Reese, Jenna, Belletrist, and more, gathered in one place on Foxing.",
       pathname: location.pathname,
+      pageType: "CollectionPage",
     }),
     ldJson(
       itemListLd(
