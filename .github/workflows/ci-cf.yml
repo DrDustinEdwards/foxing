@@ -30,6 +30,9 @@ on:
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "pnpm-lock.yaml"
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
