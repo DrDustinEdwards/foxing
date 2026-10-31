@@ -7,7 +7,6 @@ import {
   goalPacing,
   goalPeriodLabel,
   isoWeek,
-  MONTH_ABBR,
   periodElapsedFraction,
   useDeleteGoal,
   useGoals,
@@ -16,12 +15,15 @@ import {
 } from "@foxing/client";
 import { createDb, libraryRepo, views } from "@foxing/core";
 import type { Goal, GoalWithProgress } from "@foxing/types";
+import { ChartFrame } from "capsomer/react/chart-frame";
+import { Meter } from "capsomer/react/meter";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
+import { enhanceChart, weeksChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
 
@@ -33,17 +35,15 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
 
-  // Reading-activity heatmap: 53 weeks of days, colored by books finished that day. Finish
-  // dates are the only real per-day reading signal in D1 (reading_sessions are unpopulated
-  // on web), so they drive the grid. Weeks are Sunday-first, GitHub-style.
+  // Reading activity: books finished in each of the last 53 Sunday-first weeks. Finish dates are
+  // the only real per-day reading signal in D1 (reading_sessions are unpopulated on web).
   const db = createDb(env.DB);
   const goals = await views.goals(db, user.id);
   const now = new Date();
   const dayMs = 86_400_000;
   const todayUTC = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const WEEKS = 53;
-  const dow = new Date(todayUTC).getUTCDay(); // 0 Sun .. 6 Sat
-  const lastSunday = todayUTC - dow * dayMs;
+  const lastSunday = todayUTC - new Date(todayUTC).getUTCDay() * dayMs;
   const firstSunday = lastSunday - (WEEKS - 1) * 7 * dayMs;
 
   const [streak, finished] = await Promise.all([
@@ -51,40 +51,17 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     libraryRepo.listFinishedInRangeForStats(db, user.id, firstSunday, todayUTC + dayMs),
   ]);
 
-  const byDay = new Map<number, number>();
+  const weeks = Array.from({ length: WEEKS }, (_, w) => ({
+    start: firstSunday + w * 7 * dayMs,
+    books: 0,
+  }));
   for (const b of finished) {
     if (!b.finishedAt) continue;
-    const d = Date.UTC(
-      b.finishedAt.getUTCFullYear(),
-      b.finishedAt.getUTCMonth(),
-      b.finishedAt.getUTCDate(),
-    );
-    byDay.set(d, (byDay.get(d) ?? 0) + 1);
+    const w = Math.floor((b.finishedAt.getTime() - firstSunday) / (7 * dayMs));
+    if (w >= 0 && w < WEEKS) weeks[w].books += 1;
   }
 
-  const weeks: Array<Array<number | null>> = [];
-  const monthLabels: Array<{ col: number; label: string }> = [];
-  let lastLabelMonth = -1;
-  for (let w = 0; w < WEEKS; w++) {
-    const col: Array<number | null> = [];
-    for (let d = 0; d < 7; d++) {
-      const ms = firstSunday + (w * 7 + d) * dayMs;
-      col.push(ms > todayUTC ? null : (byDay.get(ms) ?? 0));
-    }
-    weeks.push(col);
-    const topMonth = new Date(firstSunday + w * 7 * dayMs).getUTCMonth();
-    const prev = monthLabels[monthLabels.length - 1];
-    if (topMonth !== lastLabelMonth && (!prev || w - prev.col >= 3)) {
-      monthLabels.push({ col: w, label: MONTH_ABBR[topMonth] });
-      lastLabelMonth = topMonth;
-    }
-  }
-
-  return {
-    goals,
-    heatmap: { weeks, monthLabels },
-    streak,
-  };
+  return { goals, weeks, streak };
 }
 
 /** A goal is active when its period covers the current date; otherwise it is past. */
@@ -97,7 +74,7 @@ function isActive(goal: Goal, now: Date): boolean {
 }
 
 export default function Goals({ loaderData }: Route.ComponentProps) {
-  const { heatmap } = loaderData;
+  const { weeks } = loaderData;
   const goals = useGoals(loaderData.goals).data;
   const streak = useStreak(loaderData.streak).data;
   const now = new Date();
@@ -137,8 +114,17 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
 
         <section className="stack">
           <h2 className="display-2">Reading activity</h2>
-          <div className="fx-goals-card">
-            <ActivityHeatmap weeks={heatmap.weeks} monthLabels={heatmap.monthLabels} />
+          <div className="card card-5">
+            {weeks.some((w) => w.books > 0) ? (
+              <ChartFrame draw={weeksChart(weeks)} onDraw={enhanceChart} />
+            ) : (
+              <ChartFrame
+                noData={{
+                  title: "Books finished per week, the last year",
+                  reason: "No books finished in the last year.",
+                }}
+              />
+            )}
           </div>
           <div className="fx-goals-grid">
             <StreakCard label="current streak" value={streak.currentStreak} hint="days in a row" />
@@ -186,7 +172,6 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
   const remove = useDeleteGoal();
   const pending = update.pending;
   const error = update.error ?? remove.error;
-  const pct = Math.min(100, goal.target > 0 ? (progress / goal.target) * 100 : 0);
   const complete = goal.target > 0 && progress >= goal.target;
   const pacing =
     active && !complete
@@ -228,22 +213,14 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
         </div>
       </div>
 
-      <div
-        className="mt-2 fx-goals-box"
-        role="progressbar"
-        aria-valuenow={progress}
-        aria-valuemin={0}
-        aria-valuemax={goal.target}
-        aria-label={`${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
-      >
-        <div
-          className={complete ? "fx-goal-fill fx-goal-done" : "fx-goal-fill"}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
-      <p className="mt-1 fine">
-        {progress} of {goal.target}
-      </p>
+      <Meter
+        className="mt-2"
+        label="Progress"
+        value={progress}
+        max={goal.target}
+        tone={complete ? "ok" : undefined}
+        valueText={`${progress} of ${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
+      />
 
       {editing ? (
         <div className="mt-3 row-2">
@@ -324,82 +301,6 @@ function CreateGoal() {
         </p>
       ) : null}
     </section>
-  );
-}
-
-// Books-finished-per-day contribution grid: 53 Sunday-first week columns x 7 days. Empty
-// days use the subtle brand track; active days ramp brand opacity by count. Inline SVG,
-// theme-aware via the brand tokens. Month labels sit beneath the grid.
-const CELL = 11;
-const PITCH = 13;
-
-function intensity(count: number): number {
-  if (count <= 1) return 0.5;
-  if (count === 2) return 0.75;
-  return 1;
-}
-
-function ActivityHeatmap({
-  weeks,
-  monthLabels,
-}: {
-  weeks: Array<Array<number | null>>;
-  monthLabels: Array<{ col: number; label: string }>;
-}) {
-  const width = weeks.length * PITCH;
-  const gridH = 7 * PITCH;
-  const height = gridH + 16;
-  return (
-    <div className="fx-goals-stack">
-      <svg
-        width={width}
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        role="img"
-        aria-label="Books finished per day over the last year"
-      >
-        {weeks.map((col, w) =>
-          col.map((count, d) =>
-            count === null ? null : (
-              <rect
-                // biome-ignore lint/suspicious/noArrayIndexKey: a fixed grid of week columns by weekday rows; a cell is identified by its position.
-                key={`${w}-${d}`}
-                x={w * PITCH}
-                y={d * PITCH}
-                width={CELL}
-                height={CELL}
-                rx="2"
-                className={count === 0 ? "fx-heat-empty" : "fx-heat"}
-                fillOpacity={count === 0 ? 1 : intensity(count)}
-              >
-                {count > 0 ? (
-                  <title>{`${count} book${count === 1 ? "" : "s"} finished`}</title>
-                ) : null}
-              </rect>
-            ),
-          ),
-        )}
-        {monthLabels.map((m) => (
-          <text
-            key={`${m.col}-${m.label}`}
-            x={m.col * PITCH}
-            y={gridH + 11}
-            className="fx-goals-text-3"
-            fontSize="9"
-          >
-            {m.label}
-          </text>
-        ))}
-      </svg>
-      <div className="fx-goals-row-4">
-        <span>Less</span>
-        <span className="fx-goals-label-2" />
-        <span className="fx-goals-label-3" style={{ opacity: 0.5 }} />
-        <span className="fx-goals-label-3" style={{ opacity: 0.75 }} />
-        <span className="fx-goals-label-3" />
-        <span>More</span>
-      </div>
-    </div>
   );
 }
 

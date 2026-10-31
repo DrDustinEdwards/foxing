@@ -7,7 +7,9 @@ import {
   useVotePoll,
 } from "@foxing/client";
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
+import { ChartFrame } from "capsomer/react/chart-frame";
 import { useState } from "react";
+import { enhanceChart, pollChart } from "~/lib/reading-charts";
 import { ErrorText } from "./club-sections";
 
 export function PollsSection({
@@ -123,7 +125,6 @@ export function PollsSection({
                 <ul className="mt-3 fx-club-schedule-list">
                   {poll.options.map((opt) => {
                     const count = poll.tallies[opt.id] ?? 0;
-                    const pct = total > 0 ? Math.round((count / total) * 100) : 0;
                     const mine = poll.myVote?.includes(opt.id);
                     return (
                       <li key={opt.id}>
@@ -134,13 +135,8 @@ export function PollsSection({
                           aria-pressed={mine}
                           className="fx-poll-option"
                         >
-                          <span
-                            aria-hidden="true"
-                            className="fx-club-schedule-label"
-                            style={{ width: `${pct}%` }}
-                          />
-                          <span className="relative fx-club-schedule-label-2">{opt.label}</span>
-                          <span className="relative fx-club-schedule-label-3" aria-live="polite">
+                          <span>{opt.label}</span>
+                          <span className="fx-club-schedule-label-3" aria-live="polite">
                             {count}
                           </span>
                         </button>
@@ -148,6 +144,17 @@ export function PollsSection({
                     );
                   })}
                 </ul>
+                {total > 0 ? (
+                  <ChartFrame
+                    className="mt-4"
+                    draw={pollChart(
+                      poll.id,
+                      poll.options.map((o) => ({ label: o.label, votes: poll.tallies[o.id] ?? 0 })),
+                      poll.isClosed,
+                    )}
+                    onDraw={enhanceChart}
+                  />
+                ) : null}
               </div>
             );
           })}

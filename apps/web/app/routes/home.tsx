@@ -3,6 +3,7 @@
 // sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
 import { useEffect, useState } from "react";
 import { Link } from "capsomer/react/link";
+import { Meter } from "capsomer/react/meter";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Button, Container, Eyebrow } from "~/components/ui";
@@ -115,17 +116,14 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
           </Link>
         </h2>
         <p className="mt-1 fx-home-text-2">{reading.author}</p>
-        <div
-          className="mt-4 fx-home-box-2"
-          role="progressbar"
-          aria-valuenow={progress}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Reading progress"
-        >
-          <div className="fx-home-box-3" style={{ width: `${progress}%` }} />
-        </div>
-        <p className="fx-home-text-3">{progress}% read</p>
+        <Meter
+          className="mt-4"
+          label="Reading progress"
+          value={progress}
+          max={100}
+          display={`${progress}% read`}
+          valueText={`${progress}% of ${reading.title} read`}
+        />
         <div className="mt-5">
           <Button to={`/books/${reading.slug}`} variant="secondary">
             Open book
