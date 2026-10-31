@@ -3,6 +3,7 @@
 // rendered by Capsomer's email templates (capsomer/email), which escape every value
 // and refuse a link that is not https.
 
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import { type Brand, magicLink, type Rendered, renderEmail, type Template } from "capsomer/email";
 
@@ -18,7 +19,7 @@ async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []
     let message = e.message ?? String(err);
     for (const secret of [...secrets, to])
       if (secret) message = message.split(secret).join("[cut]");
-    console.error(`EMAIL.send failed: code=${e.code ?? "unknown"} message=${message}`);
+    logEvent("email_send_failed", { code: e.code ?? "unknown", message }, { level: "error" });
     throw err;
   }
 }
