@@ -26,7 +26,7 @@ concurrency:
 
 jobs:
   report:
-    uses: DrDustinEdwards/devkit/.github/workflows/no-bloat.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
+    uses: DrDustinEdwards/devkit/.github/workflows/no-bloat.yml@017fccd9e3f316a9dfb9b8e1495592dffc677278 # v0.20.21
     with:
       package-manager: pnpm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.

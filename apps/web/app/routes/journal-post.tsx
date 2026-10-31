@@ -1,5 +1,5 @@
+import { goneResponse, renameRedirect } from "@dustinedwards/site-runtime/url";
 import { catalogRepo } from "@foxing/core";
-import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
@@ -20,9 +20,20 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const post = await catalogRepo.getPostBySlug(db, params.slug);
   if (!post) {
     // A post Carrel renamed: its old address answers a permanent redirect to the new one (site-api's
-    // rename). Read only on a miss, so a live post's page costs no extra query.
-    const moved = await catalogRepo.getJournalSlugRedirect(db, params.slug);
-    if (moved) throw redirect(`/journal/${moved}`, 301);
+    // rename), through site-runtime's renameRedirect, which follows a chain of renames in one hop.
+    // Read only on a miss, so a live post's page costs no extra query.
+    const moved = await renameRedirect(request, {
+      prefix: "/journal/",
+      renames: (slug) => catalogRepo.getJournalSlugRedirect(db, slug),
+    });
+    if (moved) throw moved;
+    // A post taken down on purpose (trashed after it was live) is gone, 410, not missing.
+    if (await catalogRepo.isJournalPostWithdrawn(db, params.slug)) {
+      throw (
+        goneResponse(request, [`/journal/${params.slug}`]) ??
+        new Response("Not found", { status: 404 })
+      );
+    }
     throw new Response("Not found", { status: 404 });
   }
 

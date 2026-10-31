@@ -91,13 +91,29 @@ jobs:
   # report it, checks the home page answers, and rolls the deploy back if it does not. A rollback never
   # undoes a migration; the bookmark in the run's summary does. Dormant until CF_DEPLOY is 'true'.
   # The staged wrangler.jsonc carries the real IDs and BETTER_AUTH_URL, which the build bakes in.
+  #
+  # GRADUAL ROLLOUT (D4): the new version takes 10% of real traffic beside the live one for ten
+  # minutes, the live gate reads it through a version override, and it is promoted to 100% only when
+  # the gate passes; a refusal sends everything back to the version it shared with. The crons and
+  # routes are applied from the same config (worker-deploy's `triggers deploy`). A commit that adds,
+  # renames or deletes a Durable Object class (a new `migrations` entry) cannot go up as a version,
+  # and a change to the queue consumers is not a version setting either: set gradual-percent to 0
+  # for that one deploy. Until this pin reaches devkit v0.20.22 (its `triggers deploy` step), a cron
+  # change needs gradual-percent 0 too.
+  #
+  # NO PER-PR PREVIEW (D6). Cloudflare generates no preview URL for a Worker that implements a
+  # Durable Object (Cloudflare Docs, "Version URLs", Limitations), and this one has ClubRoom and the
+  # rate limiter. Even with one, a preview version runs with this Worker's own bindings: the
+  # production D1, the EMAIL send binding, the companion queue and the Anthropic key, so a
+  # reviewer's click would write readers' data and could mail real people. A safe preview needs a
+  # second Worker with its own D1 and no send binding, which is a build, not a flag.
   deploy:
     needs: check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@017fccd9e3f316a9dfb9b8e1495592dffc677278 # v0.20.21
     with:
       worker-name: foxing
       health-url: https://foxing.app/health
@@ -116,6 +132,8 @@ jobs:
         pnpm run build
       sha-var: DEPLOY_SHA
       d1-database: foxing
+      gradual-percent: 10
+      gradual-minutes: 10
     secrets:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

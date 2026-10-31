@@ -1,6 +1,6 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
-import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, isNotNull, lte, sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import { journalPosts, journalSlugRedirects } from "../../schema";
 
@@ -96,6 +96,31 @@ export async function getJournalSlugRedirect(db: Db, slug: string): Promise<stri
     .where(eq(journalSlugRedirects.fromSlug, slug))
     .limit(1);
   return row?.toSlug ?? null;
+}
+
+/**
+ * Whether a slug names a post taken down on purpose: in Carrel's trash, and live once (published_at
+ * in the past, which unpublishing keeps). Such an address answers 410, not 404, so a crawler drops
+ * it and a reader is told it was not a typo. A draft trashed before it went live stays a 404.
+ */
+export async function isJournalPostWithdrawn(
+  db: Db,
+  slug: string,
+  now: Date = new Date(),
+): Promise<boolean> {
+  const [row] = await db
+    .select({ id: journalPosts.id })
+    .from(journalPosts)
+    .where(
+      and(
+        eq(journalPosts.slug, slug),
+        eq(journalPosts.isPublished, false),
+        isNotNull(journalPosts.trashedAt),
+        lte(journalPosts.publishedAt, now),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
 /** All published post slugs + last-modified, for the sitemap. */
