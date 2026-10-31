@@ -3,6 +3,7 @@
 import { renderToReadableStream } from "react-dom/server";
 import { ServerRouter } from "react-router";
 import type { EntryContext, RouterContextProvider } from "react-router";
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { isbot } from "isbot";
 import { cspNonceContext } from "./context";
 import { NonceContext } from "./lib/nonce";
@@ -28,7 +29,7 @@ export default async function handleRequest(
       nonce,
       onError(error: unknown) {
         responseStatusCode = 500;
-        if (shellRendered) console.error(error);
+        if (shellRendered) logEvent("render_failed", { error }, { level: "error" });
       },
     },
   );
@@ -38,6 +39,6 @@ export default async function handleRequest(
     await body.allReady;
   }
 
-  responseHeaders.set("Content-Type", "text/html");
+  responseHeaders.set("Content-Type", "text/html; charset=utf-8");
   return new Response(body, { headers: responseHeaders, status: responseStatusCode });
 }
