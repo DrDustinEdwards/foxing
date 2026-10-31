@@ -22,6 +22,6 @@ jobs:
     uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@f55d2caadaa7a18a73397fb8defffb2e3123967b # v0.20.3
     with:
       package-manager: pnpm
-      install: pnpm install --frozen-lockfile
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile'
       working-directory: apps/web
       prepare: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc && pnpm --filter web build

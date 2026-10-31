@@ -45,7 +45,8 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      # @readium/shared names @edrlab/thorium-locales by an SSH git URL; CI has no key, so fetch it over HTTPS.
+      - run: git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile
       # wrangler.jsonc is gitignored; typegen + vitest-pool need a config present.
       # Placeholder IDs are fine for local D1 (miniflare) and typegen.
       - name: Stage wrangler config
@@ -89,7 +90,7 @@ jobs:
         echo "home page answered $code";
         if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
       working-directory: apps/web
-      install: npm install -g pnpm@11.1.2 && pnpm install --frozen-lockfile
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && npm install -g pnpm@11.1.2 && pnpm install --frozen-lockfile'
       pre-deploy: >-
         sed -e "s|<D1_DATABASE_ID>|${{ vars.D1_DATABASE_ID }}|"
         -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|"
@@ -121,7 +122,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile
       - name: Install Playwright Chromium
         run: pnpm --filter web exec playwright install --with-deps chromium
       - name: Run E2E

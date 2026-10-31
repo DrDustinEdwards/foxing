@@ -45,7 +45,7 @@ jobs:
         with:
           node-version-file: .nvmrc
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile
       # wrangler.jsonc is gitignored; the Cloudflare Vite plugin needs a config
       # present to build. Placeholder ids are fine: nothing is deployed.
       - name: Stage wrangler config

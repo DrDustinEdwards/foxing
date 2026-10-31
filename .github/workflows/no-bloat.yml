@@ -30,4 +30,4 @@ jobs:
     with:
       package-manager: pnpm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
-      install: pnpm install --frozen-lockfile --ignore-scripts
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile --ignore-scripts'
