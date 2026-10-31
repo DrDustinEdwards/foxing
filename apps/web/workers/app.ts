@@ -20,7 +20,7 @@ import {
 } from "@dustinedwards/site-runtime/edge-cache";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
-import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
+import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import { preloads } from "@dustinedwards/site-runtime/preload";
 import { slashRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
@@ -177,7 +177,7 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) => (await getAuth(c.env)).handl
 // passes: the mobile app's fetch, the admin MCP's bearer calls and Stripe's webhook send none.
 // Better Auth (/api/auth) checks origins against its trustedOrigins itself, and Carrel's site
 // API is a bearer-key server call, so neither comes through this.
-app.use("/api/v1/*", async (c, next) => refuseCrossOrigin(c.req.raw) ?? next());
+app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
 
 // Search-as-you-type answers do not depend on the viewer (public books, profiles and
 // clubs only), so they come from the edge cache for everyone, signed in or not.

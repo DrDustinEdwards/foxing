@@ -13,6 +13,7 @@ import {
 } from "@foxing/core";
 import type { Db } from "@foxing/core";
 import { errors } from "../error";
+import { readBody, WEBHOOK_BODY_MAX_BYTES } from "../http";
 import type { Env } from "../types";
 
 export const stripeWebhookRoutes = new Hono<Env>();
@@ -63,7 +64,7 @@ stripeWebhookRoutes.post("/webhooks/stripe", async (c) => {
   const signature = c.req.header("stripe-signature");
   if (!signature) throw errors.validation({ signature: "missing stripe-signature header" });
 
-  const payload = await c.req.text();
+  const payload = await readBody(c, WEBHOOK_BODY_MAX_BYTES);
   const { client } = c.get("billing");
   const db = c.get("db");
 

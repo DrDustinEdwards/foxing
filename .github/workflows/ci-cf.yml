@@ -97,7 +97,7 @@ jobs:
         -e "s|https://<your-worker>.workers.dev|${{ vars.BETTER_AUTH_URL }}|"
         wrangler.jsonc.example > wrangler.jsonc &&
         pnpm exec wrangler d1 migrations apply foxing --remote &&
-        pnpm exec react-router build
+        pnpm run build
       sha-var: DEPLOY_SHA
       d1-database: foxing
     secrets:

@@ -23,6 +23,7 @@ export const errors = {
   conflict: (message: string) => new AppError(409, "conflict", message),
   rateLimited: () => new AppError(429, "rate_limited", "Too many requests."),
   validation: (details: unknown) => new AppError(422, "validation", "Invalid request.", details),
+  tooLarge: () => new AppError(413, "too_large", "Request body too large."),
   planRequired: () => new AppError(403, "plus_required", "This is a Foxing Plus feature."),
   quotaExceeded: (resetsAt: string) =>
     new AppError(429, "quota", "Daily AI usage limit reached.", { resets_at: resetsAt }),

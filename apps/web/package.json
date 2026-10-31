@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "react-router build",
+    "build": "node scripts/gen-headers.mjs && react-router build",
     "preview": "npm run build && vite preview",
     "deploy": "npm run build && wrangler deploy",
     "typegen": "wrangler types",
