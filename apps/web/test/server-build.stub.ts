@@ -56,7 +56,7 @@ const build = {
       id: "journal",
       parentId: "root",
       path: "journal/:slug",
-      module: { ...journalPost, default: UNSAFE_withComponentProps(journalPost.default) },
+      module: { ...journalPost, default: UNSAFE_withComponentProps(journalPost.default as never) },
     },
   },
   assets: {
