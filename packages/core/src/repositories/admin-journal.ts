@@ -16,7 +16,7 @@ import {
   type SQL,
 } from "drizzle-orm";
 import { z } from "zod";
-import { journalPostVersions, journalPosts, journalSlugRedirects } from "../schema";
+import { journalPostVersions, journalPosts, journalSlugRedirects, profiles } from "../schema";
 
 // ---- Journal ------------------------------------------------------------------
 
@@ -34,6 +34,8 @@ export type JournalAdminQuery = {
   publishedBefore?: Date;
   /** true lists the trash alone; otherwise the trash is left out. */
   trashed?: boolean;
+  /** Credited to this staff member; null for the posts credited to Foxing alone. */
+  authorId?: string | null;
   /** Only these slugs, or all but these (Carrel's scheduled posts, from site-api's table). */
   slugs?: string[];
   exceptSlugs?: string[];
@@ -47,6 +49,12 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
     query.trashed ? isNotNull(journalPosts.trashedAt) : isNull(journalPosts.trashedAt),
   ];
   if (query.published !== undefined) where.push(eq(journalPosts.isPublished, query.published));
+  if (query.authorId !== undefined)
+    where.push(
+      query.authorId === null
+        ? isNull(journalPosts.authorId)
+        : eq(journalPosts.authorId, query.authorId),
+    );
   if (query.q) {
     const pattern = `%${query.q.toLowerCase()}%`;
     const match = or(
@@ -88,6 +96,7 @@ export async function listJournalAdmin(db: Db, query: JournalAdminQuery = {}) {
       updatedAt: journalPosts.updatedAt,
       trashedAt: journalPosts.trashedAt,
       tags: journalPosts.tags,
+      authorId: journalPosts.authorId,
     })
     .from(journalPosts)
     .where(journalAdminWhere(query))
@@ -128,6 +137,8 @@ export const journalInput = z.object({
   coverImageAlt: z.string().max(500).nullable().optional(),
   tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   featured: z.boolean().optional(),
+  series: z.string().trim().min(1).max(200).nullable().optional(),
+  seriesPart: z.number().int().min(1).max(10_000).nullable().optional(),
   isPublished: z.boolean().optional(),
 });
 
@@ -169,6 +180,8 @@ export async function createJournalPost(
       coverImageAlt: input.coverImageAlt ?? null,
       tags: input.tags ?? null,
       featured: input.featured ?? false,
+      series: input.series ?? null,
+      seriesPart: input.seriesPart ?? null,
       authorId,
       isPublished: published,
       publishedAt: published ? new Date() : null,
@@ -177,48 +190,62 @@ export async function createJournalPost(
   return row.id;
 }
 
+/** The write that replaced a kept version. */
+export type JournalVersionEvent = "save" | "publish" | "unpublish" | "rename";
+
+type JournalRow = typeof journalPosts.$inferSelect;
+
 /**
- * Saves a journal post, snapshotting the text it replaces into journal_post_versions first.
- * savedBy is null for a save made outside a user session (the Carrel site API). Returns false,
+ * Keeps the whole post as it stood before a write that landed: every field Carrel edits, its
+ * credited author and its slug. savedBy is null for a write made outside a user session (Carrel).
+ */
+async function keepVersion(
+  db: Db,
+  before: JournalRow,
+  savedBy: string | null,
+  event: JournalVersionEvent,
+): Promise<void> {
+  await db.insert(journalPostVersions).values({
+    postId: before.id,
+    title: before.title,
+    content: before.content,
+    excerpt: before.excerpt,
+    savedAt: new Date(),
+    savedBy,
+    authorId: before.authorId,
+    event,
+    fields: {
+      slug: before.slug,
+      coverImageUrl: before.coverImageUrl,
+      coverImageAlt: before.coverImageAlt,
+      tags: before.tags ?? [],
+      featured: before.featured,
+      series: before.series,
+      seriesPart: before.seriesPart,
+    },
+  });
+}
+
+/**
+ * Saves a journal post, keeping the version it replaces in journal_post_versions. Returns false,
  * having written nothing, when the post does not exist or the guard's updated_at is stale.
  */
 export async function updateJournalPost(
   db: Db,
   id: string,
-  input: Partial<JournalInput>,
+  input: Partial<JournalInput> & { authorId?: string | null },
   savedBy: string | null,
   guard: JournalWriteGuard = {},
 ): Promise<boolean> {
   const current = await getJournalById(db, id);
   if (!current) return false;
-  if (
-    guard.expectedUpdatedAt &&
-    current.updatedAt.getTime() !== guard.expectedUpdatedAt.getTime()
-  ) {
-    return false;
-  }
-  // Snapshot the current version before overwriting, mirroring the legacy version history.
-  const [snapshot] = await db
-    .insert(journalPostVersions)
-    .values({
-      postId: id,
-      title: current.title,
-      content: current.content,
-      excerpt: current.excerpt,
-      savedAt: new Date(),
-      savedBy,
-    })
-    .returning({ id: journalPostVersions.id });
   const updated = await db
     .update(journalPosts)
     .set({ ...input, updatedAt: nextUpdatedAt(current.updatedAt) })
-    .where(journalRow(id, guard))
+    .where(journalRow(id, { expectedUpdatedAt: guard.expectedUpdatedAt ?? current.updatedAt }))
     .returning({ id: journalPosts.id });
-  if (updated.length === 0) {
-    // Another write landed between the read and this one: the snapshot describes nothing.
-    await db.delete(journalPostVersions).where(eq(journalPostVersions.id, snapshot.id));
-    return false;
-  }
+  if (updated.length === 0) return false;
+  await keepVersion(db, current, savedBy, "save");
   return true;
 }
 
@@ -246,12 +273,14 @@ export async function setJournalPublished(
         (on && !current.publishedAt ? new Date() : (current.publishedAt ?? null)),
       updatedAt: nextUpdatedAt(current.updatedAt),
     })
-    .where(journalRow(id, guard))
+    .where(journalRow(id, { expectedUpdatedAt: guard.expectedUpdatedAt ?? current.updatedAt }))
     .returning({ id: journalPosts.id });
-  return updated.length > 0;
+  if (updated.length === 0) return false;
+  await keepVersion(db, current, null, on ? "publish" : "unpublish");
+  return true;
 }
 
-/** The text a post held before each save, newest first. */
+/** The post as it stood before each write, newest first. */
 export async function listJournalVersions(db: Db, postId: string, limit = 50) {
   return db
     .select()
@@ -362,5 +391,31 @@ export async function renameJournalPost(
     ...(options.redirect ? redirects : []),
   ]);
   const after = await getJournalById(db, id);
-  return after?.slug === newSlug && after.updatedAt.getTime() === stamp.getTime();
+  if (after?.slug !== newSlug || after.updatedAt.getTime() !== stamp.getTime()) return false;
+  await keepVersion(db, current, null, "rename");
+  return true;
+}
+
+/** The Journal's staff, whom a post may credit: every admin, by display name. */
+export async function listJournalStaff(db: Db): Promise<Array<{ id: string; name: string }>> {
+  const rows = await db
+    .select({ id: profiles.id, displayName: profiles.displayName, username: profiles.username })
+    .from(profiles)
+    .where(and(eq(profiles.isAdmin, true), eq(profiles.isSuspended, false)))
+    .orderBy(asc(profiles.username));
+  return rows.map((r) => ({ id: r.id, name: r.displayName ?? r.username }));
+}
+
+/** The display names of these accounts, by id; an id with no profile is left out. */
+export async function journalPeopleNames(
+  db: Db,
+  ids: ReadonlyArray<string | null>,
+): Promise<Map<string, string>> {
+  const wanted = [...new Set(ids.filter((id): id is string => id !== null))];
+  if (wanted.length === 0) return new Map();
+  const rows = await db
+    .select({ id: profiles.id, displayName: profiles.displayName, username: profiles.username })
+    .from(profiles)
+    .where(inArray(profiles.id, wanted));
+  return new Map(rows.map((r) => [r.id, r.displayName ?? r.username]));
 }

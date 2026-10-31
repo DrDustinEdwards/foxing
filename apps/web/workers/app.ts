@@ -211,7 +211,7 @@ app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
-mountCarrel(app, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
+mountCarrel(app, (request, context) => reactRouterHandler(request, context));
 
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
 // minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and

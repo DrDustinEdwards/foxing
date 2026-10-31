@@ -12,6 +12,7 @@ import { runConformance } from "@dustinedwards/site-api/conformance";
 import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { adminRepo, catalogRepo, createDb, schema } from "@foxing/core";
 import { Hono } from "hono";
+import { createRequestHandler, type ServerBuild } from "react-router";
 import { beforeEach, describe, expect, it } from "vitest";
 import { sessionUserFromRequest } from "../app/lib/auth.server";
 import { journalSiteAdapter } from "../app/lib/carrel/journal-adapter.server";
@@ -44,9 +45,15 @@ function testEnv(overrides: Record<string, unknown> = {}): Env {
   } as unknown as Env;
 }
 
+// The real root and journal route (test/server-build.stub.ts), which a preview draws.
+const renderDocument = createRequestHandler(
+  () => import("virtual:react-router/server-build") as Promise<ServerBuild>,
+  "test",
+);
+
 function worker(): Hono<{ Bindings: Env }> {
   const app = new Hono<{ Bindings: Env }>();
-  mountCarrel(app, async () => ["/assets/root.css"]);
+  mountCarrel(app, (request, context) => renderDocument(request, context));
   app.route(
     "/api/v1",
     testApi({
@@ -100,8 +107,30 @@ async function seedPost(slug: string, opts: { isPublished?: boolean } = {}) {
   return row;
 }
 
-const source = (title: string, body = "New body.") =>
-  `---\ntitle: ${JSON.stringify(title)}\nexcerpt: null\ncover_image_url: null\ncover_image_alt: null\ntags: ["essays"]\nfeatured: false\n---\n\n${body}`;
+const source = (
+  title: string,
+  body = "New body.",
+  extra = 'authors: ["Foxing"]\nseries: null\nseriesPart: null',
+) =>
+  `---\ntitle: ${JSON.stringify(title)}\nexcerpt: null\ncover_image_url: null\ncover_image_alt: null\ntags: ["essays"]\nfeatured: false\n${extra}\n---\n\n${body}`;
+
+/** A staff member a post can credit (fake data): an admin with a display name. */
+async function seedStaff(id: string, displayName: string) {
+  const at = new Date();
+  await db()
+    .insert(schema.user)
+    .values({
+      id,
+      name: displayName,
+      email: `${id}@example.com`,
+      emailVerified: true,
+      createdAt: at,
+      updatedAt: at,
+    });
+  await db()
+    .insert(schema.profiles)
+    .values({ id, username: id, displayName, isAdmin: true, createdAt: at, updatedAt: at });
+}
 
 async function auditRows() {
   return db().select().from(schema.adminAuditLog);
@@ -113,6 +142,8 @@ beforeEach(async () => {
   await db().delete(schema.journalPostVersions);
   await db().delete(schema.journalPosts);
   await db().delete(schema.adminAuditLog);
+  await db().delete(schema.profiles);
+  await db().delete(schema.user);
 });
 
 describe("Carrel site API: conformance", () => {
@@ -131,7 +162,8 @@ describe("Carrel site API: conformance", () => {
     expect(report.ok).toBe(true);
     // Every write the suite sends is refused: nothing changed.
     expect(await auditRows()).toEqual([]);
-  });
+    // Its previews draw the real journal route, whose first render loads the page's modules.
+  }, 30_000);
 });
 
 describe("PLANT: the key off its prefix", () => {
@@ -318,28 +350,82 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(audit.find((a) => a.action === "journal.publish")?.params?.firstPublish).toBe(true);
   });
 
-  it("saves through updateJournalPost, keeping history, and diffs against it", async () => {
+  it("credits a staff author and a series, filters by author, and keeps every field of every write in history", async () => {
+    await seedStaff("staff-1", "Ada Reader");
     const post = await seedPost("edited", { isPublished: true });
-    const saved = await call(
-      `${PREFIX}/content/edited/draft`,
-      json("PUT", {
-        source: source("Edited title", "Edited body."),
-        expectedVersion: String(post.updatedAt.getTime()),
-        changeId: "ch-edit",
-      }),
+    const credited = 'authors: ["Ada Reader"]\nseries: "Rereading Eliot"\nseriesPart: "2"';
+    const save = (src: string, expectedVersion: string, changeId: string) =>
+      call(
+        `${PREFIX}/content/edited/draft`,
+        json("PUT", { source: src, expectedVersion, changeId }),
+      );
+
+    // A name that is no one on the staff is refused, naming who can be credited.
+    const unknown = await save(
+      source("T", "B", 'authors: ["Someone Else"]\nseries: null\nseriesPart: null'),
+      String(post.updatedAt.getTime()),
+      "ch-unknown",
+    );
+    expect(unknown.status).toBe(422);
+    expect((await body(unknown)).message).toContain("Foxing, Ada Reader");
+
+    const saved = await save(
+      source("Edited title", "Edited body.", credited),
+      String(post.updatedAt.getTime()),
+      "ch-edit",
     );
     expect(saved.status).toBe(200);
     // A save to a live post keeps it live.
-    expect(await saved.json()).toMatchObject({ status: "published" });
+    const after = await body<WriteResult>(saved);
+    expect(after.status).toBe("published");
+    expect(await adminRepo.getJournalBySlug(db(), "edited")).toMatchObject({
+      authorId: "staff-1",
+      series: "Rereading Eliot",
+      seriesPart: 2,
+    });
+    const doc = await body<ContentDoc>(call(`${PREFIX}/content/edited`, withKey()));
+    expect(doc.authors).toEqual(["Ada Reader"]);
+    expect(doc.source).toBe(source("Edited title", "Edited body.", credited));
 
+    // The author filter: by the staff member's name, and Foxing's for posts with none.
+    await seedPost("uncredited");
+    const ids = async (author: string) =>
+      (
+        await body<{ items: Array<{ id: string }> }>(
+          call(`${PREFIX}/content?author=${encodeURIComponent(author)}`, withKey()),
+        )
+      ).items.map((i) => i.id);
+    expect(await ids("Ada Reader")).toEqual(["edited"]);
+    expect(await ids("Foxing")).toEqual(["uncredited"]);
+    expect(await ids("Nobody")).toEqual([]);
+
+    // An unpublish and a publish each keep a version too, every field of it, under a person's name.
+    const down = await body<WriteResult>(
+      call(
+        `${PREFIX}/content/edited/unpublish`,
+        json("POST", { expectedVersion: after.version, changeId: "ch-down" }),
+      ),
+    );
+    await call(
+      `${PREFIX}/content/edited/publish`,
+      json("POST", { expectedVersion: down.version, changeId: "ch-up" }),
+    );
     const revisions = (
       await body<RevisionList>(call(`${PREFIX}/content/edited/revisions`, withKey()))
     ).items;
-    expect(revisions).toHaveLength(2);
-    const earlier = revisions[1].version;
-    const diff = await body<Diff>(call(`${PREFIX}/content/edited/diff?from=${earlier}`, withKey()));
+    expect(revisions.map((r) => [r.author, r.message.split(".")[0]])).toEqual([
+      ["Ada Reader", "The post as it stands now"],
+      ["Ada Reader", "The post before it was published"],
+      ["Ada Reader", "The post before it was taken off the Journal"],
+      ["Foxing", "The post before a save"],
+    ]);
+    const first = revisions[3].version;
+    const original = await call(`${PREFIX}/content/edited/revisions/${first}`, withKey());
+    expect(await original.text()).toContain("tags: []");
+    const diff = await body<Diff>(call(`${PREFIX}/content/edited/diff?from=${first}`, withKey()));
     expect(diff.patch).toContain("-Original body.");
     expect(diff.patch).toContain("+Edited body.");
+    expect(diff.patch).toContain('+tags: ["essays"]');
   });
 
   it("schedules a draft, which the cron publishes at its time and not before, under that time, with the hooks", async () => {
@@ -393,14 +479,30 @@ describe("Carrel site API: the Journal adapter", () => {
     );
   });
 
-  it("previews an unsaved draft in the journal's markup, never indexed, without writing", async () => {
-    const res = await call(`${PREFIX}/preview`, json("POST", { source: source("Preview me") }));
+  it("previews an unsaved draft as the journal route draws it, never indexed, without writing", async () => {
+    await seedStaff("staff-2", "Ada Reader");
+    const res = await call(
+      `${PREFIX}/preview`,
+      json("POST", {
+        source: source(
+          "Preview me",
+          "New body.",
+          'authors: ["Ada Reader"]\nseries: "Rereading Eliot"\nseriesPart: 3',
+        ),
+      }),
+    );
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain('<meta name="robots" content="noindex">');
-    expect(html).toContain('<link rel="stylesheet" href="https://foxing.app/assets/root.css">');
+    // The real page: the site header and footer around the post, with its byline and series line.
+    expect(html).toContain('data-cap="site-header"');
+    expect(html).toContain('class="fx-footer"');
     expect(html).toContain('<h1 class="mt-3 fx-journal-post-title">Preview me</h1>');
+    expect(html).toContain('By <span class="p-author h-card">Ada Reader</span>');
+    expect(html).toContain("Part 3 of 3 in Rereading Eliot");
     expect(html).toContain("<p>New body.</p>");
+    expect(html.match(/<meta name="robots"[^>]*>/g)).toEqual([
+      '<meta name="robots" content="noindex"/>',
+    ]);
     expect(await db().select().from(schema.journalPosts)).toEqual([]);
   });
 });
@@ -437,13 +539,16 @@ describe("Carrel site API: v0.17.0 over the Journal", () => {
     );
     expect(trashed.status).toBe("draft");
     expect(await catalogRepo.getPostBySlug(db(), "new-name")).toBeNull();
+    // A redirect leads only to a live post: no 301 to a 404 while it is in the trash.
+    expect(await catalogRepo.getJournalSlugRedirect(db(), "old-name")).toBeNull();
     const listed = await body<{ items: Array<{ id: string }>; filtered: string[] }>(
       call(`${PREFIX}/content?trashed=true`, withKey()),
     );
     expect([listed.items.map((i) => i.id), listed.filtered]).toEqual([["new-name"], ["trashed"]]);
     expect((await del(trashed.version, "ch-del-2")).status).toBe(200);
     expect(await adminRepo.getJournalById(db(), live.id)).toBeNull();
-    expect(await catalogRepo.getJournalSlugRedirect(db(), "old-name")).toBeNull();
+    // The delete takes the redirects that led to it with it.
+    expect(await db().select().from(schema.journalSlugRedirects)).toEqual([]);
   });
 
   it("opens a preview link without the key, never indexed, until its post goes to the trash", async () => {

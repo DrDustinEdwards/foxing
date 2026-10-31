@@ -1,5 +1,6 @@
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
+import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
@@ -17,7 +18,9 @@ function fmtDate(d: Date | null): string | null {
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
-  const post = await catalogRepo.getPostBySlug(db, params.slug);
+  // A Carrel preview hands the route its post; every other render reads the live one.
+  const preview = context.get(journalPreviewContext);
+  const post = preview ?? (await catalogRepo.getPostBySlug(db, params.slug));
   if (!post) {
     // A post Carrel renamed: its old address answers a permanent redirect to the new one (site-api's
     // rename). Read only on a miss, so a live post's page costs no extra query.
@@ -29,10 +32,22 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const cover = post.coverImageUrl
     ? (await journalCovers(db, [post.coverImageUrl])).get(post.coverImageUrl)
     : undefined;
+  const credits = await catalogRepo.getJournalCredits(db, post);
 
   return {
     html: await renderJournalBody(db, post.slug, post.content),
     cover,
+    preview: preview !== null,
+    // The byline names a staff member only when the post credits one; otherwise it is Foxing's.
+    author: credits.author,
+    series: post.series
+      ? {
+          name: post.series,
+          part: post.seriesPart,
+          // A part past the live count (a later part published first) still reads sensibly.
+          total: Math.max(credits.seriesTotal ?? 1, post.seriesPart ?? 1),
+        }
+      : null,
     post: {
       slug: post.slug,
       title: post.title,
@@ -55,7 +70,7 @@ export const headers = listingPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Essay not found | Foxing" }];
-  const { post } = data;
+  const { post, author } = data;
   const meta = buildMeta({
     title: post.ogTitle ?? post.title,
     description: post.ogDescription ?? post.excerpt ?? `${post.title}, from the Foxing Journal.`,
@@ -65,7 +80,13 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     type: "article",
   });
   return [
-    ...meta,
+    // A preview is never indexed, whatever headers carry it.
+    ...(data.preview
+      ? [
+          ...meta.filter((m) => !("name" in m && m.name === "robots")),
+          { name: "robots", content: "noindex" },
+        ]
+      : meta),
     ldJson(
       articleLd({
         slug: post.slug,
@@ -74,13 +95,14 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
         coverImageUrl: post.coverImageUrl,
         publishedAt: post.publishedAt,
         updatedAt: post.updatedAt,
+        author,
       }),
     ),
   ];
 }
 
 export default function JournalPost({ loaderData }: Route.ComponentProps) {
-  const { post, html, cover } = loaderData;
+  const { post, html, cover, author, series } = loaderData;
   const published = fmtDate(post.publishedAt);
 
   return (
@@ -99,11 +121,24 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
           <header className="mb-8">
             <Eyebrow>The Journal</Eyebrow>
             <h1 className="mt-3 fx-journal-post-title">{post.title}</h1>
+            {series ? (
+              <p className="mt-2 fx-journal-post-row">
+                {series.part
+                  ? `Part ${series.part} of ${series.total} in ${series.name}`
+                  : `Part of ${series.name}`}
+              </p>
+            ) : null}
             <div className="mt-4 fx-journal-post-row">
+              {author ? (
+                <span>
+                  By <span className="p-author h-card">{author}</span>
+                </span>
+              ) : null}
+              {author && published ? <span aria-hidden="true">·</span> : null}
               {published ? <span>{published}</span> : null}
               {post.readingTimeMinutes ? (
                 <>
-                  {published ? <span aria-hidden="true">·</span> : null}
+                  {author || published ? <span aria-hidden="true">·</span> : null}
                   <span>{post.readingTimeMinutes} min read</span>
                 </>
               ) : null}

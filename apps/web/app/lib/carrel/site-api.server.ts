@@ -23,11 +23,42 @@ import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import { schedulePurgeHook } from "@dustinedwards/site-runtime/edge-cache";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import type { Context, Hono, Next } from "hono";
+import { RouterContextProvider } from "react-router";
+import {
+  cloudflareContext,
+  cspNonceContext,
+  type JournalPreview,
+  journalPreviewContext,
+} from "../../context";
 import { INDEXNOW_KEY } from "../indexnow";
 import { SITE_ORIGIN } from "../origins";
 import { journalSiteAdapter } from "./journal-adapter.server";
 
 type WorkerEnv = { Bindings: Env };
+
+/** React Router's request handler (workers/app.ts), which a preview renders the journal route with. */
+export type RenderDocument = (
+  request: Request,
+  context: RouterContextProvider,
+) => Promise<Response>;
+
+/**
+ * The journal route's page for a post Carrel previews, rendered in-process at its own address with
+ * the post handed to the route (journalPreviewContext). It carries no nonce, as a stored public page
+ * carries none, so the page is the server's HTML and no script of it runs.
+ */
+function previewRenderer(env: Env, ctx: ExecutionContext, origin: string, render: RenderDocument) {
+  return (slug: string, post: JournalPreview) => {
+    const context = new RouterContextProvider();
+    context.set(cloudflareContext, { env, ctx });
+    context.set(cspNonceContext, undefined);
+    context.set(journalPreviewContext, post);
+    return render(
+      new Request(`${origin}/journal/${slug}`, { headers: { accept: "text/html" } }),
+      context,
+    );
+  };
+}
 
 /**
  * The Workers `ratelimit` binding, per caller address (wrangler.jsonc). A missing binding throws,
@@ -55,7 +86,10 @@ function carrelLimiter(env: Env): RateLimiter {
  */
 function carrelSiteApi(
   env: Env,
-  options: { sourceIp: string | null; stylesheets?: string[] },
+  options: {
+    sourceIp: string | null;
+    renderPreview?: Parameters<typeof journalSiteAdapter>[0]["renderPreview"];
+  },
 ): SiteApi {
   const store = d1SiteApiStore(env.DB);
   return createSiteApi({
@@ -99,9 +133,9 @@ async function presentsCarrelKeyOffPrefix(request: Request, env: Env): Promise<b
 /**
  * Registers the off-prefix refusal, the /api/carrel/v1 handler and the preview links. Call it
  * before any other route or middleware on the Worker's root app, so the refusal runs first.
- * `stylesheets` are the root route's, which a preview is drawn in.
+ * `render` is React Router's handler, which a preview draws the journal route with.
  */
-export function mountCarrel(app: Hono<WorkerEnv>, stylesheets: () => Promise<string[]>): void {
+export function mountCarrel(app: Hono<WorkerEnv>, render: RenderDocument): void {
   app.use("*", async (c: Context<WorkerEnv>, next: Next) => {
     if (await presentsCarrelKeyOffPrefix(c.req.raw, c.env)) {
       logEvent(
@@ -121,15 +155,16 @@ export function mountCarrel(app: Hono<WorkerEnv>, stylesheets: () => Promise<str
   });
 
   const handler = async (c: Context<WorkerEnv>) => {
+    const ctx = c.executionCtx as unknown as ExecutionContext;
     const api = carrelSiteApi(c.env, {
       sourceIp: c.req.header("cf-connecting-ip") ?? null,
-      stylesheets: await stylesheets(),
+      renderPreview: previewRenderer(c.env, ctx, new URL(c.req.url).origin, render),
     });
     // A preview link: noindex, private, no-store and no-referrer from the package (the security
     // headers' Referrer-Policy is no-referrer too), so the token, which is the address, is never
     // sent on.
     if (api.matchesPreviewLink(c.req.raw)) return api.servePreviewLink(c.req.raw);
-    return api.handle(c.req.raw, c.executionCtx as unknown as ExecutionContext);
+    return api.handle(c.req.raw, ctx);
   };
   app.all("/api/carrel/v1", handler);
   app.all("/api/carrel/v1/*", handler);

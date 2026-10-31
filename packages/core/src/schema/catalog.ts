@@ -151,6 +151,10 @@ export const journalPosts = sqliteTable(
     ogDescription: text("og_description"),
     canonicalUrl: text("canonical_url"),
     readingTimeMinutes: integer("reading_time_minutes"),
+    // A series the post is part of, by name, and its place in it (site-api's series and seriesPart
+    // post fields); the page reads "Part n of m". Both null outside a series.
+    series: text("series"),
+    seriesPart: integer("series_part"),
     // Carrel's content trash (site-api v0.17.0): set when the post goes to the trash, which takes
     // it off the Journal; null otherwise. site-api's runSchedules deletes it 30 days on.
     trashedAt: ts("trashed_at"),
@@ -169,6 +173,17 @@ export const journalSlugRedirects = sqliteTable("journal_slug_redirects", {
   createdAt: createdAt(),
 });
 
+/** What a journal version keeps beside its title, excerpt and body. */
+export type JournalVersionFields = {
+  slug: string;
+  coverImageUrl: string | null;
+  coverImageAlt: string | null;
+  tags: string[];
+  featured: boolean;
+  series: string | null;
+  seriesPart: number | null;
+};
+
 export const journalPostVersions = sqliteTable(
   "journal_post_versions",
   {
@@ -181,6 +196,11 @@ export const journalPostVersions = sqliteTable(
     excerpt: text("excerpt"),
     savedAt: ts("saved_at").notNull(),
     savedBy: text("saved_by").references(() => user.id, { onDelete: "set null" }),
+    // The rest of the post as it stood (null on a version saved before history kept it), its
+    // credited author, and the write that replaced it: a save, a publish, an unpublish or a rename.
+    fields: json<JournalVersionFields>("fields"),
+    authorId: text("author_id").references(() => user.id, { onDelete: "set null" }),
+    event: text("event"),
   },
   (t) => [index("journal_post_versions_post_id_idx").on(t.postId)],
 );
