@@ -6,7 +6,13 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { ACCESS_LOGOUT_PATH, accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
+import {
+  ACCESS_LOGOUT_PATH,
+  accessAdmin,
+  adminEmails,
+  withAdminIdle,
+} from "@dustinedwards/site-runtime/access";
+import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
@@ -578,12 +584,23 @@ async function withAdminIdleSignOut(request: Request, handle: () => Promise<Resp
   return withSecurityHeaders(idle, request);
 }
 
+// The admin list, hashed with a fresh salt, for the daily Access drift check (I2, devkit's
+// access-drift workflow): only a GET Access let through with a service token gets it, anything
+// else is 404 (site-runtime ./access-drift). It sits under /admin, inside the Access application,
+// and outside the idle sign-out, which is for people.
+async function adminList(request: Request, env: Env): Promise<Response> {
+  const res = await adminListResponse(request, env, { admins: adminEmails(env) });
+  return withSecurityHeaders(res, request);
+}
+
 // Every request writes one `request` line (site-runtime ./log's withRequestLog: path, status, ms and
 // the deployed commit, never a query).
 export default {
   fetch: withRequestLog(
     (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
+      new URL(request.url).pathname === ADMIN_LIST_PATH
+        ? adminList(request, env)
+        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
     { sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA },
   ),
   scheduled,

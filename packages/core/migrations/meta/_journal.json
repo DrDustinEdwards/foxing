@@ -99,6 +99,13 @@
       "when": 1793446182265,
       "tag": "0013_auth_events",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1793463133788,
+      "tag": "0014_session_details",
+      "breakpoints": true
     }
   ]
 }
