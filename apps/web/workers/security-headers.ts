@@ -1,17 +1,12 @@
-// Every security header Foxing sends, in one file: the shared package's standard set (the OWASP
-// Secure Headers Project's own values, @dustinedwards/site-runtime) with this site's deviations, each
-// beside its reason, and the Content-Security-Policy built from the list below of what Foxing really
-// loads. workers/app.ts calls withSecurityHeaders on every response, redirects, API, errors and cache
+// Every security header Foxing sends: the shared package's set (the OWASP Secure Headers Project's
+// own values, @dustinedwards/site-runtime, with Foxing's registry entry; ./header-set.ts) and the
+// Content-Security-Policy built from the list below of what Foxing really loads. workers/app.ts calls withSecurityHeaders on every response, redirects, API, errors and cache
 // hits included. No other file sets a security header.
-import { TDM_RESERVATION_HEADERS } from "@drdustinedwards/site-helpers/robots";
-import {
-  applyHeaderSet,
-  buildSecurityHeaders,
-  PASSKEY_OVERRIDES,
-} from "@dustinedwards/site-runtime/headers";
+import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
 import {
   buildContentSecurityPolicy,
   generateNonce,
+  renewNonce,
   reportingEndpoints,
   type CspSources,
 } from "@dustinedwards/site-runtime/csp";
@@ -19,6 +14,7 @@ import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 import { ipKey, limit } from "@dustinedwards/site-runtime/rate-limit";
 import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
+import { securityHeaders } from "./header-set";
 
 /** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
 export const CSP_REPORT_PATH = "/api/csp-report";
@@ -41,33 +37,8 @@ const SITE_SOURCES: CspSources = {
   frame: [TURNSTILE_ORIGIN],
 };
 
-/** The set every response carries (Prelum's TDMRep header among them, reserving training rights as
- *  /ai.txt says), with passkey sign-in allowed on Foxing's own pages (OSHP's
- *  Permissions-Policy turns it off; site-runtime's PASSKEY_OVERRIDES carries the reason). */
-export const securityHeaders: Readonly<Record<string, string>> = {
-  ...buildSecurityHeaders({ overrides: PASSKEY_OVERRIDES }),
-  ...TDM_RESERVATION_HEADERS,
-};
-
-/**
- * Images only: the OG cards (/og/*, og.foxing.app) are embedded by other sites, and a link preview
- * that a browser loads straight from here would be refused under same-origin.
- */
-const imageHeaders: Readonly<Record<string, string>> = {
-  ...buildSecurityHeaders({
-    overrides: {
-      "Cross-Origin-Resource-Policy": {
-        value: "cross-origin",
-        reason:
-          "OG cards and other images are embedded by other sites' link previews; same-origin would block them in the reader's browser",
-      },
-    },
-  }),
-  ...TDM_RESERVATION_HEADERS,
-};
-
 /** The site policy for this response: its nonce when it is a rendered page, none otherwise. */
-export function contentSecurityPolicy(nonce?: string): string {
+function contentSecurityPolicy(nonce?: string): string {
   return buildContentSecurityPolicy({
     sources: SITE_SOURCES,
     nonce,
@@ -134,44 +105,26 @@ function isHtml(headers: Headers): boolean {
 }
 
 /**
- * The response with Foxing's headers. A page from the edge cache still carries the nonce it was
- * rendered with; it is re-issued here, a fresh one per reader, by rewriting only the elements that
- * carry the old value, so no two readers share a nonce and no injected element gains one.
+ * The response with Foxing's headers. A page from the edge cache still carries the nonce it was rendered with;
+ * site-runtime's renewNonce gives it a fresh one per reader, rewriting only the elements that carry the old value, so
+ * no two readers share a nonce and no injected element gains one. Cross-Origin-Resource-Policy follows the type
+ * (corpFor): the OG cards and covers other sites embed are cross-origin, pages and JSON same-origin.
  */
 export function withSecurityHeaders(response: Response, request: Request): Response {
   // A WebSocket upgrade carries its socket on the Response and cannot be rebuilt.
   if (response.status === 101) return response;
 
-  const headers = new Headers(response.headers);
-  let body = response.body;
-  const html = isHtml(headers);
-  applyHeaderSet(
-    headers,
-    html || !headers.get("Content-Type")?.startsWith("image/") ? securityHeaders : imageHeaders,
-  );
-
-  let nonce: string | undefined;
-  if (html) {
-    const rendered = NONCE_IN_POLICY.exec(headers.get("Content-Security-Policy") ?? "")?.[1];
-    const current = issued.get(request);
-    if (rendered && rendered !== current) {
-      const fresh = generateNonce();
-      issued.set(request, fresh);
-      nonce = fresh;
-      const rewrite = {
-        element(el: Element) {
-          if (el.getAttribute("nonce") === rendered) el.setAttribute("nonce", fresh);
-        },
-      };
-      body = new HTMLRewriter()
-        .on("script[nonce]", rewrite)
-        .on("link[nonce]", rewrite)
-        .on("style[nonce]", rewrite)
-        .transform(new Response(body, { headers })).body;
-    } else {
-      nonce = current;
-    }
+  const rendered = NONCE_IN_POLICY.exec(response.headers.get("Content-Security-Policy") ?? "")?.[1];
+  if (isHtml(response.headers) && rendered && rendered !== issued.get(request)) {
+    const fresh = generateNonce();
+    issued.set(request, fresh);
+    response = renewNonce(response, fresh);
   }
+  const headers = new Headers(response.headers);
+  const html = isHtml(headers);
+  applyHeaderSet(headers, securityHeaders);
+  headers.set("Cross-Origin-Resource-Policy", corpFor(headers.get("Content-Type")));
+  const nonce = html ? issued.get(request) : undefined;
   const url = new URL(request.url);
   const reader = html && isReaderPath(url.pathname);
   headers.set(
@@ -180,7 +133,11 @@ export function withSecurityHeaders(response: Response, request: Request): Respo
   );
   const reportUrl = new URL(CSP_REPORT_PATH, url);
   headers.set("Reporting-Endpoints", reportingEndpoints(CSP_ENDPOINT_NAME, reportUrl));
-  return new Response(body, { status: response.status, statusText: response.statusText, headers });
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 /** Reports one address may send a minute before the rest are dropped (still 204). */

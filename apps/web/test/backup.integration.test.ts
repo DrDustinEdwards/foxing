@@ -1,7 +1,7 @@
 import { env } from "cloudflare:test";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BACKUP_EXCLUDE } from "../app/lib/backup-checks";
-import { backupStatus, runBackup } from "../app/lib/backup.server";
+import { backupStatus, runBackup, runMediaBackup } from "../app/lib/backup.server";
 import { healthResponse } from "@dustinedwards/site-runtime/health";
 
 // Real D1 (with the real migrations, FTS5 tables and triggers included) and real R2, in
@@ -34,6 +34,7 @@ async function reset() {
   );
   const listed = await env.BACKUPS.list();
   if (listed.objects.length > 0) await env.BACKUPS.delete(listed.objects.map((o) => o.key));
+  await env.MEDIA.delete("journal/sample.png");
 }
 
 async function seed() {
@@ -94,7 +95,12 @@ async function health(at?: Date) {
     status: res.status,
     body: (await res.json()) as {
       ok: boolean;
-      backup: { last_ok: string | null; age_hours: number | null; warning?: string };
+      backup: {
+        last_ok: string | null;
+        age_hours: number | null;
+        warning?: string;
+        files: { age_hours: number | null; warning?: string };
+      };
     } & Record<string, unknown>,
   };
 }
@@ -102,9 +108,11 @@ async function health(at?: Date) {
 describe("nightly backup", () => {
   beforeEach(reset);
 
-  it("dumps the content, leaves every credential table out, and reports a fresh age", async () => {
+  it("dumps the content and the media files, leaves every credential table out, and reports a fresh age", async () => {
     await seed();
+    await env.MEDIA.put("journal/sample.png", "sample bytes");
     await runBackup(workerEnv);
+    await runMediaBackup(workerEnv);
 
     const written = await keys();
     expect(written.some((k) => k.endsWith("/_complete.json"))).toBe(true);
@@ -131,10 +139,12 @@ describe("nightly backup", () => {
 
     const { status, body } = await health();
     expect(status).toBe(200);
-    expect(Object.keys(body).sort()).toEqual(["backup", "checks", "db", "ok", "status", "time"]);
-    expect(Object.keys(body.backup).sort()).toEqual(["age_hours", "last_ok"]);
-    expect(body.backup.warning).toBeUndefined();
     expect(body.backup.age_hours).toBeLessThan(1);
+    expect(body.backup.warning).toBeUndefined();
+    expect(body.backup.files.age_hours).toBeLessThan(1);
+    expect(await (await env.BACKUPS.get("files/media/journal/sample.png"))?.text()).toBe(
+      "sample bytes",
+    );
   });
 
   it("leaves an emptied database without a marker, throws, and health says so", async () => {

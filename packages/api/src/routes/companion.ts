@@ -3,6 +3,7 @@
 // and never a prompt or system prompt -- this is what the D10 adversarial eval
 // checks. Tier-gated (D11 Plus actions) and quota-gated (cost-based, not request-
 // count, security-open-items.md item 4). Streams via SSE.
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import {
@@ -111,7 +112,11 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
         event: "error",
         data: "The companion could not complete that request.",
       });
-      console.error(`[companion] stream failed for ${session.id}/${input.action}`, err);
+      logEvent(
+        "companion_stream_failed",
+        { user_id: session.id, action: input.action, error: err },
+        { level: "error" },
+      );
       return;
     }
 

@@ -9,7 +9,7 @@ import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
 import { getAuth } from "~/lib/auth.server";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
-import { bookLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
+import { bookLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/book-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -75,13 +75,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       noindex: community,
     }),
     ldJson(bookLd(book)),
-    ldJson(
-      breadcrumbLd([
-        { name: "Home", path: "/" },
-        { name: "Books", path: "/books" },
-        { name: book.title, path: `/books/${book.slug}` },
-      ]),
-    ),
   ];
 }
 

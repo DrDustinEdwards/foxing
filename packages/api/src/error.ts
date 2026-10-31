@@ -1,4 +1,5 @@
 // Error envelope: every failure returns { error: { code, message, details? } }.
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { DomainError } from "@foxing/core";
 import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
@@ -22,6 +23,7 @@ export const errors = {
   conflict: (message: string) => new AppError(409, "conflict", message),
   rateLimited: () => new AppError(429, "rate_limited", "Too many requests."),
   validation: (details: unknown) => new AppError(422, "validation", "Invalid request.", details),
+  tooLarge: () => new AppError(413, "too_large", "Request body too large."),
   planRequired: () => new AppError(403, "plus_required", "This is a Foxing Plus feature."),
   quotaExceeded: (resetsAt: string) =>
     new AppError(429, "quota", "Daily AI usage limit reached.", { resets_at: resetsAt }),
@@ -50,6 +52,6 @@ export function errorHandler(err: Error, c: Context) {
     return c.json({ error: { code: "http_error", message: err.message } }, err.status);
   }
   const requestId = c.get("requestId");
-  console.error(`[${requestId}] unhandled`, err);
+  logEvent("api_unhandled", { request_id: requestId, error: err }, { level: "error" });
   return c.json({ error: { code: "internal", message: "Something went wrong." } }, 500);
 }
