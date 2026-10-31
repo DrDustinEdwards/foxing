@@ -1,10 +1,10 @@
-name: Page weight (warn-only)
+name: Page weight
 
 # JavaScript and CSS weight per route of apps/web (gzip), from a production build,
-# compared with the baseline in .route-weight.json by devkit-route-weight. WARN-ONLY
-# (capsid decisions, 2026-10-01, "no bloat, as a standing plan"): a route grown past
-# the threshold is a warning and the step passes. It exits 1 only when it could not
-# run (no build); the step is continue-on-error, so even that never blocks a merge.
+# compared with the baseline in .route-weight.json by devkit-route-weight. A GATE
+# (area 7, D5: every React app fails CI over its route budget): a route over
+# budget_bytes, or grown past its baseline, fails the job, and so does a build
+# that cannot run.
 #
 # Separate from ci-cf.yml so it runs while that workflow's Lint (biome) step is
 # red on main. The paths are what the web client bundle is built from: apps/web
@@ -50,18 +50,7 @@ jobs:
       # present to build. Placeholder ids are fine: nothing is deployed.
       - name: Stage wrangler config
         run: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc
-      # continue-on-error here too: a broken build is ci-cf.yml's to report. The
-      # report step then exits 1 (no build) and says so.
       - name: Build web
-        id: build
-        continue-on-error: true
         run: pnpm build:web
-      - name: Page weight (warn-only)
-        id: weight
-        continue-on-error: true
+      - name: Page weight
         run: pnpm run check:page-weight
-      - name: Outcome
-        if: always()
-        run: |
-          echo "build step: ${{ steps.build.outcome }} (warn-only; the job continues)"
-          echo "page-weight step: ${{ steps.weight.outcome }} (warn-only; the job continues)"
