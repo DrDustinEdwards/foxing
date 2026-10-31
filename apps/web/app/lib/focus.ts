@@ -1,6 +1,6 @@
 // A cover's focal point, as Carrel sets it on a Journal media file ("XxY", each 0 to 1 from the
 // top left), turned into the CSS that keeps it in view when the cover is cropped (object-fit: cover).
-// No point, or one this site never wrote, leaves the browser's centre.
+// No point, or one this site never wrote, leaves the browser's default, the middle.
 
 export function focusStyle(
   focus: string | null | undefined,

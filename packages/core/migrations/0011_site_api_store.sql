@@ -3,8 +3,11 @@
 -- Drizzle (src/schema): each Carrel write's answer under its change id for 7 days (site_api_writes),
 -- so a retry answers the same and runs nothing; the publish hooks that failed, for the cron to run
 -- again (hook_retries); only the SHA-256 of each preview link's token (preview_links); and the pages
--- each post last sent webmentions to (webmention_targets). Times are UTC ISO text.
--- Additive: four new tables and three indexes. No existing row is touched.
+-- each post last sent webmentions to (webmention_targets). Then SCHEDULED_UPDATES_SQL from
+-- @dustinedwards/site-api/schedules, read and written only through its d1ScheduledUpdates
+-- (apps/web/app/lib/carrel/journal-adapter.server.ts): the schedule waiting on each Journal post
+-- (scheduled_updates), a draft's time to go live or a live post's update. Times are UTC ISO text.
+-- Additive: five new tables and four indexes. No existing row is touched.
 -- Apply with: wrangler d1 migrations apply foxing [--local|--remote]
 CREATE TABLE IF NOT EXISTS site_api_writes (
   change_id TEXT PRIMARY KEY,
@@ -45,3 +48,13 @@ CREATE TABLE IF NOT EXISTS webmention_targets (
   targets TEXT NOT NULL,
   sent_at TEXT NOT NULL
 );
+--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS scheduled_updates (
+  content_id TEXT PRIMARY KEY,
+  source TEXT NOT NULL,
+  publish_at TEXT NOT NULL,
+  change_id TEXT NOT NULL,
+  scheduled_at TEXT NOT NULL
+);
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS scheduled_updates_due ON scheduled_updates (publish_at);

@@ -407,8 +407,9 @@ const CRON_JOBS: Record<string, (env: Env) => CronJob[]> = {
     { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
   ],
   "*/5 * * * *": (env) => [{ name: "push-sweep", everyMinutes: 5, run: () => runPushSweep(env) }],
-  // Every minute: Carrel's site API retries the publish hooks that failed, empties the content
-  // trash of posts 30 days in it, and prunes its replay store (app/lib/carrel/site-api.server.ts).
+  // Every minute: Carrel's site API puts due scheduled posts and updates live, retries the publish
+  // hooks that failed, empties the content trash of posts 30 days in it, and prunes its replay
+  // store (app/lib/carrel/site-api.server.ts).
   "* * * * *": (env) => [
     {
       name: "carrel-schedules",

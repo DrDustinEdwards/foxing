@@ -1,16 +1,20 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
-import type {
-  ContentDoc,
-  Diff,
-  ErrorBody,
-  RevisionList,
-  WriteResult,
+import {
+  createSiteApi,
+  type ContentDoc,
+  type Diff,
+  type ErrorBody,
+  type PublishEvent,
+  type RevisionList,
+  type WriteResult,
 } from "@dustinedwards/site-api";
 import { runConformance } from "@dustinedwards/site-api/conformance";
+import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { adminRepo, catalogRepo, createDb, schema } from "@foxing/core";
 import { Hono } from "hono";
 import { beforeEach, describe, expect, it } from "vitest";
 import { sessionUserFromRequest } from "../app/lib/auth.server";
+import { journalSiteAdapter } from "../app/lib/carrel/journal-adapter.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { testApi } from "./test-api";
 
@@ -104,6 +108,7 @@ async function auditRows() {
 }
 
 beforeEach(async () => {
+  await env.DB.prepare("DELETE FROM scheduled_updates").run();
   await db().delete(schema.journalSlugRedirects);
   await db().delete(schema.journalPostVersions);
   await db().delete(schema.journalPosts);
@@ -262,6 +267,14 @@ describe("Carrel site API: the rate limit", () => {
 
 describe("Carrel site API: the Journal adapter", () => {
   it("creates a draft, first-publishes it, and records Carrel's changeId", async () => {
+    // What the Journal's rules refuse is refused, naming the field.
+    const bad = await call(
+      `${PREFIX}/content/Bad_Slug/draft`,
+      json("PUT", { source: source("T"), expectedVersion: null, changeId: "ch-bad" }),
+    );
+    expect(bad.status).toBe(422);
+    expect((await body(bad)).message).toContain("the id (slug)");
+
     const created = await call(
       `${PREFIX}/content/new-essay/draft`,
       json("PUT", {
@@ -329,25 +342,55 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(diff.patch).toContain("+Edited body.");
   });
 
-  it("refuses what the admin routes refuse, and a schedule", async () => {
-    const bad = await call(
-      `${PREFIX}/content/Bad_Slug/draft`,
-      json("PUT", { source: source("T"), expectedVersion: null, changeId: "ch-bad" }),
+  it("schedules a draft, which the cron publishes at its time and not before, under that time, with the hooks", async () => {
+    const draft = await seedPost("dated");
+    const publishAt = "2030-01-01T15:00:00.000Z";
+    const scheduled = await body<WriteResult>(
+      call(
+        `${PREFIX}/content/dated/schedule`,
+        json("POST", {
+          expectedVersion: String(draft.updatedAt.getTime()),
+          changeId: "ch-schedule",
+          publishAt,
+        }),
+      ),
     );
-    expect(bad.status).toBe(422);
-    expect((await body(bad)).message).toContain("the id (slug)");
+    expect(scheduled.status).toBe("scheduled");
+    const doc = await body<ContentDoc>(call(`${PREFIX}/content/dated`, withKey()));
+    expect([doc.status, doc.publishAt, doc.version]).toEqual([
+      "scheduled",
+      publishAt,
+      scheduled.version,
+    ]);
 
-    const post = await seedPost("dated");
-    const schedule = await call(
-      `${PREFIX}/content/dated/schedule`,
-      json("POST", {
-        expectedVersion: String(post.updatedAt.getTime()),
-        changeId: "ch-schedule",
-        publishAt: new Date(Date.now() + 86_400_000).toISOString(),
-      }),
+    // The cron's site API, as runCarrelSchedules builds it, with a spy for its hooks.
+    const heard: PublishEvent[] = [];
+    const cron = createSiteApi({
+      adapter: journalSiteAdapter({ env: testEnv(), sourceIp: null }),
+      key: KEY,
+      limiter: allowAll,
+      store: d1SiteApiStore(env.DB),
+      hooks: [{ name: "spy", run: (event) => void heard.push(event) }],
+      log: () => {},
+    });
+    expect((await cron.runSchedules({ now: new Date("2030-01-01T14:59:00Z") })).applied).toEqual(
+      [],
     );
-    expect(schedule.status).toBe(422);
-    expect((await adminRepo.getJournalById(db(), post.id))?.isPublished).toBe(false);
+    expect(await catalogRepo.getPostBySlug(db(), "dated")).toBeNull();
+    expect(
+      (await cron.runSchedules({ now: new Date("2030-01-01T15:00:30Z") })).applied,
+    ).toHaveLength(1);
+    const live = await catalogRepo.getPostBySlug(db(), "dated");
+    expect(live?.publishedAt?.toISOString()).toBe(publishAt);
+    expect(heard.map((e) => [e.action, e.trigger, e.path])).toEqual([
+      ["publish", "schedule", "/journal/dated"],
+    ]);
+    expect((await body<ContentDoc>(call(`${PREFIX}/content/dated`, withKey()))).status).toBe(
+      "published",
+    );
+    expect((await cron.runSchedules({ now: new Date("2030-01-01T15:01:00Z") })).applied).toEqual(
+      [],
+    );
   });
 
   it("previews an unsaved draft in the journal's markup, never indexed, without writing", async () => {

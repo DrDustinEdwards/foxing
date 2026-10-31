@@ -20,6 +20,7 @@ import {
 } from "@dustinedwards/site-api";
 import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
+import { schedulePurgeHook } from "@dustinedwards/site-runtime/edge-cache";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import type { Context, Hono, Next } from "hono";
 import { INDEXNOW_KEY } from "../indexnow";
@@ -49,7 +50,8 @@ function carrelLimiter(env: Env): RateLimiter {
  * failed hook for the cron to retry. The hooks run after a write that changes a public page: a
  * published change tells IndexNow at once (a request from a preview origin sends nothing), and
  * the pages a post links to hear of it by webmention. The stored pages are purged by the gateway
- * after every Carrel write (workers/app.ts); the cron changes no public page.
+ * after every Carrel write (workers/app.ts), and after a schedule the cron puts live by
+ * schedulePurgeHook, since a schedule has no request behind it.
  */
 function carrelSiteApi(
   env: Env,
@@ -64,14 +66,16 @@ function carrelSiteApi(
     hooks: [
       indexNowHook({ submit: submitIndexNow, origin: SITE_ORIGIN, key: INDEXNOW_KEY }),
       webmentionHook({ store }),
+      schedulePurgeHook(),
     ],
   });
 }
 
 /**
- * The per-minute cron's job (workers/app.ts): runs the hooks that failed earlier again, deletes
- * the posts 30 days in the trash, and prunes the replay store. The Journal has no scheduled
- * publishing, so nothing else is due. A schedule that fails fails the job, and is tried next minute.
+ * The per-minute cron's job (workers/app.ts): every scheduled post and update whose time has come
+ * goes live, with the hooks a Carrel publish runs; the hooks that failed earlier run again; the
+ * posts 30 days in the trash are deleted; and the replay store is pruned. A schedule that fails
+ * fails the job, and is tried next minute.
  */
 export async function runCarrelSchedules(env: Env, now: Date): Promise<void> {
   const run = await carrelSiteApi(env, { sourceIp: null }).runSchedules({ now });

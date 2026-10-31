@@ -5,10 +5,12 @@ import {
   desc,
   eq,
   gte,
+  inArray,
   isNotNull,
   isNull,
   like,
   lt,
+  notInArray,
   or,
   sql,
   type SQL,
@@ -32,6 +34,9 @@ export type JournalAdminQuery = {
   publishedBefore?: Date;
   /** true lists the trash alone; otherwise the trash is left out. */
   trashed?: boolean;
+  /** Only these slugs, or all but these (Carrel's scheduled posts, from site-api's table). */
+  slugs?: string[];
+  exceptSlugs?: string[];
   /** The newest updated first unless given; titles A to Z by default. */
   sort?: "updated" | "published" | "title";
   dir?: "asc" | "desc";
@@ -57,6 +62,9 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
     );
   if (query.publishedAfter) where.push(gte(journalPosts.publishedAt, query.publishedAfter));
   if (query.publishedBefore) where.push(lt(journalPosts.publishedAt, query.publishedBefore));
+  if (query.slugs)
+    where.push(query.slugs.length ? inArray(journalPosts.slug, query.slugs) : sql`0`);
+  if (query.exceptSlugs?.length) where.push(notInArray(journalPosts.slug, query.exceptSlugs));
   return and(...where);
 }
 

@@ -11,9 +11,18 @@
 // a post that was ever published leaves a 301 at its old address (journal_slug_redirects). The
 // list filters by kind, tag and publish date, searches the title and the body, sorts and counts.
 // A publish may carry the date it goes out under. The body renders through Prelum on every read,
-// so the render version meta names is the installed one. The Journal has no scheduled
-// publishing: a schedule is refused, and there are no authors to credit or filter by (a post
-// names none on its page).
+// so the render version meta names is the installed one. There are no authors to credit or
+// filter by (a post names none on its page).
+//
+// Scheduling: one row per post in site-api's scheduled_updates (migration 0011, read and written
+// only through the package's d1ScheduledUpdates). On a draft the row makes it "scheduled": it goes
+// live at publish_at, published under that time if it was never live. On a live post the row is a
+// waiting update: the live text stays until publish_at, then the row's source replaces it. Every
+// write that changes a post's state drops its row (a publish, an unpublish, a save of a draft, a
+// trash, a delete); a save of a live post keeps its update waiting, and a rename moves it. The
+// per-minute cron's runSchedules lists due rows here and applies each, with the publish hooks.
+// A version is the post's updated_at in milliseconds, with a hash of its schedule's time and
+// change id added while one waits, so a schedule, a reschedule and a cancel each move it.
 //
 // Media: the Journal's media library (journal-media-adapter.server.ts), so a post's cover and inline
 // images can be uploaded from Carrel. A cover may still be any pasted https address, and book covers
@@ -23,6 +32,7 @@ import { RENDER_VERSION } from "@drdustinedwards/site-helpers/render/nomath";
 import {
   ContentId,
   ContentTag,
+  contentVersion,
   NotFoundError,
   previewDocument,
   RefusedError,
@@ -30,11 +40,13 @@ import {
   type ContentDoc,
   type ContentStatus,
   type ContentSummary,
+  type DueSchedule,
   type ListQuery,
   type Revision,
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { adminRepo, type catalogRepo, createDb, type Db } from "@foxing/core";
@@ -69,17 +81,27 @@ const RESERVED_SLUGS = new Set(["archive", "tag"]);
 /** An earlier version's id, from journal_post_versions: distinct from a current version's digits. */
 const REVISION_PREFIX = "r-";
 
-/** A post's version is its updated_at in milliseconds, which every Journal write moves forward. */
-function versionOf(row: { updatedAt: Date }): string {
-  return String(row.updatedAt.getTime());
+/** Every schedule is due by then, so `due` at this time lists every row (ISO text compares). */
+const END_OF_TIME = new Date("9999-12-31T23:59:59.999Z");
+const ALL_ROWS = 10_000;
+
+/** The schedule waiting on a post: its time and the change that made it. */
+type Pending = { publishAt: string; changeId: string } | null;
+
+/** A post's version: its updated_at in milliseconds, which every Journal write moves forward, and its schedule's. */
+async function versionOf(row: { updatedAt: Date }, pending: Pending): Promise<string> {
+  const updated = String(row.updatedAt.getTime());
+  if (!pending) return updated;
+  return `${updated}.${(await contentVersion([pending.publishAt, pending.changeId])).slice(0, 16)}`;
 }
 
 function iso(at: Date | null | undefined): string | null {
   return at ? at.toISOString() : null;
 }
 
-function statusOf(row: { isPublished: boolean }): ContentStatus {
-  return row.isPublished ? "published" : "draft";
+function statusOf(row: { isPublished: boolean }, pending: Pending): ContentStatus {
+  if (row.isPublished) return "published";
+  return pending ? "scheduled" : "draft";
 }
 
 function fieldsOf(row: JournalPost): JournalFields {
@@ -135,27 +157,31 @@ function isUniqueViolation(error: unknown): boolean {
   return error instanceof Error && /UNIQUE constraint failed/i.test(error.message);
 }
 
-function summaryOf(row: {
-  slug: string;
-  title: string;
-  excerpt: string | null;
-  tags: string[] | null;
-  isPublished: boolean;
-  publishedAt: Date | null;
-  updatedAt: Date;
-  trashedAt: Date | null;
-}): ContentSummary {
-  const status = statusOf(row);
+async function summaryOf(
+  row: {
+    slug: string;
+    title: string;
+    excerpt: string | null;
+    tags: string[] | null;
+    isPublished: boolean;
+    publishedAt: Date | null;
+    updatedAt: Date;
+    trashedAt: Date | null;
+  },
+  pending: Pending,
+): Promise<ContentSummary> {
+  const status = statusOf(row, pending);
   return {
     id: row.slug,
     kind: KIND,
     title: row.title,
     status,
     path: status === "published" ? `/journal/${row.slug}` : null,
-    publishAt: null,
+    publishAt: status === "scheduled" ? (pending?.publishAt ?? null) : null,
     publishedAt: status === "published" ? iso(row.publishedAt) : null,
     updatedAt: iso(row.updatedAt),
-    version: versionOf(row),
+    version: await versionOf(row, pending),
+    scheduledUpdate: row.isPublished && pending ? { ...pending } : null,
     // Only tags the contract can carry, so one odd tag never fails the list.
     tags: (row.tags ?? []).filter((t) => ContentTag.safeParse(t).success),
     ...(row.excerpt ? { excerpt: row.excerpt } : {}),
@@ -164,9 +190,12 @@ function summaryOf(row: {
 }
 
 /** The list's query, as adminRepo's Journal list takes it. */
-function listFilter(query: ListQuery): adminRepo.JournalAdminQuery {
+function listFilter(query: ListQuery, scheduled: string[]): adminRepo.JournalAdminQuery {
   return {
     published: query.status === undefined ? undefined : query.status === "published",
+    // A scheduled post is a draft with a schedule waiting; a draft has none.
+    ...(query.status === "scheduled" ? { slugs: scheduled } : {}),
+    ...(query.status === "draft" ? { exceptSlugs: scheduled } : {}),
     q: query.q,
     tag: query.tag,
     publishedAfter: query.publishedAfter ? new Date(query.publishedAfter) : undefined,
@@ -188,6 +217,14 @@ export function journalSiteAdapter(options: {
 }): SiteAdapter {
   const { env, sourceIp, stylesheets = [] } = options;
   const db: Db = createDb(env.DB);
+  const schedules = d1ScheduledUpdates(env.DB);
+
+  async function pendingOf(slug: string): Promise<Pending> {
+    const waiting = await schedules.get(slug);
+    return waiting ? { publishAt: waiting.publishAt, changeId: waiting.changeId } : null;
+  }
+
+  const currentVersion = async (row: JournalPost) => versionOf(row, await pendingOf(row.slug));
 
   async function audit(action: string, params: Record<string, unknown>) {
     await adminRepo.writeAuditLog(db, {
@@ -201,14 +238,15 @@ export function journalSiteAdapter(options: {
   /** The refusal for a write that lost a race: what the site holds now, or null when it is gone. */
   async function conflict(slug: string): Promise<VersionConflictError> {
     const now = await adminRepo.getJournalBySlug(db, slug);
-    return new VersionConflictError(now ? versionOf(now) : null);
+    return new VersionConflictError(now ? await currentVersion(now) : null);
   }
 
   /** The stored row a versioned write names; a stale version, or a missing id, is a conflict. */
   async function expected(slug: string, version: string): Promise<JournalPost> {
     const row = await adminRepo.getJournalBySlug(db, slug);
     if (!row) throw new VersionConflictError(null);
-    if (versionOf(row) !== version) throw new VersionConflictError(versionOf(row));
+    const current = await currentVersion(row);
+    if (current !== version) throw new VersionConflictError(current);
     return row;
   }
 
@@ -221,7 +259,8 @@ export function journalSiteAdapter(options: {
   async function written(postId: string, changeId: string): Promise<WriteResult> {
     const row = await adminRepo.getJournalById(db, postId);
     if (!row) throw new Error(`journal post ${postId} was written and then could not be read`);
-    return { id: row.slug, version: versionOf(row), status: statusOf(row), changeId };
+    const { version, status, scheduledUpdate } = await summaryOf(row, await pendingOf(row.slug));
+    return { id: row.slug, version: version as string, status, changeId, scheduledUpdate };
   }
 
   /** One guarded save of the file's fields through updateJournalPost. Returns the new updated_at. */
@@ -255,6 +294,8 @@ export function journalSiteAdapter(options: {
       { publishedAt },
     );
     if (!done) throw await conflict(slug);
+    // What goes live, or comes down, is this write, so a waiting schedule is dropped.
+    await schedules.remove(slug).run();
     await audit(on ? "journal.publish" : "journal.unpublish", {
       id: row.id,
       slug,
@@ -280,6 +321,8 @@ export function journalSiteAdapter(options: {
       expectedUpdatedAt: row.updatedAt,
     });
     if (!done) throw await conflict(slug);
+    // A trashed post is off the Journal, so nothing it had waiting goes live.
+    if (trashed) await schedules.remove(slug).run();
     await audit(trashed ? "journal.trash" : "journal.restore", {
       id: row.id,
       slug,
@@ -302,11 +345,16 @@ export function journalSiteAdapter(options: {
       }
       const sort = query.sort ?? "updated";
       const dir = query.dir ?? (sort === "title" ? "asc" : "desc");
-      // The Journal has no scheduled publishing, so nothing is ever scheduled, and every post is
-      // a journal post.
-      if (query.status === "scheduled" || (query.kind !== undefined && query.kind !== KIND))
+      // Every post is a journal post.
+      if (query.kind !== undefined && query.kind !== KIND)
         return { items: [], nextCursor: null, total: 0, sorted: { sort, dir } };
-      const filter = listFilter(query);
+      const waiting = new Map(
+        (await schedules.due(END_OF_TIME, ALL_ROWS)).map((d) => [
+          d.id,
+          { publishAt: d.publishAt, changeId: d.changeId },
+        ]),
+      );
+      const filter = listFilter(query, [...waiting.keys()]);
       const [rows, total] = await Promise.all([
         adminRepo.listJournalAdmin(db, { ...filter, sort, dir, limit: query.limit + 1, offset }),
         adminRepo.countJournalAdmin(db, filter),
@@ -314,7 +362,11 @@ export function journalSiteAdapter(options: {
       const page = rows.slice(0, query.limit);
       return {
         // A slug the contract's id grammar cannot carry is left out rather than failing the page.
-        items: page.filter((row) => ContentId.safeParse(row.slug).success).map(summaryOf),
+        items: await Promise.all(
+          page
+            .filter((row) => ContentId.safeParse(row.slug).success)
+            .map((row) => summaryOf(row, waiting.get(row.slug) ?? null)),
+        ),
         nextCursor: rows.length > query.limit ? String(offset + query.limit) : null,
         total,
         sorted: { sort, dir },
@@ -324,25 +376,28 @@ export function journalSiteAdapter(options: {
     async get(id): Promise<ContentDoc | null> {
       const row = await adminRepo.getJournalBySlug(db, id);
       if (!row) return null;
+      const summary = await summaryOf(row, await pendingOf(id));
       return {
-        ...summaryOf(row),
+        ...summary,
         format: "markdown",
         source: journalToSource(fieldsOf(row)),
-        version: versionOf(row),
+        version: summary.version as string,
       };
     },
 
     // Keeps the stored status, as the contract's reference adapter does: a save to a live post
-    // edits it live, and a new post starts as a draft.
+    // edits it live (its waiting update stays), a scheduled draft that is edited goes back to
+    // draft, and a new post starts as a draft.
     async saveDraft(id, input) {
       if (input.expectedVersion !== null) {
         const row = await expected(id, input.expectedVersion);
         notTrashed(row);
         await save(row, input.source, input.changeId);
+        if (!row.isPublished) await schedules.remove(id).run();
         return written(row.id, input.changeId);
       }
       const existing = await adminRepo.getJournalBySlug(db, id);
-      if (existing) throw new VersionConflictError(versionOf(existing));
+      if (existing) throw new VersionConflictError(await currentVersion(existing));
       const values = validated(id, readSource(input.source));
       let postId: string;
       try {
@@ -366,11 +421,24 @@ export function journalSiteAdapter(options: {
       return setPublished(id, true, input);
     },
 
+    // site-api sends only a post that is not live here; a live post's schedule is
+    // schedules.update below. The source saved now is the one that goes live.
     async schedule(id, input) {
-      await expected(id, input.expectedVersion);
-      throw new RefusedError(
-        "The Journal has no scheduled publishing. Publish it now, or keep it a draft.",
-      );
+      const row = await expected(id, input.expectedVersion);
+      notTrashed(row);
+      const source = input.source ?? journalToSource(fieldsOf(row));
+      validated(id, readSource(source));
+      if (input.source !== undefined) await save(row, input.source, input.changeId);
+      await schedules
+        .put(id, { source, publishAt: input.publishAt, changeId: input.changeId })
+        .run();
+      await audit("journal.schedule", {
+        id: row.id,
+        slug: id,
+        publishAt: utc(input.publishAt),
+        changeId: input.changeId,
+      });
+      return written(row.id, input.changeId);
     },
 
     // Unpublish returns the post to draft; a delete is from the trash.
@@ -403,6 +471,7 @@ export function journalSiteAdapter(options: {
         throw new RefusedError("Move the post to the trash first: a delete cannot be undone.");
       if (!(await adminRepo.deleteJournalPost(db, row.id, { expectedUpdatedAt: row.updatedAt })))
         throw await conflict(id);
+      await schedules.remove(id).run();
       await audit("journal.delete", { id: row.id, slug: id, changeId: input.changeId });
     },
 
@@ -431,6 +500,18 @@ export function journalSiteAdapter(options: {
         throw error;
       }
       if (!done) throw await conflict(id);
+      // The waiting schedule moves with the post.
+      const waiting = await schedules.get(id);
+      if (waiting) {
+        await schedules
+          .put(newId, {
+            source: waiting.source,
+            publishAt: waiting.publishAt,
+            changeId: waiting.changeId,
+          })
+          .run();
+        await schedules.remove(id).run();
+      }
       await audit("journal.rename", {
         id: row.id,
         slug: newId,
@@ -446,7 +527,7 @@ export function journalSiteAdapter(options: {
       const earlier = await adminRepo.listJournalVersions(db, row.id);
       const items: Revision[] = [
         {
-          version: versionOf(row),
+          version: await currentVersion(row),
           at: row.updatedAt.toISOString(),
           author: "current",
           message: "The post as it stands now.",
@@ -466,7 +547,7 @@ export function journalSiteAdapter(options: {
     async revisionSource(id, version) {
       const row = await adminRepo.getJournalBySlug(db, id);
       if (!row) return null;
-      if (version === versionOf(row)) return journalToSource(fieldsOf(row));
+      if (version === (await currentVersion(row))) return journalToSource(fieldsOf(row));
       if (!version.startsWith(REVISION_PREFIX)) return null;
       const earlier = await adminRepo.getJournalVersion(
         db,
@@ -518,9 +599,90 @@ export function journalSiteAdapter(options: {
     });
   }
 
+  const scheduled: NonNullable<SiteAdapter["schedules"]> = {
+    async get(id) {
+      const row = await adminRepo.getJournalBySlug(db, id);
+      if (!row?.isPublished) return null;
+      return schedules.get(id);
+    },
+
+    async update(id, input) {
+      const row = await expected(id, input.expectedVersion);
+      if (!row.isPublished) throw new RefusedError("Only a live post takes a scheduled update.");
+      validated(id, readSource(input.source));
+      await schedules
+        .put(id, { source: input.source, publishAt: input.publishAt, changeId: input.changeId })
+        .run();
+      await audit("journal.schedule", {
+        id: row.id,
+        slug: id,
+        publishAt: utc(input.publishAt),
+        changeId: input.changeId,
+      });
+      return written(row.id, input.changeId);
+    },
+
+    async cancel(id, input) {
+      const row = await held(id, input.expectedVersion);
+      if (!(await schedules.get(id))) throw new RefusedError("Nothing is scheduled for this post.");
+      await schedules.remove(id).run();
+      await audit("journal.unschedule", { id: row.id, slug: id, changeId: input.changeId });
+      return written(row.id, input.changeId);
+    },
+
+    async due({ now, limit }) {
+      const due = await schedules.due(now, limit);
+      return Promise.all(
+        due.map(async (d): Promise<DueSchedule> => {
+          const row = await adminRepo.getJournalBySlug(db, d.id);
+          return { ...d, kind: row?.isPublished ? "update" : "publish" };
+        }),
+      );
+    },
+
+    // The post's write comes first and the row goes second, matched on the time and change id it
+    // was listed with, so a reschedule made in between survives. Should the drop fail after the
+    // write, the next pass finds the post already as the row describes, and changes nothing.
+    async apply(id, input) {
+      const row = await adminRepo.getJournalBySlug(db, id);
+      const waiting = await schedules.get(id);
+      if (!row || !waiting || row.trashedAt) return null;
+      if (waiting.changeId !== input.changeId || waiting.publishAt !== utc(input.publishAt))
+        return null;
+      if (Date.parse(waiting.publishAt) > input.now.getTime()) return null;
+      if (input.kind === "update") {
+        if (!row.isPublished) return null;
+        await save(row, waiting.source, input.changeId);
+      } else {
+        if (row.isPublished) return null;
+        // A first publication is published under the time it was scheduled for.
+        const done = await adminRepo.setJournalPublished(
+          db,
+          row.id,
+          true,
+          { expectedUpdatedAt: row.updatedAt },
+          row.publishedAt ? {} : { publishedAt: new Date(waiting.publishAt) },
+        );
+        if (!done) return null;
+        await audit("journal.publish", {
+          id: row.id,
+          slug: id,
+          changeId: input.changeId,
+          firstPublish: !row.publishedAt,
+          scheduled: waiting.publishAt,
+        });
+      }
+      await schedules
+        .remove(id, { publishAt: waiting.publishAt, changeId: waiting.changeId })
+        .run();
+      return written(row.id, input.changeId);
+    },
+  };
+
   return {
     site: { id: "foxing", name: "Foxing", origin: FOXING_ORIGIN },
     content,
+    schedules: scheduled,
     renderVersion: RENDER_VERSION,
     preview: { render },
     media: journalMediaAdapter({ env, audit }),
