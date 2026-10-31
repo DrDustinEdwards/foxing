@@ -294,7 +294,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                     )
                   }
                 >
-                  Remove<span className="cap-sr-only"> {p.name}</span>
+                  Remove passkey<span className="cap-sr-only"> {p.name}</span>
                 </button>
               </li>
             ))}
@@ -310,7 +310,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
               void run("add", () => authClient.passkey.addPasskey(), "The passkey was not saved.")
             }
           >
-            {busy === "add" ? "Waiting for your device..." : "Add a passkey"}
+            {busy === "add" ? "Waiting for your device..." : "Create a passkey"}
           </button>
         </div>
         {initial.providers.map((provider) => (
@@ -332,7 +332,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                   )
                 }
               >
-                Disconnect<span className="cap-sr-only"> {provider.label}</span>
+                Disconnect {provider.label}
               </button>
             ) : (
               <button

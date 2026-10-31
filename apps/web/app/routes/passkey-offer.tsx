@@ -10,7 +10,7 @@ import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
 
 export function meta() {
-  return [{ title: "Add a passkey | Foxing" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Create a passkey | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -59,7 +59,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
             window.location.assign(next);
           }}
         >
-          {pending ? "Waiting for your device..." : "Add a passkey"}
+          {pending ? "Waiting for your device..." : "Create a passkey"}
         </button>
         <p className="text-center fx-auth-shell-box-2">
           <AuthLink to={next}>Not now</AuthLink>
