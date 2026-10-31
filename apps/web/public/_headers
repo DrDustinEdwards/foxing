@@ -32,6 +32,12 @@
 /*.svg
   Content-Type: image/svg+xml; charset=utf-8
 
+/
+  Content-Type: text/html; charset=utf-8
+
+/*/
+  Content-Type: text/html; charset=utf-8
+
 /*.svg
   ! Cross-Origin-Resource-Policy
   Cross-Origin-Resource-Policy: cross-origin
