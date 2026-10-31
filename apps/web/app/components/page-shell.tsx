@@ -8,7 +8,6 @@ import {
 import { useState } from "react";
 import { useLocation, useRouteLoaderData } from "react-router";
 import { Link } from "capsomer/react/link";
-import { authClient } from "~/lib/auth-client";
 import type { loader as RootLoader } from "~/root";
 import { CommandPalette } from "./command-palette";
 import { headerAccount } from "./nav/account-panel";
@@ -85,6 +84,8 @@ function SiteNav() {
 
   async function signOut() {
     setSigningOut(true);
+    // Loaded only for a sign-out, so the Better Auth client is not in every page's bundle.
+    const { authClient } = await import("~/lib/auth-client");
     await authClient.signOut();
     // Full navigation so the root loader re-runs anonymous and the shell resets.
     window.location.assign("/");
