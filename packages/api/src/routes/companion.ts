@@ -126,9 +126,15 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
 
     // The prose check (W1). The reply streams, so this runs once it is whole: it records which checks a
     // reply tripped (never the text or the reader) for the flagged replies to be counted and acted on.
-    const flagged = checkProse(assistantText).filter((i) => i.severity === "high" || i.severity === "critical");
+    const flagged = checkProse(assistantText).filter(
+      (i) => i.severity === "high" || i.severity === "critical",
+    );
     if (flagged.length) {
-      logEvent("companion_prose_flagged", { action: input.action, checks: flagged.map((i) => i.check) }, { level: "warn" });
+      logEvent(
+        "companion_prose_flagged",
+        { action: input.action, checks: flagged.map((i) => i.check) },
+        { level: "warn" },
+      );
     }
 
     await companionRepo.appendMessage(db, thread.id, "assistant", assistantText, input.action);

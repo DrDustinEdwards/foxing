@@ -197,7 +197,10 @@ function selectAiPicks(
     if (typeof id !== "string" || !allowedIds.has(id) || seen.has(id)) continue;
     const reason =
       typeof rec.reason === "string" ? rec.reason.replace(/\s+/g, " ").trim().slice(0, 140) : "";
-    out.push({ bookId: id, reason: reason ? (proseFlagged(reason) ? null : reason) : "Picked for you" });
+    out.push({
+      bookId: id,
+      reason: reason ? (proseFlagged(reason) ? null : reason) : "Picked for you",
+    });
     seen.add(id);
     if (out.length >= TARGET) break;
   }
