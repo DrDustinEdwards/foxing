@@ -131,7 +131,7 @@ describe("nightly backup", () => {
 
     const { status, body } = await health();
     expect(status).toBe(200);
-    expect(Object.keys(body).sort()).toEqual(["backup", "db", "ok", "time"]);
+    expect(Object.keys(body).sort()).toEqual(["backup", "checks", "db", "ok", "status", "time"]);
     expect(Object.keys(body.backup).sort()).toEqual(["age_hours", "last_ok"]);
     expect(body.backup.warning).toBeUndefined();
     expect(body.backup.age_hours).toBeLessThan(1);
