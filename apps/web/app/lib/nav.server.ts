@@ -4,7 +4,7 @@
 // written into the anonymous cache. Reads run in-process via core (the standing
 // rule: loaders never self-fetch the Worker's own /api/v1).
 import { catalogRepo, createDb, isAdminAccount, libraryRepo, profilesRepo } from "@foxing/core";
-import { getAuth } from "./auth.server";
+import { getAuth, sessionLookup } from "./auth.server";
 
 export interface NavUser {
   username: string;
@@ -24,7 +24,7 @@ export interface NavUser {
  *  A signed-in user with no profile row still sees the signed-out nav here; the
  *  profile-gated page loaders are what route them to /onboarding. */
 export async function getNavUser(env: Env, request: Request): Promise<NavUser | null> {
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) return null;
 
   const db = createDb(env.DB);

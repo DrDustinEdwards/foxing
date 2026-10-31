@@ -5,6 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 import { deleteUserAccount, getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { testApi } from "./test-api";
 
+/** The session cookie a sign-in set; the device cookie (sessionDetails) comes with it. */
+const sessionCookie = (res: Response) =>
+  res.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .find((c) => c.includes("session_token")) ?? "";
+
 // Signing out every other device (settings, Signed-in devices) ends those sessions and mails the
 // reader a security notice through Foxing's own sender, after the answer (waitUntil).
 describe("signing out the other devices", () => {
@@ -34,7 +41,7 @@ describe("signing out the other devices", () => {
       const otp = sent.at(-1)?.text.match(/\b(\d{6})\b/)?.[1];
       const res = await post("/sign-in/email-otp", { email, otp });
       expect(res.status).toBe(200);
-      return (res.headers.get("set-cookie") ?? "").split(";")[0];
+      return sessionCookie(res);
     };
     const here = await signIn();
     await signIn();
@@ -75,7 +82,7 @@ describe("deleting the account", () => {
     await post("/email-otp/send-verification-otp", { email, type: "sign-in" });
     const otp = sent.at(-1)?.text.match(/\b(\d{6})\b/)?.[1];
     const signedIn = await post("/sign-in/email-otp", { email, otp });
-    const cookie = (signedIn.headers.get("set-cookie") ?? "").split(";")[0];
+    const cookie = sessionCookie(signedIn);
 
     const api = testApi({
       resolveSession: (req) => sessionUserFromRequest(req, testEnv),

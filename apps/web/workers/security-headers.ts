@@ -4,7 +4,9 @@
 // hits included. No other file sets a security header.
 import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
 import {
+  CSP_REPORT_PATH,
   buildContentSecurityPolicy,
+  buildStagedPolicy,
   generateNonce,
   renewNonce,
   reportingEndpoints,
@@ -16,9 +18,20 @@ import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 import { securityHeaders } from "./header-set";
 
-/** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
-export const CSP_REPORT_PATH = "/api/csp-report";
+/** Where browsers send violation reports (report-uri, the shared /csp-report), and the Reporting
+ *  API name for it (report-to). Pages cached before the move still name the old path, which
+ *  workers/app.ts keeps receiving. */
+export { CSP_REPORT_PATH };
+export const OLD_CSP_REPORT_PATH = "/api/csp-report";
 const CSP_ENDPOINT_NAME = "csp-endpoint";
+
+/**
+ * What the next policy adds, sent Report-Only beside the enforced one (Foxing's registry entry
+ * stages both): Trusted Types, which React DOM 19's innerHTML writes would trip today, and
+ * default-src 'none', which shows each kind a page loads that the policy does not name. The
+ * reports name what to fix before either is enforced.
+ */
+const STAGED = { trustedTypes: ["default"], denyUnlisted: true };
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
@@ -37,9 +50,9 @@ const SITE_SOURCES: CspSources = {
   frame: [TURNSTILE_ORIGIN],
 };
 
-/** The site policy for this response: its nonce when it is a rendered page, none otherwise. */
-function contentSecurityPolicy(nonce?: string): string {
-  return buildContentSecurityPolicy({
+/** The site policy's options for this response: its nonce when it is a rendered page. */
+function sitePolicy(nonce?: string) {
+  return {
     sources: SITE_SOURCES,
     nonce,
     // React style={{...}} props render style="" attributes, which a nonce cannot cover.
@@ -47,7 +60,7 @@ function contentSecurityPolicy(nonce?: string): string {
     cloudflareWebAnalytics: true,
     reportUri: CSP_REPORT_PATH,
     reportTo: CSP_ENDPOINT_NAME,
-  }).value;
+  };
 }
 
 /** The reader, /read/:slug, a document of its own (app/routes/read.tsx loads it by full navigation). */
@@ -68,7 +81,11 @@ function isReaderPath(pathname: string): boolean {
  * and blob:, which EPUBs and Readium use.
  */
 export function readerContentSecurityPolicy(nonce?: string): string {
-  return buildContentSecurityPolicy({
+  return buildContentSecurityPolicy(readerPolicy(nonce)).value;
+}
+
+function readerPolicy(nonce?: string) {
+  return {
     sources: {
       ...SITE_SOURCES,
       style: ["'unsafe-inline'", "blob:", ...(SITE_SOURCES.style ?? [])],
@@ -81,7 +98,7 @@ export function readerContentSecurityPolicy(nonce?: string): string {
     cloudflareWebAnalytics: true,
     reportUri: CSP_REPORT_PATH,
     reportTo: CSP_ENDPOINT_NAME,
-  }).value;
+  };
 }
 
 // One nonce per request, issued to the render (app/entry.server.tsx, app/root.tsx via
@@ -127,10 +144,10 @@ export function withSecurityHeaders(response: Response, request: Request): Respo
   const nonce = html ? issued.get(request) : undefined;
   const url = new URL(request.url);
   const reader = html && isReaderPath(url.pathname);
-  headers.set(
-    "Content-Security-Policy",
-    reader ? readerContentSecurityPolicy(nonce) : contentSecurityPolicy(nonce),
-  );
+  const policy = reader ? readerPolicy(nonce) : sitePolicy(nonce);
+  headers.set("Content-Security-Policy", buildContentSecurityPolicy(policy).value);
+  const staged = buildStagedPolicy(policy, STAGED);
+  headers.set(staged.name, staged.value);
   const reportUrl = new URL(CSP_REPORT_PATH, url);
   headers.set("Reporting-Endpoints", reportingEndpoints(CSP_ENDPOINT_NAME, reportUrl));
   return new Response(response.body, {

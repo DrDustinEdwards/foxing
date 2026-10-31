@@ -6,7 +6,13 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { ACCESS_LOGOUT_PATH, accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
+import {
+  ACCESS_LOGOUT_PATH,
+  accessAdmin,
+  adminEmails,
+  withAdminIdle,
+} from "@dustinedwards/site-runtime/access";
+import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
@@ -53,6 +59,7 @@ import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { clubRoomHub } from "./club-room";
 import {
   CSP_REPORT_PATH,
+  OLD_CSP_REPORT_PATH,
   cspNonceFor,
   handleCspReport,
   withSecurityHeaders,
@@ -206,8 +213,10 @@ app.use("*", async (c, next) => {
     purgeAfterWrite(c.req.raw, c.res, ctx, `${c.req.method} ${pathname}`);
 });
 
-// The Content-Security-Policy report sink the policy names.
+// The Content-Security-Policy report sink the policy names, and its old path, which pages cached
+// before the move still name.
 app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
+app.post(OLD_CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
@@ -578,12 +587,23 @@ async function withAdminIdleSignOut(request: Request, handle: () => Promise<Resp
   return withSecurityHeaders(idle, request);
 }
 
+// The admin list, hashed with a fresh salt, for the daily Access drift check (I2, devkit's
+// access-drift workflow): only a GET Access let through with a service token gets it, anything
+// else is 404 (site-runtime ./access-drift). It sits under /admin, inside the Access application,
+// and outside the idle sign-out, which is for people.
+async function adminList(request: Request, env: Env): Promise<Response> {
+  const res = await adminListResponse(request, env, { admins: adminEmails(env) });
+  return withSecurityHeaders(res, request);
+}
+
 // Every request writes one `request` line (site-runtime ./log's withRequestLog: path, status, ms and
 // the deployed commit, never a query).
 export default {
   fetch: withRequestLog(
     (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
+      new URL(request.url).pathname === ADMIN_LIST_PATH
+        ? adminList(request, env)
+        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
     { sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA },
   ),
   scheduled,
