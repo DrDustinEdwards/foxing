@@ -9,7 +9,7 @@ import { getAuth } from "~/lib/auth.server";
 import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/recap";
 import { SITE_ORIGIN } from "~/lib/origins";
-import { buildMeta } from "~/lib/seo";
+import { SITE_NAME, buildMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -31,12 +31,22 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 export function meta({ loaderData: data, params }: Route.MetaArgs) {
   const pathname = `/u/${params.username}/recap/${params.year}`;
   if (!data) return buildMeta({ title: "Year in Reading", pathname });
+  const title = `${data.displayName}'s ${data.year} in reading`;
+  const n = data.recap.booksFinished;
   return buildMeta({
-    title: `${data.displayName}'s ${data.year} in reading`,
+    title,
+    description: `${data.displayName} finished ${n} ${n === 1 ? "book" : "books"} on Foxing in ${data.year}${
+      data.recap.topBooks.length ? `, including ${data.recap.topBooks[0].title}` : ""
+    }.`,
     pathname,
     image: `${SITE_ORIGIN}/og/recap/${data.username}/${data.year}`,
     imageAlt: `${data.displayName}'s ${data.year} in reading on Foxing`,
     type: "profile",
+    breadcrumbs: [
+      { name: SITE_NAME, path: "/" },
+      { name: data.displayName, path: `/u/${data.username}` },
+      { name: title, path: pathname },
+    ],
   });
 }
 

@@ -4,7 +4,7 @@ import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { articleLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
+import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
 
 function fmtDate(d: Date | null): string | null {
@@ -70,13 +70,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
         publishedAt: post.publishedAt,
         updatedAt: post.updatedAt,
       }),
-    ),
-    ldJson(
-      breadcrumbLd([
-        { name: "Home", path: "/" },
-        { name: "Journal", path: "/journal" },
-        { name: post.title, path: `/journal/${post.slug}` },
-      ]),
     ),
   ];
 }

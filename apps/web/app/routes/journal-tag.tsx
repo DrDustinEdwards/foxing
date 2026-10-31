@@ -32,6 +32,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     title: label,
     description: `Journal essays tagged ${label.toLowerCase()}.`,
     pathname: location.pathname,
+    pageType: "CollectionPage",
   });
 }
 

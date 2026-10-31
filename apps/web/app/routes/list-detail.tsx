@@ -11,6 +11,7 @@ import { RemoveBookButton } from "~/components/social/remove-book-button";
 import { Avatar, Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { getAuth } from "~/lib/auth.server";
+import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/list-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -22,11 +23,22 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   return { page, signedIn: !!viewerId };
 }
 
-export function meta({ loaderData: data }: Route.MetaArgs) {
-  return [
-    { title: `${data?.page.list.title ?? "List"} | Foxing` },
-    { name: "robots", content: data?.page.list.isPublic ? "index" : "noindex" },
-  ];
+export function meta({ loaderData: data, location }: Route.MetaArgs) {
+  if (!data) return [{ title: "List | Foxing" }, { name: "robots", content: "noindex" }];
+  const { list, owner, books } = data.page;
+  const by = owner ? (owner.displayName ?? owner.username) : null;
+  const titles = books.flatMap((b) => (b.book ? [b.book.title] : [])).slice(0, 3);
+  return buildMeta({
+    title: list.title,
+    description:
+      list.description ??
+      `A reading list${by ? ` by ${by}` : ""} on Foxing: ${books.length} ${books.length === 1 ? "book" : "books"}${
+        titles.length ? `, including ${new Intl.ListFormat("en").format(titles)}` : ""
+      }.`,
+    pathname: location.pathname,
+    noindex: !list.isPublic,
+    pageType: "CollectionPage",
+  });
 }
 
 export default function ListDetail({ loaderData }: Route.ComponentProps) {
