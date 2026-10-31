@@ -34,16 +34,68 @@ export const BACKUP_CREDENTIAL_ALLOW: Record<string, string> = {
   "passkey.credential_id": "a passkey's public credential id; the table holds only public keys",
 };
 
-// Hand-written content that exists nowhere else, plus the catalog. Each must be in the dump.
+// Everything that exists nowhere else, so each must be in the dump: who the readers are and how
+// they sign in, the catalog, and every reader's own writing and records (shelves, lists, notes,
+// diary, sessions, goals, follows, clubs and their talk, the companion's threads), the Journal with
+// its versions, redirects and pictures, the staff picks, billing events and the admin audit log.
 export const BACKUP_REQUIRED_TABLES = [
   "user",
+  "passkey",
   "profiles",
   "books",
+  "book_awards",
+  "book_of_the_month",
+  "external_book_clubs",
+  "external_book_club_picks",
   "annotations",
+  "user_books",
+  "user_book_tags",
+  "user_favorites",
+  "custom_shelves",
+  "custom_shelf_books",
+  "reading_lists",
+  "reading_list_books",
+  "reading_sessions",
+  "reading_goals",
+  "diary_entries",
+  "vocabulary",
+  "follows",
+  "close_friends",
+  "clubs",
+  "club_members",
+  "club_books",
+  "club_threads",
+  "club_posts",
+  "club_polls",
+  "club_poll_votes",
+  "club_meetings",
+  "club_meeting_rsvps",
+  "club_schedule",
+  "companion_threads",
+  "companion_messages",
   "journal_posts",
+  "journal_post_versions",
+  "journal_slug_redirects",
+  "journal_media",
+  "journal_media_revisions",
+  "announcements",
+  "billing_events",
+  "admin_audit_log",
 ] as const;
 
-// Written by the operator, not by readers, so the count read straight after the dump matches
-// unless the dump lost rows. Reader-written tables can change between the two reads. A run whose
-// counted tables all dumped empty fails too: Foxing always has catalog books and journal posts.
-export const BACKUP_COUNTED_TABLES = ["books", "journal_posts"] as const;
+// Written by the operator alone (the catalog and its picks through the admin, the Journal and its
+// pictures through Carrel), so the count read straight after the dump matches unless the dump lost
+// rows. Reader-written tables, and any a cron inserts into, can change between the two reads, so
+// they are left out. A run whose counted tables all dumped empty fails too: Foxing always has
+// catalog books and Journal posts.
+export const BACKUP_COUNTED_TABLES = [
+  "books",
+  "book_awards",
+  "book_of_the_month",
+  "external_book_clubs",
+  "external_book_club_picks",
+  "journal_posts",
+  "journal_slug_redirects",
+  "journal_media",
+  "announcements",
+] as const;

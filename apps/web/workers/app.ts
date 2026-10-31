@@ -25,7 +25,7 @@ import {
   UNCACHED,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
-import { logEvent, withRequestLog } from "@dustinedwards/site-runtime/log";
+import { logEvent, routeNamer, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import {
@@ -596,15 +596,32 @@ async function adminList(request: Request, env: Env): Promise<Response> {
   return withSecurityHeaders(res, request);
 }
 
-// Every request writes one `request` line (site-runtime ./log's withRequestLog: path, status, ms and
-// the deployed commit, never a query).
+// The page route each log line names (`/books/:slug`), from the React Router build's route table,
+// made once per isolate. The /api/v1 routes are Hono's, so their lines carry the path alone.
+let nameRoute: ((request: Request) => string | undefined) | undefined;
+
+// Every request writes one `request` line (site-runtime ./log's withRequestLog: path, route pattern,
+// status, ms and the deployed commit, never a query), and a refused input (400 or 422) an
+// `input_validation_fail` line beside it.
 export default {
   fetch: withRequestLog(
-    (request: Request, env: Env, ctx: ExecutionContext) =>
-      new URL(request.url).pathname === ADMIN_LIST_PATH
+    (request: Request, env: Env, ctx: ExecutionContext) => {
+      // Not awaited: a request never waits on the build for its log line; the first few in an
+      // isolate may go without a route, as the build loads beside them.
+      if (!nameRoute)
+        void serverBuild().then(
+          (build) => (nameRoute ??= routeNamer(build.routes)),
+          () => undefined,
+        );
+      return new URL(request.url).pathname === ADMIN_LIST_PATH
         ? adminList(request, env)
-        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
-    { sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA },
+        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx));
+    },
+    {
+      sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA,
+      route: (request) =>
+        new URL(request.url).pathname.startsWith("/api/") ? undefined : nameRoute?.(request),
+    },
   ),
   scheduled,
   queue,
