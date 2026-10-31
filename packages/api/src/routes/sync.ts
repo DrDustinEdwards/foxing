@@ -4,7 +4,7 @@
 // (clubs/social) is never syncable -- the validator's resource enum enforces that.
 import { syncDomain, syncPushInput } from "@foxing/core";
 import { Hono } from "hono";
-import { parseJson, requireSession } from "../http";
+import { parseJson, requireSession, SYNC_BODY_MAX_BYTES } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
 import type { Env } from "../types";
 
@@ -12,7 +12,7 @@ export const syncRoutes = new Hono<Env>();
 
 syncRoutes.post("/sync", rateLimit("write"), async (c) => {
   const session = requireSession(c);
-  const { ops } = await parseJson(c, syncPushInput);
+  const { ops } = await parseJson(c, syncPushInput, SYNC_BODY_MAX_BYTES);
   const results = await syncDomain.applySync(c.get("db"), session.id, ops);
   return c.json({ results });
 });

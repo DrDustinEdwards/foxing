@@ -4,7 +4,7 @@
 import { Hono } from "hono";
 import { clubsToHandOver, deleteAccount, deleteAccountInput, exportAccount } from "@foxing/core";
 import { errors } from "../error";
-import { requireSession } from "../http";
+import { readBody, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
 import type { Env } from "../types";
 
@@ -37,7 +37,7 @@ accountRoutes.get("/account/clubs", async (c) => {
 // user-owned data. The body ({ successors }) is optional: an empty one takes the defaults.
 accountRoutes.delete("/account", rateLimit("write"), async (c) => {
   const session = requireSession(c);
-  const text = await c.req.text();
+  const text = await readBody(c);
   let raw: unknown = {};
   try {
     raw = text ? JSON.parse(text) : {};

@@ -30,6 +30,9 @@ on:
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "pnpm-lock.yaml"
 
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -40,6 +43,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
@@ -81,7 +86,7 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@956dc10b8a0fbf3128df41c7c21c9441392fabda # v0.20.5
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@a0fbcb5c7f65e4183a97989511f9d352950ad90b # v0.20.7
     with:
       worker-name: foxing
       health-url: https://foxing.app/health
@@ -97,7 +102,7 @@ jobs:
         -e "s|https://<your-worker>.workers.dev|${{ vars.BETTER_AUTH_URL }}|"
         wrangler.jsonc.example > wrangler.jsonc &&
         pnpm exec wrangler d1 migrations apply foxing --remote &&
-        pnpm exec react-router build
+        pnpm run build
       sha-var: DEPLOY_SHA
       d1-database: foxing
     secrets:
@@ -117,6 +122,8 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:

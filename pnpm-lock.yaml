@@ -19,8 +19,8 @@ importers:
         specifier: ^2.0.0
         version: 2.5.2
       '@dustinedwards/devkit':
-        specifier: github:DrDustinEdwards/devkit#v0.20.5
-        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/956dc10b8a0fbf3128df41c7c21c9441392fabda
+        specifier: github:DrDustinEdwards/devkit#v0.20.7
+        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b
       fast-xml-parser:
         specifier: ^5.8.0
         version: 5.8.0
@@ -261,14 +261,14 @@ importers:
         specifier: github:DrDustinEdwards/prelum#v0.20.0
         version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/2ded202339dcdb31ded6e1c360dd9e54fc74dbc9(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       '@dustinedwards/d1-dump':
-        specifier: github:DrDustinEdwards/d1-dump#32bd35a2a045140afcda7afe6f00fbefc8b25253
-        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/32bd35a2a045140afcda7afe6f00fbefc8b25253
+        specifier: github:DrDustinEdwards/d1-dump#v0.7.0
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd
       '@dustinedwards/site-api':
         specifier: github:DrDustinEdwards/site-api#v0.14.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.46.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf
+        specifier: github:DrDustinEdwards/site-runtime#v0.46.1
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458
       '@fontsource-variable/dm-sans':
         specifier: 5.3.0
         version: 5.3.0
@@ -310,7 +310,7 @@ importers:
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
         specifier: github:DrDustinEdwards/capsomer#v0.53.0
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
       hast-util-to-string:
         specifier: 3.0.1
         version: 3.0.1
@@ -376,8 +376,8 @@ importers:
         specifier: ^1.0.0
         version: 1.4.5(@cloudflare/workers-types@5.20260706.1)(@types/node@20.19.41)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       '@dustinedwards/devkit':
-        specifier: github:DrDustinEdwards/devkit#v0.20.5
-        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/956dc10b8a0fbf3128df41c7c21c9441392fabda
+        specifier: github:DrDustinEdwards/devkit#v0.20.7
+        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -409,8 +409,8 @@ importers:
   packages/api:
     dependencies:
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.46.0
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf
+        specifier: github:DrDustinEdwards/site-runtime#v0.46.1
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458
       '@foxing/core':
         specifier: workspace:*
         version: link:../core
@@ -1386,15 +1386,15 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/32bd35a2a045140afcda7afe6f00fbefc8b25253':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/32bd35a2a045140afcda7afe6f00fbefc8b25253}
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd}
     version: 0.7.0
     engines: {node: '>=24.14.1'}
     hasBin: true
 
-  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/956dc10b8a0fbf3128df41c7c21c9441392fabda':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/956dc10b8a0fbf3128df41c7c21c9441392fabda}
-    version: 0.20.5
+  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b}
+    version: 0.20.7
     hasBin: true
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d':
@@ -1402,9 +1402,9 @@ packages:
     version: 0.14.0
     engines: {node: '>=26.11.1'}
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf}
-    version: 0.46.0
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458}
+    version: 0.46.1
     hasBin: true
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec':
@@ -8447,9 +8447,9 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/32bd35a2a045140afcda7afe6f00fbefc8b25253': {}
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd': {}
 
-  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/956dc10b8a0fbf3128df41c7c21c9441392fabda': {}
+  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b': {}
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d':
     dependencies:
@@ -8457,7 +8457,7 @@ snapshots:
       diff: 9.0.0
       zod: 4.6.7
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf': {}
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458': {}
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec': {}
 
@@ -11000,10 +11000,10 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458)(@playwright/test@1.61.1)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.61.1)
-      '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/ba1c8d0c21cb3668da2b994e0eb433619ac05aaf
+      '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458
       '@playwright/test': 1.61.1
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)

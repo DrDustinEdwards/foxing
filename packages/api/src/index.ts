@@ -33,6 +33,15 @@ export function createApi(deps: ApiDeps) {
 
   app.onError(errorHandler);
 
+  // An answer is the reader's own unless its route says it is public (the
+  // catalog's EDGE_CACHE), so by default none is stored: the account export
+  // and /me among them, errors included.
+  app.use("*", async (c, next) => {
+    await next();
+    if (!c.res.headers.has("Cache-Control"))
+      c.res.headers.set("Cache-Control", "private, no-store");
+  });
+
   // Middleware pipeline (spec-cf-api order): request id + db, session, profile.
   // Rate limit + zod validate apply per-route. Public reads skip auth naturally.
   // The operator bearer sits between session and profile, and only on /admin/*, so
