@@ -10,7 +10,7 @@ import { useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient, signInAgainIfStale } from "~/lib/auth-client";
 import { signalUnknownCredential } from "@dustinedwards/site-runtime/sign-in-client";
-import { useRevalidator } from "react-router";
+import { useFetcher, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
@@ -383,7 +383,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
 }
 
 export type SessionSettings = {
-  token: string;
+  id: string;
   device: string;
   location: string | null;
   current: boolean;
@@ -393,10 +393,13 @@ export type SessionSettings = {
 
 /**
  * Where the reader is signed in (site-runtime ./sign-in sessionRows), this device first. Listing
- * them needs a recent sign-in, so `null` offers one. Signing a device out ends its session.
+ * them needs a recent sign-in, so `null` offers one. Signing a device out ends its session through
+ * the settings page's action, by id.
  */
 export function SessionsSection({ sessions }: { sessions: SessionSettings | null }) {
   const { busy, error, run } = useAuthAction();
+  const signOut = useFetcher<{ revoked: boolean }>();
+  const failed = signOut.data?.revoked === false ? "The device was not signed out." : null;
 
   if (!sessions)
     return (
@@ -414,7 +417,7 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
       <div className="stack">
         <ul className="stack-3">
           {sessions.map((s) => (
-            <li key={s.token} className="row">
+            <li key={s.id} className="row">
               <span className="ui grow">
                 <span className="strong">{s.device}</span>
                 {s.current ? " (this device)" : null}
@@ -424,21 +427,17 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
                 </span>
               </span>
               {s.current ? null : (
-                <button
-                  type="button"
-                  className="cap-btn"
-                  data-size="sm"
-                  disabled={busy !== null}
-                  onClick={() =>
-                    void run(
-                      s.token,
-                      () => authClient.revokeSession({ token: s.token }),
-                      "The device was not signed out.",
-                    )
-                  }
-                >
-                  Sign out<span className="cap-sr-only"> {s.device}</span>
-                </button>
+                <signOut.Form method="post">
+                  <input type="hidden" name="session" value={s.id} />
+                  <button
+                    type="submit"
+                    className="cap-btn"
+                    data-size="sm"
+                    disabled={busy !== null || signOut.state !== "idle"}
+                  >
+                    Sign out<span className="cap-sr-only"> {s.device}</span>
+                  </button>
+                </signOut.Form>
               )}
             </li>
           ))}
@@ -461,9 +460,9 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
             </button>
           </div>
         ) : null}
-        {error ? (
+        {error || failed ? (
           <p role="alert" className="error">
-            {error}
+            {error ?? failed}
           </p>
         ) : null}
       </div>
