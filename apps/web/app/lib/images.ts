@@ -15,8 +15,9 @@ export const images = defineImages({
     // A Journal post's cover, the column's width.
     journal: { layout: "constrained", width: 768 },
   },
-  // One more size between a cover's 2x and the original, and the Journal's 1x on a phone.
-  breakpoints: [480],
+  // 260: the detail cover's own width, so a 1x screen is not sent the 480 (1.8 times what it shows).
+  // 480: one more size between a cover's 2x and the original, and the Journal's 1x on a phone.
+  breakpoints: [260, 480],
 });
 
 /**

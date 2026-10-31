@@ -15,7 +15,7 @@ type Filters = {
   page: number;
 };
 
-function parseFilters(url: URL): Filters {
+export function parseFilters(url: URL): Filters {
   const p = url.searchParams;
   const sort = p.get("sort");
   return {
@@ -187,8 +187,8 @@ export default function Books({ loaderData }: Route.ComponentProps) {
         ) : (
           <>
             <BookGrid>
-              {result.books.map((b) => (
-                <BookCard key={b.slug} book={b} />
+              {result.books.map((b, i) => (
+                <BookCard key={b.slug} book={b} position={i} />
               ))}
             </BookGrid>
             <Pagination filters={filters} result={result} query={query} />
