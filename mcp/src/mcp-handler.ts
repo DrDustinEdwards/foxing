@@ -62,7 +62,7 @@ function buildServer(env: ToolEnv, caller: Caller | undefined) {
             caller,
             tool,
             args: args ?? {},
-            meta: ctx.mcpReq._meta as { traceparent?: unknown } | undefined,
+            meta: ctx.mcpReq._meta,
             run: () => tool.handler(env, args ?? {}),
           }),
       );
