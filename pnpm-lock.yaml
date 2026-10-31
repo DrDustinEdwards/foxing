@@ -258,8 +258,8 @@ importers:
         specifier: 1.7.12
         version: 1.7.12(@better-auth/core@1.7.12(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-call@1.4.4(zod@4.6.7))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))(better-call@1.4.4(zod@4.6.7))(nanostores@1.4.0)
       '@drdustinedwards/site-helpers':
-        specifier: github:DrDustinEdwards/prelum#v0.21.0
-        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/6e655c828c36350c962a4a65b92c3ab3788545c5(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+        specifier: github:DrDustinEdwards/prelum#v0.22.0
+        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/40e579a45da1d3304ddc5322ba0b2bea46380ea6(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       '@dustinedwards/d1-dump':
         specifier: github:DrDustinEdwards/d1-dump#v0.7.0
         version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd
@@ -456,8 +456,8 @@ importers:
         specifier: ^0.111.0
         version: 0.111.0(zod@4.6.7)
       '@drdustinedwards/site-helpers':
-        specifier: github:DrDustinEdwards/prelum#v0.21.0
-        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/6e655c828c36350c962a4a65b92c3ab3788545c5(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+        specifier: github:DrDustinEdwards/prelum#v0.22.0
+        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/40e579a45da1d3304ddc5322ba0b2bea46380ea6(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       '@foxing/types':
         specifier: workspace:*
         version: link:../types
@@ -1304,12 +1304,13 @@ packages:
   '@discord/embedded-app-sdk@1.9.0':
     resolution: {integrity: sha512-aesQGKyhQgcxuY4/iJoylFfFaynZeU70Y5nqDtFNQ6Hs11LH+Xly7CfD6AhkTNssIyLljEkxG5ZYLU6Bj6n1kw==}
 
-  '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/6e655c828c36350c962a4a65b92c3ab3788545c5':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/6e655c828c36350c962a4a65b92c3ab3788545c5}
-    version: 0.21.0
+  '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/40e579a45da1d3304ddc5322ba0b2bea46380ea6':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/40e579a45da1d3304ddc5322ba0b2bea46380ea6}
+    version: 0.22.0
     hasBin: true
     peerDependencies:
       '@mermaid-js/mermaid-cli': 11.17.0
+      '@resvg/resvg-js': ^2.6.2
       '@shikijs/rehype': 4.5.0
       '@shikijs/transformers': 4.5.0
       axe-core: 4.14.0
@@ -1336,6 +1337,8 @@ packages:
       unist-util-visit: 5.2.0
     peerDependenciesMeta:
       '@mermaid-js/mermaid-cli':
+        optional: true
+      '@resvg/resvg-js':
         optional: true
       '@shikijs/rehype':
         optional: true
@@ -1405,14 +1408,14 @@ packages:
     version: 0.14.0
     engines: {node: '>=26.11.1'}
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/04e1ba9501a6bdf0ce293078971d61307ba2e071':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/04e1ba9501a6bdf0ce293078971d61307ba2e071}
-    version: 0.48.1
-    hasBin: true
-
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec':
     resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec}
     version: 0.32.0
+    hasBin: true
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/04e1ba9501a6bdf0ce293078971d61307ba2e071':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/04e1ba9501a6bdf0ce293078971d61307ba2e071}
+    version: 0.48.1
     hasBin: true
 
   '@egjs/hammerjs@2.0.17':
@@ -8448,7 +8451,7 @@ snapshots:
       uuid: 10.0.0
       zod: 3.25.76
 
-  '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/6e655c828c36350c962a4a65b92c3ab3788545c5(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)':
+  '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/40e579a45da1d3304ddc5322ba0b2bea46380ea6(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)':
     optionalDependencies:
       enarratio: 0.4.0
       hast-util-to-string: 3.0.1
@@ -8476,9 +8479,9 @@ snapshots:
       diff: 9.0.0
       zod: 4.6.7
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/04e1ba9501a6bdf0ce293078971d61307ba2e071': {}
-
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec': {}
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/04e1ba9501a6bdf0ce293078971d61307ba2e071': {}
 
   '@egjs/hammerjs@2.0.17':
     dependencies:
