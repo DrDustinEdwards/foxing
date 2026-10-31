@@ -85,8 +85,9 @@ jobs:
       - name: Integration tests (web, local D1)
         run: pnpm --filter web test
 
-  # devkit's shared deploy (worker-deploy.yml): it records the D1 Time Travel bookmark, applies the D1
-  # migrations and builds (pre-deploy), deploys with DEPLOY_SHA set to this commit, waits for /health to
+  # devkit's shared deploy (worker-deploy.yml): it records the D1 Time Travel bookmark, applies the pending
+  # D1 migrations that only add (devkit-migrations --apply; a drop, rename or row delete is refused with the
+  # command to run it by hand) and builds (pre-deploy), deploys with DEPLOY_SHA set to this commit, waits for /health to
   # report it, checks the home page answers, and rolls the deploy back if it does not. A rollback never
   # undoes a migration; the bookmark in the run's summary does. Dormant until CF_DEPLOY is 'true'.
   # The staged wrangler.jsonc carries the real IDs and BETTER_AUTH_URL, which the build bakes in.
@@ -111,7 +112,7 @@ jobs:
         -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|"
         -e "s|https://<your-worker>.workers.dev|${{ vars.BETTER_AUTH_URL }}|"
         wrangler.jsonc.example > wrangler.jsonc &&
-        pnpm exec wrangler d1 migrations apply foxing --remote &&
+        pnpm exec devkit-migrations ../../packages/core/migrations --apply foxing &&
         pnpm run build
       sha-var: DEPLOY_SHA
       d1-database: foxing
