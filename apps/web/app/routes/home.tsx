@@ -159,3 +159,6 @@ function StreakCard({ streak: s }: { streak: Streak }) {
     </aside>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

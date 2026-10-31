@@ -8,14 +8,13 @@ import {
 import { useState } from "react";
 import { useLocation, useRouteLoaderData } from "react-router";
 import { Link } from "capsomer/react/link";
+import { SEARCH_BUTTON_LABEL } from "~/lib/search-commands";
+import { THEME_PREF_KEY } from "~/lib/theme";
 import type { loader as RootLoader } from "~/root";
 import { CommandPalette } from "./command-palette";
 import { headerAccount } from "./nav/account-panel";
 import { BooksPanel, booksGroups, PicksPanel, picksGroups } from "./nav/header-panels";
 import { Container } from "./ui";
-
-/** Where Capsomer's theme button remembers the choice; root.tsx's no-flash script reads it. */
-export const THEME_PREF_KEY = "foxing-theme";
 
 // The signed-in reader's own pages: a line of tabs under the header on a desktop, Capsomer's
 // bottom bar on a phone. Clubs sits in the header's sections; the rest of the personal pages
@@ -116,7 +115,7 @@ function SiteNav() {
   const extras: HeaderExtra[] = [
     {
       id: "search",
-      label: "Search the catalog",
+      label: SEARCH_BUTTON_LABEL,
       icon: SEARCH_ICON,
       keys: "Ctrl K",
       onClick: () => window.dispatchEvent(new CustomEvent("foxing:search-open")),
@@ -156,6 +155,9 @@ function SiteNav() {
       />
       {user ? <YourFoxingBar pathname={pathname} /> : null}
       <CommandPalette />
+      {/* On a page that does not hydrate (root.tsx), the header island wires this header and the
+          search palette (islands/header.ts). */}
+      <span hidden data-island="header" />
     </>
   );
 }

@@ -160,3 +160,6 @@ function Bookend({ label, book }: { label: string; book: RecapBook }) {
     </div>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

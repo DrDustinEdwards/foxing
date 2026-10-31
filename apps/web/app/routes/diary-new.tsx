@@ -55,3 +55,6 @@ export default function DiaryNew({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

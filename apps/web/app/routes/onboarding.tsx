@@ -212,3 +212,6 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
     </Frame>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };
