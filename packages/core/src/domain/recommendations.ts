@@ -12,6 +12,7 @@
 // in-process via the repos; the caller/KV are injected so this stays testable with a
 // stubbed model and a fake KV, no network and no binding.
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
+import { checkProse } from "@dustinedwards/site-runtime/prose";
 import {
   EMPTY_QUOTA_STATE,
   MODELS,
@@ -158,6 +159,11 @@ export function rankCandidates(
   return ranked;
 }
 
+/** Whether AI text a reader would see has a high or critical prose finding (checklist W1). */
+function proseFlagged(text: string): boolean {
+  return checkProse(text).some((i) => i.severity === "high" || i.severity === "critical");
+}
+
 function toRec(r: RankedRec): Recommendation {
   return {
     bookId: r.candidate.id,
@@ -173,15 +179,17 @@ function toRec(r: RankedRec): Recommendation {
 /**
  * The model's structured selection, checked again here. Null when nothing usable is in it,
  * so the caller falls back to the data ranking. Only ids in `allowedIds` survive; duplicates
- * and non-strings are dropped; reasons are cleaned to one line.
+ * and non-strings are dropped; reasons are cleaned to one line. A reason with a high or
+ * critical prose finding (site-runtime's checkProse: a stock phrase, a refusal, chatbot
+ * markup) is null, and the reader sees the data ranking's own reason for that book instead.
  */
 function selectAiPicks(
   value: unknown,
   allowedIds: Set<string>,
-): Array<{ bookId: string; reason: string }> | null {
+): Array<{ bookId: string; reason: string | null }> | null {
   const picks = (value as { picks?: unknown } | null)?.picks;
   if (!Array.isArray(picks)) return null;
-  const out: Array<{ bookId: string; reason: string }> = [];
+  const out: Array<{ bookId: string; reason: string | null }> = [];
   const seen = new Set<string>();
   for (const item of picks) {
     const rec = item as { book_id?: unknown; reason?: unknown };
@@ -189,7 +197,7 @@ function selectAiPicks(
     if (typeof id !== "string" || !allowedIds.has(id) || seen.has(id)) continue;
     const reason =
       typeof rec.reason === "string" ? rec.reason.replace(/\s+/g, " ").trim().slice(0, 140) : "";
-    out.push({ bookId: id, reason: reason || "Picked for you" });
+    out.push({ bookId: id, reason: reason ? (proseFlagged(reason) ? null : reason) : "Picked for you" });
     seen.add(id);
     if (out.length >= TARGET) break;
   }
@@ -364,7 +372,7 @@ async function aiOverlay(
     selection
       .map(({ bookId, reason }) => {
         const r = byId.get(bookId);
-        return r ? { ...toRec(r), reason } : null;
+        return r ? { ...toRec(r), reason: reason ?? r.reason } : null;
       })
       .filter((r): r is Recommendation => r !== null),
     dataRanked,
