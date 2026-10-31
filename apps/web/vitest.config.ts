@@ -27,7 +27,10 @@ export default defineConfig(async () => {
         // below is a real Durable Object (the app entry pulls in the React Router build).
         main: "./test/club-room-entry.ts",
         miniflare: {
-          durableObjects: { CLUB_ROOM: "ClubRoom" },
+          durableObjects: {
+            CLUB_ROOM: "ClubRoom",
+            RATE_LIMITER: { className: "RateLimiter", useSQLite: true },
+          },
           compatibilityDate: "2026-07-01",
           compatibilityFlags: ["nodejs_compat"],
           d1Databases: ["DB"],

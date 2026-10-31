@@ -1,0 +1,19 @@
+{
+  "note": "sha256 of each migration. devkit-migrations compares against this. Adding a migration means adding its hash in the same commit.",
+  "expand_only_after": "0012_journal_media_placeholder.sql",
+  "sha256": {
+    "0000_old_daredevil.sql": "1676ff100ee816e77c69d65621fbb3d8fe61ca1687835755d96bdc13b0e9c66c",
+    "0001_high_scarecrow.sql": "a8a03de0e7e13a09567dae6da6c1440d9316acd50cb360824b8f16643a0a27a5",
+    "0002_brief_lord_hawal.sql": "dbb9ccc91e718772391806f2ff5ac5a99ece57a0aa77acbc604bb5b95b70bd70",
+    "0003_watery_mimic.sql": "b4e1c0f743387e08dfd377d9eee6d05a52bd7be16eeace8178e1f2e5c462c9cd",
+    "0004_auth_indexes.sql": "2bcd3d2975f280894e3699e3207ec1b81ee005c698b0aba57892a4fb96f3296a",
+    "0005_clear_oauth_tokens.sql": "601e767009cef1cd35c35f1fa0b652b1b036149ccb43c9bb39dd389b36de4bd8",
+    "0006_passkeys.sql": "86e59167615c003726548f5889c2257c250632363a766e34f9810aed269e1ef6",
+    "0007_remove_passwords.sql": "d8a2e11fd7a49c4daa8320e7078b072395dbd7576bfd6c8ae92b546dbdc138dc",
+    "0008_journal_media.sql": "222e7d77888da5313d0aa881abc3e3cbab1edce4dcc0c17bd7f08b72ca4a21a2",
+    "0009_ops.sql": "642d94e21761f98ce802ea4bc5c31c1e5c37be5064b4d695c2c6d6a671c38693",
+    "0010_journal_trash_and_renames.sql": "3ca08b5094bab95ad2f10f1aed1486acfea0b134a3aab0a94fc84e9b79fa5f72",
+    "0011_site_api_store.sql": "9b4795c0e2da9e7b4a64d998d518490d9d83cad54ddc6c106f502d2d81bba1bd",
+    "0012_journal_media_placeholder.sql": "c617e218b1ff8b1e9764411c0f2db49e9961e4eadf0a00b3df16792b676c9562"
+  }
+}

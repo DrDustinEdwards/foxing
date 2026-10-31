@@ -8,7 +8,12 @@
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": "./build/client" },
-  "observability": { "enabled": true, "traces": { "enabled": true } },
+  // Logs: every invocation (head_sampling_rate 1), stated so a change to it is a reviewed one; traces
+  // at their default.
+  "observability": { "enabled": true, "head_sampling_rate": 1, "traces": { "enabled": true } },
+  // The deployed version's upload time, which /health's cron check uses to hold back a job that has
+  // not had its first window since the deploy (app/routes/health.ts).
+  "version_metadata": { "binding": "CF_VERSION_METADATA" },
   "upload_source_maps": true,
   // The public pages' edge cache (workers/app.ts, site-runtime ./edge-cache). The default export
   // is the GATEWAY, cache disabled, so it runs on every request: the APIs, auth, writes, media,
@@ -72,8 +77,8 @@
     "producers": [{ "queue": "foxing-companion-cache", "binding": "COMPANION_CACHE_QUEUE" }],
     "consumers": [{ "queue": "foxing-companion-cache", "max_batch_size": 5, "max_retries": 3 }]
   },
-  // 0 8: companion cache. */5: push sweep. 17 3: nightly backup, media copy, 404 prune. Every minute:
-  // Carrel's schedules, hook retries and content trash (workers/app.ts CRON_JOBS).
+  // 0 8: companion cache and the covers copy. */5: push sweep. 17 3: nightly backup, media copy, 404 prune. Every minute:
+  // Carrel's schedules, hook retries and content trash. Each trigger's jobs: app/lib/cron-jobs.ts.
   "triggers": { "crons": ["0 8 * * *", "*/5 * * * *", "17 3 * * *", "* * * * *"] },
   "vars": {
     "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",
