@@ -5,10 +5,14 @@
 import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
 import {
   buildContentSecurityPolicy,
+  buildStagedPolicy,
+  CSP_REPORT_GROUP,
+  CSP_REPORT_PATH,
   generateNonce,
   renewNonce,
   reportingEndpoints,
   type CspSources,
+  type SitePolicy,
 } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
 import { ipKey, limit } from "@dustinedwards/site-runtime/rate-limit";
@@ -16,9 +20,8 @@ import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 import { securityHeaders } from "./header-set";
 
-/** Where browsers send violation reports (report-uri), and the Reporting API name for it (report-to). */
-export const CSP_REPORT_PATH = "/api/csp-report";
-const CSP_ENDPOINT_NAME = "csp-endpoint";
+/** Where browsers send violation reports: the family's path and group (site-runtime's CSP_REPORT_PATH, /csp-report, and CSP_REPORT_GROUP), the builder's defaults. */
+export { CSP_REPORT_PATH };
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
@@ -38,16 +41,14 @@ const SITE_SOURCES: CspSources = {
 };
 
 /** The site policy for this response: its nonce when it is a rendered page, none otherwise. */
-function contentSecurityPolicy(nonce?: string): string {
-  return buildContentSecurityPolicy({
+function sitePolicy(nonce?: string): SitePolicy {
+  return {
     sources: SITE_SOURCES,
     nonce,
     // React style={{...}} props render style="" attributes, which a nonce cannot cover.
     styleAttributesInline: true,
     cloudflareWebAnalytics: true,
-    reportUri: CSP_REPORT_PATH,
-    reportTo: CSP_ENDPOINT_NAME,
-  }).value;
+  };
 }
 
 /** The reader, /read/:slug, a document of its own (app/routes/read.tsx loads it by full navigation). */
@@ -67,8 +68,8 @@ function isReaderPath(pathname: string): boolean {
  * files are served as text/plain (workers/app.ts, /reader-assets), which nosniff refuses to run. Images also from data:
  * and blob:, which EPUBs and Readium use.
  */
-export function readerContentSecurityPolicy(nonce?: string): string {
-  return buildContentSecurityPolicy({
+function readerPolicy(nonce?: string): SitePolicy {
+  return {
     sources: {
       ...SITE_SOURCES,
       style: ["'unsafe-inline'", "blob:", ...(SITE_SOURCES.style ?? [])],
@@ -79,9 +80,7 @@ export function readerContentSecurityPolicy(nonce?: string): string {
     nonceStyles: false,
     baseUriSelf: true,
     cloudflareWebAnalytics: true,
-    reportUri: CSP_REPORT_PATH,
-    reportTo: CSP_ENDPOINT_NAME,
-  }).value;
+  };
 }
 
 // One nonce per request, issued to the render (app/entry.server.tsx, app/root.tsx via
@@ -111,32 +110,25 @@ function isHtml(headers: Headers): boolean {
  * (corpFor): the OG cards and covers other sites embed are cross-origin, pages and JSON same-origin.
  */
 export function withSecurityHeaders(response: Response, request: Request): Response {
-  // A WebSocket upgrade carries its socket on the Response and cannot be rebuilt.
-  if (response.status === 101) return response;
-
   const rendered = NONCE_IN_POLICY.exec(response.headers.get("Content-Security-Policy") ?? "")?.[1];
   if (isHtml(response.headers) && rendered && rendered !== issued.get(request)) {
     const fresh = generateNonce();
     issued.set(request, fresh);
     response = renewNonce(response, fresh);
   }
-  const headers = new Headers(response.headers);
-  const html = isHtml(headers);
-  applyHeaderSet(headers, securityHeaders);
-  headers.set("Cross-Origin-Resource-Policy", corpFor(headers.get("Content-Type")));
+  const html = isHtml(response.headers);
   const nonce = html ? issued.get(request) : undefined;
   const url = new URL(request.url);
-  const reader = html && isReaderPath(url.pathname);
-  headers.set(
-    "Content-Security-Policy",
-    reader ? readerContentSecurityPolicy(nonce) : contentSecurityPolicy(nonce),
-  );
-  const reportUrl = new URL(CSP_REPORT_PATH, url);
-  headers.set("Reporting-Endpoints", reportingEndpoints(CSP_ENDPOINT_NAME, reportUrl));
-  return new Response(response.body, {
-    status: response.status,
-    statusText: response.statusText,
-    headers,
+  const policy = html && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce);
+  // What the registry entry stages (Trusted Types, default-src 'none') rides Report-Only beside the policy.
+  const staged = buildStagedPolicy(policy, { trustedTypes: true, denyUnlisted: true });
+  // applyHeaderSet passes a WebSocket upgrade (101) through untouched and rebuilds every other response.
+  return applyHeaderSet(response, {
+    ...securityHeaders,
+    "Cross-Origin-Resource-Policy": corpFor(response.headers.get("Content-Type")),
+    "Content-Security-Policy": buildContentSecurityPolicy(policy).value,
+    [staged.name]: staged.value,
+    "Reporting-Endpoints": reportingEndpoints(CSP_REPORT_GROUP, new URL(CSP_REPORT_PATH, url)),
   });
 }
 
