@@ -306,6 +306,22 @@ export function journalSiteAdapter(options: {
     return written(row.id, input.changeId);
   }
 
+  /** Stores the schedule (a reschedule replaces it), checked and audited under its change id. */
+  async function putSchedule(
+    row: JournalPost,
+    input: { source: string; publishAt: string; changeId: string },
+  ) {
+    const { source, publishAt, changeId } = input;
+    await schedules.put(row.slug, { source, publishAt, changeId }).run();
+    await audit("journal.schedule", {
+      id: row.id,
+      slug: row.slug,
+      publishAt: utc(publishAt),
+      changeId,
+    });
+    return written(row.id, changeId);
+  }
+
   /** Into the trash or out of it, guarded on the version the caller saw. */
   async function setTrashed(
     slug: string,
@@ -429,16 +445,7 @@ export function journalSiteAdapter(options: {
       const source = input.source ?? journalToSource(fieldsOf(row));
       validated(id, readSource(source));
       if (input.source !== undefined) await save(row, input.source, input.changeId);
-      await schedules
-        .put(id, { source, publishAt: input.publishAt, changeId: input.changeId })
-        .run();
-      await audit("journal.schedule", {
-        id: row.id,
-        slug: id,
-        publishAt: utc(input.publishAt),
-        changeId: input.changeId,
-      });
-      return written(row.id, input.changeId);
+      return putSchedule(row, { ...input, source });
     },
 
     // Unpublish returns the post to draft; a delete is from the trash.
@@ -610,16 +617,7 @@ export function journalSiteAdapter(options: {
       const row = await expected(id, input.expectedVersion);
       if (!row.isPublished) throw new RefusedError("Only a live post takes a scheduled update.");
       validated(id, readSource(input.source));
-      await schedules
-        .put(id, { source: input.source, publishAt: input.publishAt, changeId: input.changeId })
-        .run();
-      await audit("journal.schedule", {
-        id: row.id,
-        slug: id,
-        publishAt: utc(input.publishAt),
-        changeId: input.changeId,
-      });
-      return written(row.id, input.changeId);
+      return putSchedule(row, input);
     },
 
     async cancel(id, input) {
