@@ -6,6 +6,7 @@
 import { useProfilePage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
+import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 import { FollowButton } from "~/components/social/follow-button";
@@ -180,7 +181,12 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                   <Link to={`/books/${b.slug}`} className="block">
                     <span className="block fx-u-profile-label-2">
                       {b.coverUrl ? (
-                        <img src={b.coverUrl} alt="" className="fx-u-profile-img" loading="lazy" />
+                        <CoverPicture
+                          src={b.coverUrl}
+                          alt=""
+                          sizes="128px"
+                          className="fx-u-profile-img"
+                        />
                       ) : (
                         <span className="justify-center text-center fx-u-profile-label-3">
                           {b.title}
@@ -378,11 +384,11 @@ function ProfileCovers({ books }: { books: CoverBook[] }) {
           <Link to={`/books/${b.slug}`} className="block">
             <span className="block fx-u-profile-label-2">
               {b.coverUrl ? (
-                <img
+                <CoverPicture
                   src={b.coverUrl}
                   alt={`${b.title} by ${b.author}`}
+                  sizes="112px"
                   className="fx-u-profile-img"
-                  loading="lazy"
                 />
               ) : (
                 <span className="justify-center text-center fx-u-profile-label-3">{b.title}</span>

@@ -15,7 +15,6 @@ import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "./lib/nonce";
-import { COVER_ORIGIN } from "./lib/origins";
 import { SITE_NAME } from "./lib/seo";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
@@ -34,7 +33,6 @@ export function meta({ error }: Route.MetaArgs) {
 
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
-  { rel: "preconnect", href: COVER_ORIGIN },
   { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
 ];
 

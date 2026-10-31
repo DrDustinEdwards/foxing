@@ -51,33 +51,24 @@
   }
 }
 
-/* Covers: a 2:3 box with a blur-up placeholder, revealed until the full image decodes. */
+/* Covers: a 2:3 box on the sunken color until the image paints. */
 .cover-img {
   position: relative;
   aspect-ratio: 2 / 3;
   overflow: hidden;
   border-radius: var(--fx-radius-cover);
   background-color: var(--sunken);
-  background-size: cover;
-  background-position: center;
   box-shadow:
     var(--fx-shadow-sm),
     0 0 0 1px var(--line);
 }
-.cover-img[data-loaded="true"] {
-  background-image: none !important;
+.cover-img > picture {
+  display: contents;
 }
 .cover-img-photo {
   inline-size: 100%;
   block-size: 100%;
   object-fit: cover;
-  opacity: 0;
-  @media (prefers-reduced-motion: no-preference) {
-    transition: opacity 500ms var(--ease-out);
-  }
-}
-.cover-img[data-loaded="true"] .cover-img-photo {
-  opacity: 1;
 }
 .cover-img-fallback {
   display: flex;

@@ -38,6 +38,7 @@
   // earlier and deleted bytes are kept there too, under journal-media/.
   "r2_buckets": [
     { "binding": "MEDIA", "bucket_name": "foxing-epubs" },
+    { "binding": "COVERS", "bucket_name": "foxing-covers" },
     { "binding": "BACKUPS", "bucket_name": "foxing-backups" }
   ],
   // The Journal's media library: Cloudflare Images measures, turns, mirrors and shrinks its

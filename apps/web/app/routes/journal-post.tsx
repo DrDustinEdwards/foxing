@@ -2,7 +2,9 @@ import { catalogRepo } from "@foxing/core";
 import { render } from "@drdustinedwards/site-helpers/render/nomath";
 import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
+import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
+import { journalCovers, journalImageSize } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
@@ -19,16 +21,20 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     context.get(journalPreviewContext) ?? (await catalogRepo.getPostBySlug(db, params.slug));
   if (!post) throw new Response("Not found", { status: 404 });
 
-  // The journal's Markdown, through Prelum's render as every site's writing is (no math: `$` stays text). The
-  // journal stores no image sizes, so its images are written unsized.
+  // The journal's Markdown, through Prelum's render as every site's writing is (no math: `$` stays text).
+  // A picture from the media library is sized from its row; any other is written unsized.
   const { html } = await render({
     file: `journal/${post.slug}`,
     body: post.content,
-    resolveImage: async () => null,
+    resolveImage: (src) => journalImageSize(db, src),
   });
+  const cover = post.coverImageUrl
+    ? (await journalCovers(db, [post.coverImageUrl])).get(post.coverImageUrl)
+    : undefined;
 
   return {
     html,
+    cover,
     post: {
       slug: post.slug,
       title: post.title,
@@ -75,7 +81,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 }
 
 export default function JournalPost({ loaderData }: Route.ComponentProps) {
-  const { post, html } = loaderData;
+  const { post, html, cover } = loaderData;
   const published = fmtDate(post.publishedAt);
 
   return (
@@ -106,12 +112,12 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             </div>
           </header>
 
-          {post.coverImageUrl ? (
-            <img
-              src={post.coverImageUrl}
+          {cover ? (
+            <Picture
+              attrs={cover}
               alt={post.coverImageAlt ?? ""}
               className="mb-10 fx-journal-post-img"
-              loading="eager"
+              priority
             />
           ) : null}
 

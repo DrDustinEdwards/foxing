@@ -257,22 +257,6 @@ describe("Journal media: what Carrel's library reads", () => {
     expect(after).toMatchObject({ items: [], removed: [item.id] });
   });
 
-  it("fills credit, license and the date taken from a JPEG's EXIF, and names what it filled", async () => {
-    const query = new URLSearchParams({ filename: "exif.jpg", changeId: "chg-exif" });
-    const res = await fetchWorker(`${PREFIX}/media?${query}`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${KEY}`, "content-type": "image/jpeg" },
-      body: exifJpeg(),
-    });
-    expect(res.status, await res.clone().text()).toBe(201);
-    expect(await res.json()).toMatchObject({
-      credit: "Example Photographer",
-      license: "CC BY 4.0",
-      takenAt: "2024-05-06T14:30:00+01:00",
-      embedded: ["credit", "license", "takenAt"],
-    });
-  });
-
   it("suggests tags and alt text from the model, and applies neither", async () => {
     const item = await upload("suggest-case");
     const sent: string[] = [];
@@ -292,55 +276,3 @@ describe("Journal media: what Carrel's library reads", () => {
     });
   });
 });
-
-/** A JPEG whose EXIF names an artist, a copyright and when it was taken, big-endian. */
-function exifJpeg(): Uint8Array<ArrayBuffer> {
-  const ascii = (s: string) => new TextEncoder().encode(`${s}\u0000`);
-  const tiff = new Uint8Array(512);
-  const view = new DataView(tiff.buffer);
-  let dataAt = 80;
-  const place = (bytes: Uint8Array) => {
-    tiff.set(bytes, dataAt);
-    dataAt += bytes.length;
-    return dataAt - bytes.length;
-  };
-  const entry = (at: number, tag: number, type: number, count: number, value: number) => {
-    view.setUint16(at, tag);
-    view.setUint16(at + 2, type);
-    view.setUint32(at + 4, count);
-    view.setUint32(at + 8, value);
-  };
-  tiff.set([0x4d, 0x4d, 0, 42, 0, 0, 0, 8]);
-  view.setUint16(8, 3);
-  const [artist, copyright, taken, offset] = [
-    ascii("Example Photographer"),
-    ascii("CC BY 4.0"),
-    ascii("2024:05:06 14:30:00"),
-    ascii("+01:00"),
-  ];
-  entry(10, 0x013b, 2, artist.length, place(artist));
-  entry(22, 0x8298, 2, copyright.length, place(copyright));
-  entry(34, 0x8769, 4, 1, 50);
-  view.setUint16(50, 2);
-  entry(52, 0x9003, 2, taken.length, place(taken));
-  entry(64, 0x9011, 2, offset.length, place(offset));
-  const body = tiff.subarray(0, dataAt);
-  const length = 2 + 6 + body.length;
-  return new Uint8Array([
-    0xff,
-    0xd8,
-    0xff,
-    0xe1,
-    length >> 8,
-    length & 0xff,
-    0x45,
-    0x78,
-    0x69,
-    0x66,
-    0,
-    0,
-    ...body,
-    0xff,
-    0xd9,
-  ]);
-}

@@ -4,6 +4,7 @@
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
 import { Link } from "capsomer/react/link";
+import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -99,11 +100,12 @@ function CoverStack({ covers }: { covers: string[] }) {
   return (
     <div className="shrink-0 fx-lists-row-5">
       {covers.map((src, i) => (
-        <img
+        <CoverPicture
           key={src}
           src={src}
           alt=""
-          loading="lazy"
+          use="coverThumb"
+          sizes="44px"
           className="fx-lists-img"
           style={{ zIndex: covers.length - i }}
         />

@@ -5,8 +5,9 @@
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
-import { article, itemList, thing } from "@drdustinedwards/site-helpers/schema";
+import { article, itemList, pageImage, thing } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
+import { COVER_SIZE } from "./images";
 import { SITE_ORIGIN } from "./origins";
 
 export const SITE_NAME = "Foxing";
@@ -39,8 +40,8 @@ type MetaInput = {
   title: string;
   description?: string;
   pathname: string;
-  /** Absolute or site-relative card image; without one the page shares the site card. */
-  image?: string;
+  /** Absolute or site-relative card image, with its size where known; without one the page shares the site card. */
+  image?: string | { url: string; width: number; height: number; type?: string };
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
   /** Set true to keep a page out of the index (community book pages). */
@@ -72,7 +73,9 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     title,
     fullTitle: path === "/",
     description,
-    image: image ? { url: image, alt: imageAlt } : undefined,
+    image: image
+      ? { ...(typeof image === "string" ? { url: image } : image), alt: imageAlt }
+      : undefined,
     type,
     noindex,
     pageType,
@@ -103,7 +106,7 @@ export function bookLd(book: {
       ...(book.authorSlug ? { url: absoluteUrl(`/authors/${book.authorSlug}`) } : {}),
     },
     description: book.description,
-    image: book.coverUrl,
+    image: book.coverUrl ? pageImage({ url: book.coverUrl, ...COVER_SIZE }) : undefined,
     datePublished: book.publicationYear ? String(book.publicationYear) : undefined,
     isbn: book.isbn13,
     inLanguage: book.language,

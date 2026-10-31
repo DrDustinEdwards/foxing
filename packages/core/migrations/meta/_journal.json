@@ -71,6 +71,13 @@
       "when": 1793404800000,
       "tag": "0009_ops",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1793417857706,
+      "tag": "0010_journal_media_placeholder",
+      "breakpoints": true
     }
   ]
 }

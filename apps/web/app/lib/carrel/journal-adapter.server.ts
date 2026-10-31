@@ -47,6 +47,17 @@ const FOXING_ORIGIN = SITE_ORIGIN;
 /** The audit actor for every write made with the Carrel key. */
 const CARREL_ACTOR = "carrel";
 
+/** A preview's fields for a draft with no front matter yet. */
+const UNTITLED: JournalFields = {
+  title: "Untitled",
+  excerpt: null,
+  coverImageUrl: null,
+  coverImageAlt: null,
+  tags: [],
+  featured: false,
+  content: "",
+};
+
 /** The slug a preview renders at when Carrel sends no id: a post not saved yet. */
 const UNSAVED_PREVIEW_SLUG = "carrel-preview";
 
@@ -341,7 +352,10 @@ export function journalSiteAdapter(options: {
     if (!renderDocument)
       throw new Error("the React Router handler was not passed to the Carrel adapter");
     const slug = input.id ?? UNSAVED_PREVIEW_SLUG;
-    const fields = readSource(input.source);
+    // A draft with no front matter yet (site-api's conformance probe sends a heading alone) shows untitled.
+    const fields = /^---\r?\n/.test(input.source)
+      ? readSource(input.source)
+      : { ...UNTITLED, content: input.source };
     const values = validated(slug, fields);
     const stored = input.id ? await adminRepo.getJournalBySlug(db, input.id) : null;
     const now = new Date();

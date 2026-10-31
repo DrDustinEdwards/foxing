@@ -64,6 +64,7 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                     src={b.coverUrl}
                     alt={`${b.title} by ${b.author}`}
                     fallbackLabel={b.title}
+                    use="coverThumb"
                     sizes="80px"
                   />
                 </Link>

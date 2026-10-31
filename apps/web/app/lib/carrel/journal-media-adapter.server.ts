@@ -13,9 +13,11 @@
 // Offered from site-api v0.13: list and search, upload, alt, tags, trash and restore, delete by the
 // Journal's own reference check, caption, replace, duplicates, usage, lenses and filters, import,
 // credit and license, turns and mirrors, history and revert, the change log, shrinking at upload
-// and the resize pass, embedded metadata and suggestions. Not offered: the focal point, since no
-// Journal page crops around one (their covers are cropped by CSS, object-fit: cover), so a point
-// set in Carrel would change nothing a reader sees.
+// and the resize pass, embedded metadata and suggestions. An upload, a replace and the resize pass
+// go through site-api's prepareUpload (v0.15): HEIC and HEIF to JPEG, the location taken out, the
+// shrink, the size, the embedded metadata, and the placeholder and color the library shows. Not
+// offered: the focal point, since no Journal page crops around one (their covers are cropped by
+// CSS, object-fit: cover), so a point set in Carrel would change nothing a reader sees.
 
 import { slugify } from "@drdustinedwards/site-helpers/slug";
 import {
@@ -25,8 +27,9 @@ import {
   type MediaResize,
   type MediaRevision,
   type MediaTransformOp,
-  type MediaUploaded,
   NotFoundError,
+  placeholderAndColor,
+  prepareUpload,
   RefusedError,
   sha256Hex,
   turnsSize,
@@ -36,13 +39,12 @@ import { type R2BucketLike, replaceObject } from "@dustinedwards/site-api/r2";
 import { editImage } from "@dustinedwards/site-runtime/image";
 import { createDb, type Db, journalMediaRepo } from "@foxing/core";
 import { SITE_ORIGIN } from "../origins";
-import { readEmbedded } from "./media-embedded.server";
 import { suggestFor } from "./media-suggest.server";
 
 type Row = journalMediaRepo.JournalMediaRow;
 type Write = journalMediaRepo.JournalMediaWrite;
 
-/** Pictures only, each re-encodable by the Images binding but GIF, which may be animated. */
+/** The stored types, each re-encodable by the Images binding but GIF, which may be animated. */
 const EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -52,6 +54,8 @@ const EXTENSIONS: Record<string, string> = {
 };
 type Encoded = "image/jpeg" | "image/png" | "image/webp" | "image/avif";
 const REENCODED = new Set<string>(["image/jpeg", "image/png", "image/webp", "image/avif"]);
+/** Accepted too, and stored as JPEG by prepareUpload: an iPhone's photos. */
+const CONVERTED = ["image/heic", "image/heif"];
 
 /** Large enough for a camera file, which the upload then shrinks. */
 const MAX_BYTES = 20 * 1024 * 1024;
@@ -108,8 +112,8 @@ function itemOf(row: Row, usedCount?: number): MediaItem {
     trashedAt: row.trashedAt ? row.trashedAt.toISOString() : null,
     caption: row.caption,
     ...(usedCount === undefined ? {} : { usedCount }),
-    placeholder: null,
-    color: null,
+    placeholder: row.placeholder,
+    color: row.color,
     credit: row.credit,
     license: row.license,
     sourceUrl: row.sourceUrl,
@@ -124,13 +128,6 @@ function answer(write: Write): { version: string } {
   if (write.ok) return { version: versionOf(write.rev) };
   if (write.reason === "missing") throw new NotFoundError("No such media.");
   throw new VersionConflictError(versionOf(write.rev), "The file changed since it was loaded.");
-}
-
-/** A fresh ArrayBuffer of a view's bytes, not `bytes.buffer`, which may be a larger allocation. */
-function bufferOf(bytes: Uint8Array): ArrayBuffer {
-  const buffer = new ArrayBuffer(bytes.byteLength);
-  new Uint8Array(buffer).set(bytes);
-  return buffer;
 }
 
 /** A new key: journal/<year>/<month>/<the name as a slug>-<8 random hex>.<ext>, a valid media id. */
@@ -159,30 +156,6 @@ export function journalMediaAdapter(options: {
   const db: Db = createDb(env.DB);
   // The binding's `put` takes a wider `onlyIf` than the helper's narrow interface names; the shapes it uses agree.
   const bucket = env.MEDIA as unknown as R2BucketLike;
-
-  /** The picture's size, by the Images binding; null for a picture it reports no size for. */
-  async function measure(bytes: Uint8Array): Promise<{ width: number; height: number } | null> {
-    let info: Awaited<ReturnType<Env["IMAGES"]["info"]>>;
-    try {
-      info = await env.IMAGES.info(new Blob([bufferOf(bytes)]).stream());
-    } catch (error) {
-      throw new RefusedError(
-        `Cloudflare Images could not read the picture, so nothing was stored (${error instanceof Error ? error.message : String(error)}).`,
-      );
-    }
-    return "width" in info && "height" in info ? { width: info.width, height: info.height } : null;
-  }
-
-  /** One edit through the Images binding (site-runtime's editImage), in the picture's own type. */
-  async function reencode(
-    body: ReadableStream | Uint8Array,
-    edit: { rotate?: 90 | 180 | 270; flip?: "h" | "v"; maxEdge?: number },
-    format: Encoded,
-    quality: number,
-  ): Promise<Uint8Array> {
-    const response = await editImage(env.IMAGES, body, { ...edit, format, quality });
-    return new Uint8Array(await response.arrayBuffer());
-  }
 
   async function row(id: string): Promise<Row> {
     const found = await journalMediaRepo.getJournalMedia(db, id);
@@ -229,11 +202,19 @@ export function journalMediaAdapter(options: {
   /**
    * Puts new bytes under a file's key as its newest revision, its current ones copied to BACKUPS
    * first: the one way a stored file's bytes change (replace, transform, resize, revert). The caller
-   * has claimed the version, so a stale writer never gets here.
+   * has claimed the version, so a stale writer never gets here. A placeholder and color not given
+   * (a turn, a revert) are made again from the new bytes.
    */
   async function swapBytes(
     file: Row,
-    next: { bytes: Uint8Array; width: number | null; height: number | null; reason: string },
+    next: {
+      bytes: Uint8Array;
+      width: number | null;
+      height: number | null;
+      reason: string;
+      placeholder?: string | null;
+      color?: string | null;
+    },
   ): Promise<MediaItem> {
     const current = await env.MEDIA.get(file.key);
     if (!current) throw new NotFoundError("No such media.");
@@ -257,11 +238,16 @@ export function journalMediaAdapter(options: {
       reason: next.reason,
       sha256,
     });
+    const look =
+      next.placeholder !== undefined
+        ? { placeholder: next.placeholder, color: next.color ?? null }
+        : await placeholderAndColor(env.IMAGES, next.bytes);
     await journalMediaRepo.writeJournalMediaAtRev(db, file.key, {
       bytes: next.bytes.byteLength,
       width: next.width,
       height: next.height,
       sha256,
+      ...look,
     });
     return itemOf(await row(file.key));
   }
@@ -271,25 +257,8 @@ export function journalMediaAdapter(options: {
     answer(await journalMediaRepo.writeJournalMediaAtRev(db, id, {}, revOf(expectedVersion)));
   }
 
-  /** Shrinks a re-encodable picture whose longer edge is over RESIZE; null when it is within it. */
-  async function shrunk(
-    bytes: Uint8Array,
-    contentType: string,
-    size: { width: number; height: number } | null,
-  ) {
-    if (!REENCODED.has(contentType) || !size || Math.max(size.width, size.height) <= RESIZE.maxEdge)
-      return null;
-    const smaller = await reencode(
-      bytes,
-      { maxEdge: RESIZE.maxEdge },
-      contentType as Encoded,
-      RESIZE.quality,
-    );
-    return { bytes: smaller, size: await measure(smaller) };
-  }
-
   return {
-    limits: { maxBytes: MAX_BYTES, types: Object.keys(EXTENSIONS) },
+    limits: { maxBytes: MAX_BYTES, types: [...Object.keys(EXTENSIONS), ...CONVERTED] },
     lenses: ["unattached", "no-alt", "large", "duplicates", "license-expired", "oversized"],
     // No Journal page is sized by a file's address, so a replace may change a picture's size, and
     // a quarter turn turns in place.
@@ -363,17 +332,14 @@ export function journalMediaAdapter(options: {
     },
 
     async upload(input) {
-      // Read before any shrink, which drops the metadata with the pixels.
-      const found = readEmbedded(input.bytes, input.contentType);
-      const original = await measure(input.bytes);
-      const small = input.resize ? await shrunk(input.bytes, input.contentType, original) : null;
-      const bytes = small?.bytes ?? input.bytes;
-      const size = small ? small.size : original;
-      const key = newKey(input.filename, input.contentType);
+      // Converted from HEIC, its location taken out, shrunk, measured and its metadata read.
+      const prepared = await prepareUpload(env.IMAGES, input, { resize: RESIZE });
+      const { bytes, contentType, embedded: found, resizedFrom, original } = prepared;
+      const key = newKey(prepared.filename, contentType);
 
-      await env.MEDIA.put(key, bufferOf(bytes), {
-        httpMetadata: { contentType: input.contentType },
-        customMetadata: { originalName: input.filename },
+      await env.MEDIA.put(key, bytes, {
+        httpMetadata: { contentType },
+        customMetadata: { originalName: prepared.filename },
       });
       const embedded = (["credit", "license", "caption", "takenAt"] as const).filter(
         (f) => found[f],
@@ -382,12 +348,14 @@ export function journalMediaAdapter(options: {
       try {
         await journalMediaRepo.insertJournalMedia(db, {
           key,
-          filename: input.filename,
-          contentType: input.contentType,
+          filename: prepared.filename,
+          contentType,
           bytes: bytes.byteLength,
-          width: size?.width ?? null,
-          height: size?.height ?? null,
-          sha256: small ? await sha256Hex(bytes) : (input.sha256 ?? (await sha256Hex(bytes))),
+          width: prepared.width,
+          height: prepared.height,
+          sha256: prepared.sha256,
+          placeholder: prepared.placeholder,
+          color: prepared.color,
           alt: input.alt,
           credit: found.credit ?? "",
           license: found.license ?? "",
@@ -402,26 +370,18 @@ export function journalMediaAdapter(options: {
         throw error;
       }
 
-      let resizedFrom: MediaUploaded["resizedFrom"];
-      if (small && original) {
-        resizedFrom = {
-          width: original.width,
-          height: original.height,
-          bytes: input.bytes.byteLength,
-        };
+      if (resizedFrom && original) {
         // The original, as the revision the shrink replaced, in BACKUPS and in the file's history.
         const backupKey = `${BACKUP_PREFIX}/resized/${uploadedAt.toISOString()}/${key}`;
-        await env.BACKUPS.put(backupKey, bufferOf(input.bytes), {
-          httpMetadata: { contentType: input.contentType },
-        });
+        await env.BACKUPS.put(backupKey, original, { httpMetadata: { contentType } });
         await journalMediaRepo.addJournalMediaRevision(db, {
           mediaKey: key,
           at: uploadedAt,
-          bytes: input.bytes.byteLength,
-          width: original.width,
-          height: original.height,
+          bytes: original.byteLength,
+          width: resizedFrom.width,
+          height: resizedFrom.height,
           reason: input.sourceUrl ? "import" : "upload",
-          sha256: input.sha256 ?? (await sha256Hex(input.bytes)),
+          sha256: await sha256Hex(original),
           backupKey,
         });
         const stored = await row(key);
@@ -518,16 +478,12 @@ export function journalMediaAdapter(options: {
       );
     },
 
-    // The image route sends no long-lived copy and keeps no sized ones, so nothing is stale.
+    // Pages name a file with its bytes' hash (lib/journal-images.server.ts), and the size route keys
+    // each size by the object's etag, so nothing is stale.
     async replace(id, input) {
-      const size = await measure(input.bytes);
+      const prepared = await prepareUpload(env.IMAGES, { ...input, alt: "" });
       await claim(id, input.expectedVersion);
-      const item = await swapBytes(await row(id), {
-        bytes: input.bytes,
-        width: size?.width ?? null,
-        height: size?.height ?? null,
-        reason: "replace",
-      });
+      const item = await swapBytes(await row(id), { ...prepared, reason: "replace" });
       await audit("journal-media.replace", { key: id, changeId: input.changeId });
       return { item, sizesNeedPurge: false };
     },
@@ -547,12 +503,12 @@ export function journalMediaAdapter(options: {
       }
       const object = await env.MEDIA.get(id);
       if (!object) throw new NotFoundError("No such media.");
-      const bytes = await reencode(
-        object.body,
-        TRANSFORMS[input.op],
-        file.contentType as Encoded,
-        TRANSFORM_QUALITY,
-      );
+      const edited = await editImage(env.IMAGES, object.body, {
+        ...TRANSFORMS[input.op],
+        format: file.contentType as Encoded,
+        quality: TRANSFORM_QUALITY,
+      });
+      const bytes = new Uint8Array(await edited.arrayBuffer());
       const swapped = turnsSize(input.op);
       await claim(id, input.expectedVersion);
       const item = await swapBytes(file, {
@@ -608,18 +564,21 @@ export function journalMediaAdapter(options: {
       const file = await rowAt(id, input.expectedVersion);
       const object = await env.MEDIA.get(id);
       if (!object) throw new NotFoundError("No such media.");
-      const small = await shrunk(new Uint8Array(await object.arrayBuffer()), file.contentType, {
-        width: file.width ?? 0,
-        height: file.height ?? 0,
-      });
-      if (!small) return { resized: false, item: itemOf(file) };
+      const small = await prepareUpload(
+        env.IMAGES,
+        {
+          bytes: new Uint8Array(await object.arrayBuffer()),
+          contentType: file.contentType,
+          filename: file.filename ?? id,
+          alt: "",
+          changeId: input.changeId,
+          resize: true,
+        },
+        { resize: RESIZE },
+      );
+      if (!small.resizedFrom) return { resized: false, item: itemOf(file) };
       await claim(id, input.expectedVersion);
-      const item = await swapBytes(file, {
-        bytes: small.bytes,
-        width: small.size?.width ?? null,
-        height: small.size?.height ?? null,
-        reason: "resize",
-      });
+      const item = await swapBytes(file, { ...small, reason: "resize" });
       await audit("journal-media.resize", { key: id, changeId: input.changeId });
       return { resized: true, item };
     },

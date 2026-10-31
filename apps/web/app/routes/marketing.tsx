@@ -141,8 +141,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </Link>
         </div>
         <BookGrid>
-          {books.slice(0, 10).map((b, i) => (
-            <BookCard key={b.slug} book={b} priority={i < 6} />
+          {books.slice(0, 10).map((b) => (
+            <BookCard key={b.slug} book={b} />
           ))}
         </BookGrid>
       </Container>

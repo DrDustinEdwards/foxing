@@ -69,7 +69,8 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: `${book.title} by ${book.author}`,
       description,
       pathname: location.pathname,
-      image: `/og/book/${book.slug}`,
+      // The share card (routes/og-book.tsx), drawn at site-runtime's 1200x630.
+      image: { url: `/og/book/${book.slug}`, width: 1200, height: 630, type: "image/png" },
       imageAlt: `${book.title} by ${book.author}`,
       type: "book",
       noindex: community,
