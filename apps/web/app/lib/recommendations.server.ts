@@ -5,7 +5,7 @@
 // browser, not here.
 import { createDb, getRecommendations } from "@foxing/core";
 import type { RecommendationSet } from "@foxing/core";
-import { anthropicCaller } from "./anthropic.server";
+import { anthropicStructured } from "./anthropic.server";
 
 export async function loadRecommendations(
   env: Env,
@@ -13,9 +13,8 @@ export async function loadRecommendations(
   opts: { refresh?: boolean } = {},
 ): Promise<RecommendationSet> {
   const db = createDb(env.DB);
-  const caller = anthropicCaller(env);
   return getRecommendations(db, userId, {
-    caller,
+    caller: anthropicStructured(env),
     kv: env.APP_KV ?? null,
     refresh: opts.refresh,
   });

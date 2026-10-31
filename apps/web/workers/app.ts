@@ -29,7 +29,7 @@ import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, type ServerBuild, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
-import { anthropicCaller } from "../app/lib/anthropic.server";
+import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
@@ -94,6 +94,7 @@ const api = createApi({
   // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
   // other route works normally; only an actual companion call fails, cleanly, until
   // `wrangler secret put ANTHROPIC_API_KEY` runs.
+  resolveStructuredCaller: (env) => anthropicStructured(env as unknown as Env),
   resolveCompanionCaller: (env) => {
     const caller = anthropicCaller(env as unknown as Env);
     if (caller) return caller;
