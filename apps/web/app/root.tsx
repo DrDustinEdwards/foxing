@@ -3,7 +3,15 @@ import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@f
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import { LinkPrefetch } from "capsomer/react/link";
 import { useState } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useMatches,
+  useRouteLoaderData,
+} from "react-router";
 import type { Route } from "./+types/root";
 // Foxing's faces from its own origin (Fontsource, the files Google Fonts serves, bundled under /assets/): no
 // stylesheet from fonts.googleapis.com blocking the first paint, and no second origin to connect to. The variable
@@ -52,6 +60,17 @@ const NO_FLASH = `(function(){try{var t=localStorage.getItem("foxing-theme");if(
 export function Layout({ children }: { children: React.ReactNode }) {
   // The CSP nonce (workers/security-headers.ts) for every script this document renders.
   const nonce = useNonce();
+  // HYDRATION IS OPT-IN BY ROUTE (`handle = { hydrate: true }`), as on dustinedwards.info. The public pages (home, the
+  // catalog, authors, awards, picks, the Journal, profiles, lists and the guides) send no React: their header, theme
+  // button, search palette and search field run from /site.js (app/site.ts) and its islands (app/islands/). The
+  // signed-in app, the reader, the admin, sign-in and sign-up, and search with its filters opt in. A signed-in reader
+  // hydrates on every page: their header carries the account panel, Sign out and the Your Foxing bar, which are
+  // React's, and their pages are private and never edge-cached.
+  const signedIn = Boolean(useRouteLoaderData<typeof loader>("root")?.navUser);
+  const matches = useMatches();
+  const hydrates =
+    signedIn ||
+    matches.some((m) => (m.handle as { hydrate?: boolean } | undefined)?.hydrate === true);
   return (
     <html
       lang="en"
@@ -68,11 +87,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
         <Meta />
         <Links nonce={nonce} />
+        {/* Same-origin, so script-src 'self' allows it; the nonce is renewed per reader like every other. Not on a
+            hydrating page, whose React components wire the same markup themselves. */}
+        {hydrates ? null : <script src="/site.js" defer nonce={nonce} />}
       </head>
       <body>
         {children}
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
+        {hydrates ? (
+          <>
+            <ScrollRestoration nonce={nonce} />
+            <Scripts nonce={nonce} />
+          </>
+        ) : null}
       </body>
     </html>
   );

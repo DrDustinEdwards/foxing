@@ -63,3 +63,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
 export default function Read({ loaderData }: Route.ComponentProps) {
   return <ReaderView {...loaderData} />;
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

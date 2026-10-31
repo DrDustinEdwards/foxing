@@ -22,6 +22,11 @@ import {
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
+import {
+  SPECULATION_RULES_HEADER,
+  SPECULATION_RULES_PATH,
+  speculationRulesResponse,
+} from "@dustinedwards/site-runtime/prefetch";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
@@ -72,6 +77,46 @@ const PUBLIC_PREFIXES = [
 function isPublicPath(pathname: string): boolean {
   if (PUBLIC_EXACT.has(pathname)) return true;
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
+/**
+ * Hover prefetch (site-runtime ./prefetch): the paths beyond the package's own exclusions (/admin, /api, /auth,
+ * sign-out and /cdn-cgi; links to files and links with a query). The signed-in app only sends a signed-out reader on
+ * to /login, and the reader is a heavy app of its own; /sign-in/confirm spends a one-time sign-in link; /join/:code and
+ * /find-next-book act on a GET (a club join; KV and an AI call). /lists covers the signed-in index and /lists/new as
+ * well as a public list.
+ */
+const PREFETCH_EXCLUDE = [
+  "/home",
+  "/me",
+  "/settings",
+  "/library",
+  "/shelves",
+  "/onboarding",
+  "/passkey",
+  "/sign-in",
+  "/clubs",
+  "/join",
+  "/feed",
+  "/people",
+  "/diary",
+  "/lists",
+  "/notifications",
+  "/vocabulary",
+  "/commonplace",
+  "/highlights",
+  "/stats",
+  "/goals",
+  "/year",
+  "/find-next-book",
+  "/companion-test",
+  "/read",
+  "/og",
+];
+
+/** A Better Auth session cookie: the page may be personalized, and a signed-in reader's pages never prefetch. */
+function hasSession(request: Request): boolean {
+  return (request.headers.get("Cookie") ?? "").includes("better-auth");
 }
 
 // Injected at build time (vite define). Namespaces the search suggestions' cache per deploy.
@@ -291,6 +336,12 @@ app.get("/media/journal/*", async (c) => {
   return new Response(object.body, { headers });
 });
 
+// The prefetch rules every signed-out page's Speculation-Rules header names (handleFetch): one file, the same for every
+// page, so no route renders it.
+app.get(SPECULATION_RULES_PATH, (c) =>
+  speculationRulesResponse({ exclude: PREFETCH_EXCLUDE }, c.req.raw),
+);
+
 app.all("*", async (c) => {
   const req = c.req.raw;
   const url = new URL(req.url);
@@ -312,7 +363,7 @@ app.all("*", async (c) => {
   // stored in the cache. A HEAD reaches the Renderer as a GET (forRenderer), so a stored page is a whole one, and
   // forReader gives the HEAD reader no body.
   const ctx = c.executionCtx as unknown as ExecutionContext;
-  const signedIn = (req.headers.get("Cookie") ?? "").includes("better-auth");
+  const signedIn = hasSession(req);
   if ((req.method === "GET" || req.method === "HEAD") && isPublicPath(url.pathname) && !signedIn) {
     // No Renderer entrypoint (the vitest pool runs the Worker without ctx.exports): render a copy
     // here, as the Renderer would see it, stored nowhere.
@@ -489,6 +540,9 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // 404 is an answer about a record, not a broken link, so it is not.
 async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const response = withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  // Hover prefetch for a signed-out reader's pages, stored ones included (site-runtime ./prefetch).
+  if (!hasSession(request) && (response.headers.get("Content-Type") ?? "").includes("text/html"))
+    response.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
   if (!new URL(request.url).pathname.startsWith("/api/"))
     countNotFound(env.DB, request, response, ctx);
   return response;

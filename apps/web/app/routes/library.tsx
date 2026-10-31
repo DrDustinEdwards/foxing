@@ -324,3 +324,6 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
     </section>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

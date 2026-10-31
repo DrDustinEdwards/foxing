@@ -244,3 +244,6 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
     </li>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

@@ -23,7 +23,15 @@
     "apps/web": {
       // workers/app.ts is wrangler's `main`; the *.setup.ts files are Playwright
       // setup projects matched by a RegExp testMatch, which Knip does not read.
-      "entry": ["workers/app.ts", "scripts/*.mjs", "e2e/*.setup.ts"],
+      // app/site.ts and app/islands/*.ts are devkit siteScript's entries (/site.js
+      // and the islands it starts, vite.config.ts), named by convention, not import.
+      "entry": [
+        "workers/app.ts",
+        "scripts/*.mjs",
+        "e2e/*.setup.ts",
+        "app/site.ts",
+        "app/islands/*.ts"
+      ],
       // .css is in the pattern so `@import "tailwindcss"` in app/app.css counts
       // (knip.dev/features/compilers: the css compiler runs when tailwindcss is a
       // dependency, but only on project files).
