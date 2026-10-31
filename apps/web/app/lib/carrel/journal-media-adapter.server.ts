@@ -36,6 +36,7 @@ import {
   VersionConflictError,
 } from "@dustinedwards/site-api";
 import { type R2BucketLike, replaceObject } from "@dustinedwards/site-api/r2";
+import { toHex } from "@dustinedwards/site-runtime/encoding";
 import { editImage } from "@dustinedwards/site-runtime/image";
 import { createDb, type Db, journalMediaRepo } from "@foxing/core";
 import { SITE_ORIGIN } from "../origins";
@@ -135,9 +136,7 @@ function newKey(filename: string, contentType: string): string {
   const now = new Date();
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
   const name = slugify(filename.replace(/\.[A-Za-z0-9]{1,5}$/, ""), { max: 60 }) || "image";
-  const random = [...crypto.getRandomValues(new Uint8Array(4))]
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+  const random = toHex(crypto.getRandomValues(new Uint8Array(4)));
   return `journal/${now.getUTCFullYear()}/${month}/${name}-${random}.${EXTENSIONS[contentType]}`;
 }
 
