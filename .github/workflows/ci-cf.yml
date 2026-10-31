@@ -33,6 +33,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to a pull request cancels its older run; a push to the default branch never does.
+concurrency:
+  group: ci-cf-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -86,7 +91,7 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@a0fbcb5c7f65e4183a97989511f9d352950ad90b # v0.20.7
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@d9d5a3448a50f183c3c8b4a5f293717728717245 # v0.20.8
     with:
       worker-name: foxing
       health-url: https://foxing.app/health
