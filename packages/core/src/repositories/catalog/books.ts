@@ -456,12 +456,14 @@ export async function listAuthorSlugs(db: Db): Promise<string[]> {
   return rows.map((r) => r.author_slug);
 }
 
-/** Minimal rows for the sitemap: catalog slugs + last-modified. */
-export async function listSitemapBooks(db: Db): Promise<Array<{ slug: string; updatedAt: Date }>> {
+/** Minimal rows for the sitemap: catalog slugs, last-modified and cover. */
+export async function listSitemapBooks(
+  db: Db,
+): Promise<Array<{ slug: string; updatedAt: Date; coverUrl: string | null }>> {
   const rows = await db
-    .select({ slug: books.slug, updatedAt: books.updatedAt })
+    .select({ slug: books.slug, updatedAt: books.updatedAt, coverUrl: books.coverUrl })
     .from(books)
     .where(eq(books.sourceType, "catalog"))
     .orderBy(asc(books.slug));
-  return rows.map((r) => ({ slug: r.slug, updatedAt: r.updatedAt ?? new Date(0) }));
+  return rows.map((r) => ({ ...r, updatedAt: r.updatedAt ?? new Date(0) }));
 }

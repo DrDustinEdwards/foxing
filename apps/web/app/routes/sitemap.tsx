@@ -36,6 +36,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       loc: `/books/${b.slug}`,
       lastmod: b.updatedAt,
       priority: 0.8,
+      ...(b.coverUrl ? { images: [b.coverUrl] } : {}),
     })),
     ...authors.map((slug) => ({ loc: `/authors/${slug}`, priority: 0.6 })),
     ...awards.map((a) => ({ loc: `/awards/${a.slug}`, priority: 0.5 })),

@@ -9,7 +9,7 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
 import { getAuth } from "~/lib/auth.server";
-import { coverSrc, coverSrcSet } from "~/lib/images";
+import { coverAttributes } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { bookLd, buildMeta, ldJson } from "~/lib/seo";
 import { data } from "react-router";
@@ -21,9 +21,10 @@ import type { Route } from "./+types/book-detail";
  * cover URL a Link header cannot carry (preloads refuses it), which would otherwise fail the page.
  */
 function coverLink(src: string | null): string {
-  if (!src || coverSrcSet(src)) return "";
+  const attrs = src ? coverAttributes(src) : null;
+  if (!attrs || attrs.srcset) return "";
   try {
-    return preloads([{ href: coverSrc(src), as: "image" }]).header;
+    return preloads([{ href: attrs.src, as: "image" }]).header;
   } catch {
     return "";
   }
@@ -93,7 +94,8 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: `${book.title} by ${book.author}`,
       description,
       pathname: location.pathname,
-      image: `/og/book/${book.slug}`,
+      // The share card (routes/og-book.tsx), drawn at site-runtime's 1200x630.
+      image: { url: `/og/book/${book.slug}`, width: 1200, height: 630, type: "image/png" },
       imageAlt: `${book.title} by ${book.author}`,
       type: "book",
       noindex: community,

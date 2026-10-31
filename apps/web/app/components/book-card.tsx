@@ -15,22 +15,13 @@ export type BookCardData = {
  * Content-card variant (design-system Rule 15): the edge strengthens on hover and the
  * title takes the accent text. The whole card is the link target.
  */
-export function BookCard({
-  book,
-  priority,
-  className,
-}: {
-  book: BookCardData;
-  priority?: boolean;
-  className?: string;
-}) {
+export function BookCard({ book, className }: { book: BookCardData; className?: string }) {
   return (
     <Link to={`/books/${book.slug}`} className={cn("fx-book-card", className)}>
       <CoverImage
         src={book.coverUrl}
         alt={`${book.title} by ${book.author}`}
         fallbackLabel={book.title}
-        priority={priority}
         sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
       />
       <div className="fx-book-card-body">

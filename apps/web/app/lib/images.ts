@@ -1,45 +1,35 @@
-// Cloudflare Image Transformations in front of R2 covers.
-//
-// Covers are served from the R2 custom domain covers.foxing.app (already live).
-// When Image Transformations is enabled on the foxing.app zone, we can request
-// resized/reformatted variants via the /cdn-cgi/image/<options>/<path> URL form,
-// same origin. AVIF/WebP negotiation is automatic with format=auto.
-//
-// Gating: VITE_IMAGES_TRANSFORM. Default OFF so the workers.dev preview (and any
-// environment where the zone feature is not yet enabled) serves the raw R2 URL and
-// never shows a broken /cdn-cgi/image 404. Flip to "true" once Transformations is
-// enabled on the zone (dashboard step), then rebuild + deploy.
+// Every picture a page shows, through site-runtime's defineImages: covers from the COVERS bucket at
+// /media/covers/<key> and Journal pictures from MEDIA at /media/journal/<key> (workers/app.ts), each
+// size from one closed set, as AVIF and WebP.
+import { defineImages } from "@dustinedwards/site-runtime/image";
 import { COVER_ORIGIN } from "./origins";
 
-const TRANSFORM = import.meta.env.VITE_IMAGES_TRANSFORM === "true";
+/** Every cover is drawn at this size (2:3), so a page sizes one without reading it. */
+export const COVER_SIZE = { width: 484, height: 726 };
 
-/** The responsive widths we render covers at (1x/2x for the common display sizes). */
-export const COVER_WIDTHS = [160, 240, 320, 400, 480, 640] as const;
+export const images = defineImages({
+  uses: {
+    // Covers shown up to about 80px (diary, picks), and everything larger up to the 260px detail cover.
+    coverThumb: { layout: "constrained", width: 80 },
+    cover: { layout: "constrained", width: 240 },
+    // A Journal post's cover, the column's width.
+    journal: { layout: "constrained", width: 768 },
+  },
+  // One more size between a cover's 2x and the original, and the Journal's 1x on a phone.
+  breakpoints: [480],
+});
 
-function transform(src: string, options: string): string {
-  if (!TRANSFORM) return src;
-  try {
-    const u = new URL(src);
-    if (u.origin !== COVER_ORIGIN) return src; // only our covers zone
-    return `${COVER_ORIGIN}/cdn-cgi/image/${options}${u.pathname}`;
-  } catch {
-    return src;
-  }
-}
-
-/** A single sized cover URL (used for the `src` fallback). */
-export function coverSrc(src: string, width = 400): string {
-  return transform(src, `width=${width},format=auto,quality=82,fit=cover`);
-}
-
-/** A responsive srcset string across COVER_WIDTHS. */
-export function coverSrcSet(src: string): string {
-  if (!TRANSFORM) return "";
-  return COVER_WIDTHS.map((w) => `${coverSrc(src, w)} ${w}w`).join(", ");
-}
-
-/** A tiny, heavily blurred variant used as the LQIP background. */
-export function coverPlaceholder(src: string): string {
-  if (!TRANSFORM) return "";
-  return transform(src, "width=24,quality=30,blur=40,format=auto,fit=cover");
+/**
+ * A cover's attributes for one use (`sizes` names the layout where it differs from the use's): one on
+ * covers.foxing.app is asked for same origin, through the size route; any other address as it is.
+ */
+export function coverAttributes(
+  coverUrl: string,
+  options: { use?: "cover" | "coverThumb"; sizes?: string } = {},
+) {
+  const stored = coverUrl.startsWith(`${COVER_ORIGIN}/`)
+    ? { src: `/media/covers/${coverUrl.slice(COVER_ORIGIN.length + 1)}`, ...COVER_SIZE }
+    : { src: coverUrl, width: null, height: null };
+  const attrs = images.attributes(stored, options.use ?? "cover");
+  return { ...attrs, sizes: options.sizes ?? attrs.sizes };
 }
