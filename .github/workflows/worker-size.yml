@@ -19,19 +19,19 @@ concurrency:
 
 jobs:
   worker-size:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@64997ae3facf4360eb676c57b7a5b5e8ec3350de # v0.18.0
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@956dc10b8a0fbf3128df41c7c21c9441392fabda # v0.20.5
     with:
       package-manager: pnpm
-      install: pnpm install --frozen-lockfile
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile'
       working-directory: apps/web
       prepare: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc && pnpm --filter web build
 
   # The admin MCP Worker in mcp/: its own npm package and lockfile, so its own install. devkit's bin comes from the
   # root install; the budget is mcp/.worker-size.json.
   mcp:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@64997ae3facf4360eb676c57b7a5b5e8ec3350de # v0.18.0
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@956dc10b8a0fbf3128df41c7c21c9441392fabda # v0.20.5
     with:
       package-manager: pnpm
-      install: pnpm install --frozen-lockfile && npm ci --prefix mcp
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile && npm ci --prefix mcp'
       working-directory: mcp
       prepare: cp mcp/wrangler.jsonc.example mcp/wrangler.jsonc

@@ -26,8 +26,8 @@ concurrency:
 
 jobs:
   report:
-    uses: DrDustinEdwards/devkit/.github/workflows/no-bloat.yml@64997ae3facf4360eb676c57b7a5b5e8ec3350de # v0.18.0
+    uses: DrDustinEdwards/devkit/.github/workflows/no-bloat.yml@956dc10b8a0fbf3128df41c7c21c9441392fabda # v0.20.5
     with:
       package-manager: pnpm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
-      install: pnpm install --frozen-lockfile --ignore-scripts
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile --ignore-scripts'

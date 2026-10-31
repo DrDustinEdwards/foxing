@@ -27,6 +27,7 @@ export function meta({ location }: Route.MetaArgs) {
       description:
         "Essays and close readings from Foxing: what the great books mean and why they endure.",
       pathname: location.pathname,
+      pageType: "CollectionPage",
     }),
     { tagName: "link", rel: "alternate", type: "application/rss+xml", href: "/journal/rss.xml" },
   ];

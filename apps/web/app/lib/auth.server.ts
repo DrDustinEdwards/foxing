@@ -29,6 +29,8 @@ async function buildAuth(env: Env) {
     sendSignInCode: async ({ email, code }) => {
       await sendSignInCodeEmail(env, email, code);
     },
+    // Five sign-in mails an hour and ten typed codes a day per address.
+    emailLimiter: env.RATE_LIMITER,
   });
 
   return betterAuth({

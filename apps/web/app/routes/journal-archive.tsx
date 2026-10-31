@@ -23,6 +23,7 @@ export function meta({ location }: Route.MetaArgs) {
     title: "All articles",
     description: "Every published essay from the Foxing Journal, browsable by tag.",
     pathname: location.pathname,
+    pageType: "CollectionPage",
   });
 }
 

@@ -11,7 +11,7 @@ import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/compon
 import { getAuth } from "~/lib/auth.server";
 import { coverSrc, coverSrcSet } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
-import { bookLd, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
+import { bookLd, buildMeta, ldJson } from "~/lib/seo";
 import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
 
@@ -99,13 +99,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       noindex: community,
     }),
     ldJson(bookLd(book)),
-    ldJson(
-      breadcrumbLd([
-        { name: "Home", path: "/" },
-        { name: "Books", path: "/books" },
-        { name: book.title, path: `/books/${book.slug}` },
-      ]),
-    ),
   ];
 }
 

@@ -71,7 +71,7 @@
     "producers": [{ "queue": "foxing-companion-cache", "binding": "COMPANION_CACHE_QUEUE" }],
     "consumers": [{ "queue": "foxing-companion-cache", "max_batch_size": 5, "max_retries": 3 }]
   },
-  // 0 8: companion cache. */5: push sweep. 17 3: nightly D1 backup (workers/app.ts).
+  // 0 8: companion cache. */5: push sweep. 17 3: nightly backup, media copy, 404 prune (workers/app.ts CRON_JOBS).
   "triggers": { "crons": ["0 8 * * *", "*/5 * * * *", "17 3 * * *"] },
   "vars": {
     "BETTER_AUTH_URL": "https://<your-worker>.workers.dev",

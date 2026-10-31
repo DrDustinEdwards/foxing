@@ -7,15 +7,19 @@
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { type CronJob, runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
   cacheKey,
   forReader,
+  forRenderer,
   privateRender,
   purgeAfterWrite,
   settleCacheHeaders,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
+import { logEvent } from "@dustinedwards/site-runtime/log";
+import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
@@ -31,7 +35,7 @@ import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
-import { runBackup } from "../app/lib/backup.server";
+import { runBackup, runMediaBackup } from "../app/lib/backup.server";
 import {
   CSP_REPORT_PATH,
   cspNonceFor,
@@ -292,20 +296,21 @@ app.all("*", async (c) => {
     return c.redirect(dest.toString(), 301);
   }
   if (canonical) return canonical;
-  // An anonymous GET of a public page goes through the Workers cache: the Renderer's response is
+  // An anonymous GET or HEAD of a public page goes through the Workers cache: the Renderer's response is
   // stored under the path and the query without tracking parameters, and a stored one is answered
   // without rendering (a 304 to a reader who already holds it). A Better Auth session cookie means
   // the page may be personalized, so a signed-in request is rendered here, never served from or
-  // stored in the cache.
+  // stored in the cache. A HEAD reaches the Renderer as a GET (forRenderer), so a stored page is a whole one, and
+  // forReader gives the HEAD reader no body.
   const ctx = c.executionCtx as unknown as ExecutionContext;
   const signedIn = (req.headers.get("Cookie") ?? "").includes("better-auth");
-  if (req.method === "GET" && isPublicPath(url.pathname) && !signedIn) {
+  if ((req.method === "GET" || req.method === "HEAD") && isPublicPath(url.pathname) && !signedIn) {
     // No Renderer entrypoint (the vitest pool runs the Worker without ctx.exports): render a copy
     // here, as the Renderer would see it, stored nowhere.
     const renderer = (ctx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer;
     const page = renderer
-      ? await renderer.fetch(req, { cf: { cacheKey: cacheKey(url) } })
-      : await renderShared(new Request(req), c.env, ctx);
+      ? await renderer.fetch(forRenderer(req), { cf: { cacheKey: cacheKey(url) } })
+      : await renderShared(forRenderer(req), c.env, ctx);
     return forReader(page, req);
   }
   return storedNowhere(await renderPage(req, c.env, ctx));
@@ -364,12 +369,8 @@ type CacheJobMessage = { bookId: string };
 // created since the last sweep (deduped in KV), gated per user by category prefs + quiet
 // hours (domain/push). Kept off the notification write path so core stays binding-free;
 // the cadence trades a little latency for that decoupling. In-app notifications are
-// unaffected. Requires the frequent cron in wrangler.jsonc triggers.
-const PUSH_SWEEP_CRON = "*/5 * * * *";
+// unaffected.
 const PUSH_SWEEP_LOOKBACK_MS = 10 * 60 * 1000;
-
-// Nightly D1 backup into R2 (app/lib/backup.server.ts). Must match wrangler.jsonc triggers.
-const BACKUP_CRON = "17 3 * * *";
 
 async function runPushSweep(env: Env): Promise<void> {
   const db = createDb(env.DB);
@@ -383,37 +384,36 @@ async function runPushSweep(env: Env): Promise<void> {
   await kv.put("push:last_sweep", String(now));
 }
 
-async function scheduled(
-  event: ScheduledController,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<void> {
-  // Nightly cron: dump D1 to the BACKUPS bucket. Awaited, not handed to waitUntil, so a
-  // failed dump fails this invocation (Cron Events shows it) after the log line below, and
-  // /health's backup age grows toward its 26 hour warning. Never swallowed.
-  if (event.cron === BACKUP_CRON) {
-    try {
-      await runBackup(env);
-    } catch (err) {
-      console.error(JSON.stringify({ event: "backup_failed", error: String(err) }));
-      throw err;
-    }
-    return;
-  }
-
-  // Frequent cron: deliver queued push notifications.
-  if (event.cron === PUSH_SWEEP_CRON) {
-    ctx.waitUntil(runPushSweep(env));
-    return;
-  }
-
-  // Daily cron: enqueue catalog books needing cached AI generation.
+async function enqueueCompanionCache(env: Env): Promise<void> {
   const db = createDb(env.DB);
   const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
   const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
-  for (const book of books) {
-    ctx.waitUntil(env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage));
-  }
+  await Promise.all(
+    books.map((book) =>
+      env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage),
+    ),
+  );
+}
+
+// Each trigger's jobs (keys must match wrangler.jsonc triggers.crons), run by site-runtime ./cron:
+// each isolated and recorded in cron_runs, which /health's cron check reads. A failed job fails
+// the invocation (Cron Events shows it) after the others have run.
+const CRON_JOBS: Record<string, (env: Env) => CronJob[]> = {
+  // Nightly: dump D1, copy the MEDIA bucket's new and changed objects, prune the 404 counts.
+  "17 3 * * *": (env) => [
+    { name: "backup", everyMinutes: 1440, run: () => runBackup(env) },
+    { name: "media-backup", everyMinutes: 1440, run: () => runMediaBackup(env) },
+    { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
+  ],
+  "*/5 * * * *": (env) => [{ name: "push-sweep", everyMinutes: 5, run: () => runPushSweep(env) }],
+  // Daily: enqueue catalog books needing cached AI generation.
+  "0 8 * * *": (env) => [
+    { name: "companion-cache", everyMinutes: 1440, run: () => enqueueCompanionCache(env) },
+  ],
+};
+
+async function scheduled(event: ScheduledController, env: Env): Promise<void> {
+  await runJobs(env.DB, CRON_JOBS[event.cron]?.(env) ?? []);
 }
 
 async function queue(
@@ -446,7 +446,11 @@ async function queue(
       });
       message.ack();
     } catch (err) {
-      console.error(`[companion-cache] failed for book ${message.body.bookId}`, err);
+      logEvent(
+        "companion_cache_failed",
+        { book_id: message.body.bookId, error: err },
+        { level: "error" },
+      );
       message.retry();
     }
   }
@@ -462,8 +466,13 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // Security headers on every response this Worker sends: pages, API, redirects, errors, 404s and
 // stored pages (workers/security-headers.ts). Applied outside Hono, on what app.fetch returns:
 // Hono's own error and not-found answers included, and no middleware can copy an older header back.
+// A 404 to a page GET is counted per path and referring host (site-runtime ./not-found); an API's
+// 404 is an answer about a record, not a broken link, so it is not.
 async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  return withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  const response = withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  if (!new URL(request.url).pathname.startsWith("/api/"))
+    countNotFound(env.DB, request, response, ctx);
+  return response;
 }
 
 export default { fetch: handleFetch, scheduled, queue };
