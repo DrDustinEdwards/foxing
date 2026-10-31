@@ -477,7 +477,8 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
 
 // An admin idle for an hour is signed out of Access (site-runtime ./access).
 export default {
-  fetch: (request: Request, env: Env, ctx: ExecutionContext) => withAdminIdle(request, () => handleFetch(request, env, ctx)),
+  fetch: (request: Request, env: Env, ctx: ExecutionContext) =>
+    withAdminIdle(request, () => handleFetch(request, env, ctx)),
   scheduled,
   queue,
 };
