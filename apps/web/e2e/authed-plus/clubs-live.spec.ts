@@ -80,14 +80,15 @@ test.describe("clubs live layer (signed in, plus)", () => {
     await page.getByLabel("Option 1").fill("Middlemarch");
     await page.getByLabel("Option 2").fill("Bleak House");
     await page.getByRole("button", { name: /^create poll$/i }).click();
-    await expect(page.getByRole("button", { name: /Middlemarch/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /^Middlemarch/ })).toBeVisible();
 
     await gotoLive(pageB, clubUrl);
-    await expect(pageB.getByRole("button", { name: /Middlemarch/ })).toBeVisible();
+    await expect(pageB.getByRole("button", { name: /^Middlemarch/ })).toBeVisible();
 
-    // A votes; B's tally for that option should update live to 1.
-    await page.getByRole("button", { name: /Middlemarch/ }).click();
-    await expect(pageB.getByRole("button", { name: /Middlemarch/ })).toContainText("1");
+    // A votes; B's tally for that option should update live to 1. The name is anchored
+    // because once a vote exists the poll chart adds its own "Option Middlemarch" bar button.
+    await page.getByRole("button", { name: /^Middlemarch/ }).click();
+    await expect(pageB.getByRole("button", { name: /^Middlemarch/ })).toContainText("1");
 
     await ctxB.close();
   });
