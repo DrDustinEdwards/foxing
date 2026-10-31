@@ -6,7 +6,7 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { type CronJob, runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   EDGE_CACHE_HEADER,
@@ -481,4 +481,9 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
   return response;
 }
 
-export default { fetch: handleFetch, scheduled, queue };
+// An admin idle for an hour is signed out of Access (site-runtime ./access).
+export default {
+  fetch: (request: Request, env: Env, ctx: ExecutionContext) => withAdminIdle(request, () => handleFetch(request, env, ctx)),
+  scheduled,
+  queue,
+};
