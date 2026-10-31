@@ -20,6 +20,7 @@ import {
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { journalInput } from "@foxing/api";
 import { adminRepo, type catalogRepo, createDb, type Db } from "@foxing/core";
 import { RouterContextProvider } from "react-router";
@@ -341,7 +342,19 @@ export function journalSiteAdapter(options: {
     if (!renderDocument)
       throw new Error("the React Router handler was not passed to the Carrel adapter");
     const slug = input.id ?? UNSAVED_PREVIEW_SLUG;
-    const fields = readSource(input.source);
+    // A bare body with no front matter still previews, as an untitled post (site-api 0.17.0's conformance
+    // asks it to); a save still refuses it.
+    const fields = input.source.startsWith("---")
+      ? readSource(input.source)
+      : {
+          title: "Untitled",
+          excerpt: null,
+          coverImageUrl: null,
+          coverImageAlt: null,
+          tags: [],
+          featured: false,
+          content: input.source,
+        };
     const values = validated(slug, fields);
     const stored = input.id ? await adminRepo.getJournalBySlug(db, input.id) : null;
     const now = new Date();
@@ -389,5 +402,7 @@ export function journalSiteAdapter(options: {
     content,
     preview: { render },
     media: journalMediaAdapter({ env, audit }),
+    // The 404s workers/app.ts counts, for Carrel's report.
+    insight: { notFound: (options) => notFoundReport(env.DB, options) },
   };
 }

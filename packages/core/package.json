@@ -21,8 +21,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.111.0",
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.23.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.49.0",
     "@foxing/types": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "nanoid": "^5.1.0",

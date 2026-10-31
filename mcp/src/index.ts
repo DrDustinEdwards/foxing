@@ -10,7 +10,8 @@
  *
  * Request routing, outermost first:
  *
- *   /mcp                   the provider validates the access token, then
+ *   /mcp                   a foreign Origin is refused, then the provider
+ *                          validates the access token, then
  *                          apiHandler checks the audience, re-checks the
  *                          administrator, rate limits and hands off
  *   /authorize /callback   consent and the Cloudflare Access sign-in, login-handler.ts
@@ -18,14 +19,14 @@
  *                          overall), then the provider, which refuses any
  *                          redirect URI not allowlisted exactly
  *   /token, /.well-known/* the provider
- *   /health                liveness
+ *   /health                liveness, loginHandler's default
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { buildPolicy, scriptHash } from "@dustinedwards/site-runtime/csp";
 import { applyHeaderSet, buildSecurityHeaders } from "@dustinedwards/site-runtime/headers";
 import { CONSENT_STYLE, DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
-import { refuse } from "@dustinedwards/site-runtime/mcp-server";
+import { mcpOriginRefusal, refuse } from "@dustinedwards/site-runtime/mcp-server";
 
 import { apiHandler, publicOrigin, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
@@ -125,6 +126,11 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   // token could be checked against the right audience.
   if (!publicOrigin(env)) {
     return refuse("Foxing Admin is not configured: PUBLIC_ORIGIN is unset. Not configured means not open.", 503);
+  }
+  // Before the token check, so a page on another origin learns nothing from a 401 (DNS rebinding).
+  if (url.pathname === MCP_ROUTE) {
+    const foreign = mcpOriginRefusal(request);
+    if (foreign) return foreign;
   }
   if (url.pathname === "/register" && request.method === "POST") {
     const limited = await registrationLimited(request, env.OAUTH_KV);

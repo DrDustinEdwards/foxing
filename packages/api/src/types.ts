@@ -8,6 +8,7 @@ import type {
   Db,
   LiveMessage,
   Profile,
+  StructuredCaller,
 } from "@foxing/core";
 
 // The live-layer seam. The Worker builds this from the ClubRoom Durable
@@ -42,6 +43,8 @@ export type Variables = {
   viaOperator: boolean;
   profile: Profile | null;
   streamCompanion: CompanionCaller;
+  /** The JSON-schema caller (Find next book), or null with no key. */
+  structuredCompanion: StructuredCaller | null;
   billing: { client: BillingClient; prices: BillingPriceConfig };
   hub: ClubLiveHub;
 };
@@ -57,6 +60,8 @@ export type Env = { Bindings: Bindings; Variables: Variables };
 export type ApiDeps = {
   resolveSession: (req: Request, env: Bindings) => Promise<SessionUser | null>;
   resolveCompanionCaller: (env: Bindings) => CompanionCaller;
+  /** The same for structured replies; absent or null skips the AI tier. */
+  resolveStructuredCaller?: (env: Bindings) => StructuredCaller | null;
   // Same per-request shape (secrets are only reachable via env): the Worker builds the
   // real Stripe client + price ids from its secrets; when they are unset it returns the
   // not-configured stub (methods throw BillingNotConfiguredError) so routes 503 cleanly.

@@ -259,16 +259,16 @@ importers:
         version: 1.7.12(@better-auth/core@1.7.12(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-call@1.4.4(zod@4.6.7))(jose@6.2.3)(kysely@0.29.3)(nanostores@1.4.0))(@better-auth/utils@0.5.0)(@better-fetch/fetch@1.3.2)(better-auth@1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))))(better-call@1.4.4(zod@4.6.7))(nanostores@1.4.0)
       '@drdustinedwards/site-helpers':
         specifier: github:DrDustinEdwards/prelum#v0.23.0
-        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/de60c65d73c3aa6e91d139ab6fb2387c173ce3f9(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/de60c65d73c3aa6e91d139ab6fb2387c173ce3f9(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       '@dustinedwards/d1-dump':
         specifier: github:DrDustinEdwards/d1-dump#v0.7.0
         version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd
       '@dustinedwards/site-api':
-        specifier: github:DrDustinEdwards/site-api#v0.14.0
-        version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d
+        specifier: github:DrDustinEdwards/site-api#v0.17.0
+        version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/1f2225e20b41df991739849267f59b7924a3a03c
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.46.1
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458
+        specifier: github:DrDustinEdwards/site-runtime#v0.49.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8
       '@fontsource-variable/dm-sans':
         specifier: 5.3.0
         version: 5.3.0
@@ -309,8 +309,8 @@ importers:
         specifier: 1.7.12
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
-        specifier: github:DrDustinEdwards/capsomer#v0.53.0
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458)(@playwright/test@1.61.1)(enarratio@0.4.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
+        specifier: github:DrDustinEdwards/capsomer#v0.54.0
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/8aff61bb3e8e8258d659f237b5adbe0e07d157ed(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8)(@playwright/test@1.63.0)(enarratio@0.4.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)
       enarratio:
         specifier: 0.4.0
         version: 0.4.0
@@ -371,7 +371,7 @@ importers:
     devDependencies:
       '@axe-core/playwright':
         specifier: ^4.12.1
-        version: 4.12.1(playwright-core@1.61.1)
+        version: 4.12.1(playwright-core@1.63.0)
       '@cloudflare/vite-plugin':
         specifier: ^1.43.0
         version: 1.43.0(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))(workerd@1.20260701.1)(wrangler@4.107.0(@cloudflare/workers-types@5.20260706.1))
@@ -382,8 +382,8 @@ importers:
         specifier: github:DrDustinEdwards/devkit#v0.20.8
         version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245
       '@playwright/test':
-        specifier: ^1.61.1
-        version: 1.61.1
+        specifier: 1.63.0
+        version: 1.63.0
       '@react-router/dev':
         specifier: 8.5.1
         version: 8.5.1(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(typescript@5.9.3)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1))(wrangler@4.107.0(@cloudflare/workers-types@5.20260706.1))
@@ -412,8 +412,8 @@ importers:
   packages/api:
     dependencies:
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.46.1
-        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458
+        specifier: github:DrDustinEdwards/site-runtime#v0.49.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8
       '@foxing/core':
         specifier: workspace:*
         version: link:../core
@@ -452,12 +452,12 @@ importers:
 
   packages/core:
     dependencies:
-      '@anthropic-ai/sdk':
-        specifier: ^0.111.0
-        version: 0.111.0(zod@4.6.7)
       '@drdustinedwards/site-helpers':
         specifier: github:DrDustinEdwards/prelum#v0.23.0
-        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/de60c65d73c3aa6e91d139ab6fb2387c173ce3f9(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+        version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/de60c65d73c3aa6e91d139ab6fb2387c173ce3f9(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+      '@dustinedwards/site-runtime':
+        specifier: github:DrDustinEdwards/site-runtime#v0.49.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8
       '@foxing/types':
         specifier: workspace:*
         version: link:../types
@@ -496,15 +496,6 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
-
-  '@anthropic-ai/sdk@0.111.0':
-    resolution: {integrity: sha512-1hUqKi+uJQoS5X90+InwHbFAXMvgq0DnsC5hVLEeSRaODiU5WvmqDAcVCmGS2wC0pN9Z8jtWCbWw7JLzeDdm/Q==}
-    hasBin: true
-    peerDependencies:
-      zod: ^3.25.0 || ^4.0.0
-    peerDependenciesMeta:
-      zod:
-        optional: true
 
   '@aws-sdk/checksums@3.1000.16':
     resolution: {integrity: sha512-EKnvkXSmz3IpA99tCNuI+dLFXyZyClSm8zns9sB/elvkU+MTuomAs6toJMPMBf98/fICG/urXDkzGz0/c3yyAQ==}
@@ -1393,29 +1384,30 @@ packages:
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
   '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd}
+    resolution: {gitHosted: true, integrity: sha512-wh59jv3FlcD+kMtx7qFPVq9ZEsHOiMDn3arHyC0MbJ4uS9+o2RoLQeUXn2/5cMXDCr0csYDK8FTPfL9QJ0+0Ew==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd}
     version: 0.7.0
     engines: {node: '>=24.14.1'}
     hasBin: true
 
   '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245}
+    resolution: {gitHosted: true, integrity: sha512-KnBmchKjlIA4RG88XT4QzILxUdg2fp5QBXYHX+zFJpU+/vBQbI8qatKHOXn9/U3nj5Yx2u3IF9WA+15t0npubQ==, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245}
     version: 0.20.8
     hasBin: true
 
-  '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d}
-    version: 0.14.0
+  '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/1f2225e20b41df991739849267f59b7924a3a03c':
+    resolution: {gitHosted: true, integrity: sha512-FCffu38qxnQQn2oXdkySAueZ5vAHQjV6dHkmtoBuftINoNC91ANHlSBUO3XSOgfT4s5hBeM0hZFubsn7Ysd5EA==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/1f2225e20b41df991739849267f59b7924a3a03c}
+    version: 0.17.0
     engines: {node: '>=26.11.1'}
-
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec}
-    version: 0.32.0
     hasBin: true
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458}
-    version: 0.46.1
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/5affa0892160088a052a1ae5acb100116954e01c':
+    resolution: {gitHosted: true, integrity: sha512-k8PVnHf32+lXRfrqwsaA2ldcSUY4w/E4OZ1iaYieDIFHMlthqnJIZB6MtaBqV8l3IYnma7Q+udF3hKyar/R1WQ==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/5affa0892160088a052a1ae5acb100116954e01c}
+    version: 0.45.1
+    hasBin: true
+
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8':
+    resolution: {gitHosted: true, integrity: sha512-+LG6igej4Jdihd1Ks+cylK5cSAcd97lIR0n0N6fgbivhZEi2n9FGSMs0KqZ662uDu1gVq2XhcoCtsE1ZJmWj2Q==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8}
+    version: 0.49.0
     hasBin: true
 
   '@egjs/hammerjs@2.0.17':
@@ -2997,9 +2989,9 @@ packages:
     resolution: {integrity: sha512-C2Xj8FZ0uHWeCXXqX5B4/gVFQmtSkiuOolzAgutjTfseNOHT3pUjljDZsTSxXFGgio54bCzVFqmEOUrIVk8RDA==}
     engines: {node: '>=20.0.0'}
 
-  '@playwright/test@1.61.1':
-    resolution: {integrity: sha512-8nKv6+0RJSL9FE4jYOEGXnPeM/Hg12qZpmqzZjRh3qM0Y7c3z1mrOTfFLids72RDQYVh9WpLEfR5WdpNX4fkig==}
-    engines: {node: '>=18'}
+  '@playwright/test@1.63.0':
+    resolution: {integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==}
+    engines: {node: '>=20'}
     hasBin: true
 
   '@poppinss/colors@4.1.6':
@@ -3780,9 +3772,6 @@ packages:
   '@speed-highlight/core@1.2.17':
     resolution: {integrity: sha512-Z92FwKpCtfaW1V0jTU/fh3QzYEZN8wDwrzRIBoADCJfn4mJCNcJN/XegifX7BDrQ8/h9Xh/JnbyMchL0FqXrkg==}
 
-  '@stablelib/base64@1.0.1':
-    resolution: {integrity: sha512-1bnPQqSxSuc3Ii6MhBysoWCg58j97aUjuCSZrGSmDxNqtytIi0k8utUenAwTZN4V5mXXYGsVUI9zeBqy+jBOSQ==}
-
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -4286,9 +4275,9 @@ packages:
   caniuse-lite@1.0.30001792:
     resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e}
-    version: 0.53.0
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/8aff61bb3e8e8258d659f237b5adbe0e07d157ed:
+    resolution: {gitHosted: true, integrity: sha512-ZLLGQXIAvvgGM5IWQWk1OKjeZlD1Fi+cmcmEhLbIyYj572hv5BM64mftZU6LOb33Z6v9T7BGyvSwWu9mPJqkCg==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/8aff61bb3e8e8258d659f237b5adbe0e07d157ed}
+    version: 0.54.0
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
@@ -4304,8 +4293,8 @@ packages:
       '@lezer/highlight': ^1.2.3
       '@playwright/test': ^1.50.0
       enarratio: ^0.4.0
-      react: ^19.2.0
-      react-dom: ^19.2.0
+      react: 19.2.7
+      react-dom: 19.2.7
       react-router: ^8.0.0
     peerDependenciesMeta:
       '@axe-core/playwright':
@@ -5157,9 +5146,6 @@ packages:
     resolution: {integrity: sha512-7MptL8U0cqcFdzIzwOTHoilX9x5BrNqye7Z/LuC7kCMRio1EMSyqRK3BEAUD7sXRq4iT4AzTVuZdhgQ2TCvYLg==}
     engines: {node: '>=8.6.0'}
 
-  fast-sha256@1.3.0:
-    resolution: {integrity: sha512-n11RGP/lrWEFI/bWdygLxhI+pVeo1ZYIVwvvPkW7azl/rOy+F3HYRZ2K5zeE9mmkhQppyv9sQFx0JM9UabnpPQ==}
-
   fast-xml-builder@1.2.0:
     resolution: {integrity: sha512-00aAWieqff+ZJhsXA4g1g7M8k+7AYoMUUHF+/zFb5U6Uv/P0Vl4QZo84/IcufzYalLuEj9928bXN9PbbFzMF0Q==}
 
@@ -5214,11 +5200,6 @@ packages:
   fresh@0.5.2:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
-
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -5474,10 +5455,6 @@ packages:
     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
     engines: {node: '>=6'}
     hasBin: true
-
-  json-schema-to-ts@3.1.1:
-    resolution: {integrity: sha512-+DWg8jCJG2TEnpy7kOm/7/AxaYoaRbjVB4LFZLySZlWn8exGs3A4OLJR966cVvU26N7X9TWxl+Jsw7dzAqKT6g==}
-    engines: {node: '>=16'}
 
   json5@2.2.3:
     resolution: {integrity: sha512-XmOWe7eyHYH14cLdVPoyg+GOH3rYX++KpzrylJwSW98t3Nk+U8XOl8FWKOgwtzdb8lXGf6zYwDUzeHMWfxasyg==}
@@ -6243,14 +6220,14 @@ packages:
   pkg-types@2.3.1:
     resolution: {integrity: sha512-y+ichcgc2LrADuhLNAx8DFjVfgz91pRxfZdI3UDhxHvcVEZsenLO+7XaU5vOp0u/7V/wZ+plyuQxtrDlZJ+yeg==}
 
-  playwright-core@1.61.1:
-    resolution: {integrity: sha512-h7Qlt6m4REp25qvIdvbDtVmD4LqVXfpRxhORv9L0jzETM05p4fuPJ3dKyuSXQxDSbXnmS79HAgi9589lGSpLkg==}
-    engines: {node: '>=18'}
+  playwright-core@1.63.0:
+    resolution: {integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==}
+    engines: {node: '>=20'}
     hasBin: true
 
-  playwright@1.61.1:
-    resolution: {integrity: sha512-DWnY5o3YbLWK4GovuAVwpqL+1VwGNdUGrRr++8j8PtQQzvAVZUIMjKQ90fY689sEJZJBbZVw1rXaOKSTitkzPQ==}
-    engines: {node: '>=18'}
+  playwright@1.63.0:
+    resolution: {integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==}
+    engines: {node: '>=20'}
     hasBin: true
 
   plist@3.1.1:
@@ -6828,9 +6805,6 @@ packages:
   standard-navigation@0.0.5:
     resolution: {integrity: sha512-YAmzwAiiQVocZxO/VGPFiQHcu5pKiz09QIGC0MK6aRMoa3E0QkoTQgcqJr7ZZ3OMiNhu4DkaGElFI5htjOIDbw==}
 
-  standardwebhooks@1.0.0:
-    resolution: {integrity: sha512-BbHGOQK9olHPMvQNHWul6MYlrRTAOKn03rOe4A8O3CLWhNf4YHBqq2HJKKC+sfqpxiBY52pNeesD6jIiLDz8jg==}
-
   statuses@1.5.0:
     resolution: {integrity: sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==}
     engines: {node: '>= 0.6'}
@@ -6943,8 +6917,8 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee}
+  thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee:
+    resolution: {commit: 7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee, repo: git@github.com:edrlab/thorium-locales.git, type: git}
     version: 1.0.0
 
   throat@5.0.0:
@@ -6990,9 +6964,6 @@ packages:
 
   trough@2.2.0:
     resolution: {integrity: sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==}
-
-  ts-algebra@2.0.0:
-    resolution: {integrity: sha512-FPAhNPFMrkwz76P7cdjdmiShwMynZYN6SgOujD1urY4oNm80Ou9oMdmbR45LotcKOXoy7wSmHkRFE6Mxbrhefw==}
 
   ts-interface-checker@0.1.13:
     resolution: {integrity: sha512-Y/arvbn+rrz3JCKl9C4kVNfTfSm2/mEp5FSz5EsZSANGPSlQrpRI5M4PKF+mJnE52jOO90PnPSc3Ur3bTQw0gA==}
@@ -7484,13 +7455,6 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@anthropic-ai/sdk@0.111.0(zod@4.6.7)':
-    dependencies:
-      json-schema-to-ts: 3.1.1
-      standardwebhooks: 1.0.0
-    optionalDependencies:
-      zod: 4.6.7
-
   '@aws-sdk/checksums@3.1000.16':
     dependencies:
       '@aws-sdk/core': 3.975.1
@@ -7656,10 +7620,10 @@ snapshots:
 
   '@aws/lambda-invoke-store@0.3.0': {}
 
-  '@axe-core/playwright@4.12.1(playwright-core@1.61.1)':
+  '@axe-core/playwright@4.12.1(playwright-core@1.63.0)':
     dependencies:
       axe-core: 4.12.1
-      playwright-core: 1.61.1
+      playwright-core: 1.63.0
 
   '@babel/code-frame@7.29.0':
     dependencies:
@@ -8451,11 +8415,12 @@ snapshots:
       uuid: 10.0.0
       zod: 3.25.76
 
-  '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/de60c65d73c3aa6e91d139ab6fb2387c173ce3f9(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)':
+  '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/de60c65d73c3aa6e91d139ab6fb2387c173ce3f9(enarratio@0.4.0)(hast-util-to-string@3.0.1)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)':
     optionalDependencies:
       enarratio: 0.4.0
       hast-util-to-string: 3.0.1
       parse5: 8.0.1
+      playwright-core: 1.63.0
       rehype-autolink-headings: 7.1.0
       rehype-slug: 6.0.0
       rehype-stringify: 10.0.1
@@ -8473,15 +8438,15 @@ snapshots:
 
   '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245': {}
 
-  '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d':
+  '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/1f2225e20b41df991739849267f59b7924a3a03c':
     dependencies:
-      '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec
+      '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/5affa0892160088a052a1ae5acb100116954e01c
       diff: 9.0.0
       zod: 4.6.7
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7fdcc1aeeab2dc3ad0464350921e62cdc3ebedec': {}
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/5affa0892160088a052a1ae5acb100116954e01c': {}
 
-  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458': {}
+  '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8': {}
 
   '@egjs/hammerjs@2.0.17':
     dependencies:
@@ -9757,9 +9722,9 @@ snapshots:
       tslib: 2.8.1
       tsyringe: 4.10.0
 
-  '@playwright/test@1.61.1':
+  '@playwright/test@1.63.0':
     dependencies:
-      playwright: 1.61.1
+      playwright: 1.63.0
 
   '@poppinss/colors@4.1.6':
     dependencies:
@@ -10106,9 +10071,7 @@ snapshots:
       metro-runtime: 0.84.5
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.86.3': {}
 
@@ -10174,11 +10137,11 @@ snapshots:
 
   '@readium/shared@2.2.0':
     dependencies:
-      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
+      '@edrlab/thorium-locales': thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
 
   '@readium/shared@2.2.3':
     dependencies:
-      '@edrlab/thorium-locales': thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
+      '@edrlab/thorium-locales': thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee
 
   '@remix-run/node-fetch-server@0.14.2': {}
 
@@ -10470,8 +10433,6 @@ snapshots:
       tslib: 2.8.1
 
   '@speed-highlight/core@1.2.17': {}
-
-  '@stablelib/base64@1.0.1': {}
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -11022,11 +10983,11 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/92b3014791746d406171d73dd9419880a1f4c33e(@axe-core/playwright@4.12.1(playwright-core@1.61.1))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458)(@playwright/test@1.61.1)(enarratio@0.4.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/8aff61bb3e8e8258d659f237b5adbe0e07d157ed(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8)(@playwright/test@1.63.0)(enarratio@0.4.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7):
     optionalDependencies:
-      '@axe-core/playwright': 4.12.1(playwright-core@1.61.1)
-      '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/85dcd1be33f223e3736adb124604d3ac3227a458
-      '@playwright/test': 1.61.1
+      '@axe-core/playwright': 4.12.1(playwright-core@1.63.0)
+      '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/6097570cf3d58051eb0aee89993ecb6d1f9e04d8
+      '@playwright/test': 1.63.0
       enarratio: 0.4.0
       react: 19.2.7
       react-dom: 19.2.7(react@19.2.7)
@@ -11899,8 +11860,6 @@ snapshots:
       merge2: 1.4.1
       micromatch: 4.0.8
 
-  fast-sha256@1.3.0: {}
-
   fast-xml-builder@1.2.0:
     dependencies:
       path-expression-matcher: 1.5.0
@@ -11955,9 +11914,6 @@ snapshots:
   fontfaceobserver@2.3.0: {}
 
   fresh@0.5.2: {}
-
-  fsevents@2.3.2:
-    optional: true
 
   fsevents@2.3.3:
     optional: true
@@ -12198,11 +12154,6 @@ snapshots:
   jsc-safe-url@0.2.4: {}
 
   jsesc@3.1.0: {}
-
-  json-schema-to-ts@3.1.1:
-    dependencies:
-      '@babel/runtime': 7.29.2
-      ts-algebra: 2.0.0
 
   json5@2.2.3: {}
 
@@ -13322,13 +13273,11 @@ snapshots:
       exsolve: 1.1.0
       pathe: 2.0.3
 
-  playwright-core@1.61.1: {}
+  playwright-core@1.63.0: {}
 
-  playwright@1.61.1:
+  playwright@1.63.0:
     dependencies:
-      playwright-core: 1.61.1
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright-core: 1.63.0
 
   plist@3.1.1:
     dependencies:
@@ -14077,11 +14026,6 @@ snapshots:
 
   standard-navigation@0.0.5: {}
 
-  standardwebhooks@1.0.0:
-    dependencies:
-      '@stablelib/base64': 1.0.1
-      fast-sha256: 1.3.0
-
   statuses@1.5.0: {}
 
   statuses@2.0.2: {}
@@ -14210,7 +14154,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  thorium-locales@https://codeload.github.com/edrlab/thorium-locales/tar.gz/7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee: {}
+  thorium-locales@git+https://git@github.com:edrlab/thorium-locales.git#7fb96cda36b38fff1f3d8bcc790d53fbcfeb88ee: {}
 
   throat@5.0.0: {}
 
@@ -14242,8 +14186,6 @@ snapshots:
   trim-lines@3.0.1: {}
 
   trough@2.2.0: {}
-
-  ts-algebra@2.0.0: {}
 
   ts-interface-checker@0.1.13: {}
 

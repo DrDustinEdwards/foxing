@@ -8,8 +8,14 @@ import { expo } from "@better-auth/expo";
 import { createDb, schema } from "@foxing/core";
 import { signInOptions } from "@dustinedwards/site-runtime/sign-in";
 import { betterAuth } from "better-auth";
+import { waitUntil } from "cloudflare:workers";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { sendMagicLinkEmail, sendSignInCodeEmail, sendVerificationEmail } from "./email.server";
+import {
+  sendMagicLinkEmail,
+  sendSecurityNoticeEmail,
+  sendSignInCodeEmail,
+  sendVerificationEmail,
+} from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
 
 /** The app's scheme (apps/mobile app.json), where a sign-in started in the app returns. */
@@ -31,6 +37,10 @@ async function buildAuth(env: Env) {
     },
     // Five sign-in mails an hour and ten typed codes a day per address.
     emailLimiter: env.RATE_LIMITER,
+    // A passkey, Google or Apple, the email, the sessions or the account changed: tell the reader.
+    sendSecurityNotice: async (_kind, { user, detail }) => {
+      await sendSecurityNoticeEmail(env, user.email, detail);
+    },
   });
 
   return betterAuth({
@@ -46,6 +56,9 @@ async function buildAuth(env: Env) {
       transaction: false,
     }),
     plugins: [...signIn.plugins, expo()],
+    // The instance outlives a request, so the request's waitUntil comes from cloudflare:workers:
+    // the answer does not wait for a security notice's mail.
+    advanced: { ...signIn.advanced, backgroundTasks: { handler: waitUntil } },
     // Only the change-email flow sends this now: the new address confirms itself.
     emailVerification: {
       sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {

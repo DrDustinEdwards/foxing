@@ -8,6 +8,8 @@
 // fixed by the Phase 4a plan: fast = word_lookup, word_aspect, word_wise,
 // language_difficulty. deep = deep_dive, reading_personality. standard = every other
 // Plus action and all 4 cached generators.
+import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
+import { WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import type { CompanionRole } from "./models";
 
 export type CompanionTier = "plus" | "free-cached";
@@ -59,7 +61,7 @@ function bookLine(ctx: CompanionContext): string {
 
 function bookBrief(ctx: CompanionContext): string {
   const parts = [bookLine(ctx)];
-  if (ctx.book.description) parts.push(ctx.book.description);
+  if (ctx.book.description) parts.push(untrusted("book-description", ctx.book.description));
   if (ctx.book.subjects?.length) parts.push(`Subjects: ${ctx.book.subjects.join(", ")}`);
   return parts.join("\n");
 }
@@ -67,7 +69,7 @@ function bookBrief(ctx: CompanionContext): string {
 function selectionLine(ctx: CompanionContext): string {
   if (!ctx.selection) return "";
   const chapter = ctx.selection.chapter ?? ctx.chapter;
-  return `Selected passage${chapter ? ` (${chapter})` : ""}:\n"${ctx.selection.text}"`;
+  return `Selected passage${chapter ? ` (${chapter})` : ""}:\n${untrusted("selection", ctx.selection.text)}`;
 }
 
 function requireSelection(ctx: CompanionContext): string {
@@ -87,7 +89,7 @@ const PLUS_ACTIONS: CompanionAction[] = [
       "Give the sense that fits this context first, then the general definition if it differs. " +
       "Two to three sentences. Plain language, no filler.",
     buildContext: (ctx) => ({
-      userContent: `Define "${requireSelection(ctx)}" as used here.\n${selectionLine(ctx)}`,
+      userContent: `Define ${untrusted("word", requireSelection(ctx))} as used here.\n${selectionLine(ctx)}`,
     }),
   },
   {
@@ -122,7 +124,7 @@ const PLUS_ACTIONS: CompanionAction[] = [
       "You explain one linguistic aspect of a word: its etymology, an older or unusual sense, or a " +
       "connotation a modern reader might miss. Two to three sentences.",
     buildContext: (ctx) => ({
-      userContent: `What is notable about the word "${requireSelection(ctx)}" here?\n${selectionLine(ctx)}`,
+      userContent: `What is notable about the word ${untrusted("word", requireSelection(ctx))} here?\n${selectionLine(ctx)}`,
     }),
   },
   {
@@ -158,7 +160,7 @@ const PLUS_ACTIONS: CompanionAction[] = [
       `You find and describe passages, themes, or moments in ${bookLine(ctx)} connected to a ` +
       "reader's described idea. Point to what they're likely thinking of, in plain terms.",
     buildContext: (ctx) => ({
-      userContent: `Find what connects to this in the book: "${ctx.message?.trim() || requireSelection(ctx)}"`,
+      userContent: `Find what connects to this in the book: ${untrusted("reader-idea", ctx.message?.trim() || requireSelection(ctx))}`,
     }),
   },
   {
@@ -303,14 +305,12 @@ const CACHED_ACTIONS: CompanionAction[] = [
   },
 ];
 
-// The habits current models still write (Capsid foxing/ai-writing-tells.md, tested 2026-10-25), on every action.
-const STYLE =
-  'Never use an em dash. No "not X, it\'s Y". A list of three only when there are three real things.';
-
+// On every action: the family's writing rules, and the rule for the passages, words and
+// descriptions the prompts carry as untrusted() data.
 export const COMPANION_REGISTRY: CompanionAction[] = [...PLUS_ACTIONS, ...CACHED_ACTIONS].map(
   (a) => ({
     ...a,
-    systemPrompt: (ctx) => `${a.systemPrompt(ctx)} ${STYLE}`,
+    systemPrompt: (ctx) => `${a.systemPrompt(ctx)}\n\n${UNTRUSTED_DATA_RULE}\n\n${WRITING_RULES}`,
   }),
 );
 

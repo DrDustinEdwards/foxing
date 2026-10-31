@@ -7,11 +7,11 @@
 
 import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
 import { isAdminUser } from "@dustinedwards/site-runtime/mcp-login";
-import { checkRateLimit, refuse } from "@dustinedwards/site-runtime/mcp-server";
+import { audienceRefusal, checkRateLimit, refuse } from "@dustinedwards/site-runtime/mcp-server";
 import type { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
 import type { ApiEnv } from "./api-client";
-import type { Props } from "./auth";
+import { SCOPE_READ, type Props } from "./auth";
 import type { LoginEnv } from "./login-handler";
 import { handleMcp, MCP_ROUTE } from "./mcp-handler";
 
@@ -42,10 +42,8 @@ export const apiHandler = {
     };
     // Rule 12.2: a token not issued for this server is refused, even if a
     // provider configured for a second resource ever handed one over.
-    if (auth?.audience !== `${publicOrigin(env)}${MCP_ROUTE}`) {
-      console.warn(JSON.stringify({ door: "refused", reason: "audience", audience: auth?.audience ?? null }));
-      return refuse("Forbidden. This token was not issued for Foxing Admin.", 403);
-    }
+    const wrongAudience = audienceRefusal(auth, `${publicOrigin(env)}${MCP_ROUTE}`, [SCOPE_READ]);
+    if (wrongAudience) return wrongAudience;
     if (!props || !isAdminUser(env, props)) {
       return refuse(
         "Forbidden. This is a single-administrator server and this grant does not belong to its administrator.",
@@ -61,7 +59,7 @@ export const apiHandler = {
       );
     }
     // A grant with no scope list is refused, not read as read-only (Grok audit 2026-10-21, FX-16).
-    if (!Array.isArray(auth.scope)) return refuse("This grant carries no scope. Sign in again.", 403);
+    if (!Array.isArray(auth?.scope)) return refuse("This grant carries no scope. Sign in again.", 403);
     const scopes = auth.scope;
     return handleMcp(request, env, ctx, { kind: "admin", props, scopes });
   },

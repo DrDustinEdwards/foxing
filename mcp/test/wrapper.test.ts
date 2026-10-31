@@ -96,8 +96,8 @@ describe("apiHandler", () => {
 
   test("PLANT 12.2: a token issued for another resource is refused", async () => {
     const response = await apiHandler.fetch(request(), env(), ctxWith("https://other.example/mcp"));
-    assert.equal(response.status, 403);
-    assert.match(await response.text(), /not issued for Foxing Admin/);
+    assert.equal(response.status, 401);
+    assert.match(response.headers.get("www-authenticate") ?? "", /invalid_token/);
   });
 
   test("PLANT 12.1: a grant for another email is refused at the door", async () => {
