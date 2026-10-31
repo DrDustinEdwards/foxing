@@ -12,7 +12,6 @@ const ADMIN_SECTIONS = [
   { to: "/admin/books", label: "Books" },
   { to: "/admin/clubs", label: "Clubs" },
   { to: "/admin/users", label: "Users" },
-  { to: "/admin/journal", label: "Journal" },
   { to: "/admin/notifications", label: "Notifications" },
   { to: "/admin/content", label: "Content" },
   { to: "/admin/analytics", label: "Analytics" },

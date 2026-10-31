@@ -2,6 +2,7 @@ import { catalogRepo } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
+import { focusStyle } from "~/lib/focus";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/journal";
@@ -99,6 +100,7 @@ function LeadPost({ post }: { post: Post }) {
             src={post.coverImageUrl}
             alt={post.coverImageAlt ?? ""}
             className="fx-journal-img"
+            style={focusStyle(post.coverFocus)}
             loading="eager"
           />
         </div>
@@ -123,6 +125,7 @@ function PostCard({ post }: { post: Post }) {
           src={post.coverImageUrl}
           alt={post.coverImageAlt ?? ""}
           className="mb-4 fx-journal-img-2"
+          style={focusStyle(post.coverFocus)}
           loading="lazy"
         />
       ) : null}

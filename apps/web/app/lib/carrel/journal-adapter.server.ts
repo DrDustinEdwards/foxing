@@ -1,30 +1,44 @@
 // Foxing's side of Carrel's site API (the site-api package): the package owns the route, the
 // key, the rate limit and every body's shape; this adapter maps its content and preview calls onto
-// the Journal's own code. Every write goes through the adminRepo functions the admin Journal
-// screens use (createJournalPost, updateJournalPost, setJournalPublished), validated by the same
-// journalInput schema the admin routes parse with, and audited in admin_audit_log with Carrel's
-// changeId. Nothing here writes journal_posts by a path of its own.
+// the Journal's own code. Carrel is the Journal's only editor (Dustin, 2026-10-29: the admin
+// Journal screens are gone). Every write goes through adminRepo's Journal functions, validated by
+// its journalInput schema, and audited in admin_audit_log with Carrel's changeId. Nothing here
+// writes journal_posts by a path of its own.
+//
+// Site-api v0.17.0: a trash (trashed_at), where trashing takes a live post off the Journal, a
+// restore answers a draft, and only a trashed post is deleted for good (by Carrel, or by
+// runSchedules 30 days on). A rename moves the post's slug, which is its id and its address, and
+// a post that was ever published leaves a 301 at its old address (journal_slug_redirects). The
+// list filters by kind, tag and publish date, searches the title and the body, sorts and counts.
+// A publish may carry the date it goes out under. The body renders through Prelum on every read,
+// so the render version meta names is the installed one. The Journal has no scheduled
+// publishing: a schedule is refused, and there are no authors to credit or filter by (a post
+// names none on its page).
 //
 // Media: the Journal's media library (journal-media-adapter.server.ts), so a post's cover and inline
 // images can be uploaded from Carrel. A cover may still be any pasted https address, and book covers
 // are not part of it.
 
+import { RENDER_VERSION } from "@drdustinedwards/site-helpers/render/nomath";
 import {
   ContentId,
+  ContentTag,
+  NotFoundError,
+  previewDocument,
   RefusedError,
   VersionConflictError,
   type ContentDoc,
   type ContentStatus,
   type ContentSummary,
+  type ListQuery,
   type Revision,
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
-import { journalInput } from "@foxing/api";
 import { adminRepo, type catalogRepo, createDb, type Db } from "@foxing/core";
-import { RouterContextProvider } from "react-router";
-import { cloudflareContext, journalPreviewContext } from "../../context";
+import { renderJournalBody } from "../journal-body.server";
 import {
   HISTORY_KEYS,
   JournalSourceError,
@@ -37,19 +51,20 @@ import { journalMediaAdapter } from "./journal-media-adapter.server";
 
 type JournalPost = catalogRepo.JournalPost;
 
-export type RenderDocument = (
-  request: Request,
-  context: RouterContextProvider,
-) => Promise<Response>;
-
 /** Foxing's public origin, which Carrel shows and links to. */
 const FOXING_ORIGIN = SITE_ORIGIN;
 
 /** The audit actor for every write made with the Carrel key. */
 const CARREL_ACTOR = "carrel";
 
+/** The one kind of content Carrel edits on Foxing. */
+const KIND = "journal";
+
 /** The slug a preview renders at when Carrel sends no id: a post not saved yet. */
 const UNSAVED_PREVIEW_SLUG = "carrel-preview";
+
+/** Addresses under /journal/ that a route answers before any post, so no post may take one. */
+const RESERVED_SLUGS = new Set(["archive", "tag"]);
 
 /** An earlier version's id, from journal_post_versions: distinct from a current version's digits. */
 const REVISION_PREFIX = "r-";
@@ -97,9 +112,13 @@ const FILE_KEY: Record<string, string> = {
   slug: "the id (slug)",
 };
 
-/** The admin routes' own rules, applied to a Carrel save: one set of rules for both. */
+/** The Journal's own rules (adminRepo.journalInput), applied to every Carrel save. */
 function validated(slug: string, fields: JournalFields) {
-  const parsed = journalInput.safeParse({ slug, ...fields });
+  if (RESERVED_SLUGS.has(slug))
+    throw new RefusedError(
+      `/journal/${slug} is a Journal page of its own, so no post can take it.`,
+    );
+  const parsed = adminRepo.journalInput.safeParse({ slug, ...fields });
   if (!parsed.success) {
     const lines = parsed.error.issues.map((issue) => {
       const field = String(issue.path[0] ?? "post");
@@ -119,34 +138,55 @@ function isUniqueViolation(error: unknown): boolean {
 function summaryOf(row: {
   slug: string;
   title: string;
+  excerpt: string | null;
+  tags: string[] | null;
   isPublished: boolean;
   publishedAt: Date | null;
   updatedAt: Date;
+  trashedAt: Date | null;
 }): ContentSummary {
   const status = statusOf(row);
   return {
     id: row.slug,
-    kind: "journal",
+    kind: KIND,
     title: row.title,
     status,
     path: status === "published" ? `/journal/${row.slug}` : null,
     publishAt: null,
     publishedAt: status === "published" ? iso(row.publishedAt) : null,
     updatedAt: iso(row.updatedAt),
+    version: versionOf(row),
+    // Only tags the contract can carry, so one odd tag never fails the list.
+    tags: (row.tags ?? []).filter((t) => ContentTag.safeParse(t).success),
+    ...(row.excerpt ? { excerpt: row.excerpt } : {}),
+    trashedAt: iso(row.trashedAt),
   };
+}
+
+/** The list's query, as adminRepo's Journal list takes it. */
+function listFilter(query: ListQuery): adminRepo.JournalAdminQuery {
+  return {
+    published: query.status === undefined ? undefined : query.status === "published",
+    q: query.q,
+    tag: query.tag,
+    publishedAfter: query.publishedAfter ? new Date(query.publishedAfter) : undefined,
+    publishedBefore: query.publishedBefore ? new Date(query.publishedBefore) : undefined,
+    trashed: query.trashed ?? false,
+  };
+}
+
+function notTrashed(row: { trashedAt: Date | null }) {
+  if (row.trashedAt) throw new RefusedError("This post is in the trash. Restore it first.");
 }
 
 export function journalSiteAdapter(options: {
   env: Env;
-  ctx: ExecutionContext;
-  /** The origin the preview's page request is made against: the request's own. */
-  origin: string;
-  /** The caller's address, for the audit log. */
+  /** The caller's address, for the audit log; null for the cron. */
   sourceIp: string | null;
-  /** The React Router request handler, for the preview. */
-  renderDocument: RenderDocument | null;
+  /** The root route's stylesheets, which a preview is drawn in; the cron passes none. */
+  stylesheets?: string[];
 }): SiteAdapter {
-  const { env, ctx, origin, sourceIp, renderDocument } = options;
+  const { env, sourceIp, stylesheets = [] } = options;
   const db: Db = createDb(env.DB);
 
   async function audit(action: string, params: Record<string, unknown>) {
@@ -172,6 +212,12 @@ export function journalSiteAdapter(options: {
     return row;
   }
 
+  /** As `expected`, for the v0.17.0 writes, which answer a missing id 404. */
+  async function held(slug: string, version: string): Promise<JournalPost> {
+    if (!(await adminRepo.getJournalBySlug(db, slug))) throw new NotFoundError();
+    return expected(slug, version);
+  }
+
   async function written(postId: string, changeId: string): Promise<WriteResult> {
     const row = await adminRepo.getJournalById(db, postId);
     if (!row) throw new Error(`journal post ${postId} was written and then could not be read`);
@@ -194,23 +240,59 @@ export function journalSiteAdapter(options: {
   async function setPublished(
     slug: string,
     on: boolean,
-    input: { expectedVersion: string; changeId: string; source?: string },
+    input: { expectedVersion: string; changeId: string; source?: string; publishedAt?: string },
   ) {
     const row = await expected(slug, input.expectedVersion);
+    if (on) notTrashed(row);
     const guard =
       input.source === undefined ? row.updatedAt : await save(row, input.source, input.changeId);
-    const done = await adminRepo.setJournalPublished(db, row.id, on, { expectedUpdatedAt: guard });
+    const publishedAt = input.publishedAt ? new Date(input.publishedAt) : undefined;
+    const done = await adminRepo.setJournalPublished(
+      db,
+      row.id,
+      on,
+      { expectedUpdatedAt: guard },
+      { publishedAt },
+    );
     if (!done) throw await conflict(slug);
     await audit(on ? "journal.publish" : "journal.unpublish", {
       id: row.id,
       slug,
       changeId: input.changeId,
       ...(on ? { firstPublish: !row.publishedAt } : {}),
+      ...(publishedAt ? { publishedAt: input.publishedAt } : {}),
+    });
+    return written(row.id, input.changeId);
+  }
+
+  /** Into the trash or out of it, guarded on the version the caller saw. */
+  async function setTrashed(
+    slug: string,
+    trashed: boolean,
+    input: { expectedVersion: string; changeId: string },
+  ) {
+    const row = await held(slug, input.expectedVersion);
+    if (Boolean(row.trashedAt) === trashed)
+      throw new RefusedError(
+        trashed ? "This post is in the trash already." : "This post is not in the trash.",
+      );
+    const done = await adminRepo.setJournalTrashed(db, row.id, trashed, {
+      expectedUpdatedAt: row.updatedAt,
+    });
+    if (!done) throw await conflict(slug);
+    await audit(trashed ? "journal.trash" : "journal.restore", {
+      id: row.id,
+      slug,
+      changeId: input.changeId,
     });
     return written(row.id, input.changeId);
   }
 
   const content: SiteAdapter["content"] = {
+    filters: ["kind", "tag", "published"],
+    postFields: ["excerpt"],
+    publishedAtSettable: true,
+
     async list(query) {
       let offset = 0;
       if (query.cursor !== undefined) {
@@ -218,19 +300,24 @@ export function journalSiteAdapter(options: {
           throw new RefusedError("The cursor is not one this site gave.");
         offset = Number(query.cursor);
       }
-      // The Journal has no scheduled publishing, so nothing is ever scheduled.
-      if (query.status === "scheduled") return { items: [], nextCursor: null };
-      const rows = await adminRepo.listJournalAdmin(db, {
-        limit: query.limit + 1,
-        offset,
-        published: query.status === undefined ? undefined : query.status === "published",
-        q: query.q,
-      });
+      const sort = query.sort ?? "updated";
+      const dir = query.dir ?? (sort === "title" ? "asc" : "desc");
+      // The Journal has no scheduled publishing, so nothing is ever scheduled, and every post is
+      // a journal post.
+      if (query.status === "scheduled" || (query.kind !== undefined && query.kind !== KIND))
+        return { items: [], nextCursor: null, total: 0, sorted: { sort, dir } };
+      const filter = listFilter(query);
+      const [rows, total] = await Promise.all([
+        adminRepo.listJournalAdmin(db, { ...filter, sort, dir, limit: query.limit + 1, offset }),
+        adminRepo.countJournalAdmin(db, filter),
+      ]);
       const page = rows.slice(0, query.limit);
       return {
         // A slug the contract's id grammar cannot carry is left out rather than failing the page.
         items: page.filter((row) => ContentId.safeParse(row.slug).success).map(summaryOf),
         nextCursor: rows.length > query.limit ? String(offset + query.limit) : null,
+        total,
+        sorted: { sort, dir },
       };
     },
 
@@ -250,6 +337,7 @@ export function journalSiteAdapter(options: {
     async saveDraft(id, input) {
       if (input.expectedVersion !== null) {
         const row = await expected(id, input.expectedVersion);
+        notTrashed(row);
         await save(row, input.source, input.changeId);
         return written(row.id, input.changeId);
       }
@@ -285,9 +373,71 @@ export function journalSiteAdapter(options: {
       );
     },
 
-    // Unpublish returns the post to draft; deleting stays with the admin screens.
+    // Unpublish returns the post to draft; a delete is from the trash.
     async unpublish(id, input) {
       return setPublished(id, false, input);
+    },
+
+    // The tags field of the post's file, written alone. A live post's page changes with it.
+    async setTags(id, input) {
+      const row = await held(id, input.expectedVersion);
+      notTrashed(row);
+      await save(row, journalToSource({ ...fieldsOf(row), tags: input.tags }), input.changeId);
+      return written(row.id, input.changeId);
+    },
+
+    // A live post leaves the Journal as it goes in.
+    async trash(id, input) {
+      return setTrashed(id, true, input);
+    },
+
+    async restore(id, input) {
+      return setTrashed(id, false, input);
+    },
+
+    // For good, with its history, and only from the trash, so a live post never loses its address
+    // in one step.
+    async delete(id, input) {
+      const row = await held(id, input.expectedVersion);
+      if (!row.trashedAt)
+        throw new RefusedError("Move the post to the trash first: a delete cannot be undone.");
+      if (!(await adminRepo.deleteJournalPost(db, row.id, { expectedUpdatedAt: row.updatedAt })))
+        throw await conflict(id);
+      await audit("journal.delete", { id: row.id, slug: id, changeId: input.changeId });
+    },
+
+    // The slug is the post's id and its address, so both move; its history is keyed by the row and
+    // moves with it. A post ever published leaves a 301 at its old address. A preview link names
+    // the old id, so it stops working, as the address it showed has.
+    async rename(id, input) {
+      const row = await held(id, input.expectedVersion);
+      const { newId } = input;
+      validated(newId, fieldsOf(row));
+      if (await adminRepo.getJournalBySlug(db, newId))
+        throw new RefusedError(`${newId} is already taken.`);
+      const previousPath = row.publishedAt ? `/journal/${row.slug}` : null;
+      let done: boolean;
+      try {
+        done = await adminRepo.renameJournalPost(
+          db,
+          row.id,
+          newId,
+          { redirect: previousPath !== null },
+          { expectedUpdatedAt: row.updatedAt },
+        );
+      } catch (error) {
+        // Taken by another write since the check above.
+        if (isUniqueViolation(error)) throw new RefusedError(`${newId} is already taken.`);
+        throw error;
+      }
+      if (!done) throw await conflict(id);
+      await audit("journal.rename", {
+        id: row.id,
+        slug: newId,
+        from: id,
+        changeId: input.changeId,
+      });
+      return { ...(await written(row.id, input.changeId)), previousPath };
     },
 
     async revisions(id) {
@@ -336,14 +486,13 @@ export function journalSiteAdapter(options: {
     },
   };
 
-  // The page the save would publish, rendered through the journal route and the root layout
-  // in-process, so nothing is written and nothing is cached.
+  // The post the save would publish: its body through the journal route's own Prelum render, in
+  // the site's stylesheets and the route's markup, so nothing is written and nothing is cached. An
+  // unsaved source has no row for the route to load, so the package's preview page carries it.
   async function render(input: { id?: string; source: string }): Promise<string> {
-    if (!renderDocument)
-      throw new Error("the React Router handler was not passed to the Carrel adapter");
     const slug = input.id ?? UNSAVED_PREVIEW_SLUG;
-    // A bare body with no front matter still previews, as an untitled post (site-api 0.17.0's conformance
-    // asks it to); a save still refuses it.
+    // A bare body with no front matter still previews, as an untitled post (site-api 0.17.0's
+    // conformance asks it to); a save still refuses it.
     const fields = input.source.startsWith("---")
       ? readSource(input.source)
       : {
@@ -356,50 +505,23 @@ export function journalSiteAdapter(options: {
           content: input.source,
         };
     const values = validated(slug, fields);
-    const stored = input.id ? await adminRepo.getJournalBySlug(db, input.id) : null;
-    const now = new Date();
-    const post: JournalPost = {
-      id: stored?.id ?? UNSAVED_PREVIEW_SLUG,
-      authorId: stored?.authorId ?? null,
-      relatedPostIds: stored?.relatedPostIds ?? null,
-      isPublished: true,
-      publishedAt: stored?.publishedAt ?? now,
-      showPublishedAt: stored?.showPublishedAt ?? true,
-      showUpdatedAt: stored?.showUpdatedAt ?? true,
-      ogTitle: stored?.ogTitle ?? null,
-      ogDescription: stored?.ogDescription ?? null,
-      canonicalUrl: stored?.canonicalUrl ?? null,
-      readingTimeMinutes: stored?.readingTimeMinutes ?? null,
-      createdAt: stored?.createdAt ?? now,
-      updatedAt: now,
-      slug,
+    const html = await renderJournalBody(slug, values.content);
+    const cover = values.coverImageUrl
+      ? `<img src="${escapeHtml(values.coverImageUrl)}" alt="${escapeHtml(values.coverImageAlt ?? "")}" class="mb-10 fx-journal-post-img">`
+      : "";
+    return previewDocument({
       title: values.title,
-      content: values.content,
-      excerpt: values.excerpt ?? null,
-      coverImageUrl: values.coverImageUrl ?? null,
-      coverImageAlt: values.coverImageAlt ?? null,
-      tags: values.tags ?? [],
-      featured: values.featured ?? false,
-    };
-
-    const context = new RouterContextProvider();
-    context.set(cloudflareContext, { env, ctx });
-    context.set(journalPreviewContext, post);
-    const response = await renderDocument(
-      new Request(`${origin}/journal/${slug}`, { headers: { accept: "text/html" } }),
-      context,
-    );
-    if (!response.ok) {
-      throw new RefusedError(
-        `The page did not render: the journal route answered ${response.status}.`,
-      );
-    }
-    return response.text();
+      body: `<main class="fx-wrap"><article class="h-entry"><header class="mb-8"><p class="eyebrow">The Journal</p><h1 class="mt-3 fx-journal-post-title">${escapeHtml(values.title)}</h1></header>${cover}<div class="article-prose e-content">${html}</div></article></main>`,
+      origin: FOXING_ORIGIN,
+      stylesheets,
+      attributes: { "data-theme": "light" },
+    });
   }
 
   return {
     site: { id: "foxing", name: "Foxing", origin: FOXING_ORIGIN },
     content,
+    renderVersion: RENDER_VERSION,
     preview: { render },
     media: journalMediaAdapter({ env, audit }),
     // The 404s workers/app.ts counts, for Carrel's report.

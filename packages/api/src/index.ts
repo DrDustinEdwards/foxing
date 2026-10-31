@@ -78,5 +78,4 @@ export function createApi(deps: ApiDeps) {
 
 export { errors, AppError } from "./error";
 export { rateLimit } from "./middleware/rate-limit";
-export { journalInput } from "./routes/admin";
 export type { ApiDeps, Bindings, ClubLiveHub, Env, SessionUser, Variables } from "./types";

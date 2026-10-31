@@ -169,9 +169,10 @@ describe("nightly backup", () => {
 
   it("excludes exactly the tables the migrated schema shows holding credentials", async () => {
     // Derived from the schema the migrations build, not from a list: a table holds a credential
-    // when a column is a token, a password or a secret, or when it stores one-time values by
-    // identifier with an expiry (Better Auth's verification shape: magic links, resets).
-    const credentialColumn = /(^|_)(token|password|secret)$/;
+    // when a column is a token (or a token's hash, which opens a link), a password or a secret, or
+    // when it stores one-time values by identifier with an expiry (Better Auth's verification
+    // shape: magic links, resets).
+    const credentialColumn = /(^|_)(token|token_hash|password|secret)$/;
     const master = await env.DB.prepare(
       "SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'",
     ).all<{ name: string; sql: string }>();

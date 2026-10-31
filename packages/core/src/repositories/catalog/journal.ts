@@ -1,10 +1,18 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
 import type { Db } from "../../db";
-import { journalPosts } from "../../schema";
+import { journalPosts, journalSlugRedirects } from "../../schema";
 
 export type JournalPost = typeof journalPosts.$inferSelect;
+
+/**
+ * The focal point Carrel set on the cover's file in the Journal's media library ("XxY"), or null
+ * for a cover from elsewhere or with none: a cropped cover keeps that point in view.
+ */
+const coverFocus = sql<
+  string | null
+>`(SELECT m.focus FROM journal_media m WHERE substr(${journalPosts.coverImageUrl}, -length('/media/' || m.key)) = '/media/' || m.key)`;
 
 export type JournalCard = {
   slug: string;
@@ -12,6 +20,7 @@ export type JournalCard = {
   excerpt: string | null;
   coverImageUrl: string | null;
   coverImageAlt: string | null;
+  coverFocus: string | null;
   tags: string[] | null;
   featured: boolean;
   publishedAt: Date | null;
@@ -24,6 +33,7 @@ const CARD_COLUMNS = {
   excerpt: journalPosts.excerpt,
   coverImageUrl: journalPosts.coverImageUrl,
   coverImageAlt: journalPosts.coverImageAlt,
+  coverFocus,
   tags: journalPosts.tags,
   featured: journalPosts.featured,
   publishedAt: journalPosts.publishedAt,
@@ -66,13 +76,26 @@ export async function listPublishedPosts(
   };
 }
 
-export async function getPostBySlug(db: Db, slug: string): Promise<JournalPost | null> {
+export async function getPostBySlug(
+  db: Db,
+  slug: string,
+): Promise<(JournalPost & { coverFocus: string | null }) | null> {
   const rows = await db
-    .select()
+    .select({ ...getTableColumns(journalPosts), coverFocus })
     .from(journalPosts)
     .where(and(eq(journalPosts.slug, slug), eq(journalPosts.isPublished, true)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+/** Where a renamed post's old slug now leads (journal_slug_redirects, written by a Carrel rename), or null. */
+export async function getJournalSlugRedirect(db: Db, slug: string): Promise<string | null> {
+  const [row] = await db
+    .select({ toSlug: journalSlugRedirects.toSlug })
+    .from(journalSlugRedirects)
+    .where(eq(journalSlugRedirects.fromSlug, slug))
+    .limit(1);
+  return row?.toSlug ?? null;
 }
 
 /** All published post slugs + last-modified, for the sitemap. */
@@ -128,13 +151,14 @@ export async function listPostsByTag(
     excerpt: string | null;
     cover_image_url: string | null;
     cover_image_alt: string | null;
+    cover_focus: string | null;
     tags: string;
     featured: number;
     published_at: number | null;
     reading_time_minutes: number | null;
   }>(sql`
-    SELECT slug, title, excerpt, cover_image_url, cover_image_alt, tags, featured,
-           published_at, reading_time_minutes
+    SELECT slug, title, excerpt, cover_image_url, cover_image_alt, ${coverFocus} AS cover_focus,
+           tags, featured, published_at, reading_time_minutes
     FROM journal_posts
     WHERE ${where}
     ORDER BY featured DESC, published_at DESC
@@ -152,6 +176,7 @@ export async function listPostsByTag(
       excerpt: r.excerpt,
       coverImageUrl: r.cover_image_url,
       coverImageAlt: r.cover_image_alt,
+      coverFocus: r.cover_focus,
       tags: JSON.parse(r.tags) as string[],
       featured: !!r.featured,
       publishedAt: r.published_at ? new Date(r.published_at) : null,

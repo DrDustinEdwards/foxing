@@ -1,5 +1,5 @@
 // Single Worker entry. Hono is the root fetch handler and delegates:
-//   /api/carrel/v1/* -> Carrel's site API over the Journal (app/lib/carrel)
+//   /api/carrel/v1/* -> Carrel's site API over the Journal (app/lib/carrel), and its /preview/<token> links
 //   /api/auth/*  -> Better Auth
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
@@ -32,7 +32,7 @@ import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
-import { mountCarrel } from "../app/lib/carrel/site-api.server";
+import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { runBackup, runMediaBackup } from "../app/lib/backup.server";
@@ -169,7 +169,7 @@ app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
-mountCarrel(app, reactRouterHandler);
+mountCarrel(app, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
 
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
 // minute per address, counted in D1 (site-runtime ./sign-in).
@@ -407,6 +407,15 @@ const CRON_JOBS: Record<string, (env: Env) => CronJob[]> = {
     { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
   ],
   "*/5 * * * *": (env) => [{ name: "push-sweep", everyMinutes: 5, run: () => runPushSweep(env) }],
+  // Every minute: Carrel's site API retries the publish hooks that failed, empties the content
+  // trash of posts 30 days in it, and prunes its replay store (app/lib/carrel/site-api.server.ts).
+  "* * * * *": (env) => [
+    {
+      name: "carrel-schedules",
+      everyMinutes: 1,
+      run: () => runCarrelSchedules(env, new Date()),
+    },
+  ],
   // Daily: enqueue catalog books needing cached AI generation.
   "0 8 * * *": (env) => [
     { name: "companion-cache", everyMinutes: 1440, run: () => enqueueCompanionCache(env) },
