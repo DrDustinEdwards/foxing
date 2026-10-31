@@ -3,7 +3,9 @@
 // account deletion. Every write shows a visible pending + role=alert error, never a silent no-op.
 import {
   accountSessions,
-  passkeyLabel,
+  needsSecondPasskey,
+  passkeyLastUsed,
+  passkeyRows,
   revokeSessionById,
   securityHistory,
   type SecurityHistoryEntry,
@@ -43,9 +45,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user, profile } = await requireProfile(env, request);
   const isPlus = profile.subscriptionTier === "plus";
   const auth = await getAuth(env);
-  const [people, passkeys, accounts, sessions, history] = await Promise.all([
+  const [people, passkeys, lastUsed, accounts, sessions, history] = await Promise.all([
     views.people(createDb(env.DB), user.id),
     auth.api.listPasskeys({ headers: request.headers }),
+    passkeyLastUsed(env.DB, user.id),
     auth.api.listUserAccounts({ headers: request.headers }),
     // Listing sessions needs a sign-in from the last 10 minutes; past that it is null and the
     // section asks for one. Any other failure fails the page.
@@ -76,13 +79,17 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       quietHours: notificationPrefs.quietHours ?? null,
     },
     signIn: {
-      // Named by the reader, else by the password manager or device that holds it.
-      passkeys: passkeys.map((p) => ({
+      // site-runtime's accountPasskeys rows (name, provider, created, last used), kept with each
+      // passkey's credential id so a removed one can be signaled to the password manager.
+      passkeys: passkeyRows(passkeys, lastUsed).map((p) => ({
         id: p.id,
-        credentialId: p.credentialID,
-        name: passkeyLabel(p),
-        createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : null,
+        credentialId: passkeys.find((raw) => raw.id === p.id)?.credentialID ?? "",
+        name: p.name,
+        provider: p.provider,
+        created: p.createdAt ? dateLabel.format(p.createdAt) : null,
+        lastUsed: p.lastUsedAt ? dateLabel.format(p.lastUsedAt) : null,
       })),
+      secondPasskey: needsSecondPasskey(passkeys),
       providers: [
         ...(methods.google
           ? [{ id: "google" as const, label: "Google", accountId: linked.get("google") ?? null }]

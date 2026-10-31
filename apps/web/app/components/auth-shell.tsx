@@ -16,7 +16,8 @@ import { signInWithPasskey } from "@dustinedwards/site-runtime/sign-in-client";
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
 
-/** After an email link: offer a passkey (/passkey skips straight on once one exists), then `next`. */
+/** After an email link, code, Google or Apple: offer a passkey (/passkey skips straight on when
+ *  there is one already or a recent "Not now"), then `next`. */
 const afterLink = (next: string) => `/passkey?next=${encodeURIComponent(next)}`;
 const AFTER_LINK_NEW = afterLink("/onboarding");
 
@@ -97,7 +98,7 @@ function GoogleGlyph() {
 
 /**
  * "Continue with Google": a full-width OAuth redirect. A new user (no profile row) lands
- * on /onboarding, an existing one on /me; a failed handshake returns to /login with Better
+ * on /onboarding, an existing one on /me, each through the passkey offer; a failed handshake returns to /login with Better
  * Auth's ?error= code (SignInError reads it).
  */
 function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
@@ -112,8 +113,8 @@ function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         setPending(true);
         await signIn.social({
           provider: "google",
-          callbackURL: redirectTo,
-          newUserCallbackURL: "/onboarding",
+          callbackURL: afterLink(redirectTo),
+          newUserCallbackURL: AFTER_LINK_NEW,
           errorCallbackURL: "/login",
         });
         // The call redirects the whole page; reset only if it somehow returns.
@@ -154,8 +155,8 @@ function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         setPending(true);
         await signIn.social({
           provider: "apple",
-          callbackURL: redirectTo,
-          newUserCallbackURL: "/onboarding",
+          callbackURL: afterLink(redirectTo),
+          newUserCallbackURL: AFTER_LINK_NEW,
           errorCallbackURL: "/login",
         });
         setPending(false);
