@@ -302,6 +302,37 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     expect(closedNotif.length).toBeGreaterThanOrEqual(1);
   });
 
+  it("a member's live socket upgrades through the API to the club's ClubRoom", async () => {
+    // The hub as the Worker builds it: the upgrade is forwarded to the real Durable Object,
+    // whose 101 carries the socket and headers that cannot be changed.
+    const ns = (env as unknown as { CLUB_ROOM: DurableObjectNamespace }).CLUB_ROOM;
+    const hub: ClubLiveHub = {
+      async broadcast() {},
+      async connect(clubId, userId, request) {
+        const url = new URL(request.url);
+        url.searchParams.set("uid", userId);
+        return ns.getByName(clubId).fetch(new Request(url, request));
+      },
+    };
+    await seedUser("liveowner", "plus");
+    const { body } = await createClub("liveowner");
+    const res = await apiWith(hub).fetch(
+      new Request(`https://test.local/clubs/${body.club.id}/live`, {
+        headers: { "x-test-user": "liveowner", Upgrade: "websocket" },
+      }),
+      env as never,
+    );
+    expect(res.status).toBe(101);
+    const ws = res.webSocket;
+    if (!ws) throw new Error("the 101 has no socket");
+    const first = new Promise<string>((done) =>
+      ws.addEventListener("message", (e) => done(String(e.data))),
+    );
+    ws.accept();
+    expect(JSON.parse(await first)).toEqual({ t: "presence", users: ["liveowner"] });
+    ws.close();
+  });
+
   it("a non-member cannot post", async () => {
     await seedUser("owner7", "plus");
     await seedUser("outsider", "free");
