@@ -54,3 +54,6 @@ export default function Login({ loaderData }: Route.ComponentProps) {
     </AuthShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

@@ -91,3 +91,6 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     </AdminShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

@@ -29,6 +29,9 @@ export function meta() {
   return [{ title: "Admin · Clubs | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };
+
 export default function AdminClubs({ loaderData }: Route.ComponentProps) {
   const { q, clubs } = loaderData;
   const revalidator = useRevalidator();

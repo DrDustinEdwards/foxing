@@ -313,3 +313,6 @@ function StreakCard({ label, value, hint }: { label: string; value: number; hint
     </div>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };
