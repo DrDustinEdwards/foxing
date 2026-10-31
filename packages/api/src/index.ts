@@ -1,5 +1,6 @@
 // @foxing/api - the Hono app, mountable in any Worker. Routes are thin and call
 // packages/core. The Worker injects resolveSession (Better Auth) via createApi.
+import { applyHeaderSet } from "@dustinedwards/site-runtime/headers";
 import { Hono } from "hono";
 import { errorHandler } from "./error";
 import { adminAccessMw } from "./middleware/admin-access";
@@ -28,6 +29,9 @@ import { stripeWebhookRoutes } from "./routes/webhooks-stripe";
 import { syncRoutes } from "./routes/sync";
 import type { ApiDeps, Env } from "./types";
 
+/** What an API answer gets when its route names no Cache-Control: the reader's own, never stored. */
+const PRIVATE_BY_DEFAULT = { "Cache-Control": "private, no-store" } as const;
+
 export function createApi(deps: ApiDeps) {
   const app = new Hono<Env>();
 
@@ -35,13 +39,11 @@ export function createApi(deps: ApiDeps) {
 
   // An answer is the reader's own unless its route says it is public (the
   // catalog's EDGE_CACHE), so by default none is stored: the account export
-  // and /me among them, errors included. A club's live socket is left alone: its
-  // 101 comes from the ClubRoom's fetch, whose headers cannot be changed, and
-  // setting one threw, so the upgrade answered 500 and no socket ever opened.
+  // and /me among them, errors included. applyHeaderSet passes a club's live
+  // socket (the ClubRoom's 101, whose headers cannot be changed) through as it is.
   app.use("*", async (c, next) => {
     await next();
-    if (c.res.status !== 101 && !c.res.headers.has("Cache-Control"))
-      c.res.headers.set("Cache-Control", "private, no-store");
+    c.res = applyHeaderSet(c.res, PRIVATE_BY_DEFAULT, { overwrite: false });
   });
 
   // Middleware pipeline (spec-cf-api order): request id + db, session, profile.
