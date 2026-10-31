@@ -26,8 +26,8 @@ async function fetchPath(path: string, init?: RequestInit) {
 }
 
 /** The check's failures for these headers, by name. Empty is a pass. */
-function failed(headers: Headers, csp = true): string[] {
-  return failures(checkSecurityHeaders(headers, { site: "foxing", csp })).map(
+function failed(headers: Headers, options: { inlineStyles?: boolean } = {}): string[] {
+  return failures(checkSecurityHeaders(headers, { site: "foxing", ...options })).map(
     (r) => `${r.name}: ${r.detail}`,
   );
 }
@@ -48,7 +48,8 @@ describe("security headers the live check cannot reach", () => {
   it("the reader passes the check: blob: frames and base-uri 'self', scripts still nonce-only", async () => {
     const { response, body } = await fetchPath("/read/some-book");
     expect(response.status).toBe(200);
-    expect(failed(response.headers)).toEqual([]);
+    // Only the reader keeps 'unsafe-inline' on style-src: Readium styles the book it renders inline.
+    expect(failed(response.headers, { inlineStyles: true })).toEqual([]);
     const policy = response.headers.get("Content-Security-Policy") ?? "";
     const nonce = nonceOf(policy);
     expect(policy).toBe(readerContentSecurityPolicy(nonce));
@@ -66,7 +67,6 @@ describe("security headers the live check cannot reach", () => {
     const { response } = await fetchPath("/reader-assets/sample-book/js/book.js");
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe("text/plain; charset=utf-8");
-    expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
     expect(failed(response.headers)).toEqual([]);
   });
 });
