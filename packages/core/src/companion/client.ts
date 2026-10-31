@@ -16,6 +16,11 @@ export type CompanionCallArgs = {
   maxTokens: number;
   /** What is calling, for the call's log line ("companion:chat", "catalog-cache"). */
   feature?: string;
+  /**
+   * Prompt caching (site-runtime's `cache`): true caches the prompt up to its last message, for a
+   * conversation whose next turn repeats it; unset caches only a system prompt long enough alone.
+   */
+  cache?: boolean;
 };
 
 /**
