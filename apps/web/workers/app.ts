@@ -25,6 +25,7 @@ import {
   UNCACHED,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
+import { originalKey } from "@dustinedwards/site-runtime/image";
 import { logEvent, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
@@ -321,7 +322,11 @@ app.get("/reader-assets/*", async (c) => {
 app.get("/media/*", async (c) => {
   let key: string;
   try {
-    key = decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length));
+    // A size URL is suffixed (photo.jpg.webp?w=640); the stored key is the original's.
+    key = originalKey(
+      decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length)),
+      c.req.raw,
+    );
   } catch {
     return c.notFound();
   }
