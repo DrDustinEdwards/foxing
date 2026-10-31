@@ -110,7 +110,11 @@ export async function action({ context, request }: Route.ActionArgs) {
   await requireProfile(env, request);
   // The form is one session id, read to a ceiling (site-runtime ./body), never the platform's uncapped formData().
   const form = await readCapped(request, 4 * 1024);
-  if (form === null) throw new Response("Payload Too Large", { status: 413, headers: { "Cache-Control": "no-store" } });
+  if (form === null)
+    throw new Response("Payload Too Large", {
+      status: 413,
+      headers: { "Cache-Control": "no-store" },
+    });
   const id = new URLSearchParams(form).get("session") ?? "";
   try {
     return { revoked: await revokeSessionById(await getAuth(env), request, id) };

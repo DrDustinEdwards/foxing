@@ -24,7 +24,8 @@ export const errors = {
   rateLimited: () => new AppError(429, "rate_limited", "Too many requests."),
   validation: (details: unknown) => new AppError(422, "validation", "Invalid request.", details),
   tooLarge: () => new AppError(413, "too_large", "Request body too large."),
-  unsupportedType: () => new AppError(415, "unsupported_type", "Send the body as application/json."),
+  unsupportedType: () =>
+    new AppError(415, "unsupported_type", "Send the body as application/json."),
   planRequired: () => new AppError(403, "plus_required", "This is a Foxing Plus feature."),
   quotaExceeded: (resetsAt: string) =>
     new AppError(429, "quota", "Daily AI usage limit reached.", { resets_at: resetsAt }),

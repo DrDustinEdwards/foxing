@@ -26,7 +26,11 @@ export const WEBHOOK_BODY_MAX_BYTES = 1024 * 1024;
  * cookie and no preflight. An empty body (DELETE /account with no choices) needs no type, and a signed webhook passes
  * `anyType`, since its signature, not a cookie, is what it carries.
  */
-export async function readBody(c: Context<Env>, max = BODY_MAX_BYTES, anyType = false): Promise<string> {
+export async function readBody(
+  c: Context<Env>,
+  max = BODY_MAX_BYTES,
+  anyType = false,
+): Promise<string> {
   const text = await readCapped(c.req.raw, max);
   if (text === null) throw errors.tooLarge();
   if (!anyType && text !== "" && requireJson(c.req.raw)) throw errors.unsupportedType();
