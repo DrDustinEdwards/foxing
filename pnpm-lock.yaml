@@ -19,8 +19,8 @@ importers:
         specifier: ^2.0.0
         version: 2.5.2
       '@dustinedwards/devkit':
-        specifier: github:DrDustinEdwards/devkit#v0.20.7
-        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b
+        specifier: github:DrDustinEdwards/devkit#v0.20.8
+        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245
       fast-xml-parser:
         specifier: ^5.8.0
         version: 5.8.0
@@ -379,8 +379,8 @@ importers:
         specifier: ^1.0.0
         version: 1.4.5(@cloudflare/workers-types@5.20260706.1)(@types/node@20.19.41)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       '@dustinedwards/devkit':
-        specifier: github:DrDustinEdwards/devkit#v0.20.7
-        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b
+        specifier: github:DrDustinEdwards/devkit#v0.20.8
+        version: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245
       '@playwright/test':
         specifier: ^1.61.1
         version: 1.61.1
@@ -1398,9 +1398,9 @@ packages:
     engines: {node: '>=24.14.1'}
     hasBin: true
 
-  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b}
-    version: 0.20.7
+  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245':
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245}
+    version: 0.20.8
     hasBin: true
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d':
@@ -8471,7 +8471,7 @@ snapshots:
 
   '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/53758765ce374e42d98a6d11c0425601f397e6fd': {}
 
-  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/a0fbcb5c7f65e4183a97989511f9d352950ad90b': {}
+  '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/d9d5a3448a50f183c3c8b4a5f293717728717245': {}
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/bb21dfdac352c74c60e412a93ed48c4e3cbba97d':
     dependencies:
