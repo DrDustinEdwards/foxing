@@ -5,23 +5,17 @@ import { useState } from "react";
 import { redirect } from "react-router";
 import { AuthLink, AuthShell } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
-import { authClient } from "~/lib/auth-client";
+import { authClient, safeNextPath, signInAgainIfStale } from "~/lib/auth-client";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
 
 export function meta() {
-  return [{ title: "Add a passkey | Foxing" }, { name: "robots", content: "noindex" }];
-}
-
-/** Only a path on this site, never another origin (`//host` included). */
-function nextPath(url: URL): string {
-  const next = url.searchParams.get("next") ?? "/me";
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/me";
+  return [{ title: "Create a passkey | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const next = nextPath(new URL(request.url));
+  const next = safeNextPath(new URL(request.url).searchParams.get("next"));
   const auth = await getAuth(env);
   const session = await auth.api.getSession({ headers: request.headers });
   if (!session?.user) throw redirect("/login");
@@ -56,6 +50,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
             setPending(true);
             setError(null);
             const res = await authClient.passkey.addPasskey();
+            if (signInAgainIfStale(res?.error)) return;
             setPending(false);
             if (res?.error) {
               setError("The passkey was not saved. Try again, or skip it for now.");
@@ -64,7 +59,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
             window.location.assign(next);
           }}
         >
-          {pending ? "Waiting for your device..." : "Add a passkey"}
+          {pending ? "Waiting for your device..." : "Create a passkey"}
         </button>
         <p className="text-center fx-auth-shell-box-2">
           <AuthLink to={next}>Not now</AuthLink>

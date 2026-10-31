@@ -5,7 +5,7 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
-import { breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
+import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/pick-club";
 
 function pickDate(year: number | null, month: number | null): string | null {
@@ -25,20 +25,12 @@ export const headers = staticPageHeaders;
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book club not found | Foxing" }];
   const { club } = data;
-  return [
-    ...buildMeta({
-      title: `${club.name} picks`,
-      description: club.description ?? `Every ${club.name} book club pick, tracked on Foxing.`,
-      pathname: location.pathname,
-    }),
-    ldJson(
-      breadcrumbLd([
-        { name: "Home", path: "/" },
-        { name: "Picks", path: "/picks" },
-        { name: club.name, path: `/picks/${club.slug}` },
-      ]),
-    ),
-  ];
+  return buildMeta({
+    title: `${club.name} picks`,
+    description: club.description ?? `Every ${club.name} book club pick, tracked on Foxing.`,
+    pathname: location.pathname,
+    pageType: "CollectionPage",
+  });
 }
 
 export default function PickClub({ loaderData }: Route.ComponentProps) {

@@ -3,7 +3,7 @@ import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
-import { absoluteUrl, breadcrumbLd, buildMeta, ldJson } from "~/lib/seo";
+import { SITE_NAME, absoluteUrl, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/author";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -18,12 +18,24 @@ export const headers = catalogPageHeaders;
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Author not found | Foxing" }];
   const { author } = data;
+  const { first, last } = author.yearRange ?? {};
+  const titles = author.books.slice(0, 3).map((b) => b.title);
   return [
     ...buildMeta({
       title: author.name,
-      description: `${author.name} on Foxing: ${author.bookCount} ${author.bookCount === 1 ? "book" : "books"} to read and track.`,
+      // Built from the catalog alone: a count, the publication years and a few titles.
+      description: `${author.name}: ${author.bookCount} public-domain ${author.bookCount === 1 ? "book" : "books"} on Foxing${
+        first ? ` (${first === last ? first : `${first} to ${last}`})` : ""
+      }${author.bookCount === 1 ? ":" : ", including"} ${new Intl.ListFormat("en").format(titles)}.`,
       pathname: location.pathname,
       type: "profile",
+      pageType: "CollectionPage",
+      // /authors is no page; an author sits under the catalog.
+      breadcrumbs: [
+        { name: SITE_NAME, path: "/" },
+        { name: "Books", path: "/books" },
+        { name: author.name, path: `/authors/${author.slug}` },
+      ],
     }),
     ldJson({
       "@context": "https://schema.org",
@@ -32,13 +44,6 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       url: absoluteUrl(`/authors/${author.slug}`),
       knowsAbout: "Literature",
     }),
-    ldJson(
-      breadcrumbLd([
-        { name: "Home", path: "/" },
-        { name: "Books", path: "/books" },
-        { name: author.name, path: `/authors/${author.slug}` },
-      ]),
-    ),
   ];
 }
 
