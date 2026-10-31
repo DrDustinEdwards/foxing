@@ -1,6 +1,7 @@
 // Account settings (auth-gated, noindex): profile fields, plan, visibility, appearance,
 // close friends, sign-in (passkeys, Google and Apple), signed-in devices, data export, and
 // account deletion. Every write shows a visible pending + role=alert error, never a silent no-op.
+import { readCapped } from "@dustinedwards/site-runtime/body";
 import {
   accountSessions,
   needsSecondPasskey,
@@ -124,7 +125,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
   await requireProfile(env, request);
-  const id = String((await request.formData()).get("session") ?? "");
+  // The form is one session id, read to a ceiling (site-runtime ./body), never the platform's uncapped formData().
+  const form = await readCapped(request, 4 * 1024);
+  if (form === null)
+    throw new Response("Payload Too Large", {
+      status: 413,
+      headers: { "Cache-Control": "no-store" },
+    });
+  const id = new URLSearchParams(form).get("session") ?? "";
   try {
     return { revoked: await revokeSessionById(await getAuth(env), request, id) };
   } catch (err) {

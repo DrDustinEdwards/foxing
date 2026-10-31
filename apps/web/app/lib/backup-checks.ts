@@ -17,9 +17,10 @@
 // KEPT: user, profiles, books, annotations, journal_posts and every other table.
 // The FTS5 tables (books_fts, annotations_fts) are not excluded: d1-dump never dumps their
 // shadow tables and dumps these internal-content ones through their columns with rowid.
-// test/backup.integration.test.ts derives the credential tables from the migrated schema and
-// fails if this list is missing one or names an extra one. d1-dump also fails the run on an
-// excluded name that is not a table, so a table dropped by a migration leaves this list too.
+// d1-dump's credential-column check (runBackup's `credentials`) fails the night on a dumped table
+// with a column named for a token, password, secret or key hash, so a new one is excluded here or
+// allowed below with its reason. d1-dump also fails the run on an excluded name that is not a
+// table, so a table dropped by a migration leaves this list too.
 export const BACKUP_EXCLUDE = [
   "session",
   "verification",
@@ -27,6 +28,11 @@ export const BACKUP_EXCLUDE = [
   "push_tokens",
   "preview_links",
 ] as const;
+
+// Columns whose names read as credentials but are safe in a dump.
+export const BACKUP_CREDENTIAL_ALLOW: Record<string, string> = {
+  "passkey.credential_id": "a passkey's public credential id; the table holds only public keys",
+};
 
 // Hand-written content that exists nowhere else, plus the catalog. Each must be in the dump.
 export const BACKUP_REQUIRED_TABLES = [

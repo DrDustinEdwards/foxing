@@ -75,6 +75,11 @@ jobs:
         run: pnpm run lint:cf
       - name: Drizzle migration check
         run: pnpm --filter @foxing/core exec drizzle-kit check
+      # Raw console.* calls in server code against .console.json's baseline (a rise fails; log
+      # through site-runtime ./log), and the migrations against packages/core/migrations-manifest.json
+      # (an applied one edited or gone, or a new one that drops or renames without `-- contract:`, fails).
+      - name: Console ratchet and expand-only migrations
+        run: pnpm run check:console && pnpm run check:migrations
       - name: Unit tests (core)
         run: pnpm --filter @foxing/core test
       - name: Integration tests (web, local D1)
@@ -91,7 +96,7 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@d9d5a3448a50f183c3c8b4a5f293717728717245 # v0.20.8
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
     with:
       worker-name: foxing
       health-url: https://foxing.app/health

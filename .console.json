@@ -1,0 +1,23 @@
+{
+  "files": [
+    "apps/web/app/**/*.{ts,tsx}",
+    "apps/web/workers/**/*.ts",
+    "packages/api/src/**/*.ts",
+    "packages/core/src/**/*.ts",
+    "packages/utils/src/**/*.ts"
+  ],
+  "ignore": [
+    "**/*.client.{ts,tsx}",
+    "**/*.{test,spec}.*",
+    "**/test/**",
+    "**/e2e/**",
+    "**/*.d.ts",
+    "**/build/**",
+    "**/node_modules/**"
+  ],
+  "baseline": {
+    "measured_at": "d24324c",
+    "calls": 0,
+    "files": {}
+  }
+}

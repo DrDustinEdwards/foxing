@@ -4,6 +4,7 @@
 // out. Sign-in is limited by Better Auth itself (site-runtime ./sign-in, in the database).
 // A missing or failing counter lets the request through, as the optional bindings did, so
 // local and miniflare runs work without the binding; limit() logs each such pass.
+import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { limit, mustStop } from "@dustinedwards/site-runtime/rate-limit";
 import { createMiddleware } from "hono/factory";
 import { errors } from "../error";
@@ -21,6 +22,13 @@ export const rateLimit = (cls: RlClass) =>
     const verdict = await limit(c.env.RATE_LIMITER, `${cls}:${who}`, rules, {
       onUnavailable: "allow",
     });
-    if (mustStop(verdict, "allow")) throw errors.rateLimited();
+    if (mustStop(verdict, "allow")) {
+      logEvent(
+        OWASP_EVENTS.rateLimitExceeded,
+        { ...requestFields(c.req.raw), bucket: cls },
+        { level: "warn" },
+      );
+      throw errors.rateLimited();
+    }
     await next();
   });
