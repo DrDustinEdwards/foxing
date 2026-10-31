@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.20.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.21.0",
     "@foxing/types": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "nanoid": "^5.1.0",
