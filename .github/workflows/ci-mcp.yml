@@ -48,3 +48,36 @@ jobs:
       # missing from package.json fails here.
       - name: Build (dry run, no deploy)
         run: npm run build
+
+  # devkit's shared deploy (worker-deploy.yml), as the web Worker's in ci-cf.yml: a merge to main deploys
+  # foxing-admin-mcp with DEPLOY_SHA set, waits for /health to report it, checks the live door, and rolls
+  # it back on a refusal. The pre-deploy stages wrangler.jsonc from the example and fills the OAUTH_KV id
+  # by the namespace's title, so no id is committed or kept in GitHub. Dormant until CF_DEPLOY is 'true'.
+  deploy:
+    needs: check
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
+    permissions:
+      contents: read
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@d9d5a3448a50f183c3c8b4a5f293717728717245 # v0.20.8
+    with:
+      worker-name: foxing-admin-mcp
+      health-url: https://admin-mcp.foxing.app/health
+      working-directory: mcp
+      pre-deploy: >-
+        id=$(npx wrangler kv namespace list | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const n=JSON.parse(s.slice(s.indexOf("["))).find(k=>k.title==="foxing-admin-mcp-oauth");if(!n){console.error("::error::no KV namespace titled foxing-admin-mcp-oauth");process.exit(1)}process.stdout.write(n.id)})') &&
+        sed -e "s|YOUR_OAUTH_KV_ID|$id|" wrangler.jsonc.example > wrangler.jsonc
+      # The live door: the protected-resource metadata names /mcp, a foreign Origin is refused 403 before
+      # any token check, and a bare request is a 401. Exit 0 passes, 1 refuses (rolls back), 3 could not run.
+      verify-command: >-
+        o=https://admin-mcp.foxing.app;
+        prm=$(curl -s --max-time 20 "$o/.well-known/oauth-protected-resource/mcp") || exit 3;
+        echo "$prm" | grep -q "\"resource\":\"$o/mcp\"" || { echo "::error::metadata does not name $o/mcp"; exit 1; };
+        evil=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST -H 'Origin: https://evil.example' -H 'Content-Type: application/json' -d '{}' "$o/mcp");
+        [ "$evil" = 403 ] || { echo "::error::foreign Origin answered $evil, not 403"; exit 1; };
+        bare=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST -H 'Content-Type: application/json' -d '{}' "$o/mcp");
+        [ "$bare" = 401 ] || { echo "::error::no token answered $bare, not 401"; exit 1; };
+        echo "admin MCP verified live at $o"
+      sha-var: DEPLOY_SHA
+    secrets:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

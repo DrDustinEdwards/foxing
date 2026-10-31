@@ -15,6 +15,8 @@ import { SERVER_INFO } from "./mcp-handler";
 
 export interface LoginEnv extends SharedLoginEnv {
   ADMIN_EMAIL?: string;
+  /** The deployed commit, set by CI's deploy (--var DEPLOY_SHA) and reported by /health. */
+  DEPLOY_SHA?: string;
 }
 
 export const defaultHandler = loginHandler<LoginEnv>({
@@ -27,4 +29,6 @@ write Journal posts; Carrel owns writing.</p>
   admit: isAdminUser,
   // Every sign-in, admitted or refused, is a row in the tool-call log.
   audit: { name: SERVER_INFO.name, version: SERVER_INFO.version },
+  // CI's deploy (devkit's worker-deploy.yml) passes DEPLOY_SHA and waits for /health to report it.
+  health: (env) => Response.json({ ok: true, sha: env.DEPLOY_SHA ?? null }),
 });
