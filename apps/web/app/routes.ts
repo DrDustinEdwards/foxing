@@ -8,6 +8,7 @@ export default [
   route("login", "routes/login.tsx"),
   route("onboarding", "routes/onboarding.tsx"),
   route("passkey", "routes/passkey-offer.tsx"),
+  route("sign-in/confirm", "routes/sign-in-confirm.tsx"),
   route("me", "routes/me.tsx"),
   route("settings", "routes/settings.tsx"),
   route("library", "routes/library.tsx"),

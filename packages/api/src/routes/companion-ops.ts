@@ -4,8 +4,8 @@
 // route should migrate there once Phase 8 builds it; a narrow interim is fine now).
 import { Hono } from "hono";
 import { companion } from "@foxing/core";
-import { errors } from "../error";
-import { requireSession } from "../http";
+import { AppError, errors } from "../error";
+import { readBody, requireSession } from "../http";
 import type { Env } from "../types";
 
 export const companionOpsRoutes = new Hono<Env>();
@@ -21,7 +21,12 @@ companionOpsRoutes.post("/ops/companion-cache-batch", async (c) => {
   const profile = c.get("profile");
   if (!profile?.isAdmin) throw errors.forbidden("Admin only.");
 
-  const body = await c.req.json().catch(() => ({}));
+  const body = await readBody(c)
+    .then(JSON.parse)
+    .catch((err) => {
+      if (err instanceof AppError) throw err;
+      return {};
+    });
   const limit = Math.min(MAX_BATCH, Math.max(1, Number(body?.limit) || 5));
 
   const streamCompanion = c.get("streamCompanion");
