@@ -280,7 +280,8 @@ export function MagicLinkForm({
     return mountTurnstile(widget.current, turnstileSiteKey);
   }, [turnstileSiteKey, attempt]);
 
-  if (sentTo) return <SignInCodeForm email={sentTo} next={next} />;
+  if (sentTo)
+    return <SignInCodeForm email={sentTo} next={next} onRestart={() => setSentTo(null)} />;
 
   return (
     <form
@@ -331,29 +332,59 @@ export function MagicLinkForm({
 }
 
 /**
+ * What a refused code means and what to do next, from Better Auth's email OTP error codes
+ * (better-auth 1.7.12 plugins/email-otp/routes.mjs) and site-runtime's per-address limit.
+ * INVALID_OTP is both a wrong code and one that is gone (used, or replaced by a newer email);
+ * after three wrong tries the code is spent, which Better Auth says only on the fourth.
+ */
+export function signInCodeError(code: string | undefined, wrongTries: number): string {
+  if (code === "TOO_MANY_ATTEMPTS" || (code === "INVALID_OTP" && wrongTries >= 3))
+    return "That code had three wrong tries, so it no longer works. Open the link in the same email, or send yourself a new one.";
+  if (code === "INVALID_OTP")
+    return "That code is not right. Check the six digits in the newest email from Foxing: a code from an older email, or one already used, does not work.";
+  if (code === "OTP_EXPIRED")
+    return `That code has expired: codes work for ${SIGN_IN_EXPIRES_IN_WORDS}. Send yourself a new one.`;
+  if (code === "EMAIL_RATE_LIMITED" || code === "TOO_MANY_REQUESTS")
+    return "Too many codes tried for this address today. Use the link in the email, or try again tomorrow.";
+  return "The code could not be checked. Check your connection and try again.";
+}
+
+/**
  * After the link is sent: the same mail carries a six-digit code, for when the link opens in
  * another browser (the mail app's, a phone). Typed here, it signs this tab in, a new address
  * included (it then lands on /onboarding through /me). Three wrong codes spend it; the link
- * still works.
+ * still works. `onRestart` goes back to the email form for a new link and code.
  */
-function SignInCodeForm({ email, next }: { email: string; next: string }) {
+function SignInCodeForm({
+  email,
+  next,
+  onRestart,
+}: {
+  email: string;
+  next: string;
+  onRestart: () => void;
+}) {
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const [wrongTries, setWrongTries] = useState(0);
   return (
     <form
       className="stack-3"
       onSubmit={async (event) => {
         event.preventDefault();
         setPending(true);
-        setFailed(false);
+        setFailure(null);
         const otp = String(new FormData(event.currentTarget).get("code") ?? "").trim();
         const res = await signIn.emailOtp({ email, otp }).catch(() => null);
         if (res && !res.error) {
           window.location.assign(afterLink(next));
           return;
         }
+        const code = (res?.error as { code?: string } | undefined)?.code;
+        const tries = code === "INVALID_OTP" ? wrongTries + 1 : wrongTries;
+        setWrongTries(tries);
         setPending(false);
-        setFailed(true);
+        setFailure(signInCodeError(code, tries));
       }}
     >
       <p role="status" className="fx-auth-shell-text-2">
@@ -369,13 +400,16 @@ function SignInCodeForm({ email, next }: { email: string; next: string }) {
         pattern="[0-9]{6}"
         maxLength={6}
       />
-      {failed ? (
+      {failure ? (
         <p role="alert" className="error">
-          That code did not work. Check it, or open the link in the email.
+          {failure}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
         {pending ? "Signing in..." : "Sign in with the code"}
+      </button>
+      <button type="button" onClick={onRestart} className="cap-btn full" data-variant="ghost">
+        Send a new link and code
       </button>
     </form>
   );

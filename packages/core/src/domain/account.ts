@@ -190,7 +190,8 @@ export const USER_SCOPED_TABLE_NAMES: ReadonlySet<string> = new Set(
  *  - Better Auth infrastructure (user, session, account, verification, passkey). `user`
  *    basics travel with the export via the caller's session; `account` holds sign-in
  *    links to Google or Apple and `passkey` the devices' public keys, neither the
- *    reader's own content. These are removed by deleteAccount.
+ *    reader's own content. Better Auth's deleteUser removes these for the reader's own
+ *    deletion (eraseAccountData runs first), and deleteAccount for an admin's.
  *  - Public content the user contributed or authored (catalog books via added_by,
  *    journal posts + versions via author_id / saved_by, admin announcements via
  *    created_by). These outlive the account: their FK is ON DELETE SET NULL, so
@@ -307,24 +308,60 @@ async function handoverStatements(
   return stmts;
 }
 
-/** GDPR erasure, in one D1 batch so a failure leaves nothing half-done: hand each club
- *  the user created to the member they chose (or the suggested one), then remove every
- *  user-owned row, then the Better Auth rows. Clubs nobody takes over go with the account. */
+/** The rows a deletion removes before the Better Auth ones: each club the user created handed
+ *  to the member they chose (or the suggested one), then every user-owned row, then the
+ *  sign-in codes and links kept under their email. Checks every choice before it returns. */
+async function erasureStatements(
+  db: Db,
+  userId: string,
+  successors: ClubSuccessors,
+): Promise<BatchItem<"sqlite">[]> {
+  const handover = await handoverStatements(db, userId, successors);
+  // verification keys on the email (identifier), not the user id.
+  const [row] = await db.select({ email: user.email }).from(user).where(eq(user.id, userId));
+  return [
+    ...handover,
+    ...REGISTRY.map((entry) => entry.del(db, userId)),
+    ...(row?.email ? [db.delete(verification).where(eq(verification.identifier, row.email))] : []),
+  ];
+}
+
+/** The reader's own deletion, run by Better Auth's deleteUser before it removes the sessions,
+ *  the Google and Apple links and the user (its passkeys go with the user): Foxing's part, in
+ *  one D1 batch, so a refused hand-over leaves nothing half-done. If Better Auth then fails,
+ *  the account is left empty and the reader can delete it again. */
+export async function eraseAccountData(
+  db: Db,
+  userId: string,
+  successors: ClubSuccessors = {},
+): Promise<void> {
+  const stmts = await erasureStatements(db, userId, successors);
+  if (stmts.length > 0) await db.batch(stmts as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
+}
+
+/** Checks the reader's hand-over choices without writing anything: the 422 comes before the
+ *  deletion starts. */
+export async function checkSuccessors(
+  db: Db,
+  userId: string,
+  successors: ClubSuccessors,
+): Promise<void> {
+  await handoverStatements(db, userId, successors);
+}
+
+/** GDPR erasure by an admin, in one D1 batch so a failure leaves nothing half-done: Foxing's
+ *  part (eraseAccountData's rows), then the Better Auth rows. Clubs nobody takes over go with
+ *  the account. */
 export async function deleteAccount(
   db: Db,
   userId: string,
   successors: ClubSuccessors = {},
 ): Promise<void> {
-  const handover = await handoverStatements(db, userId, successors);
-  // verification keys on the email (identifier), not the user id.
-  const [row] = await db.select({ email: user.email }).from(user).where(eq(user.id, userId));
   const stmts: BatchItem<"sqlite">[] = [
-    ...handover,
-    ...REGISTRY.map((entry) => entry.del(db, userId)),
+    ...(await erasureStatements(db, userId, successors)),
     db.delete(session).where(eq(session.userId, userId)),
     db.delete(account).where(eq(account.userId, userId)),
     db.delete(passkey).where(eq(passkey.userId, userId)),
-    ...(row?.email ? [db.delete(verification).where(eq(verification.identifier, row.email))] : []),
     db.delete(user).where(eq(user.id, userId)),
   ];
   await db.batch(stmts as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);

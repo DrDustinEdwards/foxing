@@ -146,7 +146,8 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <SessionsSection sessions={loaderData.sessions} />
           <DataSection />
           {loaderData.isAdmin ? <AdminSection /> : null}
-          <DangerSection />
+          {/* No session list means no sign-in in the last 10 minutes. */}
+          <DangerSection fresh={loaderData.sessions !== null} />
         </div>
       </Container>
       <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />

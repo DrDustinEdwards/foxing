@@ -55,6 +55,10 @@ export function createApi(deps: ApiDeps) {
   app.use("*", companionDepsMw(deps));
   app.use("*", billingDepsMw(deps));
   app.use("*", hubDepsMw(deps.resolveHub));
+  app.use("/account", async (c, next) => {
+    c.set("deleteUser", deps.deleteUser);
+    await next();
+  });
 
   app.route("/", catalogRoutes);
   app.route("/", profileRoutes);

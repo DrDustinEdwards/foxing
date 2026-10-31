@@ -6,7 +6,7 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
+import { ACCESS_LOGOUT_PATH, accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { type CronJob, runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
@@ -32,7 +32,7 @@ import { RouterContextProvider, type ServerBuild, createRequestHandler } from "r
 import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
-import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
+import { deleteUserAccount, getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
@@ -89,6 +89,9 @@ const reactRouterHandler = createRequestHandler(serverBuild, import.meta.env.MOD
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
+  // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
+  deleteUser: (req, env, { successors }) =>
+    deleteUserAccount(req, env as unknown as Env, successors),
   // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).
   checkAdminAccess: async (req, env, email) =>
     (await accessAdmin(req, env as unknown as Env, { admins: [email] })) !== null,
@@ -494,10 +497,40 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
   return response;
 }
 
-// An admin idle for an hour is signed out of Access (site-runtime ./access).
+// The admin pages and the browser admin APIs behind the same Access application.
+const ADMIN_PAGES = "/admin";
+const ADMIN_APIS = ["/api/v1/admin", "/api/v1/ops"];
+
+const under = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+// An admin idle for an hour is signed out of Access (site-runtime ./access), on the pages and
+// the APIs alike. On a page the idle answer is the redirect to Access's logout. A fetch() would
+// follow that redirect to the logout page and read its 200 as success, so on an API the answer
+// is a 401 the admin screens show as their error instead; the next page load signs out. The
+// admin MCP's service-binding calls carry no Access token, so the idle check never sees them.
+async function withAdminIdleSignOut(request: Request, handle: () => Promise<Response>) {
+  const res = await withAdminIdle(request, handle, { prefixes: [ADMIN_PAGES, ...ADMIN_APIS] });
+  const { pathname } = new URL(request.url);
+  if (res.status !== 302 || res.headers.get("Location") !== ACCESS_LOGOUT_PATH) return res;
+  if (!ADMIN_APIS.some((prefix) => under(pathname, prefix))) return res;
+  const idle = Response.json(
+    {
+      error: {
+        code: "admin_idle",
+        message: "You were signed out after an hour without activity. Reload the page to sign in.",
+      },
+    },
+    { status: 401, headers: { "Cache-Control": "no-store" } },
+  );
+  const cleared = res.headers.get("Set-Cookie");
+  if (cleared) idle.headers.append("Set-Cookie", cleared);
+  return withSecurityHeaders(idle, request);
+}
+
 export default {
   fetch: (request: Request, env: Env, ctx: ExecutionContext) =>
-    withAdminIdle(request, () => handleFetch(request, env, ctx)),
+    withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
   scheduled,
   queue,
 };

@@ -4,6 +4,7 @@ import type { limit } from "@dustinedwards/site-runtime/rate-limit";
 import type {
   BillingClient,
   BillingPriceConfig,
+  ClubSuccessors,
   CompanionCaller,
   Db,
   LiveMessage,
@@ -47,6 +48,7 @@ export type Variables = {
   structuredCompanion: StructuredCaller | null;
   billing: { client: BillingClient; prices: BillingPriceConfig };
   hub: ClubLiveHub;
+  deleteUser: ApiDeps["deleteUser"];
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -74,4 +76,12 @@ export type ApiDeps = {
   // admin), checked on /admin/* and /ops/* (middleware/admin-access.ts). The Worker
   // verifies Access's signed token (site-runtime ./access accessAdmin). Absent: refused.
   checkAdminAccess?: (req: Request, env: Bindings, email: string) => Promise<boolean>;
+  // The reader's own deletion (DELETE /account): the Worker runs Better Auth's deleteUser, which
+  // needs a sign-in from the last 10 minutes and runs core eraseAccountData with `successors`
+  // first. "not_fresh": refused, nothing deleted.
+  deleteUser: (
+    req: Request,
+    env: Bindings,
+    input: { userId: string; successors: ClubSuccessors },
+  ) => Promise<"deleted" | "not_fresh">;
 };
