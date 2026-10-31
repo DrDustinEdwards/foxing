@@ -24,7 +24,12 @@ export function Picture({
       {sources.map((s) => (
         <source key={s.media ? `${s.type} still` : s.type} {...s} />
       ))}
-      <img {...img} alt={alt} style={style ? { ...img.style, ...style } : img.style} loading={eager && !priority ? "eager" : img.loading} />
+      <img
+        {...img}
+        alt={alt}
+        style={style ? { ...img.style, ...style } : img.style}
+        loading={eager && !priority ? "eager" : img.loading}
+      />
     </picture>
   );
 }
