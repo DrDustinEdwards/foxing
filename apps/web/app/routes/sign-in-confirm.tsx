@@ -47,16 +47,16 @@ export default function SignInConfirm({ actionData }: Route.ComponentProps) {
   }
 
   return (
-    <AuthShell title="Sign in to Foxing" subtitle="Press the button to finish signing in.">
+    <AuthShell title="Sign in to Foxing">
       {/* A plain form: it posts to this URL, token and all, and the browser follows the redirect. */}
       <form method="post" className="stack-3">
         {actionData?.limited ? (
           <p role="alert" className="error">
-            Too many tries. Wait a minute, then press the button again.
+            Too many tries. Wait a minute, then try again.
           </p>
         ) : null}
         <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
-          Sign in to Foxing
+          Continue
         </button>
       </form>
     </AuthShell>
