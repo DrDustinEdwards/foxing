@@ -52,9 +52,9 @@ export default function AwardDetail({ loaderData }: Route.ComponentProps) {
           lede={`${award.entries.length} ${award.entries.length === 1 ? "winner" : "winners"} in the library.`}
         />
         <BookGrid>
-          {award.entries.map((e, i) => (
+          {award.entries.map((e) => (
             <div key={`${e.book.slug}-${e.year}`}>
-              <BookCard book={e.book} priority={i < 6} />
+              <BookCard book={e.book} />
               {e.year ? (
                 <p className="fx-award-detail-caps">
                   {e.year} · {e.distinction}

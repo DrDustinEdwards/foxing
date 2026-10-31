@@ -1,9 +1,11 @@
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
+import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
 import { focusStyle } from "~/lib/focus";
 import { renderJournalBody } from "~/lib/journal-body.server";
+import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
@@ -24,8 +26,13 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     throw new Response("Not found", { status: 404 });
   }
 
+  const cover = post.coverImageUrl
+    ? (await journalCovers(db, [post.coverImageUrl])).get(post.coverImageUrl)
+    : undefined;
+
   return {
-    html: await renderJournalBody(post.slug, post.content),
+    html: await renderJournalBody(db, post.slug, post.content),
+    cover,
     post: {
       slug: post.slug,
       title: post.title,
@@ -73,7 +80,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 }
 
 export default function JournalPost({ loaderData }: Route.ComponentProps) {
-  const { post, html } = loaderData;
+  const { post, html, cover } = loaderData;
   const published = fmtDate(post.publishedAt);
 
   return (
@@ -106,13 +113,13 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             </div>
           </header>
 
-          {post.coverImageUrl ? (
-            <img
-              src={post.coverImageUrl}
+          {cover ? (
+            <Picture
+              attrs={cover}
               alt={post.coverImageAlt ?? ""}
               className="mb-10 fx-journal-post-img"
+              priority
               style={focusStyle(post.coverFocus)}
-              loading="eager"
             />
           ) : null}
 

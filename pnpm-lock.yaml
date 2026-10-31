@@ -1406,7 +1406,7 @@ packages:
     hasBin: true
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7d25cc51efa0fa7e11b7bbfe37d7c77da7a340d9':
-    resolution: {gitHosted: true, integrity: sha512-A0HzRsoVGWGFeUVDjZ4sWjjXKvrCEOsmWPrZq3Wxr9K7KSWTBNYoLO1QhqcOJbR+g0l40rE+GD+SZdbS1R3UiQ==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7d25cc51efa0fa7e11b7bbfe37d7c77da7a340d9}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/7d25cc51efa0fa7e11b7bbfe37d7c77da7a340d9}
     version: 0.51.0
     hasBin: true
 
@@ -10071,7 +10071,9 @@ snapshots:
       metro-runtime: 0.84.5
     transitivePeerDependencies:
       - '@babel/core'
+      - bufferutil
       - supports-color
+      - utf-8-validate
 
   '@react-native/normalize-colors@0.86.3': {}
 

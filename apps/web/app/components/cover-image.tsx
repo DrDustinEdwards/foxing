@@ -1,46 +1,35 @@
-import { useState } from "react";
 import { cn } from "~/lib/cn";
-import { COVER_WIDTHS, coverPlaceholder, coverSrc, coverSrcSet } from "~/lib/images";
+import { coverAttributes } from "~/lib/images";
+import { Picture } from "./picture";
 
 type Props = {
   src: string | null | undefined;
   alt: string;
   /** The book/list title, drawn into the placeholder when there is no cover. */
   fallbackLabel?: string;
-  /** LCP cover on a detail page: eager + high priority. Everything else lazy. */
+  /** Only the page's LCP image: eager + high priority. Everything else lazy. */
   priority?: boolean;
+  /** coverThumb for covers shown at 80px or less. */
+  use?: "cover" | "coverThumb";
   sizes?: string;
   className?: string;
 };
 
 /**
- * Book cover with Cloudflare Image Transformations (responsive srcset, AVIF/WebP,
- * blur-up LQIP) and a no-CLS 2:3 aspect box. Falls back to the raw R2 URL when
- * Transformations is disabled, and to a typographic placeholder when a cover is
- * missing (community-book covers, per the deferred Stage 3 backfill).
+ * Book cover in a no-CLS 2:3 aspect box, as a `<picture>` of AVIF and WebP sizes (lib/images.ts),
+ * and a typographic placeholder when a cover is missing (community-book covers, per the deferred
+ * Stage 3 backfill).
  */
-export function CoverImage({ src, alt, fallbackLabel, priority, sizes, className }: Props) {
-  const [loaded, setLoaded] = useState(false);
-  const placeholder = src ? coverPlaceholder(src) : "";
-
+export function CoverImage({ src, alt, fallbackLabel, priority, use, sizes, className }: Props) {
   return (
-    <div
-      className={cn("cover-img", className)}
-      style={placeholder ? { backgroundImage: `url("${placeholder}")` } : undefined}
-      data-loaded={loaded ? "true" : "false"}
-    >
+    <div className={cn("cover-img", className)}>
       {src ? (
-        <img
-          src={coverSrc(src, 400)}
-          srcSet={coverSrcSet(src) || undefined}
-          sizes={sizes ?? `(min-width: 768px) ${COVER_WIDTHS[3]}px, 45vw`}
+        <CoverPicture
+          src={src}
           alt={alt}
-          width={400}
-          height={600}
-          loading={priority ? "eager" : "lazy"}
-          fetchPriority={priority ? "high" : "auto"}
-          decoding={priority ? "auto" : "async"}
-          onLoad={() => setLoaded(true)}
+          use={use}
+          sizes={sizes}
+          priority={priority}
           className="cover-img-photo"
         />
       ) : (
@@ -50,4 +39,18 @@ export function CoverImage({ src, alt, fallbackLabel, priority, sizes, className
       )}
     </div>
   );
+}
+
+/** A cover's `<picture>` alone, for a page that draws its own box. */
+export function CoverPicture({
+  src,
+  use,
+  sizes,
+  ...rest
+}: Omit<React.ComponentProps<typeof Picture>, "attrs"> & {
+  src: string;
+  use?: "cover" | "coverThumb";
+  sizes?: string;
+}) {
+  return <Picture attrs={coverAttributes(src, { use, sizes })} {...rest} />;
 }

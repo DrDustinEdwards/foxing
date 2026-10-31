@@ -18,6 +18,7 @@
 // sockets across N child objects (idFromName(`${clubId}:${shard}`)) and have the API
 // notify each shard. Nothing about D1-as-truth changes.
 import { DurableObject } from "cloudflare:workers";
+import type { ClubLiveHub } from "@foxing/api";
 import type { LiveMessage } from "@foxing/core";
 import { PING_FRAME, PONG_FRAME } from "@foxing/types";
 
@@ -105,4 +106,22 @@ export class ClubRoom extends DurableObject {
     const payload: ServerMessage = { t: "presence", users };
     for (const ws of sockets) this.send(ws, payload);
   }
+}
+
+/** The API's live hub over the ClubRoom namespace: one object per club. broadcast() runs only
+ *  AFTER a write commits to D1 (write -> commit -> notify); connect() forwards a
+ *  membership-checked upgrade to that club's object. */
+export function clubRoomHub(ns: DurableObjectNamespace<ClubRoom>): ClubLiveHub {
+  return {
+    async broadcast(clubId, message) {
+      await ns.getByName(clubId).broadcast(message);
+    },
+    async connect(clubId, userId, request) {
+      // Pass the verified user id on the URL; new Request(url, request) preserves the
+      // WebSocket upgrade so the ClubRoom can accept it.
+      const url = new URL(request.url);
+      url.searchParams.set("uid", userId);
+      return ns.getByName(clubId).fetch(new Request(url, request));
+    },
+  };
 }

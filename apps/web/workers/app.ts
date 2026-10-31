@@ -33,6 +33,7 @@ import { RouterContextProvider, type ServerBuild, createRequestHandler } from "r
 import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
+import { images } from "../app/lib/images";
 import {
   deleteUserAccount,
   getAuth,
@@ -43,6 +44,7 @@ import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.serv
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
 import { runBackup, runMediaBackup } from "../app/lib/backup.server";
+import { clubRoomHub } from "./club-room";
 import {
   CSP_REPORT_PATH,
   cspNonceFor,
@@ -137,25 +139,8 @@ const api = createApi({
     }
     return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
   },
-  // The live layer. One ClubRoom Durable Object per club; the API calls
-  // broadcast() only AFTER a write commits to D1 (write -> commit -> notify), and
-  // connect() forwards a membership-checked upgrade to that club's object. The DO
-  // never writes D1.
-  resolveHub: (env) => {
-    const ns = (env as unknown as Env).CLUB_ROOM;
-    return {
-      async broadcast(clubId, message) {
-        await ns.getByName(clubId).broadcast(message);
-      },
-      async connect(clubId, userId, request) {
-        // Pass the verified user id on the URL; new Request(url, request) preserves the
-        // WebSocket upgrade so the ClubRoom can accept it.
-        const url = new URL(request.url);
-        url.searchParams.set("uid", userId);
-        return ns.getByName(clubId).fetch(new Request(url, request));
-      },
-    };
-  },
+  // The live layer: one ClubRoom Durable Object per club (clubRoomHub). The DO never writes D1.
+  resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
 });
 
 const app = new Hono<{ Bindings: Env }>();
@@ -277,11 +262,11 @@ app.get("/reader-assets/*", async (c) => {
   return res;
 });
 
-// The Journal's media library (app/lib/carrel/journal-media-adapter.server.ts): the pictures Carrel
-// uploads for Journal posts, from the MEDIA bucket under journal/ only, so no other key (a reader
-// asset, say) is ever served from here. A replace or a turn keeps the address, so browsers keep a
-// copy an hour at most, and revalidate by the object's etag.
-app.get("/media/journal/*", async (c) => {
+// Every picture a page shows (app/lib/images.ts): covers from the COVERS bucket under covers/, and the
+// Journal's media library (app/lib/carrel/journal-media-adapter.server.ts) from MEDIA under journal/
+// only, so no other key (a reader asset, say) is ever served from here. A size is a year-long
+// immutable copy; a Journal address without its `v` (a replace or a turn keeps the key) an hour.
+app.get("/media/*", async (c) => {
   let key: string;
   try {
     key = decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length));
@@ -290,15 +275,20 @@ app.get("/media/journal/*", async (c) => {
   }
   if (key.split("/").some((part) => part === "" || part === "." || part === ".."))
     return c.notFound();
-  const object = await c.env.MEDIA.get(key, { onlyIf: c.req.raw.headers });
-  if (!object) return c.notFound();
-  const headers = new Headers({
-    "Cache-Control": "public, max-age=3600",
-    ETag: object.httpEtag,
+  const [bucket, stored] = key.startsWith("covers/")
+    ? [c.env.COVERS, key.slice("covers/".length)]
+    : key.startsWith("journal/")
+      ? [c.env.MEDIA, key]
+      : [null, ""];
+  if (!bucket) return c.notFound();
+  const versioned = key.startsWith("covers/") || c.req.query("v") !== undefined;
+  return images.respond(c.req.raw, {
+    object: await bucket.get(stored),
+    images: c.env.IMAGES,
+    cache: edgeCache(),
+    reread: () => bucket.get(stored),
+    ...(versioned ? {} : { cacheControl: "public, max-age=3600" }),
   });
-  object.writeHttpMetadata(headers);
-  if (!("body" in object)) return new Response(null, { status: 304, headers });
-  return new Response(object.body, { headers });
 });
 
 app.all("*", async (c) => {

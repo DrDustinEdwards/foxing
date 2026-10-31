@@ -593,7 +593,7 @@ export function journalSiteAdapter(options: {
           content: input.source,
         };
     const values = validated(slug, fields);
-    const html = await renderJournalBody(slug, values.content);
+    const html = await renderJournalBody(db, slug, values.content);
     const cover = values.coverImageUrl
       ? `<img src="${escapeHtml(values.coverImageUrl)}" alt="${escapeHtml(values.coverImageAlt ?? "")}" class="mb-10 fx-journal-post-img">`
       : "";

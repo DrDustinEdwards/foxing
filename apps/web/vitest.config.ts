@@ -36,8 +36,8 @@ export default defineConfig(async () => {
           d1Databases: ["DB"],
           kvNamespaces: ["APP_KV"],
           // The nightly backup's bucket (app/lib/backup.server.ts), empty and local.
-          // MEDIA: the reader assets bucket the Worker entry binds (empty here).
-          r2Buckets: ["BACKUPS", "MEDIA"],
+          // MEDIA and COVERS: the reader assets and covers buckets the Worker entry binds (empty here).
+          r2Buckets: ["BACKUPS", "MEDIA", "COVERS"],
           bindings: { TEST_MIGRATIONS: migrations },
         },
       }),

@@ -24,6 +24,10 @@ export const journalMedia = sqliteTable(
     height: integer("height"),
     /** SHA-256 of the current bytes, lower case hex: duplicates are exact bytes. */
     sha256: text("sha256").notNull(),
+    /** site-api's MediaPlaceholder: a 16 pixel blurred WebP data: URI; null where none was made. */
+    placeholder: text("placeholder"),
+    /** The picture's main color, #rrggbb; null where none was read. */
+    color: text("color"),
     alt: text("alt").notNull().default(""),
     caption: text("caption").notNull().default(""),
     tags: json<string[]>("tags").notNull().default([]),

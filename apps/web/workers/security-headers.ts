@@ -22,8 +22,8 @@ const CSP_ENDPOINT_NAME = "csp-endpoint";
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
- * - img: book covers, every one on the R2 custom domain covers.foxing.app (app/lib/images.ts; all
- *   2,209 cover_url rows in production D1 are on it). Avatars are profiles.avatar_url, empty in
+ * - img: covers.foxing.app, the R2 custom domain every cover_url names, for a Journal cover pasted
+ *   from there; pages show covers through /media/covers/ (app/lib/images.ts). Avatars are profiles.avatar_url, empty in
  *   production today; one on another host would be blocked (an empty avatar circle) until it is
  *   moved to R2 or its host is listed here.
  * - script, frame: Cloudflare Turnstile on the email sign-in link (site-runtime ./turnstile).

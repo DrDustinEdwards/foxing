@@ -35,10 +35,12 @@ export function createApi(deps: ApiDeps) {
 
   // An answer is the reader's own unless its route says it is public (the
   // catalog's EDGE_CACHE), so by default none is stored: the account export
-  // and /me among them, errors included.
+  // and /me among them, errors included. A club's live socket is left alone: its
+  // 101 comes from the ClubRoom's fetch, whose headers cannot be changed, and
+  // setting one threw, so the upgrade answered 500 and no socket ever opened.
   app.use("*", async (c, next) => {
     await next();
-    if (!c.res.headers.has("Cache-Control"))
+    if (c.res.status !== 101 && !c.res.headers.has("Cache-Control"))
       c.res.headers.set("Cache-Control", "private, no-store");
   });
 

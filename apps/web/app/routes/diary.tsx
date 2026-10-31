@@ -211,6 +211,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
               src={e.book.coverUrl}
               alt={`Cover of ${e.book.title}`}
               fallbackLabel={e.book.title}
+              use="coverThumb"
               sizes="64px"
             />
           </Link>
