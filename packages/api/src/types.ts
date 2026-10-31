@@ -51,6 +51,7 @@ export type Variables = {
   billing: { client: BillingClient; prices: BillingPriceConfig };
   hub: ClubLiveHub;
   deleteUser: ApiDeps["deleteUser"];
+  isFresh: ApiDeps["isFresh"];
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -81,6 +82,9 @@ export type ApiDeps = {
   // The reader's own deletion (DELETE /account): the Worker runs Better Auth's deleteUser, which
   // needs a sign-in from the last 10 minutes and runs core eraseAccountData with `successors`
   // first. "not_fresh": refused, nothing deleted.
+  // Whether the reader signed in within the last 10 minutes (site-runtime requireFreshSession),
+  // for the account export. Deletion checks its own, in Better Auth's deleteUser.
+  isFresh: (req: Request, env: Bindings) => Promise<boolean>;
   deleteUser: (
     req: Request,
     env: Bindings,

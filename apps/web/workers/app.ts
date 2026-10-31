@@ -22,6 +22,7 @@ import {
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
+import { pruneAuthEvents } from "@dustinedwards/site-runtime/sign-in";
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
@@ -32,7 +33,12 @@ import { RouterContextProvider, type ServerBuild, createRequestHandler } from "r
 import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
-import { deleteUserAccount, getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
+import {
+  deleteUserAccount,
+  getAuth,
+  isFreshSession,
+  sessionUserFromRequest,
+} from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
@@ -90,6 +96,7 @@ const reactRouterHandler = createRequestHandler(serverBuild, import.meta.env.MOD
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
   // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
+  isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
   deleteUser: (req, env, { successors }) =>
     deleteUserAccount(req, env as unknown as Env, successors),
   // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).
@@ -411,11 +418,13 @@ async function enqueueCompanionCache(env: Env): Promise<void> {
 // each isolated and recorded in cron_runs, which /health's cron check reads. A failed job fails
 // the invocation (Cron Events shows it) after the others have run.
 const CRON_JOBS: Record<string, (env: Env) => CronJob[]> = {
-  // Nightly: dump D1, copy the MEDIA bucket's new and changed objects, prune the 404 counts.
+  // Nightly: dump D1, copy the MEDIA bucket's new and changed objects, prune the 404 counts and
+  // the sign-in events (site-runtime pruneAuthEvents: a deleted user's after 30 days, all after a year).
   "17 3 * * *": (env) => [
     { name: "backup", everyMinutes: 1440, run: () => runBackup(env) },
     { name: "media-backup", everyMinutes: 1440, run: () => runMediaBackup(env) },
     { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
+    { name: "prune-auth-events", everyMinutes: 1440, run: () => pruneAuthEvents(env.DB) },
   ],
   "*/5 * * * *": (env) => [{ name: "push-sweep", everyMinutes: 5, run: () => runPushSweep(env) }],
   // Every minute: Carrel's site API puts due scheduled posts and updates live, retries the publish

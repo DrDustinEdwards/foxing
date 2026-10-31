@@ -7,7 +7,11 @@
 import { expo } from "@better-auth/expo";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type ClubSuccessors, createDb, eraseAccountData, schema } from "@foxing/core";
-import { signInOptions } from "@dustinedwards/site-runtime/sign-in";
+import {
+  SessionNotFresh,
+  requireFreshSession,
+  signInOptions,
+} from "@dustinedwards/site-runtime/sign-in";
 import { betterAuth } from "better-auth";
 import { waitUntil } from "cloudflare:workers";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -40,8 +44,14 @@ async function buildAuth(env: Env) {
     sendSignInCode: async ({ email, code }) => {
       await sendSignInCodeEmail(env, email, code);
     },
-    // Five sign-in mails an hour and ten typed codes a day per address.
+    // Five sign-in mails an hour, and wrong codes three an hour and ten a day, per address.
     emailLimiter: env.RATE_LIMITER,
+    // Each auth event is also a row in auth_events (migration 0012): Settings' security history,
+    // /health's spike check, and new-device and recovery notices read it.
+    eventsDb: env.DB,
+    // The link request is unchecked by Turnstile until Dustin creates the keys
+    // (TURNSTILE_SITE_KEY, TURNSTILE_SECRET_KEY); each request logs a warning until then.
+    turnstile: "off-until-keys",
     // A passkey, Google or Apple, the email, the sessions or the account changed: tell the reader.
     sendSecurityNotice: async (_kind, { user, detail }) => {
       await sendSecurityNoticeEmail(env, user.email, detail);
@@ -157,6 +167,17 @@ export async function deleteUserAccount(
   } catch (err) {
     const code = (err as { body?: { code?: string } }).body?.code;
     if (code === "SESSION_EXPIRED" || code === "SESSION_NOT_FRESH") return "not_fresh";
+    throw err;
+  }
+}
+
+/** Whether the request's session was made in the last 10 minutes (site-runtime
+ *  requireFreshSession), for the account export. */
+export async function isFreshSession(req: Request, env: Env): Promise<boolean> {
+  try {
+    return (await requireFreshSession(await getAuth(env), req)) !== null;
+  } catch (err) {
+    if (err instanceof SessionNotFresh) return false;
     throw err;
   }
 }

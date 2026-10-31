@@ -166,7 +166,7 @@ const EMAIL_CHANGE_PARAM = "email-change";
 
 /** What an email change link's return says, from Better Auth's ?error= codes
  *  (better-auth 1.7.12 email-verification.mjs verifyEmail); null when it did not return here. */
-export function emailChangeNotice(
+function emailChangeNotice(
   params: URLSearchParams,
   current: string,
 ): { error: boolean; text: string } | null {
@@ -522,16 +522,60 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
   );
 }
 
-export function DataSection() {
+export type SecurityActivity = {
+  what: string;
+  when: string;
+  device: string | null;
+  location: string | null;
+}[];
+
+/** The last ten sign-ins and sign-in changes (site-runtime securityHistory), newest first, so a
+ *  reader can spot one that was not theirs. */
+export function SecurityHistorySection({ activity }: { activity: SecurityActivity }) {
+  return (
+    <Card title="Recent security activity">
+      {activity.length === 0 ? (
+        <p className="ui">Nothing yet. Sign-ins and changes to how you sign in will show here.</p>
+      ) : (
+        <ul className="stack-3">
+          {activity.map((a, i) => (
+            // biome-ignore lint/suspicious/noArrayIndexKey: a fixed, newest-first list that never reorders on screen
+            <li key={i} className="ui">
+              <span className="strong">{a.what}</span>
+              <span className="block small dim">
+                {[a.when, a.device, a.location].filter(Boolean).join(". ")}.
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="mt-4 small dim">
+        Something you do not recognize? Sign out the other devices above and remove any passkey you
+        did not add.
+      </p>
+    </Card>
+  );
+}
+
+/** The export needs a sign-in from the last 10 minutes; past that, `fresh` is false and the
+ *  section offers one first. */
+export function DataSection({ fresh }: { fresh: boolean }) {
   return (
     <Card title="Your data">
       <p className="ui">
         Download a JSON archive of everything tied to your account: your profile, library, reading
         history, highlights, notes, and goals.
+        {fresh ? null : " It holds everything, so sign in again first."}
       </p>
-      <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
-        Download your data
-      </a>
+      {fresh ? (
+        <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
+          Download your data
+        </a>
+      ) : (
+        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+          Sign in again
+        </Link>
+      )}
     </Card>
   );
 }

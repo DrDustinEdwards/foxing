@@ -10,7 +10,8 @@ import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { Link } from "capsomer/react/link";
-import { signIn } from "~/lib/auth-client";
+import { authClient, signIn } from "~/lib/auth-client";
+import { signInWithPasskey } from "@dustinedwards/site-runtime/sign-in-client";
 
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
@@ -175,23 +176,33 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function signInWithPasskey(autoFill: boolean) {
-    const res = await signIn.passkey({ autoFill });
+  // site-runtime's signInWithPasskey: on a passkey this site no longer has, it tells the browser
+  // to stop offering it (the Signal API).
+  async function tryPasskey(autoFill: boolean) {
+    // Better Auth's client types its error without `code`, which the answer carries.
+    const client = authClient as unknown as Parameters<typeof signInWithPasskey>[0];
+    const res = await signInWithPasskey(client, { autoFill });
     if (!res?.error) {
       window.location.assign(redirectTo);
       return;
     }
+    const code = (res.error as { code?: string }).code;
     // A canceled prompt is the person choosing another way, not a failure to show.
-    if (!autoFill && !("code" in res.error && res.error.code === "AUTH_CANCELLED")) {
-      setError("That passkey didn't work. Try again, or use another way below.");
-    }
+    if (autoFill || code === "AUTH_CANCELLED") return;
+    setError(
+      code === "RATE_LIMIT_UNAVAILABLE"
+        ? "Sign-in is busy right now. Wait a minute and try again, or use the email link below."
+        : code === "EMAIL_RATE_LIMITED" || code === "TOO_MANY_REQUESTS"
+          ? "Too many tries. Wait a while, then try again, or use the email link below."
+          : "That passkey didn't work. Try again, or use another way below.",
+    );
   }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: once per page; the browser holds one pending autofill request
   useEffect(() => {
     if (typeof PublicKeyCredential === "undefined") return;
     void PublicKeyCredential.isConditionalMediationAvailable?.().then((ok) => {
-      if (ok) void signInWithPasskey(true);
+      if (ok) void tryPasskey(true);
     });
   }, []);
 
@@ -206,7 +217,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         onClick={async () => {
           setPending(true);
           setError(null);
-          await signInWithPasskey(false);
+          await tryPasskey(false);
           setPending(false);
         }}
       >
@@ -269,7 +280,7 @@ export function MagicLinkForm({
 }) {
   const [pending, setPending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const [checkFailed, setCheckFailed] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const widget = useRef<HTMLDivElement>(null);
 
@@ -289,7 +300,7 @@ export function MagicLinkForm({
       onSubmit={async (event) => {
         event.preventDefault();
         setPending(true);
-        setCheckFailed(false);
+        setRefusal(null);
         const form = new FormData(event.currentTarget);
         const email = String(form.get("email"));
         const token = String(form.get("cf-turnstile-response") ?? "");
@@ -306,12 +317,19 @@ export function MagicLinkForm({
           )
           .catch(() => null);
         setPending(false);
-        // The bot check is the one refusal to show: everything else gets the same neutral
-        // result, so the form never says whether an address has an account.
+        // The refusals to show are the ones about the site, never the address: the bot check, and
+        // the link request turned off (no Turnstile keys) or its counter down. Everything else gets
+        // the same neutral result, so the form never says whether an address has an account.
         const code = (res?.error as { code?: string } | undefined)?.code;
         if (code === "MISSING_RESPONSE" || code === "VERIFICATION_FAILED") {
-          setCheckFailed(true);
+          setRefusal("Complete the check, then send the link again.");
           setAttempt((n) => n + 1);
+          return;
+        }
+        if (code === "TURNSTILE_NOT_SET" || code === "RATE_LIMIT_UNAVAILABLE") {
+          setRefusal(
+            "Sign-in by email is not available right now. Use a passkey, Google or Apple, or try again later.",
+          );
           return;
         }
         setSentTo(email);
@@ -319,9 +337,9 @@ export function MagicLinkForm({
     >
       <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
       {turnstileSiteKey ? <div ref={widget} /> : null}
-      {checkFailed ? (
+      {refusal ? (
         <p role="alert" className="error">
-          Complete the check, then send the link again.
+          {refusal}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
@@ -337,15 +355,17 @@ export function MagicLinkForm({
  * INVALID_OTP is both a wrong code and one that is gone (used, or replaced by a newer email);
  * after three wrong tries the code is spent, which Better Auth says only on the fourth.
  */
-export function signInCodeError(code: string | undefined, wrongTries: number): string {
+function signInCodeError(code: string | undefined, wrongTries: number): string {
   if (code === "TOO_MANY_ATTEMPTS" || (code === "INVALID_OTP" && wrongTries >= 3))
     return "That code had three wrong tries, so it no longer works. Open the link in the same email, or send yourself a new one.";
   if (code === "INVALID_OTP")
     return "That code is not right. Check the six digits in the newest email from Foxing: a code from an older email, or one already used, does not work.";
   if (code === "OTP_EXPIRED")
     return `That code has expired: codes work for ${SIGN_IN_EXPIRES_IN_WORDS}. Send yourself a new one.`;
+  if (code === "RATE_LIMIT_UNAVAILABLE")
+    return "Codes cannot be checked right now. Open the link in the email, or try again in a minute.";
   if (code === "EMAIL_RATE_LIMITED" || code === "TOO_MANY_REQUESTS")
-    return "Too many codes tried for this address today. Use the link in the email, or try again tomorrow.";
+    return "Too many wrong codes for this address. Use the link in the email, or try again in an hour.";
   return "The code could not be checked. Check your connection and try again.";
 }
 

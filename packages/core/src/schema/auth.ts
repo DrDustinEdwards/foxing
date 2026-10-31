@@ -100,3 +100,22 @@ export const passkey = sqliteTable(
     index("passkey_credential_id_idx").on(t.credentialID),
   ],
 );
+
+// One row per sign-in event (site-runtime ./sign-in `eventsDb`), exactly site-runtime's
+// AUTH_EVENTS_SQL: no address, token or code. Settings' security history, /health's spike check
+// and the new-device and recovery notices read it; the daily cron prunes it (pruneAuthEvents).
+// No foreign key: rows outlive a deleted user until the prune.
+export const authEvents = sqliteTable(
+  "auth_events",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    at: integer("at").notNull(),
+    event: text("event").notNull(),
+    change: text("change"),
+    via: text("via"),
+    userId: text("user_id"),
+    device: text("device"),
+    location: text("location"),
+  },
+  (t) => [index("auth_events_user").on(t.userId, t.at), index("auth_events_at").on(t.at, t.event)],
+);

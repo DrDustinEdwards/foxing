@@ -5,6 +5,8 @@ import {
   accountSessions,
   passkeyLabel,
   revokeSessionById,
+  securityHistory,
+  type SecurityHistoryEntry,
   signInMethods,
 } from "@dustinedwards/site-runtime/sign-in";
 import { createDb, views } from "@foxing/core";
@@ -23,6 +25,7 @@ import {
   DataSection,
   EmailSection,
   ProfileSection,
+  SecurityHistorySection,
   SessionsSection,
   SignInSection,
   UsernameSection,
@@ -40,13 +43,14 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user, profile } = await requireProfile(env, request);
   const isPlus = profile.subscriptionTier === "plus";
   const auth = await getAuth(env);
-  const [people, passkeys, accounts, sessions] = await Promise.all([
+  const [people, passkeys, accounts, sessions, history] = await Promise.all([
     views.people(createDb(env.DB), user.id),
     auth.api.listPasskeys({ headers: request.headers }),
     auth.api.listUserAccounts({ headers: request.headers }),
     // Listing sessions needs a sign-in from the last 10 minutes; past that it is null and the
     // section asks for one. Any other failure fails the page.
     accountSessions(auth, request),
+    securityHistory(env.DB, user.id, 10),
   ]);
   const methods = signInMethods(env, { social: true });
   // The joined account's own id, which Disconnect names.
@@ -88,6 +92,12 @@ export async function loader({ context, request }: Route.LoaderArgs) {
           : []),
       ],
     },
+    activity: history.map((h) => ({
+      what: activityLabel(h),
+      when: `${dateTimeLabel.format(h.at)} UTC`,
+      device: h.device,
+      location: h.location,
+    })),
     // This device first, then the most recently active.
     sessions: sessions
       ? sessions.map((row) => ({
@@ -117,6 +127,40 @@ export async function action({ context, request }: Route.ActionArgs) {
 }
 
 const dateLabel = new Intl.DateTimeFormat("en-US", { dateStyle: "long" });
+const dateTimeLabel = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "UTC",
+});
+
+const WAY_IN: Record<string, string> = {
+  link: "an email link",
+  code: "an email code",
+  passkey: "a passkey",
+  google: "Google",
+  apple: "Apple",
+};
+
+/** One line of the security history, in plain words. */
+function activityLabel({ kind, via }: SecurityHistoryEntry): string {
+  const way = via ? (WAY_IN[via] ?? via) : null;
+  switch (kind) {
+    case "sign-in":
+      return way ? `Signed in with ${way}` : "Signed in";
+    case "passkey-added":
+      return "Passkey added";
+    case "passkey-removed":
+      return "Passkey removed";
+    case "sign-in-linked":
+      return way ? `${way} connected` : "Sign-in method connected";
+    case "sign-in-unlinked":
+      return way ? `${way} disconnected` : "Sign-in method disconnected";
+    case "email-changed":
+      return "Email changed";
+    case "recovery":
+      return "Signed in by email with no passkey left; other devices signed out";
+  }
+}
 
 export function meta() {
   return [{ title: "Settings | Foxing" }, { name: "robots", content: "noindex" }];
@@ -144,7 +188,8 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <CloseFriendsSection people={loaderData.people} />
           <SignInSection initial={loaderData.signIn} />
           <SessionsSection sessions={loaderData.sessions} />
-          <DataSection />
+          <SecurityHistorySection activity={loaderData.activity} />
+          <DataSection fresh={loaderData.sessions !== null} />
           {loaderData.isAdmin ? <AdminSection /> : null}
           {/* No session list means no sign-in in the last 10 minutes. */}
           <DangerSection fresh={loaderData.sessions !== null} />
