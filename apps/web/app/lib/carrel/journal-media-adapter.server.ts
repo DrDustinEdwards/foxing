@@ -13,11 +13,11 @@
 // Offered from site-api v0.13: list and search, upload, alt, tags, trash and restore, delete by the
 // Journal's own reference check, caption, replace, duplicates, usage, lenses and filters, import,
 // credit and license, turns and mirrors, history and revert, the change log, shrinking at upload
-// and the resize pass, embedded metadata and suggestions. An upload, a replace and the resize pass
-// go through site-api's prepareUpload (v0.15): HEIC and HEIF to JPEG, the location taken out, the
-// shrink, the size, the embedded metadata, and the placeholder and color the library shows. Not
-// offered: the focal point, since no Journal page crops around one (their covers are cropped by
-// CSS, object-fit: cover), so a point set in Carrel would change nothing a reader sees.
+// and the resize pass, embedded metadata and suggestions, and the focal point: a Journal cover is
+// cropped by CSS (object-fit: cover), and its object-position is the point set in Carrel. A turn or
+// a mirror moves the point with the picture; a replace or a revert clears it. An upload, a replace
+// and the resize pass go through site-api's prepareUpload: HEIC and HEIF to JPEG, the location taken
+// out, the shrink, the size, the embedded metadata, and the placeholder and color the library shows.
 
 import { slugify } from "@drdustinedwards/site-helpers/slug";
 import {
@@ -32,6 +32,7 @@ import {
   prepareUpload,
   RefusedError,
   sha256Hex,
+  transformFocus,
   turnsSize,
   VersionConflictError,
 } from "@dustinedwards/site-api";
@@ -112,6 +113,7 @@ function itemOf(row: Row, usedCount?: number): MediaItem {
     tags: row.tags,
     trashedAt: row.trashedAt ? row.trashedAt.toISOString() : null,
     caption: row.caption,
+    focus: row.focus,
     ...(usedCount === undefined ? {} : { usedCount }),
     placeholder: row.placeholder,
     color: row.color,
@@ -211,6 +213,7 @@ export function journalMediaAdapter(options: {
       width: number | null;
       height: number | null;
       reason: string;
+      focus: string | null;
       placeholder?: string | null;
       color?: string | null;
     },
@@ -246,6 +249,7 @@ export function journalMediaAdapter(options: {
       width: next.width,
       height: next.height,
       sha256,
+      focus: next.focus,
       ...look,
     });
     return itemOf(await row(file.key));
@@ -463,6 +467,10 @@ export function journalMediaAdapter(options: {
       return writeAt(id, { trashedAt: null }, input, "journal-media.restore");
     },
 
+    async setFocus(id, input) {
+      return writeAt(id, { focus: input.focus }, input, "journal-media.focus");
+    },
+
     async setCaption(id, input) {
       return writeAt(id, { caption: input.caption }, input, "journal-media.caption");
     },
@@ -482,7 +490,7 @@ export function journalMediaAdapter(options: {
     async replace(id, input) {
       const prepared = await prepareUpload(env.IMAGES, { ...input, alt: "" });
       await claim(id, input.expectedVersion);
-      const item = await swapBytes(await row(id), { ...prepared, reason: "replace" });
+      const item = await swapBytes(await row(id), { ...prepared, reason: "replace", focus: null });
       await audit("journal-media.replace", { key: id, changeId: input.changeId });
       return { item, sizesNeedPurge: false };
     },
@@ -515,6 +523,7 @@ export function journalMediaAdapter(options: {
         width: swapped ? file.height : file.width,
         height: swapped ? file.width : file.height,
         reason: "transform",
+        focus: transformFocus(file.focus, input.op),
       });
       await audit("journal-media.transform", { key: id, op: input.op, changeId: input.changeId });
       return { item, sizesNeedPurge: false };
@@ -554,6 +563,7 @@ export function journalMediaAdapter(options: {
         width: revision.width,
         height: revision.height,
         reason: "revert",
+        focus: null,
       });
       await audit("journal-media.revert", { key: id, to: input.to, changeId: input.changeId });
       return { item, sizesNeedPurge: false };
@@ -577,7 +587,7 @@ export function journalMediaAdapter(options: {
       );
       if (!small.resizedFrom) return { resized: false, item: itemOf(file) };
       await claim(id, input.expectedVersion);
-      const item = await swapBytes(file, { ...small, reason: "resize" });
+      const item = await swapBytes(file, { ...small, reason: "resize", focus: file.focus });
       await audit("journal-media.resize", { key: id, changeId: input.changeId });
       return { resized: true, item };
     },

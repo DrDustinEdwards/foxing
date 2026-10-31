@@ -75,8 +75,22 @@
     {
       "idx": 10,
       "version": "6",
-      "when": 1793417857706,
-      "tag": "0010_journal_media_placeholder",
+      "when": 1793438605481,
+      "tag": "0010_journal_trash_and_renames",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1793438605482,
+      "tag": "0011_site_api_store",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1793443112127,
+      "tag": "0012_journal_media_placeholder",
       "breakpoints": true
     }
   ]

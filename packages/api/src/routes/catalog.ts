@@ -69,7 +69,7 @@ catalogRoutes.get("/authors/:slug", async (c) => {
 catalogRoutes.get("/recommendations", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   const set = await getRecommendations(c.get("db"), session.id, {
-    caller: c.get("streamCompanion"),
+    caller: c.get("structuredCompanion"),
     kv: c.env.APP_KV,
     refresh: c.req.query("refresh") === "1",
   });

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RecCandidate } from "../src/repositories";
-import { parseAiSelection, rankCandidates, type RankSignals } from "../src/domain/recommendations";
+import { rankCandidates, type RankSignals } from "../src/domain/recommendations";
 
 function cand(over: Partial<RecCandidate> & { id: string }): RecCandidate {
   return {
@@ -104,28 +104,5 @@ describe("rankCandidates - tier 2 (behavior) boosting", () => {
     const signals: RankSignals = { ...NO_SIGNALS, behaviorGenres: ["Gothic"] };
     const ranked = rankCandidates([cand({ id: "g", subjects: ["Gothic"] })], signals, new Set());
     expect(ranked[0].reason).toBe("More Gothic, which you read");
-  });
-});
-
-describe("parseAiSelection", () => {
-  const allowed = new Set(["a", "b", "c"]);
-
-  it("parses a strict array, keeping only allowed ids and one line reasons", () => {
-    const text = `[{"book_id":"a","reason":"  Dark  and\\ntense  "},{"book_id":"b","reason":"Cozy"}]`;
-    expect(parseAiSelection(text, allowed)).toEqual([
-      { bookId: "a", reason: "Dark and tense" },
-      { bookId: "b", reason: "Cozy" },
-    ]);
-  });
-
-  it("tolerates prose around the array and drops unknown/duplicate ids", () => {
-    const text = `Here you go: [{"book_id":"a","reason":"x"},{"book_id":"zzz","reason":"y"},{"book_id":"a","reason":"dup"}] done`;
-    expect(parseAiSelection(text, allowed)).toEqual([{ bookId: "a", reason: "x" }]);
-  });
-
-  it("returns null on malformed JSON so the caller falls back to data ranking", () => {
-    expect(parseAiSelection("not json at all", allowed)).toBeNull();
-    expect(parseAiSelection("[{book_id:'a'}]", allowed)).toBeNull();
-    expect(parseAiSelection("[]", allowed)).toBeNull();
   });
 });

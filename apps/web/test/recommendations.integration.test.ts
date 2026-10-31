@@ -1,22 +1,19 @@
 import { env } from "cloudflare:test";
 import { createDb, getRecommendations, schema } from "@foxing/core";
-import type { CompanionCaller } from "@foxing/core";
+import type { StructuredCaller } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 
 // getRecommendations end to end against local D1 (real migrations) + the real miniflare
 // KV. The AI tier is exercised with a stubbed caller (no network): one that returns a
-// valid selection (personalised) and one that returns garbage (silent fallback to the
-// data ranking). Free/zero-history and with-history both return a full data page.
+// valid selection (personalised) and one that fails, as the real caller does on a reply
+// that did not finish or did not parse (silent fallback to the data ranking). Free/zero-history and with-history both return a full data page.
 
 const db = () => createDb(env.DB);
 
-// A caller that emits `text` as one chunk then a done event. No network.
-function stubCaller(text: string): CompanionCaller {
-  return async function* () {
-    yield { type: "text", delta: text } as const;
-    yield { type: "done", inputTokens: 20, outputTokens: 40 } as const;
-  };
+// A caller that answers `value` as the parsed structured reply. No network.
+function stubCaller(value: unknown): StructuredCaller {
+  return async () => ({ value, inputTokens: 20, outputTokens: 40 });
 }
 
 async function seedUser(id: string, tier: "free" | "plus", favoriteGenres: string[] | null) {
@@ -219,12 +216,9 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
 
   it("uses the AI selection + reasons when the model returns valid JSON", async () => {
     await seedUser("plus-ok", "plus", ["Gothic"]);
-    const selection = JSON.stringify(
-      Array.from({ length: 8 }, (_, i) => ({
-        book_id: `b${i}`,
-        reason: `AI reason ${i}`,
-      })),
-    );
+    const selection = {
+      picks: Array.from({ length: 8 }, (_, i) => ({ book_id: `b${i}`, reason: `AI reason ${i}` })),
+    };
     const set = await getRecommendations(db(), "plus-ok", {
       caller: stubCaller(selection),
       kv: env.APP_KV,
@@ -235,10 +229,12 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
     expect(set.recommendations[0].reason).toBe("AI reason 0");
   });
 
-  it("falls back to the data ranking silently when the model returns garbage", async () => {
+  it("falls back to the data ranking silently when the model call fails", async () => {
     await seedUser("plus-bad", "plus", ["Gothic"]);
     const set = await getRecommendations(db(), "plus-bad", {
-      caller: stubCaller("sorry, I cannot help with that"),
+      caller: async () => {
+        throw new Error("The model call did not finish (invalid_output).");
+      },
       kv: env.APP_KV,
     });
 

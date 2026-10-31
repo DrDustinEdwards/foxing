@@ -4,8 +4,15 @@
 // and refuse a link that is not https.
 
 import { logEvent } from "@dustinedwards/site-runtime/log";
-import { SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
-import { type Brand, magicLink, type Rendered, renderEmail, type Template } from "capsomer/email";
+import { type NoticeDetail, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
+import {
+  type Brand,
+  magicLink,
+  type Rendered,
+  renderEmail,
+  securityNotice,
+  type Template,
+} from "capsomer/email";
 
 const brand: Brand = { name: "Foxing", family: "fox" };
 
@@ -77,4 +84,11 @@ const confirmEmail: Template<{ url: string }> = {
 
 export function sendVerificationEmail(env: Env, to: string, url: string): Promise<void> {
   return send(env, to, renderEmail(confirmEmail, { brand, to, url }), [url]);
+}
+
+/** A change to how the reader signs in (site-runtime ./sign-in `sendSecurityNotice`) on
+ *  Capsomer's security-notice template, its button back to /settings. It holds no sign-in link. */
+export function sendSecurityNoticeEmail(env: Env, to: string, detail: NoticeDetail): Promise<void> {
+  const url = new URL("/settings", env.BETTER_AUTH_URL).href;
+  return send(env, to, renderEmail(securityNotice, { brand, to, ...detail, url }));
 }

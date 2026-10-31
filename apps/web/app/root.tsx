@@ -1,5 +1,7 @@
+import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
+import { LinkPrefetch } from "capsomer/react/link";
 import { useState } from "react";
 import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
 import type { Route } from "./+types/root";
@@ -33,7 +35,7 @@ export function meta({ error }: Route.MetaArgs) {
 
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
-  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  ...iconLinks(),
 ];
 
 // Set data-theme before paint so there is no theme flash. Stored preference wins;
@@ -78,12 +80,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 // server never shares a cache between requests.
 const api = createApiClient();
 
+// Capsomer's Link prefetches on hover, which runs the target's loader. This loader writes on a GET
+// (KV, and an AI call for a Plus reader), so it is never prefetched, beyond the family's own list.
+const GET_WRITERS = ["/find-next-book"];
+
 export default function App() {
   const [queryClient] = useState(createFoxingQueryClient);
   return (
-    <FoxingDataProvider api={api} queryClient={queryClient}>
-      <Outlet />
-    </FoxingDataProvider>
+    <LinkPrefetch exclude={GET_WRITERS}>
+      <FoxingDataProvider api={api} queryClient={queryClient}>
+        <Outlet />
+      </FoxingDataProvider>
+    </LinkPrefetch>
   );
 }
 

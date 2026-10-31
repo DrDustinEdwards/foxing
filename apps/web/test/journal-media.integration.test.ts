@@ -198,16 +198,29 @@ describe("Journal media: upload, serve, use and delete", () => {
 });
 
 describe("Journal media: bytes and their history", () => {
-  it("turns a picture in place, keeps the old bytes, and a revert puts them back", async () => {
+  it("turns a picture in place with its focal point, keeps the old bytes, and a revert puts them back", async () => {
     const item = await upload("turn-case");
+    const focused = await carrel("PUT", `/media/${enc(item.id)}/focus`, {
+      focus: "0.25x0.4",
+      expectedVersion: item.version,
+      changeId: "chg-focus",
+    });
+    expect(focused.status, await focused.clone().text()).toBe(200);
     const turned = await carrel("POST", `/media/${enc(item.id)}/transform`, {
       op: "rotate-90",
-      expectedVersion: item.version,
+      expectedVersion: (await read<WriteResult>(focused)).version,
       changeId: "chg-turn",
     });
     expect(turned.status, await turned.clone().text()).toBe(200);
     const after = await read<MediaItem & { asNewFile: boolean }>(turned);
-    expect(after).toMatchObject({ id: item.id, asNewFile: false, width: 800, height: 1200 });
+    // The point moved with the picture: a quarter turn clockwise.
+    expect(after).toMatchObject({
+      id: item.id,
+      asNewFile: false,
+      width: 800,
+      height: 1200,
+      focus: "0.6x0.25",
+    });
     expect(await objectBytes(env.MEDIA, item.id)).not.toEqual(png("turn-case"));
 
     type History = { revisions: Array<{ rev: string; reason: string; current: boolean }> };
@@ -223,6 +236,8 @@ describe("Journal media: bytes and their history", () => {
     });
     expect(reverted.status, await reverted.clone().text()).toBe(200);
     expect(await objectBytes(env.MEDIA, item.id)).toEqual(png("turn-case"));
+    // Other bytes, so the point is cleared.
+    expect((await read<MediaItem>(reverted)).focus).toBeNull();
   });
 
   it("shrinks a large picture at upload unless asked not to, and keeps the original", async () => {

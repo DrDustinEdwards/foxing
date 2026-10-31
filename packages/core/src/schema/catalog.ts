@@ -151,11 +151,23 @@ export const journalPosts = sqliteTable(
     ogDescription: text("og_description"),
     canonicalUrl: text("canonical_url"),
     readingTimeMinutes: integer("reading_time_minutes"),
+    // Carrel's content trash (site-api v0.17.0): set when the post goes to the trash, which takes
+    // it off the Journal; null otherwise. site-api's runSchedules deletes it 30 days on.
+    trashedAt: ts("trashed_at"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (t) => [index("journal_posts_published_idx").on(t.isPublished, t.publishedAt)],
 );
+
+// The old addresses of renamed Journal posts (site-api v0.17.0 rename): /journal/<from_slug>
+// answers a 301 to /journal/<to_slug>. A later rename points every row at the newest slug, so
+// there are no chains; the post route reads it only when no live post holds the slug.
+export const journalSlugRedirects = sqliteTable("journal_slug_redirects", {
+  fromSlug: text("from_slug").primaryKey(),
+  toSlug: text("to_slug").notNull(),
+  createdAt: createdAt(),
+});
 
 export const journalPostVersions = sqliteTable(
   "journal_post_versions",

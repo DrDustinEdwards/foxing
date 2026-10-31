@@ -1,10 +1,11 @@
 import { catalogRepo } from "@foxing/core";
-import { render } from "@drdustinedwards/site-helpers/render/nomath";
-import { journalPreviewContext } from "~/context";
+import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
-import { journalCovers, journalImageSize } from "~/lib/journal-images.server";
+import { focusStyle } from "~/lib/focus";
+import { renderJournalBody } from "~/lib/journal-body.server";
+import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
@@ -16,24 +17,21 @@ function fmtDate(d: Date | null): string | null {
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
-  // The Carrel preview sets an unsaved post in-process; an ordinary request never has one.
-  const post =
-    context.get(journalPreviewContext) ?? (await catalogRepo.getPostBySlug(db, params.slug));
-  if (!post) throw new Response("Not found", { status: 404 });
+  const post = await catalogRepo.getPostBySlug(db, params.slug);
+  if (!post) {
+    // A post Carrel renamed: its old address answers a permanent redirect to the new one (site-api's
+    // rename). Read only on a miss, so a live post's page costs no extra query.
+    const moved = await catalogRepo.getJournalSlugRedirect(db, params.slug);
+    if (moved) throw redirect(`/journal/${moved}`, 301);
+    throw new Response("Not found", { status: 404 });
+  }
 
-  // The journal's Markdown, through Prelum's render as every site's writing is (no math: `$` stays text).
-  // A picture from the media library is sized from its row; any other is written unsized.
-  const { html } = await render({
-    file: `journal/${post.slug}`,
-    body: post.content,
-    resolveImage: (src) => journalImageSize(db, src),
-  });
   const cover = post.coverImageUrl
     ? (await journalCovers(db, [post.coverImageUrl])).get(post.coverImageUrl)
     : undefined;
 
   return {
-    html,
+    html: await renderJournalBody(db, post.slug, post.content),
     cover,
     post: {
       slug: post.slug,
@@ -41,6 +39,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       excerpt: post.excerpt,
       coverImageUrl: post.coverImageUrl,
       coverImageAlt: post.coverImageAlt,
+      coverFocus: post.coverFocus,
       tags: post.tags,
       readingTimeMinutes: post.readingTimeMinutes,
       publishedAt: post.showPublishedAt ? post.publishedAt : null,
@@ -94,7 +93,9 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             { label: post.title },
           ]}
         />
-        <article>
+        {/* h-entry and e-content name the post's own text for site-api's webmention hook, which
+            sends to the links inside it only. No style reads either class. */}
+        <article className="h-entry">
           <header className="mb-8">
             <Eyebrow>The Journal</Eyebrow>
             <h1 className="mt-3 fx-journal-post-title">{post.title}</h1>
@@ -118,11 +119,12 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
               alt={post.coverImageAlt ?? ""}
               className="mb-10 fx-journal-post-img"
               priority
+              style={focusStyle(post.coverFocus)}
             />
           ) : null}
 
           {/* biome-ignore lint/security/noDangerouslySetInnerHtml: trusted CMS markdown */}
-          <div className="article-prose" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="article-prose e-content" dangerouslySetInnerHTML={{ __html: html }} />
         </article>
       </Container>
     </PageShell>

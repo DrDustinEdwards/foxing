@@ -1,9 +1,9 @@
 name: worker-size
 
-# The web Worker's bundle size budget in apps/web/.worker-size.json, checked by devkit's shared worker-size.yml against
-# `wrangler deploy --dry-run` of the build (the build leaves .wrangler/deploy/config.json pointing the dry run at
-# build/server/wrangler.json). No secret: the prepare step copies wrangler.jsonc.example and a dry run never talks to the
-# account.
+# The Worker bundle size budgets, apps/web/.worker-size.json for the web Worker and mcp/.worker-size.json for the admin
+# MCP, checked by devkit's shared worker-size.yml against `wrangler deploy --dry-run` (the web build leaves
+# .wrangler/deploy/config.json pointing the dry run at build/server/wrangler.json). No secret: the prepare step copies
+# wrangler.jsonc.example and a dry run never talks to the account.
 
 on:
   pull_request:
@@ -19,9 +19,19 @@ concurrency:
 
 jobs:
   worker-size:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@a0fbcb5c7f65e4183a97989511f9d352950ad90b # v0.20.7
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@d9d5a3448a50f183c3c8b4a5f293717728717245 # v0.20.8
     with:
       package-manager: pnpm
       install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile'
       working-directory: apps/web
       prepare: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc && pnpm --filter web build
+
+  # The admin MCP Worker in mcp/: its own npm package and lockfile, so its own install. devkit's bin comes from the
+  # root install; the budget is mcp/.worker-size.json.
+  mcp:
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@d9d5a3448a50f183c3c8b4a5f293717728717245 # v0.20.8
+    with:
+      package-manager: pnpm
+      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile && npm ci --prefix mcp'
+      working-directory: mcp
+      prepare: cp mcp/wrangler.jsonc.example mcp/wrangler.jsonc

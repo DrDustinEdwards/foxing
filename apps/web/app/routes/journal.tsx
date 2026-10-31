@@ -4,6 +4,7 @@ import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "~/components/picture";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
+import { focusStyle } from "~/lib/focus";
 import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
@@ -107,6 +108,7 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
             alt={post.coverImageAlt ?? ""}
             className="fx-journal-img"
             priority
+            style={focusStyle(post.coverFocus)}
           />
         </div>
       ) : (
@@ -130,6 +132,7 @@ function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
           attrs={{ ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" }}
           alt={post.coverImageAlt ?? ""}
           className="mb-4 fx-journal-img-2"
+          style={focusStyle(post.coverFocus)}
         />
       ) : null}
       <h3 className="fx-journal-title-2">{post.title}</h3>
