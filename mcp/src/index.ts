@@ -19,7 +19,7 @@
  *                          overall), then the provider, which refuses any
  *                          redirect URI not allowlisted exactly
  *   /token, /.well-known/* the provider
- *   /health                liveness, loginHandler's default
+ *   /health                liveness and the deployed commit (login-handler.ts)
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";

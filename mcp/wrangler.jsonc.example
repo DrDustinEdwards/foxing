@@ -1,5 +1,7 @@
 {
-  // Copy to wrangler.jsonc (gitignored) and fill in the ids. Foxing Admin, its own Worker.
+  // Foxing Admin, its own Worker. CI deploys it on a merge to main (.github/workflows/ci-mcp.yml):
+  // it copies this file to wrangler.jsonc (gitignored) and fills the OAUTH_KV id by the namespace's
+  // title, foxing-admin-mcp-oauth. Locally: copy it and fill the id by hand.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "foxing-admin-mcp",
   "main": "src/index.ts",
@@ -14,30 +16,24 @@
   "minify": true,
   "upload_source_maps": true,
 
-  // ADDRESS. Until the cutover this Worker answers only on workers.dev, so it
-  // can be verified while admin-mcp.foxing.app still serves the Vercel server.
-  // At cutover (a step for Dustin, listed in the PR): add
-  //   "routes": [{ "pattern": "admin-mcp.foxing.app", "custom_domain": true }]
-  // set "workers_dev": false, and change PUBLIC_ORIGIN to https://admin-mcp.foxing.app.
-  "workers_dev": true,
+  // ADDRESS: admin-mcp.foxing.app, a Custom Domain. The deploy attaches it,
+  // which needs the foxing.app zone to hold no other record for that name.
+  "workers_dev": false,
+  "routes": [{ "pattern": "admin-mcp.foxing.app", "custom_domain": true }],
 
-  // Non-secret.
+  // Non-secret. (ADMIN_EMAIL and FOXING_ADMIN_ID are Worker secrets, below,
+  // so this public file names nobody.)
   // PUBLIC_ORIGIN: this server's own origin; every access token is bound to
   //   PUBLIC_ORIGIN + /mcp (RFC 8707). Unset serves nothing.
   // SITE_ORIGIN: the URL the foxing Worker sees over the FOXING binding.
   // ACCESS_TEAM_DOMAIN: the Cloudflare Access team, https://<team>.cloudflareaccess.com,
   //   the same team Capsid and Carrel sign in through.
-  // ADMIN_EMAIL: the one email let in, as Access verifies it at sign-in.
-  // FOXING_ADMIN_ID: the Foxing user id the admin API acts as. The API re-reads
-  //   that account's is_admin and suspension on every call.
   // DCR_REDIRECT_URIS: the exact allowlist for dynamically registered clients
   //   (rule 13), comma separated. Empty refuses every registration.
   "vars": {
-    "PUBLIC_ORIGIN": "https://foxing-admin-mcp.YOUR_SUBDOMAIN.workers.dev",
+    "PUBLIC_ORIGIN": "https://admin-mcp.foxing.app",
     "SITE_ORIGIN": "https://foxing.app",
-    "ACCESS_TEAM_DOMAIN": "https://YOUR_TEAM.cloudflareaccess.com",
-    "ADMIN_EMAIL": "admin@example.com",
-    "FOXING_ADMIN_ID": "YOUR_FOXING_USER_ID",
+    "ACCESS_TEAM_DOMAIN": "https://dustinedwards.cloudflareaccess.com",
     "DCR_REDIRECT_URIS": "https://vertexaisearch.cloud.google.com/oauth-redirect"
   },
 
@@ -66,7 +62,11 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["McpRateLimit", "ToolCallLog"] }]
 
-  // Secrets, set with `npx wrangler secret put`, never committed:
+  // Secrets, set with `npx wrangler secret put <NAME> --name foxing-admin-mcp`, never committed;
+  // a deploy keeps them:
+  //   ADMIN_EMAIL           the one email let in, as Access verifies it at sign-in.
+  //   FOXING_ADMIN_ID       the Foxing user id the admin API acts as. The API re-reads
+  //                         that account's is_admin and suspension on every call.
   //   ADMIN_OPERATOR_TOKEN  the API leg. Same value as the foxing Worker's
   //                         ADMIN_OPERATOR_TOKEN. At least 32 characters.
   //   ACCESS_SAAS_CLIENT_ID      the Access for SaaS (OIDC) app used for sign-in,
