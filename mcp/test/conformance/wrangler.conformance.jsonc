@@ -1,0 +1,25 @@
+// The dev config for `npm run check:conformance`. NEVER DEPLOYED: it has no routes, no account, no service binding to
+// foxing and a local-only KV. It exists so the gate runs the real protocol layer and the real door under `wrangler dev`
+// without the gitignored wrangler.jsonc. The protocol half passes test/conformance/entry.ts positionally; the door half
+// runs `main`, the deployed entry.
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "foxing-admin-mcp-conformance",
+  "main": "../../src/index.ts",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["global_fetch_strictly_public"],
+  "workers_dev": false,
+  "kv_namespaces": [{ "binding": "OAUTH_KV", "id": "00000000000000000000000000000000" }],
+  "durable_objects": {
+    "bindings": [
+      { "name": "MCP_RATE_LIMIT", "class_name": "McpRateLimit" },
+      { "name": "TOOL_CALL_LOG", "class_name": "ToolCallLog" }
+    ]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["McpRateLimit", "ToolCallLog"] }],
+  "vars": {
+    "PUBLIC_ORIGIN": "http://localhost:8789",
+    "SITE_ORIGIN": "http://localhost:8790",
+    "ACCESS_TEAM_DOMAIN": "https://conformance.cloudflareaccess.com"
+  }
+}

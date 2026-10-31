@@ -49,12 +49,32 @@ jobs:
       - name: Build (dry run, no deploy)
         run: npm run build
 
+  # The official MCP conformance suite (devkit-conformance, .conformance.json) against the real protocol layer under
+  # wrangler dev, and the door's authorization server: a regression against the recorded baseline fails.
+  conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: mcp
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: mcp/package-lock.json
+      - run: npm ci
+      - run: npm run check:conformance
+
   # devkit's shared deploy (worker-deploy.yml), as the web Worker's in ci-cf.yml: a merge to main deploys
   # foxing-admin-mcp with DEPLOY_SHA set, waits for /health to report it, checks the live door, and rolls
   # it back on a refusal. The pre-deploy stages wrangler.jsonc from the example and fills the OAUTH_KV id
   # by the namespace's title, so no id is committed or kept in GitHub. Dormant until CF_DEPLOY is 'true'.
   deploy:
-    needs: check
+    needs: [check, conformance]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CF_DEPLOY == 'true'
     permissions:
       contents: read

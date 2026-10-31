@@ -5,7 +5,7 @@
  * grant is long lived and this is the boundary a request actually crosses.
  */
 
-import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
+import { recordAudit, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";
 import { isAdminUser } from "@dustinedwards/site-runtime/mcp-login";
 import { audienceRefusal, checkRateLimit, refuse } from "@dustinedwards/site-runtime/mcp-server";
 import type { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-object";
@@ -13,7 +13,7 @@ import type { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable
 import type { ApiEnv } from "./api-client";
 import { SCOPE_READ, type Props } from "./auth";
 import type { LoginEnv } from "./login-handler";
-import { handleMcp, MCP_ROUTE } from "./mcp-handler";
+import { handleMcp, MCP_ROUTE, SERVER_INFO } from "./mcp-handler";
 
 
 export interface Env
@@ -52,6 +52,14 @@ export const apiHandler = {
     }
     const limit = await checkRateLimit(env.MCP_RATE_LIMIT, `admin:${props.email.toLowerCase()}`);
     if (!limit.allowed) {
+      // A rate-limited request is a row in the tool-call log beside the calls and sign-ins (checklist L2).
+      await recordAudit(env, {
+        callId: crypto.randomUUID(),
+        phase: "rate-limited",
+        caller: `access:${props.email}`,
+        clientId: typeof props.clientId === "string" ? props.clientId : undefined,
+        server: { name: SERVER_INFO.name, version: SERVER_INFO.version },
+      });
       return refuse(
         "Rate limited. This server allows 30 requests per 60 seconds. The Foxing admin API applies its own limit as well.",
         429,

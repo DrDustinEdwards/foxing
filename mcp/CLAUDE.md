@@ -15,4 +15,5 @@ Each guard has a test marked PLANT; a guard is trusted only after its plant was 
 ## Commands (in mcp/)
 
 - `npm ci`, `cp wrangler.jsonc.example wrangler.jsonc`, then `npm run typecheck`, `npm test`, `npm run build` (dry run)
+- `npm run check:conformance`: the official MCP suite against `.conformance.json`'s baseline (CI's `conformance` job)
 - A merge to main deploys it (`deploy` in .github/workflows/ci-mcp.yml, devkit's worker-deploy.yml, on while CF_DEPLOY is `true`). Never deploy from a session.
