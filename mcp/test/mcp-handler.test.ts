@@ -9,18 +9,20 @@ import { beforeEach, describe, test } from "node:test";
 import type { Caller } from "../src/auth.ts";
 import { handleMcp } from "../src/mcp-handler.ts";
 import { TOOLS, type ToolEnv } from "../src/tools.ts";
-import { WRITER, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
+import { READER, WRITER, fakeFoxing, fakeLog, freshEnv, type FakeFoxing, type FakeLog } from "./fakes.ts";
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
 const ERA = "2025-11-25";
 
 let foxing: FakeFoxing;
+let log: FakeLog;
 let env: ToolEnv;
 let nextId = 1;
 
 beforeEach(() => {
   foxing = fakeFoxing();
-  env = freshEnv(foxing, fakeLog());
+  log = fakeLog();
+  env = freshEnv(foxing, log);
 });
 
 async function rpc(method: string, params: Record<string, unknown>, caller: Caller | null = WRITER) {
@@ -73,12 +75,30 @@ describe("handleMcp", () => {
     assert.deepEqual(listed.map((t) => t.name), TOOLS.map((t) => t.name));
   });
 
-  test("tools/call becomes one admin API request and returns its JSON", async () => {
-    foxing.reply({ body: { totalUsers: 3 } });
+  test("tools/call becomes one admin API request, logged before and after, and returns its JSON", async () => {
+    const stats = {
+      totalUsers: 3,
+      plusUsers: 1,
+      suspendedUsers: 0,
+      totalBooks: 9,
+      staffPicks: 2,
+      totalClubs: 1,
+      publishedJournal: 4,
+      publishedBotm: 1,
+      recentSignups: [],
+    };
+    foxing.reply({ body: stats });
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} });
     assert.equal(foxing.calls.length, 1);
     assert.equal(foxing.calls[0].url.pathname, "/api/v1/admin/stats");
-    assert.deepEqual(message.result.structuredContent, { totalUsers: 3 });
+    assert.deepEqual(message.result.structuredContent, stats);
+    assert.deepEqual(log.rows.map((r) => r.phase), ["started", "finished"]);
+  });
+
+  test("PLANT 12.3: a read-only grant is refused a write and sends nothing", async () => {
+    const message = await rpc("tools/call", { name: "foxing_edit_book", arguments: { book_id: "b1", title: "New" } }, READER);
+    assert.equal(message.result.isError, true);
+    assert.equal(foxing.calls.length, 0);
   });
 
   test("a schema violation fails before any request", async () => {

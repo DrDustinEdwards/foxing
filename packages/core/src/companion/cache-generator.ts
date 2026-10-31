@@ -1,6 +1,10 @@
 // Generates the 4 free-cached catalog actions for one book and writes them to
 // book_ai_cache. Called from both the Queue consumer (production) and a manual
 // one-off script (proving cost on a small batch) -- one code path, not two.
+// These texts are public catalog pages, so a reply that did not finish (the caller throws)
+// or that trips a high prose finding (a refusal, a cutoff note, a blank, chatbot markup, a
+// blurb tell) is never written: the generation throws and the queue retries it.
+import { checkProse } from "@dustinedwards/site-runtime/prose";
 import type { Db } from "../db";
 import * as catalogBooksRepo from "../repositories/catalog/books";
 import * as companionRepo from "../repositories/companion";
@@ -59,8 +63,18 @@ export async function generateCachedActionsForBook(
       system: def.systemPrompt(ctx),
       messages: [{ role: "user", content: def.buildContext(ctx).userContent }],
       maxTokens: MAX_OUTPUT_TOKENS[def.role],
+      feature: "catalog-cache",
     });
 
+    const findings = checkProse(text).filter(
+      (i) => i.severity === "high" || i.severity === "critical",
+    );
+    if (findings.length) {
+      // Names the checks only; the text itself is never logged.
+      throw new Error(
+        `${name} for ${book.id} failed the prose check: ${findings.map((i) => i.check).join(", ")}`,
+      );
+    }
     await companionRepo.upsertCachedAction(db, book.id, name, text, model);
     results.push({
       bookId: book.id,

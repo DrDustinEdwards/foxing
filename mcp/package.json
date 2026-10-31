@@ -14,7 +14,7 @@
     "build": "wrangler deploy --dry-run --outdir=dist"
   },
   "dependencies": {
-    "@cloudflare/workers-oauth-provider": "1.1.0",
+    "@cloudflare/workers-oauth-provider": "1.2.4",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.48.2",
     "@modelcontextprotocol/server": "2.4.0",
     "agents": "0.32.0",

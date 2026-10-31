@@ -11,6 +11,7 @@
 
 import { isAdminUser, loginHandler, type LoginEnv as SharedLoginEnv } from "@dustinedwards/site-runtime/mcp-login";
 import { SCOPE_READ, SCOPE_WRITE } from "./auth";
+import { SERVER_INFO } from "./mcp-handler";
 
 export interface LoginEnv extends SharedLoginEnv {
   ADMIN_EMAIL?: string;
@@ -24,4 +25,6 @@ staff picks, Book of the Month, celebrity picks and the admin audit log. It cann
 write Journal posts; Carrel owns writing.</p>
 <p>It will always be able to read. Changes need the box below.</p>`,
   admit: isAdminUser,
+  // Every sign-in, admitted or refused, is a row in the tool-call log.
+  audit: { name: SERVER_INFO.name, version: SERVER_INFO.version },
 });
