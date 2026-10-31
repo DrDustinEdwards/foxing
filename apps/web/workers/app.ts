@@ -7,7 +7,7 @@
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
 import { accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
-import { type CronJob, runJobs } from "@dustinedwards/site-runtime/cron";
+import { runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
   cacheKey,
@@ -19,7 +19,7 @@ import {
   UNCACHED,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
-import { logEvent } from "@dustinedwards/site-runtime/log";
+import { logEvent, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import {
@@ -42,7 +42,8 @@ import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { legacyRedirectTarget } from "../app/lib/redirects";
-import { runBackup, runMediaBackup } from "../app/lib/backup.server";
+import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { clubRoomHub } from "./club-room";
 import {
   CSP_REPORT_PATH,
@@ -445,35 +446,32 @@ async function enqueueCompanionCache(env: Env): Promise<void> {
   );
 }
 
-// Each trigger's jobs (keys must match wrangler.jsonc triggers.crons), run by site-runtime ./cron:
-// each isolated and recorded in cron_runs, which /health's cron check reads. A failed job fails
-// the invocation (Cron Events shows it) after the others have run.
-const CRON_JOBS: Record<string, (env: Env) => CronJob[]> = {
-  // Nightly: dump D1, copy the MEDIA bucket's new and changed objects, prune the 404 counts.
-  "17 3 * * *": (env) => [
-    { name: "backup", everyMinutes: 1440, run: () => runBackup(env) },
-    { name: "media-backup", everyMinutes: 1440, run: () => runMediaBackup(env) },
-    { name: "prune-404", everyMinutes: 1440, run: () => pruneNotFound(env.DB) },
-  ],
-  "*/5 * * * *": (env) => [{ name: "push-sweep", everyMinutes: 5, run: () => runPushSweep(env) }],
-  // Every minute: Carrel's site API puts due scheduled posts and updates live, retries the publish
-  // hooks that failed, empties the content trash of posts 30 days in it, and prunes its replay
-  // store (app/lib/carrel/site-api.server.ts).
-  "* * * * *": (env) => [
-    {
-      name: "carrel-schedules",
-      everyMinutes: 1,
-      run: () => runCarrelSchedules(env, new Date()),
-    },
-  ],
-  // Daily: enqueue catalog books needing cached AI generation.
-  "0 8 * * *": (env) => [
-    { name: "companion-cache", everyMinutes: 1440, run: () => enqueueCompanionCache(env) },
-  ],
+// Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
+// timeouts, which /health's cron check reads too. A failed job fails the invocation (Cron Events
+// shows it) after the others have run.
+const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
+  backup: runBackup,
+  "media-backup": runMediaBackup,
+  "covers-backup": runCoversBackup,
+  "prune-404": (env) => pruneNotFound(env.DB),
+  "push-sweep": runPushSweep,
+  "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
+  "companion-cache": enqueueCompanionCache,
 };
 
 async function scheduled(event: ScheduledController, env: Env): Promise<void> {
-  await runJobs(env.DB, CRON_JOBS[event.cron]?.(env) ?? []);
+  const jobs: readonly (typeof CRON_TRIGGERS)[keyof typeof CRON_TRIGGERS][number][] | undefined =
+    CRON_TRIGGERS[event.cron as keyof typeof CRON_TRIGGERS];
+  // A trigger with no job list is a misspelt key or a cron added to wrangler.jsonc alone: fail the
+  // invocation loudly rather than run nothing in silence.
+  if (!jobs) {
+    logEvent("cron_trigger_unknown", { cron: event.cron }, { level: "error" });
+    throw new Error(`no cron jobs for trigger "${event.cron}"`);
+  }
+  await runJobs(
+    env.DB,
+    jobs.map((job) => ({ ...job, run: () => CRON_RUNS[job.name](env) })),
+  );
 }
 
 async function queue(
@@ -538,10 +536,15 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
   return response;
 }
 
-// An admin idle for an hour is signed out of Access (site-runtime ./access).
+// An admin idle for an hour is signed out of Access (site-runtime ./access). Every request writes one
+// `request` line (site-runtime ./log's withRequestLog: path, status, ms and the deployed commit, never
+// a query).
 export default {
-  fetch: (request: Request, env: Env, ctx: ExecutionContext) =>
-    withAdminIdle(request, () => handleFetch(request, env, ctx)),
+  fetch: withRequestLog(
+    (request: Request, env: Env, ctx: ExecutionContext) =>
+      withAdminIdle(request, () => handleFetch(request, env, ctx)),
+    { sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA },
+  ),
   scheduled,
   queue,
 };
