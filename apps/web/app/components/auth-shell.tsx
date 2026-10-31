@@ -179,9 +179,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   // site-runtime's signInWithPasskey: on a passkey this site no longer has, it tells the browser
   // to stop offering it (the Signal API).
   async function tryPasskey(autoFill: boolean) {
-    // Better Auth's client types its error without `code`, which the answer carries.
-    const client = authClient as unknown as Parameters<typeof signInWithPasskey>[0];
-    const res = await signInWithPasskey(client, { autoFill });
+    const res = await signInWithPasskey(authClient, { autoFill });
     if (!res?.error) {
       window.location.assign(redirectTo);
       return;
