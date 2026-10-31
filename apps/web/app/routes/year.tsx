@@ -2,13 +2,14 @@
 // recap aggregation that powers the public /u/:username/recap/:year, targeted by user id
 // so it is always the viewer's own. /year shows the current year; /year/:year picks one.
 // A year picker links between years. The shareable public version lives on the profile.
-import { MONTH_INITIALS, MONTH_NAMES } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { RecapBook } from "@foxing/types";
+import { ChartFrame } from "capsomer/react/chart-frame";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
+import { enhanceChart, genresChart, monthsChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/year";
 
@@ -94,7 +95,7 @@ export default function Year({ loaderData }: Route.ComponentProps) {
               <section className="stack">
                 <h2 className="display-2">Your reading months</h2>
                 <div className="card card-5">
-                  <MonthStrip monthly={monthly} year={year} />
+                  <ChartFrame draw={monthsChart(monthly, year)} onDraw={enhanceChart} />
                 </div>
               </section>
             ) : null}
@@ -103,7 +104,7 @@ export default function Year({ loaderData }: Route.ComponentProps) {
               <section className="stack">
                 <h2 className="display-2">Genre spread</h2>
                 <div className="card card-5">
-                  <GenreSpread genres={genres} />
+                  <ChartFrame draw={genresChart(genres, year)} onDraw={enhanceChart} />
                 </div>
               </section>
             ) : null}
@@ -144,81 +145,6 @@ export default function Year({ loaderData }: Route.ComponentProps) {
         </p>
       </Container>
     </PageShell>
-  );
-}
-
-// Books finished per month of the year: inline SVG bars over a subtle baseline. Same shape
-// as the stats page's monthly view, kept local so /year stays self-contained.
-function MonthStrip({ monthly, year }: { monthly: number[]; year: number }) {
-  const max = Math.max(1, ...monthly);
-  const colW = 24;
-  const barW = 12;
-  const plotH = 56;
-  const baseY = 64;
-  const width = colW * 12;
-  return (
-    <svg
-      viewBox={`0 0 ${width} 84`}
-      className="fx-year-icon"
-      role="img"
-      aria-label={`Books finished each month of ${year}`}
-      preserveAspectRatio="xMidYMid meet"
-    >
-      <line x1="0" y1={baseY} x2={width} y2={baseY} className="fx-year-line" strokeWidth="1" />
-      {monthly.map((count, i) => {
-        const h = count > 0 ? Math.max(3, (count / max) * plotH) : 0;
-        const x = i * colW + (colW - barW) / 2;
-        return (
-          <g key={MONTH_NAMES[i]}>
-            {h > 0 ? (
-              <rect x={x} y={baseY - h} width={barW} height={h} rx="2" className="fx-year-bar">
-                <title>{`${MONTH_NAMES[i]}: ${count} book${count === 1 ? "" : "s"}`}</title>
-              </rect>
-            ) : null}
-            <text
-              x={i * colW + colW / 2}
-              y="78"
-              textAnchor="middle"
-              className="fx-year-text"
-              fontSize="9"
-            >
-              {MONTH_INITIALS[i]}
-            </text>
-          </g>
-        );
-      })}
-    </svg>
-  );
-}
-
-// Top genres of the year as labeled horizontal bars, widths relative to the most-read.
-function GenreSpread({ genres }: { genres: Array<{ name: string; value: number }> }) {
-  const max = Math.max(1, ...genres.map((g) => g.value));
-  return (
-    <ul className="stack-3">
-      {genres.map((g) => {
-        const pct = Math.max(4, (g.value / max) * 100);
-        return (
-          <li
-            key={g.name}
-            className="fx-year-grid-3"
-            title={`${g.name}: ${g.value} book${g.value === 1 ? "" : "s"}`}
-          >
-            <span className="truncate fx-year-label-2">{g.name}</span>
-            <svg
-              viewBox="0 0 100 6"
-              preserveAspectRatio="none"
-              className="fx-year-icon-2"
-              aria-hidden="true"
-            >
-              <rect x="0" y="0" width="100" height="6" rx="3" className="fx-year-bar-2" />
-              <rect x="0" y="0" width={pct} height="6" rx="3" className="fx-year-bar" />
-            </svg>
-            <span className="fx-year-label-3">{g.value}</span>
-          </li>
-        );
-      })}
-    </ul>
   );
 }
 

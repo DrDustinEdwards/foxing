@@ -31,6 +31,8 @@
 @import "capsomer/skeleton.css";
 @import "capsomer/meter.css";
 @import "capsomer/table.css";
+@import "capsomer/chart-frame.css";
+@import "enarratio/base.css";
 @import "./styles/reset.css" layer(reset);
 @import "./styles/base.css";
 @import "./styles/shell.css";
