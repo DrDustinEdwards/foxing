@@ -23,10 +23,9 @@
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
-import { buildPolicy, scriptHash } from "@dustinedwards/site-runtime/csp";
-import { applyHeaderSet, buildSecurityHeaders } from "@dustinedwards/site-runtime/headers";
-import { CONSENT_STYLE, DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
-import { mcpOriginRefusal, refuse } from "@dustinedwards/site-runtime/mcp-server";
+import { DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
+import { checkRateLimit, mcpOriginRefusal, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
+import { foxingMcp } from "@dustinedwards/site-runtime/sites";
 
 import { apiHandler, publicOrigin, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
@@ -37,33 +36,6 @@ export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-li
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
 
 export type { Env };
-
-// EVERY RESPONSE LEAVES THROUGH withSecurityHeaders: the family's standard set
-// (site-runtime, OWASP's values), never cached or indexed, and a policy that
-// lets no page frame this one, so the consent page cannot be clickjacked.
-const SECURITY_HEADERS: Readonly<Record<string, string>> = {
-  ...buildSecurityHeaders(),
-  "X-Robots-Tag": "noindex, nofollow",
-};
-
-/** Nothing here but the consent page is a page: the rest may load nothing. */
-const NON_HTML_POLICY = buildPolicy(["default-src 'none'", "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'"]);
-
-// The consent page's one inline <style>, by hash. No form-action: approving
-// posts into a redirect chain ending at whatever redirect_uri the client named.
-let consentPolicy: Promise<string> | undefined;
-
-async function withSecurityHeaders(response: Response): Promise<Response> {
-  const headers = new Headers(response.headers);
-  applyHeaderSet(headers, SECURITY_HEADERS);
-  if (!(headers.get("Cache-Control") ?? "").includes("no-store")) headers.set("Cache-Control", "no-store");
-  const isHtml = (headers.get("Content-Type") ?? "").includes("text/html");
-  consentPolicy ??= scriptHash(CONSENT_STYLE).then((hash) =>
-    buildPolicy(["default-src 'none'", `style-src '${hash}'`, "base-uri 'none'", "frame-ancestors 'none'"]),
-  );
-  headers.set("Content-Security-Policy", isHtml ? await consentPolicy : NON_HTML_POLICY);
-  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
-}
 
 const providers = new Map<string, OAuthProvider<Env>>();
 
@@ -115,9 +87,15 @@ function providerFor(env: Env): OAuthProvider<Env> {
   return provider;
 }
 
+// Every response, 404s included, leaves with the family set, noindex, no-store and the consent page's policy; the
+// wrapper also answers /.well-known/security.txt and /csp-report.
 export default {
-  fetch: async (request: Request, env: Env, ctx: ExecutionContext): Promise<Response> =>
-    withSecurityHeaders(await route(request, env, ctx)),
+  fetch: withMcpHeaders<Env>((request, env, ctx) => route(request, env, ctx as ExecutionContext), {
+    site: foxingMcp,
+    securityTxt: { contact: "security@dustinedwards.info", expires: "2027-09-28T00:00:00Z" },
+    allowReport: async (request, env) =>
+      (await checkRateLimit(env.MCP_RATE_LIMIT, `csp-report:${request.headers.get("CF-Connecting-IP") ?? "unknown"}`)).allowed,
+  }),
 } satisfies ExportedHandler<Env>;
 
 async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
