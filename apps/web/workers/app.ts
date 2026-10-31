@@ -6,7 +6,7 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { accessAdmin } from "@dustinedwards/site-runtime/access";
+import { accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
 import { type CronJob, runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
@@ -16,6 +16,7 @@ import {
   privateRender,
   purgeAfterWrite,
   settleCacheHeaders,
+  UNCACHED,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
 import { logEvent } from "@dustinedwards/site-runtime/log";
@@ -172,8 +173,15 @@ app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 mountCarrel(app, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
 
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
-// minute per address, counted in D1 (site-runtime ./sign-in).
-app.on(["GET", "POST"], "/api/auth/*", async (c) => (await getAuth(c.env)).handler(c.req.raw));
+// minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and
+// passkey challenges, so no browser or proxy keeps one (checklist D10).
+app.on(["GET", "POST"], "/api/auth/*", async (c) => {
+  const answer = await (await getAuth(c.env)).handler(c.req.raw);
+  // A copy, since a redirect's headers are immutable.
+  const res = new Response(answer.body, answer);
+  if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", UNCACHED);
+  return res;
+});
 
 // Every write is an /api/v1 route (the admin API included), none reached through React Router's
 // own Origin check, so a browser write from another origin is refused here. An absent Origin
@@ -486,4 +494,10 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
   return response;
 }
 
-export default { fetch: handleFetch, scheduled, queue };
+// An admin idle for an hour is signed out of Access (site-runtime ./access).
+export default {
+  fetch: (request: Request, env: Env, ctx: ExecutionContext) =>
+    withAdminIdle(request, () => handleFetch(request, env, ctx)),
+  scheduled,
+  queue,
+};
