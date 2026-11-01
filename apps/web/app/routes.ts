@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { type RouteConfig, index, prefix, route } from "@react-router/dev/routes";
 import { INDEXNOW_KEY } from "./lib/indexnow";
 
 export default [
@@ -46,6 +46,14 @@ export default [
   route("goals", "routes/goals.tsx"),
   route("year/:year?", "routes/year.tsx"),
   route("find-next-book", "routes/find-next-book.tsx"),
+
+  // Chart demos: the signed-in pages' charts with sample numbers, no sign-in, noindex. They read
+  // nothing from D1, so a live check sees the same charts a reader does (devkit live/areas.json, area 10).
+  ...prefix("demos", [
+    route("stats", "routes/demos/stats.tsx"),
+    route("year", "routes/demos/year.tsx"),
+    route("goals", "routes/demos/goals.tsx"),
+  ]),
 
   // Admin (operator-only, gated on profiles.is_admin in every loader). Reads run
   // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
