@@ -9,7 +9,7 @@ import { SearchBox } from "~/components/search-box";
 import { Button, Container, Eyebrow } from "~/components/ui";
 import { getAuth } from "~/lib/auth.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { buildMeta, ldJson } from "~/lib/seo";
+import { buildMeta, ldJson, organizationLd, websiteLd } from "~/lib/seo";
 import type { Route } from "./+types/marketing";
 
 // FAQ structured data (schema.org FAQPage). Restores the rich result the legacy
@@ -67,6 +67,8 @@ export function meta({ location }: Route.MetaArgs) {
         "Foxing is a reading home for the classics: read free, track what you finish, and follow the conversations around great books.",
       pathname: location.pathname,
     }),
+    ldJson(websiteLd()),
+    ldJson(organizationLd()),
     ldJson(FAQ_SCHEMA),
   ];
 }
