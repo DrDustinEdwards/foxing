@@ -28,6 +28,7 @@
  */
 
 import type { AuditEnv } from "@dustinedwards/site-runtime/audit-log";
+import { base64url } from "@dustinedwards/site-runtime/encoding";
 import { outsideResult } from "@dustinedwards/site-runtime/mcp-server";
 import { z } from "zod";
 
@@ -126,7 +127,7 @@ function single(
 const CURSOR = /^c([0-9]{1,7})$/;
 
 export function encodeCursor(offset: number): string {
-  return btoa(`c${offset}`).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+  return base64url(`c${offset}`);
 }
 
 /** The offset a cursor names, or null for anything this server did not issue. */
