@@ -47,6 +47,9 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       ogTitle: post.ogTitle,
       ogDescription: post.ogDescription,
       canonicalUrl: post.canonicalUrl,
+      ogImageUrl: post.ogImageUrl,
+      ogImageAlt: post.ogImageAlt,
+      noindex: post.noindex,
     },
   };
 }
@@ -60,8 +63,11 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     title: post.ogTitle ?? post.title,
     description: post.ogDescription ?? post.excerpt ?? `${post.title}, from the Foxing Journal.`,
     pathname: location.pathname,
-    image: post.coverImageUrl ?? undefined,
-    imageAlt: post.coverImageAlt ?? undefined,
+    // Carrel's share image (site-api's image and imageAlt search fields) ahead of the cover.
+    image: post.ogImageUrl ?? post.coverImageUrl ?? undefined,
+    imageAlt: (post.ogImageUrl ? post.ogImageAlt : post.coverImageAlt) ?? undefined,
+    canonical: post.canonicalUrl ?? undefined,
+    noindex: post.noindex,
     type: "article",
   });
   return [

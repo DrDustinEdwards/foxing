@@ -50,8 +50,10 @@ type MetaInput = {
   image?: string | { url: string; width: number; height: number; type?: string };
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
-  /** Set true to keep a page out of the index (community book pages). */
+  /** Set true to keep a page out of the index (community book pages, a Journal post Carrel marked noindex). */
   noindex?: boolean;
+  /** An absolute canonical URL, where it is not this page's own (a Journal post's search field). */
+  canonical?: string;
   /** "CollectionPage" for a list; WebPage otherwise. */
   pageType?: string;
   /** The trail from home, where it is not the one the URL's sections give. */
@@ -68,6 +70,7 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     imageAlt,
     type,
     noindex,
+    canonical,
     pageType,
     breadcrumbs,
   } = input;
@@ -84,6 +87,7 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
       : undefined,
     type,
     noindex,
+    canonical,
     pageType,
     breadcrumbs,
   });

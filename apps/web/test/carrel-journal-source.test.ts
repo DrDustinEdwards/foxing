@@ -15,6 +15,12 @@ const full: JournalFields = {
   coverImageAlt: "A worn copy of Middlemarch",
   tags: ["essays", "classics"],
   featured: true,
+  ogTitle: "Middlemarch, reread",
+  ogDescription: "Why the novel holds up, in one paragraph.",
+  ogImageUrl: "https://foxing.app/media/journal/2026/10/middlemarch-0a1b2c3d.jpg",
+  ogImageAlt: "A worn copy of Middlemarch on a desk",
+  canonicalUrl: "https://example.com/middlemarch",
+  noindex: true,
   content: "## Opening\n\n---\n\nA rule inside the body is body text.\n",
 };
 
@@ -28,6 +34,12 @@ describe("journal source mapping", () => {
       coverImageAlt: null,
       tags: [],
       featured: false,
+      ogTitle: null,
+      ogDescription: null,
+      ogImageUrl: null,
+      ogImageAlt: null,
+      canonicalUrl: null,
+      noindex: false,
     };
     expect(sourceToJournal(journalToSource(empty))).toEqual(empty);
   });
