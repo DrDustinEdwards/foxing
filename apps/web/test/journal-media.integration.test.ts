@@ -98,7 +98,11 @@ function png(seed: string): Uint8Array<ArrayBuffer> {
 
 async function upload(seed: string, overrides: Record<string, unknown> = {}, extra = "") {
   // site-api 0.19+ refuses an upload with neither alt nor decorative.
-  const query = new URLSearchParams({ filename: `${seed}.png`, changeId: `chg-${seed}`, decorative: "yes" });
+  const query = new URLSearchParams({
+    filename: `${seed}.png`,
+    changeId: `chg-${seed}`,
+    decorative: "yes",
+  });
   const res = await carrel("POST", `/media?${query}${extra}`, png(seed), overrides);
   expect(res.status, await res.clone().text()).toBe(201);
   return read<MediaItem & { resizedFrom?: Size & { bytes: number } }>(res);
@@ -190,7 +194,11 @@ describe("Journal media: upload, serve, use and delete", () => {
 
   it("answers bytes it already holds with that file, and stores nothing new", async () => {
     const item = await upload("twice");
-    const query = new URLSearchParams({ filename: "renamed.png", changeId: "chg-twice-2", decorative: "yes" });
+    const query = new URLSearchParams({
+      filename: "renamed.png",
+      changeId: "chg-twice-2",
+      decorative: "yes",
+    });
     const res = await carrel("POST", `/media?${query}`, png("twice"));
     expect(res.status).toBe(200);
     expect(await read(res)).toMatchObject({ id: item.id, duplicateOf: item.id });
