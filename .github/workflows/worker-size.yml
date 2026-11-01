@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   worker-size:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@454002f526e5e8e645a9c110605880e220b611a0 # v0.21.0
     with:
       package-manager: pnpm
       install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile'
@@ -29,7 +29,7 @@ jobs:
   # The admin MCP Worker in mcp/: its own npm package and lockfile, so its own install. devkit's bin comes from the
   # root install; the budget is mcp/.worker-size.json.
   mcp:
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@65782d2c45431055672a315f0d126b62d0dd3aff # v0.20.14
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-size.yml@454002f526e5e8e645a9c110605880e220b611a0 # v0.21.0
     with:
       package-manager: pnpm
       install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile && npm ci --prefix mcp'
