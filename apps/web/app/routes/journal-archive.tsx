@@ -41,7 +41,11 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <Breadcrumbs
-          trail={[{ label: "Home", to: "/" }, { label: "Journal", to: "/journal" }, { label: "All articles" }]}
+          trail={[
+            { label: "Home", to: "/" },
+            { label: "Journal", to: "/journal" },
+            { label: "All articles" },
+          ]}
         />
         <PageHeader
           title="All articles"
