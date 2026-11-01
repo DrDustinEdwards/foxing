@@ -79,4 +79,6 @@
   //   ACCESS_SAAS_CLIENT_ID      the Access for SaaS (OIDC) app used for sign-in,
   //                              with redirect URL PUBLIC_ORIGIN + /callback.
   //   ACCESS_SAAS_CLIENT_SECRET  ditto.
+  //   MCP_PROBE_KEY         optional: the list-only test key for the daily live check. It can list
+  //                         tools and runs none (site-runtime probeDoor). At least 32 characters.
 }

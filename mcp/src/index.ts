@@ -27,13 +27,13 @@
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
-import { checkRateLimit, mcpOriginRefusal, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
+import { checkRateLimit, mcpOriginRefusal, probeDoor, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
 import { foxingMcp } from "@dustinedwards/site-runtime/sites";
 
 import { apiHandler, publicOrigin, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
 import { defaultHandler } from "./login-handler";
-import { MCP_ROUTE } from "./mcp-handler";
+import { handleMcp, MCP_ROUTE, SERVER } from "./mcp-handler";
 
 export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
@@ -119,6 +119,11 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   if (url.pathname === MCP_ROUTE) {
     const foreign = mcpOriginRefusal(request);
     if (foreign) return foreign;
+    // THE LIST-ONLY TEST KEY (Dustin 2026-11-01, "do the best practice"): the Worker secret MCP_PROBE_KEY lets the daily
+    // live check connect and list tools, and nothing else. Before the provider, which answers 401 to any token it did
+    // not mint. No key in the request, or no secret set, is null and goes on to OAuth (site-runtime probeDoor).
+    const probed = await probeDoor(request, env, { server: SERVER, limiter: env.MCP_RATE_LIMIT, serve: (req, caller) => handleMcp(req, env, ctx, caller) });
+    if (probed) return probed;
   }
   if (url.pathname === "/register" && request.method === "POST") {
     const limited = await registrationLimited(request, env.OAUTH_KV);
