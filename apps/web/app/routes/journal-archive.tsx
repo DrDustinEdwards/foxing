@@ -21,7 +21,8 @@ export const headers = listingPageHeaders;
 export function meta({ location }: Route.MetaArgs) {
   return buildMeta({
     title: "All articles",
-    description: "Every published essay from the Foxing Journal, browsable by tag.",
+    description:
+      "Every published essay and close reading from the Foxing Journal, on the great books and why they endure, browsable by tag.",
     pathname: location.pathname,
     pageType: "CollectionPage",
   });

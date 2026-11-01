@@ -5,7 +5,7 @@
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
-import { article, itemList, pageImage, thing } from "@drdustinedwards/site-helpers/schema";
+import { article, itemList, pageImage, thing, website } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { COVER_SIZE } from "./images";
 import { SITE_ORIGIN } from "./origins";
@@ -95,6 +95,43 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
 
 /** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */
 export { jsonLd as ldJson } from "@drdustinedwards/site-helpers/schema";
+
+const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
+
+/** Foxing itself, on the home page, where Google reads an Organization's name and logo
+ *  (https://developers.google.com/search/docs/appearance/structured-data/organization). The logo is the 512 px app icon. */
+export function organizationLd(): Record<string, unknown> {
+  return thing("Organization", {
+    "@id": ORGANIZATION_ID,
+    name: SITE_NAME,
+    url: absoluteUrl("/"),
+    description: DEFAULT_DESCRIPTION,
+    logo: pageImage({ url: absoluteUrl("/icon-512.png"), width: 512, height: 512 }),
+  });
+}
+
+/** The site, on the home page, where Google reads the site name
+ *  (https://developers.google.com/search/docs/appearance/site-names). No SearchAction: /search is kept from crawlers. */
+export function websiteLd(): Record<string, unknown> {
+  return website({
+    origin: SITE_ORIGIN,
+    name: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    publisher: { "@id": ORGANIZATION_ID },
+  });
+}
+
+/** The Journal as a Blog, published by Foxing, on /journal. */
+export function journalLd(description: string): Record<string, unknown> {
+  return thing("Blog", {
+    "@id": `${absoluteUrl("/journal")}#blog`,
+    name: "The Journal",
+    url: absoluteUrl("/journal"),
+    description,
+    publisher: { "@id": ORGANIZATION_ID },
+    isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+  });
+}
 
 export function bookLd(book: {
   slug: string;
