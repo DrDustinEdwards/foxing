@@ -9,7 +9,7 @@ import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { enhanceChart, genresChart, monthsChart } from "~/lib/reading-charts";
+import { genresChart, monthsChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/year";
 
@@ -95,7 +95,7 @@ export default function Year({ loaderData }: Route.ComponentProps) {
               <section className="stack">
                 <h2 className="display-2">Your reading months</h2>
                 <div className="card card-5">
-                  <ChartFrame draw={monthsChart(monthly, year)} onDraw={enhanceChart} />
+                  <ChartFrame draw={monthsChart(monthly, year)} />
                 </div>
               </section>
             ) : null}
@@ -104,7 +104,7 @@ export default function Year({ loaderData }: Route.ComponentProps) {
               <section className="stack">
                 <h2 className="display-2">Genre spread</h2>
                 <div className="card card-5">
-                  <ChartFrame draw={genresChart(genres, year)} onDraw={enhanceChart} />
+                  <ChartFrame draw={genresChart(genres, year)} />
                 </div>
               </section>
             ) : null}
