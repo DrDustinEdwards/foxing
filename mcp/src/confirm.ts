@@ -11,6 +11,9 @@
  * produced for these arguments; the tool's text asks the model to show it to the administrator and wait for a yes.
  */
 
+import { safeEqual } from "@dustinedwards/site-runtime/compare";
+import { toHex } from "@dustinedwards/site-runtime/encoding";
+
 const TTL_MS = 10 * 60_000;
 const LABEL = "foxing-admin-mcp confirm v1";
 
@@ -34,7 +37,7 @@ async function sign(env: ConfirmEnv, tool: string, expires: number, args: Record
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(`${LABEL}\n${secret}`), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const { confirm: _ignored, ...rest } = args;
   const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${tool}\n${expires}\n${canonical(rest)}`));
-  return [...new Uint8Array(mac)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  return toHex(mac);
 }
 
 /** A token for exactly this call, or null when the Worker has no operator token to key it with. */
@@ -52,8 +55,5 @@ export async function isConfirmed(env: ConfirmEnv, tool: string, args: Record<st
   if (!Number.isFinite(expires) || expires < now || expires > now + TTL_MS) return false;
   const expected = await sign(env, tool, expires, args);
   if (!expected) return false;
-  // Constant time over equal-length hex.
-  let diff = 0;
-  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ match[2].charCodeAt(i);
-  return diff === 0;
+  return safeEqual(match[2], expected);
 }

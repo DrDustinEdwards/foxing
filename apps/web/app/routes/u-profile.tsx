@@ -3,6 +3,7 @@
 // client. Shows identity, follow control, recent diary, lists, and activity. Anonymous
 // visitors can view public profiles; a non-public profile 404s for everyone but its
 // owner.
+import { thing } from "@drdustinedwards/site-helpers/schema";
 import { useProfilePage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
@@ -43,15 +44,15 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
     ...(data.isPrivate
       ? []
       : [
-          ldJson({
-            "@context": "https://schema.org",
-            "@type": "Person",
-            name,
-            alternateName: `@${username}`,
-            url: absoluteUrl(`/u/${username}`),
-            ...(avatarUrl ? { image: avatarUrl } : {}),
-            ...(bio ? { description: bio } : {}),
-          }),
+          ldJson(
+            thing("Person", {
+              name,
+              alternateName: `@${username}`,
+              url: absoluteUrl(`/u/${username}`),
+              image: avatarUrl,
+              description: bio,
+            }),
+          ),
         ]),
   ];
 }

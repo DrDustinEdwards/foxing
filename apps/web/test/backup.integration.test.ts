@@ -1,4 +1,5 @@
 import { env } from "cloudflare:test";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BACKUP_EXCLUDE } from "../app/lib/backup-checks";
 import { backupStatus, runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
@@ -19,19 +20,7 @@ const SECRETS = [
 ];
 
 async function reset() {
-  await env.DB.batch(
-    [
-      "push_tokens",
-      "session",
-      "account",
-      "verification",
-      "annotations",
-      "journal_posts",
-      "profiles",
-      "books",
-      "user",
-    ].map((t) => env.DB.prepare(`DELETE FROM "${t}"`)),
-  );
+  await resetDb(env.DB);
   const listed = await env.BACKUPS.list();
   if (listed.objects.length > 0) await env.BACKUPS.delete(listed.objects.map((o) => o.key));
   await env.MEDIA.delete("journal/sample.png");
