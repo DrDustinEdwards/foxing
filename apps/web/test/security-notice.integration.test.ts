@@ -119,3 +119,17 @@ describe("deleting the account", () => {
     expect(sent.at(-1)?.to).toBe(email);
   });
 });
+
+// A signed-in page's loader reads the session from its GET (sessionLookup, with the request for
+// sessionDetails' place). Better Auth answers a call that carries a request with a Response
+// unless asked not to, which once sent every signed-in reader back to /login.
+describe("a signed-in GET", () => {
+  it("finds the reader's session", async () => {
+    const { testEnv, signIn } = await signInHarness("test-secret-value-for-get-session");
+    const email = "returning-reader@example.com";
+    const cookie = await signIn(email);
+
+    const page = new Request("https://foxing.app/me", { headers: { cookie } });
+    expect(await sessionUserFromRequest(page, testEnv)).toMatchObject({ email });
+  });
+});
