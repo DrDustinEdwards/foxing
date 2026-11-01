@@ -137,7 +137,7 @@ describe("what each tool sends", () => {
     assert.equal(foxing.calls.length, 0);
   });
 
-  test("foxing_set_book_of_month: create, update, publish and the page of list", async () => {
+  test("foxing_set_book_of_month creates, updates and publishes; foxing_read_book_of_month pages the list", async () => {
     foxing.reply({ status: 201, body: { id: "m1" } });
     await confirmCall("foxing_set_book_of_month", {
       action: "create",
@@ -165,7 +165,7 @@ describe("what each tool sends", () => {
     assert.deepEqual(foxing.calls[2].body, { on: false });
 
     foxing.reply({ body: { items: [1, 2, 3] } });
-    const page = await call("foxing_set_book_of_month", { action: "list", limit: 2 });
+    const page = await call("foxing_read_book_of_month", { action: "list", limit: 2 });
     assert.deepEqual(page.structuredContent, { items: [1, 2], total: 3, has_more: true, next_cursor: encodeCursor(2) });
   });
 
