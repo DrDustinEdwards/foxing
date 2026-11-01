@@ -29,6 +29,8 @@ export interface Env
   DCR_REDIRECT_URIS?: string;
   /** The tool-call log's copies in R2 (index.ts's scheduled export, L6-L7). */
   AUDIT_BUCKET?: R2Bucket;
+  /** The list-only test key (index.ts, site-runtime probeDoor): lists tools, runs none. */
+  MCP_PROBE_KEY?: string;
 }
 
 /** The configured origin, or "" when unset. There is no default: an unset origin serves nothing. */

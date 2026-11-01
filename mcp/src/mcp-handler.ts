@@ -24,7 +24,7 @@ export const SERVER_INFO = {
 };
 
 /** This server as refusals, the step-up challenge and the tool-call log name it. */
-const SERVER: McpServerInfo = { site: "foxing.app", scopes: SCOPES, name: SERVER_INFO.name, version: SERVER_INFO.version };
+export const SERVER: McpServerInfo = { site: "foxing.app", scopes: SCOPES, name: SERVER_INFO.name, version: SERVER_INFO.version };
 
 const INSTRUCTIONS =
   "Runs foxing.app for its administrator: the platform snapshot, finding readers and reading their " +
