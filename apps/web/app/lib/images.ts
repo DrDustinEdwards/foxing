@@ -18,6 +18,8 @@ export const images = defineImages({
   // 260: the detail cover's own width, so a 1x screen is not sent the 480 (1.8 times what it shows).
   // 480: one more size between a cover's 2x and the original, and the Journal's 1x on a phone.
   breakpoints: [260, 480],
+  // The share crop and the Article image set (16:9, 4:3 and 1:1 at 1200 wide) for a Journal post's structured data.
+  shareImages: true,
 });
 
 /**
