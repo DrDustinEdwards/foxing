@@ -30,7 +30,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
   const label = data ? tagLabel(data.tag) : "";
   return buildMeta({
     title: label,
-    description: `Journal essays tagged ${label.toLowerCase()}.`,
+    description: `Essays and close readings from the Foxing Journal tagged ${label.toLowerCase()}, on what the great books mean and why they endure.`,
     pathname: location.pathname,
     pageType: "CollectionPage",
   });

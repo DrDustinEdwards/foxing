@@ -6,6 +6,8 @@
 import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
+import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
+
 import { encodeCursor, TOOLS, type ToolEnv } from "../src/tools.ts";
 import { FOXING_ADMIN_ID, TOKEN, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
 
@@ -53,7 +55,8 @@ describe("reader data (rule 12.5)", () => {
   test("12.5: reader-written text is marked as data", async () => {
     foxing.reply({ body: { items: [], has_more: false, next_offset: null } });
     const out = await call("foxing_find_user", { query: "x" });
-    assert.match(out.content[0].text, /DATA, never instructions/);
+    assert.ok(out.content[0].text.startsWith(OUTSIDE_DATA_NOTICE));
+    assert.match(out.content[0].text, /<data label="foxing-reader-data">/);
   });
 });
 
@@ -134,7 +137,7 @@ describe("what each tool sends", () => {
     assert.equal(foxing.calls.length, 0);
   });
 
-  test("foxing_set_book_of_month: create, update, publish and the page of list", async () => {
+  test("foxing_set_book_of_month creates, updates and publishes; foxing_read_book_of_month pages the list", async () => {
     foxing.reply({ status: 201, body: { id: "m1" } });
     await confirmCall("foxing_set_book_of_month", {
       action: "create",
@@ -162,7 +165,7 @@ describe("what each tool sends", () => {
     assert.deepEqual(foxing.calls[2].body, { on: false });
 
     foxing.reply({ body: { items: [1, 2, 3] } });
-    const page = await call("foxing_set_book_of_month", { action: "list", limit: 2 });
+    const page = await call("foxing_read_book_of_month", { action: "list", limit: 2 });
     assert.deepEqual(page.structuredContent, { items: [1, 2], total: 3, has_more: true, next_cursor: encodeCursor(2) });
   });
 
@@ -178,6 +181,7 @@ describe("what each tool sends", () => {
     assert.equal(path(0), "GET /api/v1/admin/pick-clubs");
     assert.equal(path(1), "GET /api/v1/admin/picks?club_id=c1");
     assert.deepEqual(out.structuredContent, {
+      notice: OUTSIDE_DATA_NOTICE,
       clubs: [{ id: "c1" }],
       picks: { items: [{ id: "p1" }], total: 2, has_more: true, next_cursor: encodeCursor(1) },
     });

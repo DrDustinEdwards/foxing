@@ -5,10 +5,11 @@
 import { createDb, libraryRepo, views } from "@foxing/core";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Meter } from "capsomer/react/meter";
+import { numberFormat } from "enarratio";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { enhanceChart, genresChart, monthsChart } from "~/lib/reading-charts";
+import { genresChart, monthsChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/stats";
 
@@ -35,7 +36,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   };
 }
 
-const numberFormat = new Intl.NumberFormat("en-US");
+const formatNumber = numberFormat();
 export default function Stats({ loaderData }: Route.ComponentProps) {
   const {
     year,
@@ -64,7 +65,7 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
         <dl className="fx-stats-grid">
           {tiles.map((tile) => (
             <div key={tile.label} className="card card-5">
-              <dd className="display-3">{numberFormat.format(tile.value)}</dd>
+              <dd className="display-3">{formatNumber(tile.value)}</dd>
               <dt className="mt-1 fx-stats-caps">{tile.label}</dt>
             </div>
           ))}
@@ -72,13 +73,13 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
 
         {finishedThisYear > 0 ? (
           <section className="mt-10 card card-5">
-            <ChartFrame draw={monthsChart(monthly, year)} onDraw={enhanceChart} />
+            <ChartFrame draw={monthsChart(monthly, year)} />
           </section>
         ) : null}
 
         {genres.length > 0 ? (
           <section className="mt-10 card card-5">
-            <ChartFrame draw={genresChart(genres, year)} onDraw={enhanceChart} />
+            <ChartFrame draw={genresChart(genres, year)} />
           </section>
         ) : null}
 
@@ -89,7 +90,7 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="stack-2">
               {goals.map((g) => {
-                const label = `${numberFormat.format(g.target)} ${g.type} per ${g.periodType}`;
+                const label = `${formatNumber(g.target)} ${g.type} per ${g.periodType}`;
                 return g.type === "books" && g.periodType === "year" && booksYearGoalTarget ? (
                   <Meter
                     key={g.id}
@@ -98,8 +99,8 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
                     label={label}
                     value={finishedThisYear}
                     max={booksYearGoalTarget}
-                    display={`${numberFormat.format(finishedThisYear)} / ${numberFormat.format(g.target)}`}
-                    valueText={`${numberFormat.format(finishedThisYear)} of ${numberFormat.format(g.target)} books finished in ${year}`}
+                    display={`${formatNumber(finishedThisYear)} / ${formatNumber(g.target)}`}
+                    valueText={`${formatNumber(finishedThisYear)} of ${formatNumber(g.target)} books finished in ${year}`}
                   />
                 ) : (
                   <li key={g.id} className="py-3 fx-stats-card">

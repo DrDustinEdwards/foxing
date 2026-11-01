@@ -2,6 +2,7 @@ import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import { LinkPrefetch } from "capsomer/react/link";
+import { themeScript } from "capsomer/theme-server";
 import { useState } from "react";
 import {
   Links,
@@ -46,14 +47,15 @@ export const links: Route.LinksFunction = () => [
   ...iconLinks(),
 ];
 
-// Set data-theme before paint so there is no theme flash. Stored preference wins;
-// otherwise follow the OS. Attribute-driven per design-system.md. Capsomer's theme button
-// (page-shell.tsx) remembers its choice under the same key, as the plain word.
-// Migration shim: the key was "foxing-mode" (attribute data-mode) before the
-// portfolio standardized on data-theme. Read the old key once, rewrite it to the
-// new one, and drop it, so a returning reader keeps their choice. Safe to delete
-// this branch once the old key is gone from the wild.
-const NO_FLASH = `(function(){try{var t=localStorage.getItem("foxing-theme");if(!t){var old=localStorage.getItem("foxing-mode");if(old==="dark"||old==="light"){t=old;localStorage.setItem("foxing-theme",t);localStorage.removeItem("foxing-mode");}}if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`;
+// Set data-theme before paint so there is no theme flash. Stored preference wins (Capsomer's themeScript, under
+// Foxing's key; Capsomer's theme button in page-shell.tsx remembers its choice there, as the plain word); otherwise
+// follow the OS. Attribute-driven per design-system.md.
+// Migration shim: the key was "foxing-mode" (attribute data-mode) before the portfolio standardized on data-theme.
+// Move the old key over once and drop it, so a returning reader keeps their choice. Safe to delete this part once
+// the old key is gone from the wild.
+const MIGRATE_OLD_KEY = `try{if(!localStorage.getItem("foxing-theme")){var o=localStorage.getItem("foxing-mode");if(o==="dark"||o==="light"){localStorage.setItem("foxing-theme",o);localStorage.removeItem("foxing-mode");}}}catch(e){}`;
+const FOLLOW_OS = `try{document.documentElement.setAttribute("data-theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}catch(e){}`;
+const NO_FLASH = `${MIGRATE_OLD_KEY}${FOLLOW_OS}${themeScript("foxing-theme")}`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
   // The CSP nonce (workers/security-headers.ts) for every script this document renders.

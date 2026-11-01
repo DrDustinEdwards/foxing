@@ -1,3 +1,4 @@
+import { thing } from "@drdustinedwards/site-helpers/schema";
 import { views } from "@foxing/core";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
@@ -37,13 +38,13 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
         { name: author.name, path: `/authors/${author.slug}` },
       ],
     }),
-    ldJson({
-      "@context": "https://schema.org",
-      "@type": "Person",
-      name: author.name,
-      url: absoluteUrl(`/authors/${author.slug}`),
-      knowsAbout: "Literature",
-    }),
+    ldJson(
+      thing("Person", {
+        name: author.name,
+        url: absoluteUrl(`/authors/${author.slug}`),
+        knowsAbout: "Literature",
+      }),
+    ),
   ];
 }
 
@@ -73,8 +74,8 @@ export default function Author({ loaderData }: Route.ComponentProps) {
           }.`}
         />
         <BookGrid>
-          {author.books.map((b) => (
-            <BookCard key={b.slug} book={b} />
+          {author.books.map((b, i) => (
+            <BookCard key={b.slug} book={b} position={i} />
           ))}
         </BookGrid>
       </Container>

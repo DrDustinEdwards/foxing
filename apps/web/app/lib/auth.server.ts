@@ -11,6 +11,7 @@ import {
   SessionNotFresh,
   emailConfirmURL,
   requireFreshSession,
+  sessionLookup,
   signInOptions,
 } from "@dustinedwards/site-runtime/sign-in";
 import { betterAuth } from "better-auth";
@@ -140,17 +141,8 @@ export function getAuth(env: Env): Promise<Auth> {
   return auth;
 }
 
-/**
- * What a server-side getSession reads: on a GET the request too, so the session's place follows
- * the reader (site-runtime sessionDetails; the last-active time moves either way). Any other
- * method leaves it out: Better Auth would hold the request to /get-session's GET and POST, and
- * could read a POST's body before the action does.
- */
-export function sessionLookup(request: Request): { headers: Headers; request?: Request } {
-  return request.method === "GET"
-    ? { headers: request.headers, request }
-    : { headers: request.headers };
-}
+/** What a server-side getSession reads: site-runtime sessionLookup (always `asResponse: false`; the request too on a GET). */
+export { sessionLookup };
 
 /**
  * The signed-in user behind an /api/v1 request, from the Better Auth session cookie; null when

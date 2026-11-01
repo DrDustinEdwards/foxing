@@ -105,7 +105,8 @@ export async function listPublishedSlugs(
   const rows = await db
     .select({ slug: journalPosts.slug, updatedAt: journalPosts.updatedAt })
     .from(journalPosts)
-    .where(eq(journalPosts.isPublished, true))
+    // A post Carrel marked noindex stays on the Journal but out of the sitemap.
+    .where(and(eq(journalPosts.isPublished, true), eq(journalPosts.noindex, false)))
     .orderBy(desc(journalPosts.publishedAt));
   return rows.map((r) => ({ slug: r.slug, updatedAt: r.updatedAt ?? new Date(0) }));
 }

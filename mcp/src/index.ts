@@ -2,8 +2,9 @@
  * Foxing Admin: the admin MCP server for foxing.app.
  *
  * Ruling capsid/rulings/mcp-2026-10-10.md and capsid/research/design-mcp-servers.md
- * section 5. Its own Worker (rule 9 as amended): it holds no Stripe key, no D1,
- * no R2 and no Foxing data binding. Its only route to Foxing is the FOXING
+ * section 5. Its own Worker (rule 9 as amended): it holds no Stripe key, no D1
+ * and no Foxing data binding (its one R2 bucket holds only copies of its own
+ * tool-call log). Its only route to Foxing is the FOXING
  * service binding to /api/v1/admin, which owns every rule and re-checks the
  * acting admin on every call. If this Worker vanished, nothing about what is
  * allowed on foxing.app would change.
@@ -15,6 +16,8 @@
  *                          apiHandler checks the audience, re-checks the
  *                          administrator, rate limits and hands off
  *   /authorize /callback   consent and the Cloudflare Access sign-in, login-handler.ts
+ *   /owner                 the owner page: your grants with Revoke, the agent keys and the tool-call log
+ *                          (site-runtime ./owner-page, mounted by the same login handler)
  *   /register              site-runtime's registrationLimited (per address and
  *                          overall), then the provider, which refuses any
  *                          redirect URI not allowlisted exactly
@@ -24,16 +27,17 @@
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
 import { DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
-import { checkRateLimit, mcpOriginRefusal, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
+import { checkRateLimit, mcpOriginRefusal, probeDoor, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
 import { foxingMcp } from "@dustinedwards/site-runtime/sites";
 
 import { apiHandler, publicOrigin, type Env } from "./api-handler";
 import { SCOPES } from "./auth";
 import { defaultHandler } from "./login-handler";
-import { MCP_ROUTE } from "./mcp-handler";
+import { handleMcp, MCP_ROUTE, SERVER } from "./mcp-handler";
 
 export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
+import { exportAuditLog } from "@dustinedwards/site-runtime/audit-log";
 
 export type { Env };
 
@@ -96,6 +100,12 @@ export default {
     allowReport: async (request, env) =>
       (await checkRateLimit(env.MCP_RATE_LIMIT, `csp-report:${request.headers.get("CF-Connecting-IP") ?? "unknown"}`)).allowed,
   }),
+  // The daily copy of the tool-call log to R2 and the 90-day prune (L6-L7); a failed write throws, so the run shows failed.
+  scheduled: async (_controller, env) => {
+    if (!env.AUDIT_BUCKET) throw new Error("AUDIT_BUCKET is not bound; the tool-call log is not copied");
+    const done = await exportAuditLog(env, env.AUDIT_BUCKET);
+    console.log(JSON.stringify({ event: "tool_call_log_exported", exported: done.exported, pruned: done.pruned }));
+  },
 } satisfies ExportedHandler<Env>;
 
 async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -109,6 +119,11 @@ async function route(request: Request, env: Env, ctx: ExecutionContext): Promise
   if (url.pathname === MCP_ROUTE) {
     const foreign = mcpOriginRefusal(request);
     if (foreign) return foreign;
+    // THE LIST-ONLY TEST KEY (Dustin 2026-11-01, "do the best practice"): the Worker secret MCP_PROBE_KEY lets the daily
+    // live check connect and list tools, and nothing else. Before the provider, which answers 401 to any token it did
+    // not mint. No key in the request, or no secret set, is null and goes on to OAuth (site-runtime probeDoor).
+    const probed = await probeDoor(request, env, { server: SERVER, limiter: env.MCP_RATE_LIMIT, serve: (req, caller) => handleMcp(req, env, ctx, caller) });
+    if (probed) return probed;
   }
   if (url.pathname === "/register" && request.method === "POST") {
     const limited = await registrationLimited(request, env.OAUTH_KV);

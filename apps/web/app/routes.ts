@@ -90,6 +90,7 @@ export default [
   // Legal + content (static, edge-cached).
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
+  route("accessibility", "routes/accessibility.tsx"),
   route("about", "routes/about.tsx"),
   route("features", "routes/features.tsx"),
 
