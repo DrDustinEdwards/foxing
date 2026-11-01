@@ -53,6 +53,22 @@ export async function journalCovers(
   return out;
 }
 
+/**
+ * An Article's `image` set for a post's picture: Google's 16:9, 4:3 and 1:1 crops at 1200 wide, cut around the file's
+ * focal point, as absolute URLs with the file's credit. Empty for a picture outside the library (no size to cut).
+ */
+export async function journalArticleImages(db: Db, url: string | null) {
+  const key = url ? keyOf(url) : null;
+  const row = key ? await journalMediaRepo.getJournalMedia(db, key) : null;
+  if (!row) return [];
+  return images.articleImages(stored(row)).map(({ url: path, width, height }) => ({
+    url: `${SITE_ORIGIN}${path}`,
+    width,
+    height,
+    ...(row.credit ? { creditText: row.credit } : {}),
+  }));
+}
+
 /** The library keys a post's Markdown names, by their /media/journal/ paths. */
 function keysIn(content: string): string[] {
   const found = content.match(/\/media\/journal\/[A-Za-z0-9._/-]+/g) ?? [];

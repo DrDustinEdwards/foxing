@@ -129,6 +129,8 @@ export function articleLd(post: {
   title: string;
   excerpt: string | null;
   coverImageUrl: string | null;
+  /** The picture's Article crops (journalArticleImages), written in its place where it has them. */
+  articleImages?: Array<{ url: string; width: number; height: number; creditText?: string }>;
   publishedAt: Date | null;
   updatedAt: Date | null;
 }): Record<string, unknown> {
@@ -136,7 +138,7 @@ export function articleLd(post: {
     url: absoluteUrl(`/journal/${post.slug}`),
     headline: post.title,
     description: post.excerpt,
-    image: post.coverImageUrl ?? undefined,
+    image: post.articleImages?.length ? post.articleImages : (post.coverImageUrl ?? undefined),
     published: post.publishedAt,
     modified: post.updatedAt,
     author: { "@type": "Organization", name: SITE_NAME },
