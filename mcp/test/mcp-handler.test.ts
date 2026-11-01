@@ -7,6 +7,8 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
 import type { Caller } from "../src/auth.ts";
+import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
+
 import { handleMcp } from "../src/mcp-handler.ts";
 import { TOOLS, type ToolEnv } from "../src/tools.ts";
 import { READER, WRITER, fakeFoxing, fakeLog, freshEnv, type FakeFoxing, type FakeLog } from "./fakes.ts";
@@ -91,13 +93,17 @@ describe("handleMcp", () => {
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} });
     assert.equal(foxing.calls.length, 1);
     assert.equal(foxing.calls[0].url.pathname, "/api/v1/admin/stats");
-    assert.deepEqual(message.result.structuredContent, stats);
+    // The stats carry readers' text (recent sign-ups), so the shared data notice rides beside them (S2).
+    assert.deepEqual(message.result.structuredContent, { notice: OUTSIDE_DATA_NOTICE, ...stats });
     assert.deepEqual(log.rows.map((r) => r.phase), ["started", "finished"]);
   });
 
-  test("PLANT 12.3: a read-only grant is refused a write and sends nothing", async () => {
+  test("PLANT 12.3: a read-only grant is not listed the write tools, is refused one, and sends nothing (T7)", async () => {
+    const listed = (await rpc("tools/list", {}, READER)).result.tools.map((t: { name: string }) => t.name);
+    assert.ok(listed.includes("foxing_get_health"));
+    assert.ok(!listed.includes("foxing_edit_book"));
     const message = await rpc("tools/call", { name: "foxing_edit_book", arguments: { book_id: "b1", title: "New" } }, READER);
-    assert.equal(message.result.isError, true);
+    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
     assert.equal(foxing.calls.length, 0);
   });
 
@@ -115,7 +121,7 @@ describe("handleMcp", () => {
 
   test("a request with no caller runs no tool", async () => {
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} }, null);
-    assert.equal(message.result.isError, true);
+    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
     assert.equal(foxing.calls.length, 0);
   });
 });

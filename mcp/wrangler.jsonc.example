@@ -42,8 +42,15 @@
   "services": [{ "binding": "FOXING", "service": "foxing" }],
 
   // BINDINGS ARE AN ALLOWLIST (test/wrapper.test.ts derives it from this block).
-  // No D1, no R2, no Stripe key, no binding of any kind that reaches Foxing's
-  // data: the only path is HTTP to /api/v1/admin over FOXING.
+  // No D1, no Stripe key, no binding of any kind that reaches Foxing's data: the
+  // only path is HTTP to /api/v1/admin over FOXING. The one R2 bucket holds only
+  // this server's own tool-call log copies.
+  // The tool-call log's copies (checklist L6-L7): the daily cron copies new rows here as
+  // tool-calls/<first>-<last>.json, then the log drops copied rows older than 90 days.
+  // The bucket has a lock rule on tool-calls/ so a copy cannot be changed or removed.
+  "r2_buckets": [{ "binding": "AUDIT_BUCKET", "bucket_name": "foxing-admin-mcp-tool-calls" }],
+  "triggers": { "crons": ["17 4 * * *"] },
+
   "kv_namespaces": [
     {
       // Token and grant storage for the OAuth provider. Its own namespace.
