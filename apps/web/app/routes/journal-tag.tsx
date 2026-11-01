@@ -2,9 +2,9 @@ import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, PageHeader } from "~/components/ui";
+import { Breadcrumbs, Container, EmptyState, PageHeader } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { buildMeta, journalTagPath } from "~/lib/seo";
+import { buildMeta, journalTagPath, SITE_NAME } from "~/lib/seo";
 import type { Route } from "./+types/journal-tag";
 
 function tagLabel(tag: string): string {
@@ -33,6 +33,15 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
     description: `Essays and close readings from the Foxing Journal tagged ${label.toLowerCase()}, on what the great books mean and why they endure.`,
     pathname: location.pathname,
     pageType: "CollectionPage",
+    // The visible trail above the heading, from the home page down.
+    breadcrumbs: data
+      ? [
+          { name: SITE_NAME, path: "/" },
+          { name: "Journal", path: "/journal" },
+          { name: "All articles", path: "/journal/archive" },
+          { name: label, path: location.pathname.replace(/\/+$/, "") },
+        ]
+      : undefined,
   });
 }
 
@@ -43,11 +52,14 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <p className="mb-6">
-          <Link to="/journal/archive" className="fx-journal-tag-link">
-            &larr; All articles
-          </Link>
-        </p>
+        <Breadcrumbs
+          trail={[
+            { label: "Home", to: "/" },
+            { label: "Journal", to: "/journal" },
+            { label: "All articles", to: "/journal/archive" },
+            { label: label },
+          ]}
+        />
         <PageHeader
           title={label}
           lede={`${result.total} ${result.total === 1 ? "post" : "posts"}`}
