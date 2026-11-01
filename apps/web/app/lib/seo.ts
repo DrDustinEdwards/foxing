@@ -30,7 +30,13 @@ export function journalTagPath(tag: string): string {
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: SITE_NAME,
-  image: { url: "/og/site", width: 1200, height: 630, alt: "Foxing: read the classics, free." },
+  image: {
+    url: "/og/site",
+    width: 1200,
+    height: 630,
+    type: "image/png",
+    alt: "Foxing: read the classics, free.",
+  },
   suffix: ` | ${SITE_NAME}`,
   // The sections a page's BreadcrumbList passes through; Prelum builds the only one a page has.
   sections: { "/books": "Books", "/awards": "Awards", "/picks": "Picks", "/journal": "Journal" },
@@ -44,8 +50,10 @@ type MetaInput = {
   image?: string | { url: string; width: number; height: number; type?: string };
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
-  /** Set true to keep a page out of the index (community book pages). */
+  /** Set true to keep a page out of the index (community book pages, a Journal post Carrel marked noindex). */
   noindex?: boolean;
+  /** An absolute canonical URL, where it is not this page's own (a Journal post's search field). */
+  canonical?: string;
   /** "CollectionPage" for a list; WebPage otherwise. */
   pageType?: string;
   /** The trail from home, where it is not the one the URL's sections give. */
@@ -62,6 +70,7 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     imageAlt,
     type,
     noindex,
+    canonical,
     pageType,
     breadcrumbs,
   } = input;
@@ -78,6 +87,7 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
       : undefined,
     type,
     noindex,
+    canonical,
     pageType,
     breadcrumbs,
   });
@@ -119,6 +129,8 @@ export function articleLd(post: {
   title: string;
   excerpt: string | null;
   coverImageUrl: string | null;
+  /** The picture's Article crops (journalArticleImages), written in its place where it has them. */
+  articleImages?: Array<{ url: string; width: number; height: number; creditText?: string }>;
   publishedAt: Date | null;
   updatedAt: Date | null;
 }): Record<string, unknown> {
@@ -126,7 +138,7 @@ export function articleLd(post: {
     url: absoluteUrl(`/journal/${post.slug}`),
     headline: post.title,
     description: post.excerpt,
-    image: post.coverImageUrl ?? undefined,
+    image: post.articleImages?.length ? post.articleImages : (post.coverImageUrl ?? undefined),
     published: post.publishedAt,
     modified: post.updatedAt,
     author: { "@type": "Organization", name: SITE_NAME },
