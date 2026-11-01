@@ -216,6 +216,7 @@ function SiteFooter() {
           links={[
             { to: "/privacy", label: "Privacy" },
             { to: "/terms", label: "Terms" },
+            { to: "/accessibility", label: "Accessibility" },
           ]}
         />
       </Container>

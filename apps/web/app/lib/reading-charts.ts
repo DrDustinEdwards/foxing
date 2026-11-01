@@ -1,10 +1,10 @@
 // The reader's charts, drawn by Enarratio into Capsomer's chart frame (ChartFrame redraws each one
-// to its width). Each returns a draw(width) for ChartFrame's `draw`; the figure carries the title,
-// the finding, the drawing and the numbers behind "Show data". The stats page and /year share the
-// months and genres charts.
+// to its width and adds Enarratio's hover details, keyboard reading and sortable table). Each
+// returns a draw(width) for ChartFrame's `draw`; the figure carries the title, the finding, the
+// drawing and the numbers behind "Show data". The stats page and /year share the months and
+// genres charts.
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
-import { enhance } from "enarratio/enhance";
 import { barChart } from "enarratio/lite/bar";
 
 const SOURCE = "Your Foxing library";
@@ -17,15 +17,6 @@ const rows = <K extends string>(key: K, items: Array<[string, number]>) =>
   items.flatMap(([name, n]) =>
     Array.from({ length: n }, () => ({ [key]: name }) as Record<K, string>),
   );
-
-/** ChartFrame's onDraw: hover details, keyboard reading and a sortable table. */
-export function enhanceChart(el: HTMLElement) {
-  // The Workers types redeclare ParentNode for HTMLRewriter; this is the browser's DOM element.
-  const charts = enhance(el as unknown as Parameters<typeof enhance>[0]);
-  return () => {
-    for (const c of charts) c.destroy();
-  };
-}
 
 /** Books finished in each month of a year, as bars. */
 export function monthsChart(monthly: number[], year: number) {
