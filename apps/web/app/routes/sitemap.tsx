@@ -42,6 +42,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     { loc: "/journal", priority: 0.7 },
     { loc: "/journal/archive", priority: 0.5 },
     { loc: "/about", priority: 0.3 },
+    { loc: "/accessibility", priority: 0.3 },
     { loc: "/features", priority: 0.4 },
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,

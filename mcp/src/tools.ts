@@ -210,8 +210,8 @@ type Level = "read" | "write";
 
 export interface ToolDefinition {
   name: string;
-  /** The scope a call needs, never inferred from an annotation. A function where the action decides it. */
-  scope: Level | ((args: Record<string, unknown>) => Level);
+  /** The scope a call needs, never inferred from an annotation; fixed per tool, so a read grant is listed only tools it can always call (T7). */
+  scope: Level;
   config: {
     title: string;
     description: string;
@@ -332,7 +332,7 @@ export const TOOLS: ToolDefinition[] = [
         "staff picks, reader clubs, published Journal posts, published Book of the Month entries, and " +
         "the ten newest sign-ups (id, username, tier, when). Read only. It does not yet report errors, " +
         "logs or the deploy: the admin API has no route for those.",
-      inputSchema: z.object({}),
+      inputSchema: z.strictObject({}),
       outputSchema: z.looseObject({
         totalUsers: z.number(),
         plusUsers: z.number(),
@@ -359,7 +359,7 @@ export const TOOLS: ToolDefinition[] = [
         "username, displayName, tier (free or plus), isAdmin (an email on the site's ADMIN_EMAILS setting, " +
         "or the old profiles.is_admin flag while that setting is unset), isSuspended and createdAt. Pass a user's " +
         "id to foxing_get_user_state for everything about them.",
-      inputSchema: z.object({ query: querySchema, limit: limitSchema, cursor: cursorSchema }),
+      inputSchema: z.strictObject({ query: querySchema, limit: limitSchema, cursor: cursorSchema }),
       outputSchema: apiPage,
       annotations: READ_ONLY,
     },
@@ -382,7 +382,7 @@ export const TOOLS: ToolDefinition[] = [
         "Everything the admin screen shows about one reader: the profile (tier, admin, suspended, " +
         "timezone and the rest), email, last active (latest session start), and activity counts (books " +
         "finished, highlights, clubs joined, diary entries). A 404 means no user has that id.",
-      inputSchema: z.object({ user_id: idSchema("user") }),
+      inputSchema: z.strictObject({ user_id: idSchema("user") }),
       outputSchema: z.looseObject({ user: record, activity: record }),
       annotations: READ_ONLY,
     },
@@ -405,7 +405,7 @@ export const TOOLS: ToolDefinition[] = [
         "Searches the catalog by title or author, most recently updated first, a page at a time. Each " +
         "has id, title, author, slug (its page is foxing.app/books/<slug>), sourceType, isStaffPick and " +
         "publicationYear. Use the id with foxing_edit_book or foxing_set_book_of_month.",
-      inputSchema: z.object({ query: querySchema, limit: limitSchema, cursor: cursorSchema }),
+      inputSchema: z.strictObject({ query: querySchema, limit: limitSchema, cursor: cursorSchema }),
       outputSchema: apiPage,
       annotations: READ_ONLY,
     },
@@ -428,7 +428,7 @@ export const TOOLS: ToolDefinition[] = [
         "optional one), and/or staff_pick to feature or unfeature it with an optional note. Fields left " +
         "out are not touched. The admin API validates every field and records the change in Foxing's " +
         "admin audit log.",
-      inputSchema: z.object({
+      inputSchema: z.strictObject({
         book_id: idSchema("book"),
         title: z.string().min(1).max(500).optional(),
         author: z.string().min(1).max(500).optional(),
@@ -508,29 +508,21 @@ export const TOOLS: ToolDefinition[] = [
   },
 
   {
-    name: "foxing_set_book_of_month",
-    scope: (args) => (args.action === "list" || args.action === "get" ? "read" : "write"),
+    name: "foxing_read_book_of_month",
+    scope: "read",
     config: {
-      title: "Keep Foxing's Book of the Month",
+      title: "Read Foxing's Book of the Month",
       description:
         "Foxing's own monthly pick (foxing.app/book-of-the-month), not reader clubs or celebrity picks. " +
         "Actions:\n" +
         "- list: every entry, newest month first, a page at a time, with its book title and author.\n" +
         "- get (botm_id): one entry.\n" +
-        "- create (year, month, and any of book_id, category, curator_note, bookshop_url, amazon_url): " +
-        "a new entry, unpublished. Returns its id.\n" +
-        "- update (botm_id, any of those fields): changes only what is passed.\n" +
-        "- publish or unpublish (botm_id): shows or hides it on the site.\n" +
-        "Deleting an entry stays in the admin screen.",
-      inputSchema: z.object({
-        action: z.enum(["list", "get", "create", "update", "publish", "unpublish"]),
-        botm_id: z.string().min(1).max(100).optional().describe("For get, update, publish, unpublish."),
-        year: yearSchema.optional().describe("For create (required) or update."),
-        month: monthSchema.optional().describe("For create (required) or update. 1 to 12."),
-        ...botmFields,
+        "Writes nothing; foxing_set_book_of_month changes an entry.",
+      inputSchema: z.strictObject({
+        action: z.enum(["list", "get"]),
+        botm_id: z.string().min(1).max(100).optional().describe("For get."),
         limit: limitSchema,
         cursor: cursorSchema,
-        confirm: confirmSchema,
       }),
       outputSchema: z
         .looseObject({
@@ -539,11 +531,52 @@ export const TOOLS: ToolDefinition[] = [
           has_more: z.boolean().optional(),
           next_cursor: z.string().nullable().optional(),
           id: z.string().optional(),
+        })
+        .describe("list: a page; get: the entry."),
+      annotations: READ_ONLY,
+    },
+    handler: (env, args, signal) =>
+      guarded(async () => {
+        if (args.action === "list") {
+          const result = await callAdmin(env, "GET", "/botm", { signal });
+          if (!result.ok) return refusal(result);
+          const items = ((result.data as { items?: unknown[] })?.items ?? []) as unknown[];
+          return ok(pageOf(items, (args.limit as number) ?? 20, offsetOf(args)));
+        }
+        if (!args.botm_id) return inputError("Action get needs botm_id. Call action list for the ids.");
+        return single(env, "GET", `/botm/${encodeURIComponent(String(args.botm_id))}`, { signal });
+      }),
+  },
+
+  {
+    name: "foxing_set_book_of_month",
+    scope: "write",
+    config: {
+      title: "Change Foxing's Book of the Month",
+      description:
+        "Foxing's own monthly pick (foxing.app/book-of-the-month), not reader clubs or celebrity picks. " +
+        "Reading the entries is foxing_read_book_of_month. Actions:\n" +
+        "- create (year, month, and any of book_id, category, curator_note, bookshop_url, amazon_url): " +
+        "a new entry, unpublished. Returns its id.\n" +
+        "- update (botm_id, any of those fields): changes only what is passed.\n" +
+        "- publish or unpublish (botm_id): shows or hides it on the site.\n" +
+        "Deleting an entry stays in the admin screen.",
+      inputSchema: z.strictObject({
+        action: z.enum(["create", "update", "publish", "unpublish"]),
+        botm_id: z.string().min(1).max(100).optional().describe("For update, publish, unpublish."),
+        year: yearSchema.optional().describe("For create (required) or update."),
+        month: monthSchema.optional().describe("For create (required) or update. 1 to 12."),
+        ...botmFields,
+        confirm: confirmSchema,
+      }),
+      outputSchema: z
+        .looseObject({
+          id: z.string().optional(),
           ok: z.boolean().optional(),
           ...confirmationFields,
         })
         .describe(
-          "list: a page; get: the entry; create: its id; update, publish, unpublish: ok. A create, update, publish " +
+          "create: its id; update, publish, unpublish: ok. A create, update, publish " +
             "or unpublish without confirm: the preview and its confirm token.",
         ),
       annotations: {
@@ -558,12 +591,6 @@ export const TOOLS: ToolDefinition[] = [
     handler: (env, args, signal) =>
       guarded(async () => {
         const action = args.action as string;
-        if (action === "list") {
-          const result = await callAdmin(env, "GET", "/botm", { signal });
-          if (!result.ok) return refusal(result);
-          const items = ((result.data as { items?: unknown[] })?.items ?? []) as unknown[];
-          return ok(pageOf(items, (args.limit as number) ?? 20, offsetOf(args)));
-        }
         const tool = "foxing_set_book_of_month";
         if (action === "create") {
           if (args.year === undefined || args.month === undefined) {
@@ -579,7 +606,6 @@ export const TOOLS: ToolDefinition[] = [
           return inputError(`Action ${action} needs botm_id. Call action list for the ids.`);
         }
         const id = encodeURIComponent(String(args.botm_id));
-        if (action === "get") return single(env, "GET", `/botm/${id}`, { signal });
         if (action === "update") {
           const body = botmBody(args);
           if (Object.keys(body).length === 0) {
@@ -605,7 +631,7 @@ export const TOOLS: ToolDefinition[] = [
         "The celebrity book clubs Foxing follows (foxing.app/book-clubs) and their picks, newest first, " +
         "a page at a time. Each pick has its club, book, month, isPublished, notes, curatorQuote and " +
         "category. Pass club_id to see one club's picks. Use a pick's id with foxing_publish_club_pick.",
-      inputSchema: z.object({
+      inputSchema: z.strictObject({
         club_id: z.string().min(1).max(100).optional().describe("Optional. One club's id."),
         limit: limitSchema,
         cursor: cursorSchema,
@@ -639,7 +665,7 @@ export const TOOLS: ToolDefinition[] = [
         "Edits one celebrity book club pick and/or publishes or unpublishes it on foxing.app/book-clubs. " +
         "Pass any of notes, curator_quote and category to change them (null clears one), and publish " +
         "true or false to show or hide the pick. Edits are applied before the publish change.",
-      inputSchema: z.object({
+      inputSchema: z.strictObject({
         pick_id: idSchema("pick"),
         publish: z.boolean().optional().describe("Optional. true publishes, false unpublishes."),
         notes: z.string().max(5000).nullable().optional(),
@@ -707,7 +733,7 @@ export const TOOLS: ToolDefinition[] = [
         "Foxing's own record of admin changes (admin_audit_log), newest first, a page at a time: action, " +
         "params, actor (the admin's user id), source IP and when. Changes made through this server carry " +
         'params.via "operator". This is the site\'s log; the MCP server keeps its own call log as well.',
-      inputSchema: z.object({ limit: limitSchema, cursor: cursorSchema }),
+      inputSchema: z.strictObject({ limit: limitSchema, cursor: cursorSchema }),
       outputSchema: apiPage,
       annotations: READ_ONLY,
     },

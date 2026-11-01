@@ -145,11 +145,19 @@ export function getAuth(env: Env): Promise<Auth> {
  * the reader (site-runtime sessionDetails; the last-active time moves either way). Any other
  * method leaves it out: Better Auth would hold the request to /get-session's GET and POST, and
  * could read a POST's body before the action does.
+ *
+ * `asResponse: false` always: given a `request`, Better Auth's api answers with a Response
+ * unless told otherwise, and a Response has no `user`, so every signed-in page read as signed
+ * out and sent the reader back to /login (site-runtime README, sessionDetails).
  */
-export function sessionLookup(request: Request): { headers: Headers; request?: Request } {
+export function sessionLookup(request: Request): {
+  headers: Headers;
+  request?: Request;
+  asResponse: false;
+} {
   return request.method === "GET"
-    ? { headers: request.headers, request }
-    : { headers: request.headers };
+    ? { headers: request.headers, request, asResponse: false }
+    : { headers: request.headers, asResponse: false };
 }
 
 /**

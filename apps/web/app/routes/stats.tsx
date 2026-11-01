@@ -9,7 +9,7 @@ import { numberFormat } from "enarratio";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { enhanceChart, genresChart, monthsChart } from "~/lib/reading-charts";
+import { genresChart, monthsChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/stats";
 
@@ -73,13 +73,13 @@ export default function Stats({ loaderData }: Route.ComponentProps) {
 
         {finishedThisYear > 0 ? (
           <section className="mt-10 card card-5">
-            <ChartFrame draw={monthsChart(monthly, year)} onDraw={enhanceChart} />
+            <ChartFrame draw={monthsChart(monthly, year)} />
           </section>
         ) : null}
 
         {genres.length > 0 ? (
           <section className="mt-10 card card-5">
-            <ChartFrame draw={genresChart(genres, year)} onDraw={enhanceChart} />
+            <ChartFrame draw={genresChart(genres, year)} />
           </section>
         ) : null}
 

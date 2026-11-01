@@ -121,7 +121,15 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                         </span>
                       ) : null}
                       {e.status === "reading" && e.progressPct > 0 ? (
-                        <span className="fx-library-label-3">
+                        <span
+                          className="fx-library-label-3"
+                          role="progressbar"
+                          aria-label="Reading progress"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={Math.min(100, Math.round(e.progressPct))}
+                          aria-valuetext={`${Math.min(100, Math.round(e.progressPct))}% read`}
+                        >
                           <span
                             className="block fx-library-label-4"
                             style={{ width: `${Math.min(100, e.progressPct)}%` }}

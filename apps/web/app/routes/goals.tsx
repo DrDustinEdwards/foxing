@@ -23,7 +23,7 @@ import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { enhanceChart, weeksChart } from "~/lib/reading-charts";
+import { weeksChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
 
@@ -116,7 +116,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
           <h2 className="display-2">Reading activity</h2>
           <div className="card card-5">
             {weeks.some((w) => w.books > 0) ? (
-              <ChartFrame draw={weeksChart(weeks)} onDraw={enhanceChart} />
+              <ChartFrame draw={weeksChart(weeks)} />
             ) : (
               <ChartFrame
                 noData={{

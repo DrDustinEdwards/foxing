@@ -74,6 +74,7 @@ const PUBLIC_EXACT = new Set([
   "/robots.txt",
   "/privacy",
   "/terms",
+  "/accessibility",
   "/about",
   "/features",
   "/guide",
