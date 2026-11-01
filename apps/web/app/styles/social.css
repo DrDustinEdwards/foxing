@@ -298,15 +298,6 @@
   gap: 1rem;
 }
 .fx-list-detail-link-2,
-.fx-recap-link {
-  font-family: var(--display);
-  font-size: 1.125rem;
-  line-height: 1.75rem;
-  color: var(--text);
-  &:hover {
-    color: var(--accent-text);
-  }
-}
 .fx-list-detail-title {
   font-family: var(--display);
   font-size: 1.125rem;
@@ -770,16 +761,6 @@
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--dim);
-}
-.fx-recap-card-2 {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding-inline: 1rem;
 }
 .fx-lists-row-2 {
   display: flex;

@@ -27,15 +27,6 @@ export function YearView({
   const { recap, year, years, username, monthly, genres } = data;
   const firstBook = recap.finished[0];
   const lastBook = recap.finished[recap.finished.length - 1];
-  const stats = [
-    { label: "books finished", value: recap.booksFinished },
-    { label: "words read", value: recap.totalWords ? recap.totalWords.toLocaleString() : "0" },
-    { label: "distinct authors", value: recap.distinctAuthors },
-    {
-      label: "average rating",
-      value: recap.averageRating != null ? recap.averageRating.toFixed(1) : "-",
-    },
-  ];
 
   return (
     <PageShell>
@@ -67,14 +58,7 @@ export function YearView({
           />
         ) : (
           <>
-            <section className="fx-year-grid">
-              {stats.map((s) => (
-                <div key={s.label} className="text-center fx-year-card">
-                  <p className="display-3">{s.value}</p>
-                  <p className="mt-1 fx-year-caps">{s.label}</p>
-                </div>
-              ))}
-            </section>
+            <YearNumbers recap={recap} />
 
             {monthly.some((n) => n > 0) ? (
               <section className="stack">
@@ -101,23 +85,7 @@ export function YearView({
               </section>
             ) : null}
 
-            {recap.topBooks.length > 0 ? (
-              <section className="stack">
-                <h2 className="display-2">Top books</h2>
-                <ol className="stack-2">
-                  {recap.topBooks.map((b) => (
-                    <li key={b.bookId} className="py-3 fx-year-card-2">
-                      <Link to={`/books/${b.slug}`} className="fx-year-link">
-                        {b.title}
-                      </Link>
-                      <span className="fx-year-label">
-                        {b.ratingHalf != null ? `${(b.ratingHalf / 2).toFixed(1)}★` : ""}
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : null}
+            <TopBooks books={recap.topBooks} />
           </>
         )}
 
@@ -132,6 +100,51 @@ export function YearView({
         ) : null}
       </Container>
     </PageShell>
+  );
+}
+
+// The year's four numbers, shared with the public recap (routes/recap.tsx).
+export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
+  const stats = [
+    { label: "books finished", value: recap.booksFinished },
+    { label: "words read", value: recap.totalWords ? recap.totalWords.toLocaleString() : "0" },
+    { label: "distinct authors", value: recap.distinctAuthors },
+    {
+      label: "average rating",
+      value: recap.averageRating != null ? recap.averageRating.toFixed(1) : "-",
+    },
+  ];
+  return (
+    <section className="fx-year-grid">
+      {stats.map((s) => (
+        <div key={s.label} className="text-center fx-year-card">
+          <p className="display-3">{s.value}</p>
+          <p className="mt-1 fx-year-caps">{s.label}</p>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+// The year's top books, shared with the public recap.
+export function TopBooks({ books }: { books: RecapPage["recap"]["topBooks"] }) {
+  if (books.length === 0) return null;
+  return (
+    <section className="stack">
+      <h2 className="display-2">Top books</h2>
+      <ol className="stack-2">
+        {books.map((b) => (
+          <li key={b.bookId} className="py-3 fx-year-card-2">
+            <Link to={`/books/${b.slug}`} className="fx-year-link">
+              {b.title}
+            </Link>
+            <span className="fx-year-label">
+              {b.ratingHalf != null ? `${(b.ratingHalf / 2).toFixed(1)}★` : ""}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
 
