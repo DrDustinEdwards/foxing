@@ -15,6 +15,8 @@
  *                          apiHandler checks the audience, re-checks the
  *                          administrator, rate limits and hands off
  *   /authorize /callback   consent and the Cloudflare Access sign-in, login-handler.ts
+ *   /owner                 the owner page: your grants with Revoke, the agent keys and the tool-call log
+ *                          (site-runtime ./owner-page, mounted by the same login handler)
  *   /register              site-runtime's registrationLimited (per address and
  *                          overall), then the provider, which refuses any
  *                          redirect URI not allowlisted exactly
