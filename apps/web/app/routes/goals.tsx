@@ -15,15 +15,14 @@ import {
 } from "@foxing/client";
 import { createDb, libraryRepo, views } from "@foxing/core";
 import type { Goal, GoalWithProgress } from "@foxing/types";
-import { ChartFrame } from "capsomer/react/chart-frame";
 import { Meter } from "capsomer/react/meter";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
+import { ReadingActivity } from "~/components/reading/reading-activity";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { weeksChart } from "~/lib/reading-charts";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
 
@@ -112,27 +111,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
           </section>
         ) : null}
 
-        <section className="stack">
-          <h2 className="display-2">Reading activity</h2>
-          <div className="card card-5">
-            {weeks.some((w) => w.books > 0) ? (
-              <ChartFrame draw={weeksChart(weeks)} />
-            ) : (
-              <ChartFrame
-                noData={{
-                  title: "Books finished per week, the last year",
-                  reason: "No books finished in the last year.",
-                }}
-              />
-            )}
-          </div>
-          <div className="fx-goals-grid">
-            <StreakCard label="current streak" value={streak.currentStreak} hint="days in a row" />
-            <StreakCard label="longest streak" value={streak.longestStreak} hint="all time" />
-            <StreakCard label="books finished" value={streak.totalBooksFinished} hint="all time" />
-            <StreakCard label="highlights" value={streak.totalHighlights} hint="all time" />
-          </div>
-        </section>
+        <ReadingActivity weeks={weeks} streak={streak} />
       </Container>
     </PageShell>
   );
@@ -301,16 +280,6 @@ function CreateGoal() {
         </p>
       ) : null}
     </section>
-  );
-}
-
-function StreakCard({ label, value, hint }: { label: string; value: number; hint: string }) {
-  return (
-    <div className="card">
-      <p className="display-2">{value.toLocaleString()}</p>
-      <p className="mt-1 fx-goals-caps">{label}</p>
-      <p className="fx-goals-text-4">{hint}</p>
-    </div>
   );
 }
 
