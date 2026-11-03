@@ -1,11 +1,14 @@
 // The reader's charts, drawn by Enarratio into Capsomer's chart frame (ChartFrame redraws each one
 // to its width and adds Enarratio's hover details, keyboard reading and sortable table). Each
-// returns a draw(width) for ChartFrame's `draw`; the figure carries the title, the finding, the
-// drawing and the numbers behind "Show data". The stats page and /year share the months and
-// genres charts.
+// returns a draw for ChartFrame's `draw`; the bar charts take `fit`, the height the server's drawing
+// showed at the frame's width, so the redraw does not push the page down on a phone (the weeks heat
+// strip is shown at its drawn height, so it keeps its own). The figure carries the title, the
+// finding, the drawing and the numbers behind "Show data". The stats page and /year share the
+// months and genres charts.
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
 import { barChart } from "enarratio/lite/bar";
+import type { ChartFit } from "capsomer/react/chart-frame";
 
 const SOURCE = "Your Foxing library";
 const count = (n: number, one: string, many = `${one}s`) =>
@@ -27,13 +30,14 @@ export function monthsChart(monthly: number[], year: number) {
     "month",
     monthly.map((books, i) => [MONTH_ABBR[i], books]),
   );
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "month",
       xDomain: MONTH_ABBR,
       width,
       height: 220,
+      ...fit,
       id: `months-${year}`,
       title: `Books finished per month, ${year}`,
       alt,
@@ -53,7 +57,7 @@ export function genresChart(genres: Array<{ name: string; value: number }>, year
     "genre",
     genres.map((g) => [g.name, g.value]),
   );
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "genre",
@@ -61,6 +65,7 @@ export function genresChart(genres: Array<{ name: string; value: number }>, year
       orientation: "horizontal",
       width,
       height: 60 + genres.length * 36,
+      ...fit,
       id: `genres-${year}`,
       title: `Top genres, ${year}`,
       alt,
@@ -116,7 +121,7 @@ export function pollChart(
     "option",
     options.map((o) => [o.label, o.votes]),
   );
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "option",
@@ -124,6 +129,7 @@ export function pollChart(
       orientation: "horizontal",
       width,
       height: 60 + options.length * 36,
+      ...fit,
       id: `poll-${id}`,
       title: closed ? "Final votes" : "Votes so far",
       alt,
