@@ -4,7 +4,7 @@
 // so the route renders a shell and the ReaderView lazy-loads the engine. Anonymous
 // readers can read fully; annotating/bookmarking/progress prompt sign-in.
 import { loadReaderAnnotations, views } from "@foxing/core";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
 import { ReaderView } from "~/components/reader/reader-view";
@@ -12,7 +12,7 @@ import type { Route } from "./+types/read";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   const userId = session?.user?.id ?? null;
   // The same view GET /books/:slug/reader returns to mobile: the readable book, the
   // saved position and the clubs a passage comment can go to.

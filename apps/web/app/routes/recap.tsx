@@ -5,7 +5,7 @@ import { PageShell } from "~/components/page-shell";
 import { TopBooks, YearNumbers } from "~/components/reading/year-view";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/recap";
 import { SITE_ORIGIN } from "~/lib/origins";
@@ -17,7 +17,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   if (!Number.isInteger(year) || year < 2000 || year > 2100) {
     throw new Response("Not found", { status: 404 });
   }
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   const data = await views.recap(
     createDb(env.DB),
     { username: params.username },
