@@ -415,8 +415,8 @@ importers:
   packages/api:
     dependencies:
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.62.1
-        version: git+https://git@github.com:DrDustinEdwards/site-runtime.git#3ec2a3a52916ea60bcdcb62e9e030983f41aa722
+        specifier: github:DrDustinEdwards/site-runtime#v0.73.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f
       '@foxing/core':
         specifier: workspace:*
         version: link:../core
@@ -459,8 +459,8 @@ importers:
         specifier: github:DrDustinEdwards/prelum#v0.32.1
         version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/4db933115fd46e995c2ef554e8d972c508da38f5(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       '@dustinedwards/site-runtime':
-        specifier: github:DrDustinEdwards/site-runtime#v0.62.1
-        version: git+https://git@github.com:DrDustinEdwards/site-runtime.git#3ec2a3a52916ea60bcdcb62e9e030983f41aa722
+        specifier: github:DrDustinEdwards/site-runtime#v0.73.0
+        version: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f
       '@foxing/types':
         specifier: workspace:*
         version: link:../types
@@ -1598,11 +1598,6 @@ packages:
     resolution: {gitHosted: true, integrity: sha512-XnycXpmJ+mje09+efIrU6xLwyDXEJuAbqEGH5+3D1w2tNkD5+I++CkQz28UDtJYchJwCdu6kePmhkZRmSRUcDA==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/be0c72075be014f8826421aa2e9fb0fa4d7ec547}
     version: 0.21.0
     engines: {node: '>=26.11.1'}
-    hasBin: true
-
-  '@dustinedwards/site-runtime@git+https://git@github.com:DrDustinEdwards/site-runtime.git#3ec2a3a52916ea60bcdcb62e9e030983f41aa722':
-    resolution: {commit: 3ec2a3a52916ea60bcdcb62e9e030983f41aa722, repo: git@github.com:DrDustinEdwards/site-runtime.git, type: git}
-    version: 0.62.1
     hasBin: true
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f':
@@ -8768,8 +8763,6 @@ snapshots:
       - shiki
       - unified
       - unist-util-visit
-
-  '@dustinedwards/site-runtime@git+https://git@github.com:DrDustinEdwards/site-runtime.git#3ec2a3a52916ea60bcdcb62e9e030983f41aa722': {}
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f': {}
 
