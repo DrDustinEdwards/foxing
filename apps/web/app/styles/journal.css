@@ -106,15 +106,6 @@
   object-fit: cover;
 }
 
-.fx-journal-tag-link {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--dim);
-  &:hover {
-    color: var(--text);
-  }
-}
 .fx-journal-tag-grid {
   display: grid;
   gap: 1.5rem;
