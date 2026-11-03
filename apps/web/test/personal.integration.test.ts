@@ -4,8 +4,7 @@ import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { testApi } from "./test-api";
 
-// Personal surfaces. The cut-feature redirects are tested with the rest of the legacy map
-// in restore.integration.test.ts; the goal-edit contract drives the API directly (x-test-user stands
+// Personal surfaces. The goal-edit contract drives the API directly (x-test-user stands
 // in for the Better Auth session the Worker injects). The visible /diary, /goals, and
 // /year UI are covered by the Playwright authed spec with the real login fixture.
 
