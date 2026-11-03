@@ -7,12 +7,12 @@ import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { clubsRepo, createDb } from "@foxing/core";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect(`/login?redirect=/join/${params.code}`);
 
   const db = createDb(env.DB);

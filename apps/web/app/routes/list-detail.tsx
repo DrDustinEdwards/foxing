@@ -10,13 +10,13 @@ import { LikeButton } from "~/components/social/like-button";
 import { RemoveBookButton } from "~/components/social/remove-book-button";
 import { Avatar, Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/list-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   const viewerId = session?.user?.id ?? null;
   const page = await views.listPage(createDb(env.DB), params.id, viewerId);
   if (!page) throw new Response("Not found", { status: 404 });

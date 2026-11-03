@@ -8,13 +8,13 @@ import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login?redirect=/clubs");
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   return views.clubsIndex(createDb(env.DB), session.user.id);

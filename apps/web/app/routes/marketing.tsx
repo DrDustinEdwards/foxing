@@ -7,7 +7,7 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
 import { Button, Container, Eyebrow } from "~/components/ui";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, ldJson, organizationLd, websiteLd } from "~/lib/seo";
 import type { Route } from "./+types/marketing";
@@ -47,7 +47,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env } = loaderBase(context, request);
   // Signed-in visitors get their dashboard; "/" stays the marketing page for
   // anonymous visitors (whose response is the one that gets edge-cached).
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (session?.user) throw redirect("/home");
   const [pick, browse, journal] = await Promise.all([
     catalogRepo.getTodaysPick(db),

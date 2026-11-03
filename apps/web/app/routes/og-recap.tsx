@@ -3,7 +3,7 @@ import { cardText } from "@dustinedwards/site-runtime/share-card";
 // pipeline as og-book (lib/og.server). Only public profiles render; others 404
 // (crawlers get nothing to leak).
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { ogCard } from "~/lib/og.server";
 import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/og-recap";
@@ -13,7 +13,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const year = Number(params.year);
   if (!Number.isInteger(year)) throw new Response("Not found", { status: 404 });
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   const data = await views.recap(
     createDb(env.DB),
     { username: params.username },

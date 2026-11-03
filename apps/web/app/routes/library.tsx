@@ -24,7 +24,7 @@ import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
@@ -47,7 +47,7 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login?redirect=/library");
   // Signed-in but not onboarded -> /onboarding (never render with a null profile).
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });

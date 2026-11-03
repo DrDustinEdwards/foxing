@@ -9,7 +9,7 @@ import { Form, redirect } from "react-router";
 import { AuthShell } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import { authClient, safeNextPath, signInAgainIfStale } from "~/lib/auth-client";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
 
 export function meta() {
@@ -21,7 +21,7 @@ async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArg
   const { env } = context.get(cloudflareContext);
   const next = safeNextPath(new URL(request.url).searchParams.get("next"));
   const auth = await getAuth(env);
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await auth.api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login");
   return { env, auth, next, userId: session.user.id };
 }
