@@ -1,8 +1,8 @@
 // The reader's charts, drawn by Enarratio into Capsomer's chart frame (ChartFrame redraws each one
 // to its width and adds Enarratio's hover details, keyboard reading and sortable table). Each
-// returns a draw for ChartFrame's `draw`; the bar charts take `fit`, the height the server's drawing
-// showed at the frame's width, so the redraw does not push the page down on a phone (the weeks heat
-// strip is shown at its drawn height, so it keeps its own). The figure carries the title, the
+// returns a draw for ChartFrame's `draw`, which takes `fit`: for a bar chart the height the server's
+// drawing showed at the frame's width, so the redraw does not push the page down on a phone; for the
+// weeks heat strip nothing, since a primitive keeps its own height. The figure carries the title, the
 // finding, the drawing and the numbers behind "Show data". The stats page and /year share the
 // months and genres charts.
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
@@ -87,12 +87,13 @@ export function weeksChart(weeks: Array<{ start: number; books: number }>) {
   const total = weeks.reduce((a, w) => a + w.books, 0);
   const active = weeks.filter((w) => w.books > 0).length;
   const alt = `${count(total, "book")} finished over the last ${weeks.length} weeks, in ${count(active, "week")}.`;
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     heatStrip({
       values: weeks.map((w) => w.books),
       cellLabels: weeks.map((w) => label(w.start)),
       width,
       height: 32,
+      ...fit,
       min: 0,
       id: "weeks",
       title: "Books finished per week, the last year",

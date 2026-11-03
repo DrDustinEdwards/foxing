@@ -312,8 +312,8 @@ importers:
         specifier: 1.7.12
         version: 1.7.12(drizzle-kit@0.31.10)(drizzle-orm@0.45.2(@cloudflare/workers-types@5.20260706.1)(kysely@0.29.3))(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(vitest@4.1.8(@types/node@20.19.41)(vite@8.1.3(@types/node@20.19.41)(esbuild@0.28.2)(jiti@1.21.7)(terser@5.47.1)(tsx@4.22.0)(yaml@2.9.1)))
       capsomer:
-        specifier: github:DrDustinEdwards/capsomer#v0.66.0
-        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/e8ae9b4e081f2366267d1eeeb46422a8472167c4(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f)(@playwright/test@1.63.0)(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+        specifier: github:DrDustinEdwards/capsomer#v0.67.2
+        version: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/0ed1d626a0833f3b7e8c8aafb1ba9459f0fcec29(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f)(@playwright/test@1.63.0)(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       enarratio:
         specifier: 0.7.3
         version: 0.7.3
@@ -4469,9 +4469,9 @@ packages:
   caniuse-lite@1.0.30001792:
     resolution: {integrity: sha512-hVLMUZFgR4JJ6ACt1uEESvQN1/dBVqPAKY0hgrV70eN3391K6juAfTjKZLKvOMsx8PxA7gsY1/tLMMTcfFLLpw==}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/312a832f3065562d46fb713854278ad891b62847:
-    resolution: {gitHosted: true, integrity: sha512-7W4PUEhoml3H6gz6ywlZl8tRI91Gk8z4lknxV+9oGfDNcpkmlZ2aXyJHQfpnN97uIW2bRRfvs11Xa3Oev6ya4w==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/312a832f3065562d46fb713854278ad891b62847}
-    version: 0.63.0
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/0ed1d626a0833f3b7e8c8aafb1ba9459f0fcec29:
+    resolution: {gitHosted: true, integrity: sha512-PukmoRj7RaK5hG2wxk4/JQeC51YE+x9Ga0DG1ZIpc8ZcNNWyEY8prWtLh7m0a65D/x3wxrLea/itCbzoKdB3gw==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/0ed1d626a0833f3b7e8c8aafb1ba9459f0fcec29}
+    version: 0.67.2
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
@@ -4522,9 +4522,9 @@ packages:
       react-router:
         optional: true
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/e8ae9b4e081f2366267d1eeeb46422a8472167c4:
-    resolution: {gitHosted: true, integrity: sha512-jECdJb/hMcxOsVIIMdMS/uJW9wIEMMtF20InSAzSYEu5CXahLMXFzjxrpYmlJO/HO9PXLdEnpebH/m4tzFJJ5A==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/e8ae9b4e081f2366267d1eeeb46422a8472167c4}
-    version: 0.66.0
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/312a832f3065562d46fb713854278ad891b62847:
+    resolution: {gitHosted: true, integrity: sha512-7W4PUEhoml3H6gz6ywlZl8tRI91Gk8z4lknxV+9oGfDNcpkmlZ2aXyJHQfpnN97uIW2bRRfvs11Xa3Oev6ya4w==, tarball: https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/312a832f3065562d46fb713854278ad891b62847}
+    version: 0.63.0
     engines: {node: '>=24.14.1'}
     hasBin: true
     peerDependencies:
@@ -11299,9 +11299,9 @@ snapshots:
 
   caniuse-lite@1.0.30001792: {}
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/312a832f3065562d46fb713854278ad891b62847(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f)(@playwright/test@1.63.0)(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/0ed1d626a0833f3b7e8c8aafb1ba9459f0fcec29(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f)(@playwright/test@1.63.0)(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0):
     dependencies:
-      '@drdustinedwards/site-helpers': https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/e03ead8283cd200687c62600be5c41d34c9d2a3f(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+      '@drdustinedwards/site-helpers': https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/4db933115fd46e995c2ef554e8d972c508da38f5(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.63.0)
       '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f
@@ -11340,9 +11340,9 @@ snapshots:
       - unified
       - unist-util-visit
 
-  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/e8ae9b4e081f2366267d1eeeb46422a8472167c4(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f)(@playwright/test@1.63.0)(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0):
+  capsomer@https://codeload.github.com/DrDustinEdwards/capsomer/tar.gz/312a832f3065562d46fb713854278ad891b62847(@axe-core/playwright@4.12.1(playwright-core@1.63.0))(@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f)(@playwright/test@1.63.0)(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(react-dom@19.2.7(react@19.2.7))(react-router@8.5.1(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.7(react@19.2.7))(react@19.2.7))(react@19.2.7)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0):
     dependencies:
-      '@drdustinedwards/site-helpers': https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/4db933115fd46e995c2ef554e8d972c508da38f5(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
+      '@drdustinedwards/site-helpers': https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/e03ead8283cd200687c62600be5c41d34c9d2a3f(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
     optionalDependencies:
       '@axe-core/playwright': 4.12.1(playwright-core@1.63.0)
       '@dustinedwards/site-runtime': https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/abc1fa77649e13e6d8fa973a8b409c7b3906ae4f
