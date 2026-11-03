@@ -80,6 +80,10 @@ jobs:
       # (an applied one edited or gone, or a new one that drops or renames without `-- contract:`, fails).
       - name: Console ratchet and expand-only migrations
         run: pnpm run check:console && pnpm run check:migrations
+      # Every server-side Better Auth session read goes through site-runtime sessionLookup, which always sets
+      # asResponse: false (without it a signed-in reader reads as signed out; site-runtime-session-check).
+      - name: Session reads go through sessionLookup
+        run: pnpm --filter web run check:session
       - name: Unit tests (core)
         run: pnpm --filter @foxing/core test
       - name: Integration tests (web, local D1)
