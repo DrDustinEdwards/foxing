@@ -3,8 +3,7 @@
     "apps/web/app/**/*.{ts,tsx}",
     "apps/web/workers/**/*.ts",
     "packages/api/src/**/*.ts",
-    "packages/core/src/**/*.ts",
-    "packages/utils/src/**/*.ts"
+    "packages/core/src/**/*.ts"
   ],
   "ignore": [
     "**/*.client.{ts,tsx}",

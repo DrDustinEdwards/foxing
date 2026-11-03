@@ -50,12 +50,8 @@ export const links: Route.LinksFunction = () => [
 // Set data-theme before paint so there is no theme flash. Stored preference wins (Capsomer's themeScript, under
 // Foxing's key; Capsomer's theme button in page-shell.tsx remembers its choice there, as the plain word); otherwise
 // follow the OS. Attribute-driven per design-system.md.
-// Migration shim: the key was "foxing-mode" (attribute data-mode) before the portfolio standardized on data-theme.
-// Move the old key over once and drop it, so a returning reader keeps their choice. Safe to delete this part once
-// the old key is gone from the wild.
-const MIGRATE_OLD_KEY = `try{if(!localStorage.getItem("foxing-theme")){var o=localStorage.getItem("foxing-mode");if(o==="dark"||o==="light"){localStorage.setItem("foxing-theme",o);localStorage.removeItem("foxing-mode");}}}catch(e){}`;
 const FOLLOW_OS = `try{document.documentElement.setAttribute("data-theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}catch(e){}`;
-const NO_FLASH = `${MIGRATE_OLD_KEY}${FOLLOW_OS}${themeScript("foxing-theme")}`;
+const NO_FLASH = `${FOLLOW_OS}${themeScript("foxing-theme")}`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
   // The CSP nonce (workers/security-headers.ts) for every script this document renders.

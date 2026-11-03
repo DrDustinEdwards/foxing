@@ -4,7 +4,7 @@ const { withNativeWind } = require('nativewind/metro')
 
 // Expo monorepo metro config per
 // https://docs.expo.dev/guides/monorepos/. Without these tweaks Metro
-// can't resolve workspace packages (@foxing/types, @foxing/utils) because
+// can't resolve workspace packages (@foxing/types, @foxing/client) because
 // pnpm symlinks land outside the mobile app's own node_modules tree.
 
 const projectRoot = __dirname

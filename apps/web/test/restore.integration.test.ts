@@ -2,34 +2,12 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { legacyRedirectTarget } from "../app/lib/redirects";
 import { testApi } from "./test-api";
 
-// The restoration pass: legacy path 301s (one hop, no chains), admin user-detail operator mutations, and the
-// settings username change/availability endpoints. Redirects are a pure function; the
+// The restoration pass: admin user-detail operator mutations and the
+// settings username change/availability endpoints. The
 // mutation and username contracts drive the API directly (x-test-user stands in for the
 // Better Auth session the Worker injects). The visible admin UI is covered by Playwright.
-
-describe("legacy redirect map", () => {
-  it("sends every legacy path one hop to a live route, and keeps recap live", () => {
-    const legacy = [
-      "/sign-in",
-      "/sign-up",
-      "/book-clubs",
-      "/book-clubs/oprah",
-      "/series/dune",
-      "/quotes/123",
-      "/buddy-reads/abc",
-      "/u/jane/shelves/abc",
-    ];
-    for (const p of legacy) {
-      const target = legacyRedirectTarget(p);
-      expect(target, p).not.toBeNull();
-      expect(legacyRedirectTarget(target as string), `${p} chains`).toBeNull();
-    }
-    expect(legacyRedirectTarget("/u/jane/recap/2026")).toBeNull();
-  });
-});
 
 const api = testApi({
   // Cloudflare Access let the request through, unless the test says it did not.

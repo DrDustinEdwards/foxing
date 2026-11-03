@@ -54,7 +54,6 @@ import {
 } from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
-import { legacyRedirectTarget } from "../app/lib/redirects";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { clubRoomHub } from "./club-room";
@@ -360,14 +359,6 @@ app.all("*", async (c) => {
   const url = new URL(req.url);
   // One hop to the canonical address: https, the bare host, no trailing slash (/books/ to /books).
   const canonical = canonicalRedirect(req, { host: "foxing.app" });
-  // Legacy path 301s (GET navigations only), from the canonical address so /sign-in/ is one hop
-  // too. The query string is kept.
-  const dest = new URL(canonical?.headers.get("Location") ?? url);
-  const legacy = req.method === "GET" ? legacyRedirectTarget(dest.pathname) : null;
-  if (legacy) {
-    dest.pathname = legacy;
-    return c.redirect(dest.toString(), 301);
-  }
   if (canonical) return canonical;
   // An anonymous GET or HEAD of a public page goes through the Workers cache: the Renderer's response is
   // stored under the path and the query without tracking parameters, and a stored one is answered

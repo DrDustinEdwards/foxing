@@ -193,13 +193,12 @@ export default function Reader() {
 
   // Live WPM tracking. Each location change with pageWordCount lets us
   // compute words/sec from the previous sample → smooth into a session
-  // average for the bottom-bar reading-rate indicator.
+  // average, saved as the calibrated WPM that /settings shows.
   const lastLocationTimeRef = useRef<number>(Date.now())
   const lastPageWordsRef = useRef<number>(0)
   const wpmSamplesRef = useRef<number[]>([])
   // Page turns in the stretch not yet logged as a session.
   const pagesReadRef = useRef<number>(0)
-  const [wpm, setWpm] = useState<number | null>(null)
 
   // Transient toast, currently used for "couldn't save highlight" feedback.
   const [toast, setToast] = useState<string | null>(null)
@@ -256,17 +255,6 @@ export default function Reader() {
     if (readerState !== 'ready') return
     readerRef.current?.setHighlightColors(highlightPalette)
   }, [highlightPalette, readerState])
-
-  // Hydrate any prior calibrated WPM so the bottom-bar shows a sensible
-  // value before we collect a fresh sample this session.
-  useEffect(() => {
-    import('@/lib/user-prefs')
-      .then((m) => m.getCalibratedWpm())
-      .then((w) => {
-        if (w) setWpm(w)
-      })
-      .catch(() => {})
-  }, [])
 
   // Paint the reader's own highlights once the book is open, and again when they change.
   useEffect(() => {
@@ -537,8 +525,7 @@ export default function Reader() {
         wpmSamplesRef.current = [...wpmSamplesRef.current.slice(-4), sample]
         const avg = wpmSamplesRef.current.reduce((a, b) => a + b, 0) / wpmSamplesRef.current.length
         const rounded = Math.round(avg)
-        setWpm(rounded)
-        // Persist calibrated WPM so /settings can show it + Recalibrate.
+        // Persist calibrated WPM so /settings can show it.
         // Best-effort; never block reading on the AsyncStorage write.
         import('@/lib/user-prefs')
           .then((m) => m.setCalibratedWpm(rounded))

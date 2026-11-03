@@ -348,10 +348,6 @@
     color: var(--accent-text);
   }
 }
-.fx-year-text {
-  fill: var(--dim);
-  font-family: var(--mono);
-}
 .fx-year-text-2 {
   margin-top: 0.125rem;
   font-family: var(--ui);

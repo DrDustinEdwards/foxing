@@ -14,7 +14,6 @@ Foxing: a reading app and web platform ("Letterboxd for books"), foxing.app.
     packages/core/  @foxing/core: Drizzle schema, repositories, domain logic
     packages/api/   @foxing/api: Hono routes (the /api/v1 surface)
     packages/types/ @foxing/types: shared interfaces
-    packages/utils/ @foxing/utils: shared helpers
     mcp/            Foxing Admin MCP: own Worker, npm package
 
 Web stack: Workers, D1, R2, KV, React Router 8 framework mode. A pnpm and turborepo monorepo. Node 26 (`.nvmrc`).

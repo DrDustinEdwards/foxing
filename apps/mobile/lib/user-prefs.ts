@@ -8,8 +8,8 @@ const PREFS_KEY = 'user_prefs_v1'
 const WPM_KEY = 'user_calibrated_wpm'
 
 export type AppLanguage = 'en' | 'es' | 'fr' | 'de' | 'pt' | 'it' | 'ja' | 'zh'
-export type AiLanguage = AppLanguage
-export type SpeedUnit = 'wpm' | 'pages_per_hour'
+type AiLanguage = AppLanguage
+type SpeedUnit = 'wpm' | 'pages_per_hour'
 
 export interface UserPrefs {
   appLanguage: AppLanguage
@@ -43,7 +43,7 @@ export async function setUserPrefs(next: UserPrefs): Promise<void> {
 }
 
 // Calibrated WPM is owned by the reader, but the settings screen lets the
-// user inspect and reset it. Kept separate from UserPrefs so it can be
+// user inspect it. Kept separate from UserPrefs so it can be
 // updated without serializing the whole prefs blob on every page turn.
 export async function getCalibratedWpm(): Promise<number | null> {
   const raw = await AsyncStorage.getItem(WPM_KEY)
@@ -54,10 +54,6 @@ export async function getCalibratedWpm(): Promise<number | null> {
 
 export async function setCalibratedWpm(wpm: number): Promise<void> {
   await AsyncStorage.setItem(WPM_KEY, String(Math.round(wpm)))
-}
-
-export async function clearCalibratedWpm(): Promise<void> {
-  await AsyncStorage.removeItem(WPM_KEY)
 }
 
 export const APP_LANGUAGE_OPTIONS: Array<{ value: AppLanguage; label: string }> = [
