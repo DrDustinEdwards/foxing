@@ -15,11 +15,6 @@
   --brand: #d4622e;
   --brand-deep: #8a3610;
   --amber: #e8b554;
-  /* Capsomer's meter in this app's dark palette. */
-  --accent: var(--brand);
-  --sunken: var(--bg);
-  --muted: var(--text-dim);
-  --line-strong: var(--border);
   font-family: 'Inter', system-ui, sans-serif;
   color-scheme: dark;
 }
