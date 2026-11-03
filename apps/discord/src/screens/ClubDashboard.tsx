@@ -8,6 +8,7 @@ import {
 } from '../lib/foxing-api'
 import type { DiscordSession } from '../lib/discord-sdk'
 import { SprintTimer } from './SprintTimer'
+import { Meter } from 'capsomer/react/meter'
 
 const TABS = ['reading', 'discuss', 'vote', 'sprint'] as const
 type Tab = (typeof TABS)[number]
@@ -105,6 +106,13 @@ export function ClubDashboard({ clubId, session, onBack }: Props) {
   )
 }
 
+// Foxing's own meter (Capsomer's, as apps/web's reading goals use it): the value is in the
+// meter's accessible name and on screen, not a width alone (charts check, 2026-11-03).
+function ReadMeter({ name, percent }: { name: string; percent: number | null }) {
+  const pct = Math.round(Math.max(0, Math.min(100, percent ?? 0)))
+  return <Meter label={name} value={pct} max={100} display={`${pct}%`} valueText={`${pct}% read`} />
+}
+
 function ReadingTab({ data }: { data: ClubDashboardData }) {
   if (data.member_progress.length === 0) {
     return <p className="muted">No member progress yet.</p>
@@ -114,17 +122,7 @@ function ReadingTab({ data }: { data: ClubDashboardData }) {
       {data.member_progress.map((m) => (
         <li key={m.user_id} className="card row">
           <div className="col" style={{ flex: 1, gap: 4 }}>
-            <strong>{m.display_name}</strong>
-            <div className="row">
-              <div className="progress">
-                <span
-                  style={{ width: `${Math.max(0, Math.min(100, m.progress_percentage ?? 0))}%` }}
-                />
-              </div>
-              <span className="muted" style={{ fontSize: 12 }}>
-                {Math.round(m.progress_percentage ?? 0)}%
-              </span>
-            </div>
+            <ReadMeter name={m.display_name} percent={m.progress_percentage} />
           </div>
           {m.status === 'finished' && <span>✓</span>}
         </li>
@@ -256,13 +254,13 @@ function VoteTab({
         const isMine = poll.my_vote === opt.id
         return (
           <div key={opt.id} className="col">
-            <div className="row" style={{ justifyContent: 'space-between' }}>
-              <span>{opt.label}</span>
-              <span className="muted">{opt.vote_count}</span>
-            </div>
-            <div className="progress">
-              <span style={{ width: `${pct}%` }} />
-            </div>
+            <Meter
+              label={opt.label}
+              value={opt.vote_count}
+              max={Math.max(total, 1)}
+              display={`${opt.vote_count} (${pct}%)`}
+              valueText={`${opt.vote_count} of ${total} ${total === 1 ? 'vote' : 'votes'}, ${pct}%`}
+            />
             <button
               type="button"
               className={isMine ? '' : 'ghost'}
