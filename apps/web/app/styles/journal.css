@@ -73,6 +73,7 @@
 }
 .fx-journal-archive-box {
   flex-grow: 1;
+  min-width: 0;
 }
 .fx-journal-archive-text {
   margin-top: 0.125rem;
