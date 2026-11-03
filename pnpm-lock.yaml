@@ -492,8 +492,6 @@ importers:
 
   packages/types: {}
 
-  packages/utils: {}
-
 packages:
 
   '@alloc/quick-lru@5.2.0':

@@ -62,8 +62,7 @@
         "app/**/*.{ts,tsx}",
         "scripts/*.{ts,mjs}",
         "plugins/*.js",
-        "metro.config.js",
-        "tailwind.config.js"
+        "metro.config.js"
       ],
       // supabase/functions is Deno code with URL imports, deployed by the
       // Supabase CLI, outside Node resolution.
@@ -78,19 +77,15 @@
       "metro": false
     },
     "apps/discord": {
-      "entry": ["src/main.tsx"],
       "project": ["src/**/*.{ts,tsx,css}"]
     },
     "packages/core": {
-      "project": ["src/**/*.ts", "test/**/*.ts", "drizzle.config.ts"]
+      "project": ["src/**/*.ts", "test/**/*.ts"]
     },
     "packages/api": {
       "project": ["src/**/*.ts"]
     },
     "packages/types": {
-      "project": ["src/**/*.ts"]
-    },
-    "packages/utils": {
       "project": ["src/**/*.ts"]
     }
   }
