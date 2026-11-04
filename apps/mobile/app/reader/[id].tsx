@@ -1349,9 +1349,7 @@ export default function Reader() {
         bookTitle={book.title}
         bookAuthor={book.author}
         bookId={book.id}
-        onNavigate={(cfi, text, chapter) =>
-          readerRef.current?.goTo(cfi, { text, chapter: chapter ?? undefined })
-        }
+        onNavigate={(cfi) => readerRef.current?.goTo(cfi)}
         onClose={() => setHighlightsOpen(false)}
       />
 

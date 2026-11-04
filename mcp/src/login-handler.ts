@@ -6,7 +6,7 @@
  *
  * Access rather than Foxing's own Better Auth: this server's sign-in stays
  * independent of foxing.app's sessions. The Foxing account the API acts as is
- * FOXING_ADMIN_ID, and the API re-checks that account's is_admin on every call.
+ * FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAILS) on every call.
  */
 
 import { auditLogCheck, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";

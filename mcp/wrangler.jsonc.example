@@ -73,7 +73,7 @@
   // a deploy keeps them:
   //   ADMIN_EMAIL           the one email let in, as Access verifies it at sign-in.
   //   FOXING_ADMIN_ID       the Foxing user id the admin API acts as. The API re-reads
-  //                         that account's is_admin and suspension on every call.
+  //                         that account's admin standing and suspension on every call.
   //   ADMIN_OPERATOR_TOKEN  the API leg. Same value as the foxing Worker's
   //                         ADMIN_OPERATOR_TOKEN. At least 32 characters.
   //   ACCESS_SAAS_CLIENT_ID      the Access for SaaS (OIDC) app used for sign-in,
