@@ -43,7 +43,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
     displayName: profile.displayName ?? profile.username,
     avatarUrl: profile.avatarUrl,
     subscriptionTier: profile.subscriptionTier === "plus" ? "plus" : "free",
-    isAdmin: isAdminAccount(env, session.user.email, profile.isAdmin),
+    isAdmin: isAdminAccount(env, session.user.email),
     stats: {
       booksThisYear,
       dayStreak: streak?.currentStreak ?? 0,

@@ -16,7 +16,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   await requireAdmin(env, request);
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
-  const users = await adminRepo.listUsers(createDb(env.DB), { q: q || undefined });
+  const users = await adminRepo.listUsers(createDb(env.DB), { q: q || undefined, admins: env });
   return { q, users };
 }
 

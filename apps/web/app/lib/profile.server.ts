@@ -24,8 +24,8 @@ export interface ProfileContext {
 export async function requireProfileForUser(env: Env, user: SessionUser): Promise<ProfileContext> {
   const row = await profilesRepo.getProfileById(createDb(env.DB), user.id);
   if (!row) throw redirect("/onboarding");
-  // Admin is the ADMIN_EMAILS setting once it is set (core isAdminAccount).
-  const profile = { ...row, isAdmin: isAdminAccount(env, user.email, row.isAdmin) };
+  // Admin is the ADMIN_EMAILS setting (core isAdminAccount), never the stored row.
+  const profile = { ...row, isAdmin: isAdminAccount(env, user.email) };
   return { user, profile };
 }
 

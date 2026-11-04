@@ -27,7 +27,7 @@ const call = (pathname: string, user: string | null, init?: RequestInit) =>
     env as never,
   );
 
-async function seedUser(id: string, opts: { isAdmin?: boolean; tier?: "free" | "plus" } = {}) {
+async function seedUser(id: string, opts: { tier?: "free" | "plus" } = {}) {
   const db = createDb(env.DB);
   await db.insert(schema.user).values({
     id,
@@ -41,7 +41,6 @@ async function seedUser(id: string, opts: { isAdmin?: boolean; tier?: "free" | "
     id,
     username: id,
     displayName: id,
-    isAdmin: opts.isAdmin ?? false,
     subscriptionTier: opts.tier ?? "free",
     onboardedAt: new Date(),
     createdAt: new Date(),
@@ -56,19 +55,11 @@ describe("admin user-detail operator mutations", () => {
     await db.delete(schema.adminAuditLog);
     await db.delete(schema.profiles);
     await db.delete(schema.user);
-    await seedUser("admin", { isAdmin: true });
+    await seedUser("admin");
     await seedUser("reader", { tier: "free" });
   });
 
-  // Tier and admin changes are preview then perform, covered in admin.integration.test.ts.
-  it("blocks self-demotion", async () => {
-    const self = await call("/admin/users/admin/admin", "admin", {
-      method: "POST",
-      body: JSON.stringify({ on: false }),
-    });
-    expect(self.status).toBe(422);
-  });
-
+  // Tier and suspend changes are preview then perform, covered in admin.integration.test.ts.
   it("sends a single-user notification", async () => {
     const res = await call("/admin/users/reader/notify", "admin", {
       method: "POST",

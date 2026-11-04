@@ -1,5 +1,5 @@
-// Preview then perform for admin role and permission changes (grant or revoke admin,
-// change tier, suspend or unsuspend). The first request to a role route changes
+// Preview then perform for admin role and permission changes (change tier, suspend or
+// unsuspend). The first request to a role route changes
 // nothing: the server answers with who gains or loses what and a single-use token. This
 // dialog shows that preview and sends the token only when the operator confirms. It is
 // a native modal <dialog>: focus moves into it, Tab stays inside, Escape cancels, and
@@ -11,7 +11,7 @@ type RoleValue = boolean | string;
 
 type RolePreview = {
   target: { id: string; username: string; displayName: string | null };
-  kind: "admin" | "tier" | "suspend";
+  kind: "tier" | "suspend";
   from: RoleValue;
   to: RoleValue;
   summary: string;
@@ -34,7 +34,6 @@ function errorMessage(body: unknown, status: number, fallback: string): string {
 }
 
 const VALUE_LABELS: Record<RolePreview["kind"], (v: RoleValue) => string> = {
-  admin: (v) => (v ? "Admin" : "Not admin"),
   tier: (v) => (v === "plus" ? "Plus" : "Free"),
   suspend: (v) => (v ? "Suspended" : "Active"),
 };

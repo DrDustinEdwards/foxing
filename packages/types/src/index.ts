@@ -58,7 +58,6 @@ export interface MyProfile {
   subscriptionTier: "free" | "plus";
   subscriptionStatus: string | null;
   subscriptionPeriodEnd: number | null;
-  isAdmin: boolean;
   timezone: string | null;
   visibility: {
     profile?: "public" | "private";

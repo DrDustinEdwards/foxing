@@ -38,7 +38,11 @@ export default defineConfig(async () => {
           // The nightly backup's bucket (app/lib/backup.server.ts), empty and local.
           // MEDIA and COVERS: the reader assets and covers buckets the Worker entry binds (empty here).
           r2Buckets: ["BACKUPS", "MEDIA", "COVERS"],
-          bindings: { TEST_MIGRATIONS: migrations },
+          // The admin list (core isAdminAccount): the suites' admins are these test emails.
+          bindings: {
+            TEST_MIGRATIONS: migrations,
+            ADMIN_EMAILS: "admin@example.com,admin2@example.com",
+          },
         },
       }),
     ],
