@@ -14,6 +14,7 @@ import {
   insidePrefix,
   MIN_KEY_LENGTH,
   PREVIEW_LINK_PATH,
+  type PublishHook,
   type RateLimiter,
   type SiteApi,
   webmentionHook,
@@ -100,9 +101,21 @@ function carrelSiteApi(
     hooks: [
       indexNowHook({ submit: submitIndexNow, origin: SITE_ORIGIN, key: INDEXNOW_KEY }),
       webmentionHook({ store }),
-      schedulePurgeHook(),
+      scheduledPurge(),
     ],
   });
+}
+
+/**
+ * site-runtime's schedule purge, for site-api 0.22.0's publish event, whose `path` is null when the
+ * change has no page to purge (nothing is stored for it).
+ */
+function scheduledPurge(): PublishHook {
+  const purge = schedulePurgeHook();
+  return {
+    name: purge.name,
+    run: (e) => (e.path === null ? false : purge.run({ trigger: e.trigger, action: e.action, path: e.path })),
+  };
 }
 
 /**
