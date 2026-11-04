@@ -176,7 +176,6 @@ export function TypographySheet({
             )}
             {tab === 'themes' && (
               <ThemesTab
-                prefs={prefs}
                 savedThemes={savedThemes}
                 savingTheme={savingTheme}
                 themeName={themeName}

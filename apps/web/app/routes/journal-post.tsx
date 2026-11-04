@@ -5,7 +5,7 @@ import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
 import { focusStyle } from "~/lib/focus";
 import { renderJournalBody } from "~/lib/journal-body.server";
-import { journalCovers } from "~/lib/journal-images.server";
+import { journalArticleImages, journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
@@ -26,13 +26,20 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     throw new Response("Not found", { status: 404 });
   }
 
-  const cover = post.coverImageUrl
-    ? (await journalCovers(db, [post.coverImageUrl])).get(post.coverImageUrl)
-    : undefined;
+  const [cover, articleImages] = await Promise.all([
+    post.coverImageUrl
+      ? journalCovers(db, [post.coverImageUrl]).then((covers) =>
+          covers.get(post.coverImageUrl ?? ""),
+        )
+      : undefined,
+    // The Article's picture is the cover, else the share image Carrel set.
+    journalArticleImages(db, post.coverImageUrl ?? post.ogImageUrl),
+  ]);
 
   return {
     html: await renderJournalBody(db, post.slug, post.content),
     cover,
+    articleImages,
     post: {
       slug: post.slug,
       title: post.title,
@@ -47,6 +54,9 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       ogTitle: post.ogTitle,
       ogDescription: post.ogDescription,
       canonicalUrl: post.canonicalUrl,
+      ogImageUrl: post.ogImageUrl,
+      ogImageAlt: post.ogImageAlt,
+      noindex: post.noindex,
     },
   };
 }
@@ -55,13 +65,16 @@ export const headers = listingPageHeaders;
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Essay not found | Foxing" }];
-  const { post } = data;
+  const { post, articleImages } = data;
   const meta = buildMeta({
     title: post.ogTitle ?? post.title,
     description: post.ogDescription ?? post.excerpt ?? `${post.title}, from the Foxing Journal.`,
     pathname: location.pathname,
-    image: post.coverImageUrl ?? undefined,
-    imageAlt: post.coverImageAlt ?? undefined,
+    // Carrel's share image (site-api's image and imageAlt search fields) ahead of the cover.
+    image: post.ogImageUrl ?? post.coverImageUrl ?? undefined,
+    imageAlt: (post.ogImageUrl ? post.ogImageAlt : post.coverImageAlt) ?? undefined,
+    canonical: post.canonicalUrl ?? undefined,
+    noindex: post.noindex,
     type: "article",
   });
   return [
@@ -72,6 +85,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
         title: post.title,
         excerpt: post.excerpt,
         coverImageUrl: post.coverImageUrl,
+        articleImages,
         publishedAt: post.publishedAt,
         updatedAt: post.updatedAt,
       }),

@@ -29,6 +29,11 @@ export const SCOPES = mcpScopes("foxing");
 export const SCOPE_READ = SCOPES.read;
 export const SCOPE_WRITE = SCOPES.write;
 
-/** Who is making one tool call, as the request boundary established it. Never read from the request. */
-export type Caller = { kind: "admin"; props: Props; scopes: readonly string[] };
+/**
+ * Who is making one tool call, as the request boundary established it. Never read from the request. The `probe` is the
+ * list-only test key (index.ts): listed the read tools, refused every call.
+ */
+export type Caller =
+  | { kind: "admin"; props: Props; scopes: readonly string[] }
+  | { kind: "probe"; principal: string; scopes: readonly string[] };
 

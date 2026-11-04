@@ -8,7 +8,7 @@ import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { coverAttributes } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { bookLd, buildMeta, ldJson } from "~/lib/seo";
@@ -40,7 +40,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   // Personalized shelf status + shelves. Anonymous requests are edge-cached (this
   // loader does not run), so this only fires for signed-in readers (cache bypassed).
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   const userId = session?.user?.id ?? null;
   const [myBook, shelves] = userId
     ? await Promise.all([views.myBook(db, userId, book.id), views.shelves(db, userId)])

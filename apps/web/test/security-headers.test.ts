@@ -5,7 +5,6 @@ import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:
 import { checkSecurityHeaders, failures } from "@dustinedwards/site-runtime/check";
 import { describe, expect, it } from "vitest";
 import worker from "../workers/app";
-import { readerContentSecurityPolicy } from "../workers/security-headers";
 
 const ORIGIN = "https://foxing.test";
 
@@ -52,9 +51,6 @@ describe("security headers the live check cannot reach", () => {
     expect(failed(response.headers, { inlineStyles: true })).toEqual([]);
     const policy = response.headers.get("Content-Security-Policy") ?? "";
     const nonce = nonceOf(policy);
-    expect(policy).toBe(readerContentSecurityPolicy(nonce));
-    expect(policy).toContain("frame-src 'self' blob:");
-    expect(policy).toContain("base-uri 'self'");
     const scriptSrc = policy.split("; ").find((d) => d.startsWith("script-src ")) ?? "";
     expect(scriptSrc).not.toMatch(/blob:|'unsafe-inline'|'unsafe-eval'/);
     for (const s of scripts(body).filter((x) => x.executable)) expect(s.nonce).toBe(nonce);

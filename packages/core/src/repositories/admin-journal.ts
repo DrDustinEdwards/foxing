@@ -129,6 +129,13 @@ export const journalInput = z.object({
   tags: z.array(z.string().max(60)).max(20).nullable().optional(),
   featured: z.boolean().optional(),
   isPublished: z.boolean().optional(),
+  // site-api's search fields, as Carrel sets them (apps/web/app/lib/carrel/journal-source.ts).
+  ogTitle: z.string().max(500).nullable().optional(),
+  ogDescription: z.string().max(1000).nullable().optional(),
+  ogImageUrl: z.string().url().max(1000).nullable().optional(),
+  ogImageAlt: z.string().max(500).nullable().optional(),
+  canonicalUrl: z.string().url().max(1000).nullable().optional(),
+  noindex: z.boolean().optional(),
 });
 
 export type JournalInput = z.infer<typeof journalInput>;
@@ -169,6 +176,12 @@ export async function createJournalPost(
       coverImageAlt: input.coverImageAlt ?? null,
       tags: input.tags ?? null,
       featured: input.featured ?? false,
+      ogTitle: input.ogTitle ?? null,
+      ogDescription: input.ogDescription ?? null,
+      ogImageUrl: input.ogImageUrl ?? null,
+      ogImageAlt: input.ogImageAlt ?? null,
+      canonicalUrl: input.canonicalUrl ?? null,
+      noindex: input.noindex ?? false,
       authorId,
       isPublished: published,
       publishedAt: published ? new Date() : null,

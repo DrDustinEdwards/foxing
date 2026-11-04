@@ -127,11 +127,10 @@ export type AdminUserRow = {
   createdAt: Date;
 };
 
-/** `isAdmin` is the admin list's answer (isAdminAccount: ADMIN_EMAILS in `admins`, else the
- *  profiles.is_admin flag). */
+/** `isAdmin` is the admin list's answer (isAdminAccount: the email on ADMIN_EMAILS in `admins`). */
 export async function listUsers(
   db: Db,
-  opts: { q?: string; limit?: number; offset?: number; admins?: AdminSettings } = {},
+  opts: { q?: string; limit?: number; offset?: number; admins: AdminSettings },
 ): Promise<AdminUserRow[]> {
   const limit = Math.min(opts.limit ?? 50, 100);
   const q = opts.q?.trim();
@@ -141,7 +140,6 @@ export async function listUsers(
       username: profiles.username,
       displayName: profiles.displayName,
       tier: profiles.subscriptionTier,
-      isAdmin: profiles.isAdmin,
       isSuspended: profiles.isSuspended,
       createdAt: profiles.createdAt,
       email: user.email,
@@ -156,7 +154,7 @@ export async function listUsers(
     .offset(opts.offset ?? 0);
   return rows.map(({ email, ...row }) => ({
     ...row,
-    isAdmin: isAdminAccount(opts.admins ?? {}, email ?? "", row.isAdmin),
+    isAdmin: isAdminAccount(opts.admins, email ?? ""),
   }));
 }
 
@@ -174,7 +172,8 @@ export async function getOperatorActor(
   return row ?? null;
 }
 
-export async function getUserDetail(db: Db, id: string) {
+/** One user for the admin screen; `isAdmin` is the admin list's answer, as in listUsers. */
+export async function getUserDetail(db: Db, id: string, admins: AdminSettings) {
   const [row] = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
   if (!row) return null;
   // Email lives on the Better Auth user row, not the profile. Last-active is the most
@@ -190,7 +189,13 @@ export async function getUserDetail(db: Db, id: string) {
     .where(eq(session.userId, id))
     .orderBy(desc(session.createdAt))
     .limit(1);
-  return { ...row, email: authRow?.email ?? null, lastActiveAt: lastSession?.createdAt ?? null };
+  const email = authRow?.email ?? null;
+  return {
+    ...row,
+    email,
+    isAdmin: isAdminAccount(admins, email ?? ""),
+    lastActiveAt: lastSession?.createdAt ?? null,
+  };
 }
 
 export type UserActivityStats = {
@@ -215,7 +220,6 @@ export type UserRoleState = {
   id: string;
   username: string;
   displayName: string | null;
-  isAdmin: boolean;
   isSuspended: boolean;
   tier: string;
 };
@@ -226,7 +230,6 @@ export async function getUserRoleState(db: Db, id: string): Promise<UserRoleStat
       id: profiles.id,
       username: profiles.username,
       displayName: profiles.displayName,
-      isAdmin: profiles.isAdmin,
       isSuspended: profiles.isSuspended,
       tier: profiles.subscriptionTier,
     })
@@ -236,7 +239,7 @@ export async function getUserRoleState(db: Db, id: string): Promise<UserRoleStat
   return row ?? null;
 }
 
-// The three role setters write only while the row still holds `from`, the value the
+// The two role setters write only while the row still holds `from`, the value the
 // admin saw in the preview, and return whether a row changed. Counted with RETURNING,
 // not meta.changes, which triggers can inflate.
 
@@ -264,20 +267,6 @@ export async function setUserTier(
     .update(profiles)
     .set({ subscriptionTier: tier, updatedAt: new Date() })
     .where(and(eq(profiles.id, id), eq(profiles.subscriptionTier, from)))
-    .returning({ id: profiles.id });
-  return rows.length > 0;
-}
-
-export async function setUserAdmin(
-  db: Db,
-  id: string,
-  isAdmin: boolean,
-  from: boolean,
-): Promise<boolean> {
-  const rows = await db
-    .update(profiles)
-    .set({ isAdmin, updatedAt: new Date() })
-    .where(and(eq(profiles.id, id), eq(profiles.isAdmin, from)))
     .returning({ id: profiles.id });
   return rows.length > 0;
 }

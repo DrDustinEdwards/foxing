@@ -1,7 +1,6 @@
 // Minimal admin surface for the companion cache pipeline: an on-demand trigger to run
-// a small batch NOW (proving cost, not waiting for the daily cron), gated on
-// profiles.is_admin (the same flag the future /ops/mcp surface will use -- this
-// route should migrate there once Phase 8 builds it; a narrow interim is fine now).
+// a small batch NOW (proving cost, not waiting for the daily cron), gated on the
+// admin list (ADMIN_EMAILS, core isAdminAccount, applied by profileMw) like /admin/*.
 import { Hono } from "hono";
 import { companion } from "@foxing/core";
 import { AppError, errors } from "../error";

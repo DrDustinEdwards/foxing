@@ -6,7 +6,13 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { ACCESS_LOGOUT_PATH, accessAdmin, withAdminIdle } from "@dustinedwards/site-runtime/access";
+import {
+  ACCESS_LOGOUT_PATH,
+  accessAdmin,
+  adminEmails,
+  withAdminIdle,
+} from "@dustinedwards/site-runtime/access";
+import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import { runJobs } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
@@ -19,6 +25,7 @@ import {
   UNCACHED,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
+import { originalKey } from "@dustinedwards/site-runtime/image";
 import { logEvent, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
@@ -47,7 +54,6 @@ import {
 } from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
-import { legacyRedirectTarget } from "../app/lib/redirects";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { clubRoomHub } from "./club-room";
@@ -67,6 +73,7 @@ const PUBLIC_EXACT = new Set([
   "/robots.txt",
   "/privacy",
   "/terms",
+  "/accessibility",
   "/about",
   "/features",
   "/guide",
@@ -315,7 +322,11 @@ app.get("/reader-assets/*", async (c) => {
 app.get("/media/*", async (c) => {
   let key: string;
   try {
-    key = decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length));
+    // A size URL is suffixed (photo.jpg.webp?w=640); the stored key is the original's.
+    key = originalKey(
+      decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length)),
+      c.req.raw,
+    );
   } catch {
     return c.notFound();
   }
@@ -348,14 +359,6 @@ app.all("*", async (c) => {
   const url = new URL(req.url);
   // One hop to the canonical address: https, the bare host, no trailing slash (/books/ to /books).
   const canonical = canonicalRedirect(req, { host: "foxing.app" });
-  // Legacy path 301s (GET navigations only), from the canonical address so /sign-in/ is one hop
-  // too. The query string is kept.
-  const dest = new URL(canonical?.headers.get("Location") ?? url);
-  const legacy = req.method === "GET" ? legacyRedirectTarget(dest.pathname) : null;
-  if (legacy) {
-    dest.pathname = legacy;
-    return c.redirect(dest.toString(), 301);
-  }
   if (canonical) return canonical;
   // An anonymous GET or HEAD of a public page goes through the Workers cache: the Renderer's response is
   // stored under the path and the query without tracking parameters, and a stored one is answered
@@ -578,12 +581,23 @@ async function withAdminIdleSignOut(request: Request, handle: () => Promise<Resp
   return withSecurityHeaders(idle, request);
 }
 
+// The admin list, hashed with a fresh salt, for the daily Access drift check (I2, devkit's
+// access-drift workflow): only a GET Access let through with a service token gets it, anything
+// else is 404 (site-runtime ./access-drift). It sits under /admin, inside the Access application,
+// and outside the idle sign-out, which is for people.
+async function adminList(request: Request, env: Env): Promise<Response> {
+  const res = await adminListResponse(request, env, { admins: adminEmails(env) });
+  return withSecurityHeaders(res, request);
+}
+
 // Every request writes one `request` line (site-runtime ./log's withRequestLog: path, status, ms and
 // the deployed commit, never a query).
 export default {
   fetch: withRequestLog(
     (request: Request, env: Env, ctx: ExecutionContext) =>
-      withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
+      new URL(request.url).pathname === ADMIN_LIST_PATH
+        ? adminList(request, env)
+        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
     { sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA },
   ),
   scheduled,

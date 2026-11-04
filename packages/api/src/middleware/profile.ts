@@ -14,11 +14,8 @@ export const profileMw = createMiddleware<Env>(async (c, next) => {
     return next();
   }
   const row = await profilesRepo.getProfileById(c.get("db"), session.id);
-  // Admin is the ADMIN_EMAILS setting once it is set (core isAdminAccount), for every check below.
-  const profile = row && {
-    ...row,
-    isAdmin: isAdminAccount(c.env, session.email, row.isAdmin),
-  };
+  // Admin is the ADMIN_EMAILS setting (core isAdminAccount), for every check below.
+  const profile = row && { ...row, isAdmin: isAdminAccount(c.env, session.email) };
   c.set("profile", profile);
   if (profile?.isSuspended && WRITE_METHODS.has(c.req.method)) {
     throw errors.forbidden("Account suspended.");

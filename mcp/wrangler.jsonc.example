@@ -44,8 +44,15 @@
   "services": [{ "binding": "FOXING", "service": "foxing" }],
 
   // BINDINGS ARE AN ALLOWLIST (test/wrapper.test.ts derives it from this block).
-  // No D1, no R2, no Stripe key, no binding of any kind that reaches Foxing's
-  // data: the only path is HTTP to /api/v1/admin over FOXING.
+  // No D1, no Stripe key, no binding of any kind that reaches Foxing's data: the
+  // only path is HTTP to /api/v1/admin over FOXING. The one R2 bucket holds only
+  // this server's own tool-call log copies.
+  // The tool-call log's copies (checklist L6-L7): the daily cron copies new rows here as
+  // tool-calls/<first>-<last>.json, then the log drops copied rows older than 90 days.
+  // The bucket has a lock rule on tool-calls/ so a copy cannot be changed or removed.
+  "r2_buckets": [{ "binding": "AUDIT_BUCKET", "bucket_name": "foxing-admin-mcp-tool-calls" }],
+  "triggers": { "crons": ["17 4 * * *"] },
+
   "kv_namespaces": [
     {
       // Token and grant storage for the OAuth provider. Its own namespace.
@@ -68,10 +75,12 @@
   // a deploy keeps them:
   //   ADMIN_EMAIL           the one email let in, as Access verifies it at sign-in.
   //   FOXING_ADMIN_ID       the Foxing user id the admin API acts as. The API re-reads
-  //                         that account's is_admin and suspension on every call.
+  //                         that account's admin standing and suspension on every call.
   //   ADMIN_OPERATOR_TOKEN  the API leg. Same value as the foxing Worker's
   //                         ADMIN_OPERATOR_TOKEN. At least 32 characters.
   //   ACCESS_SAAS_CLIENT_ID      the Access for SaaS (OIDC) app used for sign-in,
   //                              with redirect URL PUBLIC_ORIGIN + /callback.
   //   ACCESS_SAAS_CLIENT_SECRET  ditto.
+  //   MCP_PROBE_KEY         optional: the list-only test key for the daily live check. It can list
+  //                         tools and runs none (site-runtime probeDoor). At least 32 characters.
 }

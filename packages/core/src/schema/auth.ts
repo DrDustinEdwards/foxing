@@ -28,6 +28,10 @@ export const session = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
+    // site-runtime ./sign-in `sessionDetails` (SESSION_DETAILS_SQL): the coarse place, kept up
+    // with use, and the random id of the browser's device cookie, never sent to a browser.
+    location: text("location"),
+    deviceId: text("device_id"),
   },
   (t) => [index("session_user_id_idx").on(t.userId)],
 );
@@ -116,6 +120,8 @@ export const authEvents = sqliteTable(
     userId: text("user_id"),
     device: text("device"),
     location: text("location"),
+    // The sign-in's device id (AUTH_EVENTS_DEVICE_SQL), for the new-device notice.
+    deviceId: text("device_id"),
   },
   (t) => [index("auth_events_user").on(t.userId, t.at), index("auth_events_at").on(t.at, t.event)],
 );

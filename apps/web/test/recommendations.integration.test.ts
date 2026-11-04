@@ -214,10 +214,13 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
     await env.APP_KV.delete("recs-refresh:plus-bad");
   });
 
-  it("uses the AI selection + reasons when the model returns valid JSON", async () => {
+  it("uses the AI selection + reasons when the model returns valid JSON, and a data reason for one that fails the prose check", async () => {
     await seedUser("plus-ok", "plus", ["Gothic"]);
     const selection = {
-      picks: Array.from({ length: 8 }, (_, i) => ({ book_id: `b${i}`, reason: `AI reason ${i}` })),
+      picks: Array.from({ length: 8 }, (_, i) => ({
+        book_id: `b${i}`,
+        reason: i === 1 ? "As an AI language model, I cannot pick books" : `AI reason ${i}`,
+      })),
     };
     const set = await getRecommendations(db(), "plus-ok", {
       caller: stubCaller(selection),
@@ -227,6 +230,10 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
     expect(set.isPlus).toBe(true);
     expect(set.aiPersonalized).toBe(true);
     expect(set.recommendations[0].reason).toBe("AI reason 0");
+    // W1: the flagged reason never reaches the reader; the book keeps the data ranking's own reason.
+    const second = set.recommendations.find((r) => r.bookId === "b1");
+    expect(second?.reason).toBeTruthy();
+    expect(second?.reason).not.toContain("language model");
   });
 
   it("falls back to the data ranking silently when the model call fails", async () => {

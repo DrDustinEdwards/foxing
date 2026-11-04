@@ -1,11 +1,12 @@
 // Admin surface. Callers are a signed-in admin (cookie session) or the admin MCP
 // Worker (operator bearer naming the acting admin, middleware/operator.ts); both pass
 // the same requireAdmin check. Reads wrap adminRepo and page with limit and offset.
-// Every mutation is gated on profiles.is_admin and wrapped in an admin_audit_log entry
+// Every mutation is gated on the admin list (ADMIN_EMAILS) and wrapped in an admin_audit_log entry
 // (actor + source ip, plus via: "operator" for bearer calls). Every write returns a
 // plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
-// changes (suspend, tier, admin) are preview then perform; see below.
-import { adminListIsSet, adminRepo, type Db, deleteAccount } from "@foxing/core";
+// changes (suspend, tier) are preview then perform; see below. Who is an admin is the
+// ADMIN_EMAILS setting alone, so no route grants or revokes it.
+import { adminRepo, type Db, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { z } from "zod";
@@ -23,7 +24,7 @@ import type { Env, SessionUser } from "../types";
 
 export const adminRoutes = new Hono<Env>();
 
-// Session + is_admin gate. profileMw already blocks a suspended account's writes;
+// Session + admin list gate. profileMw already blocks a suspended account's writes;
 // this also keeps a suspended admin out of the admin reads.
 function requireAdmin(c: Context<Env>): SessionUser {
   const session = requireSession(c);
@@ -95,7 +96,7 @@ adminRoutes.get("/admin/users/:id", async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
   const db = c.get("db");
-  const user = await adminRepo.getUserDetail(db, id);
+  const user = await adminRepo.getUserDetail(db, id, c.env);
   if (!user) throw errors.notFound("No user with that id.");
   return c.json({ user, activity: await adminRepo.getUserActivityStats(db, id) });
 });
@@ -257,27 +258,6 @@ adminRoutes.post("/admin/users/:id/tier", rateLimit("write"), async (c) => {
         : "moves to Free and loses the AI companion. Nothing changes in Stripe, and a later Stripe event can set the tier again.",
     auditAction: "user.tier",
     apply: (db, id, from) => adminRepo.setUserTier(db, id, tier, from as string),
-  });
-});
-
-adminRoutes.post("/admin/users/:id/admin", rateLimit("write"), async (c) => {
-  const admin = requireAdmin(c);
-  const id = c.req.param("id");
-  const { on, confirm } = await parseJson(c, z.object({ on: z.boolean(), confirm: confirmToken }));
-  // Once ADMIN_EMAILS is set it alone decides, and this flag no longer does anything.
-  if (adminListIsSet(c.env))
-    throw errors.conflict("Admins come from the ADMIN_EMAILS setting. Change it there.");
-  // Guard against locking yourself out by revoking your own admin here.
-  if (!on && id === admin.id) throw errors.validation({ id: "You cannot revoke your own admin." });
-  return previewOrPerform(c, admin, confirm, {
-    kind: "admin",
-    to: on,
-    current: (s) => s.isAdmin,
-    effect: on
-      ? "gains admin: every admin page and every admin write, including granting admin to others."
-      : "loses admin: no admin pages and no admin writes.",
-    auditAction: on ? "user.grant_admin" : "user.revoke_admin",
-    apply: (db, id, from) => adminRepo.setUserAdmin(db, id, on, from as boolean),
   });
 });
 

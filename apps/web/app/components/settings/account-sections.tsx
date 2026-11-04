@@ -6,11 +6,15 @@ import {
   useUsernameAvailable,
 } from "@foxing/client";
 import type { ClubHandover } from "@foxing/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient, signInAgainIfStale } from "~/lib/auth-client";
-import { signalUnknownCredential } from "@dustinedwards/site-runtime/sign-in-client";
-import { useFetcher, useRevalidator, useSearchParams } from "react-router";
+import {
+  signalCurrentUserDetails,
+  signalPasskeys,
+  signalUnknownCredential,
+} from "@dustinedwards/site-runtime/sign-in-client";
+import { useFetcher, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
@@ -19,7 +23,7 @@ const BIO_MAX = 200;
 export function ProfileSection({
   initial,
 }: {
-  initial: { displayName: string; bio: string; favoriteGenres: string };
+  initial: { email: string; displayName: string; bio: string; favoriteGenres: string };
 }) {
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [bio, setBio] = useState(initial.bio);
@@ -38,7 +42,13 @@ export function ProfileSection({
         .map((g) => g.trim())
         .filter(Boolean),
     });
-    if (saved) setStatus("saved");
+    if (!saved) return;
+    setStatus("saved");
+    // The password manager shows the new name beside this account's passkeys (the Signal API).
+    void signalCurrentUserDetails({
+      name: initial.email,
+      displayName: displayName.trim() || undefined,
+    });
   }
 
   return (
@@ -160,56 +170,11 @@ export function UsernameSection({ initial }: { initial: string }) {
   );
 }
 
-/** Where both of the email change's links return: the new address rides along, so the page can
- *  tell the first step (approved by the current address) from the last (changed). */
-const EMAIL_CHANGE_PARAM = "email-change";
-
-/** What an email change link's return says, from Better Auth's ?error= codes
- *  (better-auth 1.7.12 email-verification.mjs verifyEmail); null when it did not return here. */
-function emailChangeNotice(
-  params: URLSearchParams,
-  current: string,
-): { error: boolean; text: string } | null {
-  const pending = params.get(EMAIL_CHANGE_PARAM);
-  if (pending === null) return null;
-  switch (params.get("error")) {
-    case null:
-      return pending.toLowerCase() === current.toLowerCase()
-        ? { error: false, text: `Done. Your account email is now ${current}.` }
-        : {
-            error: false,
-            text: `Approved. Now open the link Foxing sent to ${pending} to finish the change.`,
-          };
-    case "TOKEN_EXPIRED":
-      return {
-        error: true,
-        text: "That link has expired: email change links work for an hour. Ask for the change again below.",
-      };
-    case "USER_NOT_FOUND":
-      return {
-        error: true,
-        text: "That link has been used already, so it no longer works. Your account email is shown below.",
-      };
-    case "INVALID_USER":
-      return {
-        error: true,
-        text: "That link belongs to a different Foxing account than the one signed in here. Sign out, then open it again.",
-      };
-    default:
-      return {
-        error: true,
-        text: "That link is not complete or not valid. Open it from the email again, or ask for the change again below.",
-      };
-  }
-}
-
 export function EmailSection({ initial }: { initial: string }) {
   const [email, setEmail] = useState("");
   const [pending, setPending] = useState(false);
   const [status, setStatus] = useState<"sent" | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [params] = useSearchParams();
-  const returned = emailChangeNotice(params, initial);
 
   async function change(event: React.FormEvent) {
     event.preventDefault();
@@ -218,10 +183,8 @@ export function EmailSection({ initial }: { initial: string }) {
     setError(null);
     const newEmail = email.trim();
     try {
-      const res = await authClient.changeEmail({
-        newEmail,
-        callbackURL: `/settings?${EMAIL_CHANGE_PARAM}=${encodeURIComponent(newEmail)}`,
-      });
+      // Both mailed links open /email/confirm, which shows how each step went.
+      const res = await authClient.changeEmail({ newEmail });
       if (res.error) {
         setError(res.error.message ?? "Could not change your email.");
         return;
@@ -237,12 +200,7 @@ export function EmailSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Email">
-      {returned ? (
-        <p role={returned.error ? "alert" : "status"} className={returned.error ? "error" : "ui"}>
-          {returned.text}
-        </p>
-      ) : null}
-      <p className={returned ? "mt-4 ui" : "ui"}>
+      <p className="ui">
         Your account email is <span className="strong">{initial}</span>. To change it, approve the
         change from a link sent to this address, then confirm the new address from a link sent
         there.
@@ -284,6 +242,9 @@ export function AdminSection() {
 }
 
 export type SignInSettings = {
+  /** The account's address and display name, as the password manager shows them. */
+  email: string;
+  displayName: string;
   passkeys: {
     id: string;
     credentialId: string;
@@ -339,6 +300,19 @@ function useAuthAction() {
 export function SignInSection({ initial }: { initial: SignInSettings }) {
   const { busy, error, run } = useAuthAction();
   const [renaming, setRenaming] = useState<string | null>(null);
+
+  // Tells the password manager which passkeys Foxing still accepts and the account's current
+  // name (the Signal API), so one removed elsewhere stops being offered.
+  useEffect(() => {
+    const credentialIds = initial.passkeys.map((p) => p.credentialId);
+    // A passkey left out would be dropped from the password manager, so a gap sends nothing.
+    if (credentialIds.some((id) => !id)) return;
+    void signalPasskeys({
+      credentialIds,
+      name: initial.email,
+      displayName: initial.displayName || undefined,
+    });
+  }, [initial]);
 
   return (
     <Card title="Sign-in">

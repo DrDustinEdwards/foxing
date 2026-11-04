@@ -70,8 +70,7 @@
       "Bash(npx wrangler d1 migrations apply*)",
       "Bash(npx wrangler d1 execute *DELETE*)",
       "Bash(npx wrangler d1 execute *DROP*)",
-      "Bash(npx wrangler secret*)",
-      "Bash(npx supabase functions deploy*)"
+      "Bash(npx wrangler secret*)"
     ],
     "deny": [
       "Bash(rm -rf *)",

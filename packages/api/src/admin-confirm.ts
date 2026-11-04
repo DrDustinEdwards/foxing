@@ -1,5 +1,5 @@
-// Single-use confirmation tokens for admin role and permission changes (grant or revoke
-// admin, change tier, suspend or unsuspend). A preview mints a token bound to the actor,
+// Single-use confirmation tokens for admin role and permission changes (change tier,
+// suspend or unsuspend). A preview mints a token bound to the actor,
 // the target, the kind of change, the new value and the value the preview saw, and keeps
 // it in APP_KV for CONFIRM_TTL_SECONDS. A perform redeems it once. The route's setter
 // then writes only while the row still holds the previewed value, so a token that is
@@ -8,7 +8,7 @@
 import { toHex } from "@dustinedwards/site-runtime/encoding";
 import { errors } from "./error";
 
-export type RoleChangeKind = "admin" | "tier" | "suspend";
+export type RoleChangeKind = "tier" | "suspend";
 export type RoleValue = boolean | string;
 
 export type PendingRoleChange = {

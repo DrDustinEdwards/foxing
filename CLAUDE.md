@@ -14,20 +14,16 @@ Foxing: a reading app and web platform ("Letterboxd for books"), foxing.app.
     packages/core/  @foxing/core: Drizzle schema, repositories, domain logic
     packages/api/   @foxing/api: Hono routes (the /api/v1 surface)
     packages/types/ @foxing/types: shared interfaces
-    packages/utils/ @foxing/utils: shared helpers
     mcp/            Foxing Admin MCP: own Worker, npm package
 
 Web stack: Workers, D1, R2, KV, React Router 8 framework mode. A pnpm and turborepo monorepo. Node 26 (`.nvmrc`).
-
-Supabase project `ekjpsuewrkvqzbuteurc` is kept ONLY for the mobile ai-companion edge function; the web platform does not use it.
 
 ## Commands
 
 Run mobile commands in `apps/mobile`, web in `apps/web`; install at the root.
 - Root: `pnpm dev:web`, `dev:mobile`, `build:web`, `type-check` (both apps), `lint`, `lint:cf`.
 - Web deploy: a merge to main deploys (the `deploy` job in `.github/workflows/ci-cf.yml`, devkit's worker-deploy.yml, on while the repository variable `CF_DEPLOY` is `true`): it applies the pending D1 migrations that only add (a drop, rename or row delete is refused for a hand run), deploys, and rolls back if /health or the home page refuses it; then `e2e` runs against the live site. `cd apps/web && pnpm run deploy` still deploys by hand.
-- D1 migrations: author with drizzle-kit in `packages/core` (`packages/core/migrations`), apply with wrangler. Never Supabase MCP or hand-run production DDL.
-- Supabase CLI only for the mobile ai-companion function, in `apps/mobile`: `npx supabase functions deploy ai-companion --project-ref ekjpsuewrkvqzbuteurc`. Never delete `apps/mobile/supabase` or merge the trees.
+- D1 migrations: author with drizzle-kit in `packages/core` (`packages/core/migrations`), apply with wrangler. Never hand-run production DDL.
 - Public repo: never commit `wrangler.jsonc`, `.dev.vars`, a key or a secret; only the `.example` configs are committed.
 
 ## Backup

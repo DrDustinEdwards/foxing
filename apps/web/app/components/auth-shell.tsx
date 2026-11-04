@@ -11,7 +11,7 @@ import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { Link } from "capsomer/react/link";
 import { authClient, signIn } from "~/lib/auth-client";
-import { signInWithPasskey } from "@dustinedwards/site-runtime/sign-in-client";
+import { signInWithPasskey, signalPasskeys } from "@dustinedwards/site-runtime/sign-in-client";
 
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
@@ -47,6 +47,23 @@ export function AuthShell({
         {footer ? <div className="mt-5 text-center fx-auth-shell-box-2">{footer}</div> : null}
       </div>
     </main>
+  );
+}
+
+/** An emailed link's confirm button: a plain form that posts to the page's own URL, token and
+ *  all, so the browser follows Better Auth's redirect. */
+export function ConfirmButtonForm({ label, limited }: { label: string; limited?: boolean }) {
+  return (
+    <form method="post" className="stack-3">
+      {limited ? (
+        <p role="alert" className="error">
+          Too many tries. Wait a minute, then try again.
+        </p>
+      ) : null}
+      <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
+        {label}
+      </button>
+    </form>
   );
 }
 
@@ -169,6 +186,20 @@ function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
 }
 
 /**
+ * After a passkey sign-in: tells the password manager which of the account's passkeys Foxing still
+ * accepts (the Signal API). The names it shows are sent from Settings, where the display name is
+ * known. Best effort, and never holds up the sign-in.
+ */
+async function signalAfterPasskeySignIn() {
+  try {
+    const { data } = await authClient.passkey.listUserPasskeys();
+    if (data) await signalPasskeys({ credentialIds: data.map((p) => p.credentialID) });
+  } catch {
+    // The sign-in stands; the browser simply hears nothing this time.
+  }
+}
+
+/**
  * "Sign in with a passkey", the main way in. The browser asks which saved passkey to use; a
  * person with none can cancel and use another way. Also offers saved passkeys in the email
  * field's suggestions (conditional mediation), so a returning reader can just tap one.
@@ -182,6 +213,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   async function tryPasskey(autoFill: boolean) {
     const res = await signInWithPasskey(authClient, { autoFill });
     if (!res?.error) {
+      await signalAfterPasskeySignIn();
       window.location.assign(redirectTo);
       return;
     }

@@ -36,8 +36,10 @@ describe("bindings", () => {
         "secrets_store_secrets",
       ].includes(k),
     );
-    assert.deepEqual(keys.sort(), ["durable_objects", "kv_namespaces", "services"]);
+    assert.deepEqual(keys.sort(), ["durable_objects", "kv_namespaces", "r2_buckets", "services"]);
     assert.deepEqual(config.services, [{ binding: "FOXING", service: "foxing" }]);
+    // The one bucket is this server's own copy of its tool-call log (L6), never one of Foxing's.
+    assert.deepEqual(config.r2_buckets, [{ binding: "AUDIT_BUCKET", bucket_name: "foxing-admin-mcp-tool-calls" }]);
     assert.deepEqual(
       config.kv_namespaces.map((k: { binding: string }) => k.binding),
       ["OAUTH_KV"],
@@ -110,8 +112,13 @@ describe("apiHandler", () => {
     assert.match(await response.text(), /does not belong to its administrator/);
   });
 
-  test("with the right audience and administrator, it reaches the rate limiter, which fails closed unbound", async () => {
-    const response = await apiHandler.fetch(request(), env(), ctxWith(`${ORIGIN}/mcp`));
+  test("with the right audience and administrator, it reaches the rate limiter, which fails closed unbound and logs the refusal", async () => {
+    const log = fakeLog();
+    const response = await apiHandler.fetch(request(), { ...env(), TOOL_CALL_LOG: log.binding }, ctxWith(`${ORIGIN}/mcp`));
     assert.equal(response.status, 429);
+    assert.deepEqual(
+      log.rows.map((row) => [row.phase, row.caller]),
+      [["rate-limited", `access:${WRITER.props.email}`]],
+    );
   });
 });

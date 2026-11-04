@@ -46,6 +46,7 @@ import {
   type SiteAdapter,
   type WriteResult,
 } from "@dustinedwards/site-api";
+import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
 import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
 import { escapeHtml } from "@dustinedwards/site-runtime/html";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
@@ -112,6 +113,12 @@ function fieldsOf(row: JournalPost): JournalFields {
     coverImageAlt: row.coverImageAlt,
     tags: row.tags ?? [],
     featured: row.featured,
+    ogTitle: row.ogTitle,
+    ogDescription: row.ogDescription,
+    ogImageUrl: row.ogImageUrl,
+    ogImageAlt: row.ogImageAlt,
+    canonicalUrl: row.canonicalUrl,
+    noindex: row.noindex,
     content: row.content,
   };
 }
@@ -130,6 +137,11 @@ function readSource(source: string): JournalFields {
 const FILE_KEY: Record<string, string> = {
   coverImageUrl: "cover_image_url",
   coverImageAlt: "cover_image_alt",
+  ogTitle: "searchTitle",
+  ogDescription: "description",
+  ogImageUrl: "image",
+  ogImageAlt: "imageAlt",
+  canonicalUrl: "canonical",
   content: "the body",
   slug: "the id (slug)",
 };
@@ -350,6 +362,8 @@ export function journalSiteAdapter(options: {
   const content: SiteAdapter["content"] = {
     filters: ["kind", "tag", "published"],
     postFields: ["excerpt"],
+    // The post's head renders all six (routes/journal-post.tsx): the share image ahead of the cover.
+    searchFields: SEARCH_FIELDS,
     publishedAtSettable: true,
 
     async list(query) {
@@ -590,6 +604,12 @@ export function journalSiteAdapter(options: {
           coverImageAlt: null,
           tags: [],
           featured: false,
+          ogTitle: null,
+          ogDescription: null,
+          ogImageUrl: null,
+          ogImageAlt: null,
+          canonicalUrl: null,
+          noindex: false,
           content: input.source,
         };
     const values = validated(slug, fields);

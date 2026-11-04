@@ -4,6 +4,7 @@
 // back with a visible error if the write fails.
 import { useMarkNotificationsRead, useNotifications } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
+import { dateFormat } from "enarratio";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -20,7 +21,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return views.notifications(createDb(env.DB), user.id);
 }
 
-const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
+const formatDate = dateFormat({ time: true });
 
 export default function Notifications({ loaderData }: Route.ComponentProps) {
   const { notifications, unread } = useNotifications(loaderData).data;
@@ -63,7 +64,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
                   <p className="sans small strong">{n.title}</p>
                   {n.body ? <p className="fx-notifications-text-2">{n.body}</p> : null}
                   <p className="mt-1 fx-notifications-text-3">
-                    {dateFormat.format(new Date(n.createdAt))}
+                    {formatDate(new Date(n.createdAt))}
                   </p>
                 </div>
               </li>

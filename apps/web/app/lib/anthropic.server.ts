@@ -25,7 +25,10 @@ function request(args: companion.CompanionCallArgs) {
 export function anthropicCaller(env: Env): companion.CompanionCaller | null {
   if (!env.ANTHROPIC_API_KEY) return null;
   return async function* call(args) {
-    for await (const event of stream(env, APP, request(args), { feature: args.feature })) {
+    for await (const event of stream(env, APP, request(args), {
+      feature: args.feature,
+      cache: args.cache,
+    })) {
       if (event.type === "text") yield event;
       else if (!event.result.ok) throw failed(event.result);
       else {

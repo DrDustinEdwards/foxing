@@ -9,7 +9,7 @@ import {
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { useState } from "react";
-import { enhanceChart, pollChart } from "~/lib/reading-charts";
+import { pollChart } from "~/lib/reading-charts";
 import { ErrorText } from "./club-sections";
 
 export function PollsSection({
@@ -152,7 +152,6 @@ export function PollsSection({
                       poll.options.map((o) => ({ label: o.label, votes: poll.tallies[o.id] ?? 0 })),
                       poll.isClosed,
                     )}
-                    onDraw={enhanceChart}
                   />
                 ) : null}
               </div>

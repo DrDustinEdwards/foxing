@@ -13,6 +13,7 @@
     "--dim": "Foxing keeps its own look on its own domain (Dustin 2026-10-26)"
   },
   "copies": {
-    "apps/mobile/lib/epub-cache.ts": "cacheKey here names a downloaded EPUB's file on the phone, not site-runtime's edge-cache key; web work never touches apps/mobile (CLAUDE.md, hard rule 2)"
+    "apps/mobile/lib/epub-cache.ts": "cacheKey here names a downloaded EPUB's file on the phone, not site-runtime's edge-cache key; web work never touches apps/mobile (CLAUDE.md, hard rule 2)",
+    "apps/web/public/_headers": "not by hand: the web build's site-runtime-headers writes it from Foxing's registry entry, the same entry workers/header-set.ts gives buildSecurityHeaders; committed so the /assets/* and /islands/* cache rules can be read"
   }
 }

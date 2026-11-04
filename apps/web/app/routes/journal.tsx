@@ -7,7 +7,7 @@ import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/component
 import { focusStyle } from "~/lib/focus";
 import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { buildMeta } from "~/lib/seo";
+import { buildMeta, journalLd, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal";
 
 function fmtDate(d: Date | null): string | null {
@@ -28,15 +28,18 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export const headers = listingPageHeaders;
 
+const JOURNAL_DESCRIPTION =
+  "Essays and close readings from Foxing: what the great books mean and why they endure.";
+
 export function meta({ location }: Route.MetaArgs) {
   return [
     ...buildMeta({
       title: "The Journal",
-      description:
-        "Essays and close readings from Foxing: what the great books mean and why they endure.",
+      description: JOURNAL_DESCRIPTION,
       pathname: location.pathname,
       pageType: "CollectionPage",
     }),
+    ldJson(journalLd(JOURNAL_DESCRIPTION)),
     { tagName: "link", rel: "alternate", type: "application/rss+xml", href: "/journal/rss.xml" },
   ];
 }

@@ -4,24 +4,23 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "6ed6e39",
+    "measured_at": "16a7e8e",
     "knip": {
-      "Unused files": 2,
-      "Unused devDependencies": 1
+      "Unused files": 2
     },
     "jscpd": {
-      "clones": 289,
-      "lines": 2907,
-      "percentage": 3.47
+      "clones": 275,
+      "lines": 2814,
+      "percentage": 3.3
     },
     "tests": {
       "files": 73,
       "cases": 403
     },
     "comments": {
-      "lines": 5607,
-      "code": 72901,
-      "percentage": 7.14
+      "lines": 5906,
+      "code": 73992,
+      "percentage": 7.39
     }
   }
 }

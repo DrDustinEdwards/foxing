@@ -4,10 +4,10 @@
 // Reads the profile in-process via core, per the standing rule: loaders never
 // self-fetch the Worker's own /api/v1 (that loopback returns a 404 HTML page, not
 // JSON, unconditionally, which is what crashed /me before this gate existed).
-import type { Profile } from "@foxing/core";
+import type { SignedInProfile } from "@foxing/core";
 import { createDb, isAdminAccount, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
-import { getAuth } from "./auth.server";
+import { getAuth, sessionLookup } from "./auth.server";
 
 export interface SessionUser {
   id: string;
@@ -16,7 +16,7 @@ export interface SessionUser {
 
 export interface ProfileContext {
   user: SessionUser;
-  profile: Profile;
+  profile: SignedInProfile;
 }
 
 // Resolve the profile for a known user id, or redirect to onboarding when absent.
@@ -24,14 +24,14 @@ export interface ProfileContext {
 export async function requireProfileForUser(env: Env, user: SessionUser): Promise<ProfileContext> {
   const row = await profilesRepo.getProfileById(createDb(env.DB), user.id);
   if (!row) throw redirect("/onboarding");
-  // Admin is the ADMIN_EMAILS setting once it is set (core isAdminAccount).
-  const profile = { ...row, isAdmin: isAdminAccount(env, user.email, row.isAdmin) };
+  // Admin is the ADMIN_EMAILS setting (core isAdminAccount), never the stored row.
+  const profile = { ...row, isAdmin: isAdminAccount(env, user.email) };
   return { user, profile };
 }
 
 // Full gate for a loader: unauthenticated to /login, onboarded-less to /onboarding.
 export async function requireProfile(env: Env, request: Request): Promise<ProfileContext> {
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login");
   return requireProfileForUser(env, { id: session.user.id, email: session.user.email });
 }

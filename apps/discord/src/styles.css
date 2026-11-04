@@ -1,3 +1,10 @@
+/* Foxing's tokens and meter, as apps/web loads them (app/app.css); this file's own colors follow. */
+@import "capsomer/tokens.css";
+@import "capsomer/family-fox.css" layer(cap.tokens);
+@import "capsomer/site-foxing.css";
+@import "capsomer/status.css";
+@import "capsomer/meter.css";
+
 :root {
   --bg: #16100b;
   --bg-elevated: #1f1610;
@@ -99,20 +106,6 @@ button.ghost {
   display: flex;
   flex-direction: column;
   gap: 10px;
-}
-
-.progress {
-  flex: 1;
-  height: 6px;
-  background: var(--bg);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress > span {
-  display: block;
-  height: 100%;
-  background: var(--brand);
 }
 
 .error {

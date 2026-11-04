@@ -548,12 +548,3 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-.fx-journal-archive-link {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--dim);
-  &:hover {
-    color: var(--text);
-  }
-}

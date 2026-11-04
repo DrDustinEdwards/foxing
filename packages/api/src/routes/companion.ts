@@ -4,6 +4,7 @@
 // checks. Tier-gated (D11 Plus actions) and quota-gated (cost-based, not request-
 // count, security-open-items.md item 4). Streams via SSE.
 import { logEvent } from "@dustinedwards/site-runtime/log";
+import { checkProse } from "@dustinedwards/site-runtime/prose";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import {
@@ -98,6 +99,8 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
         messages: [...ctx.history, { role: "user", content: userContent }],
         maxTokens,
         feature: `companion:${input.action}`,
+        // The system prompt and the thread so far are the same on the next turn: cache them (C7).
+        cache: true,
       })) {
         if (event.type === "text") {
           assistantText += event.delta;
@@ -114,10 +117,24 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
       });
       logEvent(
         "companion_stream_failed",
-        { user_id: session.id, action: input.action, error: err },
+        // No reader id in the log (S5); the action and the failure kind are enough to act on.
+        { action: input.action, error: err },
         { level: "error" },
       );
       return;
+    }
+
+    // The prose check (W1). The reply streams, so this runs once it is whole: it records which checks a
+    // reply tripped (never the text or the reader) for the flagged replies to be counted and acted on.
+    const flagged = checkProse(assistantText).filter(
+      (i) => i.severity === "high" || i.severity === "critical",
+    );
+    if (flagged.length) {
+      logEvent(
+        "companion_prose_flagged",
+        { action: input.action, checks: flagged.map((i) => i.check) },
+        { level: "warn" },
+      );
     }
 
     await companionRepo.appendMessage(db, thread.id, "assistant", assistantText, input.action);

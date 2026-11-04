@@ -5,7 +5,7 @@
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
-import { article, itemList, pageImage, thing } from "@drdustinedwards/site-helpers/schema";
+import { article, itemList, pageImage, thing, website } from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { COVER_SIZE } from "./images";
 import { SITE_ORIGIN } from "./origins";
@@ -30,7 +30,13 @@ export function journalTagPath(tag: string): string {
 const head = defineHead({
   origin: SITE_ORIGIN,
   siteName: SITE_NAME,
-  image: { url: "/og/site", width: 1200, height: 630, alt: "Foxing: read the classics, free." },
+  image: {
+    url: "/og/site",
+    width: 1200,
+    height: 630,
+    type: "image/png",
+    alt: "Foxing: read the classics, free.",
+  },
   suffix: ` | ${SITE_NAME}`,
   // The sections a page's BreadcrumbList passes through; Prelum builds the only one a page has.
   sections: { "/books": "Books", "/awards": "Awards", "/picks": "Picks", "/journal": "Journal" },
@@ -44,8 +50,10 @@ type MetaInput = {
   image?: string | { url: string; width: number; height: number; type?: string };
   imageAlt?: string;
   type?: "website" | "article" | "book" | "profile";
-  /** Set true to keep a page out of the index (community book pages). */
+  /** Set true to keep a page out of the index (community book pages, a Journal post Carrel marked noindex). */
   noindex?: boolean;
+  /** An absolute canonical URL, where it is not this page's own (a Journal post's search field). */
+  canonical?: string;
   /** "CollectionPage" for a list; WebPage otherwise. */
   pageType?: string;
   /** The trail from home, where it is not the one the URL's sections give. */
@@ -62,6 +70,7 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
     imageAlt,
     type,
     noindex,
+    canonical,
     pageType,
     breadcrumbs,
   } = input;
@@ -78,6 +87,7 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
       : undefined,
     type,
     noindex,
+    canonical,
     pageType,
     breadcrumbs,
   });
@@ -85,6 +95,43 @@ export function buildMeta(input: MetaInput): MetaDescriptor[] {
 
 /** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */
 export { jsonLd as ldJson } from "@drdustinedwards/site-helpers/schema";
+
+const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
+
+/** Foxing itself, on the home page, where Google reads an Organization's name and logo
+ *  (https://developers.google.com/search/docs/appearance/structured-data/organization). The logo is the 512 px app icon. */
+export function organizationLd(): Record<string, unknown> {
+  return thing("Organization", {
+    "@id": ORGANIZATION_ID,
+    name: SITE_NAME,
+    url: absoluteUrl("/"),
+    description: DEFAULT_DESCRIPTION,
+    logo: pageImage({ url: absoluteUrl("/icon-512.png"), width: 512, height: 512 }),
+  });
+}
+
+/** The site, on the home page, where Google reads the site name
+ *  (https://developers.google.com/search/docs/appearance/site-names). No SearchAction: /search is kept from crawlers. */
+export function websiteLd(): Record<string, unknown> {
+  return website({
+    origin: SITE_ORIGIN,
+    name: SITE_NAME,
+    description: DEFAULT_DESCRIPTION,
+    publisher: { "@id": ORGANIZATION_ID },
+  });
+}
+
+/** The Journal as a Blog, published by Foxing, on /journal. */
+export function journalLd(description: string): Record<string, unknown> {
+  return thing("Blog", {
+    "@id": `${absoluteUrl("/journal")}#blog`,
+    name: "The Journal",
+    url: absoluteUrl("/journal"),
+    description,
+    publisher: { "@id": ORGANIZATION_ID },
+    isPartOf: { "@id": `${SITE_ORIGIN}/#website` },
+  });
+}
 
 export function bookLd(book: {
   slug: string;
@@ -119,6 +166,8 @@ export function articleLd(post: {
   title: string;
   excerpt: string | null;
   coverImageUrl: string | null;
+  /** The picture's Article crops (journalArticleImages), written in its place where it has them. */
+  articleImages?: Array<{ url: string; width: number; height: number; creditText?: string }>;
   publishedAt: Date | null;
   updatedAt: Date | null;
 }): Record<string, unknown> {
@@ -126,7 +175,7 @@ export function articleLd(post: {
     url: absoluteUrl(`/journal/${post.slug}`),
     headline: post.title,
     description: post.excerpt,
-    image: post.coverImageUrl ?? undefined,
+    image: post.articleImages?.length ? post.articleImages : (post.coverImageUrl ?? undefined),
     published: post.publishedAt,
     modified: post.updatedAt,
     author: { "@type": "Organization", name: SITE_NAME },

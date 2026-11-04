@@ -8,7 +8,7 @@ import type {
   CompanionCaller,
   Db,
   LiveMessage,
-  Profile,
+  SignedInProfile,
   StructuredCaller,
 } from "@foxing/core";
 
@@ -29,7 +29,7 @@ export type Bindings = {
   // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
   // every bearer request to /admin/* is refused (operator.ts).
   ADMIN_OPERATOR_TOKEN?: string;
-  // Who is an admin, comma-separated emails (core isAdminAccount). Unset: profiles.is_admin.
+  // Who is an admin, comma-separated emails (core isAdminAccount). Unset: nobody.
   ADMIN_EMAILS?: string;
   // Affiliate ids appended to buy links (core config/affiliate.ts); vars, both optional.
   AMAZON_ASSOC_TAG?: string;
@@ -44,7 +44,7 @@ export type Variables = {
   session: SessionUser | null;
   // True when the session was resolved from the operator bearer, not a cookie.
   viaOperator: boolean;
-  profile: Profile | null;
+  profile: SignedInProfile | null;
   streamCompanion: CompanionCaller;
   /** The JSON-schema caller (Find next book), or null with no key. */
   structuredCompanion: StructuredCaller | null;

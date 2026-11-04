@@ -92,7 +92,7 @@ export async function generateCachedActionsForBook(
 /**
  * Find up to `limit` catalog books still missing a cached action and generate all 4
  * for each. Used by both the Cron-triggered Queue producer path and the manual proof
- * script (scripts/generate-companion-cache.mjs) -- the only two callers, one code path.
+ * route (POST /ops/companion-cache-batch) -- the only two callers, one code path.
  */
 export async function runCacheBatch(
   db: Db,

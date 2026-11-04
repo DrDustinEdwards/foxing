@@ -38,7 +38,6 @@ export function myProfile(p: Profile): W.MyProfile {
     subscriptionTier: p.subscriptionTier === "plus" ? "plus" : "free",
     subscriptionStatus: p.subscriptionStatus,
     subscriptionPeriodEnd: ms(p.subscriptionPeriodEnd),
-    isAdmin: p.isAdmin,
     timezone: p.timezone,
     visibility: visibility(p.visibility),
     notificationPrefs: notificationPrefs(p.notificationPrefs),

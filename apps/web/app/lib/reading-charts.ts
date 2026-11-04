@@ -1,11 +1,14 @@
 // The reader's charts, drawn by Enarratio into Capsomer's chart frame (ChartFrame redraws each one
-// to its width). Each returns a draw(width) for ChartFrame's `draw`; the figure carries the title,
-// the finding, the drawing and the numbers behind "Show data". The stats page and /year share the
+// to its width and adds Enarratio's hover details, keyboard reading and sortable table). Each
+// returns a draw for ChartFrame's `draw`, which takes `fit`: for a bar chart the height the server's
+// drawing showed at the frame's width, so the redraw does not push the page down on a phone; for the
+// weeks heat strip nothing, since a primitive keeps its own height. The figure carries the title, the
+// finding, the drawing and the numbers behind "Show data". The stats page and /year share the
 // months and genres charts.
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
-import { enhance } from "enarratio/enhance";
 import { barChart } from "enarratio/lite/bar";
+import type { ChartFit } from "capsomer/react/chart-frame";
 
 const SOURCE = "Your Foxing library";
 const count = (n: number, one: string, many = `${one}s`) =>
@@ -18,15 +21,6 @@ const rows = <K extends string>(key: K, items: Array<[string, number]>) =>
     Array.from({ length: n }, () => ({ [key]: name }) as Record<K, string>),
   );
 
-/** ChartFrame's onDraw: hover details, keyboard reading and a sortable table. */
-export function enhanceChart(el: HTMLElement) {
-  // The Workers types redeclare ParentNode for HTMLRewriter; this is the browser's DOM element.
-  const charts = enhance(el as unknown as Parameters<typeof enhance>[0]);
-  return () => {
-    for (const c of charts) c.destroy();
-  };
-}
-
 /** Books finished in each month of a year, as bars. */
 export function monthsChart(monthly: number[], year: number) {
   const total = monthly.reduce((a, b) => a + b, 0);
@@ -36,13 +30,14 @@ export function monthsChart(monthly: number[], year: number) {
     "month",
     monthly.map((books, i) => [MONTH_ABBR[i], books]),
   );
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "month",
       xDomain: MONTH_ABBR,
       width,
       height: 220,
+      ...fit,
       id: `months-${year}`,
       title: `Books finished per month, ${year}`,
       alt,
@@ -62,7 +57,7 @@ export function genresChart(genres: Array<{ name: string; value: number }>, year
     "genre",
     genres.map((g) => [g.name, g.value]),
   );
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "genre",
@@ -70,6 +65,7 @@ export function genresChart(genres: Array<{ name: string; value: number }>, year
       orientation: "horizontal",
       width,
       height: 60 + genres.length * 36,
+      ...fit,
       id: `genres-${year}`,
       title: `Top genres, ${year}`,
       alt,
@@ -91,12 +87,13 @@ export function weeksChart(weeks: Array<{ start: number; books: number }>) {
   const total = weeks.reduce((a, w) => a + w.books, 0);
   const active = weeks.filter((w) => w.books > 0).length;
   const alt = `${count(total, "book")} finished over the last ${weeks.length} weeks, in ${count(active, "week")}.`;
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     heatStrip({
       values: weeks.map((w) => w.books),
       cellLabels: weeks.map((w) => label(w.start)),
       width,
       height: 32,
+      ...fit,
       min: 0,
       id: "weeks",
       title: "Books finished per week, the last year",
@@ -125,7 +122,7 @@ export function pollChart(
     "option",
     options.map((o) => [o.label, o.votes]),
   );
-  return (width: number) =>
+  return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "option",
@@ -133,6 +130,7 @@ export function pollChart(
       orientation: "horizontal",
       width,
       height: 60 + options.length * 36,
+      ...fit,
       id: `poll-${id}`,
       title: closed ? "Final votes" : "Votes so far",
       alt,

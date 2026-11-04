@@ -150,6 +150,10 @@ export const journalPosts = sqliteTable(
     ogTitle: text("og_title"),
     ogDescription: text("og_description"),
     canonicalUrl: text("canonical_url"),
+    // site-api's image, imageAlt and noindex search fields (Carrel's share image and search controls).
+    ogImageUrl: text("og_image_url"),
+    ogImageAlt: text("og_image_alt"),
+    noindex: bool("noindex").notNull().default(false),
     readingTimeMinutes: integer("reading_time_minutes"),
     // Carrel's content trash (site-api v0.17.0): set when the post goes to the trash, which takes
     // it off the Journal; null otherwise. site-api's runSchedules deletes it 30 days on.

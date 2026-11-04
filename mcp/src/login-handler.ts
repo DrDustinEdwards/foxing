@@ -6,16 +6,17 @@
  *
  * Access rather than Foxing's own Better Auth: this server's sign-in stays
  * independent of foxing.app's sessions. The Foxing account the API acts as is
- * FOXING_ADMIN_ID, and the API re-checks that account's is_admin on every call.
+ * FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAILS) on every call.
  */
 
+import { auditLogCheck, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";
 import { durableObjectCheck, healthResponse, kvCheck, type HealthCheck } from "@dustinedwards/site-runtime/health";
 import { isAdminUser, loginHandler, type LoginEnv as SharedLoginEnv } from "@dustinedwards/site-runtime/mcp-login";
 import type { Env } from "./api-handler";
 import { SCOPE_READ, SCOPE_WRITE } from "./auth";
 import { SERVER_INFO } from "./mcp-handler";
 
-export interface LoginEnv extends SharedLoginEnv {
+export interface LoginEnv extends SharedLoginEnv, Partial<AuditEnv> {
   ADMIN_EMAIL?: string;
   /** The deployed commit, set by CI's deploy (--var DEPLOY_SHA) and reported by /health. */
   DEPLOY_SHA?: string;
@@ -32,8 +33,9 @@ write Journal posts; Carrel owns writing.</p>
   // Every sign-in, admitted or refused, is a row in the tool-call log.
   audit: { name: SERVER_INFO.name, version: SERVER_INFO.version },
   // CI's deploy (devkit's worker-deploy.yml) passes DEPLOY_SHA and waits for /health to report it.
-  // site-runtime's healthResponse: application/health+json, no-store and noindex, with a check per binding.
-  health: (env) => healthResponse({ sha: env.DEPLOY_SHA, checks: healthChecks(env as unknown as Env) }),
+  // site-runtime's healthResponse: application/health+json, no-store and noindex, with a check per binding and the
+  // tool-call log's own (L8, a warn-level alert: a call with no finished row, a spike, or rows not copied for two days).
+  health: (env) => healthResponse({ sha: env.DEPLOY_SHA, checks: [...healthChecks(env as unknown as Env), auditLogCheck(env)] }),
 });
 
 /**
