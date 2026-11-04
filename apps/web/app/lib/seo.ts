@@ -170,6 +170,8 @@ export function articleLd(post: {
   articleImages?: Array<{ url: string; width: number; height: number; creditText?: string }>;
   publishedAt: Date | null;
   updatedAt: Date | null;
+  /** The staff member the post credits; null credits Foxing. */
+  author?: string | null;
 }): Record<string, unknown> {
   return article({
     url: absoluteUrl(`/journal/${post.slug}`),
@@ -178,7 +180,9 @@ export function articleLd(post: {
     image: post.articleImages?.length ? post.articleImages : (post.coverImageUrl ?? undefined),
     published: post.publishedAt,
     modified: post.updatedAt,
-    author: { "@type": "Organization", name: SITE_NAME },
+    author: post.author
+      ? { "@type": "Person", name: post.author }
+      : { "@type": "Organization", name: SITE_NAME },
     publisher: { "@type": "Organization", name: SITE_NAME },
   });
 }

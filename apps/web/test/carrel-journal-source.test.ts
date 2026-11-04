@@ -21,6 +21,9 @@ const full: JournalFields = {
   ogImageAlt: "A worn copy of Middlemarch on a desk",
   canonicalUrl: "https://example.com/middlemarch",
   noindex: true,
+  authors: ["Ada Reader"],
+  series: "Rereading Eliot",
+  seriesPart: 2,
   content: "## Opening\n\n---\n\nA rule inside the body is body text.\n",
 };
 
@@ -40,6 +43,9 @@ describe("journal source mapping", () => {
       ogImageAlt: null,
       canonicalUrl: null,
       noindex: false,
+      authors: [],
+      series: null,
+      seriesPart: null,
     };
     expect(sourceToJournal(journalToSource(empty))).toEqual(empty);
   });
