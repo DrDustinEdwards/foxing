@@ -1594,7 +1594,7 @@ packages:
 
   '@dustinedwards/site-api@https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/59da99b2ed046b9df10620abdb7bc24cab514291':
     resolution: {gitHosted: true, integrity: sha512-CSn0MQEiKUrCa0BwpUuh0plJj/gzyQDa9eluVEtUh7GpulRcczl/vPdAxblzVlKvr9w/s6jZa21Q1XebBUFYxA==, tarball: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/59da99b2ed046b9df10620abdb7bc24cab514291}
-    version: 0.21.0
+    version: 0.22.0
     engines: {node: '>=26.11.1'}
     hasBin: true
 
