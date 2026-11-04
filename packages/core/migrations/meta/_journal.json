@@ -120,6 +120,13 @@
       "when": 1793520309796,
       "tag": "0016_site_api_media_uploads",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1793763225980,
+      "tag": "0017_drop_profiles_is_admin",
+      "breakpoints": true
     }
   ]
 }
