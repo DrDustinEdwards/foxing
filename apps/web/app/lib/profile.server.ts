@@ -4,7 +4,7 @@
 // Reads the profile in-process via core, per the standing rule: loaders never
 // self-fetch the Worker's own /api/v1 (that loopback returns a 404 HTML page, not
 // JSON, unconditionally, which is what crashed /me before this gate existed).
-import type { Profile } from "@foxing/core";
+import type { SignedInProfile } from "@foxing/core";
 import { createDb, isAdminAccount, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { getAuth, sessionLookup } from "./auth.server";
@@ -16,7 +16,7 @@ export interface SessionUser {
 
 export interface ProfileContext {
   user: SessionUser;
-  profile: Profile;
+  profile: SignedInProfile;
 }
 
 // Resolve the profile for a known user id, or redirect to onboarding when absent.
