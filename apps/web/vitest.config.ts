@@ -15,6 +15,8 @@ export default defineConfig(async () => {
     define: { __CACHE_VERSION__: JSON.stringify("test") },
     resolve: {
       alias: [
+        // tsconfig's ~/ paths, for the real routes the stub build carries.
+        { find: /^~\//, replacement: `${path.resolve(__dirname, "app")}/` },
         {
           find: "virtual:react-router/server-build",
           replacement: path.resolve(__dirname, "test/server-build.stub.ts"),

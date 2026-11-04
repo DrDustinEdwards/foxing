@@ -1,8 +1,8 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
-import { and, desc, eq, getTableColumns, sql } from "drizzle-orm";
+import { and, desc, eq, getTableColumns, ne, sql } from "drizzle-orm";
 import type { Db } from "../../db";
-import { journalPosts, journalSlugRedirects } from "../../schema";
+import { journalPosts, journalSlugRedirects, profiles } from "../../schema";
 
 export type JournalPost = typeof journalPosts.$inferSelect;
 
@@ -88,14 +88,51 @@ export async function getPostBySlug(
   return rows[0] ?? null;
 }
 
-/** Where a renamed post's old slug now leads (journal_slug_redirects, written by a Carrel rename), or null. */
+/**
+ * Where a renamed post's old slug now leads (journal_slug_redirects, written by a Carrel rename),
+ * or null. Only a live post is led to, so the 301 never ends at a 404: while the post is a draft or
+ * in the trash its old address answers 404 itself, and a delete removes the rows.
+ */
 export async function getJournalSlugRedirect(db: Db, slug: string): Promise<string | null> {
   const [row] = await db
     .select({ toSlug: journalSlugRedirects.toSlug })
     .from(journalSlugRedirects)
-    .where(eq(journalSlugRedirects.fromSlug, slug))
+    .innerJoin(journalPosts, eq(journalPosts.slug, journalSlugRedirects.toSlug))
+    .where(and(eq(journalSlugRedirects.fromSlug, slug), eq(journalPosts.isPublished, true)))
     .limit(1);
   return row?.toSlug ?? null;
+}
+
+/**
+ * The byline and series line of a post: its credited staff member's display name (null when it
+ * credits Foxing alone), and how many live posts its series has, this one counted.
+ */
+export async function getJournalCredits(
+  db: Db,
+  post: { slug: string; authorId: string | null; series: string | null },
+): Promise<{ author: string | null; seriesTotal: number | null }> {
+  const [person] = post.authorId
+    ? await db
+        .select({ displayName: profiles.displayName, username: profiles.username })
+        .from(profiles)
+        .where(eq(profiles.id, post.authorId))
+        .limit(1)
+    : [];
+  let seriesTotal: number | null = null;
+  if (post.series) {
+    const [others] = await db
+      .select({ n: sql<number>`count(*)` })
+      .from(journalPosts)
+      .where(
+        and(
+          eq(journalPosts.series, post.series),
+          eq(journalPosts.isPublished, true),
+          ne(journalPosts.slug, post.slug),
+        ),
+      );
+    seriesTotal = (others?.n ?? 0) + 1;
+  }
+  return { author: person ? (person.displayName ?? person.username) : null, seriesTotal };
 }
 
 /** All published post slugs + last-modified, for the sitemap. */

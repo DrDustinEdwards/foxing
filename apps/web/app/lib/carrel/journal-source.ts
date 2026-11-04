@@ -6,6 +6,9 @@
 // og_image_alt, canonical_url and noindex columns. Columns the file does not name (the show_*
 // toggles, related_post_ids, reading_time_minutes) are never written through Carrel.
 //
+// `authors`, `series` and `seriesPart` are site-api's shared post fields, under their shared names.
+// authors holds display names: the adapter resolves the one Foxing credits to a staff account.
+//
 // Each front matter line is `key: value`, the value as JSON. A plain unquoted string is accepted
 // for the text fields so a hand edit does not have to quote. A key the file leaves out is cleared,
 // because the file is the whole post. The reader and writer are site-api's jsonSource.
@@ -26,6 +29,9 @@ export type JournalFields = {
   ogImageAlt: string | null;
   canonicalUrl: string | null;
   noindex: boolean;
+  authors: string[];
+  series: string | null;
+  seriesPart: number | null;
   content: string;
 };
 
@@ -43,6 +49,9 @@ const SOURCE = jsonSource(
     imageAlt: "text",
     canonical: "text",
     noindex: "flag",
+    authors: "list",
+    series: "text",
+    seriesPart: "text",
   },
   { required: ["title"], blankLine: true },
 );
@@ -68,6 +77,9 @@ export function journalToSource(fields: JournalFields, only?: ReadonlyArray<stri
     imageAlt: fields.ogImageAlt || undefined,
     canonical: fields.canonicalUrl || undefined,
     noindex: fields.noindex || undefined,
+    authors: fields.authors,
+    series: fields.series,
+    seriesPart: fields.seriesPart === null ? null : String(fields.seriesPart),
   };
   const kept = only
     ? Object.fromEntries(Object.entries(values).filter(([k]) => only.includes(k)))
@@ -78,6 +90,11 @@ export function journalToSource(fields: JournalFields, only?: ReadonlyArray<stri
 /** Reads Carrel's file back into the row's fields, or throws JournalSourceError naming every problem. */
 export function sourceToJournal(source: string): JournalFields {
   const { values: v, body } = SOURCE.read(source);
+  const part = v.seriesPart ?? null;
+  if (part !== null && !/^[1-9]\d{0,4}$/.test(part))
+    throw new JsonSourceError(["seriesPart must be a whole number, 1 or more."]);
+  if (part !== null && !v.series)
+    throw new JsonSourceError(["seriesPart needs a series: name the series it is a part of."]);
   return {
     title: v.title ?? "",
     excerpt: v.excerpt ?? null,
@@ -91,6 +108,9 @@ export function sourceToJournal(source: string): JournalFields {
     ogImageAlt: v.imageAlt ?? null,
     canonicalUrl: v.canonical ?? null,
     noindex: v.noindex ?? false,
+    authors: v.authors ?? [],
+    series: v.series ?? null,
+    seriesPart: part === null ? null : Number(part),
     content: body,
   };
 }
