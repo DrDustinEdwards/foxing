@@ -38,7 +38,7 @@ import { decodeLocator, encodeLocator, settingsToReadiumPreferences, splitSenten
 // the surrounding screen wiring.
 //
 // What works:
-//   - render an EPUB from a public Supabase Storage URL
+//   - render an EPUB from its URL
 //   - goForward / goBackward / goTo (Locator-based)
 //   - applySettings -> Readium Preferences (theme, font size, line height,
 //     family, justification, page margins)
@@ -47,7 +47,7 @@ import { decodeLocator, encodeLocator, settingsToReadiumPreferences, splitSenten
 //     multi-word -> onPassageSelected; both route through the floating pill
 //   - tap-to-hide chrome via an RNGH Tap gesture with tight movement and
 //     duration thresholds so swipes / long-press pass through to Readium
-//   - location persistence with 1500ms debounce so we don't write to Supabase
+//   - location persistence with 1500ms debounce so we don't save progress
 //     on every page swipe (also fixes the historical CFI oscillation bug)
 //   - getChapterText / getChapterParagraphs by parsing the EPUB in-process
 //     via lib/epub-content (jszip + OPF parser + HTML stripper)
@@ -315,7 +315,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     // Suppress the very first onLocationChange after mount. Readium emits
     // an initial relocate event when the publication renders -- if we let
     // that fire the host's save, a fresh book with no saved CFI would
-    // overwrite Supabase with chapter 1 even if the user never turned a
+    // overwrite its saved place with chapter 1 even if the user never turned a
     // page. After the first event, every subsequent change is a real
     // navigation.
     const firstLocationChangeRef = useRef(true)

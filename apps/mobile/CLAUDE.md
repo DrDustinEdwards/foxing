@@ -31,8 +31,7 @@ offline (progress, sessions, highlights, words, library status) go through
 `queueWrite` and `/api/v1/sync`. A screen with no API behind it is removed, not stubbed.
 
 All AI goes through `/api/v1/companion` (`useCompanion`). Never call the Anthropic API
-from the app; the key stays on the server. `supabase/` is the retired Edge Function
-source, kept for reference; nothing in the app calls it.
+from the app; the key stays on the server.
 
 ## Builds
 

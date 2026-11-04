@@ -31,7 +31,7 @@ export { CSP_REPORT_PATH };
  *   moved to R2 or its host is listed here.
  * - script, frame: Cloudflare Turnstile on the email sign-in link (site-runtime ./turnstile).
  * - connect: nothing beyond 'self', which covers /api/v1, /api/auth and the club-room WebSocket
- *   (same host, wss). Supabase is the mobile app's alone and is not listed.
+ *   (same host, wss).
  * The Cloudflare Web Analytics beacon is asked for by name below (cloudflareWebAnalytics).
  */
 const SITE_SOURCES: CspSources = {
