@@ -26,5 +26,10 @@
     "@modelcontextprotocol/conformance": "0.2.0-alpha.11",
     "typescript": "5.9.3",
     "wrangler": "4.151.3"
+  },
+  "allowScripts": {
+    "core-js-pure": false,
+    "esbuild": false,
+    "workerd": false
   }
 }
