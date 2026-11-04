@@ -114,7 +114,8 @@ function scheduledPurge(): PublishHook {
   const purge = schedulePurgeHook();
   return {
     name: purge.name,
-    run: (e) => (e.path === null ? false : purge.run({ trigger: e.trigger, action: e.action, path: e.path })),
+    run: (e) =>
+      e.path === null ? false : purge.run({ trigger: e.trigger, action: e.action, path: e.path }),
   };
 }
 

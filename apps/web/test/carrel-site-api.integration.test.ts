@@ -117,16 +117,14 @@ const source = (
 /** A staff member a post can credit (fake data): an account on the test admin list (vitest.config.ts), with a display name. */
 async function seedStaff(id: string, displayName: string) {
   const at = new Date();
-  await db()
-    .insert(schema.user)
-    .values({
-      id,
-      name: displayName,
-      email: "admin@example.com",
-      emailVerified: true,
-      createdAt: at,
-      updatedAt: at,
-    });
+  await db().insert(schema.user).values({
+    id,
+    name: displayName,
+    email: "admin@example.com",
+    emailVerified: true,
+    createdAt: at,
+    updatedAt: at,
+  });
   await db()
     .insert(schema.profiles)
     .values({ id, username: id, displayName, createdAt: at, updatedAt: at });
