@@ -8,7 +8,7 @@ import type {
   CompanionCaller,
   Db,
   LiveMessage,
-  Profile,
+  SignedInProfile,
   StructuredCaller,
 } from "@foxing/core";
 
@@ -44,7 +44,7 @@ export type Variables = {
   session: SessionUser | null;
   // True when the session was resolved from the operator bearer, not a cookie.
   viaOperator: boolean;
-  profile: Profile | null;
+  profile: SignedInProfile | null;
   streamCompanion: CompanionCaller;
   /** The JSON-schema caller (Find next book), or null with no key. */
   structuredCompanion: StructuredCaller | null;
