@@ -42,14 +42,7 @@ export interface PassageCommentMarker {
 export interface ReaderRef {
   prev: () => void
   next: () => void
-  // Optional hint lets callers carry an excerpt + chapter name forward
-  // when the CFI is in a renderer-foreign format (e.g. legacy foliate
-  // epubcfi strings being navigated by the Readium renderer). The Foliate
-  // renderer ignores the hint and uses the CFI directly.
-  goTo: (
-    cfi: string,
-    hint?: { text?: string; chapter?: string },
-  ) => void
+  goTo: (cfi: string) => void
   applySettings: (settings: ReaderSettings) => void
   addHighlight: (cfi: string, color: HighlightColor) => void
   removeHighlight: (cfi: string) => void
