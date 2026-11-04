@@ -64,12 +64,9 @@
         "plugins/*.js",
         "metro.config.js"
       ],
-      // supabase/functions is Deno code with URL imports, deployed by the
-      // Supabase CLI, outside Node resolution.
       "project": [
         "**/*.{ts,tsx,js,mjs,cjs,css}",
-        "!assets/**",
-        "!supabase/**"
+        "!assets/**"
       ],
       // Knip's metro plugin executes metro.config.js from the repo root, where
       // NativeWind cannot find ./tailwind.config and the load fails. The file stays
