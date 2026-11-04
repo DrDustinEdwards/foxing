@@ -6,6 +6,8 @@ import { profiles } from "../schema";
 import type { UpdateMeInput } from "../validators/profile";
 
 export type Profile = typeof profiles.$inferSelect;
+/** A signed-in reader's profile; `isAdmin` is the admin list's answer (isAdminAccount), never a stored column. */
+export type SignedInProfile = Profile & { isAdmin: boolean };
 export type NewProfile = typeof profiles.$inferInsert;
 
 /** Minimal identity for rendering an actor in a feed / follower list. */

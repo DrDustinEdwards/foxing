@@ -50,7 +50,6 @@ export const profiles = sqliteTable("profiles", {
   subscriptionPeriodEnd: ts("subscription_period_end"), // current period end (renewal / trial end)
   visibility: json<VisibilityPrefs>("visibility"),
   notificationPrefs: json<NotificationPrefs>("notification_prefs"),
-  isAdmin: bool("is_admin").notNull().default(false),
   isSuspended: bool("is_suspended").notNull().default(false),
   timezone: text("timezone"),
   onboardedAt: ts("onboarded_at"),
