@@ -1,39 +1,55 @@
-// After an email link: offer a passkey, so next time there is no email to wait for. Someone who
-// already has one goes straight on. `next` is where they were headed (/me, or /onboarding for a
-// new reader), a path on this site only.
-import { useState } from "react";
-import { redirect } from "react-router";
-import { AuthLink, AuthShell } from "~/components/auth-shell";
+// After an email link, code, Google or Apple: offer a passkey, so next time there is no email to
+// wait for. Someone who already has one, said "Not now" in the last 30 days, or is on a device
+// that cannot make one goes straight on (site-runtime shouldOfferPasskey, canOfferPasskey). `next`
+// is where they were headed (/me, or /onboarding for a new reader), a path on this site only.
+import { dismissPasskeyOffer, shouldOfferPasskey } from "@dustinedwards/site-runtime/sign-in";
+import { canOfferPasskey } from "@dustinedwards/site-runtime/sign-in-client";
+import { useEffect, useState } from "react";
+import { Form, redirect } from "react-router";
+import { AuthShell } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
-import { authClient } from "~/lib/auth-client";
-import { getAuth } from "~/lib/auth.server";
+import { authClient, safeNextPath, signInAgainIfStale } from "~/lib/auth-client";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
 
 export function meta() {
-  return [{ title: "Add a passkey | Foxing" }, { name: "robots", content: "noindex" }];
+  return [{ title: "Create a passkey | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
-/** Only a path on this site, never another origin (`//host` included). */
-function nextPath(url: URL): string {
-  const next = url.searchParams.get("next") ?? "/me";
-  return next.startsWith("/") && !next.startsWith("//") ? next : "/me";
-}
-
-export async function loader({ context, request }: Route.LoaderArgs) {
+/** The signed-in reader, their auth and where they were headed; no session goes to /login. */
+async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  const next = nextPath(new URL(request.url));
+  const next = safeNextPath(new URL(request.url).searchParams.get("next"));
   const auth = await getAuth(env);
-  const session = await auth.api.getSession({ headers: request.headers });
+  const session = await auth.api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login");
-  const passkeys = await auth.api.listPasskeys({ headers: request.headers });
-  if (passkeys.length > 0) throw redirect(next);
+  return { env, auth, next, userId: session.user.id };
+}
+
+export async function loader(args: Route.LoaderArgs) {
+  const { env, auth, next, userId } = await signedIn(args);
+  const passkeys = await auth.api.listPasskeys({ headers: args.request.headers });
+  if (!(await shouldOfferPasskey(env.DB, userId, passkeys))) throw redirect(next);
   return { next };
+}
+
+// "Not now": held for 30 days, for the person rather than this browser.
+export async function action(args: Route.ActionArgs) {
+  const { env, next, userId } = await signedIn(args);
+  await dismissPasskeyOffer(env.DB, userId, { request: args.request });
+  throw redirect(next);
 }
 
 export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
   const { next } = loaderData;
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A device with no built-in way to make a passkey skips the offer.
+  useEffect(() => {
+    void canOfferPasskey().then((can) => {
+      if (!can) window.location.replace(next);
+    });
+  }, [next]);
 
   return (
     <AuthShell
@@ -56,6 +72,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
             setPending(true);
             setError(null);
             const res = await authClient.passkey.addPasskey();
+            if (signInAgainIfStale(res?.error)) return;
             setPending(false);
             if (res?.error) {
               setError("The passkey was not saved. Try again, or skip it for now.");
@@ -64,12 +81,17 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
             window.location.assign(next);
           }}
         >
-          {pending ? "Waiting for your device..." : "Add a passkey"}
+          {pending ? "Waiting for your device..." : "Create a passkey"}
         </button>
-        <p className="text-center fx-auth-shell-box-2">
-          <AuthLink to={next}>Not now</AuthLink>
-        </p>
+        <Form method="post" className="text-center fx-auth-shell-box-2">
+          <button type="submit" className="cap-btn" data-variant="ghost" disabled={pending}>
+            Not now
+          </button>
+        </Form>
       </div>
     </AuthShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

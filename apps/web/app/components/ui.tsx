@@ -136,7 +136,7 @@ export function EntityCard({
   );
 }
 
-/** Breadcrumb trail, Capsomer's. Also feeds BreadcrumbList JSON-LD (built separately in seo). */
+/** Breadcrumb trail, Capsomer's. The BreadcrumbList JSON-LD is Prelum's (lib/seo.ts). */
 export function Breadcrumbs({ trail }: { trail: Array<{ label: string; to?: string }> }) {
   return (
     <nav aria-label="Breadcrumb" className="cap-breadcrumb mb-6">

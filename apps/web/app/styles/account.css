@@ -258,8 +258,6 @@
 }
 
 .fx-preference-sections-label,
-.fx-admin-journal-edit-label,
-.fx-admin-journal-new-label,
 .fx-journal-tag-text-2,
 .fx-commonplace-text-2 {
   font-family: var(--ui);

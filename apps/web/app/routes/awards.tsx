@@ -21,6 +21,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       description:
         "Nobel, Pulitzer, Newbery, and more. Browse award-winning classics you can read on Foxing.",
       pathname: location.pathname,
+      pageType: "CollectionPage",
     }),
     ldJson(
       itemListLd(

@@ -1,0 +1,27 @@
+name: access-drift
+
+# The daily Access drift check (area 3, I2), devkit's reusable workflow: the Access application in front
+# of /admin must let in exactly the addresses on the Worker's ADMIN_EMAILS, which the site serves hashed at
+# /admin/access-drift to the Access service token (workers/app.ts). No copy of the list is kept in GitHub.
+# Until all four secrets are set the job fails, by design.
+
+on:
+  schedule:
+    - cron: "41 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    uses: DrDustinEdwards/devkit/.github/workflows/access-drift.yml@454002f526e5e8e645a9c110605880e220b611a0 # v0.21.0
+    with:
+      app: foxing-login
+      admins-url: https://foxing.app/admin/access-drift
+      site-runtime-ref: v0.59.0
+    secrets:
+      ACCESS_READ_TOKEN: ${{ secrets.ACCESS_READ_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      ACCESS_CLIENT_ID: ${{ secrets.ACCESS_CLIENT_ID }}
+      ACCESS_CLIENT_SECRET: ${{ secrets.ACCESS_CLIENT_SECRET }}

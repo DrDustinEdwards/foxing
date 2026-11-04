@@ -1,10 +1,11 @@
-import { env } from "cloudflare:test";
+import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { desc, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import worker from "../workers/app";
 import { testApi } from "./test-api";
 
-// The admin write surface is gated on profiles.is_admin and logs every mutation to
+// The admin write surface is gated on the admin list (ADMIN_EMAILS, set in vitest.config.ts) and logs every mutation to
 // admin_audit_log. This drives the API contract directly (the x-test-user stub stands in
 // for the Better Auth session the Worker injects). The visible admin UI is covered by the
 // Playwright admin specs, which need a seeded admin account.
@@ -16,7 +17,7 @@ const api = testApi({
 const call = (pathname: string, init?: RequestInit) =>
   api.fetch(new Request(`https://test.local${pathname}`, init), env as never);
 
-async function seedUser(id: string, opts: { isAdmin: boolean }) {
+async function seedUser(id: string) {
   const db = createDb(env.DB);
   await db.insert(schema.user).values({
     id,
@@ -30,7 +31,6 @@ async function seedUser(id: string, opts: { isAdmin: boolean }) {
     id,
     username: id,
     displayName: id,
-    isAdmin: opts.isAdmin,
     onboardedAt: new Date(),
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -54,8 +54,19 @@ describe("admin write surface gate + audit log", () => {
     await db.delete(schema.adminAuditLog);
     await db.delete(schema.profiles);
     await db.delete(schema.user);
-    await seedUser("admin", { isAdmin: true });
-    await seedUser("reader", { isAdmin: false });
+    await seedUser("admin");
+    await seedUser("reader");
+  });
+
+  it("lets ADMIN_EMAILS alone decide, in any case, and unset admits nobody", async () => {
+    const asUser = (user: string, ADMIN_EMAILS: string) =>
+      api.fetch(
+        new Request("https://test.local/admin/users", { headers: { "x-test-user": user } }),
+        { ...env, ADMIN_EMAILS } as never,
+      );
+    expect((await asUser("reader", " Reader@Example.com ")).status).toBe(200);
+    expect((await asUser("admin", " Reader@Example.com ")).status).toBe(403);
+    expect((await asUser("admin", "")).status).toBe(403);
   });
 
   it("rejects an anonymous request with 401", async () => {
@@ -112,10 +123,9 @@ describe("admin write surface gate + audit log", () => {
     expect(row.isSuspended).toBe(false);
   });
 });
-
 // Role and permission changes are preview then perform: the first request returns who
 // gains what and a single-use token, and only a second request carrying that token
-// writes. These guard the "one click grants admin" bug class.
+// writes. These guard the "one click changes a role" bug class.
 type Preview = {
   preview: {
     target: { id: string; username: string };
@@ -142,11 +152,16 @@ async function auditRows(action: string) {
     .where(eq(schema.adminAuditLog.action, action));
 }
 
-async function previewGrant(target: string, actor = "admin"): Promise<string> {
-  const res = await post(`/admin/users/${target}/admin`, actor, { on: true });
+const tierOf = async (id: string) => (await profileOf(id)).subscriptionTier;
+
+async function previewPlus(target: string, actor = "admin"): Promise<string> {
+  const res = await post(`/admin/users/${target}/tier`, actor, { tier: "plus" });
   expect(res.status).toBe(200);
   return ((await res.json()) as Preview).confirm.token;
 }
+
+const performPlus = (target: string, token: string, actor = "admin") =>
+  post(`/admin/users/${target}/tier`, actor, { tier: "plus", confirm: token });
 
 describe("admin role changes: preview then perform", () => {
   beforeEach(async () => {
@@ -155,122 +170,102 @@ describe("admin role changes: preview then perform", () => {
     await db.delete(schema.adminAuditLog);
     await db.delete(schema.profiles);
     await db.delete(schema.user);
-    await seedUser("admin", { isAdmin: true });
-    await seedUser("admin2", { isAdmin: true });
-    await seedUser("reader", { isAdmin: false });
-    await seedUser("other", { isAdmin: false });
+    await seedUser("admin");
+    await seedUser("admin2");
+    await seedUser("reader");
+    await seedUser("other");
   });
 
-  it("a single request cannot grant admin: it returns a preview and changes nothing", async () => {
-    const res = await post("/admin/users/reader/admin", "admin", { on: true });
+  it("a single request cannot change a tier: it returns a preview and changes nothing", async () => {
+    const res = await post("/admin/users/reader/tier", "admin", { tier: "plus" });
     expect(res.status).toBe(200);
-    expect((await profileOf("reader")).isAdmin).toBe(false);
-    expect(await auditRows("user.grant_admin")).toHaveLength(0);
+    expect(await tierOf("reader")).toBe("free");
+    expect(await auditRows("user.tier")).toHaveLength(0);
 
     const body = (await res.json()) as Preview;
     expect(body.preview.target.username).toBe("reader");
-    expect(body.preview.kind).toBe("admin");
-    expect(body.preview.from).toBe(false);
-    expect(body.preview.to).toBe(true);
-    expect(body.preview.summary).toContain("@reader gains admin");
+    expect(body.preview.kind).toBe("tier");
+    expect(body.preview.from).toBe("free");
+    expect(body.preview.to).toBe("plus");
+    expect(body.preview.summary).toContain("@reader moves to Plus");
     expect(body.confirm.token).toMatch(/^[0-9a-f]{64}$/);
   });
 
-  it("grants admin with the confirmation token and records the actor", async () => {
-    const token = await previewGrant("reader");
-    const res = await post("/admin/users/reader/admin", "admin", { on: true, confirm: token });
-    expect(res.status).toBe(200);
+  it("performs with the confirmation token and records the actor", async () => {
+    const token = await previewPlus("reader");
+    expect((await performPlus("reader", token)).status).toBe(200);
 
-    expect((await profileOf("reader")).isAdmin).toBe(true);
-    const rows = await auditRows("user.grant_admin");
+    expect(await tierOf("reader")).toBe("plus");
+    const rows = await auditRows("user.tier");
     expect(rows).toHaveLength(1);
     expect(rows[0].actor).toBe("admin");
-    expect(rows[0].params).toEqual({ id: "reader", from: false, to: true });
+    expect(rows[0].params).toEqual({ id: "reader", from: "free", to: "plus" });
   });
 
   it("refuses a reused token", async () => {
-    const token = await previewGrant("reader");
-    expect(
-      (await post("/admin/users/reader/admin", "admin", { on: true, confirm: token })).status,
-    ).toBe(200);
+    const token = await previewPlus("reader");
+    expect((await performPlus("reader", token)).status).toBe(200);
     // Put the target back, so only the spent token stands between a replay and a write.
     await createDb(env.DB)
       .update(schema.profiles)
-      .set({ isAdmin: false })
+      .set({ subscriptionTier: "free" })
       .where(eq(schema.profiles.id, "reader"));
 
-    const replay = await post("/admin/users/reader/admin", "admin", { on: true, confirm: token });
-    expect(replay.status).toBe(409);
-    expect((await profileOf("reader")).isAdmin).toBe(false);
-    expect(await auditRows("user.grant_admin")).toHaveLength(1);
+    expect((await performPlus("reader", token)).status).toBe(409);
+    expect(await tierOf("reader")).toBe("free");
+    expect(await auditRows("user.tier")).toHaveLength(1);
   });
 
   it("refuses an expired token", async () => {
-    const token = await previewGrant("reader");
+    const token = await previewPlus("reader");
     vi.useFakeTimers({ now: Date.now() + 121_000, toFake: ["Date"] });
-    const res = await post("/admin/users/reader/admin", "admin", { on: true, confirm: token });
+    const res = await performPlus("reader", token);
     vi.useRealTimers();
     expect(res.status).toBe(409);
-    expect((await profileOf("reader")).isAdmin).toBe(false);
-    expect(await auditRows("user.grant_admin")).toHaveLength(0);
+    expect(await tierOf("reader")).toBe("free");
+    expect(await auditRows("user.tier")).toHaveLength(0);
   });
 
   it("refuses a stale token when the target changed after the preview", async () => {
-    const token = await previewGrant("reader");
-    // The target's admin flag moves after the preview, so the preview no longer
-    // describes the change the token would perform.
+    const token = await previewPlus("reader");
+    // The target's tier moves after the preview, so the preview no longer describes the
+    // change the token would perform.
     await createDb(env.DB)
       .update(schema.profiles)
-      .set({ isAdmin: true })
+      .set({ subscriptionTier: "plus" })
       .where(eq(schema.profiles.id, "reader"));
-    const res = await post("/admin/users/reader/admin", "admin", { on: true, confirm: token });
-    expect(res.status).toBe(409);
-    expect(await auditRows("user.grant_admin")).toHaveLength(0);
+    expect((await performPlus("reader", token)).status).toBe(409);
+    expect(await auditRows("user.tier")).toHaveLength(0);
   });
 
-  it("a token minted for one user cannot grant another", async () => {
-    const token = await previewGrant("reader");
-    const res = await post("/admin/users/other/admin", "admin", { on: true, confirm: token });
-    expect(res.status).toBe(409);
-    expect((await profileOf("other")).isAdmin).toBe(false);
-    expect((await profileOf("reader")).isAdmin).toBe(false);
-    expect(await auditRows("user.grant_admin")).toHaveLength(0);
+  it("a token minted for one user cannot change another", async () => {
+    const token = await previewPlus("reader");
+    expect((await performPlus("other", token)).status).toBe(409);
+    expect(await tierOf("other")).toBe("free");
+    expect(await tierOf("reader")).toBe("free");
+    expect(await auditRows("user.tier")).toHaveLength(0);
   });
 
   it("a token is bound to the admin who previewed it and to the change it previewed", async () => {
-    const token = await previewGrant("reader");
-    const byOther = await post("/admin/users/reader/admin", "admin2", { on: true, confirm: token });
-    expect(byOther.status).toBe(409);
+    const token = await previewPlus("reader");
+    expect((await performPlus("reader", token, "admin2")).status).toBe(409);
 
-    const tierPreview = (await (
-      await post("/admin/users/reader/tier", "admin", { tier: "plus" })
+    const suspendPreview = (await (
+      await post("/admin/users/reader/suspend", "admin", { suspended: true })
     ).json()) as Preview;
-    const crossKind = await post("/admin/users/reader/admin", "admin", {
-      on: true,
-      confirm: tierPreview.confirm.token,
-    });
-    expect(crossKind.status).toBe(409);
+    expect((await performPlus("reader", suspendPreview.confirm.token)).status).toBe(409);
 
     const reader = await profileOf("reader");
-    expect(reader.isAdmin).toBe(false);
-    expect(reader.subscriptionTier).toBe("free");
-  });
-
-  it("tier and suspend changes also need the confirmation token", async () => {
-    const tier = await post("/admin/users/reader/tier", "admin", { tier: "plus" });
-    const suspend = await post("/admin/users/reader/suspend", "admin", { suspended: true });
-    expect(tier.status).toBe(200);
-    expect(suspend.status).toBe(200);
-    let reader = await profileOf("reader");
     expect(reader.subscriptionTier).toBe("free");
     expect(reader.isSuspended).toBe(false);
+  });
 
-    const tierToken = ((await tier.json()) as Preview).confirm.token;
+  it("suspend changes also need the confirmation token", async () => {
+    const suspend = await post("/admin/users/reader/suspend", "admin", { suspended: true });
+    expect(suspend.status).toBe(200);
+    expect((await profileOf("reader")).isSuspended).toBe(false);
+
     const suspendToken = ((await suspend.json()) as Preview).confirm.token;
-    expect(
-      (await post("/admin/users/reader/tier", "admin", { tier: "plus", confirm: tierToken }))
-        .status,
-    ).toBe(200);
     expect(
       (
         await post("/admin/users/reader/suspend", "admin", {
@@ -279,10 +274,7 @@ describe("admin role changes: preview then perform", () => {
         })
       ).status,
     ).toBe(200);
-    reader = await profileOf("reader");
-    expect(reader.subscriptionTier).toBe("plus");
-    expect(reader.isSuspended).toBe(true);
-    expect(await auditRows("user.tier")).toHaveLength(1);
+    expect((await profileOf("reader")).isSuspended).toBe(true);
     expect(await auditRows("user.suspend")).toHaveLength(1);
   });
 });
@@ -318,8 +310,8 @@ describe("admin operator bearer", () => {
     await db.delete(schema.adminAuditLog);
     await db.delete(schema.profiles);
     await db.delete(schema.user);
-    await seedUser("admin", { isAdmin: true });
-    await seedUser("reader", { isAdmin: false });
+    await seedUser("admin");
+    await seedUser("reader");
   });
 
   it("lets the operator read as a named admin", async () => {
@@ -432,8 +424,8 @@ describe("admin reads with a cookie session", () => {
     const db = createDb(env.DB);
     await db.delete(schema.profiles);
     await db.delete(schema.user);
-    await seedUser("admin", { isAdmin: true });
-    await seedUser("reader", { isAdmin: false });
+    await seedUser("admin");
+    await seedUser("reader");
   });
 
   it("serves an admin and refuses a reader and an anonymous caller", async () => {
@@ -446,5 +438,33 @@ describe("admin reads with a cookie session", () => {
     expect(body.activity).toBeTruthy();
     expect((await get("reader")).status).toBe(403);
     expect((await get(null)).status).toBe(401);
+  });
+});
+
+// The hour's idle sign-out on the browser admin APIs (workers/app.ts): a fetch() from an admin
+// screen gets a 401 it can show, not the redirect to Access's logout, which fetch would follow
+// and read as a success.
+const b64url = (value: object) =>
+  btoa(JSON.stringify(value)).replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+
+describe("admin idle sign-out", () => {
+  it("answers an idle admin's API call with a 401 the admin screens show", async () => {
+    // adminIdle reads the Access token's iat without verifying it; two hours ago is idle.
+    const iat = Math.floor(Date.now() / 1000) - 2 * 60 * 60;
+    const token = `${b64url({ alg: "RS256" })}.${b64url({ sub: "admin", iat })}.sig`;
+    const ctx = createExecutionContext();
+    const res = await worker.fetch(
+      new Request("https://foxing.test/api/v1/admin/announcements", {
+        method: "POST",
+        headers: { "cf-access-jwt-assertion": token, "content-type": "application/json" },
+        body: "{}",
+      }),
+      env as unknown as Env,
+      ctx,
+    );
+    await waitOnExecutionContext(ctx);
+    expect(res.status).toBe(401);
+    const body = (await res.json()) as { error: { code: string } };
+    expect(body.error.code).toBe("admin_idle");
   });
 });

@@ -6,14 +6,19 @@
  *
  * Access rather than Foxing's own Better Auth: this server's sign-in stays
  * independent of foxing.app's sessions. The Foxing account the API acts as is
- * FOXING_ADMIN_ID, and the API re-checks that account's is_admin on every call.
+ * FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAILS) on every call.
  */
 
+import { auditLogCheck, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";
+import { healthResponse } from "@dustinedwards/site-runtime/health";
 import { isAdminUser, loginHandler, type LoginEnv as SharedLoginEnv } from "@dustinedwards/site-runtime/mcp-login";
 import { SCOPE_READ, SCOPE_WRITE } from "./auth";
+import { SERVER_INFO } from "./mcp-handler";
 
-export interface LoginEnv extends SharedLoginEnv {
+export interface LoginEnv extends SharedLoginEnv, Partial<AuditEnv> {
   ADMIN_EMAIL?: string;
+  /** The deployed commit, set by CI's deploy (--var DEPLOY_SHA) and reported by /health. */
+  DEPLOY_SHA?: string;
 }
 
 export const defaultHandler = loginHandler<LoginEnv>({
@@ -24,4 +29,9 @@ staff picks, Book of the Month, celebrity picks and the admin audit log. It cann
 write Journal posts; Carrel owns writing.</p>
 <p>It will always be able to read. Changes need the box below.</p>`,
   admit: isAdminUser,
+  // Every sign-in, admitted or refused, is a row in the tool-call log.
+  audit: { name: SERVER_INFO.name, version: SERVER_INFO.version },
+  // CI's deploy (devkit's worker-deploy.yml) passes DEPLOY_SHA and waits for /health to report it. The tool-call log's
+  // check (L8, a warn-level alert) names a call with no finished row, a spike, or rows not copied for two days.
+  health: (env) => healthResponse({ sha: env.DEPLOY_SHA, checks: [auditLogCheck(env)] }),
 });

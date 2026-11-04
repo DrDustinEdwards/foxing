@@ -80,9 +80,3 @@ const adminProps = { email: ADMIN_EMAIL };
 
 export const WRITER: Caller = { kind: "admin", props: adminProps, scopes: ["foxing.read", "foxing.write"] };
 export const READER: Caller = { kind: "admin", props: adminProps, scopes: ["foxing.read"] };
-/** A grant for an email that is not the administrator. */
-export const STRANGER: Caller = {
-  kind: "admin",
-  props: { email: "someone-else@example.com" },
-  scopes: ["foxing.read", "foxing.write"],
-};

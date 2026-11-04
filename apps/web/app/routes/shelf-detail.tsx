@@ -6,13 +6,13 @@ import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/shelf-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect(`/login?redirect=/shelves/${params.id}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const detail = await views.shelfDetail(createDb(env.DB), session.user.id, params.id);
@@ -59,3 +59,6 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

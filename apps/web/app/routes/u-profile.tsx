@@ -3,52 +3,58 @@
 // client. Shows identity, follow control, recent diary, lists, and activity. Anonymous
 // visitors can view public profiles; a non-public profile 404s for everyone but its
 // owner.
+import { thing } from "@drdustinedwards/site-helpers/schema";
 import { useProfilePage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
+import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 import { FollowButton } from "~/components/social/follow-button";
 import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
-import { absoluteUrl, ldJson } from "~/lib/seo";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { absoluteUrl, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/u-profile";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   const viewerId = session?.user?.id ?? null;
   const page = await views.profilePage(createDb(env.DB), params.username, viewerId);
   if (!page) throw new Response("Not found", { status: 404 });
   return { page, signedIn: !!viewerId };
 }
 
-export function meta({ loaderData }: Route.MetaArgs) {
+export function meta({ loaderData, location }: Route.MetaArgs) {
   const data = loaderData?.page;
-  const name = data?.profile.displayName ?? data?.profile.username ?? "Reader";
-  const base = [
-    { title: `${name} | Foxing` },
-    { name: "description", content: `${name} on Foxing.` },
+  if (!data) return [{ title: "Reader | Foxing" }, { name: "robots", content: "noindex" }];
+  const { username, displayName, avatarUrl } = data.profile;
+  const name = displayName ?? username;
+  const bio = data.isPrivate ? null : data.profile.bio;
+  return [
+    ...buildMeta({
+      title: name,
+      description: bio ?? `${name} (@${username}) on Foxing: reading diary, lists and highlights.`,
+      pathname: location.pathname,
+      type: "profile",
+      noindex: data.isPrivate,
+      pageType: "ProfilePage",
+    }),
+    ...(data.isPrivate
+      ? []
+      : [
+          ldJson(
+            thing("Person", {
+              name,
+              alternateName: `@${username}`,
+              url: absoluteUrl(`/u/${username}`),
+              image: avatarUrl,
+              description: bio,
+            }),
+          ),
+        ]),
   ];
-  if (data && !data.isPrivate) {
-    return [
-      ...base,
-      ldJson({
-        "@context": "https://schema.org",
-        "@type": "ProfilePage",
-        mainEntity: {
-          "@type": "Person",
-          name,
-          alternateName: `@${data.profile.username}`,
-          url: absoluteUrl(`/u/${data.profile.username}`),
-          ...(data.profile.avatarUrl ? { image: data.profile.avatarUrl } : {}),
-          ...(data.profile.bio ? { description: data.profile.bio } : {}),
-        },
-      }),
-    ];
-  }
-  return base;
 }
 
 // The current calendar year, for the "year in reading" recap link. Computed at
@@ -176,7 +182,12 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                   <Link to={`/books/${b.slug}`} className="block">
                     <span className="block fx-u-profile-label-2">
                       {b.coverUrl ? (
-                        <img src={b.coverUrl} alt="" className="fx-u-profile-img" loading="lazy" />
+                        <CoverPicture
+                          src={b.coverUrl}
+                          alt=""
+                          sizes="128px"
+                          className="fx-u-profile-img"
+                        />
                       ) : (
                         <span className="justify-center text-center fx-u-profile-label-3">
                           {b.title}
@@ -374,11 +385,11 @@ function ProfileCovers({ books }: { books: CoverBook[] }) {
           <Link to={`/books/${b.slug}`} className="block">
             <span className="block fx-u-profile-label-2">
               {b.coverUrl ? (
-                <img
+                <CoverPicture
                   src={b.coverUrl}
                   alt={`${b.title} by ${b.author}`}
+                  sizes="112px"
                   className="fx-u-profile-img"
-                  loading="lazy"
                 />
               ) : (
                 <span className="justify-center text-center fx-u-profile-label-3">{b.title}</span>

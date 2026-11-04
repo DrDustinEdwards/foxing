@@ -1,5 +1,6 @@
 // @foxing/api - the Hono app, mountable in any Worker. Routes are thin and call
 // packages/core. The Worker injects resolveSession (Better Auth) via createApi.
+import { applyHeaderSet } from "@dustinedwards/site-runtime/headers";
 import { Hono } from "hono";
 import { errorHandler } from "./error";
 import { adminAccessMw } from "./middleware/admin-access";
@@ -28,10 +29,22 @@ import { stripeWebhookRoutes } from "./routes/webhooks-stripe";
 import { syncRoutes } from "./routes/sync";
 import type { ApiDeps, Env } from "./types";
 
+/** What an API answer gets when its route names no Cache-Control: the reader's own, never stored. */
+const PRIVATE_BY_DEFAULT = { "Cache-Control": "private, no-store" } as const;
+
 export function createApi(deps: ApiDeps) {
   const app = new Hono<Env>();
 
   app.onError(errorHandler);
+
+  // An answer is the reader's own unless its route says it is public (the
+  // catalog's EDGE_CACHE), so by default none is stored: the account export
+  // and /me among them, errors included. applyHeaderSet passes a club's live
+  // socket (the ClubRoom's 101, whose headers cannot be changed) through as it is.
+  app.use("*", async (c, next) => {
+    await next();
+    c.res = applyHeaderSet(c.res, PRIVATE_BY_DEFAULT, { overwrite: false });
+  });
 
   // Middleware pipeline (spec-cf-api order): request id + db, session, profile.
   // Rate limit + zod validate apply per-route. Public reads skip auth naturally.
@@ -46,6 +59,12 @@ export function createApi(deps: ApiDeps) {
   app.use("*", companionDepsMw(deps));
   app.use("*", billingDepsMw(deps));
   app.use("*", hubDepsMw(deps.resolveHub));
+  // The account routes' ties to Better Auth (the Worker's deleteUser and isFresh).
+  app.use("*", async (c, next) => {
+    c.set("deleteUser", deps.deleteUser);
+    c.set("isFresh", deps.isFresh);
+    await next();
+  });
 
   app.route("/", catalogRoutes);
   app.route("/", profileRoutes);
@@ -69,5 +88,4 @@ export function createApi(deps: ApiDeps) {
 
 export { errors, AppError } from "./error";
 export { rateLimit } from "./middleware/rate-limit";
-export { journalInput } from "./routes/admin";
 export type { ApiDeps, Bindings, ClubLiveHub, Env, SessionUser, Variables } from "./types";

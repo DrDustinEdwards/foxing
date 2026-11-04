@@ -184,6 +184,26 @@ async function openReader(browser: Browser, storageState: string): Promise<Page>
   return page;
 }
 
+// Remove the club highlights A left in this book. The test deletes its own highlight as its
+// last step, so every run that failed before that step left one behind, and by 31 Oct 36 of
+// them covered every paragraph of the shared chapter: findParagraph found no unmarked passage
+// and the gate failed before testing anything. This is setup through A's own API, not a step
+// under test; the share and the delete under test stay clicks on visible controls.
+async function clearLeftoverClubHighlights(browser: Browser, storageState: string): Promise<void> {
+  const ctx = await browser.newContext({ storageState });
+  const list = await ctx.request.get("/api/v1/annotations?types=highlight");
+  expect(list.ok(), `listing A's highlights answered ${list.status()}`).toBe(true);
+  const { annotations } = (await list.json()) as {
+    annotations: { id: string; bookSlug: string | null; visibility: string }[];
+  };
+  for (const a of annotations) {
+    if (a.bookSlug !== SLUG || a.visibility !== "club") continue;
+    const res = await ctx.request.delete(`/api/v1/annotations/${a.id}`);
+    expect(res.ok(), `deleting a leftover highlight answered ${res.status()}`).toBe(true);
+  }
+  await ctx.close();
+}
+
 // Tap a passage the way a reader does: a single click on its first line. Decorations
 // are drawn with the CSS Custom Highlight API (no DOM element to click), and the reader
 // resolves a tap inside a highlighted range to that annotation.
@@ -207,6 +227,7 @@ test.describe("social reading: three-account gate", () => {
     test.setTimeout(240_000);
 
     // --- A: share a highlight to the club via the visible control -------------
+    await clearLeftoverClubHighlights(browser, "e2e/.auth/plus.json");
     const a = await openReader(browser, "e2e/.auth/plus.json");
     // A passage A has not marked yet: one A already highlighted opens A's edit popover on
     // a click instead of a fresh selection.

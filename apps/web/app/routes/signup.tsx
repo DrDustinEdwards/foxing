@@ -10,7 +10,7 @@ import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/signup";
 
 export function meta() {
-  return [{ title: "Create your Foxing account" }];
+  return [{ title: "Create your Foxing account" }, { name: "robots", content: "noindex" }];
 }
 
 export function loader({ context }: Route.LoaderArgs) {
@@ -40,3 +40,6 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
     </AuthShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

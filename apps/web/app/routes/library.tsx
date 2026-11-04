@@ -17,13 +17,14 @@ import type { GoalWithProgress, Shelf, ShelfStatus, Streak } from "@foxing/types
 import { useState } from "react";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
+import { Meter } from "capsomer/react/meter";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
@@ -46,7 +47,7 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login?redirect=/library");
   // Signed-in but not onboarded -> /onboarding (never render with a null profile).
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
@@ -120,7 +121,15 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                         </span>
                       ) : null}
                       {e.status === "reading" && e.progressPct > 0 ? (
-                        <span className="fx-library-label-3">
+                        <span
+                          className="fx-library-label-3"
+                          role="progressbar"
+                          aria-label="Reading progress"
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-valuenow={Math.min(100, Math.round(e.progressPct))}
+                          aria-valuetext={`${Math.min(100, Math.round(e.progressPct))}% read`}
+                        >
                           <span
                             className="block fx-library-label-4"
                             style={{ width: `${Math.min(100, e.progressPct)}%` }}
@@ -212,20 +221,13 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
                   Remove
                 </button>
               </div>
-              <div
-                className="mt-1 fx-library-box-2"
-                role="progressbar"
-                aria-valuenow={progress}
-                aria-valuemax={goal.target}
-              >
-                <div
-                  className="fx-library-box-3"
-                  style={{ width: `${Math.min(100, (progress / goal.target) * 100)}%` }}
-                />
-              </div>
-              <p className="mt-1 fine">
-                {progress} of {goal.target}
-              </p>
+              <Meter
+                className="mt-1"
+                label="Progress"
+                value={progress}
+                max={goal.target}
+                valueText={`${progress} of ${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
+              />
             </li>
           ))}
         </ul>
@@ -330,3 +332,6 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
     </section>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

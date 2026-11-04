@@ -1,4 +1,4 @@
-import { type RouteConfig, index, route } from "@react-router/dev/routes";
+import { type RouteConfig, index, prefix, route } from "@react-router/dev/routes";
 import { INDEXNOW_KEY } from "./lib/indexnow";
 
 export default [
@@ -6,6 +6,8 @@ export default [
   route("home", "routes/home.tsx"),
   route("signup", "routes/signup.tsx"),
   route("login", "routes/login.tsx"),
+  route("sign-in/confirm", "routes/sign-in-confirm.tsx"),
+  route("email/confirm", "routes/email-confirm.tsx"),
   route("onboarding", "routes/onboarding.tsx"),
   route("passkey", "routes/passkey-offer.tsx"),
   route("me", "routes/me.tsx"),
@@ -45,7 +47,15 @@ export default [
   route("year/:year?", "routes/year.tsx"),
   route("find-next-book", "routes/find-next-book.tsx"),
 
-  // Admin (operator-only, gated on profiles.is_admin in every loader). Reads run
+  // Chart demos: the signed-in pages' charts with sample numbers, no sign-in, noindex. They read
+  // nothing from D1, so a live check sees the same charts a reader does (devkit live/areas.json, area 10).
+  ...prefix("demos", [
+    route("stats", "routes/demos/stats.tsx"),
+    route("year", "routes/demos/year.tsx"),
+    route("goals", "routes/demos/goals.tsx"),
+  ]),
+
+  // Admin (operator-only, gated on ADMIN_EMAILS in every loader). Reads run
   // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
   route("admin", "routes/admin.tsx"),
   route("admin/book-of-month", "routes/admin-botm.tsx"),
@@ -54,9 +64,6 @@ export default [
   route("admin/clubs", "routes/admin-clubs.tsx"),
   route("admin/users", "routes/admin-users.tsx"),
   route("admin/users/:id", "routes/admin-user-detail.tsx"),
-  route("admin/journal", "routes/admin-journal.tsx"),
-  route("admin/journal/new", "routes/admin-journal-new.tsx"),
-  route("admin/journal/:id", "routes/admin-journal-edit.tsx"),
   route("admin/notifications", "routes/admin-notifications.tsx"),
   route("admin/content", "routes/admin-content.tsx"),
   route("admin/analytics", "routes/admin-analytics.tsx"),
@@ -91,6 +98,7 @@ export default [
   // Legal + content (static, edge-cached).
   route("privacy", "routes/privacy.tsx"),
   route("terms", "routes/terms.tsx"),
+  route("accessibility", "routes/accessibility.tsx"),
   route("about", "routes/about.tsx"),
   route("features", "routes/features.tsx"),
 
@@ -100,6 +108,7 @@ export default [
   route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("robots.txt", "routes/robots.tsx"),
+  route("site.webmanifest", "routes/site-webmanifest.tsx"),
   route("ai.txt", "routes/ai-txt.tsx"),
   route("llms.txt", "routes/llms.tsx"),
   route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),

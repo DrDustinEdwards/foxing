@@ -5,19 +5,21 @@
 //
 // The ways in are the family's one sign-in (site-runtime ./sign-in): a passkey first, Google
 // and Apple, and an emailed link (with Turnstile once its keys are set). No passwords.
-import { SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
+import { CONFIRM_PATH, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { Link } from "capsomer/react/link";
-import { signIn } from "~/lib/auth-client";
+import { authClient, signIn } from "~/lib/auth-client";
+import { signInWithPasskey, signalPasskeys } from "@dustinedwards/site-runtime/sign-in-client";
 
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
 
-/** After an email link: offer a passkey (/passkey skips straight on once one exists). */
-const AFTER_LINK = "/passkey?next=/me";
-const AFTER_LINK_NEW = "/passkey?next=/onboarding";
+/** After an email link, code, Google or Apple: offer a passkey (/passkey skips straight on when
+ *  there is one already or a recent "Not now"), then `next`. */
+const afterLink = (next: string) => `/passkey?next=${encodeURIComponent(next)}`;
+const AFTER_LINK_NEW = afterLink("/onboarding");
 
 export function AuthShell({
   title,
@@ -45,6 +47,23 @@ export function AuthShell({
         {footer ? <div className="mt-5 text-center fx-auth-shell-box-2">{footer}</div> : null}
       </div>
     </main>
+  );
+}
+
+/** An emailed link's confirm button: a plain form that posts to the page's own URL, token and
+ *  all, so the browser follows Better Auth's redirect. */
+export function ConfirmButtonForm({ label, limited }: { label: string; limited?: boolean }) {
+  return (
+    <form method="post" className="stack-3">
+      {limited ? (
+        <p role="alert" className="error">
+          Too many tries. Wait a minute, then try again.
+        </p>
+      ) : null}
+      <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
+        {label}
+      </button>
+    </form>
   );
 }
 
@@ -96,7 +115,7 @@ function GoogleGlyph() {
 
 /**
  * "Continue with Google": a full-width OAuth redirect. A new user (no profile row) lands
- * on /onboarding, an existing one on /me; a failed handshake returns to /login with Better
+ * on /onboarding, an existing one on /me, each through the passkey offer; a failed handshake returns to /login with Better
  * Auth's ?error= code (SignInError reads it).
  */
 function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
@@ -111,8 +130,8 @@ function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         setPending(true);
         await signIn.social({
           provider: "google",
-          callbackURL: redirectTo,
-          newUserCallbackURL: "/onboarding",
+          callbackURL: afterLink(redirectTo),
+          newUserCallbackURL: AFTER_LINK_NEW,
           errorCallbackURL: "/login",
         });
         // The call redirects the whole page; reset only if it somehow returns.
@@ -153,8 +172,8 @@ function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         setPending(true);
         await signIn.social({
           provider: "apple",
-          callbackURL: redirectTo,
-          newUserCallbackURL: "/onboarding",
+          callbackURL: afterLink(redirectTo),
+          newUserCallbackURL: AFTER_LINK_NEW,
           errorCallbackURL: "/login",
         });
         setPending(false);
@@ -167,6 +186,20 @@ function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
 }
 
 /**
+ * After a passkey sign-in: tells the password manager which of the account's passkeys Foxing still
+ * accepts (the Signal API). The names it shows are sent from Settings, where the display name is
+ * known. Best effort, and never holds up the sign-in.
+ */
+async function signalAfterPasskeySignIn() {
+  try {
+    const { data } = await authClient.passkey.listUserPasskeys();
+    if (data) await signalPasskeys({ credentialIds: data.map((p) => p.credentialID) });
+  } catch {
+    // The sign-in stands; the browser simply hears nothing this time.
+  }
+}
+
+/**
  * "Sign in with a passkey", the main way in. The browser asks which saved passkey to use; a
  * person with none can cancel and use another way. Also offers saved passkeys in the email
  * field's suggestions (conditional mediation), so a returning reader can just tap one.
@@ -175,23 +208,32 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function signInWithPasskey(autoFill: boolean) {
-    const res = await signIn.passkey({ autoFill });
+  // site-runtime's signInWithPasskey: on a passkey this site no longer has, it tells the browser
+  // to stop offering it (the Signal API).
+  async function tryPasskey(autoFill: boolean) {
+    const res = await signInWithPasskey(authClient, { autoFill });
     if (!res?.error) {
+      await signalAfterPasskeySignIn();
       window.location.assign(redirectTo);
       return;
     }
+    const code = (res.error as { code?: string }).code;
     // A canceled prompt is the person choosing another way, not a failure to show.
-    if (!autoFill && !("code" in res.error && res.error.code === "AUTH_CANCELLED")) {
-      setError("That passkey didn't work. Try again, or use another way below.");
-    }
+    if (autoFill || code === "AUTH_CANCELLED") return;
+    setError(
+      code === "RATE_LIMIT_UNAVAILABLE"
+        ? "Sign-in is busy right now. Wait a minute and try again, or use the email link below."
+        : code === "EMAIL_RATE_LIMITED" || code === "TOO_MANY_REQUESTS"
+          ? "Too many tries. Wait a while, then try again, or use the email link below."
+          : "That passkey didn't work. Try again, or use another way below.",
+    );
   }
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: once per page; the browser holds one pending autofill request
   useEffect(() => {
     if (typeof PublicKeyCredential === "undefined") return;
     void PublicKeyCredential.isConditionalMediationAvailable?.().then((ok) => {
-      if (ok) void signInWithPasskey(true);
+      if (ok) void tryPasskey(true);
     });
   }, []);
 
@@ -206,7 +248,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         onClick={async () => {
           setPending(true);
           setError(null);
-          await signInWithPasskey(false);
+          await tryPasskey(false);
           setPending(false);
         }}
       >
@@ -222,11 +264,11 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
 }
 
 /** Google and Apple, each when the site has its settings. */
-export function SocialButtons({ methods }: { methods: SignInMethods }) {
+export function SocialButtons({ methods, next }: { methods: SignInMethods; next?: string }) {
   return (
     <>
-      {methods.google ? <GoogleButton /> : null}
-      {methods.apple ? <AppleButton /> : null}
+      {methods.google ? <GoogleButton redirectTo={next} /> : null}
+      {methods.apple ? <AppleButton redirectTo={next} /> : null}
     </>
   );
 }
@@ -260,10 +302,16 @@ export function AuthDivider() {
  * field also offers saved passkeys (autocomplete "webauthn"). With Turnstile on, its widget
  * sits above the button and its token goes as Better Auth's x-captcha-response header.
  */
-export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string | null }) {
+export function MagicLinkForm({
+  turnstileSiteKey,
+  next = "/me",
+}: {
+  turnstileSiteKey: string | null;
+  next?: string;
+}) {
   const [pending, setPending] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
-  const [checkFailed, setCheckFailed] = useState(false);
+  const [refusal, setRefusal] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
   const widget = useRef<HTMLDivElement>(null);
 
@@ -274,7 +322,8 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
     return mountTurnstile(widget.current, turnstileSiteKey);
   }, [turnstileSiteKey, attempt]);
 
-  if (sentTo) return <SignInCodeForm email={sentTo} />;
+  if (sentTo)
+    return <SignInCodeForm email={sentTo} next={next} onRestart={() => setSentTo(null)} />;
 
   return (
     <form
@@ -282,7 +331,7 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
       onSubmit={async (event) => {
         event.preventDefault();
         setPending(true);
-        setCheckFailed(false);
+        setRefusal(null);
         const form = new FormData(event.currentTarget);
         const email = String(form.get("email"));
         const token = String(form.get("cf-turnstile-response") ?? "");
@@ -290,29 +339,38 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
           .magicLink(
             {
               email,
-              callbackURL: AFTER_LINK,
+              callbackURL: afterLink(next),
               newUserCallbackURL: AFTER_LINK_NEW,
+              // A spent or expired link shows its own message on the confirm page.
+              errorCallbackURL: CONFIRM_PATH,
             },
             turnstileSiteKey ? { headers: { "x-captcha-response": token } } : undefined,
           )
           .catch(() => null);
         setPending(false);
-        // The bot check is the one refusal to show: everything else gets the same neutral
-        // result, so the form never says whether an address has an account.
+        // The refusals to show are the ones about the site, never the address: the bot check, and
+        // the link request turned off (no Turnstile keys) or its counter down. Everything else gets
+        // the same neutral result, so the form never says whether an address has an account.
         const code = (res?.error as { code?: string } | undefined)?.code;
         if (code === "MISSING_RESPONSE" || code === "VERIFICATION_FAILED") {
-          setCheckFailed(true);
+          setRefusal("Complete the check, then send the link again.");
           setAttempt((n) => n + 1);
+          return;
+        }
+        if (code === "TURNSTILE_NOT_SET" || code === "RATE_LIMIT_UNAVAILABLE") {
+          setRefusal(
+            "Sign-in by email is not available right now. Use a passkey, Google or Apple, or try again later.",
+          );
           return;
         }
         setSentTo(email);
       }}
     >
-      <Field label="Email" name="email" type="email" required autoComplete="email webauthn" />
+      <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
       {turnstileSiteKey ? <div ref={widget} /> : null}
-      {checkFailed ? (
+      {refusal ? (
         <p role="alert" className="error">
-          Complete the check, then send the link again.
+          {refusal}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
@@ -323,29 +381,61 @@ export function MagicLinkForm({ turnstileSiteKey }: { turnstileSiteKey: string |
 }
 
 /**
+ * What a refused code means and what to do next, from Better Auth's email OTP error codes
+ * (better-auth 1.7.12 plugins/email-otp/routes.mjs) and site-runtime's per-address limit.
+ * INVALID_OTP is both a wrong code and one that is gone (used, or replaced by a newer email);
+ * after three wrong tries the code is spent, which Better Auth says only on the fourth.
+ */
+function signInCodeError(code: string | undefined, wrongTries: number): string {
+  if (code === "TOO_MANY_ATTEMPTS" || (code === "INVALID_OTP" && wrongTries >= 3))
+    return "That code had three wrong tries, so it no longer works. Open the link in the same email, or send yourself a new one.";
+  if (code === "INVALID_OTP")
+    return "That code is not right. Check the six digits in the newest email from Foxing: a code from an older email, or one already used, does not work.";
+  if (code === "OTP_EXPIRED")
+    return `That code has expired: codes work for ${SIGN_IN_EXPIRES_IN_WORDS}. Send yourself a new one.`;
+  if (code === "RATE_LIMIT_UNAVAILABLE")
+    return "Codes cannot be checked right now. Open the link in the email, or try again in a minute.";
+  if (code === "EMAIL_RATE_LIMITED" || code === "TOO_MANY_REQUESTS")
+    return "Too many wrong codes for this address. Use the link in the email, or try again in an hour.";
+  return "The code could not be checked. Check your connection and try again.";
+}
+
+/**
  * After the link is sent: the same mail carries a six-digit code, for when the link opens in
  * another browser (the mail app's, a phone). Typed here, it signs this tab in, a new address
  * included (it then lands on /onboarding through /me). Three wrong codes spend it; the link
- * still works.
+ * still works. `onRestart` goes back to the email form for a new link and code.
  */
-function SignInCodeForm({ email }: { email: string }) {
+function SignInCodeForm({
+  email,
+  next,
+  onRestart,
+}: {
+  email: string;
+  next: string;
+  onRestart: () => void;
+}) {
   const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<string | null>(null);
+  const [wrongTries, setWrongTries] = useState(0);
   return (
     <form
       className="stack-3"
       onSubmit={async (event) => {
         event.preventDefault();
         setPending(true);
-        setFailed(false);
+        setFailure(null);
         const otp = String(new FormData(event.currentTarget).get("code") ?? "").trim();
         const res = await signIn.emailOtp({ email, otp }).catch(() => null);
         if (res && !res.error) {
-          window.location.assign(AFTER_LINK);
+          window.location.assign(afterLink(next));
           return;
         }
+        const code = (res?.error as { code?: string } | undefined)?.code;
+        const tries = code === "INVALID_OTP" ? wrongTries + 1 : wrongTries;
+        setWrongTries(tries);
         setPending(false);
-        setFailed(true);
+        setFailure(signInCodeError(code, tries));
       }}
     >
       <p role="status" className="fx-auth-shell-text-2">
@@ -361,13 +451,16 @@ function SignInCodeForm({ email }: { email: string }) {
         pattern="[0-9]{6}"
         maxLength={6}
       />
-      {failed ? (
+      {failure ? (
         <p role="alert" className="error">
-          That code did not work. Check it, or open the link in the email.
+          {failure}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
         {pending ? "Signing in..." : "Sign in with the code"}
+      </button>
+      <button type="button" onClick={onRestart} className="cap-btn full" data-variant="ghost">
+        Send a new link and code
       </button>
     </form>
   );

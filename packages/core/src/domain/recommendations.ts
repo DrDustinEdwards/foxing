@@ -2,16 +2,18 @@
 //   Tier 1 (taste)    - favourite_genres -> award winners + most-loved in those genres.
 //                       Empty genres fall back to a cross-genre curated starter set.
 //   Tier 2 (behavior)- finished/rated books -> favorite authors + top genres boost.
-//   Tier 3 (AI)       - Plus + ANTHROPIC_API_KEY only: the companion re-ranks the top
-//                       data candidates with a personalised reason each. Cached in KV
+//   Tier 3 (AI)       - Plus + ANTHROPIC_API_KEY only: the model re-ranks the top data
+//                       candidates with a personalised reason each, as JSON matching a
+//                       schema (structured output, not parsed from prose). Cached in KV
 //                       (7 days); any parse/API/quota failure falls back to the data
 //                       ranking silently. Free users, or no key, get the full data page.
 //
 // Tiers 1+2 are pure data (rankCandidates); tier 3 is an overlay. The composition reads
 // in-process via the repos; the caller/KV are injected so this stays testable with a
 // stubbed model and a fake KV, no network and no binding.
+import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
+import { checkProse } from "@dustinedwards/site-runtime/prose";
 import {
-  type CompanionCaller,
   EMPTY_QUOTA_STATE,
   MODELS,
   type QuotaState,
@@ -20,6 +22,7 @@ import {
   isOverQuota,
   quotaKey,
   quotaResetsAt,
+  type StructuredCaller,
 } from "../companion";
 import type { Db } from "../db";
 import { catalogRepo, diaryRepo, libraryRepo, profilesRepo } from "../repositories";
@@ -50,7 +53,7 @@ export interface RecKv {
 
 export interface RecDeps {
   /** Real caller when ANTHROPIC_API_KEY is set, else null (tier 3 skipped). */
-  caller: CompanionCaller | null;
+  caller: StructuredCaller | null;
   /** KV for the AI cache + quota, or null (tier 3 recomputes / is skipped). */
   kv: RecKv | null;
   /** A refresh busts the AI cache (rate-limited); ignored for the data tiers. */
@@ -156,6 +159,11 @@ export function rankCandidates(
   return ranked;
 }
 
+/** Whether AI text a reader would see has a high or critical prose finding (checklist W1). */
+function proseFlagged(text: string): boolean {
+  return checkProse(text).some((i) => i.severity === "high" || i.severity === "critical");
+}
+
 function toRec(r: RankedRec): Recommendation {
   return {
     bookId: r.candidate.id,
@@ -169,36 +177,34 @@ function toRec(r: RankedRec): Recommendation {
 }
 
 /**
- * Parse the model's strict-JSON selection. Returns null on any malformed output so the
- * caller falls back to the data ranking. Only ids in `allowedIds` survive; duplicates
- * and non-strings are dropped; reasons are cleaned to one line.
+ * The model's structured selection, checked again here. Null when nothing usable is in it,
+ * so the caller falls back to the data ranking. Only ids in `allowedIds` survive; duplicates
+ * and non-strings are dropped; reasons are cleaned to one line. A reason with a high or
+ * critical prose finding (site-runtime's checkProse: a stock phrase, a refusal, chatbot
+ * markup) is null, and the reader sees the data ranking's own reason for that book instead.
  */
-export function parseAiSelection(
-  text: string,
+function selectAiPicks(
+  value: unknown,
   allowedIds: Set<string>,
-): Array<{ bookId: string; reason: string }> | null {
-  try {
-    const start = text.indexOf("[");
-    const end = text.lastIndexOf("]");
-    if (start < 0 || end <= start) return null;
-    const parsed: unknown = JSON.parse(text.slice(start, end + 1));
-    if (!Array.isArray(parsed)) return null;
-    const out: Array<{ bookId: string; reason: string }> = [];
-    const seen = new Set<string>();
-    for (const item of parsed) {
-      const rec = item as { book_id?: unknown; bookId?: unknown; reason?: unknown };
-      const id = typeof rec.book_id === "string" ? rec.book_id : rec.bookId;
-      if (typeof id !== "string" || !allowedIds.has(id) || seen.has(id)) continue;
-      const reason =
-        typeof rec.reason === "string" ? rec.reason.replace(/\s+/g, " ").trim().slice(0, 140) : "";
-      out.push({ bookId: id, reason: reason || "Picked for you" });
-      seen.add(id);
-      if (out.length >= TARGET) break;
-    }
-    return out.length ? out : null;
-  } catch {
-    return null;
+): Array<{ bookId: string; reason: string | null }> | null {
+  const picks = (value as { picks?: unknown } | null)?.picks;
+  if (!Array.isArray(picks)) return null;
+  const out: Array<{ bookId: string; reason: string | null }> = [];
+  const seen = new Set<string>();
+  for (const item of picks) {
+    const rec = item as { book_id?: unknown; reason?: unknown };
+    const id = rec.book_id;
+    if (typeof id !== "string" || !allowedIds.has(id) || seen.has(id)) continue;
+    const reason =
+      typeof rec.reason === "string" ? rec.reason.replace(/\s+/g, " ").trim().slice(0, 140) : "";
+    out.push({
+      bookId: id,
+      reason: reason ? (proseFlagged(reason) ? null : reason) : "Picked for you",
+    });
+    seen.add(id);
+    if (out.length >= TARGET) break;
   }
+  return out.length ? out : null;
 }
 
 // -- Signals ----------------------------------------------------------------
@@ -243,23 +249,6 @@ function buildSignals(
 
 // -- AI overlay -------------------------------------------------------------
 
-async function collect(
-  caller: CompanionCaller,
-  args: Parameters<CompanionCaller>[0],
-): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
-  let text = "";
-  let inputTokens = 0;
-  let outputTokens = 0;
-  for await (const ev of caller(args)) {
-    if (ev.type === "text") text += ev.delta;
-    else if (ev.type === "done") {
-      inputTokens = ev.inputTokens;
-      outputTokens = ev.outputTokens;
-    }
-  }
-  return { text, inputTokens, outputTokens };
-}
-
 function buildProfilePrompt(
   favoriteGenres: string[],
   finished: Array<{ title: string; author: string }>,
@@ -281,6 +270,26 @@ function buildProfilePrompt(
     lines.push(`Authors they return to: ${signals.favoriteAuthors.slice(0, 8).join(", ")}`);
   }
   return lines.join("\n");
+}
+
+/** The structured-output schema: ranked picks, each a candidate's id and its reason. */
+function picksSchema(ids: string[]): Record<string, unknown> {
+  return {
+    type: "object",
+    properties: {
+      picks: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: { book_id: { type: "string", enum: ids }, reason: { type: "string" } },
+          required: ["book_id", "reason"],
+          additionalProperties: false,
+        },
+      },
+    },
+    required: ["picks"],
+    additionalProperties: false,
+  };
 }
 
 async function aiOverlay(
@@ -336,34 +345,37 @@ async function aiOverlay(
 
   const system =
     "You recommend classic and literary books for a reading app. Pick and rank the best " +
-    "matches for one reader from a fixed candidate list. Return ONLY a JSON array, no prose.";
+    `matches for one reader from a fixed candidate list. ${UNTRUSTED_DATA_RULE}`;
   const user =
-    `Reader profile:\n${profilePrompt}\n\n` +
-    `Candidates (book_id | title | author | genre):\n${candidateLines}\n\n` +
-    `From the candidates ONLY, choose up to ${TARGET} best for THIS reader, best first. ` +
-    `For each return {"book_id","reason"} where reason is a specific, warm one-line ` +
-    `(max 12 words) for this reader. Output a JSON array only.`;
+    `Reader profile:\n${untrusted("reader-profile", profilePrompt)}\n\n` +
+    `Candidates (book_id | title | author | genre):\n${untrusted("candidates", candidateLines)}\n\n` +
+    `From the candidates ONLY, choose up to ${TARGET} best for THIS reader, best first, each ` +
+    "with a specific, warm one-line reason (max 12 words) for this reader.";
 
-  const { text, inputTokens, outputTokens } = await collect(caller, {
-    model: MODELS.fast,
-    system,
-    messages: [{ role: "user", content: user }],
-    maxTokens: 1024,
-  });
+  const { value, inputTokens, outputTokens } = await caller(
+    {
+      model: MODELS.fast,
+      system,
+      messages: [{ role: "user", content: user }],
+      maxTokens: 1024,
+      feature: "recommendations",
+    },
+    picksSchema([...allowed]),
+  );
 
   // Record the settled cost against the daily quota (best effort).
   const cost = estimateCostCents("fast", inputTokens, outputTokens);
   const resetTtl = Math.max(60, Math.ceil((Date.parse(quotaResetsAt(now)) - now.getTime()) / 1000));
   await kv.put(qkey, JSON.stringify(addUsage(quota, cost)), { expirationTtl: resetTtl });
 
-  const selection = parseAiSelection(text, allowed);
+  const selection = selectAiPicks(value, allowed);
   if (!selection || selection.length < 6) return null;
 
   const recs = padTo(
     selection
       .map(({ bookId, reason }) => {
         const r = byId.get(bookId);
-        return r ? { ...toRec(r), reason } : null;
+        return r ? { ...toRec(r), reason: reason ?? r.reason } : null;
       })
       .filter((r): r is Recommendation => r !== null),
     dataRanked,

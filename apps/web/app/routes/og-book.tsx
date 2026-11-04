@@ -1,25 +1,22 @@
 import { toBase64 } from "@dustinedwards/site-runtime/encoding";
 import { cardText } from "@dustinedwards/site-runtime/share-card";
 import { catalogRepo } from "@foxing/core";
-import { coverSrc } from "~/lib/images";
 import { loaderBase } from "~/lib/loader.server";
 import { ogCard } from "~/lib/og.server";
 import type { Route } from "./+types/og-book";
-import { OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
+import { COVER_ORIGIN, OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 
-async function coverDataUri(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(coverSrc(url, 480));
-    if (!res.ok) return null;
-    const type = res.headers.get("content-type") ?? "image/jpeg";
-    return `data:${type};base64,${toBase64(await res.arrayBuffer())}`;
-  } catch {
-    return null;
-  }
+/** The cover's original from the COVERS bucket, as the card's data URI; null for none. */
+async function coverDataUri(env: Env, url: string): Promise<string | null> {
+  if (!url.startsWith(`${COVER_ORIGIN}/`)) return null;
+  const object = await env.COVERS.get(url.slice(COVER_ORIGIN.length + 1));
+  if (!object) return null;
+  const type = object.httpMetadata?.contentType ?? "image/jpeg";
+  return `data:${type};base64,${toBase64(await object.arrayBuffer())}`;
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
-  const { db } = loaderBase(context, request);
+  const { db, env } = loaderBase(context, request);
   const book = await catalogRepo.getBookBySlug(db, params.slug);
   if (!book) throw new Response("Not found", { status: 404 });
 
@@ -29,7 +26,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   // The card, or when it cannot be drawn (no font, a render error), the cover (or home), so
   // crawlers still get art. The cover is fetched only on a cache miss.
   const card = await ogCard(cardRequest, async ({ titleFamily }) => {
-    const cover = book.coverUrl ? await coverDataUri(book.coverUrl) : null;
+    const cover = book.coverUrl ? await coverDataUri(env, book.coverUrl) : null;
     const title = cardText(book.title.length > 80 ? `${book.title.slice(0, 77)}...` : book.title);
     const author = cardText(book.author);
 

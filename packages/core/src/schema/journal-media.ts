@@ -24,6 +24,10 @@ export const journalMedia = sqliteTable(
     height: integer("height"),
     /** SHA-256 of the current bytes, lower case hex: duplicates are exact bytes. */
     sha256: text("sha256").notNull(),
+    /** site-api's MediaPlaceholder: a 16 pixel blurred WebP data: URI; null where none was made. */
+    placeholder: text("placeholder"),
+    /** The picture's main color, #rrggbb; null where none was read. */
+    color: text("color"),
     alt: text("alt").notNull().default(""),
     caption: text("caption").notNull().default(""),
     tags: json<string[]>("tags").notNull().default([]),
@@ -35,6 +39,8 @@ export const journalMedia = sqliteTable(
     /** As the picture's own metadata says: with an offset where it names one. */
     takenAt: text("taken_at"),
     uploadedAt: ts("uploaded_at").notNull(),
+    /** The focal point, "XxY" from the top left (site-api's MediaFocus); a cropped cover keeps it in view. */
+    focus: text("focus"),
     /** In the trash since; null in the library. A trashed file is still served. */
     trashedAt: ts("trashed_at"),
   },

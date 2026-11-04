@@ -1,5 +1,5 @@
 // Admin: Analytics. Read-only. At-a-glance platform counts plus the full recent operator
-// audit log. Gated on profiles.is_admin; adminRepo reads run in-process.
+// audit log. Gated on ADMIN_EMAILS; adminRepo reads run in-process.
 import { adminRepo, createDb } from "@foxing/core";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { cloudflareContext } from "~/context";
@@ -82,3 +82,6 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
     </AdminShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

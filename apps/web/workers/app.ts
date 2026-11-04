@@ -1,25 +1,43 @@
 // Single Worker entry. Hono is the root fetch handler and delegates:
-//   /api/carrel/v1/* -> Carrel's site API over the Journal (app/lib/carrel)
+//   /api/carrel/v1/* -> Carrel's site API over the Journal (app/lib/carrel), and its /preview/<token> links
 //   /api/auth/*  -> Better Auth
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   everything   -> React Router SSR
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
-import { accessAdmin } from "@dustinedwards/site-runtime/access";
 import {
-  EDGE_CACHE_HEADER,
-  PAGES_CACHE_TAG,
+  ACCESS_LOGOUT_PATH,
+  accessAdmin,
+  adminEmails,
+  withAdminIdle,
+} from "@dustinedwards/site-runtime/access";
+import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
+import { runJobs } from "@dustinedwards/site-runtime/cron";
+import {
   SHARED_CACHE_CONTROL,
-  UNCACHED,
   cacheKey,
   forReader,
-  purgeTags,
+  forRenderer,
+  privateRender,
+  purgeAfterWrite,
   settleCacheHeaders,
+  UNCACHED,
+  withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
-import { refuseCrossOrigin } from "@dustinedwards/site-runtime/origin";
-import { preloads } from "@dustinedwards/site-runtime/preload";
-import { slashRedirect } from "@dustinedwards/site-runtime/url";
+import { originalKey } from "@dustinedwards/site-runtime/image";
+import { logEvent, withRequestLog } from "@dustinedwards/site-runtime/log";
+import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
+import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
+import {
+  SPECULATION_RULES_HEADER,
+  SPECULATION_RULES_PATH,
+  speculationRulesResponse,
+} from "@dustinedwards/site-runtime/prefetch";
+import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
+import { timedRender } from "@dustinedwards/site-runtime/server-timing";
+import { pruneAuthEvents } from "@dustinedwards/site-runtime/sign-in";
+import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
 import {
   billing,
@@ -32,12 +50,20 @@ import {
 import { Hono } from "hono";
 import { RouterContextProvider, type ServerBuild, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
-import { anthropicCaller } from "../app/lib/anthropic.server";
+import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
-import { getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
-import { mountCarrel } from "../app/lib/carrel/site-api.server";
-import { legacyRedirectTarget } from "../app/lib/redirects";
-import { runBackup } from "../app/lib/backup.server";
+import { images } from "../app/lib/images";
+import {
+  deleteUserAccount,
+  getAuth,
+  isFreshSession,
+  sessionUserFromRequest,
+} from "../app/lib/auth.server";
+import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
+import { FONT_PRELOADS } from "../app/lib/preloads";
+import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
+import { clubRoomHub } from "./club-room";
 import {
   CSP_REPORT_PATH,
   cspNonceFor,
@@ -54,6 +80,7 @@ const PUBLIC_EXACT = new Set([
   "/robots.txt",
   "/privacy",
   "/terms",
+  "/accessibility",
   "/about",
   "/features",
   "/guide",
@@ -75,6 +102,46 @@ function isPublicPath(pathname: string): boolean {
   return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
+/**
+ * Hover prefetch (site-runtime ./prefetch): the paths beyond the package's own exclusions (/admin, /api, /auth,
+ * sign-out and /cdn-cgi; links to files and links with a query). The signed-in app only sends a signed-out reader on
+ * to /login, and the reader is a heavy app of its own; /sign-in/confirm spends a one-time sign-in link; /join/:code and
+ * /find-next-book act on a GET (a club join; KV and an AI call). /lists covers the signed-in index and /lists/new as
+ * well as a public list.
+ */
+const PREFETCH_EXCLUDE = [
+  "/home",
+  "/me",
+  "/settings",
+  "/library",
+  "/shelves",
+  "/onboarding",
+  "/passkey",
+  "/sign-in",
+  "/clubs",
+  "/join",
+  "/feed",
+  "/people",
+  "/diary",
+  "/lists",
+  "/notifications",
+  "/vocabulary",
+  "/commonplace",
+  "/highlights",
+  "/stats",
+  "/goals",
+  "/year",
+  "/find-next-book",
+  "/companion-test",
+  "/read",
+  "/og",
+];
+
+/** A Better Auth session cookie: the page may be personalized, and a signed-in reader's pages never prefetch. */
+function hasSession(request: Request): boolean {
+  return (request.headers.get("Cookie") ?? "").includes("better-auth");
+}
+
 // Injected at build time (vite define). Namespaces the search suggestions' cache per deploy.
 declare const __CACHE_VERSION__: string;
 
@@ -90,12 +157,17 @@ const reactRouterHandler = createRequestHandler(serverBuild, import.meta.env.MOD
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
+  // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
+  isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
+  deleteUser: (req, env, { successors }) =>
+    deleteUserAccount(req, env as unknown as Env, successors),
   // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).
   checkAdminAccess: async (req, env, email) =>
     (await accessAdmin(req, env as unknown as Env, { admins: [email] })) !== null,
   // ANTHROPIC_API_KEY is not set as a Worker secret yet (Phase 4a precheck). Every
   // other route works normally; only an actual companion call fails, cleanly, until
   // `wrangler secret put ANTHROPIC_API_KEY` runs.
+  resolveStructuredCaller: (env) => anthropicStructured(env as unknown as Env),
   resolveCompanionCaller: (env) => {
     const caller = anthropicCaller(env as unknown as Env);
     if (caller) return caller;
@@ -127,25 +199,8 @@ const api = createApi({
     }
     return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
   },
-  // The live layer. One ClubRoom Durable Object per club; the API calls
-  // broadcast() only AFTER a write commits to D1 (write -> commit -> notify), and
-  // connect() forwards a membership-checked upgrade to that club's object. The DO
-  // never writes D1.
-  resolveHub: (env) => {
-    const ns = (env as unknown as Env).CLUB_ROOM;
-    return {
-      async broadcast(clubId, message) {
-        await ns.getByName(clubId).broadcast(message);
-      },
-      async connect(clubId, userId, request) {
-        // Pass the verified user id on the URL; new Request(url, request) preserves the
-        // WebSocket upgrade so the ClubRoom can accept it.
-        const url = new URL(request.url);
-        url.searchParams.set("uid", userId);
-        return ns.getByName(clubId).fetch(new Request(url, request));
-      },
-    };
-  },
+  // The live layer: one ClubRoom Durable Object per club (clubRoomHub). The DO never writes D1.
+  resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
 });
 
 const app = new Hono<{ Bindings: Env }>();
@@ -157,12 +212,12 @@ const app = new Hono<{ Bindings: Env }>();
 const PAGE_WRITERS = ["/api/carrel/v1", "/api/v1/admin"];
 app.use("*", async (c, next) => {
   await next();
-  const { method } = c.req;
-  if (method === "GET" || method === "HEAD" || !c.res.ok) return;
   const { pathname } = new URL(c.req.url);
   if (!PAGE_WRITERS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) return;
-  const renderer = (c.executionCtx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer;
-  if (renderer) c.executionCtx.waitUntil(renderer.purgePages(`${method} ${pathname}`));
+  // No Renderer entrypoint in the vitest pool, which runs the Worker without ctx.exports.
+  const ctx = c.executionCtx as unknown as ExecutionContext;
+  if ((ctx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer)
+    purgeAfterWrite(c.req.raw, c.res, ctx, `${c.req.method} ${pathname}`);
 });
 
 // The Content-Security-Policy report sink the policy names.
@@ -170,18 +225,25 @@ app.post(CSP_REPORT_PATH, (c) => handleCspReport(c.req.raw, c.env));
 
 // Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
 // every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
-mountCarrel(app, reactRouterHandler);
+mountCarrel(app, async () => rootStylesheets(await serverBuild()).map((s) => s.href));
 
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
-// minute per address, counted in D1 (site-runtime ./sign-in).
-app.on(["GET", "POST"], "/api/auth/*", async (c) => (await getAuth(c.env)).handler(c.req.raw));
+// minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and
+// passkey challenges, so no browser or proxy keeps one (checklist D10).
+app.on(["GET", "POST"], "/api/auth/*", async (c) => {
+  const answer = await (await getAuth(c.env)).handler(c.req.raw);
+  // A copy, since a redirect's headers are immutable.
+  const res = new Response(answer.body, answer);
+  if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", UNCACHED);
+  return res;
+});
 
 // Every write is an /api/v1 route (the admin API included), none reached through React Router's
 // own Origin check, so a browser write from another origin is refused here. An absent Origin
 // passes: the mobile app's fetch, the admin MCP's bearer calls and Stripe's webhook send none.
 // Better Auth (/api/auth) checks origins against its trustedOrigins itself, and Carrel's site
 // API is a bearer-key server call, so neither comes through this.
-app.use("/api/v1/*", async (c, next) => refuseCrossOrigin(c.req.raw) ?? next());
+app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
 
 // Search-as-you-type answers do not depend on the viewer (public books, profiles and
 // clubs only), so they come from the edge cache for everyone, signed in or not.
@@ -260,97 +322,101 @@ app.get("/reader-assets/*", async (c) => {
   return res;
 });
 
-// The Journal's media library (app/lib/carrel/journal-media-adapter.server.ts): the pictures Carrel
-// uploads for Journal posts, from the MEDIA bucket under journal/ only, so no other key (a reader
-// asset, say) is ever served from here. A replace or a turn keeps the address, so browsers keep a
-// copy an hour at most, and revalidate by the object's etag.
-app.get("/media/journal/*", async (c) => {
+// Every picture a page shows (app/lib/images.ts): covers from the COVERS bucket under covers/, and the
+// Journal's media library (app/lib/carrel/journal-media-adapter.server.ts) from MEDIA under journal/
+// only, so no other key (a reader asset, say) is ever served from here. A size is a year-long
+// immutable copy; a Journal address without its `v` (a replace or a turn keeps the key) an hour.
+app.get("/media/*", async (c) => {
   let key: string;
   try {
-    key = decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length));
+    // A size URL is suffixed (photo.jpg.webp?w=640); the stored key is the original's.
+    key = originalKey(
+      decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length)),
+      c.req.raw,
+    );
   } catch {
     return c.notFound();
   }
   if (key.split("/").some((part) => part === "" || part === "." || part === ".."))
     return c.notFound();
-  const object = await c.env.MEDIA.get(key, { onlyIf: c.req.raw.headers });
-  if (!object) return c.notFound();
-  const headers = new Headers({
-    "Cache-Control": "public, max-age=3600",
-    ETag: object.httpEtag,
+  const [bucket, stored] = key.startsWith("covers/")
+    ? [c.env.COVERS, key.slice("covers/".length)]
+    : key.startsWith("journal/")
+      ? [c.env.MEDIA, key]
+      : [null, ""];
+  if (!bucket) return c.notFound();
+  const versioned = key.startsWith("covers/") || c.req.query("v") !== undefined;
+  return images.respond(c.req.raw, {
+    object: await bucket.get(stored),
+    images: c.env.IMAGES,
+    cache: edgeCache(),
+    reread: () => bucket.get(stored),
+    ...(versioned ? {} : { cacheControl: "public, max-age=3600" }),
   });
-  object.writeHttpMetadata(headers);
-  if (!("body" in object)) return new Response(null, { status: 304, headers });
-  return new Response(object.body, { headers });
 });
+
+// The prefetch rules every signed-out page's Speculation-Rules header names (handleFetch): one file, the same for every
+// page, so no route renders it.
+app.get(SPECULATION_RULES_PATH, (c) =>
+  speculationRulesResponse({ exclude: PREFETCH_EXCLUDE }, c.req.raw),
+);
 
 app.all("*", async (c) => {
   const req = c.req.raw;
   const url = new URL(req.url);
-  // One address per page: /books/ answers with a redirect to /books.
-  const slash = slashRedirect(req);
-  if (slash) return slash;
-  // Legacy path 301s (GET navigations only). Preserve the query string; one hop.
-  if (req.method === "GET") {
-    const target = legacyRedirectTarget(url.pathname);
-    if (target) {
-      const dest = new URL(target, url.origin);
-      dest.search = url.search;
-      return c.redirect(dest.toString(), 301);
-    }
-  }
-  // An anonymous GET of a public page goes through the Workers cache: the Renderer's response is
-  // stored under the path and query, and a stored one is answered without rendering. A Better Auth
-  // session cookie means the page may be personalized, so a signed-in request is rendered here,
-  // never served from or stored in the cache.
+  // One hop to the canonical address: https, the bare host, no trailing slash (/books/ to /books).
+  const canonical = canonicalRedirect(req, { host: "foxing.app" });
+  if (canonical) return canonical;
+  // An anonymous GET or HEAD of a public page goes through the Workers cache: the Renderer's response is
+  // stored under the path and the query without tracking parameters, and a stored one is answered
+  // without rendering (a 304 to a reader who already holds it). A Better Auth session cookie means
+  // the page may be personalized, so a signed-in request is rendered here, never served from or
+  // stored in the cache. A HEAD reaches the Renderer as a GET (forRenderer), so a stored page is a whole one, and
+  // forReader gives the HEAD reader no body.
   const ctx = c.executionCtx as unknown as ExecutionContext;
-  const signedIn = (req.headers.get("Cookie") ?? "").includes("better-auth");
-  if (req.method === "GET" && isPublicPath(url.pathname) && !signedIn) {
+  const signedIn = hasSession(req);
+  if ((req.method === "GET" || req.method === "HEAD") && isPublicPath(url.pathname) && !signedIn) {
     // No Renderer entrypoint (the vitest pool runs the Worker without ctx.exports): render a copy
     // here, as the Renderer would see it, stored nowhere.
     const renderer = (ctx.exports as Partial<Cloudflare.Exports> | undefined)?.Renderer;
     const page = renderer
-      ? await renderer.fetch(req, { cf: { cacheKey: cacheKey(url) } })
-      : await renderShared(new Request(req), c.env, ctx);
+      ? await renderer.fetch(forRenderer(req), { cf: { cacheKey: cacheKey(url) } })
+      : await renderShared(forRenderer(req), c.env, ctx);
     return forReader(page, req);
   }
   return storedNowhere(await renderPage(req, c.env, ctx));
 });
 
-/** A page rendered by React Router, with the security headers and the Early Hints Link header. */
+/** A page rendered by React Router, with the security headers, Server-Timing and the Early Hints Link header. */
 async function renderPage(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const context = new RouterContextProvider();
   context.set(cloudflareContext, { env, ctx });
   context.set(cspNonceContext, cspNonceFor(request));
   // The policy is set here with the nonce the page was rendered with, so a stored page keeps it and
   // withSecurityHeaders, run again on the way out (handleFetch), re-issues a fresh one per reader.
-  const res = withSecurityHeaders(await reactRouterHandler(request, context), request);
+  const res = await timedRender(async () =>
+    withSecurityHeaders(await reactRouterHandler(request, context), request),
+  );
   // Early Hints: on a zone with Early Hints on, a page carrying a preload Link header is answered with a 103 first,
-  // so the browser starts the render-blocking stylesheet while the Worker still renders (site-runtime ./preload).
-  if (res.headers.get("Content-Type")?.startsWith("text/html")) {
-    const stylesheets = (await serverBuild()).assets.routes.root?.css ?? [];
-    const { header } = preloads(stylesheets.map((href) => ({ href, as: "style" as const })));
-    if (header) res.headers.append("Link", header);
-  }
-  return res;
+  // so the browser starts the render-blocking stylesheet and the first faces while the Worker still renders
+  // (site-runtime ./preload). A book page's own Link (its cover) comes first.
+  return withPreloadHeader(
+    res,
+    preloads([...rootStylesheets(await serverBuild()), ...FONT_PRELOADS]).header,
+  );
 }
 
-/** The Renderer's answer: a page the cache may store only when its route marked it shared and it is a 200 with no cookie. */
+/** The Renderer's answer: stored only when its route marked it shared and it is a 200 with no cookie either way. */
 async function renderShared(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const page = await renderPage(request, env, ctx);
-  if (page.headers.has("Set-Cookie")) page.headers.set("Cache-Control", UNCACHED);
-  return settleCacheHeaders(page);
+  return settleCacheHeaders(await renderPage(request, env, ctx), request);
 }
 
 /** A page rendered in the gateway (signed in, or not a public path) is stored nowhere, even under a shared route. */
 function storedNowhere(response: Response): Response {
   const settled = settleCacheHeaders(response);
-  if (settled.headers.get("Cache-Control") === SHARED_CACHE_CONTROL) {
-    settled.headers.set("Cache-Control", UNCACHED);
-    settled.headers.delete(EDGE_CACHE_HEADER);
-    settled.headers.delete("Cache-Tag");
-  }
-  return settled;
+  return settled.headers.get("Cache-Control") === SHARED_CACHE_CONTROL
+    ? privateRender(settled)
+    : settled;
 }
 
 /**
@@ -358,14 +424,9 @@ function storedNowhere(response: Response): Response {
  * stored by the Workers cache under the key the gateway names. Only the gateway calls it, and only
  * for an anonymous GET of a public path.
  */
-export class Renderer extends WorkerEntrypoint<Env> {
+export class Renderer extends withPurgePages(WorkerEntrypoint<Env>) {
   override fetch(request: Request): Promise<Response> {
     return renderShared(request, this.env, this.ctx);
-  }
-
-  /** Drops every stored page. Called over RPC from the gateway, which stores nothing; RPC methods bypass the cache. */
-  async purgePages(why: string): Promise<void> {
-    await purgeTags(this.ctx.cache, [PAGES_CACHE_TAG], why);
   }
 }
 
@@ -379,12 +440,8 @@ type CacheJobMessage = { bookId: string };
 // created since the last sweep (deduped in KV), gated per user by category prefs + quiet
 // hours (domain/push). Kept off the notification write path so core stays binding-free;
 // the cadence trades a little latency for that decoupling. In-app notifications are
-// unaffected. Requires the frequent cron in wrangler.jsonc triggers.
-const PUSH_SWEEP_CRON = "*/5 * * * *";
+// unaffected.
 const PUSH_SWEEP_LOOKBACK_MS = 10 * 60 * 1000;
-
-// Nightly D1 backup into R2 (app/lib/backup.server.ts). Must match wrangler.jsonc triggers.
-const BACKUP_CRON = "17 3 * * *";
 
 async function runPushSweep(env: Env): Promise<void> {
   const db = createDb(env.DB);
@@ -398,38 +455,45 @@ async function runPushSweep(env: Env): Promise<void> {
   await kv.put("push:last_sweep", String(now));
 }
 
-async function scheduled(
-  event: ScheduledController,
-  env: Env,
-  ctx: ExecutionContext,
-): Promise<void> {
-  // Nightly cron: dump D1 to the BACKUPS bucket. Awaited, not handed to waitUntil, so a
-  // failed dump fails this invocation (Cron Events shows it) after the log line below, and
-  // /health's backup age grows toward its 26 hour warning. Never swallowed.
-  if (event.cron === BACKUP_CRON) {
-    try {
-      await runBackup(env);
-    } catch (err) {
-      console.error(JSON.stringify({ event: "backup_failed", error: String(err) }));
-      throw err;
-    }
-    return;
-  }
-
-  // Frequent cron: deliver queued push notifications.
-  if (event.cron === PUSH_SWEEP_CRON) {
-    ctx.waitUntil(runPushSweep(env));
-    return;
-  }
-
-  // Daily cron: clear expired sign-in rows, then enqueue catalog books needing cached AI generation.
+async function enqueueCompanionCache(env: Env): Promise<void> {
   const db = createDb(env.DB);
-  ctx.waitUntil(deleteExpiredAuthRows(db, new Date()));
   const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
   const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
-  for (const book of books) {
-    ctx.waitUntil(env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage));
+  await Promise.all(
+    books.map((book) =>
+      env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage),
+    ),
+  );
+}
+
+// Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
+// timeouts, which /health's cron check reads too. A failed job fails the invocation (Cron Events
+// shows it) after the others have run.
+const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
+  backup: runBackup,
+  "media-backup": runMediaBackup,
+  "covers-backup": runCoversBackup,
+  "prune-404": (env) => pruneNotFound(env.DB),
+  "prune-auth-events": (env) => pruneAuthEvents(env.DB),
+  "push-sweep": runPushSweep,
+  "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
+  "companion-cache": enqueueCompanionCache,
+  "prune-expired-auth": (env) => deleteExpiredAuthRows(createDb(env.DB), new Date()),
+};
+
+async function scheduled(event: ScheduledController, env: Env): Promise<void> {
+  const jobs: readonly (typeof CRON_TRIGGERS)[keyof typeof CRON_TRIGGERS][number][] | undefined =
+    CRON_TRIGGERS[event.cron as keyof typeof CRON_TRIGGERS];
+  // A trigger with no job list is a misspelt key or a cron added to wrangler.jsonc alone: fail the
+  // invocation loudly rather than run nothing in silence.
+  if (!jobs) {
+    logEvent("cron_trigger_unknown", { cron: event.cron }, { level: "error" });
+    throw new Error(`no cron jobs for trigger "${event.cron}"`);
   }
+  await runJobs(
+    env.DB,
+    jobs.map((job) => ({ ...job, run: () => CRON_RUNS[job.name](env) })),
+  );
 }
 
 async function queue(
@@ -462,7 +526,11 @@ async function queue(
       });
       message.ack();
     } catch (err) {
-      console.error(`[companion-cache] failed for book ${message.body.bookId}`, err);
+      logEvent(
+        "companion_cache_failed",
+        { book_id: message.body.bookId, error: err },
+        { level: "error" },
+      );
       message.retry();
     }
   }
@@ -478,8 +546,68 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // Security headers on every response this Worker sends: pages, API, redirects, errors, 404s and
 // stored pages (workers/security-headers.ts). Applied outside Hono, on what app.fetch returns:
 // Hono's own error and not-found answers included, and no middleware can copy an older header back.
+// A 404 to a page GET is counted per path and referring host (site-runtime ./not-found); an API's
+// 404 is an answer about a record, not a broken link, so it is not.
 async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  return withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  const response = withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  // Hover prefetch for a signed-out reader's pages, stored ones included (site-runtime ./prefetch).
+  if (!hasSession(request) && (response.headers.get("Content-Type") ?? "").includes("text/html"))
+    response.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
+  if (!new URL(request.url).pathname.startsWith("/api/"))
+    countNotFound(env.DB, request, response, ctx);
+  return response;
 }
 
-export default { fetch: handleFetch, scheduled, queue };
+// The admin pages and the browser admin APIs behind the same Access application.
+const ADMIN_PAGES = "/admin";
+const ADMIN_APIS = ["/api/v1/admin", "/api/v1/ops"];
+
+const under = (pathname: string, prefix: string) =>
+  pathname === prefix || pathname.startsWith(`${prefix}/`);
+
+// An admin idle for an hour is signed out of Access (site-runtime ./access), on the pages and
+// the APIs alike. On a page the idle answer is the redirect to Access's logout. A fetch() would
+// follow that redirect to the logout page and read its 200 as success, so on an API the answer
+// is a 401 the admin screens show as their error instead; the next page load signs out. The
+// admin MCP's service-binding calls carry no Access token, so the idle check never sees them.
+async function withAdminIdleSignOut(request: Request, handle: () => Promise<Response>) {
+  const res = await withAdminIdle(request, handle, { prefixes: [ADMIN_PAGES, ...ADMIN_APIS] });
+  const { pathname } = new URL(request.url);
+  if (res.status !== 302 || res.headers.get("Location") !== ACCESS_LOGOUT_PATH) return res;
+  if (!ADMIN_APIS.some((prefix) => under(pathname, prefix))) return res;
+  const idle = Response.json(
+    {
+      error: {
+        code: "admin_idle",
+        message: "You were signed out after an hour without activity. Reload the page to sign in.",
+      },
+    },
+    { status: 401, headers: { "Cache-Control": "no-store" } },
+  );
+  const cleared = res.headers.get("Set-Cookie");
+  if (cleared) idle.headers.append("Set-Cookie", cleared);
+  return withSecurityHeaders(idle, request);
+}
+
+// The admin list, hashed with a fresh salt, for the daily Access drift check (I2, devkit's
+// access-drift workflow): only a GET Access let through with a service token gets it, anything
+// else is 404 (site-runtime ./access-drift). It sits under /admin, inside the Access application,
+// and outside the idle sign-out, which is for people.
+async function adminList(request: Request, env: Env): Promise<Response> {
+  const res = await adminListResponse(request, env, { admins: adminEmails(env) });
+  return withSecurityHeaders(res, request);
+}
+
+// Every request writes one `request` line (site-runtime ./log's withRequestLog: path, status, ms and
+// the deployed commit, never a query).
+export default {
+  fetch: withRequestLog(
+    (request: Request, env: Env, ctx: ExecutionContext) =>
+      new URL(request.url).pathname === ADMIN_LIST_PATH
+        ? adminList(request, env)
+        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx)),
+    { sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA },
+  ),
+  scheduled,
+  queue,
+};

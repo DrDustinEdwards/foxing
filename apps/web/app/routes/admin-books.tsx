@@ -28,6 +28,9 @@ export function meta() {
   return [{ title: "Admin · Books | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };
+
 export default function AdminBooks({ loaderData }: Route.ComponentProps) {
   const { q, books } = loaderData;
   const revalidator = useRevalidator();

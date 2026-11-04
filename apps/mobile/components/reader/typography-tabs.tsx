@@ -340,7 +340,6 @@ export function CanvasTab({
 }
 
 export function ThemesTab({
-  prefs,
   savedThemes,
   savingTheme,
   themeName,
@@ -350,7 +349,6 @@ export function ThemesTab({
   onCommitSave,
   onApply,
 }: {
-  prefs: ReaderPrefs
   savedThemes: SavedTheme[]
   savingTheme: boolean
   themeName: string

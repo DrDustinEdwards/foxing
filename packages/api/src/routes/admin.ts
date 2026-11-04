@@ -1,10 +1,11 @@
 // Admin surface. Callers are a signed-in admin (cookie session) or the admin MCP
 // Worker (operator bearer naming the acting admin, middleware/operator.ts); both pass
 // the same requireAdmin check. Reads wrap adminRepo and page with limit and offset.
-// Every mutation is gated on profiles.is_admin and wrapped in an admin_audit_log entry
+// Every mutation is gated on the admin list (ADMIN_EMAILS) and wrapped in an admin_audit_log entry
 // (actor + source ip, plus via: "operator" for bearer calls). Every write returns a
 // plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
-// changes (suspend, tier, admin) are preview then perform; see below.
+// changes (suspend, tier) are preview then perform; see below. Who is an admin is the
+// ADMIN_EMAILS setting alone, so no route grants or revokes it.
 import { adminRepo, type Db, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
@@ -23,7 +24,7 @@ import type { Env, SessionUser } from "../types";
 
 export const adminRoutes = new Hono<Env>();
 
-// Session + is_admin gate. profileMw already blocks a suspended account's writes;
+// Session + admin list gate. profileMw already blocks a suspended account's writes;
 // this also keeps a suspended admin out of the admin reads.
 function requireAdmin(c: Context<Env>): SessionUser {
   const session = requireSession(c);
@@ -86,7 +87,7 @@ adminRoutes.get("/admin/users", async (c) => {
   const query = parseQuery(c, pageQuery);
   return c.json(
     await page(query, (limit, offset) =>
-      adminRepo.listUsers(c.get("db"), { q: query.q, limit, offset }),
+      adminRepo.listUsers(c.get("db"), { q: query.q, limit, offset, admins: c.env }),
     ),
   );
 });
@@ -95,7 +96,7 @@ adminRoutes.get("/admin/users/:id", async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
   const db = c.get("db");
-  const user = await adminRepo.getUserDetail(db, id);
+  const user = await adminRepo.getUserDetail(db, id, c.env);
   if (!user) throw errors.notFound("No user with that id.");
   return c.json({ user, activity: await adminRepo.getUserActivityStats(db, id) });
 });
@@ -260,24 +261,6 @@ adminRoutes.post("/admin/users/:id/tier", rateLimit("write"), async (c) => {
   });
 });
 
-adminRoutes.post("/admin/users/:id/admin", rateLimit("write"), async (c) => {
-  const admin = requireAdmin(c);
-  const id = c.req.param("id");
-  const { on, confirm } = await parseJson(c, z.object({ on: z.boolean(), confirm: confirmToken }));
-  // Guard against locking yourself out by revoking your own admin here.
-  if (!on && id === admin.id) throw errors.validation({ id: "You cannot revoke your own admin." });
-  return previewOrPerform(c, admin, confirm, {
-    kind: "admin",
-    to: on,
-    current: (s) => s.isAdmin,
-    effect: on
-      ? "gains admin: every admin page and every admin write, including granting admin to others."
-      : "loses admin: no admin pages and no admin writes.",
-    auditAction: on ? "user.grant_admin" : "user.revoke_admin",
-    apply: (db, id, from) => adminRepo.setUserAdmin(db, id, on, from as boolean),
-  });
-});
-
 adminRoutes.post("/admin/users/:id/notify", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
@@ -428,53 +411,6 @@ adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
   const id = c.req.param("id");
   await adminRepo.deleteClubAdmin(c.get("db"), id);
   await audit(c, "club.delete", { id });
-  return c.json({ ok: true });
-});
-
-// ---- Journal ------------------------------------------------------------------
-
-// Exported for the Carrel site API, which validates every save against the same rules.
-export const journalInput = z.object({
-  title: z.string().min(1).max(500),
-  slug: z
-    .string()
-    .min(1)
-    .max(200)
-    .regex(/^[a-z0-9-]+$/, "Slug must be lowercase letters, numbers, and hyphens."),
-  content: z.string().min(1),
-  excerpt: z.string().max(1000).nullable().optional(),
-  coverImageUrl: z.string().url().max(1000).nullable().optional(),
-  coverImageAlt: z.string().max(500).nullable().optional(),
-  tags: z.array(z.string().max(60)).max(20).nullable().optional(),
-  featured: z.boolean().optional(),
-  isPublished: z.boolean().optional(),
-});
-
-adminRoutes.post("/admin/journal", rateLimit("write"), async (c) => {
-  const admin = requireAdmin(c);
-  const input = await parseJson(c, journalInput);
-  const existing = await adminRepo.getJournalBySlug(c.get("db"), input.slug);
-  if (existing) throw errors.conflict("A post with that slug already exists.");
-  const id = await adminRepo.createJournalPost(c.get("db"), input, admin.id);
-  await audit(c, "journal.create", { id, slug: input.slug });
-  return c.json({ id }, 201);
-});
-
-adminRoutes.patch("/admin/journal/:id", rateLimit("write"), async (c) => {
-  const admin = requireAdmin(c);
-  const id = c.req.param("id");
-  const input = await parseJson(c, journalInput.partial());
-  await adminRepo.updateJournalPost(c.get("db"), id, input, admin.id);
-  await audit(c, "journal.update", { id, fields: Object.keys(input) });
-  return c.json({ ok: true });
-});
-
-adminRoutes.post("/admin/journal/:id/publish", rateLimit("write"), async (c) => {
-  requireAdmin(c);
-  const id = c.req.param("id");
-  const { on } = await parseJson(c, onOff);
-  await adminRepo.setJournalPublished(c.get("db"), id, on);
-  await audit(c, on ? "journal.publish" : "journal.unpublish", { id });
   return c.json({ ok: true });
 });
 

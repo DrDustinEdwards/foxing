@@ -64,16 +64,3 @@ test.describe("diary + year (signed in)", () => {
     await expect(page.getByRole("link", { name: `${thisYear - 1}` })).toBeVisible();
   });
 });
-
-test.describe("cut features 301 to a live surface (signed in nav has no dead links)", () => {
-  for (const [from, to] of [
-    ["/series", "/books"],
-    ["/quotes", "/journal"],
-    ["/buddy-reads", "/clubs"],
-  ]) {
-    test(`${from} lands on ${to}`, async ({ page }) => {
-      await page.goto(from);
-      await expect(page).toHaveURL(new RegExp(`${to}$`));
-    });
-  }
-});

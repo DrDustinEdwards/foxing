@@ -30,6 +30,9 @@ const PLACEMENTS = ["banner", "home", "journal"] as const;
 
 const fmt = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };
+
 export default function AdminContent({ loaderData }: Route.ComponentProps) {
   const { announcements } = loaderData;
   const revalidator = useRevalidator();

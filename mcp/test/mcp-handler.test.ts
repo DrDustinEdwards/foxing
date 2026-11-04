@@ -7,20 +7,24 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
 import type { Caller } from "../src/auth.ts";
+import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
+
 import { handleMcp } from "../src/mcp-handler.ts";
 import { TOOLS, type ToolEnv } from "../src/tools.ts";
-import { WRITER, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
+import { READER, WRITER, fakeFoxing, fakeLog, freshEnv, type FakeFoxing, type FakeLog } from "./fakes.ts";
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
 const ERA = "2025-11-25";
 
 let foxing: FakeFoxing;
+let log: FakeLog;
 let env: ToolEnv;
 let nextId = 1;
 
 beforeEach(() => {
   foxing = fakeFoxing();
-  env = freshEnv(foxing, fakeLog());
+  log = fakeLog();
+  env = freshEnv(foxing, log);
 });
 
 async function rpc(method: string, params: Record<string, unknown>, caller: Caller | null = WRITER) {
@@ -62,7 +66,7 @@ describe("handleMcp", () => {
       listed.map((t) => t.name).sort(),
       TOOLS.map((t) => t.name).sort(),
     );
-    assert.equal(listed.length, 9);
+    assert.equal(listed.length, 10);
     for (const t of listed) {
       assert.match(t.name, /^foxing_[a-z_]+$/);
       for (const hint of ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]) {
@@ -73,12 +77,36 @@ describe("handleMcp", () => {
     assert.deepEqual(listed.map((t) => t.name), TOOLS.map((t) => t.name));
   });
 
-  test("tools/call becomes one admin API request and returns its JSON", async () => {
-    foxing.reply({ body: { totalUsers: 3 } });
+  test("tools/call becomes one admin API request, logged before and after, and returns its JSON", async () => {
+    const stats = {
+      totalUsers: 3,
+      plusUsers: 1,
+      suspendedUsers: 0,
+      totalBooks: 9,
+      staffPicks: 2,
+      totalClubs: 1,
+      publishedJournal: 4,
+      publishedBotm: 1,
+      recentSignups: [],
+    };
+    foxing.reply({ body: stats });
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} });
     assert.equal(foxing.calls.length, 1);
     assert.equal(foxing.calls[0].url.pathname, "/api/v1/admin/stats");
-    assert.deepEqual(message.result.structuredContent, { totalUsers: 3 });
+    // The stats carry readers' text (recent sign-ups), so the shared data notice rides beside them (S2).
+    assert.deepEqual(message.result.structuredContent, { notice: OUTSIDE_DATA_NOTICE, ...stats });
+    assert.deepEqual(log.rows.map((r) => r.phase), ["started", "finished"]);
+  });
+
+  test("PLANT 12.3: a read-only grant is not listed the write tools, is refused one, and sends nothing (T7)", async () => {
+    const listed = (await rpc("tools/list", {}, READER)).result.tools.map((t: { name: string }) => t.name);
+    assert.ok(listed.includes("foxing_get_health"));
+    assert.ok(!listed.includes("foxing_edit_book"));
+    // Every tool's scope is fixed, so the read grant's list is read-only throughout (the live check's T7).
+    assert.ok(listed.includes("foxing_read_book_of_month") && !listed.includes("foxing_set_book_of_month"), listed.join());
+    const message = await rpc("tools/call", { name: "foxing_edit_book", arguments: { book_id: "b1", title: "New" } }, READER);
+    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
+    assert.equal(foxing.calls.length, 0);
   });
 
   test("a schema violation fails before any request", async () => {
@@ -95,7 +123,7 @@ describe("handleMcp", () => {
 
   test("a request with no caller runs no tool", async () => {
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} }, null);
-    assert.equal(message.result.isError, true);
+    assert.ok(message.error !== undefined || message.result?.isError === true, JSON.stringify(message));
     assert.equal(foxing.calls.length, 0);
   });
 });

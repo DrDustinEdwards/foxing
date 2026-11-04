@@ -8,7 +8,7 @@ import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/club-detail";
 import { MembershipControls, ThreadsSection } from "../components/clubs/club-sections";
@@ -16,7 +16,7 @@ import { MeetingsSection, PollsSection, ScheduleSection } from "../components/cl
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession({ headers: request.headers });
+  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect(`/login?redirect=/clubs/${params.slug}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const page = await views.clubPage(createDb(env.DB), params.slug, session.user.id);
@@ -88,3 +88,6 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
     </PageShell>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

@@ -1,7 +1,18 @@
+import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
+import { LinkPrefetch } from "capsomer/react/link";
+import { themeScript } from "capsomer/theme-server";
 import { useState } from "react";
-import { Links, Meta, Outlet, Scripts, ScrollRestoration } from "react-router";
+import {
+  Links,
+  Meta,
+  Outlet,
+  Scripts,
+  ScrollRestoration,
+  useMatches,
+  useRouteLoaderData,
+} from "react-router";
 import type { Route } from "./+types/root";
 // Foxing's faces from its own origin (Fontsource, the files Google Fonts serves, bundled under /assets/): no
 // stylesheet from fonts.googleapis.com blocking the first paint, and no second origin to connect to. The variable
@@ -15,7 +26,6 @@ import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "./lib/nonce";
-import { COVER_ORIGIN } from "./lib/origins";
 import { SITE_NAME } from "./lib/seo";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
@@ -34,22 +44,29 @@ export function meta({ error }: Route.MetaArgs) {
 
 export const links: Route.LinksFunction = () => [
   { rel: "stylesheet", href: stylesheet },
-  { rel: "preconnect", href: COVER_ORIGIN },
-  { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
+  ...iconLinks(),
 ];
 
-// Set data-theme before paint so there is no theme flash. Stored preference wins;
-// otherwise follow the OS. Attribute-driven per design-system.md. Capsomer's theme button
-// (page-shell.tsx) remembers its choice under the same key, as the plain word.
-// Migration shim: the key was "foxing-mode" (attribute data-mode) before the
-// portfolio standardized on data-theme. Read the old key once, rewrite it to the
-// new one, and drop it, so a returning reader keeps their choice. Safe to delete
-// this branch once the old key is gone from the wild.
-const NO_FLASH = `(function(){try{var t=localStorage.getItem("foxing-theme");if(!t){var old=localStorage.getItem("foxing-mode");if(old==="dark"||old==="light"){t=old;localStorage.setItem("foxing-theme",t);localStorage.removeItem("foxing-mode");}}if(!t){t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";}document.documentElement.setAttribute("data-theme",t);}catch(e){document.documentElement.setAttribute("data-theme","light");}})();`;
+// Set data-theme before paint so there is no theme flash. Stored preference wins (Capsomer's themeScript, under
+// Foxing's key; Capsomer's theme button in page-shell.tsx remembers its choice there, as the plain word); otherwise
+// follow the OS. Attribute-driven per design-system.md.
+const FOLLOW_OS = `try{document.documentElement.setAttribute("data-theme",matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");}catch(e){}`;
+const NO_FLASH = `${FOLLOW_OS}${themeScript("foxing-theme")}`;
 
 export function Layout({ children }: { children: React.ReactNode }) {
   // The CSP nonce (workers/security-headers.ts) for every script this document renders.
   const nonce = useNonce();
+  // HYDRATION IS OPT-IN BY ROUTE (`handle = { hydrate: true }`), as on dustinedwards.info. The public pages (home, the
+  // catalog, authors, awards, picks, the Journal, profiles, lists and the guides) send no React: their header, theme
+  // button, search palette and search field run from /site.js (app/site.ts) and its islands (app/islands/). The
+  // signed-in app, the reader, the admin, sign-in and sign-up, and search with its filters opt in. A signed-in reader
+  // hydrates on every page: their header carries the account panel, Sign out and the Your Foxing bar, which are
+  // React's, and their pages are private and never edge-cached.
+  const signedIn = Boolean(useRouteLoaderData<typeof loader>("root")?.navUser);
+  const matches = useMatches();
+  const hydrates =
+    signedIn ||
+    matches.some((m) => (m.handle as { hydrate?: boolean } | undefined)?.hydrate === true);
   return (
     <html
       lang="en"
@@ -66,11 +83,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
         <Meta />
         <Links nonce={nonce} />
+        {/* Same-origin, so script-src 'self' allows it; the nonce is renewed per reader like every other. Not on a
+            hydrating page, whose React components wire the same markup themselves. */}
+        {hydrates ? null : <script src="/site.js" defer nonce={nonce} />}
       </head>
       <body>
         {children}
-        <ScrollRestoration nonce={nonce} />
-        <Scripts nonce={nonce} />
+        {hydrates ? (
+          <>
+            <ScrollRestoration nonce={nonce} />
+            <Scripts nonce={nonce} />
+          </>
+        ) : null}
       </body>
     </html>
   );
@@ -80,12 +104,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
 // server never shares a cache between requests.
 const api = createApiClient();
 
+// Capsomer's Link prefetches on hover, which runs the target's loader. This loader writes on a GET
+// (KV, and an AI call for a Plus reader), so it is never prefetched, beyond the family's own list.
+const GET_WRITERS = ["/find-next-book"];
+
 export default function App() {
   const [queryClient] = useState(createFoxingQueryClient);
   return (
-    <FoxingDataProvider api={api} queryClient={queryClient}>
-      <Outlet />
-    </FoxingDataProvider>
+    <LinkPrefetch exclude={GET_WRITERS}>
+      <FoxingDataProvider api={api} queryClient={queryClient}>
+        <Outlet />
+      </FoxingDataProvider>
+    </LinkPrefetch>
   );
 }
 

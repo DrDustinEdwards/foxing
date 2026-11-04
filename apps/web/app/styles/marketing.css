@@ -125,6 +125,40 @@
   }
 }
 
+/* The accessibility statement: Prelum's markup (h2, p, ul, a) in the legal pages' type. */
+.fx-statement {
+  font-family: var(--ui);
+  font-size: 1rem;
+  line-height: 1.625;
+  color: var(--muted);
+  & > * + * {
+    margin-top: 1rem;
+  }
+  & h2 {
+    margin-top: 2rem;
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.25rem;
+    line-height: 1.3;
+    color: var(--text);
+  }
+  & ul {
+    list-style: disc;
+    padding-inline-start: 1.3rem;
+  }
+  & li + li {
+    margin-top: 0.4rem;
+  }
+  & a {
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+  & a:hover {
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+}
+
 .fx-about-text {
   font-family: var(--fx-body);
   font-size: 1rem;

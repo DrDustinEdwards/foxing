@@ -3,6 +3,7 @@ import type { ClubLiveHub } from "@foxing/api";
 import { type LiveMessage, createDb, schema } from "@foxing/core";
 import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { type ClubRoom, clubRoomHub } from "../workers/club-room";
 import { callApi, seedUser, testApi } from "./test-api";
 
 // Captures every live broadcast so tests can assert the write -> commit -> notify path
@@ -300,6 +301,30 @@ describe("clubs API (web -> api -> core -> D1)", () => {
       .where(and(eq(schema.notifications.userId, "voter6"), eq(schema.notifications.type, "poll")));
     // one for poll.created + one for poll.closed
     expect(closedNotif.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("a member's live socket upgrades through the API to the club's ClubRoom", async () => {
+    // The Worker's own hub: the upgrade goes to the real Durable Object, whose 101
+    // carries the socket and headers that cannot be changed.
+    const ns = (env as unknown as { CLUB_ROOM: DurableObjectNamespace<ClubRoom> }).CLUB_ROOM;
+    const hub = clubRoomHub(ns);
+    await seedUser("liveowner", "plus");
+    const { body } = await createClub("liveowner");
+    const res = await apiWith(hub).fetch(
+      new Request(`https://test.local/clubs/${body.club.id}/live`, {
+        headers: { "x-test-user": "liveowner", Upgrade: "websocket" },
+      }),
+      env as never,
+    );
+    expect(res.status).toBe(101);
+    const ws = res.webSocket;
+    if (!ws) throw new Error("the 101 has no socket");
+    const first = new Promise<string>((done) =>
+      ws.addEventListener("message", (e) => done(String(e.data))),
+    );
+    ws.accept();
+    expect(JSON.parse(await first)).toEqual({ t: "presence", users: ["liveowner"] });
+    ws.close();
   });
 
   it("a non-member cannot post", async () => {

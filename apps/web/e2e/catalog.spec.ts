@@ -17,11 +17,13 @@ test.describe("public catalog flows", () => {
     await expect(page).toHaveURL(/\/books\/[a-z0-9-]+$/);
     await expect(page.locator("h1")).toBeVisible();
 
-    // JSON-LD Book structured data is present and valid JSON.
+    // JSON-LD is valid JSON: the Book, and exactly one BreadcrumbList (Prelum's graph).
     const ld = await page.locator('script[type="application/ld+json"]').allTextContents();
-    const types = ld.map((t) => JSON.parse(t)["@type"]);
+    const types = ld
+      .flatMap((t) => JSON.parse(t)["@graph"] ?? [JSON.parse(t)])
+      .map((n) => n["@type"]);
     expect(types).toContain("Book");
-    expect(types).toContain("BreadcrumbList");
+    expect(types.filter((t) => t === "BreadcrumbList")).toHaveLength(1);
   });
 
   test("misspelled author returns the right book via the fuzzy fallback", async ({ page }) => {

@@ -5,8 +5,7 @@
     "paths": {
       "@/*": ["./*"],
       "@foxing/client": ["../../packages/client/src/index.ts"],
-      "@foxing/types": ["../../packages/types/src/index.ts"],
-      "@foxing/utils": ["../../packages/utils/src/index.ts"]
+      "@foxing/types": ["../../packages/types/src/index.ts"]
     }
   },
   "include": [
@@ -17,7 +16,6 @@
     "nativewind-env.d.ts"
   ],
   "exclude": [
-    "node_modules",
-    "supabase/functions"
+    "node_modules"
   ]
 }

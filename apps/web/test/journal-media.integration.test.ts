@@ -97,7 +97,12 @@ function png(seed: string): Uint8Array<ArrayBuffer> {
 }
 
 async function upload(seed: string, overrides: Record<string, unknown> = {}, extra = "") {
-  const query = new URLSearchParams({ filename: `${seed}.png`, changeId: `chg-${seed}` });
+  // site-api 0.19+ refuses an upload with neither alt nor decorative.
+  const query = new URLSearchParams({
+    filename: `${seed}.png`,
+    changeId: `chg-${seed}`,
+    decorative: "yes",
+  });
   const res = await carrel("POST", `/media?${query}${extra}`, png(seed), overrides);
   expect(res.status, await res.clone().text()).toBe(201);
   return read<MediaItem & { resizedFrom?: Size & { bytes: number } }>(res);
@@ -189,7 +194,11 @@ describe("Journal media: upload, serve, use and delete", () => {
 
   it("answers bytes it already holds with that file, and stores nothing new", async () => {
     const item = await upload("twice");
-    const query = new URLSearchParams({ filename: "renamed.png", changeId: "chg-twice-2" });
+    const query = new URLSearchParams({
+      filename: "renamed.png",
+      changeId: "chg-twice-2",
+      decorative: "yes",
+    });
     const res = await carrel("POST", `/media?${query}`, png("twice"));
     expect(res.status).toBe(200);
     expect(await read(res)).toMatchObject({ id: item.id, duplicateOf: item.id });
@@ -198,16 +207,29 @@ describe("Journal media: upload, serve, use and delete", () => {
 });
 
 describe("Journal media: bytes and their history", () => {
-  it("turns a picture in place, keeps the old bytes, and a revert puts them back", async () => {
+  it("turns a picture in place with its focal point, keeps the old bytes, and a revert puts them back", async () => {
     const item = await upload("turn-case");
+    const focused = await carrel("PUT", `/media/${enc(item.id)}/focus`, {
+      focus: "0.25x0.4",
+      expectedVersion: item.version,
+      changeId: "chg-focus",
+    });
+    expect(focused.status, await focused.clone().text()).toBe(200);
     const turned = await carrel("POST", `/media/${enc(item.id)}/transform`, {
       op: "rotate-90",
-      expectedVersion: item.version,
+      expectedVersion: (await read<WriteResult>(focused)).version,
       changeId: "chg-turn",
     });
     expect(turned.status, await turned.clone().text()).toBe(200);
     const after = await read<MediaItem & { asNewFile: boolean }>(turned);
-    expect(after).toMatchObject({ id: item.id, asNewFile: false, width: 800, height: 1200 });
+    // The point moved with the picture: a quarter turn clockwise.
+    expect(after).toMatchObject({
+      id: item.id,
+      asNewFile: false,
+      width: 800,
+      height: 1200,
+      focus: "0.6x0.25",
+    });
     expect(await objectBytes(env.MEDIA, item.id)).not.toEqual(png("turn-case"));
 
     type History = { revisions: Array<{ rev: string; reason: string; current: boolean }> };
@@ -223,6 +245,8 @@ describe("Journal media: bytes and their history", () => {
     });
     expect(reverted.status, await reverted.clone().text()).toBe(200);
     expect(await objectBytes(env.MEDIA, item.id)).toEqual(png("turn-case"));
+    // Other bytes, so the point is cleared.
+    expect((await read<MediaItem>(reverted)).focus).toBeNull();
   });
 
   it("shrinks a large picture at upload unless asked not to, and keeps the original", async () => {
@@ -257,29 +281,13 @@ describe("Journal media: what Carrel's library reads", () => {
     expect(after).toMatchObject({ items: [], removed: [item.id] });
   });
 
-  it("fills credit, license and the date taken from a JPEG's EXIF, and names what it filled", async () => {
-    const query = new URLSearchParams({ filename: "exif.jpg", changeId: "chg-exif" });
-    const res = await fetchWorker(`${PREFIX}/media?${query}`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${KEY}`, "content-type": "image/jpeg" },
-      body: exifJpeg(),
-    });
-    expect(res.status, await res.clone().text()).toBe(201);
-    expect(await res.json()).toMatchObject({
-      credit: "Example Photographer",
-      license: "CC BY 4.0",
-      takenAt: "2024-05-06T14:30:00+01:00",
-      embedded: ["credit", "license", "takenAt"],
-    });
-  });
-
   it("suggests tags and alt text from the model, and applies neither", async () => {
     const item = await upload("suggest-case");
     const sent: string[] = [];
     const AI = {
       run: async (model: string, input: unknown) => {
         sent.push(model, JSON.stringify(input));
-        return { response: '{"alt": "A stack of old books.", "tags": ["Books", "books", "x y!"]}' };
+        return { response: { alt: "A stack of old books.", tags: ["Books", "books", "x y!"] } };
       },
     };
     const res = await carrel("GET", `/media/${enc(item.id)}/suggestions`, undefined, { AI });
@@ -292,55 +300,3 @@ describe("Journal media: what Carrel's library reads", () => {
     });
   });
 });
-
-/** A JPEG whose EXIF names an artist, a copyright and when it was taken, big-endian. */
-function exifJpeg(): Uint8Array<ArrayBuffer> {
-  const ascii = (s: string) => new TextEncoder().encode(`${s}\u0000`);
-  const tiff = new Uint8Array(512);
-  const view = new DataView(tiff.buffer);
-  let dataAt = 80;
-  const place = (bytes: Uint8Array) => {
-    tiff.set(bytes, dataAt);
-    dataAt += bytes.length;
-    return dataAt - bytes.length;
-  };
-  const entry = (at: number, tag: number, type: number, count: number, value: number) => {
-    view.setUint16(at, tag);
-    view.setUint16(at + 2, type);
-    view.setUint32(at + 4, count);
-    view.setUint32(at + 8, value);
-  };
-  tiff.set([0x4d, 0x4d, 0, 42, 0, 0, 0, 8]);
-  view.setUint16(8, 3);
-  const [artist, copyright, taken, offset] = [
-    ascii("Example Photographer"),
-    ascii("CC BY 4.0"),
-    ascii("2024:05:06 14:30:00"),
-    ascii("+01:00"),
-  ];
-  entry(10, 0x013b, 2, artist.length, place(artist));
-  entry(22, 0x8298, 2, copyright.length, place(copyright));
-  entry(34, 0x8769, 4, 1, 50);
-  view.setUint16(50, 2);
-  entry(52, 0x9003, 2, taken.length, place(taken));
-  entry(64, 0x9011, 2, offset.length, place(offset));
-  const body = tiff.subarray(0, dataAt);
-  const length = 2 + 6 + body.length;
-  return new Uint8Array([
-    0xff,
-    0xd8,
-    0xff,
-    0xe1,
-    length >> 8,
-    length & 0xff,
-    0x45,
-    0x78,
-    0x69,
-    0x66,
-    0,
-    0,
-    ...body,
-    0xff,
-    0xd9,
-  ]);
-}

@@ -15,7 +15,7 @@ type Filters = {
   page: number;
 };
 
-function parseFilters(url: URL): Filters {
+export function parseFilters(url: URL): Filters {
   const p = url.searchParams;
   const sort = p.get("sort");
   return {
@@ -62,6 +62,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       title: label,
       description: `Browse ${data.result.total.toLocaleString()} readable classics on Foxing. Filter by genre, era, and length.`,
       pathname: location.pathname,
+      pageType: "CollectionPage",
     }),
     ldJson(
       itemListLd(
@@ -187,7 +188,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
           <>
             <BookGrid>
               {result.books.map((b, i) => (
-                <BookCard key={b.slug} book={b} priority={i < 6} />
+                <BookCard key={b.slug} book={b} position={i} />
               ))}
             </BookGrid>
             <Pagination filters={filters} result={result} query={query} />

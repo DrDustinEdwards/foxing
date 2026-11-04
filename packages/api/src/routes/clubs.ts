@@ -4,6 +4,7 @@
 // -- only after that returns -- relay any `live` message to the club's ClubRoom via the
 // injected hub. That ordering is the invariant: D1 commits first, then the DO fans out.
 // The DO never writes D1.
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { Hono } from "hono";
 import {
   type LiveMessage,
@@ -42,7 +43,7 @@ async function notify(c: Context<Env>, clubId: string, live: LiveMessage | LiveM
   try {
     await c.get("hub").broadcast(clubId, live);
   } catch (err) {
-    console.error(`[clubs] live broadcast failed for ${clubId}`, err);
+    logEvent("club_broadcast_failed", { club_id: clubId, error: err }, { level: "error" });
   }
 }
 

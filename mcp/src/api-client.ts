@@ -5,8 +5,8 @@
  * /api/v1/admin/* on the `foxing` Worker over the FOXING service binding. The
  * admin API owns every rule (packages/api/src/routes/admin.ts): it resolves the
  * operator bearer to the acting admin named in X-Foxing-Admin-Id
- * (packages/api/src/middleware/operator.ts), re-reads that account's is_admin
- * and suspension from D1 on every request, validates the input, writes the
+ * (packages/api/src/middleware/operator.ts), re-checks that account's email
+ * against the site's ADMIN_EMAILS and its suspension on every request, validates the input, writes the
  * admin_audit_log and rate limits. Nothing here interprets a rule.
  *
  * A service binding is still HTTP, not an in-process call: the request crosses
@@ -65,7 +65,7 @@ export async function callAdmin(
   env: Partial<ApiEnv>,
   method: "GET" | "POST" | "PATCH",
   path: string,
-  options: { query?: Query; body?: Record<string, unknown> } = {},
+  options: { query?: Query; body?: Record<string, unknown>; signal?: AbortSignal } = {},
 ): Promise<ApiCallResult> {
   const query = new URLSearchParams();
   for (const [key, value] of Object.entries(options.query ?? {})) {
@@ -75,6 +75,8 @@ export async function callAdmin(
     method,
     headers: { [ACTOR_HEADER]: env.FOXING_ADMIN_ID?.trim() ?? "" },
     json: options.body,
+    // The call's abort signal (checklist P11): a client that closes the stream stops the request to the API.
+    signal: options.signal,
   });
   if (ok) return { status, ok: true, data: body };
 

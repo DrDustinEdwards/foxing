@@ -40,12 +40,9 @@ export function settingsToReadiumPreferences(s: ReaderSettings): Preferences {
   }
 }
 
-// CFI <-> Locator conversion. Readium uses its own Locator shape; we keep
-// the migration storage-compatible by stringifying the whole Locator and
-// stashing it where progress_cfi used to live. Old foliate epubcfi(...)
-// strings will fail to parse here and the reader will start from the top
-// of the book on first open -- acceptable migration cost since there's no
-// reliable epubcfi -> Readium Locator mapping.
+// CFI <-> Locator conversion. Readium uses its own Locator shape, stored
+// as the whole Locator stringified where progress_cfi used to live. Any
+// string that is not Locator JSON decodes to undefined.
 export function decodeLocator(cfi: string | undefined): Locator | undefined {
   if (!cfi) return undefined
   if (!cfi.startsWith('{')) return undefined

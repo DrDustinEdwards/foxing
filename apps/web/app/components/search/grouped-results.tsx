@@ -77,8 +77,8 @@ export function GroupedResults({
             Books · {bookTotal.toLocaleString()}
           </h2>
           <BookGrid>
-            {books.map((b, i) => (
-              <BookCard key={b.slug} book={b} priority={i < 6} />
+            {books.map((b) => (
+              <BookCard key={b.slug} book={b} />
             ))}
           </BookGrid>
         </section>

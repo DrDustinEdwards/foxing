@@ -1,9 +1,10 @@
 import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
-import { catalogRepo } from "@foxing/core";
+import { catalogRepo, views } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
+import { parseFilters } from "./books";
 
 const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 
@@ -12,30 +13,42 @@ const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env, ctx } = loaderBase(context, request);
 
-  const [books, authors, awards, clubs, posts, tags] = await Promise.all([
-    catalogRepo.listSitemapBooks(db),
-    catalogRepo.listAuthorSlugs(db),
-    catalogRepo.listAwards(db),
-    catalogRepo.listExternalClubs(db),
-    catalogRepo.listPublishedSlugs(db),
-    catalogRepo.listTags(db),
-  ]);
+  const [books, authors, awards, clubs, posts, tags, homePick, homeBooks, browse] =
+    await Promise.all([
+      catalogRepo.listSitemapBooks(db),
+      catalogRepo.listAuthorSlugs(db),
+      catalogRepo.listAwards(db),
+      catalogRepo.listExternalClubs(db),
+      catalogRepo.listPublishedSlugs(db),
+      catalogRepo.listTags(db),
+      // The covers the home page and /books show, read as their loaders read them (marketing.tsx, books.tsx), for
+      // their image entries.
+      catalogRepo.getTodaysPick(db),
+      catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
+      views.browse(db, parseFilters(new URL("/books", request.url))),
+    ]);
+  const covers = (list: Array<{ coverUrl?: string | null } | null | undefined>) => {
+    const urls = [...new Set(list.flatMap((b) => (b?.coverUrl ? [b.coverUrl] : [])))];
+    return urls.length > 0 ? { images: urls } : {};
+  };
 
   // Paths here; Prelum's sitemapDocument takes absolute URLs, made below.
   const urls: SitemapEntry[] = [
-    { loc: "/", priority: 1 },
-    { loc: "/books", priority: 0.9 },
+    { loc: "/", priority: 1, ...covers([homePick?.book, ...homeBooks.books]) },
+    { loc: "/books", priority: 0.9, ...covers(browse.books) },
     { loc: "/awards", priority: 0.7 },
     { loc: "/picks", priority: 0.7 },
     { loc: "/book-of-the-month", priority: 0.7 },
     { loc: "/journal", priority: 0.7 },
     { loc: "/journal/archive", priority: 0.5 },
     { loc: "/about", priority: 0.3 },
+    { loc: "/accessibility", priority: 0.3 },
     { loc: "/features", priority: 0.4 },
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,
       lastmod: b.updatedAt,
       priority: 0.8,
+      ...(b.coverUrl ? { images: [b.coverUrl] } : {}),
     })),
     ...authors.map((slug) => ({ loc: `/authors/${slug}`, priority: 0.6 })),
     ...awards.map((a) => ({ loc: `/awards/${a.slug}`, priority: 0.5 })),

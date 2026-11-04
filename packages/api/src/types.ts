@@ -4,10 +4,12 @@ import type { limit } from "@dustinedwards/site-runtime/rate-limit";
 import type {
   BillingClient,
   BillingPriceConfig,
+  ClubSuccessors,
   CompanionCaller,
   Db,
   LiveMessage,
-  Profile,
+  SignedInProfile,
+  StructuredCaller,
 } from "@foxing/core";
 
 // The live-layer seam. The Worker builds this from the ClubRoom Durable
@@ -27,6 +29,8 @@ export type Bindings = {
   // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
   // every bearer request to /admin/* is refused (operator.ts).
   ADMIN_OPERATOR_TOKEN?: string;
+  // Who is an admin, comma-separated emails (core isAdminAccount). Unset: nobody.
+  ADMIN_EMAILS?: string;
   // Affiliate ids appended to buy links (core config/affiliate.ts); vars, both optional.
   AMAZON_ASSOC_TAG?: string;
   BOOKSHOP_AFFILIATE_ID?: string;
@@ -40,10 +44,14 @@ export type Variables = {
   session: SessionUser | null;
   // True when the session was resolved from the operator bearer, not a cookie.
   viaOperator: boolean;
-  profile: Profile | null;
+  profile: SignedInProfile | null;
   streamCompanion: CompanionCaller;
+  /** The JSON-schema caller (Find next book), or null with no key. */
+  structuredCompanion: StructuredCaller | null;
   billing: { client: BillingClient; prices: BillingPriceConfig };
   hub: ClubLiveHub;
+  deleteUser: ApiDeps["deleteUser"];
+  isFresh: ApiDeps["isFresh"];
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -57,6 +65,8 @@ export type Env = { Bindings: Bindings; Variables: Variables };
 export type ApiDeps = {
   resolveSession: (req: Request, env: Bindings) => Promise<SessionUser | null>;
   resolveCompanionCaller: (env: Bindings) => CompanionCaller;
+  /** The same for structured replies; absent or null skips the AI tier. */
+  resolveStructuredCaller?: (env: Bindings) => StructuredCaller | null;
   // Same per-request shape (secrets are only reachable via env): the Worker builds the
   // real Stripe client + price ids from its secrets; when they are unset it returns the
   // not-configured stub (methods throw BillingNotConfiguredError) so routes 503 cleanly.
@@ -69,4 +79,15 @@ export type ApiDeps = {
   // admin), checked on /admin/* and /ops/* (middleware/admin-access.ts). The Worker
   // verifies Access's signed token (site-runtime ./access accessAdmin). Absent: refused.
   checkAdminAccess?: (req: Request, env: Bindings, email: string) => Promise<boolean>;
+  // The reader's own deletion (DELETE /account): the Worker runs Better Auth's deleteUser, which
+  // needs a sign-in from the last 10 minutes and runs core eraseAccountData with `successors`
+  // first. "not_fresh": refused, nothing deleted.
+  // Whether the reader signed in within the last 10 minutes (site-runtime requireFreshSession),
+  // for the account export. Deletion checks its own, in Better Auth's deleteUser.
+  isFresh: (req: Request, env: Bindings) => Promise<boolean>;
+  deleteUser: (
+    req: Request,
+    env: Bindings,
+    input: { userId: string; successors: ClubSuccessors },
+  ) => Promise<"deleted" | "not_fresh">;
 };

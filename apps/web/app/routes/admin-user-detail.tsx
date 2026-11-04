@@ -1,8 +1,8 @@
 // Admin: User detail. Full profile for one reader plus operator controls: suspend,
-// change tier, grant/revoke admin, send a notification, and delete the account. Reads
-// run in-process via adminRepo; every write goes to /api/v1/admin/users/:id/* with an
-// audit-log entry and a visible pending + role=alert error. Suspend, tier and admin
-// open a confirmation showing the server's preview before anything changes.
+// change tier, send a notification, and delete the account. Reads run in-process via
+// adminRepo; every write goes to /api/v1/admin/users/:id/* with an audit-log entry and a
+// visible pending + role=alert error. Suspend and tier open a confirmation showing the
+// server's preview before anything changes. Who is an admin is ADMIN_EMAILS alone.
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
@@ -23,7 +23,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   await requireAdmin(env, request);
   const db = createDb(env.DB);
-  const user = await adminRepo.getUserDetail(db, params.id);
+  const user = await adminRepo.getUserDetail(db, params.id, env);
   if (!user) throw new Response("Not found", { status: 404 });
   const stats = await adminRepo.getUserActivityStats(db, params.id);
   return { user, stats };
@@ -129,7 +129,6 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
           userId={user.id}
           username={user.username}
           isPlus={user.subscriptionTier === "plus"}
-          isAdmin={Boolean(user.isAdmin)}
         />
       </div>
     </AdminShell>
@@ -140,18 +139,15 @@ function OperatorControls({
   userId,
   username,
   isPlus,
-  isAdmin,
 }: {
   userId: string;
   username: string;
   isPlus: boolean;
-  isAdmin: boolean;
 }) {
   const revalidator = useRevalidator();
   const navigate = useNavigate();
   const { pending, error, run } = useAdminAction({ onDone: () => revalidator.revalidate() });
   const tier = useRoleChange({ onDone: () => revalidator.revalidate() });
-  const admin = useRoleChange({ onDone: () => revalidator.revalidate() });
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [notifySent, setNotifySent] = useState(false);
@@ -193,22 +189,9 @@ function OperatorControls({
             >
               {isPlus ? "Downgrade to Free" : "Upgrade to Plus"}
             </AdminButton>
-            <AdminButton
-              pending={admin.pending}
-              onClick={() =>
-                admin.request(
-                  `/users/${userId}/admin`,
-                  { on: !isAdmin },
-                  isAdmin ? "Revoke admin" : "Grant admin",
-                )
-              }
-            >
-              {isAdmin ? "Revoke admin" : "Grant admin"}
-            </AdminButton>
           </div>
-          <AdminError error={tier.error ?? admin.error} />
+          <AdminError error={tier.error} />
           {tier.dialog}
-          {admin.dialog}
         </div>
 
         <div className="fx-admin-user-detail-box">
@@ -272,3 +255,6 @@ function OperatorControls({
     </AdminCard>
   );
 }
+
+// It hydrates (root.tsx, the `hydrate` handle).
+export const handle = { hydrate: true };

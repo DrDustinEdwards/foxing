@@ -1,12 +1,13 @@
 import { env } from "cloudflare:test";
+import { resetDb } from "@dustinedwards/devkit/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BACKUP_EXCLUDE } from "../app/lib/backup-checks";
-import { backupStatus, runBackup } from "../app/lib/backup.server";
+import { backupStatus, runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
 import { healthResponse } from "@dustinedwards/site-runtime/health";
 
 // Real D1 (with the real migrations, FTS5 tables and triggers included) and real R2, in
-// Miniflare. One test per behavior: a good run, an emptied database, a stale run, and the
-// exclude list against the schema.
+// Miniflare. One test per behavior: a good run, an emptied database and a stale run. The
+// credential-column check against the schema is d1-dump's own, on in every run here.
 const workerEnv = env as unknown as Env;
 const now = Date.now();
 
@@ -19,21 +20,10 @@ const SECRETS = [
 ];
 
 async function reset() {
-  await env.DB.batch(
-    [
-      "push_tokens",
-      "session",
-      "account",
-      "verification",
-      "annotations",
-      "journal_posts",
-      "profiles",
-      "books",
-      "user",
-    ].map((t) => env.DB.prepare(`DELETE FROM "${t}"`)),
-  );
+  await resetDb(env.DB);
   const listed = await env.BACKUPS.list();
   if (listed.objects.length > 0) await env.BACKUPS.delete(listed.objects.map((o) => o.key));
+  await env.MEDIA.delete("journal/sample.png");
 }
 
 async function seed() {
@@ -94,7 +84,12 @@ async function health(at?: Date) {
     status: res.status,
     body: (await res.json()) as {
       ok: boolean;
-      backup: { last_ok: string | null; age_hours: number | null; warning?: string };
+      backup: {
+        last_ok: string | null;
+        age_hours: number | null;
+        warning?: string;
+        files: { age_hours: number | null; warning?: string };
+      };
     } & Record<string, unknown>,
   };
 }
@@ -102,9 +97,12 @@ async function health(at?: Date) {
 describe("nightly backup", () => {
   beforeEach(reset);
 
-  it("dumps the content, leaves every credential table out, and reports a fresh age", async () => {
+  it("dumps the content and the media files, leaves every credential table out, and reports a fresh age", async () => {
     await seed();
+    await env.MEDIA.put("journal/sample.png", "sample bytes");
     await runBackup(workerEnv);
+    await runMediaBackup(workerEnv);
+    await runCoversBackup(workerEnv);
 
     const written = await keys();
     expect(written.some((k) => k.endsWith("/_complete.json"))).toBe(true);
@@ -131,10 +129,12 @@ describe("nightly backup", () => {
 
     const { status, body } = await health();
     expect(status).toBe(200);
-    expect(Object.keys(body).sort()).toEqual(["backup", "db", "ok", "time"]);
-    expect(Object.keys(body.backup).sort()).toEqual(["age_hours", "last_ok"]);
-    expect(body.backup.warning).toBeUndefined();
     expect(body.backup.age_hours).toBeLessThan(1);
+    expect(body.backup.warning).toBeUndefined();
+    expect(body.backup.files.age_hours).toBeLessThan(1);
+    expect(await (await env.BACKUPS.get("files/media/journal/sample.png"))?.text()).toBe(
+      "sample bytes",
+    );
   });
 
   it("leaves an emptied database without a marker, throws, and health says so", async () => {
@@ -155,40 +155,5 @@ describe("nightly backup", () => {
     const { status, body } = await health(new Date(Date.now() + 27 * 3_600_000));
     expect(status).toBe(200);
     expect(body.backup.warning).toMatch(/over the 26h threshold/);
-  });
-
-  it("excludes exactly the tables the migrated schema shows holding credentials", async () => {
-    // Derived from the schema the migrations build, not from a list: a table holds a credential
-    // when a column is a token, a password or a secret, or when it stores one-time values by
-    // identifier with an expiry (Better Auth's verification shape: magic links, resets).
-    const credentialColumn = /(^|_)(token|password|secret)$/;
-    const master = await env.DB.prepare(
-      "SELECT name, sql FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '_cf_%'",
-    ).all<{ name: string; sql: string }>();
-    const virtual = master.results
-      .filter((t) => /^CREATE VIRTUAL TABLE/i.test(t.sql))
-      .map((t) => t.name);
-    const tables = master.results
-      .map((t) => t.name)
-      .filter((n) => !virtual.some((v) => n === v || n.startsWith(`${v}_`)));
-
-    const derived: string[] = [];
-    for (const table of tables) {
-      const cols = new Set(
-        (
-          await env.DB.prepare("SELECT name FROM pragma_table_info(?1)")
-            .bind(table)
-            .all<{ name: string }>()
-        ).results.map((c) => c.name),
-      );
-      const oneTime = cols.has("identifier") && cols.has("value") && cols.has("expires_at");
-      if (oneTime || [...cols].some((c) => credentialColumn.test(c))) derived.push(table);
-    }
-
-    expect(tables.length).toBeGreaterThan(40); // the whole schema was read
-    expect(virtual.sort()).toEqual(["annotations_fts", "books_fts"]);
-    const missing = derived.filter((t) => !(BACKUP_EXCLUDE as readonly string[]).includes(t));
-    const extra = BACKUP_EXCLUDE.filter((t) => !derived.includes(t));
-    expect({ missing, extra }).toEqual({ missing: [], extra: [] });
   });
 });

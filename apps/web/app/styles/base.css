@@ -498,9 +498,11 @@
   font-family: var(--display);
 }
 
-/* Links in running text and the quiet links of lists. */
+/* Links in running text and the quiet links of lists: semibold as well as the link color, so a link in a sentence is
+   told from its words by more than color (WCAG 2.2 SC 1.4.1; F73 names bold as a passing cue). */
 .link {
   color: var(--accent-text);
+  font-weight: 600;
 }
 .link:hover {
   color: var(--accent-text);

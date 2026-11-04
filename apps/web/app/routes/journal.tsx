@@ -1,9 +1,13 @@
+import type { ImageAttributes } from "@dustinedwards/site-runtime/image";
 import { catalogRepo } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
+import { Picture } from "~/components/picture";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
+import { focusStyle } from "~/lib/focus";
+import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { buildMeta } from "~/lib/seo";
+import { buildMeta, journalLd, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal";
 
 function fmtDate(d: Date | null): string | null {
@@ -15,25 +19,33 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
   const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
   const result = await catalogRepo.listPublishedPosts(db, { page });
-  return { result };
+  const covers = await journalCovers(
+    db,
+    result.posts.map((p) => p.coverImageUrl),
+  );
+  return { result, covers: Object.fromEntries(covers) };
 }
 
 export const headers = listingPageHeaders;
+
+const JOURNAL_DESCRIPTION =
+  "Essays and close readings from Foxing: what the great books mean and why they endure.";
 
 export function meta({ location }: Route.MetaArgs) {
   return [
     ...buildMeta({
       title: "The Journal",
-      description:
-        "Essays and close readings from Foxing: what the great books mean and why they endure.",
+      description: JOURNAL_DESCRIPTION,
       pathname: location.pathname,
+      pageType: "CollectionPage",
     }),
+    ldJson(journalLd(JOURNAL_DESCRIPTION)),
     { tagName: "link", rel: "alternate", type: "application/rss+xml", href: "/journal/rss.xml" },
   ];
 }
 
 export default function Journal({ loaderData }: Route.ComponentProps) {
-  const { result } = loaderData;
+  const { result, covers } = loaderData;
   const [lead, ...rest] = result.posts;
 
   return (
@@ -54,11 +66,11 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
           <EmptyState title="Nothing published yet" body="The first essays are on the way." />
         ) : (
           <div className="fx-journal-stack">
-            {lead ? <LeadPost post={lead} /> : null}
+            {lead ? <LeadPost post={lead} cover={covers[lead.coverImageUrl ?? ""]} /> : null}
             {rest.length > 0 ? (
               <div className="fx-journal-grid">
                 {rest.map((p) => (
-                  <PostCard key={p.slug} post={p} />
+                  <PostCard key={p.slug} post={p} cover={covers[p.coverImageUrl ?? ""]} />
                 ))}
               </div>
             ) : null}
@@ -89,16 +101,17 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
 
 type Post = Route.ComponentProps["loaderData"]["result"]["posts"][number];
 
-function LeadPost({ post }: { post: Post }) {
+function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
     <Link to={`/journal/${post.slug}`} className="group fx-journal-card">
-      {post.coverImageUrl ? (
+      {cover ? (
         <div className="fx-journal-box">
-          <img
-            src={post.coverImageUrl}
+          <Picture
+            attrs={cover}
             alt={post.coverImageAlt ?? ""}
             className="fx-journal-img"
-            loading="eager"
+            priority
+            style={focusStyle(post.coverFocus)}
           />
         </div>
       ) : (
@@ -114,15 +127,15 @@ function LeadPost({ post }: { post: Post }) {
   );
 }
 
-function PostCard({ post }: { post: Post }) {
+function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
     <Link to={`/journal/${post.slug}`} className="group fx-journal-card-2">
-      {post.coverImageUrl ? (
-        <img
-          src={post.coverImageUrl}
+      {cover ? (
+        <Picture
+          attrs={{ ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" }}
           alt={post.coverImageAlt ?? ""}
           className="mb-4 fx-journal-img-2"
-          loading="lazy"
+          style={focusStyle(post.coverFocus)}
         />
       ) : null}
       <h3 className="fx-journal-title-2">{post.title}</h3>

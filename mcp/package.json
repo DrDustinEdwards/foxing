@@ -11,17 +11,25 @@
     "dev": "wrangler dev",
     "typecheck": "wrangler types && tsc -b",
     "test": "node --import ./test/resolve-ts.mjs --test \"test/**/*.test.ts\"",
-    "build": "wrangler deploy --dry-run --outdir=dist"
+    "build": "wrangler deploy --dry-run --outdir=dist",
+    "check:conformance": "devkit-conformance"
   },
   "dependencies": {
-    "@cloudflare/workers-oauth-provider": "1.1.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.33.0",
+    "@cloudflare/workers-oauth-provider": "1.2.4",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.73.0",
     "@modelcontextprotocol/server": "2.4.0",
     "agents": "0.32.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.21.0",
+    "@modelcontextprotocol/conformance": "0.2.0-alpha.11",
     "typescript": "5.9.3",
     "wrangler": "4.151.3"
+  },
+  "allowScripts": {
+    "core-js-pure": false,
+    "esbuild": false,
+    "workerd": false
   }
 }

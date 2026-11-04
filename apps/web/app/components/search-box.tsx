@@ -5,7 +5,8 @@ import { Form, useNavigate } from "react-router";
 /**
  * Accessible search-as-you-type combobox. Debounced suggestions come from the shared
  * search-as-you-type hook; submitting the form runs the full /search (which
- * includes the fuzzy fallback). Degrades to a plain GET form without JS.
+ * includes the fuzzy fallback). Degrades to a plain GET form without JS. On a page that does not
+ * hydrate (root.tsx) the search-box island (islands/search-box.ts) wires the same markup.
  */
 export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
   const [q, setQ] = useState(initialQuery);
@@ -47,7 +48,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
   }
 
   return (
-    <div className="relative">
+    <div className="relative" data-island="search-box">
       <Form method="get" action="/search" role="search" onSubmit={() => setOpen(false)}>
         <label htmlFor="q" className="cap-sr-only">
           Search books and authors

@@ -11,11 +11,6 @@ test.describe("auth flows", () => {
     await expect(page.getByLabel(/password/i)).toHaveCount(0);
   });
 
-  test("the old password pages lead to sign-in", async ({ page }) => {
-    await page.goto("/forgot-password");
-    await expect(page).toHaveURL(/\/login/);
-  });
-
   // The live site has Turnstile on, so a link request without a passed check is refused
   // before any mail goes out, which is what this browser, like any bot, gets.
   test("a sign-in link request without the bot check sends nothing", async ({ page }) => {
