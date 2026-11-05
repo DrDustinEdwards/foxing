@@ -1,4 +1,5 @@
 import { preloads } from "@dustinedwards/site-runtime/preload";
+import { renameRedirect } from "@dustinedwards/site-runtime/url";
 import { useMyBook, useShelves } from "@foxing/client";
 import { views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
@@ -33,7 +34,17 @@ function coverLink(src: string | null): string {
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env } = loaderBase(context, request);
   const page = await views.bookPage(db, params.slug, affiliateConfig(env));
-  if (!page || page.book.slug !== params.slug) throw new Response("Not found", { status: 404 });
+  if (!page) throw new Response("Not found", { status: 404 });
+  if (page.book.slug !== params.slug) {
+    // Found by its id, or by a slug that is not its own: one 301 to the book's own address
+    // (site-runtime's renameRedirect), so each book keeps one URL and an old link still lands.
+    const canonical = page.book.slug;
+    const moved = await renameRedirect(request, {
+      prefix: "/books/",
+      renames: (slug) => (slug === params.slug ? canonical : null),
+    });
+    throw moved ?? new Response("Not found", { status: 404 });
+  }
   const { book, awards, related } = page;
   const readable = book.readable;
   const community = book.community;
