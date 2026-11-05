@@ -35,10 +35,11 @@ export type GenreFacet = { subject: string; count: number };
 /** Top subjects across the catalog, for the genre filter and genre chips. */
 export async function getGenreFacets(db: Db, limit = 32): Promise<GenreFacet[]> {
   const rows = await db.all<{ subject: string; count: number }>(sql`
-    SELECT je.value AS subject, COUNT(*) AS count
-    FROM books, json_each(books.subjects) je
-    WHERE books.source_type = 'catalog' AND je.value IS NOT NULL AND je.value != ''
-    GROUP BY je.value
+    SELECT bs.subject AS subject, COUNT(*) AS count
+    FROM book_subjects bs
+    JOIN books ON books.id = bs.book_id
+    WHERE books.source_type = 'catalog'
+    GROUP BY bs.subject
     ORDER BY count DESC, subject ASC
     LIMIT ${limit}
   `);

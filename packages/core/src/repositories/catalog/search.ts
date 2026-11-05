@@ -41,7 +41,7 @@ function filterConditions(filters: SearchFilters): SQL[] {
   const conds: SQL[] = [];
   if (filters.subject) {
     conds.push(
-      sql`EXISTS (SELECT 1 FROM json_each(b.subjects) je WHERE je.value = ${filters.subject})`,
+      sql`EXISTS (SELECT 1 FROM book_subjects bs WHERE bs.book_id = b.id AND bs.subject = ${filters.subject})`,
     );
   }
   const era = resolveEra(filters.era);
