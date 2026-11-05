@@ -5,7 +5,7 @@
 // from the subjects json array.
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
-import { memo } from "../../memo";
+import { cachedRead } from "../../kv-cache";
 
 export type Bucket = { slug: string; label: string; min: number; max: number };
 
@@ -36,7 +36,7 @@ export type GenreFacet = { subject: string; count: number };
 /** Top subjects across the catalog, for the genre filter and genre chips. */
 export function getGenreFacets(db: Db, limit = 32): Promise<GenreFacet[]> {
   // Counts every catalog book's subjects, called by most catalog pages: ten minutes stale is invisible.
-  return memo(`genre-facets:${limit}`, 10 * 60_000, () => readGenreFacets(db, limit));
+  return cachedRead(db, `catalog:genre-facets:v1:${limit}`, 600, () => readGenreFacets(db, limit));
 }
 
 async function readGenreFacets(db: Db, limit: number): Promise<GenreFacet[]> {

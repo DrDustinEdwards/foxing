@@ -4,7 +4,7 @@
 // books too (noindex). This is the primary affiliate surface.
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
-import { memo } from "../../memo";
+import { cachedRead } from "../../kv-cache";
 
 export type ClubSummary = {
   slug: string;
@@ -40,7 +40,7 @@ export type ClubDetail = ClubSummary & { picks: PickEntry[] };
 
 export function listExternalClubs(db: Db): Promise<ClubSummary[]> {
   // Read by the nav on every page and by the picks page and sitemap; the club list changes when an admin publishes a pick.
-  return memo("external-clubs", 5 * 60_000, () => readExternalClubs(db));
+  return cachedRead(db, "catalog:external-clubs:v1", 300, () => readExternalClubs(db));
 }
 
 async function readExternalClubs(db: Db): Promise<ClubSummary[]> {

@@ -1,6 +1,7 @@
 // D1 + Drizzle handle. Built per-request from the DB binding (D1 is request-scoped).
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1";
 import * as schema from "./schema";
+import { attachKv, type KvLike } from "./kv-cache";
 
 export type Schema = typeof schema;
 export type Db = DrizzleD1Database<Schema>;
@@ -83,6 +84,6 @@ export function wrapD1(d1: D1Database): D1Database {
   });
 }
 
-export function createDb(d1: D1Database): Db {
-  return drizzle(wrapD1(d1), { schema });
+export function createDb(d1: D1Database, kv?: KvLike | null): Db {
+  return attachKv(drizzle(wrapD1(d1), { schema }), kv);
 }
