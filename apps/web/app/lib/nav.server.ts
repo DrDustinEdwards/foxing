@@ -75,7 +75,7 @@ export interface NavMenu {
  *  the anonymous response is edge-cacheable. getCurrentBotm already filters to published
  *  rows, so the BOTM card self-omits when nothing is live. */
 export async function getNavMenu(env: Env): Promise<NavMenu> {
-  const db = createDb(env.DB);
+  const db = createDb(env.DB, env.APP_KV);
   const [clubs, botm] = await Promise.all([
     catalogRepo.listExternalClubs(db),
     catalogRepo.getCurrentBotm(db),

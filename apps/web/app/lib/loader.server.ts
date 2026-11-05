@@ -11,7 +11,7 @@ export function loaderBase(context: Readonly<RouterContextProvider>, request: Re
   return {
     env,
     ctx,
-    db: createDb(env.DB),
+    db: createDb(env.DB, env.APP_KV),
     origin: new URL(request.url).origin,
   };
 }
