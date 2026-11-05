@@ -13,7 +13,7 @@ import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { adminRepo, catalogRepo, createDb, schema } from "@foxing/core";
 import { Hono } from "hono";
 import { createRequestHandler, type ServerBuild } from "react-router";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sessionUserFromRequest } from "../app/lib/auth.server";
 import { journalSiteAdapter } from "../app/lib/carrel/journal-adapter.server";
 import { mountCarrel } from "../app/lib/carrel/site-api.server";
@@ -65,6 +65,12 @@ function worker(): Hono<{ Bindings: Env }> {
 }
 
 const app = worker();
+
+// Every write here renders the post's Markdown through Prelum's pipeline: about 1.6 s a test when the runner is
+// quiet, and 5 s (vitest's default testTimeout) on a loaded one, which failed main on 2026-11-05 (#224, #225) in the
+// tests that write a post. The conformance test below carries the same 30 s for the same reason; this gives the
+// whole file that headroom, so a slow runner is not a red build (vitest.dev/config/testtimeout).
+vi.setConfig({ testTimeout: 30_000 });
 
 async function call(path: string, init: RequestInit = {}, e: Env = testEnv()): Promise<Response> {
   const ctx = createExecutionContext();
