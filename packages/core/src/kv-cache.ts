@@ -23,7 +23,12 @@ export function attachKv(db: Db, kv: KvLike | null | undefined): Db {
   return db;
 }
 
-export async function cachedRead<T>(db: Db, key: string, ttlSeconds: number, read: () => Promise<T>): Promise<T> {
+export async function cachedRead<T>(
+  db: Db,
+  key: string,
+  ttlSeconds: number,
+  read: () => Promise<T>,
+): Promise<T> {
   const kv = handles.get(db);
   if (!kv) return read();
   try {
