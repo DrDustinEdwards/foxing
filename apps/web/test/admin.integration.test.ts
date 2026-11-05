@@ -115,6 +115,19 @@ describe("admin write surface gate + audit log", () => {
     expect(audit.actor).toBe("admin");
   });
 
+  it("runs the files backup for an admin, records it, and refuses a reader", async () => {
+    const res = await post("/admin/backup/media", "admin", {});
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ files: [] });
+    const [audit] = await createDb(env.DB)
+      .select()
+      .from(schema.adminAuditLog)
+      .orderBy(desc(schema.adminAuditLog.performedAt))
+      .limit(1);
+    expect(audit.action).toBe("backup.media");
+    expect((await post("/admin/backup/media", "reader", {})).status).toBe(403);
+  });
+
   it("blocks a non-admin from suspending a user", async () => {
     const res = await post("/admin/users/reader/suspend", "reader", { suspended: true });
     expect(res.status).toBe(403);

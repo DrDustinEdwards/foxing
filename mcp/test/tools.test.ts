@@ -51,6 +51,15 @@ describe("every request", () => {
   });
 });
 
+describe("foxing_backup_media", () => {
+  test("is one POST to /backup/media and returns each pass's counts", async () => {
+    foxing.reply({ body: { files: [{ name: "journal", complete: true }] } });
+    const out = await call("foxing_backup_media");
+    assert.equal(path(), "POST /api/v1/admin/backup/media");
+    assert.deepEqual(out.structuredContent, { files: [{ name: "journal", complete: true }] });
+  });
+});
+
 describe("reader data (rule 12.5)", () => {
   test("12.5: reader-written text is marked as data", async () => {
     foxing.reply({ body: { items: [], has_more: false, next_offset: null } });

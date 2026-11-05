@@ -61,7 +61,12 @@ import {
 } from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
-import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import {
+  backupFilesNow,
+  runBackup,
+  runCoversBackup,
+  runMediaBackup,
+} from "../app/lib/backup.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { clubRoomHub } from "./club-room";
 import {
@@ -159,6 +164,7 @@ const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
   // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
   isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
+  backupFiles: (env) => backupFilesNow(env as unknown as Env),
   deleteUser: (req, env, { successors }) =>
     deleteUserAccount(req, env as unknown as Env, successors),
   // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).

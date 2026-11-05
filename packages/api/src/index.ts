@@ -63,6 +63,7 @@ export function createApi(deps: ApiDeps) {
   app.use("*", async (c, next) => {
     c.set("deleteUser", deps.deleteUser);
     c.set("isFresh", deps.isFresh);
+    c.set("backupFiles", deps.backupFiles);
     await next();
   });
 

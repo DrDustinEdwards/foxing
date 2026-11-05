@@ -52,6 +52,7 @@ export type Variables = {
   hub: ClubLiveHub;
   deleteUser: ApiDeps["deleteUser"];
   isFresh: ApiDeps["isFresh"];
+  backupFiles: ApiDeps["backupFiles"];
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -85,6 +86,8 @@ export type ApiDeps = {
   // Whether the reader signed in within the last 10 minutes (site-runtime requireFreshSession),
   // for the account export. Deletion checks its own, in Better Auth's deleteUser.
   isFresh: (req: Request, env: Bindings) => Promise<boolean>;
+  /** Runs the files backup passes now (the Worker's backupFilesNow); the admin API's backup route. */
+  backupFiles: (env: Bindings) => Promise<Record<string, unknown>[]>;
   deleteUser: (
     req: Request,
     env: Bindings,
