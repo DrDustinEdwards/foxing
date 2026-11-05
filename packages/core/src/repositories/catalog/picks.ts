@@ -4,6 +4,7 @@
 // books too (noindex). This is the primary affiliate surface.
 import { sql } from "drizzle-orm";
 import type { Db } from "../../db";
+import { memo } from "../../memo";
 
 export type ClubSummary = {
   slug: string;
@@ -37,7 +38,12 @@ export type PickEntry = {
 
 export type ClubDetail = ClubSummary & { picks: PickEntry[] };
 
-export async function listExternalClubs(db: Db): Promise<ClubSummary[]> {
+export function listExternalClubs(db: Db): Promise<ClubSummary[]> {
+  // Read by the nav on every page and by the picks page and sitemap; the club list changes when an admin publishes a pick.
+  return memo("external-clubs", 5 * 60_000, () => readExternalClubs(db));
+}
+
+async function readExternalClubs(db: Db): Promise<ClubSummary[]> {
   const rows = await db.all<{
     slug: string;
     name: string;

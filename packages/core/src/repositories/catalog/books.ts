@@ -2,6 +2,7 @@
 // community books never appear on the browse/search/sitemap surface (spec-cf-schema
 // rev 3). Readability is derived (catalog AND epub_url present), never a column.
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { nanoid } from "nanoid";
 import { chunked, type Db } from "../../db";
 import { bookAwards, books, userBooks } from "../../schema";
 import { resolveEra, resolveLength } from "./facets";
@@ -162,28 +163,37 @@ export async function listBooksByAuthorSlug(db: Db, authorSlug: string): Promise
   return rows.map(toCard);
 }
 
-/** Up to `limit` other catalog books sharing the book's first subject. */
+/**
+ * Up to `limit` other catalog books sharing the book's first subject, covers first, a different handful each time.
+ * ORDER BY RANDOM() read every book of the subject on each page view. This starts at a random id inside the
+ * subject's index instead and wraps once, so it reads about `limit` rows however large the subject is.
+ */
 export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<BookCard[]> {
   const subject = (book.subjects ?? [])[0];
   if (!subject) return [];
-  const rows = await db.all<{
-    id: string;
-    slug: string;
-    title: string;
-    author: string;
-    author_slug: string | null;
-    cover_url: string | null;
-    publication_year: number | null;
-    epub_url: string | null;
-  }>(sql`
-    SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url, b.publication_year, b.epub_url
-    FROM book_subjects bs
-    JOIN books b ON b.id = bs.book_id
-    WHERE bs.subject = ${subject} AND b.source_type = 'catalog' AND b.id != ${book.id}
-    ORDER BY b.cover_url IS NULL, RANDOM()
-    LIMIT ${limit}
-  `);
-  return rows.map((r) =>
+  const pivot = nanoid();
+  const found: Array<RelatedRow> = [];
+  const take = async (withCover: boolean, forward: boolean) => {
+    const want = limit - found.length;
+    if (want <= 0) return;
+    const rows = await db.all<RelatedRow>(sql`
+      SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url, b.publication_year, b.epub_url
+      FROM book_subjects bs
+      JOIN books b ON b.id = bs.book_id
+      WHERE bs.subject = ${subject}
+        AND ${forward ? sql`bs.book_id >= ${pivot}` : sql`bs.book_id < ${pivot}`}
+        AND b.source_type = 'catalog' AND b.id != ${book.id}
+        AND ${withCover ? sql`b.cover_url IS NOT NULL` : sql`b.cover_url IS NULL`}
+      ORDER BY bs.book_id
+      LIMIT ${want}
+    `);
+    found.push(...rows);
+  };
+  await take(true, true);
+  await take(true, false);
+  await take(false, true);
+  await take(false, false);
+  return found.map((r) =>
     toCard({
       id: r.id,
       slug: r.slug,
@@ -196,6 +206,17 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
     }),
   );
 }
+
+type RelatedRow = {
+  id: string;
+  slug: string;
+  title: string;
+  author: string;
+  author_slug: string | null;
+  cover_url: string | null;
+  publication_year: number | null;
+  epub_url: string | null;
+};
 
 /** The next catalog book in the same series, by series order; null when there is none. */
 export async function getNextInSeries(db: Db, book: Book): Promise<BookCard | null> {
