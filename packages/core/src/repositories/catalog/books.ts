@@ -78,7 +78,7 @@ function browseConditions(params: BrowseParams) {
   const conds = [eq(books.sourceType, "catalog")];
   if (params.subject) {
     conds.push(
-      sql`EXISTS (SELECT 1 FROM json_each(${books.subjects}) je WHERE je.value = ${params.subject})`,
+      sql`EXISTS (SELECT 1 FROM book_subjects bs WHERE bs.book_id = ${books.id} AND bs.subject = ${params.subject})`,
     );
   }
   const era = resolveEra(params.era);
@@ -177,9 +177,9 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
     epub_url: string | null;
   }>(sql`
     SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url, b.publication_year, b.epub_url
-    FROM books b, json_each(b.subjects) je
-    WHERE b.source_type = 'catalog' AND je.value = ${subject} AND b.id != ${book.id}
-    GROUP BY b.id
+    FROM book_subjects bs
+    JOIN books b ON b.id = bs.book_id
+    WHERE bs.subject = ${subject} AND b.source_type = 'catalog' AND b.id != ${book.id}
     ORDER BY b.cover_url IS NULL, RANDOM()
     LIMIT ${limit}
   `);
@@ -419,7 +419,7 @@ export function listRecCandidatesBySubjects(
     .where(
       and(
         readableCatalog,
-        sql`EXISTS (SELECT 1 FROM json_each(${books.subjects}) je WHERE lower(je.value) IN (${inList}))`,
+        sql`EXISTS (SELECT 1 FROM book_subjects bs WHERE bs.book_id = ${books.id} AND lower(bs.subject) IN (${inList}))`,
       ),
     )
     .orderBy(
