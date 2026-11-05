@@ -1,7 +1,8 @@
 // Nightly D1 backup, run from the Worker's scheduled handler (wrangler.jsonc triggers.crons).
 // d1-dump writes one JSON object per table into the BACKUPS R2 bucket and works where
 // `wrangler d1 export` fails on our FTS5 tables. The Journal's pictures (MEDIA under journal/) are
-// copied beside the dumps under files/journal/, and the COVERS bucket's objects under files/covers/,
+// copied beside the dumps under files/journal/, the COVERS bucket's objects under files/covers/, and
+// the Journal's earlier and deleted bytes (BACKUPS journal-media/) under files/journal-revisions/,
 // by d1-dump's backupFiles, each run going on where the last stopped. Capsid's nightly off-account
 // copy takes files/ to Amazon. Restore and drill: the d1-dump README.
 //
@@ -31,6 +32,10 @@ import {
 
 const JOURNAL_BACKUP = { name: "journal", prefix: "journal/" };
 const COVERS_BACKUP = { name: "covers" };
+// The Journal library's earlier and deleted bytes (journal-media-adapter.server.ts) sit in BACKUPS under
+// journal-media/, outside files/, so Amazon's copy would never take them. They are copied under
+// files/journal-revisions/ in the same bucket, where the revert path keeps reading the originals.
+const REVISIONS_BACKUP = { name: "journal-revisions", prefix: "journal-media/" };
 
 /**
  * Dump, check, then mark complete and prune, by d1-dump's runCheckedBackup. Its `counted` check
@@ -54,6 +59,7 @@ export async function runBackup(env: Env): Promise<void> {
 
 export async function runMediaBackup(env: Env): Promise<void> {
   await backupFiles(env.MEDIA, env.BACKUPS, JOURNAL_BACKUP);
+  await backupFiles(env.BACKUPS, env.BACKUPS, REVISIONS_BACKUP);
 }
 
 export async function runCoversBackup(env: Env): Promise<void> {
@@ -65,15 +71,17 @@ export async function runCoversBackup(env: Env): Promise<void> {
 export async function backupStatus(
   env: Env,
   now?: Date,
-): Promise<BackupHealth & { files: BackupHealth; covers: BackupHealth }> {
-  const [dump, files, covers] = await Promise.all([
+): Promise<BackupHealth & { files: BackupHealth; covers: BackupHealth; revisions: BackupHealth }> {
+  const [dump, files, covers, revisions] = await Promise.all([
     backupHealth(env.BACKUPS, { now }),
     filesHealth(env.BACKUPS, { name: JOURNAL_BACKUP.name, now }),
     filesHealth(env.BACKUPS, { ...COVERS_BACKUP, now }),
+    filesHealth(env.BACKUPS, { name: REVISIONS_BACKUP.name, now }),
   ]);
   const warning =
     dump.warning ??
     (files.warning && `journal files: ${files.warning}`) ??
-    (covers.warning && `cover files: ${covers.warning}`);
-  return { ...dump, files, covers, ...(warning ? { warning } : {}) };
+    (covers.warning && `cover files: ${covers.warning}`) ??
+    (revisions.warning && `journal revisions: ${revisions.warning}`);
+  return { ...dump, files, covers, revisions, ...(warning ? { warning } : {}) };
 }

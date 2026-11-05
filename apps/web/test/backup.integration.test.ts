@@ -100,6 +100,7 @@ describe("nightly backup", () => {
   it("dumps the content and the Journal's pictures, leaves every credential table out, and reports a fresh age", async () => {
     await seed();
     await env.MEDIA.put("journal/sample.png", "sample bytes");
+    await env.BACKUPS.put("journal-media/deleted/2026-01-01T00:00:00.000Z/journal/old.png", "earlier bytes");
     await env.MEDIA.put("reader/sample-book/chapter.xhtml", "re-derivable from the EPUB");
     await runBackup(workerEnv);
     await runMediaBackup(workerEnv);
@@ -136,6 +137,13 @@ describe("nightly backup", () => {
     expect(await (await env.BACKUPS.get("files/journal/journal/sample.png"))?.text()).toBe(
       "sample bytes",
     );
+    expect(
+      await (
+        await env.BACKUPS.get(
+          "files/journal-revisions/journal-media/deleted/2026-01-01T00:00:00.000Z/journal/old.png",
+        )
+      )?.text(),
+    ).toBe("earlier bytes");
     // The EPUBs and their reader files are fetched again, never backed up.
     expect(written.some((k) => k.includes("reader/"))).toBe(false);
   });
