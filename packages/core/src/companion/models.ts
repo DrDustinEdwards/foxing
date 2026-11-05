@@ -9,7 +9,7 @@
 export const MODELS = {
   fast: "claude-haiku-4-5-20251001", // cheap, high-frequency (word_lookup, word_aspect, ...)
   standard: "claude-sonnet-5", // default. Sonnet 4.6 is LEGACY -- do not use it.
-  deep: "claude-opus-4-8", // heavy reasoning (deep_dive, reading_personality)
+  deep: "claude-opus-5-5", // heavy reasoning (deep_dive, reading_personality)
 } as const;
 
 export type CompanionRole = keyof typeof MODELS;
@@ -19,13 +19,13 @@ export function resolveModel(role: CompanionRole): string {
 }
 
 // Per-million-token USD rates for the pinned models above (checked against
-// platform.claude.com/docs/en/about-claude/pricing on 2026-07-10). Update alongside
+// platform.claude.com/docs/en/about-claude/pricing on 2026-11-05). Update alongside
 // MODELS whenever a pinned model changes -- quota math is meaningless against a stale
 // rate. Sonnet 5 is introductory pricing through 2026-08-31; revisit after that date.
 const RATES_PER_MTOK: Record<CompanionRole, { input: number; output: number }> = {
   fast: { input: 1, output: 5 }, // Haiku 4.5
   standard: { input: 2, output: 10 }, // Sonnet 5 (introductory, through 2026-08-31)
-  deep: { input: 5, output: 25 }, // Opus 4.8
+  deep: { input: 4, output: 20 }, // Opus 5.5
 };
 
 /** Estimated cost of one call, in whole cents (rounded up so quota math never undercounts). */
