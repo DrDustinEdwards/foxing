@@ -97,9 +97,10 @@ async function health(at?: Date) {
 describe("nightly backup", () => {
   beforeEach(reset);
 
-  it("dumps the content and the media files, leaves every credential table out, and reports a fresh age", async () => {
+  it("dumps the content and the Journal's pictures, leaves every credential table out, and reports a fresh age", async () => {
     await seed();
     await env.MEDIA.put("journal/sample.png", "sample bytes");
+    await env.MEDIA.put("reader/sample-book/chapter.xhtml", "re-derivable from the EPUB");
     await runBackup(workerEnv);
     await runMediaBackup(workerEnv);
     await runCoversBackup(workerEnv);
@@ -132,9 +133,11 @@ describe("nightly backup", () => {
     expect(body.backup.age_hours).toBeLessThan(1);
     expect(body.backup.warning).toBeUndefined();
     expect(body.backup.files.age_hours).toBeLessThan(1);
-    expect(await (await env.BACKUPS.get("files/media/journal/sample.png"))?.text()).toBe(
+    expect(await (await env.BACKUPS.get("files/journal/journal/sample.png"))?.text()).toBe(
       "sample bytes",
     );
+    // The EPUBs and their reader files are fetched again, never backed up.
+    expect(written.some((k) => k.includes("reader/"))).toBe(false);
   });
 
   it("leaves an emptied database without a marker, throws, and health says so", async () => {

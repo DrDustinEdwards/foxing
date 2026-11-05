@@ -1,9 +1,9 @@
 // Nightly D1 backup, run from the Worker's scheduled handler (wrangler.jsonc triggers.crons).
 // d1-dump writes one JSON object per table into the BACKUPS R2 bucket and works where
-// `wrangler d1 export` fails on our FTS5 tables. The MEDIA bucket's objects (the EPUBs, reader
-// assets and the Journal's pictures) are copied beside the dumps under files/media/, and the COVERS
-// bucket's under files/covers/, by d1-dump's backupFiles, each run going on where the last stopped.
-// Restore and drill: the d1-dump README.
+// `wrangler d1 export` fails on our FTS5 tables. The Journal's pictures (MEDIA under journal/) are
+// copied beside the dumps under files/journal/, and the COVERS bucket's objects under files/covers/,
+// by d1-dump's backupFiles, each run going on where the last stopped. Capsid's nightly off-account
+// copy takes files/ to Amazon. Restore and drill: the d1-dump README.
 //
 // NOT BACKED UP, and why:
 //   APP_KV     caches (catalog, recommendations), the companion's daily counters (25-hour TTL), the
@@ -12,6 +12,9 @@
 //   CLUB_ROOM  fan-out only: it never writes, so it holds nothing to restore (workers/club-room.ts).
 //   RATE_LIMITER  counters that expire within their window.
 //   BACKUPS    the copy itself.
+//   MEDIA outside journal/  the public-domain EPUBs (se/, pg*.epub) and their exploded reader files
+//              (reader/, from scripts/explode-epubs). Dustin, 2026-11-05: they can be fetched again,
+//              so they are not backed up; 3.4 GB in 73,000 files would also never finish a pass.
 import {
   type BackupHealth,
   backupFiles,
@@ -26,7 +29,7 @@ import {
   BACKUP_REQUIRED_TABLES,
 } from "./backup-checks";
 
-const MEDIA_BACKUP = { name: "media" };
+const JOURNAL_BACKUP = { name: "journal", prefix: "journal/" };
 const COVERS_BACKUP = { name: "covers" };
 
 /**
@@ -50,27 +53,27 @@ export async function runBackup(env: Env): Promise<void> {
 }
 
 export async function runMediaBackup(env: Env): Promise<void> {
-  await backupFiles(env.MEDIA, env.BACKUPS, MEDIA_BACKUP);
+  await backupFiles(env.MEDIA, env.BACKUPS, JOURNAL_BACKUP);
 }
 
 export async function runCoversBackup(env: Env): Promise<void> {
   await backupFiles(env.COVERS, env.BACKUPS, COVERS_BACKUP);
 }
 
-/** The newest complete dump's age, with the media pass's under `files` and the covers pass's under
- *  `covers`, for /health. Warns past 26 hours. Never throws. */
+/** The newest complete dump's age, with the Journal pictures' pass under `files` and the covers pass's
+ *  under `covers`, for /health. Warns past 26 hours. Never throws. */
 export async function backupStatus(
   env: Env,
   now?: Date,
 ): Promise<BackupHealth & { files: BackupHealth; covers: BackupHealth }> {
   const [dump, files, covers] = await Promise.all([
     backupHealth(env.BACKUPS, { now }),
-    filesHealth(env.BACKUPS, { ...MEDIA_BACKUP, now }),
+    filesHealth(env.BACKUPS, { name: JOURNAL_BACKUP.name, now }),
     filesHealth(env.BACKUPS, { ...COVERS_BACKUP, now }),
   ]);
   const warning =
     dump.warning ??
-    (files.warning && `media files: ${files.warning}`) ??
+    (files.warning && `journal files: ${files.warning}`) ??
     (covers.warning && `cover files: ${covers.warning}`);
   return { ...dump, files, covers, ...(warning ? { warning } : {}) };
 }
