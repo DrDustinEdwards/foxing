@@ -110,6 +110,7 @@ export const diaryEntries = sqliteTable(
   (t) => [
     index("diary_user_book_idx").on(t.userId, t.bookId),
     index("diary_updated_idx").on(t.updatedAt),
+    index("diary_book_visibility_idx").on(t.bookId, t.visibility, t.logDate),
   ],
 );
 

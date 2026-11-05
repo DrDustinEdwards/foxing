@@ -141,6 +141,13 @@
       "when": 1793763227980,
       "tag": "0019_site_api_gone_and_hook_runs",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1793849627980,
+      "tag": "0020_hot_query_indexes",
+      "breakpoints": true
     }
   ]
 }

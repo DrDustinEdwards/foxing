@@ -49,6 +49,7 @@ export const books = sqliteTable(
     index("books_author_slug_idx").on(t.authorSlug),
     index("books_source_type_idx").on(t.sourceType),
     index("books_isbn13_idx").on(t.isbn13),
+    index("books_author_source_idx").on(t.authorSlug, t.sourceType, t.publicationYear),
   ],
 );
 
@@ -113,7 +114,10 @@ export const externalBookClubPicks = sqliteTable(
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
-  (t) => [index("external_picks_club_id_idx").on(t.clubId)],
+  (t) => [
+    index("external_picks_club_id_idx").on(t.clubId),
+    index("external_picks_club_published_idx").on(t.clubId, t.isPublished),
+  ],
 );
 
 export const bookOfTheMonth = sqliteTable("book_of_the_month", {
