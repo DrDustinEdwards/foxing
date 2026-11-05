@@ -76,10 +76,16 @@ export type BrowseResult = {
 };
 
 function browseConditions(params: BrowseParams) {
-  const conds = [eq(books.sourceType, "catalog")];
+  // With a subject, start from the subject's index entries and look each book up by id. Left alone, SQLite (no
+  // statistics on D1) walks every catalog book and probes book_subjects for each, reading the whole catalog on
+  // every genre page. The unary plus on source_type keeps it from choosing that index instead, the documented
+  // way to disable one (sqlite.org/optoverview.html, "Disabling Automatic Index Use").
+  const conds = [
+    params.subject ? sql`+${books.sourceType} = 'catalog'` : eq(books.sourceType, "catalog"),
+  ];
   if (params.subject) {
     conds.push(
-      sql`EXISTS (SELECT 1 FROM book_subjects bs WHERE bs.book_id = ${books.id} AND bs.subject = ${params.subject})`,
+      sql`${books.id} IN (SELECT book_id FROM book_subjects WHERE subject = ${params.subject})`,
     );
   }
   const era = resolveEra(params.era);
