@@ -21,6 +21,7 @@
     "0016_site_api_media_uploads.sql": "c2a04012fc34641da1ed9ad2b96fb4d9a3f5db3f7be992835961b8b391faeecd",
     "0017_drop_profiles_is_admin.sql": "9714f05c8c82f273b21b20098b562a42e032c8b80953d87749c2d12d561a1821",
     "0018_journal_series_and_full_history.sql": "cb179359e5298620b4f352b81320de554d65df7bab96ce0afc3596be1228c063",
-    "0019_site_api_gone_and_hook_runs.sql": "2c0d2eeb4156177ffe174389838cde317d8cd85ef35899999afdf7e7e502cace"
+    "0019_site_api_gone_and_hook_runs.sql": "2c0d2eeb4156177ffe174389838cde317d8cd85ef35899999afdf7e7e502cace",
+    "0020_hot_query_indexes.sql": "4bd1ea6133cbb86e322f124e460068e2f0e7cd32ba8fcd342c7d43c0f5dd227a"
   }
 }
