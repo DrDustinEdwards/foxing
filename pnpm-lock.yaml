@@ -1512,7 +1512,7 @@ packages:
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/33fdcc21849e216f354ff513dddceb8446ad8400':
     resolution: {gitHosted: true, integrity: sha512-xjCRGMRsNIvfoPW0VmsCVkUpmOMyV6sexI5W44J8bGRlWAC54YEJa3wZafoILBYZK0cnfnh1RQwCkdXfUpHfNQ==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/33fdcc21849e216f354ff513dddceb8446ad8400}
-    version: 0.74.0
+    version: 0.75.0
     hasBin: true
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/c671edc26fbd23501e693749a796f06fda69e6ff':
