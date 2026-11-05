@@ -39,7 +39,14 @@ import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { pruneAuthEvents } from "@dustinedwards/site-runtime/sign-in";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
-import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
+import {
+  billing,
+  catalogRepo,
+  companion,
+  createDb,
+  deleteExpiredAuthRows,
+  push,
+} from "@foxing/core";
 import { Hono } from "hono";
 import { RouterContextProvider, type ServerBuild, createRequestHandler } from "react-router";
 import { cloudflareContext, cspNonceContext } from "../app/context";
@@ -471,6 +478,7 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "push-sweep": runPushSweep,
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,
+  "prune-expired-auth": (env) => deleteExpiredAuthRows(createDb(env.DB), new Date()),
 };
 
 async function scheduled(event: ScheduledController, env: Env): Promise<void> {

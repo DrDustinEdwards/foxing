@@ -20,9 +20,11 @@ export const CRON_TRIGGERS = {
   // hooks that failed, empties the content trash of posts 30 days in it, and prunes its replay
   // store (app/lib/carrel/site-api.server.ts).
   "* * * * *": [{ name: "carrel-schedules", everyMinutes: 1, timeoutMs: 50_000 }],
-  // Daily: enqueue catalog books needing cached AI generation, and copy the COVERS bucket (its own
+  // Daily: delete expired Better Auth sessions and sign-in values, enqueue catalog books needing cached
+  // AI generation, and copy the COVERS bucket (its own
   // trigger, so the nightly one stays inside its fifteen minutes).
   "0 8 * * *": [
+    { name: "prune-expired-auth", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "companion-cache", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "covers-backup", everyMinutes: 1440, timeoutMs: 6 * 60_000 },
   ],
