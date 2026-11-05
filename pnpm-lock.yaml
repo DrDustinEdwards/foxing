@@ -1495,7 +1495,7 @@ packages:
 
   '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/fb09df7139e838f9a4f699530f2cbc7d662150b9':
     resolution: {gitHosted: true, integrity: sha512-d2BNF5zjYfhIMbWlDwppdulAN+uncNzRZcL99zCuXNmqJpAc6fYBThFK3YZgEFqHK+j9y+WnP17hX6jos9Ek6Q==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/fb09df7139e838f9a4f699530f2cbc7d662150b9}
-    version: 0.12.0
+    version: 0.12.1
     engines: {node: '>=24.14.1'}
     hasBin: true
 
