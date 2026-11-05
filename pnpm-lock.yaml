@@ -264,8 +264,8 @@ importers:
         specifier: github:DrDustinEdwards/prelum#v0.32.1
         version: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/4db933115fd46e995c2ef554e8d972c508da38f5(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
       '@dustinedwards/d1-dump':
-        specifier: github:DrDustinEdwards/d1-dump#v0.8.0
-        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/69b4ff6032b15e3c2ff26e65917305a9eda9e5bc
+        specifier: github:DrDustinEdwards/d1-dump#v0.12.0
+        version: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/1c1ce8775b53b26125725a3bf2ff86b24c6fd029
       '@dustinedwards/site-api':
         specifier: github:DrDustinEdwards/site-api#v0.22.0
         version: https://codeload.github.com/DrDustinEdwards/site-api/tar.gz/59da99b2ed046b9df10620abdb7bc24cab514291(enarratio@0.7.3)(hast-util-to-string@3.0.1)(mdast-util-gfm@3.1.0)(mdast-util-to-markdown@2.2.0)(parse5@8.0.1)(playwright-core@1.63.0)(rehype-autolink-headings@7.1.0)(rehype-slug@6.0.0)(rehype-stringify@10.0.1)(remark-directive@4.0.0)(remark-gfm@4.0.1)(remark-parse@11.0.0)(remark-rehype@11.1.2)(remark-smartypants@3.0.3)(unified@11.0.5)(unist-util-visit@5.2.0)
@@ -1397,7 +1397,7 @@ packages:
         optional: true
 
   '@drdustinedwards/site-helpers@https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/e03ead8283cd200687c62600be5c41d34c9d2a3f':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/e03ead8283cd200687c62600be5c41d34c9d2a3f}
+    resolution: {gitHosted: true, integrity: sha512-USK7l/4AHfsIqaQZQ3WIfPhxZ+6kEL2C8HMZngfsz6eM1lU5ZFObABwrHqJIKf/76byPKxc6nDfnrjeh9hA0KQ==, tarball: https://codeload.github.com/DrDustinEdwards/prelum/tar.gz/e03ead8283cd200687c62600be5c41d34c9d2a3f}
     version: 0.31.4
     hasBin: true
     peerDependencies:
@@ -1493,9 +1493,9 @@ packages:
   '@drizzle-team/brocli@0.10.2':
     resolution: {integrity: sha512-z33Il7l5dKjUgGULTqBsQBQwckHh5AbIuxhdsIxDDiZAzBOrZO6q9ogcWC65kU382AfynTfgNumVcNIjuIua6w==}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/69b4ff6032b15e3c2ff26e65917305a9eda9e5bc':
-    resolution: {gitHosted: true, integrity: sha512-cqmjp53WYoqzBBH3f4opCSB3izY63SEDOtJSbFVdoXjxZ1vIO+ApgTaS3hgHWJj/axw9uA0N1FQQhQR0lZ5FGw==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/69b4ff6032b15e3c2ff26e65917305a9eda9e5bc}
-    version: 0.8.0
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/1c1ce8775b53b26125725a3bf2ff86b24c6fd029':
+    resolution: {gitHosted: true, integrity: sha512-Dq3PDasDhhKCwFgW9WxbhGzSYdhVe6zsWrA7Ywm1MzpQSvDmFEgPgDG0dOLeY9ujVEFtEk8krDtg/sWXcc5mCQ==, tarball: https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/1c1ce8775b53b26125725a3bf2ff86b24c6fd029}
+    version: 0.12.0
     engines: {node: '>=24.14.1'}
     hasBin: true
 
@@ -1516,7 +1516,7 @@ packages:
     hasBin: true
 
   '@dustinedwards/site-runtime@https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/c671edc26fbd23501e693749a796f06fda69e6ff':
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/c671edc26fbd23501e693749a796f06fda69e6ff}
+    resolution: {gitHosted: true, integrity: sha512-FN0fWVKP4c0RjiPQSWjkDDOIIvYZ/mfRwk1ZNUjeO5IUtJWG2xC7khRHTCSxNRXp1zUToSwhYMFD/sRrKriqKg==, tarball: https://codeload.github.com/DrDustinEdwards/site-runtime/tar.gz/c671edc26fbd23501e693749a796f06fda69e6ff}
     version: 0.72.0
     hasBin: true
 
@@ -8624,7 +8624,7 @@ snapshots:
 
   '@drizzle-team/brocli@0.10.2': {}
 
-  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/69b4ff6032b15e3c2ff26e65917305a9eda9e5bc': {}
+  '@dustinedwards/d1-dump@https://codeload.github.com/DrDustinEdwards/d1-dump/tar.gz/1c1ce8775b53b26125725a3bf2ff86b24c6fd029': {}
 
   '@dustinedwards/devkit@https://codeload.github.com/DrDustinEdwards/devkit/tar.gz/454002f526e5e8e645a9c110605880e220b611a0': {}
 
@@ -10292,9 +10292,7 @@ snapshots:
       metro-runtime: 0.84.5
     transitivePeerDependencies:
       - '@babel/core'
-      - bufferutil
       - supports-color
-      - utf-8-validate
 
   '@react-native/normalize-colors@0.86.3': {}
 
