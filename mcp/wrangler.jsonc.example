@@ -12,7 +12,9 @@
   // nodejs_compat is on by default, which the MCP SDK needs.
   "compatibility_flags": ["global_fetch_strictly_public"],
 
-  "observability": { "enabled": true },
+  // Logs: every invocation (head_sampling_rate 1), stated so a change to it is a reviewed one; an admin
+  // server's traffic is one person's.
+  "observability": { "enabled": true, "head_sampling_rate": 1 },
   "minify": true,
   "upload_source_maps": true,
 
