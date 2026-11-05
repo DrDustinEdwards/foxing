@@ -13,7 +13,7 @@
     "lint": "biome lint ."
   },
   "dependencies": {
-    "@better-auth/expo": "~1.7.12",
+    "@better-auth/expo": "~1.7.17",
     "@epubjs-react-native/core": "^1.4.7",
     "@expo-google-fonts/dm-mono": "^0.4.2",
     "@expo-google-fonts/dm-sans": "^0.4.2",
@@ -28,7 +28,7 @@
     "@sentry/react-native": "~7.11.0",
     "@tanstack/react-query": "^5.104.5",
     "babel-preset-expo": "~57.0.16",
-    "better-auth": "~1.7.12",
+    "better-auth": "~1.7.17",
     "expo": "~57.0.31",
     "expo-asset": "~57.0.20",
     "expo-build-properties": "~57.0.22",
