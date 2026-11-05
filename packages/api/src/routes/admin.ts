@@ -414,6 +414,18 @@ adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
+// ---- Backup -------------------------------------------------------------------
+
+// Runs the files backup now: the same passes as the nightly cron (the Worker's backupFilesNow), copy
+// only, so it writes nothing outside the backups bucket and is safe to repeat. A pass stops at its
+// write or time budget and the next run goes on from there.
+adminRoutes.post("/admin/backup/media", rateLimit("write"), async (c) => {
+  requireAdmin(c);
+  const files = await c.get("backupFiles")(c.env);
+  await audit(c, "backup.media", { passes: files.map((f) => f.name) });
+  return c.json({ files });
+});
+
 // ---- Broadcast notifications --------------------------------------------------
 
 adminRoutes.post("/admin/notifications/broadcast", rateLimit("write"), async (c) => {

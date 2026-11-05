@@ -656,6 +656,25 @@ export const TOOLS: ToolDefinition[] = [
   },
 
   {
+    name: "foxing_backup_media",
+    scope: "write",
+    config: {
+      title: "Back up the files now",
+      description:
+        "Runs the nightly files backup now: one pass each over the Journal's pictures, the Journal's earlier " +
+        "and deleted bytes, and the book covers into the backups bucket (files/journal/, files/journal-revisions/ " +
+        "and files/covers/), which Capsid copies to Amazon. It copies new and changed files and drops a copy " +
+        "only 30 days after its file is gone; it never writes or deletes in the media or covers buckets. A pass " +
+        "stops at its write or time budget and the next goes on from there. Reports each backup's counts and " +
+        "whether its pass completed.",
+      inputSchema: z.strictObject({}),
+      outputSchema: z.looseObject({ files: z.array(record) }),
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+    },
+    handler: (env, _args, signal) => single(env, "POST", "/backup/media", { signal }),
+  },
+
+  {
     name: "foxing_publish_club_pick",
     scope: "write",
     config: {
