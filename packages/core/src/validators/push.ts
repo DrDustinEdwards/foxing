@@ -23,10 +23,12 @@ export const notificationPrefsInput = z.object({
 });
 export type NotificationPrefsInput = z.infer<typeof notificationPrefsInput>;
 
-// POST /notifications/read: the given notifications, or every one only when asked for by name. Anything else is a 422
-// that changes nothing (a malformed body used to mark all of them read). One page of ids fits one D1 IN list.
+// POST /notifications/read: { ids } marks those (one page fits one D1 IN list); a body naming no ids, `{}` or
+// { all: true }, marks every one. `{}` is mark-all as the API has always read it and as mobile builds before
+// { all: true } still send it. A body that is not one of these (wrong types, empty ids, all: false, unknown keys,
+// not JSON) is a 422 that changes nothing (RFC 9110 section 15.5.21); it used to fall through to mark-all.
 export const markNotificationsReadInput = z.union([
   z.strictObject({ ids: z.array(z.string().min(1).max(64)).min(1).max(90) }),
-  z.strictObject({ all: z.literal(true) }),
+  z.strictObject({ all: z.literal(true).optional() }),
 ]);
 export type MarkNotificationsReadInput = z.infer<typeof markNotificationsReadInput>;
