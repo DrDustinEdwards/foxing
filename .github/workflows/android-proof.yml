@@ -23,5 +23,7 @@ jobs:
         working-directory: apps/mobile
       # Install CMake and the NDK once, up front: Gradle's parallel native tasks otherwise race to install them.
       - run: echo y | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "cmake;3.22.1" "ndk;27.1.12297006" "ndk;27.0.12077973" > /dev/null
-      - run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
+      - run: |
+          set -o pipefail
+          ./gradlew assembleRelease --no-daemon --info --max-workers=2 -PreactNativeArchitectures=arm64-v8a 2>&1 | tee /tmp/gradle.log | grep -v '^\s*$' | tail -n 5 || { grep -n -B3 -A25 'CMake Error\|ninja: error\|fatal error\|Caused by' /tmp/gradle.log | head -150; exit 1; }
         working-directory: apps/mobile/android
