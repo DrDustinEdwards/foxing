@@ -21,6 +21,7 @@ Web stack: Workers, D1, R2, KV, React Router 8 framework mode. An npm workspaces
 ## Commands
 
 Run mobile commands in `apps/mobile`, web in `apps/web`; install at the root.
+
 - Root: `npm run dev:web`, `dev:mobile`, `build:web`, `type-check` (both apps), `lint` (Oxlint, `oxlint.config.ts`).
 - Web deploy: a merge to main deploys (the `deploy` job in `.github/workflows/ci-cf.yml`, devkit's worker-deploy.yml, on while the repository variable `CF_DEPLOY` is `true`): it applies the pending D1 migrations that only add (a drop, rename or row delete is refused for a hand run), deploys, and rolls back if /health or the home page refuses it; then `e2e` runs against the live site. `cd apps/web && npm run deploy` still deploys by hand.
 - D1 migrations: author with drizzle-kit in `packages/core` (`packages/core/migrations`), apply with wrangler. Never hand-run production DDL.

@@ -119,7 +119,9 @@ function ClubRow({
               <AdminButton
                 variant="danger"
                 pending={pending}
-                onClick={() => void run(`/clubs/${club.id}`, { method: "DELETE" }, "Could not delete")}
+                onClick={() =>
+                  void run(`/clubs/${club.id}`, { method: "DELETE" }, "Could not delete")
+                }
               >
                 Confirm delete
               </AdminButton>

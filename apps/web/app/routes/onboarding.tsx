@@ -205,7 +205,11 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
       )}
 
       <div className="mt-10">
-        <button type="button" onClick={() => void navigate("/home")} className="fx-onboarding-btn-2">
+        <button
+          type="button"
+          onClick={() => void navigate("/home")}
+          className="fx-onboarding-btn-2"
+        >
           Skip for now
         </button>
       </div>

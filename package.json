@@ -1,15 +1,12 @@
 {
   "name": "foxing",
   "private": true,
-  "type": "module",
-  "engines": {
-    "node": ">=26 <27"
-  },
   "workspaces": [
     "apps/web",
     "apps/mobile",
     "packages/*"
   ],
+  "type": "module",
   "scripts": {
     "dev:mobile": "npm run start -w mobile",
     "dev:web": "npm run dev -w web",
@@ -38,5 +35,8 @@
   "overrides": {
     "react": "19.2.7",
     "react-dom": "19.2.7"
+  },
+  "engines": {
+    "node": ">=26 <27"
   }
 }

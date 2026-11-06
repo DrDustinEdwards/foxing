@@ -28,7 +28,10 @@ import {
 } from "../schema";
 
 async function countWhere(db: Db, table: SQLiteTable, where?: SQL): Promise<number> {
-  const [row] = await db.select({ n: sql<number>`count(*)` }).from(table).where(where);
+  const [row] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(table)
+    .where(where);
   return row?.n ?? 0;
 }
 

@@ -138,7 +138,7 @@ jobs:
         echo "home page answered $code";
         if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
       working-directory: apps/web
-      install: 'npm ci'
+      install: "npm ci"
       pre-deploy: >-
         sed -e "s|<D1_DATABASE_ID>|${{ vars.D1_DATABASE_ID }}|"
         -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|"

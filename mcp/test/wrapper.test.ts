@@ -11,7 +11,6 @@ import assert from "node:assert/strict";
 import { readdirSync, readFileSync } from "node:fs";
 import { describe, test } from "node:test";
 
-
 const config = JSON.parse(
   readFileSync(new URL("../wrangler.jsonc.example", import.meta.url), "utf8")
     .replace(/\/\*[\s\S]*?\*\//g, "")
@@ -38,15 +37,17 @@ describe("bindings", () => {
     assert.deepEqual(keys.sort(), ["durable_objects", "kv_namespaces", "r2_buckets", "services"]);
     assert.deepEqual(config.services, [{ binding: "FOXING", service: "foxing" }]);
     // The one bucket is this server's own copy of its tool-call log (L6), never one of Foxing's.
-    assert.deepEqual(config.r2_buckets, [{ binding: "AUDIT_BUCKET", bucket_name: "foxing-admin-mcp-tool-calls" }]);
+    assert.deepEqual(config.r2_buckets, [
+      { binding: "AUDIT_BUCKET", bucket_name: "foxing-admin-mcp-tool-calls" },
+    ]);
     assert.deepEqual(
       config.kv_namespaces.map((k: { binding: string }) => k.binding),
       ["OAUTH_KV"],
     );
-    assert.deepEqual(
-      config.durable_objects.bindings.map((b: { name: string }) => b.name).sort(),
-      ["MCP_RATE_LIMIT", "TOOL_CALL_LOG"],
-    );
+    assert.deepEqual(config.durable_objects.bindings.map((b: { name: string }) => b.name).sort(), [
+      "MCP_RATE_LIMIT",
+      "TOOL_CALL_LOG",
+    ]);
   });
 
   test("no var or secret name mentions Stripe", () => {

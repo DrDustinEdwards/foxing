@@ -51,7 +51,11 @@ export interface FakeLog {
 }
 
 export function fakeLog(): FakeLog {
-  const log: FakeLog = { rows: [], fail: false, binding: undefined as unknown as DurableObjectNamespace };
+  const log: FakeLog = {
+    rows: [],
+    fail: false,
+    binding: undefined as unknown as DurableObjectNamespace,
+  };
   log.binding = {
     idFromName: (name: string) => name,
     get: () => ({
@@ -78,5 +82,9 @@ export function freshEnv(foxing: FakeFoxing, log: FakeLog): ToolEnv {
 
 const adminProps = { email: ADMIN_EMAIL };
 
-export const WRITER: Caller = { kind: "admin", props: adminProps, scopes: ["foxing.read", "foxing.write"] };
+export const WRITER: Caller = {
+  kind: "admin",
+  props: adminProps,
+  scopes: ["foxing.read", "foxing.write"],
+};
 export const READER: Caller = { kind: "admin", props: adminProps, scopes: ["foxing.read"] };

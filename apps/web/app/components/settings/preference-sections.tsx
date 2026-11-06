@@ -48,7 +48,12 @@ export function BillingSection({
             You are on <span className="strong">Foxing Plus</span>
             {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
           </p>
-          <button type="button" onClick={() => void manage()} disabled={pending} className="cap-btn">
+          <button
+            type="button"
+            onClick={() => void manage()}
+            disabled={pending}
+            className="cap-btn"
+          >
             {pending ? "Opening..." : "Manage billing"}
           </button>
         </div>

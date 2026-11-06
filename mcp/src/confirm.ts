@@ -31,24 +31,52 @@ function canonical(value: unknown): string {
   return JSON.stringify(value) ?? "null";
 }
 
-async function sign(env: ConfirmEnv, tool: string, expires: number, args: Record<string, unknown>): Promise<string | null> {
+async function sign(
+  env: ConfirmEnv,
+  tool: string,
+  expires: number,
+  args: Record<string, unknown>,
+): Promise<string | null> {
   const secret = env.ADMIN_OPERATOR_TOKEN;
   if (typeof secret !== "string" || secret.length < 32) return null;
-  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(`${LABEL}\n${secret}`), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(`${LABEL}\n${secret}`),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
   const { confirm: _ignored, ...rest } = args;
-  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${tool}\n${expires}\n${canonical(rest)}`));
+  const mac = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    new TextEncoder().encode(`${tool}\n${expires}\n${canonical(rest)}`),
+  );
   return toHex(mac);
 }
 
 /** A token for exactly this call, or null when the Worker has no operator token to key it with. */
-export async function confirmationFor(env: ConfirmEnv, tool: string, args: Record<string, unknown>, now = Date.now()) {
+export async function confirmationFor(
+  env: ConfirmEnv,
+  tool: string,
+  args: Record<string, unknown>,
+  now = Date.now(),
+) {
   const expires = now + TTL_MS;
   const mac = await sign(env, tool, expires, args);
-  return mac ? { token: `${expires.toString(36)}.${mac}`, expiresAt: new Date(expires).toISOString() } : null;
+  return mac
+    ? { token: `${expires.toString(36)}.${mac}`, expiresAt: new Date(expires).toISOString() }
+    : null;
 }
 
 /** Whether `token` was issued for exactly this tool and these arguments, and is still fresh. */
-export async function isConfirmed(env: ConfirmEnv, tool: string, args: Record<string, unknown>, token: string, now = Date.now()): Promise<boolean> {
+export async function isConfirmed(
+  env: ConfirmEnv,
+  tool: string,
+  args: Record<string, unknown>,
+  token: string,
+  now = Date.now(),
+): Promise<boolean> {
   const match = /^([0-9a-z]{1,12})\.([0-9a-f]{64})$/.exec(token);
   if (!match) return false;
   const expires = Number.parseInt(match[1], 36);

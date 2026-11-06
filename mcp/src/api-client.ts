@@ -71,21 +71,30 @@ export async function callAdmin(
   for (const [key, value] of Object.entries(options.query ?? {})) {
     if (value !== undefined) query.set(key, String(value));
   }
-  const { status, ok, body } = await callApi(env, LEG, `/api/v1/admin${path}${query.size ? `?${query}` : ""}`, {
-    method,
-    headers: { [ACTOR_HEADER]: env.FOXING_ADMIN_ID?.trim() ?? "" },
-    json: options.body,
-    // The call's abort signal (checklist P11): a client that closes the stream stops the request to the API.
-    signal: options.signal,
-  });
+  const { status, ok, body } = await callApi(
+    env,
+    LEG,
+    `/api/v1/admin${path}${query.size ? `?${query}` : ""}`,
+    {
+      method,
+      headers: { [ACTOR_HEADER]: env.FOXING_ADMIN_ID?.trim() ?? "" },
+      json: options.body,
+      // The call's abort signal (checklist P11): a client that closes the stream stops the request to the API.
+      signal: options.signal,
+    },
+  );
   if (ok) return { status, ok: true, data: body };
 
   // The API's error envelope: { error: { code, message, details? } } (packages/api/src/error.ts).
-  const envelope = (body as { error?: { code?: unknown; message?: unknown; details?: unknown } })?.error;
+  const envelope = (body as { error?: { code?: unknown; message?: unknown; details?: unknown } })
+    ?.error;
   return {
     status,
     ok: false,
-    error: typeof envelope?.message === "string" ? envelope.message : `The Foxing admin API refused with status ${status}.`,
+    error:
+      typeof envelope?.message === "string"
+        ? envelope.message
+        : `The Foxing admin API refused with status ${status}.`,
     code: typeof envelope?.code === "string" ? envelope.code : undefined,
     details: envelope?.details,
   };

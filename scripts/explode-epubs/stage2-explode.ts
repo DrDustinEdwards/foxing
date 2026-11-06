@@ -64,17 +64,16 @@ function contentType(path: string): string {
   return CONTENT_TYPES[ext] ?? "application/octet-stream";
 }
 
-const r2 =
-  LOCAL
-    ? null
-    : new S3Client({
-        region: "auto",
-        endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-        credentials: {
-          accessKeyId: requireEnv("R2_ACCESS_KEY_ID"),
-          secretAccessKey: requireEnv("R2_SECRET_ACCESS_KEY"),
-        },
-      });
+const r2 = LOCAL
+  ? null
+  : new S3Client({
+      region: "auto",
+      endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: requireEnv("R2_ACCESS_KEY_ID"),
+        secretAccessKey: requireEnv("R2_SECRET_ACCESS_KEY"),
+      },
+    });
 
 function requireEnv(name: string): string {
   const v = process.env[name];
@@ -206,7 +205,8 @@ async function main() {
     JSON.stringify({ ok, skipped, failed, objects, errors }, null, 2),
   );
   console.log(`\n[stage2] done: ok=${ok} skipped=${skipped} failed=${failed} objects~=${objects}`);
-  if (errors.length) console.log(`[stage2] ${errors.length} failures in reports/explode-report.json`);
+  if (errors.length)
+    console.log(`[stage2] ${errors.length} failures in reports/explode-report.json`);
 }
 
 main().catch((e) => {

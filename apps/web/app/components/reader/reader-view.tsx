@@ -332,7 +332,6 @@ export function ReaderView(props: ReaderViewProps) {
     // oxlint-disable-next-line react/exhaustive-deps -- mount once per book; inputs are session-stable or ref-read
   }, [manifestUrl]);
 
-
   // Keyboard navigation (ignored while a panel, composer, or prompt is open, or
   // when focus is in a text field).
   useEffect(() => {
