@@ -24,6 +24,6 @@
     "0019_site_api_gone_and_hook_runs.sql": "2c0d2eeb4156177ffe174389838cde317d8cd85ef35899999afdf7e7e502cace",
     "0020_hot_query_indexes.sql": "4bd1ea6133cbb86e322f124e460068e2f0e7cd32ba8fcd342c7d43c0f5dd227a",
     "0021_book_subjects.sql": "3fede7847ea881363ede7f620988411dec51550f3f8ccc0697af0bb42b20f96b",
-    "0022_companion_usage.sql": "f83f866d421e97bbd661dc42bd2b8388f68c8f6f16daec5b54591fa5bddc1493"
+    "0022_companion_usage.sql": "00cc577e4032e27010692f0d44037825cdbc35070b7461d0f06343b41ca230f3"
   }
 }
