@@ -583,8 +583,8 @@ const under = (pathname: string, prefix: string) =>
 // follow that redirect to the logout page and read its 200 as success, so on an API the answer
 // is a 401 the admin screens show as their error instead; the next page load signs out. The
 // admin MCP's service-binding calls carry no Access token, so the idle check never sees them.
-async function withAdminIdleSignOut(request: Request, handle: () => Promise<Response>) {
-  const res = await withAdminIdle(request, handle, { prefixes: [ADMIN_PAGES, ...ADMIN_APIS] });
+async function withAdminIdleSignOut(request: Request, env: Env, handle: () => Promise<Response>) {
+  const res = await withAdminIdle(request, handle, { prefixes: [ADMIN_PAGES, ...ADMIN_APIS], secret: env.ADMIN_IDLE_SECRET });
   const { pathname } = new URL(request.url);
   if (res.status !== 302 || res.headers.get("Location") !== ACCESS_LOGOUT_PATH) return res;
   if (!ADMIN_APIS.some((prefix) => under(pathname, prefix))) return res;
@@ -630,7 +630,7 @@ export default {
         );
       return new URL(request.url).pathname === ADMIN_LIST_PATH
         ? adminList(request, env)
-        : withAdminIdleSignOut(request, () => handleFetch(request, env, ctx));
+        : withAdminIdleSignOut(request, env, () => handleFetch(request, env, ctx));
     },
     {
       sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA,
