@@ -84,7 +84,7 @@ export function LanguageTab({
 
       <Section label="Vocabulary export">
         <Pressable
-          onPress={exportAnki}
+          onPress={() => void exportAnki()}
           disabled={!bookId || vocabulary.isPending}
           className="flex-row items-center justify-center py-3 rounded-full border"
           style={{ borderColor: colors.borderInteractive, opacity: !bookId || vocabulary.isPending ? 0.7 : 1 }}

@@ -64,28 +64,28 @@ function fire(impact: () => void): void {
 export const haptic = {
   // Light: highlight save, bookmark add, pill appear, button press.
   light(): void {
-    fire(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light))
+    fire(() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light))
   },
   // Medium: badge earned, streak milestone, level up.
   medium(): void {
-    fire(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium))
+    fire(() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium))
   },
   // Heavier, reserved; not currently wired.
   heavy(): void {
-    fire(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy))
+    fire(() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy))
   },
   // Success: book marked finished, account-level wins.
   success(): void {
-    fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success))
+    fire(() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success))
   },
   warning(): void {
-    fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning))
+    fire(() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning))
   },
   error(): void {
-    fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error))
+    fire(() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error))
   },
   // Selection: tab bar tap, segmented control flip.
   selection(): void {
-    fire(() => Haptics.selectionAsync())
+    fire(() => void Haptics.selectionAsync())
   },
 }

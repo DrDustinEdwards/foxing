@@ -26,7 +26,7 @@ export function MeetingsPollsSection({
   const closePoll = useClosePoll()
   const [addMeetingOpen, setAddMeetingOpen] = useState(false)
   const [addPollOpen, setAddPollOpen] = useState(false)
-  const now = Date.now()
+  const [now] = useState(() => Date.now())
   const meetings = page.meetings
     .filter((m) => !m.isCancelled && (m.endDate ?? m.meetingDate) >= now)
     .sort((a, b) => a.meetingDate - b.meetingDate)

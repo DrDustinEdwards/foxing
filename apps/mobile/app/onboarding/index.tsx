@@ -98,7 +98,7 @@ export default function OnboardingScreen() {
     step === 'first_book'
 
   if (step === 'welcome') {
-    return <Welcome onStart={next} />
+    return <Welcome onStart={() => void next()} />
   }
 
   return (
@@ -195,7 +195,7 @@ export default function OnboardingScreen() {
           </Text>
         </Pressable>
         <Pressable
-          onPress={next}
+          onPress={() => void next()}
           disabled={!canAdvance || submitting}
           accessibilityRole="button"
           accessibilityLabel={
@@ -298,7 +298,7 @@ function TasteStep({
   setGoalBooks: (v: string) => void
 }) {
   const colors = useColors()
-  const year = new Date().getFullYear()
+  const [year] = useState(() => new Date().getFullYear())
   return (
     <View>
       <Heading>What do you love to read?</Heading>

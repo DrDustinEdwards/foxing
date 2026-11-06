@@ -1,0 +1,49 @@
+name: CI (mobile)
+
+# Lints apps/mobile with the root Oxlint config (oxlint.config.ts), the app's only CI check so far.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/mobile/**"
+      - "packages/client/**"
+      - "packages/types/**"
+      - "oxlint.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ci-mobile.yml"
+  pull_request:
+    paths:
+      - "apps/mobile/**"
+      - "packages/client/**"
+      - "packages/types/**"
+      - "oxlint.config.ts"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/ci-mobile.yml"
+
+permissions:
+  contents: read
+
+# A newer push to a pull request cancels its older run; a push to the default branch never does.
+concurrency:
+  group: ci-mobile-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # The root lint over apps/mobile only: the web and admin MCP's type-aware rules need their typegen,
+      # which ci-cf.yml runs before its own Lint step.
+      - name: Lint
+        run: npm run lint -- apps/mobile

@@ -51,7 +51,8 @@ const C = Colors.dark
 export default function YearInReadingScreen() {
   const router = useRouter()
   const params = useLocalSearchParams<{ year?: string }>()
-  const year = params.year ? parseInt(params.year, 10) : new Date().getFullYear()
+  const [thisYear] = useState(() => new Date().getFullYear())
+  const year = params.year ? parseInt(params.year, 10) : thisYear
 
   const { width } = Dimensions.get('window')
   const [index, setIndex] = useState(0)
@@ -141,7 +142,7 @@ export default function YearInReadingScreen() {
               />
             ))}
           </View>
-          <Pressable onPress={share} hitSlop={10} style={{ padding: 6 }}>
+          <Pressable onPress={() => void share()} hitSlop={10} style={{ padding: 6 }}>
             <ShareIcon color={C.textPrimary} size={20} />
           </Pressable>
         </View>
@@ -347,7 +348,7 @@ export default function YearInReadingScreen() {
               reading, together.
             </Text>
             <Pressable
-              onPress={share}
+              onPress={() => void share()}
               style={{
                 flexDirection: 'row',
                 alignItems: 'center',

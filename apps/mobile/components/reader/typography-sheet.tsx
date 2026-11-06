@@ -56,7 +56,7 @@ export function TypographySheet({
 
   useEffect(() => {
     if (!visible) return
-    ;(async () => {
+    void (async () => {
       setSavedThemes(await loadSavedThemes(userId))
     })()
   }, [visible, userId])
@@ -185,7 +185,7 @@ export function TypographySheet({
                   setThemeName('')
                 }}
                 onChangeName={setThemeName}
-                onCommitSave={commitTheme}
+                onCommitSave={() => void commitTheme()}
                 onApply={applyTheme}
               />
             )}

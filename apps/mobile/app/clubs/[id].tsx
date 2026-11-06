@@ -49,11 +49,11 @@ export default function ClubDetailScreen() {
   )
 
   // Earliest future unlock, drives the "Next chapter unlocks in Xd Yh" header.
+  const [now] = useState(() => Date.now())
   const nextUnlock = useMemo(() => {
-    const now = Date.now()
     const future = (page?.schedule ?? []).map((r) => r.unlockDate).filter((t) => t > now)
     return future.length > 0 ? Math.min(...future) : null
-  }, [page?.schedule])
+  }, [page?.schedule, now])
 
   const isLocked = useCallback(
     (t: W.ClubThreadItem) => {

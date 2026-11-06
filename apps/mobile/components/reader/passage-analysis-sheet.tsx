@@ -34,6 +34,7 @@ export function PassageAnalysisSheet({
   const [saved, setSaved] = useState(false)
   useEffect(() => {
     if (!visible) return
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setAction('passage_analysis')
     setSaved(false)
   }, [visible, passage])

@@ -1,5 +1,5 @@
 import { errorMessage, useBookAnnotations } from '@foxing/client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useMemo } from 'react'
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Share } from 'react-native'
 import { X as XIcon, Export } from 'phosphor-react-native'
 import { SheetScaffold } from '@/components/ui/sheet-scaffold'
@@ -18,7 +18,7 @@ interface HighlightRow {
   id: string
   cfi: string
   text: string
-  color: HighlightColor | string
+  color: string
   note: string | null
   chapter: string | null
 }
@@ -46,17 +46,22 @@ export function HighlightsSheet({
   const layers = useBookAnnotations(bookId)
   const loading = layers.isPending
   const error = errorMessage(layers.error)
-  const rows: HighlightRow[] = (layers.data?.mine ?? [])
-    .filter((m) => (m.type === 'highlight' || m.type === 'note') && m.locator)
-    .map((m) => ({
-      id: m.id,
-      cfi: encodeLocator(m.locator!),
-      text: m.selectedText ?? '',
-      color: m.color ?? '',
-      note: m.body,
-      chapter: m.chapter,
-    }))
-    .reverse()
+  const mine = layers.data?.mine
+  const rows = useMemo<HighlightRow[]>(
+    () =>
+      (mine ?? [])
+        .filter((m) => (m.type === 'highlight' || m.type === 'note') && m.locator)
+        .map((m) => ({
+          id: m.id,
+          cfi: encodeLocator(m.locator!),
+          text: m.selectedText ?? '',
+          color: m.color ?? '',
+          note: m.body,
+          chapter: m.chapter,
+        }))
+        .reverse(),
+    [mine],
+  )
   const [filterColor, setFilterColor] = useState<HighlightColor | null>(null)
   const [formatPickerOpen, setFormatPickerOpen] = useState(false)
 
@@ -73,7 +78,10 @@ export function HighlightsSheet({
     }
   }, [colors])
 
-  const filtered = filterColor ? rows.filter((r) => r.color === filterColor) : rows
+  const filtered = useMemo(
+    () => (filterColor ? rows.filter((r) => r.color === filterColor) : rows),
+    [filterColor, rows],
+  )
 
   // Export uses the visible-filtered set so users can pull a single color's
   // highlights when they want a focused list.
@@ -263,7 +271,7 @@ export function HighlightsSheet({
             ] as Array<{ id: ExportFormat; label: string }>).map((opt, i) => (
               <Pressable
                 key={opt.id}
-                onPress={() => handleExport(opt.id)}
+                onPress={() => void handleExport(opt.id)}
                 accessibilityRole="button"
                 accessibilityLabel={`Export as ${opt.label}`}
                 className="px-5 py-3"

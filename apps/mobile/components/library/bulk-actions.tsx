@@ -80,7 +80,7 @@ export function BulkShelfPicker({
           {STATUS_SHELVES.map((s, i) => (
             <Pressable
               key={s.status}
-              onPress={() => onPick(s.status)}
+              onPress={() => void onPick(s.status)}
               accessibilityRole="button"
               accessibilityLabel={`Move to ${s.label}`}
               className="px-5 py-4"

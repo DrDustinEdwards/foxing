@@ -32,17 +32,19 @@ export function NewThreadSheet({
   const [chapter, setChapter] = useState(defaultChapter)
   const [hasSpoilers, setHasSpoilers] = useState(false)
   const createThread = useCreateThread()
+  const resetCreateThread = createThread.reset
   const busy = createThread.pending
 
   useEffect(() => {
     if (visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
       setTitle('')
       setOpening('')
       setChapter(defaultChapter)
       setHasSpoilers(false)
-      createThread.reset()
+      resetCreateThread()
     }
-  }, [visible, defaultChapter, createThread.reset])
+  }, [visible, defaultChapter, resetCreateThread])
 
   const post = useCallback(async () => {
     if (!title.trim() || busy) return
@@ -80,7 +82,7 @@ export function NewThreadSheet({
             </Text>
           ) : null}
           <Pressable
-            onPress={post}
+            onPress={() => void post()}
             disabled={!title.trim() || busy}
             className="px-5 py-2 rounded-full"
             style={{

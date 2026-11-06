@@ -50,6 +50,7 @@ export function PassageCommentSheet({
 
   useEffect(() => {
     if (visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
       setBody('')
       setHasSpoilers(false)
       setReplyTo(null)

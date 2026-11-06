@@ -73,7 +73,7 @@ export default function FindNextBookScreen() {
             </Text>
             {!data.isPlus ? (
               <Pressable
-                onPress={() => Linking.openURL('https://foxing.app/pricing')}
+                onPress={() => void Linking.openURL('https://foxing.app/pricing')}
                 accessibilityRole="link"
                 className="p-3 mb-4 rounded-2xl border"
                 style={{ borderColor: colors.borderBrand, backgroundColor: colors.bgSelected }}

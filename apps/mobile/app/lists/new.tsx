@@ -56,7 +56,7 @@ export default function NewListScreen() {
           New list
         </Text>
         <Pressable
-          onPress={save}
+          onPress={() => void save()}
           disabled={saving || !title.trim()}
           style={{
             paddingHorizontal: 14,

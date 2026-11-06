@@ -60,6 +60,7 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
   const [step, setStep] = useState<Step>('basics')
   const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT)
   const createClub = useCreateClub()
+  const resetCreateClub = createClub.reset
   const submitting = createClub.pending
   const [created, setCreated] = useState<CreatedClub | null>(null)
   const error = createClub.error ? "Couldn't create the club. Try again." : null
@@ -68,12 +69,13 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
   // draft shouldn't leak into a brand-new flow.
   useEffect(() => {
     if (visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
       setStep('basics')
       setDraft(EMPTY_DRAFT)
       setCreated(null)
-      createClub.reset()
+      resetCreateClub()
     }
-  }, [visible, createClub.reset])
+  }, [visible, resetCreateClub])
 
   const idx = STEP_ORDER.indexOf(step)
   const isLast = step === 'invite'
@@ -148,7 +150,7 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
             <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>Back</Text>
           </Pressable>
           <Pressable
-            onPress={goNext}
+            onPress={() => void goNext()}
             disabled={!canAdvance || submitting}
             className="flex-row items-center gap-1 px-5 py-2 rounded-full"
             style={{

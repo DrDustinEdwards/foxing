@@ -77,7 +77,7 @@ function resolveTargetFile() {
   try {
     const pkgJson = require.resolve('react-native-readium/package.json')
     return join(dirname(pkgJson), RELATIVE_KT_PATH)
-  } catch (err) {
+  } catch {
     return null
   }
 }

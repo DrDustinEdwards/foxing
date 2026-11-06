@@ -22,7 +22,7 @@ export default function NotificationsScreen() {
   const router = useRouter()
   const notifications = useNotifications()
   const markRead = useMarkNotificationsRead()
-  const rows = notifications.data?.notifications ?? []
+  const rows = useMemo(() => notifications.data?.notifications ?? [], [notifications.data])
   const unreadCount = notifications.data?.unread ?? 0
 
   const onTap = useCallback(
@@ -100,7 +100,7 @@ export default function NotificationsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={notifications.isRefetching}
-              onRefresh={() => notifications.refetch()}
+              onRefresh={() => void notifications.refetch()}
               tintColor={colors.brandUi}
               colors={[colors.brandUi]}
             />
@@ -143,6 +143,7 @@ function NotificationRowView({
           marginRight: 12,
         }}
       >
+        {/* oxlint-disable-next-line react/static-components -- iconFor returns one of the module's icon components, never a new one */}
         <Icon color={colors.brandSubtleText} size={18} weight="regular" />
       </View>
       <View style={{ flex: 1 }}>

@@ -48,6 +48,7 @@ export function FeedRow({
       </Pressable>
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View className="flex-row items-center" style={{ marginBottom: 2 }}>
+          {/* oxlint-disable-next-line react/static-components -- iconForType returns one of the module's icon components, never a new one */}
           <Icon color={colors.brandText} size={14} weight="regular" />
           <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginLeft: 6 }}>
             {relativeTime(row.createdAt)}

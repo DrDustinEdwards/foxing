@@ -53,6 +53,7 @@ export function EditProfileSheet({ visible, profile, onClose }: Props) {
   // Reset local state whenever the sheet opens with a (possibly new) profile.
   useEffect(() => {
     if (!visible) return
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setDisplayName(profile.displayName ?? '')
     setUsername(profile.username)
     setBio(profile.bio ?? '')
@@ -127,7 +128,7 @@ export function EditProfileSheet({ visible, profile, onClose }: Props) {
           <Text style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary }}>
             Edit Profile
           </Text>
-          <Pressable onPress={handleSave} disabled={!canSave} hitSlop={8}>
+          <Pressable onPress={() => void handleSave()} disabled={!canSave} hitSlop={8}>
             {saving ? (
               <ActivityIndicator color={colors.brandUi} size="small" />
             ) : (

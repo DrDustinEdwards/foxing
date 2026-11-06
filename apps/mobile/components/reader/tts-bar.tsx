@@ -49,7 +49,7 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
   }, [chapterText])
 
   const stop = useCallback(() => {
-    try { Speech.stop() } catch {}
+    try { void Speech.stop() } catch {}
     setPlaying(false)
   }, [])
 
@@ -102,10 +102,9 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
   // from the same sentence so the rate change actually takes effect.
   useEffect(() => {
     if (!playing) return
-    try { Speech.stop() } catch {}
+    try { void Speech.stop() } catch {}
     speakAt(index)
-    // intentionally only on speed change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- intentionally only on speed change
   }, [speed])
 
   const togglePlay = useCallback(() => {

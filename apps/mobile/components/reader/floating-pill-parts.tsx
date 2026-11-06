@@ -169,7 +169,7 @@ export function PillAction({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={a11yLabel}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      // oxlint-disable-next-line typescript/no-explicit-any -- accessibilityAutoFocus is missing from React Native's Pressable props type
       {...(autoFocus ? ({ accessibilityAutoFocus: true } as any) : {})}
       onPress={onPress}
       style={{

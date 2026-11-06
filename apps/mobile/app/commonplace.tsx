@@ -31,7 +31,7 @@ export default function CommonplaceScreen() {
   const colors = useColors()
   const router = useRouter()
   const query = useMyAnnotations(TYPES)
-  const entries = query.data ?? []
+  const entries = useMemo(() => query.data ?? [], [query.data])
   const loading = query.isPending
   const [filter, setFilter] = useState<Filter>('all')
   const [addOpen, setAddOpen] = useState(false)
@@ -120,7 +120,7 @@ export default function CommonplaceScreen() {
         >
           Commonplace Book
         </Text>
-        <Pressable onPress={exportAll} hitSlop={10} className="p-2">
+        <Pressable onPress={() => void exportAll()} hitSlop={10} className="p-2">
           <ShareNetwork color={colors.textSecondary} size={20} />
         </Pressable>
         <Pressable
@@ -272,7 +272,7 @@ export default function CommonplaceScreen() {
               Save a passage
             </Text>
             <Pressable
-              onPress={saveEntry}
+              onPress={() => void saveEntry()}
               disabled={!passage.trim()}
               className="px-4 py-2 rounded-full"
               style={{

@@ -35,16 +35,18 @@ interface ChatMessage {
 export function CompanionChat({ visible, bookTitle, bookId, seedQuestion, onClose }: CompanionChatProps) {
   const colors = useColors()
   const companion = useCompanion()
+  const resetCompanion = companion.reset
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const sending = companion.pending
 
   useEffect(() => {
     if (!visible) return
-    companion.reset()
+    resetCompanion()
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setMessages([])
     setInput(seedQuestion ?? '')
-  }, [visible, seedQuestion])
+  }, [visible, seedQuestion, resetCompanion])
 
   async function send() {
     const message = input.trim()
@@ -130,7 +132,7 @@ export function CompanionChat({ visible, bookTitle, bookId, seedQuestion, onClos
               <ActivityIndicator color={colors.brandUi} className="mt-2" />
             ) : null}
             {companion.planRequired ? (
-              <Pressable onPress={() => Linking.openURL('https://foxing.app/pricing')} accessibilityRole="link">
+              <Pressable onPress={() => void Linking.openURL('https://foxing.app/pricing')} accessibilityRole="link">
                 <Text style={{ fontFamily: Fonts.ui, fontSize: 14, color: colors.brandText, marginTop: 8 }}>
                   The companion is a Foxing Plus feature. See Foxing Plus
                 </Text>
@@ -150,11 +152,11 @@ export function CompanionChat({ visible, bookTitle, bookId, seedQuestion, onClos
               placeholder="Ask something…"
               placeholderTextColor={colors.textTertiary}
               className="font-ui flex-1 rounded-full px-4 py-3 bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark"
-              onSubmitEditing={send}
+              onSubmitEditing={() => void send()}
               returnKeyType="send"
             />
             <Pressable
-              onPress={send}
+              onPress={() => void send()}
               disabled={sending || !input.trim()}
               accessibilityRole="button"
               accessibilityLabel="Send message"

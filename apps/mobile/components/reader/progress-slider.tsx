@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { View, Text, PanResponder, type LayoutChangeEvent } from 'react-native'
 import { useColors } from '@/constants/colors'
 import { Fonts } from '@/constants/fonts'
@@ -34,17 +34,27 @@ export function ProgressSlider({
   // closure if state-bound) always sees the freshest drag position.
   const previewRef = useRef(value)
 
+  // The responder is made once, so its handlers read the latest width and callbacks
+  // through refs rather than the first render's values.
+  const widthRef = useRef(0)
+  const callbacks = useRef({ onSlidingChange, onSlidingComplete })
+  useEffect(() => {
+    callbacks.current = { onSlidingChange, onSlidingComplete }
+  })
+
   const handleLayout = (e: LayoutChangeEvent) => {
+    widthRef.current = e.nativeEvent.layout.width
     setWidth(e.nativeEvent.layout.width)
   }
 
-  const computeFraction = (touchX: number): number => {
-    if (width <= 0) return 0
-    return Math.max(0, Math.min(1, touchX / width))
-  }
-
-  const responder = useRef(
-    PanResponder.create({
+  // oxlint-disable-next-line react/refs -- the handlers read the refs during a gesture, never during render
+  const [responder] = useState(() => {
+    const computeFraction = (touchX: number): number => {
+      const w = widthRef.current
+      if (w <= 0) return 0
+      return Math.max(0, Math.min(1, touchX / w))
+    }
+    return PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: (e) => {
@@ -52,23 +62,23 @@ export function ProgressSlider({
         const f = computeFraction(e.nativeEvent.locationX)
         previewRef.current = f
         setPreview(f)
-        onSlidingChange?.(f)
+        callbacks.current.onSlidingChange?.(f)
       },
       onPanResponderMove: (e) => {
         const f = computeFraction(e.nativeEvent.locationX)
         previewRef.current = f
         setPreview(f)
-        onSlidingChange?.(f)
+        callbacks.current.onSlidingChange?.(f)
       },
       onPanResponderRelease: () => {
         setDragging(false)
-        onSlidingComplete(previewRef.current)
+        callbacks.current.onSlidingComplete(previewRef.current)
       },
       onPanResponderTerminate: () => {
         setDragging(false)
       },
-    }),
-  ).current
+    })
+  })
 
   const fraction = dragging ? preview : value
   const filled = Math.max(0, Math.min(1, fraction))

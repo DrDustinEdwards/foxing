@@ -9,8 +9,7 @@
     "web": "expo start --web",
     "build": "npx eas-cli@18.12.3 build",
     "update": "npx eas-cli@18.12.3 update",
-    "postinstall": "node scripts/patch-readium.mjs",
-    "lint": "biome lint ."
+    "postinstall": "node scripts/patch-readium.mjs"
   },
   "dependencies": {
     "@better-auth/expo": "~1.7.17",
