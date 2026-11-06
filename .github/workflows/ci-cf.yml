@@ -67,14 +67,14 @@ jobs:
       - name: Typecheck (core, api, client, web)
         run: |
           mkdir -p "$RUNNER_TEMP/tc"
-          npm exec -w @foxing/core -- tsc --noEmit > "$RUNNER_TEMP/tc/core.log" 2>&1 & p_core=$!
-          npm exec -w @foxing/api -- tsc --noEmit > "$RUNNER_TEMP/tc/api.log" 2>&1 & p_api=$!
-          npm exec -w @foxing/client -- tsc --noEmit > "$RUNNER_TEMP/tc/client.log" 2>&1 & p_client=$!
-          npm run type-check -w web > "$RUNNER_TEMP/tc/web.log" 2>&1 & p_web=$!
+          declare -A pid
+          npm exec -w @foxing/core -- tsc --noEmit > "$RUNNER_TEMP/tc/core.log" 2>&1 & pid[core]=$!
+          npm exec -w @foxing/api -- tsc --noEmit > "$RUNNER_TEMP/tc/api.log" 2>&1 & pid[api]=$!
+          npm exec -w @foxing/client -- tsc --noEmit > "$RUNNER_TEMP/tc/client.log" 2>&1 & pid[client]=$!
+          npm run type-check -w web > "$RUNNER_TEMP/tc/web.log" 2>&1 & pid[web]=$!
           fail=0
           for name in core api client web; do
-            pid="p_$name"
-            if wait "${!pid}"; then status=ok; else status=FAILED; fail=1; fi
+            if wait "${pid[$name]}"; then status=ok; else status=FAILED; fail=1; fi
             echo "::group::Typecheck $name ($status)"
             cat "$RUNNER_TEMP/tc/$name.log"
             echo "::endgroup::"
