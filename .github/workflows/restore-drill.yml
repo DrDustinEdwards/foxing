@@ -17,7 +17,7 @@ concurrency:
 
 jobs:
   drill:
-    uses: DrDustinEdwards/devkit/.github/workflows/restore-drill.yml@454002f526e5e8e645a9c110605880e220b611a0 # v0.21.0
+    uses: DrDustinEdwards/devkit/.github/workflows/restore-drill.yml@0c1b0a6aa70b7991888cc2d5686af6e8a8e28f3d # v0.21.3
     with:
       bucket: foxing-backups
       d1-dump-ref: v0.7.0
