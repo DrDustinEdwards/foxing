@@ -58,3 +58,6 @@ apps/web/e2e/.auth/
 
 # Claude Code per-machine settings
 .claude/settings.local.json
+
+# TypeScript incremental build state
+*.tsbuildinfo
