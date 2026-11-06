@@ -6,6 +6,7 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
+import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import {
   ACCESS_LOGOUT_PATH,
   accessAdmin,
@@ -555,12 +556,16 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // A 404 to a page GET is counted per path and referring host (site-runtime ./not-found); an API's
 // 404 is an answer about a record, not a broken link, so it is not.
 async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const response = withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  const url = new URL(request.url);
+  let response = withSecurityHeaders(await app.fetch(request, env, ctx), request);
+  // A Journal post Carrel deleted or trashed answers 410, not 404 (site-api tombstones, gone_paths); an API's 404 is
+  // an answer about a record and stays one.
+  if (!url.pathname.startsWith("/api/"))
+    response = await tombstoned(response, url.pathname, d1SiteApiStore(env.DB));
   // Hover prefetch for a signed-out reader's pages, stored ones included (site-runtime ./prefetch).
   if (!hasSession(request) && (response.headers.get("Content-Type") ?? "").includes("text/html"))
     response.headers.set(SPECULATION_RULES_HEADER.name, SPECULATION_RULES_HEADER.value);
-  if (!new URL(request.url).pathname.startsWith("/api/"))
-    countNotFound(env.DB, request, response, ctx);
+  if (!url.pathname.startsWith("/api/")) countNotFound(env.DB, request, response, ctx);
   return response;
 }
 
