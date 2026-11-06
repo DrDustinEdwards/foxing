@@ -16,7 +16,8 @@ import {
 import type { Route } from "./+types/root";
 // Foxing's faces from its own origin (Fontsource, the files Google Fonts serves, bundled under /assets/): no
 // stylesheet from fonts.googleapis.com blocking the first paint, and no second origin to connect to. The variable
-// files carry Fraunces' and Source Serif's optical sizes, as the Google request asked for.
+// files carry Fraunces' and Source Serif's optical sizes, as the Google request asked for. vite.config.ts serves their
+// rules with font-display: optional, so text never moves once drawn (D5).
 import "@fontsource-variable/fraunces/opsz.css";
 import "@fontsource-variable/source-serif-4/opsz.css";
 import "@fontsource-variable/dm-sans/wght.css";
