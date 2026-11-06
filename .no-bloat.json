@@ -4,7 +4,7 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "4f61216",
+    "measured_at": "bf576cd",
     "knip": {
       "Unused files": 2
     },
