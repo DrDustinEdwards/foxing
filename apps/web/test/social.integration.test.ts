@@ -271,7 +271,7 @@ describe("social API (web -> api -> core -> D1)", () => {
 
   // -- Notifications ----------------------------------------------------------
 
-  it("POST /notifications/read marks the named ones, refuses a malformed body, and marks all only when asked", async () => {
+  it("POST /notifications/read marks the named ones, refuses a malformed body, and marks all for a body naming no ids", async () => {
     await seedUser("alice");
     await db()
       .insert(schema.notifications)
@@ -290,16 +290,17 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(await unread()).toEqual(["n2", "n3"]);
 
     // A malformed body used to fall through to mark-all.
-    for (const body of [{}, { ids: "n2" }, { ids: [] }, { all: false }, "not json"]) {
+    for (const body of [{ ids: "n2" }, { ids: [] }, { all: false }, { all: "yes" }, "not json"]) {
       const res = await call("/notifications/read", { method: "POST", user: "alice", body });
       expect(res.status).toBe(422);
     }
     expect(await unread()).toEqual(["n2", "n3"]);
 
-    expect(
-      (await call("/notifications/read", { method: "POST", user: "alice", body: { all: true } }))
-        .status,
-    ).toBe(200);
+    // `{}` is what mobile builds before { all: true } send for mark-all.
+    for (const body of [{}, { all: true }]) {
+      const res = await call("/notifications/read", { method: "POST", user: "alice", body });
+      expect(res.status).toBe(200);
+    }
     expect(await unread()).toEqual([]);
   });
 });
