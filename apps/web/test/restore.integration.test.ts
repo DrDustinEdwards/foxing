@@ -21,7 +21,7 @@ const call = (pathname: string, user: string | null, init?: RequestInit) =>
       headers: {
         ...(init?.body ? { "Content-Type": "application/json" } : {}),
         ...(user ? { "x-test-user": user } : {}),
-        ...(init?.headers ?? {}),
+        ...Object.fromEntries(new Headers(init?.headers)),
       },
     }),
     env as never,

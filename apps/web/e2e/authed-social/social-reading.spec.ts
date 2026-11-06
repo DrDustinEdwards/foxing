@@ -177,7 +177,7 @@ async function openReader(browser: Browser, storageState: string): Promise<Page>
   await expect
     .poll(async () => {
       const now = await position(page);
-      return now !== from || /@0$/.test(now ?? "");
+      return now !== from || (now ?? "").endsWith("@0");
     })
     .toBe(true);
   await waitForShownPage(page);

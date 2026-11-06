@@ -76,7 +76,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
   const { weeks } = loaderData;
   const goals = useGoals(loaderData.goals).data;
   const streak = useStreak(loaderData.streak).data;
-  const now = new Date();
+  const [now] = useState(() => new Date());
   const active = goals.filter((g) => isActive(g.goal, now));
   const past = goals.filter((g) => !isActive(g.goal, now));
 
@@ -215,7 +215,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
           </label>
           <button
             type="button"
-            onClick={save}
+            onClick={() => void save()}
             disabled={pending}
             className="cap-btn"
             data-size="sm"

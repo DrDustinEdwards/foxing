@@ -22,9 +22,6 @@ apps/mobile/dist/
 .DS_Store
 Thumbs.db
 
-# Turbo
-.turbo/
-
 .vercel
 .env*
 

@@ -8,7 +8,7 @@
 import { CONFIRM_PATH, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
-import type { InputHTMLAttributes, ReactNode } from "react";
+import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 import { Link } from "capsomer/react/link";
 import { authClient, signIn } from "~/lib/auth-client";
 import { signInWithPasskey, signalPasskeys } from "@dustinedwards/site-runtime/sign-in-client";
@@ -113,6 +113,23 @@ function GoogleGlyph() {
   );
 }
 
+/** The OAuth redirect behind the Google and Apple buttons. */
+async function startSocial(
+  provider: "google" | "apple",
+  redirectTo: string,
+  setPending: (pending: boolean) => void,
+) {
+  setPending(true);
+  await signIn.social({
+    provider,
+    callbackURL: afterLink(redirectTo),
+    newUserCallbackURL: AFTER_LINK_NEW,
+    errorCallbackURL: "/login",
+  });
+  // The call redirects the whole page; reset only if it somehow returns.
+  setPending(false);
+}
+
 /**
  * "Continue with Google": a full-width OAuth redirect. A new user (no profile row) lands
  * on /onboarding, an existing one on /me, each through the passkey offer; a failed handshake returns to /login with Better
@@ -126,17 +143,7 @@ function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       disabled={pending}
       className={authSecondaryButtonClass}
       data-size="lg"
-      onClick={async () => {
-        setPending(true);
-        await signIn.social({
-          provider: "google",
-          callbackURL: afterLink(redirectTo),
-          newUserCallbackURL: AFTER_LINK_NEW,
-          errorCallbackURL: "/login",
-        });
-        // The call redirects the whole page; reset only if it somehow returns.
-        setPending(false);
-      }}
+      onClick={() => void startSocial("google", redirectTo, setPending)}
     >
       <GoogleGlyph />
       Continue with Google
@@ -168,16 +175,7 @@ function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       disabled={pending}
       className={authSecondaryButtonClass}
       data-size="lg"
-      onClick={async () => {
-        setPending(true);
-        await signIn.social({
-          provider: "apple",
-          callbackURL: afterLink(redirectTo),
-          newUserCallbackURL: AFTER_LINK_NEW,
-          errorCallbackURL: "/login",
-        });
-        setPending(false);
-      }}
+      onClick={() => void startSocial("apple", redirectTo, setPending)}
     >
       <AppleGlyph />
       Continue with Apple
@@ -229,13 +227,20 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
     );
   }
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: once per page; the browser holds one pending autofill request
   useEffect(() => {
     if (typeof PublicKeyCredential === "undefined") return;
     void PublicKeyCredential.isConditionalMediationAvailable?.().then((ok) => {
       if (ok) void tryPasskey(true);
     });
+    // oxlint-disable-next-line react/exhaustive-deps -- once per page; the browser holds one pending autofill request
   }, []);
+
+  const startPasskey = async () => {
+    setPending(true);
+    setError(null);
+    await tryPasskey(false);
+    setPending(false);
+  };
 
   return (
     <div className="stack-3">
@@ -245,12 +250,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         className="cap-btn full"
         data-variant="primary"
         data-size="lg"
-        onClick={async () => {
-          setPending(true);
-          setError(null);
-          await tryPasskey(false);
-          setPending(false);
-        }}
+        onClick={() => void startPasskey()}
       >
         Sign in with a passkey
       </button>
@@ -316,7 +316,6 @@ export function MagicLinkForm({
   const widget = useRef<HTMLDivElement>(null);
 
   // A token is good for one request, so each attempt gets a fresh widget.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: attempt re-mounts the widget for a fresh token
   useEffect(() => {
     if (!turnstileSiteKey || !widget.current) return;
     return mountTurnstile(widget.current, turnstileSiteKey);
@@ -325,46 +324,48 @@ export function MagicLinkForm({
   if (sentTo)
     return <SignInCodeForm email={sentTo} next={next} onRestart={() => setSentTo(null)} />;
 
+  const sendLink = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPending(true);
+    setRefusal(null);
+    const form = new FormData(event.currentTarget);
+    const email = String(form.get("email"));
+    const token = String(form.get("cf-turnstile-response") ?? "");
+    const res = await signIn
+      .magicLink(
+        {
+          email,
+          callbackURL: afterLink(next),
+          newUserCallbackURL: AFTER_LINK_NEW,
+          // A spent or expired link shows its own message on the confirm page.
+          errorCallbackURL: CONFIRM_PATH,
+        },
+        turnstileSiteKey ? { headers: { "x-captcha-response": token } } : undefined,
+      )
+      .catch(() => null);
+    setPending(false);
+    // The refusals to show are the ones about the site, never the address: the bot check, and
+    // the link request turned off (no Turnstile keys) or its counter down. Everything else gets
+    // the same neutral result, so the form never says whether an address has an account.
+    const code = (res?.error as { code?: string } | undefined)?.code;
+    if (code === "MISSING_RESPONSE" || code === "VERIFICATION_FAILED") {
+      setRefusal("Complete the check, then send the link again.");
+      setAttempt((n) => n + 1);
+      return;
+    }
+    if (code === "TURNSTILE_NOT_SET" || code === "RATE_LIMIT_UNAVAILABLE") {
+      setRefusal(
+        "Sign-in by email is not available right now. Use a passkey, Google or Apple, or try again later.",
+      );
+      return;
+    }
+    setSentTo(email);
+  };
+
   return (
     <form
       className="stack-3"
-      onSubmit={async (event) => {
-        event.preventDefault();
-        setPending(true);
-        setRefusal(null);
-        const form = new FormData(event.currentTarget);
-        const email = String(form.get("email"));
-        const token = String(form.get("cf-turnstile-response") ?? "");
-        const res = await signIn
-          .magicLink(
-            {
-              email,
-              callbackURL: afterLink(next),
-              newUserCallbackURL: AFTER_LINK_NEW,
-              // A spent or expired link shows its own message on the confirm page.
-              errorCallbackURL: CONFIRM_PATH,
-            },
-            turnstileSiteKey ? { headers: { "x-captcha-response": token } } : undefined,
-          )
-          .catch(() => null);
-        setPending(false);
-        // The refusals to show are the ones about the site, never the address: the bot check, and
-        // the link request turned off (no Turnstile keys) or its counter down. Everything else gets
-        // the same neutral result, so the form never says whether an address has an account.
-        const code = (res?.error as { code?: string } | undefined)?.code;
-        if (code === "MISSING_RESPONSE" || code === "VERIFICATION_FAILED") {
-          setRefusal("Complete the check, then send the link again.");
-          setAttempt((n) => n + 1);
-          return;
-        }
-        if (code === "TURNSTILE_NOT_SET" || code === "RATE_LIMIT_UNAVAILABLE") {
-          setRefusal(
-            "Sign-in by email is not available right now. Use a passkey, Google or Apple, or try again later.",
-          );
-          return;
-        }
-        setSentTo(email);
-      }}
+      onSubmit={(event) => void sendLink(event)}
     >
       <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
       {turnstileSiteKey ? <div ref={widget} /> : null}
@@ -418,25 +419,27 @@ function SignInCodeForm({
   const [pending, setPending] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const [wrongTries, setWrongTries] = useState(0);
+  const submitCode = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setPending(true);
+    setFailure(null);
+    const otp = String(new FormData(event.currentTarget).get("code") ?? "").trim();
+    const res = await signIn.emailOtp({ email, otp }).catch(() => null);
+    if (res && !res.error) {
+      window.location.assign(afterLink(next));
+      return;
+    }
+    const code = (res?.error as { code?: string } | undefined)?.code;
+    const tries = code === "INVALID_OTP" ? wrongTries + 1 : wrongTries;
+    setWrongTries(tries);
+    setPending(false);
+    setFailure(signInCodeError(code, tries));
+  };
+
   return (
     <form
       className="stack-3"
-      onSubmit={async (event) => {
-        event.preventDefault();
-        setPending(true);
-        setFailure(null);
-        const otp = String(new FormData(event.currentTarget).get("code") ?? "").trim();
-        const res = await signIn.emailOtp({ email, otp }).catch(() => null);
-        if (res && !res.error) {
-          window.location.assign(afterLink(next));
-          return;
-        }
-        const code = (res?.error as { code?: string } | undefined)?.code;
-        const tries = code === "INVALID_OTP" ? wrongTries + 1 : wrongTries;
-        setWrongTries(tries);
-        setPending(false);
-        setFailure(signInCodeError(code, tries));
-      }}
+      onSubmit={(event) => void submitCode(event)}
     >
       <p role="status" className="fx-auth-shell-text-2">
         Check your email. Open the sign-in link, or type the code from the same email here. Both

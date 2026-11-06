@@ -303,12 +303,11 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
   // locator. The relayout re-paginates the resource, which can shift the saved
   // progression onto a neighboring page (it was landing a page early), so we
   // re-navigate afterward to land on the exact saved page.
-  requestAnimationFrame(() =>
-    requestAnimationFrame(async () => {
-      await forceRelayout();
-      if (initialLocator) nav.go(initial, false, () => {});
-    }),
-  );
+  const settle = async () => {
+    await forceRelayout();
+    if (initialLocator) nav.go(initial, false, () => {});
+  };
+  requestAnimationFrame(() => requestAnimationFrame(() => void settle()));
 
   const findByProgression = (fraction: number): ReadiumLocator => {
     const clamped = Math.max(0, Math.min(1, fraction));
@@ -383,7 +382,7 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
       // Column-count / scroll / font changes shift the geometry; recompute against
       // the container's current width. Deferred a frame so the container's new
       // max-width (which tracks the column count) is committed before we measure.
-      requestAnimationFrame(forceRelayout);
+      requestAnimationFrame(() => void forceRelayout());
     },
     currentLocator: () => {
       try {

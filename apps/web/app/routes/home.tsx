@@ -1,7 +1,7 @@
 // Signed-in dashboard at /home. Reads run in-process via core (loadLibraryData);
 // the shell (nav, secondary bar) comes from the root loader. Anonymous visitors are
 // sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
 import { CoverImage } from "~/components/cover-image";
@@ -56,14 +56,18 @@ export function meta() {
   return [{ title: "Home | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
+// The local hour is read once on the client; nothing pushes a change to it.
+const noSubscription = () => () => {};
+
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { firstName, reading, streak, hasTimezone } = loaderData;
   // Server greeting uses the saved timezone. Without one it is a UTC guess, so
   // correct to the visitor's actual local hour after hydration.
-  const [greeting, setGreeting] = useState(loaderData.greeting);
-  useEffect(() => {
-    if (!hasTimezone) setGreeting(timeOfDay(new Date().getHours()));
-  }, [hasTimezone]);
+  const greeting = useSyncExternalStore(
+    noSubscription,
+    () => (hasTimezone ? loaderData.greeting : timeOfDay(new Date().getHours())),
+    () => loaderData.greeting,
+  );
 
   return (
     <PageShell>

@@ -53,7 +53,7 @@ export function ProfileSection({
 
   return (
     <Card title="Profile">
-      <form onSubmit={save} className="stack">
+      <form onSubmit={(e) => void save(e)} className="stack">
         <label className="block">
           <span className="fx-label">Display name</span>
           <input
@@ -65,7 +65,7 @@ export function ProfileSection({
         </label>
         <label className="block">
           <span className="mb-1 fx-account-sections-label">
-            <span>Bio</span>
+            Bio
             <span className={bio.length > BIO_MAX ? "mono xsmall crit" : "mono xsmall dim"}>
               {bio.length} / {BIO_MAX}
             </span>
@@ -132,7 +132,7 @@ export function UsernameSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Username">
-      <form onSubmit={save} className="stack-3">
+      <form onSubmit={(e) => void save(e)} className="stack-3">
         <label className="block">
           <span className="fx-label">Username</span>
           <div className="row-2">
@@ -205,7 +205,7 @@ export function EmailSection({ initial }: { initial: string }) {
         change from a link sent to this address, then confirm the new address from a link sent
         there.
       </p>
-      <form onSubmit={change} className="mt-4 fx-account-sections-form">
+      <form onSubmit={(e) => void change(e)} className="mt-4 fx-account-sections-form">
         <label className="block">
           <span className="fx-label">New email</span>
           <input
@@ -349,7 +349,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                         defaultValue={p.name}
                         maxLength={60}
                         required
-                        // biome-ignore lint/a11y/noAutofocus: the field the Rename button opened
+                        // oxlint-disable-next-line jsx-a11y/no-autofocus -- the field the Rename button opened
                         autoFocus
                         className={inputClass}
                       />
@@ -594,7 +594,7 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
       ) : (
         <ul className="stack-3">
           {activity.map((a, i) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: a fixed, newest-first list that never reorders on screen
+            // An index key: a fixed, newest-first list that never reorders on screen
             <li key={i} className="ui">
               <span className="strong">{a.what}</span>
               <span className="block small dim">
@@ -751,7 +751,7 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
       <div className="mt-4">
         <button
           type="button"
-          onClick={remove}
+          onClick={() => void remove()}
           disabled={pending || clubs === null || confirm.trim().toLowerCase() !== CONFIRM_PHRASE}
           className="cap-btn"
           data-variant="danger"

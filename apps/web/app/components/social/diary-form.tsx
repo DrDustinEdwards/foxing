@@ -52,7 +52,7 @@ export function DiaryForm({
   }
 
   return (
-    <form onSubmit={submit} className="stack-6">
+    <form onSubmit={(e) => void submit(e)} className="stack-6">
       <p className="ui">
         Logging <span className="strong">{bookTitle}</span>
       </p>
@@ -114,7 +114,7 @@ export function DiaryForm({
         <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
           {pending ? "Saving..." : mode === "create" ? "Save entry" : "Save changes"}
         </button>
-        <button type="button" onClick={() => navigate(redirectTo)} className="fx-diary-form-btn">
+        <button type="button" onClick={() => void navigate(redirectTo)} className="fx-diary-form-btn">
           Cancel
         </button>
       </div>

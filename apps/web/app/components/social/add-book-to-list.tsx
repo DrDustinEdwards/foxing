@@ -29,7 +29,7 @@ export function AddBookToList({ listId }: { listId: string }) {
             <li key={b.id}>
               <button
                 type="button"
-                onClick={() => add(b)}
+                onClick={() => void add(b)}
                 disabled={pending}
                 className="py-2 fx-add-book-to-list-btn"
               >

@@ -14,7 +14,7 @@ test.describe("find next book (signed in)", () => {
     // The catalog has readable candidates, so the grid renders books with reason lines.
     const reasons = page.getByTestId("rec-reason");
     await expect(reasons.first()).toBeVisible();
-    await expect(await reasons.first().innerText()).not.toHaveLength(0);
+    expect(await reasons.first().innerText()).not.toHaveLength(0);
 
     // Each reason sits under a book that links into the catalog.
     await expect(page.getByRole("link", { name: /Title|by/i }).first()).toBeVisible();

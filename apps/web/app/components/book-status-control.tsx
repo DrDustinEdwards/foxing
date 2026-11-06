@@ -4,7 +4,7 @@
 // sign-in link instead. Used on /library, the book page and find-next-book.
 import { useSetBookStatus } from "@foxing/client";
 import type { BookRef, ShelfStatus } from "@foxing/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "capsomer/react/link";
 
 const STATUSES = [
@@ -31,7 +31,11 @@ export function BookStatusControl({
   const setStatus = useSetBookStatus();
   // Follows the cache when the page has one; otherwise remembers the last pick.
   const [status, setLocal] = useState<ShelfStatus | null>(currentStatus);
-  useEffect(() => setLocal(currentStatus), [currentStatus]);
+  const [followed, setFollowed] = useState(currentStatus);
+  if (currentStatus !== followed) {
+    setFollowed(currentStatus);
+    setLocal(currentStatus);
+  }
 
   if (!signedIn) {
     return (
@@ -56,7 +60,7 @@ export function BookStatusControl({
           value={status ?? ""}
           disabled={setStatus.pending}
           onChange={(e) =>
-            apply(
+            void apply(
               e.target.value === "" || e.target.value === "remove"
                 ? null
                 : (e.target.value as ShelfStatus),

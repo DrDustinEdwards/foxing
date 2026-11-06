@@ -42,7 +42,7 @@ export default function ClubNew() {
         <h1 className="display-4">Start a club</h1>
         <p className="mt-2 fx-club-new-text">Pick a book, set the pace, and read together.</p>
 
-        <form onSubmit={onSubmit} className="mt-8 fx-club-new-form">
+        <form onSubmit={(e) => void onSubmit(e)} className="mt-8 fx-club-new-form">
           <div>
             <label htmlFor="name" className="block fx-club-new-field">
               Club name

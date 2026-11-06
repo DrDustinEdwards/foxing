@@ -24,14 +24,13 @@ export function CommandPalette() {
   const [recent, setRecent] = useState<string[]>([]);
 
   useEffect(() => {
-    const onOpen = () => setOpen(true);
+    const onOpen = () => {
+      setRecent(readRecent());
+      setOpen(true);
+    };
     window.addEventListener("foxing:search-open", onOpen);
     return () => window.removeEventListener("foxing:search-open", onOpen);
   }, []);
-
-  useEffect(() => {
-    if (open) setRecent(readRecent());
-  }, [open]);
 
   const go = (to: string) => void navigate(to);
   const commands = quickCommands(recent, signedIn, go);
@@ -39,7 +38,11 @@ export function CommandPalette() {
   return (
     <CommandMenu
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(next) => {
+        // Recent searches are read again each time the palette opens.
+        if (next) setRecent(readRecent());
+        setOpen(next);
+      }}
       commands={commands}
       search={(q, signal) => liveCommands(q, signal, go)}
       label={PALETTE_LABEL}

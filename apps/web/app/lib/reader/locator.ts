@@ -97,8 +97,8 @@ export function enrichSelectionLocator(
     ...(ctx.after !== undefined ? { after: ctx.after } : {}),
   };
   const locations: Record<string, unknown> = {
-    ...(positionLocations ?? {}),
-    ...(base.locations ?? {}),
+    ...positionLocations,
+    ...base.locations,
     ...(ctx.cssSelector ? { cssSelector: ctx.cssSelector } : {}),
   };
   return { ...base, text, locations };

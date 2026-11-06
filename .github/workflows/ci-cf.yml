@@ -11,8 +11,10 @@ on:
       - "packages/types/**"
       - "apps/web/**"
       - ".github/workflows/ci-cf.yml"
-      # Lint config and the lint:cf script decide what the Lint (biome) step checks.
-      - "biome.json"
+      # The root lint covers the admin MCP too, so a change there runs the Lint step.
+      - "mcp/**"
+      # The lint config and the root lint script decide what the Lint step checks.
+      - "oxlint.config.ts"
       - "package.json"
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "package-lock.json"
@@ -24,8 +26,10 @@ on:
       - "packages/types/**"
       - "apps/web/**"
       - ".github/workflows/ci-cf.yml"
-      # Lint config and the lint:cf script decide what the Lint (biome) step checks.
-      - "biome.json"
+      # The root lint covers the admin MCP too, so a change there runs the Lint step.
+      - "mcp/**"
+      # The lint config and the root lint script decide what the Lint step checks.
+      - "oxlint.config.ts"
       - "package.json"
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "package-lock.json"
@@ -81,8 +85,16 @@ jobs:
             if [ "$status" = FAILED ]; then echo "::error::Typecheck $name failed"; fi
           done
           exit "$fail"
-      - name: Lint (biome)
-        run: npm run lint:cf
+      # Oxlint over web, packages and the admin MCP (oxlint.config.ts), after the typechecks: its
+      # type-aware rules read the typegen output, and the MCP's own install and wrangler types.
+      - name: Admin MCP install and typegen (for the type-aware lint)
+        working-directory: mcp
+        run: |
+          npm ci
+          cp wrangler.jsonc.example wrangler.jsonc
+          npx wrangler types
+      - name: Lint
+        run: npm run lint
       - name: Drizzle migration check
         run: npm exec -w @foxing/core -- drizzle-kit check
       # Raw console.* calls in server code against .console.json's baseline (a rise fails; log

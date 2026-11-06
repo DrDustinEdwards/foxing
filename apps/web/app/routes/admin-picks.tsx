@@ -80,7 +80,7 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="divided">
               {picks.map((p) => (
-                <PickRow key={p.id} pick={p} onDone={reload} />
+                <PickRow key={p.id} pick={p} onDone={() => void reload()} />
               ))}
             </ul>
           )}
@@ -127,7 +127,7 @@ function PickRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(
+              void run(
                 `/picks/${pick.id}/publish`,
                 { body: { on: !pick.isPublished } },
                 "Could not update",
@@ -199,7 +199,7 @@ function PickEdit({
           className={adminInputClass}
         />
       </label>
-      <AdminButton variant="primary" pending={pending} onClick={save}>
+      <AdminButton variant="primary" pending={pending} onClick={() => void save()}>
         {pending ? "Saving..." : "Save"}
       </AdminButton>
       <AdminError error={error} />

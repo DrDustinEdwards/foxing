@@ -12,7 +12,7 @@ export function testApi(deps: Partial<ApiDeps> = {}) {
       return id ? { id, email: `${id}@example.com` } : null;
     },
     resolveCompanionCaller: () =>
-      // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
+      // oxlint-disable-next-line eslint/require-yield -- throws on first iteration by design, never yields
       async function* unused() {
         throw new Error("not used in this suite");
       },

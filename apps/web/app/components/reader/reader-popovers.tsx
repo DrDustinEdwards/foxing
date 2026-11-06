@@ -43,7 +43,7 @@ function useAnchoredPopover(
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: remeasure is the content-size trigger
+  // remeasure is the content-size trigger.
   useLayoutEffect(() => {
     if (!anchor || !ref.current) {
       setPos(null);
@@ -230,7 +230,7 @@ export function AttributionPopover({
             <button
               type="button"
               disabled={busy || !replyText.trim()}
-              onClick={submit}
+              onClick={() => void submit()}
               className="fx-reader-popovers-btn-4"
             >
               Reply
@@ -334,7 +334,7 @@ export function NoteComposer({
         ))}
       </div>
       <textarea
-        // biome-ignore lint/a11y/noAutofocus: composer opens on explicit user action
+        // oxlint-disable-next-line jsx-a11y/no-autofocus -- composer opens on explicit user action
         autoFocus
         value={draft.text}
         onChange={(e) => onChange({ ...draft, text: e.target.value })}

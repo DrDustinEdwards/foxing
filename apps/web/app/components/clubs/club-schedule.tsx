@@ -56,7 +56,7 @@ export function PollsSection({
       </div>
 
       {open ? (
-        <form onSubmit={create} className="mt-3 fx-club-schedule-card">
+        <form onSubmit={(e) => void create(e)} className="mt-3 fx-club-schedule-card">
           <input
             name="title"
             required
@@ -66,7 +66,7 @@ export function PollsSection({
           />
           {Array.from({ length: optionCount }, (_, i) => (
             <input
-              // biome-ignore lint/suspicious/noArrayIndexKey: options are only appended, never removed or reordered, and the field name opt{i} is positional too.
+              // An index key: options are only appended, never removed or reordered, and the field name opt{i} is positional too.
               key={i}
               name={`opt${i}`}
               required={i < 2}
@@ -196,7 +196,7 @@ export function MeetingsSection({
         </button>
       </div>
       {open ? (
-        <form onSubmit={create} className="mt-3 fx-club-schedule-card-2">
+        <form onSubmit={(e) => void create(e)} className="mt-3 fx-club-schedule-card-2">
           <input
             name="title"
             required
@@ -265,7 +265,8 @@ export function ScheduleSection({
   canModerate: boolean;
 }) {
   const { run, error, pending } = useAddSchedule();
-  const now = Date.now();
+  // The time the list was first drawn, which splits upcoming from past.
+  const [now] = useState(() => Date.now());
 
   async function add(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -301,7 +302,7 @@ export function ScheduleSection({
         </ul>
       )}
       {canModerate ? (
-        <form onSubmit={add} className="mt-3 fx-club-schedule-form">
+        <form onSubmit={(e) => void add(e)} className="mt-3 fx-club-schedule-form">
           <input
             name="chapter"
             required

@@ -62,7 +62,7 @@ function StatTile({ label, value }: { label: string; value: number }) {
 export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
   const { user, stats } = loaderData;
   const revalidator = useRevalidator();
-  const suspend = useRoleChange({ onDone: () => revalidator.revalidate() });
+  const suspend = useRoleChange({ onDone: () => void revalidator.revalidate() });
   const genres = user.favoriteGenres?.length ? user.favoriteGenres.join(", ") : "None set";
 
   return (
@@ -81,7 +81,7 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
             variant={user.isSuspended ? "default" : "danger"}
             pending={suspend.pending}
             onClick={() =>
-              suspend.request(
+              void suspend.request(
                 `/users/${user.id}/suspend`,
                 { suspended: !user.isSuspended },
                 user.isSuspended ? "Unsuspend" : "Suspend",
@@ -146,8 +146,8 @@ function OperatorControls({
 }) {
   const revalidator = useRevalidator();
   const navigate = useNavigate();
-  const { pending, error, run } = useAdminAction({ onDone: () => revalidator.revalidate() });
-  const tier = useRoleChange({ onDone: () => revalidator.revalidate() });
+  const { pending, error, run } = useAdminAction({ onDone: () => void revalidator.revalidate() });
+  const tier = useRoleChange({ onDone: () => void revalidator.revalidate() });
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [notifySent, setNotifySent] = useState(false);
@@ -180,7 +180,7 @@ function OperatorControls({
             <AdminButton
               pending={tier.pending}
               onClick={() =>
-                tier.request(
+                void tier.request(
                   `/users/${userId}/tier`,
                   { tier: isPlus ? "free" : "plus" },
                   isPlus ? "Downgrade to Free" : "Upgrade to Plus",
@@ -215,7 +215,7 @@ function OperatorControls({
             <AdminButton
               pending={pending}
               disabled={title.trim().length === 0}
-              onClick={sendNotification}
+              onClick={() => void sendNotification()}
             >
               Send to @{username}
             </AdminButton>
@@ -244,7 +244,7 @@ function OperatorControls({
             variant="danger"
             pending={pending}
             disabled={confirmDelete.trim() !== username}
-            onClick={remove}
+            onClick={() => void remove()}
           >
             Delete this account
           </AdminButton>

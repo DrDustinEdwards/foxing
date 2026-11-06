@@ -51,6 +51,19 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
     });
   }, [next]);
 
+  const createPasskey = async () => {
+    setPending(true);
+    setError(null);
+    const res = await authClient.passkey.addPasskey();
+    if (signInAgainIfStale(res?.error)) return;
+    setPending(false);
+    if (res?.error) {
+      setError("The passkey was not saved. Try again, or skip it for now.");
+      return;
+    }
+    window.location.assign(next);
+  };
+
   return (
     <AuthShell
       title="You're signed in"
@@ -68,18 +81,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
           className="cap-btn full"
           data-variant="primary"
           data-size="lg"
-          onClick={async () => {
-            setPending(true);
-            setError(null);
-            const res = await authClient.passkey.addPasskey();
-            if (signInAgainIfStale(res?.error)) return;
-            setPending(false);
-            if (res?.error) {
-              setError("The passkey was not saved. Try again, or skip it for now.");
-              return;
-            }
-            window.location.assign(next);
-          }}
+          onClick={() => void createPasskey()}
         >
           {pending ? "Waiting for your device..." : "Create a passkey"}
         </button>

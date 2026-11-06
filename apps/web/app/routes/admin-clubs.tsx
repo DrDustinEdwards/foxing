@@ -60,7 +60,7 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="divided">
               {clubs.map((c) => (
-                <ClubRow key={c.id} club={c} onDone={reload} />
+                <ClubRow key={c.id} club={c} onDone={() => void reload()} />
               ))}
             </ul>
           )}
@@ -105,7 +105,7 @@ function ClubRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(
+              void run(
                 `/clubs/${club.id}/verify`,
                 { body: { on: !club.isVerified } },
                 "Could not update",
@@ -119,7 +119,7 @@ function ClubRow({
               <AdminButton
                 variant="danger"
                 pending={pending}
-                onClick={() => run(`/clubs/${club.id}`, { method: "DELETE" }, "Could not delete")}
+                onClick={() => void run(`/clubs/${club.id}`, { method: "DELETE" }, "Could not delete")}
               >
                 Confirm delete
               </AdminButton>

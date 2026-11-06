@@ -19,12 +19,9 @@ export function BookPicker({
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (q.trim().length < 2) {
-      setResults([]);
-      return;
-    }
+    if (q.trim().length < 2) return;
     if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
+    const suggest = async () => {
       try {
         const res = await fetch(`/api/v1/search/suggest?q=${encodeURIComponent(q)}`);
         const body = (await res.json()) as { books?: Suggestion[] };
@@ -33,11 +30,15 @@ export function BookPicker({
       } catch {
         setResults([]);
       }
-    }, 200);
+    };
+    timer.current = setTimeout(() => void suggest(), 200);
     return () => {
       if (timer.current) clearTimeout(timer.current);
     };
   }, [q]);
+
+  // A query too short to search shows no suggestions.
+  const shown = q.trim().length < 2 ? [] : results;
 
   if (selected) {
     return (
@@ -58,14 +59,14 @@ export function BookPicker({
       <input
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        onFocus={() => results.length > 0 && setOpen(true)}
+        onFocus={() => shown.length > 0 && setOpen(true)}
         placeholder="Search the catalog by title or author"
         className={adminInputClass}
         aria-label="Search for a book"
       />
-      {open && results.length > 0 ? (
+      {open && shown.length > 0 ? (
         <ul className="mt-1 fx-book-picker-list">
-          {results.map((b) => (
+          {shown.map((b) => (
             <li key={b.id}>
               <button
                 type="button"

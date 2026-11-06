@@ -482,7 +482,6 @@ export function ReaderTopBar({
       </header>
 
       {/* Social layer toggles: read your book with optional social layers overlaid. */}
-      {/* biome-ignore lint/a11y/useSemanticElements: a toggle bar of buttons, not a form fieldset */}
       <div
         className="fx-reader-panels-row-4"
         style={{ background }}

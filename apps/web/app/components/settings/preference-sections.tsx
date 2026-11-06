@@ -48,7 +48,7 @@ export function BillingSection({
             You are on <span className="strong">Foxing Plus</span>
             {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
           </p>
-          <button type="button" onClick={manage} disabled={pending} className="cap-btn">
+          <button type="button" onClick={() => void manage()} disabled={pending} className="cap-btn">
             {pending ? "Opening..." : "Manage billing"}
           </button>
         </div>
@@ -98,7 +98,7 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
 
   return (
     <Card title="Visibility">
-      <form onSubmit={save} className="stack">
+      <form onSubmit={(e) => void save(e)} className="stack">
         <ToggleRow
           checked={profile === "public"}
           onChange={(on) => setProfile(on ? "public" : "private")}
@@ -166,7 +166,7 @@ export function NotificationsSection({
 
   return (
     <Card title="Notifications">
-      <form onSubmit={save} className="stack">
+      <form onSubmit={(e) => void save(e)} className="stack">
         <p className="ui">
           Choose which push notifications the mobile app sends you. Quiet hours pause them overnight
           in your timezone.

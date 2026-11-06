@@ -290,7 +290,9 @@ export function useClubLive(clubId: string | null) {
   const [presence, setPresence] = useState<string[]>([]);
   const [connected, setConnected] = useState(false);
   const deps = useRef({ api, qc });
-  deps.current = { api, qc };
+  useEffect(() => {
+    deps.current = { api, qc };
+  });
 
   useEffect(() => {
     if (!clubId) return;

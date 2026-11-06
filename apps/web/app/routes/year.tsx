@@ -4,6 +4,7 @@
 // A year picker links between years. The shareable public version lives on the profile.
 // The page is YearView (components/reading/year-view.tsx), which /demos/year draws with a sample year.
 import { createDb, views } from "@foxing/core";
+import { useState } from "react";
 import { YearView } from "~/components/reading/year-view";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
@@ -36,7 +37,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export default function Year({ loaderData }: Route.ComponentProps) {
-  const thisYear = new Date().getUTCFullYear();
+  const [thisYear] = useState(() => new Date().getUTCFullYear());
   return <YearView data={loaderData} yearHref={(y) => (y === thisYear ? "/year" : `/year/${y}`)} />;
 }
 

@@ -1,5 +1,5 @@
 import { useSuggest } from "@foxing/client";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 import { Form, useNavigate } from "react-router";
 
 /**
@@ -19,9 +19,11 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
   const listId = useId();
 
   // A new set of suggestions opens the list; none closes it.
-  useEffect(() => {
+  const [shownItems, setShownItems] = useState(items);
+  if (items !== shownItems) {
+    setShownItems(items);
     setOpen(items.length > 0);
-  }, [items]);
+  }
 
   function onChange(value: string) {
     setQ(value);

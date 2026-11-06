@@ -64,7 +64,7 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="divided">
               {books.map((b) => (
-                <BookRow key={b.id} book={b} onDone={reload} />
+                <BookRow key={b.id} book={b} onDone={() => void reload()} />
               ))}
             </ul>
           )}
@@ -104,7 +104,7 @@ function BookRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(
+              void run(
                 `/books/${book.id}/staff-pick`,
                 { body: { on: !book.isStaffPick } },
                 "Could not update",
@@ -201,7 +201,7 @@ function BookEdit({
           className={adminInputClass}
         />
       </label>
-      <AdminButton variant="primary" pending={pending} onClick={save}>
+      <AdminButton variant="primary" pending={pending} onClick={() => void save()}>
         {pending ? "Saving..." : "Save"}
       </AdminButton>
       <AdminError error={error} />

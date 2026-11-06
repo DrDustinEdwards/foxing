@@ -49,7 +49,7 @@ export async function deliverPush(
     {
       title: ctx.notification.title,
       body: ctx.notification.body,
-      data: { notificationId, ...(ctx.notification.data ?? {}) },
+      data: { notificationId, ...ctx.notification.data },
     },
   );
   const tickets = await sendExpoPush(messages, deps.fetchImpl);

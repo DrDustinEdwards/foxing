@@ -19,7 +19,7 @@ function stubCaller(text = "Hello, reader."): companion.CompanionCaller {
 }
 
 function throwingCaller(): companion.CompanionCaller {
-  // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
+  // oxlint-disable-next-line eslint/require-yield -- throws on first iteration by design, never yields
   return async function* boom() {
     throw new Error("model call failed");
   };
@@ -117,7 +117,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
     });
   }
 
-  const call = (api: ReturnType<typeof apiWith>, userId: string, body: unknown) =>
+  const call = async (api: ReturnType<typeof apiWith>, userId: string, body: unknown) =>
     api.fetch(
       new Request("https://test.local/companion", {
         method: "POST",

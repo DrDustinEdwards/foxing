@@ -211,7 +211,6 @@ async function tocFromNav(zip: JSZip, navHref: string): Promise<{ href: string; 
   const re = /<a[^>]*href="([^"#]+)(?:#[^"]*)?"[^>]*>([\s\S]*?)<\/a>/gi;
   const out: { href: string; title: string }[] = [];
   let m: RegExpExecArray | null;
-  // biome-ignore lint/suspicious/noAssignInExpressions: standard regex exec loop
   while ((m = re.exec(scope)) !== null) {
     const href = posix.normalize(posix.join(navDir, decodeURIComponent(m[1])));
     const label = m[2].replace(/<[^>]+>/g, "").trim();

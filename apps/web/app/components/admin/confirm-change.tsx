@@ -177,7 +177,7 @@ function RoleChangeDialog({
         <AdminButton disabled={pending} onClick={() => closeThen(onCancel)}>
           Cancel
         </AdminButton>
-        <AdminButton variant="danger" pending={pending} onClick={perform}>
+        <AdminButton variant="danger" pending={pending} onClick={() => void perform()}>
           {change.label}
         </AdminButton>
       </div>

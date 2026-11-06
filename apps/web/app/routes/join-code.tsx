@@ -58,7 +58,7 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
         {alreadyMember ? (
           <button
             type="button"
-            onClick={() => navigate(`/clubs/${club.slug}`)}
+            onClick={() => void navigate(`/clubs/${club.slug}`)}
             className="cap-btn mt-8"
             data-variant="primary"
           >
@@ -67,7 +67,7 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
         ) : (
           <button
             type="button"
-            onClick={join}
+            onClick={() => void join()}
             disabled={pending}
             className="cap-btn mt-8"
             data-variant="primary"

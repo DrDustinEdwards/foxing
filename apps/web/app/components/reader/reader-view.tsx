@@ -15,7 +15,7 @@ import {
   useUpdateAnnotation,
 } from "@foxing/client";
 import type { ReaderAnnotations } from "@foxing/types";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { HighlightColor } from "@foxing/core";
 import type {
   CreateEngineOptions,
@@ -120,6 +120,13 @@ export function ReaderView(props: ReaderViewProps) {
     useSaveProgress(),
   ] as const;
   const [createAnn, updateAnn, deleteAnn, likeAnn, comment, saveProgress] = writes;
+  // Each write's method on its own, so a callback depends on the method, not the whole write.
+  const createRun = createAnn.run;
+  const updateFire = updateAnn.fire;
+  const deleteFire = deleteAnn.fire;
+  const likeFire = likeAnn.fire;
+  const commentRun = comment.run;
+  const saveFire = saveProgress.fire;
   const saving = writes.some((w) => w.pending);
   const writeError = writes.find((w) => w.error)?.error ?? null;
   const dismissWriteError = () => {
@@ -127,15 +134,18 @@ export function ReaderView(props: ReaderViewProps) {
   };
 
   const settingsRef = useRef(settings);
-  settingsRef.current = settings;
   const annotationsRef = useRef(annotations);
-  annotationsRef.current = annotations;
   const othersRef = useRef(others);
-  othersRef.current = others;
   const layersRef = useRef(layers);
-  layersRef.current = layers;
   const popularRef = useRef(popular);
-  popularRef.current = popular;
+  // The refs follow the latest render once it commits, before any effect below reads them.
+  useLayoutEffect(() => {
+    settingsRef.current = settings;
+    annotationsRef.current = annotations;
+    othersRef.current = others;
+    layersRef.current = layers;
+    popularRef.current = popular;
+  });
 
   // Redraw the decoration layers from the current mine/others sets, honoring the layer
   // toggles. Your own always render when the Mine layer is on; others render as an
@@ -186,11 +196,28 @@ export function ReaderView(props: ReaderViewProps) {
     engineRef.current?.applyPopular(popularSpecs, theme);
   }, [reapplyHighlights]);
 
+  const scheduleSave = useCallback(
+    (loc: Locator) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = setTimeout(() => {
+        // Don't re-persist the position we already saved (the restore navigation
+        // re-emits it, which would flash "Saving..." on every reload for nothing).
+        if (samePosition(loc, lastSavedRef.current)) return;
+        lastSavedRef.current = loc;
+        saveFire({
+          bookId: book.id,
+          locator: loc,
+          progressPct: progressPctFromLocator(loc),
+        });
+      }, PROGRESS_DEBOUNCE);
+    },
+    [book.id, saveFire],
+  );
+
   // Boot: load saved settings, build the engine, wire listeners. Mounts once per
   // book; all inputs it needs (signedIn, initialLocator, the callbacks) are stable
   // for a reading session or read through refs, so re-running on their identity
   // would needlessly rebuild the navigator.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: mount once per book; inputs are session-stable or ref-read
   useEffect(() => {
     const initial = loadSettings();
     setSettings(initial);
@@ -299,28 +326,12 @@ export function ReaderView(props: ReaderViewProps) {
     return () => {
       destroyed = true;
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      engineRef.current?.destroy();
+      void engineRef.current?.destroy();
       engineRef.current = null;
     };
+    // oxlint-disable-next-line react/exhaustive-deps -- mount once per book; inputs are session-stable or ref-read
   }, [manifestUrl]);
 
-  const scheduleSave = useCallback(
-    (loc: Locator) => {
-      if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        // Don't re-persist the position we already saved (the restore navigation
-        // re-emits it, which would flash "Saving..." on every reload for nothing).
-        if (samePosition(loc, lastSavedRef.current)) return;
-        lastSavedRef.current = loc;
-        saveProgress.fire({
-          bookId: book.id,
-          locator: loc,
-          progressPct: progressPctFromLocator(loc),
-        });
-      }, PROGRESS_DEBOUNCE);
-    },
-    [book.id, saveProgress.fire],
-  );
 
   // Keyboard navigation (ignored while a panel, composer, or prompt is open, or
   // when focus is in a text field).
@@ -387,14 +398,14 @@ export function ReaderView(props: ReaderViewProps) {
       visibility?: "club";
     }) => {
       const chapterTitle = currentLocatorRef.current?.title;
-      await createAnn.run({
+      await createRun({
         ...payload,
         id: newId(),
         bookId: book.id,
         chapter: typeof chapterTitle === "string" ? chapterTitle : undefined,
       });
     },
-    [book.id, createAnn.run],
+    [book.id, createRun],
   );
 
   const highlightSelection = useCallback(
@@ -431,25 +442,25 @@ export function ReaderView(props: ReaderViewProps) {
 
   const patchAnnotation = useCallback(
     (id: string, patch: { color?: HighlightColor; body?: string | null }) => {
-      updateAnn.fire({ bookId: book.id, id, ...patch });
+      updateFire({ bookId: book.id, id, ...patch });
     },
-    [book.id, updateAnn.fire],
+    [book.id, updateFire],
   );
 
   const deleteAnnotation = useCallback(
     (id: string) => {
-      deleteAnn.fire({ bookId: book.id, id });
+      deleteFire({ bookId: book.id, id });
       setEditing(null);
       setEditAnchor(null);
     },
-    [book.id, deleteAnn.fire],
+    [book.id, deleteFire],
   );
 
   // A layer toggle, or any change to the cached annotations (a write, its rollback, a
   // refetch), redraws the decoration set.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: redraw reads live refs; these are the triggers
   useEffect(() => {
     redraw();
+    // oxlint-disable-next-line react/exhaustive-deps -- redraw reads live refs; these are the triggers
   }, [layers, annotations, others, popular]);
 
   const toggleLayer = useCallback((key: keyof LayerState) => {
@@ -484,9 +495,9 @@ export function ReaderView(props: ReaderViewProps) {
           ? { ...cur, likedByMe: on, likeCount: Math.max(0, cur.likeCount + (on ? 1 : -1)) }
           : cur,
       );
-      likeAnn.fire({ bookId: book.id, id: other.id, on });
+      likeFire({ bookId: book.id, id: other.id, on });
     },
-    [requireSignIn, likeAnn.fire, book.id],
+    [requireSignIn, likeFire, book.id],
   );
 
   // Reply to another reader's annotation, posted into a shared club (the passage-comment
@@ -498,7 +509,7 @@ export function ReaderView(props: ReaderViewProps) {
       setAttribution((cur) =>
         cur && cur.id === other.id ? { ...cur, replyCount: cur.replyCount + 1 } : cur,
       );
-      const ok = await comment.run({
+      const ok = await commentRun({
         id: newId(),
         clubId,
         bookId: book.id,
@@ -515,7 +526,7 @@ export function ReaderView(props: ReaderViewProps) {
       }
       return !!ok;
     },
-    [requireSignIn, comment.run, book.id],
+    [requireSignIn, commentRun, book.id],
   );
 
   const canvas = READING_CANVAS[settings.theme];
@@ -542,7 +553,7 @@ export function ReaderView(props: ReaderViewProps) {
         background={canvas.bg}
         panel={panel}
         onTogglePanel={(p) => setPanel(panel === p ? null : p)}
-        onBookmark={addBookmark}
+        onBookmark={() => void addBookmark()}
         layers={layers}
         onToggleLayer={toggleLayer}
         clubsCount={others.filter((o) => o.layer !== "public").length}
@@ -610,7 +621,7 @@ export function ReaderView(props: ReaderViewProps) {
         <SelectionToolbar
           canvas={canvas}
           canShareToClub={canShareToClub}
-          onColor={(c, share) => highlightSelection(c, undefined, share)}
+          onColor={(c, share) => void highlightSelection(c, undefined, share)}
           onNote={() => setNoteDraft({ color: "amber", text: "" })}
           onDismiss={() => {
             setSelection(null);
@@ -627,7 +638,7 @@ export function ReaderView(props: ReaderViewProps) {
           canShareToClub={canShareToClub}
           onChange={setNoteDraft}
           onSave={(share) =>
-            highlightSelection(noteDraft.color, noteDraft.text.trim() || undefined, share)
+            void highlightSelection(noteDraft.color, noteDraft.text.trim() || undefined, share)
           }
           onCancel={() => {
             setNoteDraft(null);
