@@ -15,11 +15,11 @@ const SQL =
 
 function d1Query(sql: string): Array<Record<string, unknown>> {
   // --file returns only metadata, not rows, so use --command. Pass the whole
-  // invocation as one shell string (shell:true is required for pnpm.cmd on
+  // invocation as one shell string (shell:true is required for npx.cmd on
   // Windows); the SQL is double-quoted so cmd.exe keeps it as one argument and
   // the inner single quotes stay literal. The SQL here is a fixed literal (no
   // user input), so the lack of escaping is not a concern.
-  const cmd = `pnpm exec wrangler d1 execute ${D1_DB} --remote --json --command "${sql}"`;
+  const cmd = `npx wrangler d1 execute ${D1_DB} --remote --json --command "${sql}"`;
   const proc = spawnSync(cmd, {
     cwd: WEB_DIR,
     encoding: "utf-8",

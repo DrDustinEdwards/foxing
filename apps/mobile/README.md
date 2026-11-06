@@ -18,9 +18,9 @@ reads alongside you, and book clubs with discussion tied to passages.
 From the repository root:
 
 ```bash
-pnpm install
+npm install
 cp apps/mobile/.env.example apps/mobile/.env
-pnpm --filter mobile start
+npm run dev:mobile
 ```
 
 `EXPO_PUBLIC_API_URL` points a dev build at a preview Worker; it defaults to

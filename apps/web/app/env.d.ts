@@ -42,7 +42,7 @@ interface Env {
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
   // "1" in .dev.vars only: lets localhost into the admin pages, since no Access sits in
-  // front of `pnpm dev:web`. Ignored on any other host.
+  // front of `npm run dev:web`. Ignored on any other host.
   ACCESS_DEV_BYPASS?: string;
 }
 

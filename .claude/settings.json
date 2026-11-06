@@ -49,7 +49,7 @@
   },
   "permissions": {
     "allow": [
-      "Bash(pnpm *)",
+      "Bash(npm *)",
       "Bash(npm run *)",
       "Bash(npx tsc *)",
       "Bash(npx wrangler types*)",
@@ -65,7 +65,7 @@
     "ask": [
       "Bash(git push *)",
       "Bash(npm run deploy*)",
-      "Bash(pnpm run deploy*)",
+      "Bash(npm run deploy*)",
       "Bash(npx wrangler deploy*)",
       "Bash(npx wrangler d1 migrations apply*)",
       "Bash(npx wrangler d1 execute *DELETE*)",
