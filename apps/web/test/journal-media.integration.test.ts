@@ -167,8 +167,8 @@ describe("Journal media: upload, serve, use and delete", () => {
     expect(await objectBytes(env.MEDIA, item.id)).toBeNull();
     expect((await fetchWorker(`/media/${item.id}`)).status).toBe(404);
     // The last bytes are kept, so a delete can be undone by hand.
-    const kept = (await env.BACKUPS.list({ prefix: "journal-media/deleted/" })).objects;
-    expect(kept.map((o) => o.key.endsWith(`/${item.id}`))).toContain(true);
+    const kept = (await env.BACKUPS.list({ prefix: `journal-media/replaced/${item.id}/` })).objects;
+    expect(await objectBytes(env.BACKUPS, kept[0]?.key ?? "")).toEqual(png("reading-room"));
   });
 
   it("refuses a stale version, even for two writes in the same second, and changes nothing", async () => {
@@ -256,9 +256,8 @@ describe("Journal media: bytes and their history", () => {
       width: 2560,
       resizedFrom: { width: 6000, height: 4000, bytes: png("big-case").length },
     });
-    const kept = (await env.BACKUPS.list({ prefix: "journal-media/resized/" })).objects.find((o) =>
-      o.key.endsWith(`/${shrunk.id}`),
-    );
+    const [kept] = (await env.BACKUPS.list({ prefix: `journal-media/replaced/${shrunk.id}/` }))
+      .objects;
     expect(await objectBytes(env.BACKUPS, kept?.key ?? "")).toEqual(png("big-case"));
 
     const asIs = await upload("big-as-is", big, "&resize=no");
