@@ -20,7 +20,11 @@ const brand: Brand = { name: "Foxing", family: "fox" };
 /** Sends one mail (site-runtime ./email: a link or code in `secrets` and the recipient are cut out of a logged
  *  error, never the body). What is thrown holds none of the provider's words: Better Auth logs it as it is. */
 async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []): Promise<void> {
-  const outcome = await sendEmail(env.EMAIL, { to, from: { email: env.EMAIL_FROM, name: "Foxing" }, ...mail }, { secrets });
+  const outcome = await sendEmail(
+    env.EMAIL,
+    { to, from: { email: env.EMAIL_FROM, name: "Foxing" }, ...mail },
+    { secrets },
+  );
   if (!outcome.sent) throw new Error(`Email not sent (${outcome.code}).`);
 }
 
