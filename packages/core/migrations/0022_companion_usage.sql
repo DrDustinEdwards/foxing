@@ -1,5 +1,5 @@
 -- companion_usage: the companion's daily quota, moved from a KV read-then-write (parallel requests all read the same
--- count, and a failed or cancelled reply was never counted) to one row per reader per UTC day. companionRepo reserves a
+-- count, and a failed or canceled reply was never counted) to one row per reader per UTC day. companionRepo reserves a
 -- request's worst-case cost with a single conditional upsert before the model is called and settles it to the real cost
 -- after; each is one statement, which D1 runs atomically.
 -- Additive: one new table. No existing row is touched.

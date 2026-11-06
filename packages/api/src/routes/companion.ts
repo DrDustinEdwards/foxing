@@ -67,7 +67,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
 
   // Quota: reserve this call's worst case before the model is called, in one statement that also checks the cap, so
   // parallel requests cannot all pass on the same count. It is settled to the real cost once the reply is whole; a
-  // reply that fails or is cancelled keeps the reservation, since the model may have been billed for it.
+  // reply that fails or is canceled keeps the reservation, since the model may have been billed for it.
   const inputChars =
     system.length + userContent.length + ctx.history.reduce((n, m) => n + m.content.length, 0);
   const reserved = companion.reserveCents(action.role, inputChars, maxTokens);

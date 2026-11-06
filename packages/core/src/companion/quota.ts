@@ -1,7 +1,7 @@
 // Pure quota logic (security-open-items.md item 4). The D1 counter is companionRepo.reserveUsage/settleUsage;
 // everything here is testable without a binding. A call's real cost is only known once it settles, so a request
 // reserves its worst case first (the cap is checked and the reservation added in one statement) and is settled to
-// the real cost after. A reply that fails or is cancelled keeps its reservation: the model may have been billed.
+// the real cost after. A reply that fails or is canceled keeps its reservation: the model may have been billed.
 import { type CompanionRole, estimateCostCents } from "./models";
 
 /** The quota's day, YYYYMMDD in UTC: one counter row per reader per day. */
