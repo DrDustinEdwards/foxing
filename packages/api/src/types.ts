@@ -53,6 +53,7 @@ export type Variables = {
   deleteUser: ApiDeps["deleteUser"];
   isFresh: ApiDeps["isFresh"];
   backupFiles: ApiDeps["backupFiles"];
+  backupStatus: ApiDeps["backupStatus"];
 };
 
 export type Env = { Bindings: Bindings; Variables: Variables };
@@ -88,6 +89,8 @@ export type ApiDeps = {
   isFresh: (req: Request, env: Bindings) => Promise<boolean>;
   /** Runs the files backup passes now (the Worker's backupFilesNow); the admin API's backup route. */
   backupFiles: (env: Bindings) => Promise<Record<string, unknown>[]>;
+  /** Reads the backup state now, uncached (the Worker's backupStatus, the same read as /health's backup). */
+  backupStatus: (env: Bindings) => Promise<Record<string, unknown>>;
   deleteUser: (
     req: Request,
     env: Bindings,

@@ -115,7 +115,7 @@ describe("admin write surface gate + audit log", () => {
     expect(audit.actor).toBe("admin");
   });
 
-  it("runs the files backup for an admin, records it, and refuses a reader", async () => {
+  it("runs and reads the files backup for an admin, records the run, and refuses a reader", async () => {
     const res = await post("/admin/backup/media", "admin", {});
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ files: [] });
@@ -126,6 +126,9 @@ describe("admin write surface gate + audit log", () => {
       .limit(1);
     expect(audit.action).toBe("backup.media");
     expect((await post("/admin/backup/media", "reader", {})).status).toBe(403);
+    const check = (user: string) => call("/admin/backup", { headers: { "x-test-user": user } });
+    expect(await (await check("admin")).json()).toEqual({ ok: true });
+    expect((await check("reader")).status).toBe(403);
   });
 
   it("blocks a non-admin from suspending a user", async () => {

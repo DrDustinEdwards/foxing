@@ -66,7 +66,7 @@ describe("handleMcp", () => {
       listed.map((t) => t.name).sort(),
       TOOLS.map((t) => t.name).sort(),
     );
-    assert.equal(listed.length, 11);
+    assert.equal(listed.length, 12);
     for (const t of listed) {
       assert.match(t.name, /^foxing_[a-z_]+$/);
       for (const hint of ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]) {

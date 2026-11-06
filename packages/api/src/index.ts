@@ -64,6 +64,7 @@ export function createApi(deps: ApiDeps) {
     c.set("deleteUser", deps.deleteUser);
     c.set("isFresh", deps.isFresh);
     c.set("backupFiles", deps.backupFiles);
+    c.set("backupStatus", deps.backupStatus);
     await next();
   });
 

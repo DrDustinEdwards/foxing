@@ -19,6 +19,7 @@ export function testApi(deps: Partial<ApiDeps> = {}) {
     // Every test caller signed in just now.
     isFresh: async () => true,
     backupFiles: async () => [],
+    backupStatus: async () => ({ ok: true }),
     // The real one is Better Auth's deleteUser (security-notice.integration.test.ts).
     deleteUser: async (_req, e, { userId, successors }) => {
       await deleteAccount(createDb(e.DB), userId, successors);
