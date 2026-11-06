@@ -543,6 +543,8 @@ describe("Carrel site API: v0.17.0 over the Journal", () => {
     );
     expect(trashed.status).toBe("draft");
     expect(await catalogRepo.getPostBySlug(db(), "new-name")).toBeNull();
+    // The Worker answers that address 410 (workers/app.ts, site-api's tombstoned): the trash left the tombstone.
+    expect(await d1SiteApiStore(env.DB).isGone("/journal/new-name")).toBe(true);
     // A redirect leads only to a live post: no 301 to a 404 while it is in the trash.
     expect(await catalogRepo.getJournalSlugRedirect(db(), "old-name")).toBeNull();
     const listed = await body<{ items: Array<{ id: string }>; filtered: string[] }>(
