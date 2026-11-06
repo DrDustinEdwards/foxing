@@ -666,7 +666,8 @@ export const TOOLS: ToolDefinition[] = [
         "and files/covers/), which Capsid copies to Amazon. It copies new and changed files and drops a copy " +
         "only 30 days after its file is gone; it never writes or deletes in the media or covers buckets. A pass " +
         "stops at its write or time budget and the next goes on from there. Reports each backup's counts and " +
-        "whether its pass completed.",
+        "whether its pass completed. /health caches the backup read for an hour, so its backup fields may " +
+        "take up to an hour to show this run.",
       inputSchema: z.strictObject({}),
       outputSchema: z.looseObject({ files: z.array(record) }),
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
