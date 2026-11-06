@@ -1,140 +1,45 @@
 /**
  * Foxing Admin: the admin MCP server for foxing.app.
  *
- * Ruling capsid/rulings/mcp-2026-10-10.md and capsid/research/design-mcp-servers.md
- * section 5. Its own Worker (rule 9 as amended): it holds no Stripe key, no D1
- * and no Foxing data binding (its one R2 bucket holds only copies of its own
- * tool-call log). Its only route to Foxing is the FOXING
- * service binding to /api/v1/admin, which owns every rule and re-checks the
- * acting admin on every call. If this Worker vanished, nothing about what is
- * allowed on foxing.app would change.
+ * Ruling capsid/rulings/mcp-2026-10-10.md and capsid/research/design-mcp-servers.md section 5. Its own Worker (rule 9
+ * as amended): it holds no Stripe key, no D1 and no Foxing data binding (its one R2 bucket holds only copies of its own
+ * tool-call log). Its only route to Foxing is the FOXING service binding to /api/v1/admin, which owns every rule and
+ * re-checks the acting admin on every call. If this Worker vanished, nothing about what is allowed on foxing.app would
+ * change.
  *
- * Request routing, outermost first:
+ * The Worker is site-runtime's adminMcpWorker, the door every admin MCP server shares: the Origin and Host checks, the
+ * list-only test key, the OAuth provider bound to PUBLIC_ORIGIN + /mcp, the Cloudflare Access sign-in admitting the
+ * single ADMIN_EMAIL (on every request too), the rate limit, /owner, /health and the tool-call log's daily copy. What
+ * is Foxing's own is below: its name, its consent paragraphs, its binding and its MCP server (mcp-handler.ts).
  *
- *   /mcp                   a foreign Origin is refused, then the provider
- *                          validates the access token, then
- *                          apiHandler checks the audience, re-checks the
- *                          administrator, rate limits and hands off
- *   /authorize /callback   consent and the Cloudflare Access sign-in, login-handler.ts
- *   /owner                 the owner page: your grants with Revoke, the agent keys and the tool-call log
- *                          (site-runtime ./owner-page, mounted by the same login handler)
- *   /register              site-runtime's registrationLimited (per address and
- *                          overall), then the provider, which refuses any
- *                          redirect URI not allowlisted exactly
- *   /token, /.well-known/* the provider
- *   /health                site-runtime's healthResponse: the deployed commit and a check per
- *                          binding (login-handler.ts)
+ * Access rather than Foxing's own Better Auth: this server's sign-in stays independent of foxing.app's sessions. The
+ * Foxing account the API acts as is FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAILS)
+ * on every call.
  */
 
 import OAuthProvider from "@cloudflare/workers-oauth-provider";
-import { DCR_CALLBACKS, registrationLimited, registrationRefusal } from "@dustinedwards/site-runtime/mcp-login";
-import { checkRateLimit, mcpOriginRefusal, probeDoor, refuse, withMcpHeaders } from "@dustinedwards/site-runtime/mcp-server";
-import { withRequestLog } from "@dustinedwards/site-runtime/log";
+import { adminMcpWorker, type AdminMcpEnv } from "@dustinedwards/site-runtime/admin-mcp";
 import { foxingMcp } from "@dustinedwards/site-runtime/sites";
 
-import { apiHandler, publicOrigin, type Env } from "./api-handler";
-import { SCOPES } from "./auth";
-import { defaultHandler } from "./login-handler";
-import { handleMcp, MCP_ROUTE, SERVER } from "./mcp-handler";
+import type { ApiEnv } from "./api-client";
+import { handleMcp, SERVER } from "./mcp-handler";
 
 export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
-import { exportAuditLog } from "@dustinedwards/site-runtime/audit-log";
 
-export type { Env };
+export interface Env extends AdminMcpEnv, Partial<ApiEnv> {}
 
-const providers = new Map<string, OAuthProvider<Env>>();
-
-/**
- * One provider per origin and registration allowlist: both are fixed at
- * construction, so a changed allowlist gets a new provider, never a stale one.
- */
-function providerFor(env: Env): OAuthProvider<Env> {
-  const origin = publicOrigin(env);
-  const key = `${origin} ${env.DCR_REDIRECT_URIS ?? ""}`;
-  let provider = providers.get(key);
-  if (!provider) {
-    provider = new OAuthProvider<Env>({
-      apiRoute: MCP_ROUTE,
-      apiHandler,
-      defaultHandler: defaultHandler as unknown as ExportedHandler<Env>,
-      authorizeEndpoint: "/authorize",
-      tokenEndpoint: "/token",
-      scopesSupported: SCOPES.all,
-      // AUDIENCE BINDING, rule 12.2 and RFC 8707: every grant and token is
-      // pinned to exactly this server's /mcp. Nothing is passed through; the
-      // API leg uses ADMIN_OPERATOR_TOKEN, never the client's token.
-      resourceMetadata: {
-        resource: `${origin}${MCP_ROUTE}`,
-        authorization_servers: [origin],
-        scopes_supported: SCOPES.all,
-        resource_name: "Foxing Admin",
-      },
-      // Rule 13. CIMD for Claude, Claude Code and ChatGPT, which send their
-      // client_id as a metadata URL and never register. Needs the
-      // global_fetch_strictly_public compatibility flag.
-      clientIdMetadataDocumentEnabled: true,
-      // Tightened DCR for Grok and Gemini, which still require RFC 7591 as of
-      // 2026-10-09: exact redirect URIs only, rate limited before the provider
-      // sees it, and a registration grants nothing (consent, Access and
-      // isAdminUser still decide). Remove when they support CIMD, at the latest
-      // when the specification removes DCR.
-      clientRegistrationEndpoint: "/register",
-      clientRegistrationCallback: ({ clientMetadata }) => {
-        // The callbacks every user shares (Grok, ChatGPT, Gemini) and this server's own DCR_REDIRECT_URIS.
-        const why = registrationRefusal([...DCR_CALLBACKS, env.DCR_REDIRECT_URIS].join(","), clientMetadata);
-        if (!why) return undefined;
-        console.log(JSON.stringify({ audit: "registration-refused", why }));
-        return { code: "invalid_redirect_uri", description: why };
-      },
-    });
-    providers.set(key, provider);
-  }
-  return provider;
-}
-
-// Every response, 404s included, leaves with the network's set, noindex, no-store and the consent page's policy; the
-// wrapper also answers /.well-known/security.txt and /csp-report. withRequestLog writes one `request` line per request
-// (site-runtime ./log: path, status, ms and the deployed commit; never a query).
-const door = withMcpHeaders<Env>((request, env, ctx) => route(request, env, ctx as ExecutionContext), {
+export default adminMcpWorker<Env>({
+  name: "Foxing Admin",
+  server: SERVER,
   site: foxingMcp,
   securityTxt: { contact: "security@dustinedwards.info", expires: "2027-09-28T00:00:00Z" },
-  allowReport: async (request, env) =>
-    (await checkRateLimit(env.MCP_RATE_LIMIT, `csp-report:${request.headers.get("CF-Connecting-IP") ?? "unknown"}`)).allowed,
+  about: `<p>Foxing Admin runs foxing.app: the platform snapshot, readers, the catalog and
+staff picks, Book of the Month, celebrity picks and the admin audit log. It cannot
+write Journal posts; Carrel owns writing.</p>
+<p>It will always be able to read. Changes need the box below.</p>`,
+  // The service binding is checked by presence only: a request over it would be an admin API call.
+  api: { binding: "FOXING", name: "foxing" },
+  OAuthProvider,
+  serve: (request, env, ctx, caller) => handleMcp(request, env, ctx, caller),
 });
-
-export default {
-  fetch: withRequestLog((request: Request, env: Env, ctx: ExecutionContext) => door(request, env, ctx), {
-    sha: (env) => env.DEPLOY_SHA,
-  }),
-  // The daily copy of the tool-call log to R2 and the 90-day prune (L6-L7); a failed write throws, so the run shows failed.
-  scheduled: async (_controller, env) => {
-    if (!env.AUDIT_BUCKET) throw new Error("AUDIT_BUCKET is not bound; the tool-call log is not copied");
-    const done = await exportAuditLog(env, env.AUDIT_BUCKET);
-    console.log(JSON.stringify({ event: "tool_call_log_exported", exported: done.exported, pruned: done.pruned }));
-  },
-} satisfies ExportedHandler<Env>;
-
-async function route(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-  const url = new URL(request.url);
-  // Fails closed: tokens are bound to PUBLIC_ORIGIN + /mcp, so without it no
-  // token could be checked against the right audience.
-  if (!publicOrigin(env)) {
-    return refuse("Foxing Admin is not configured: PUBLIC_ORIGIN is unset. Not configured means not open.", 503);
-  }
-  // Before the token check, so a page on another origin learns nothing from a 401 (DNS rebinding).
-  if (url.pathname === MCP_ROUTE) {
-    const foreign = mcpOriginRefusal(request);
-    if (foreign) return foreign;
-    // THE LIST-ONLY TEST KEY (Dustin 2026-11-01, "do the best practice"): the Worker secret MCP_PROBE_KEY lets the daily
-    // live check connect and list tools, and nothing else. Before the provider, which answers 401 to any token it did
-    // not mint. No key in the request, or no secret set, is null and goes on to OAuth (site-runtime probeDoor).
-    const probed = await probeDoor(request, env, { server: SERVER, limiter: env.MCP_RATE_LIMIT, serve: (req, caller) => handleMcp(req, env, ctx, caller) });
-    if (probed) return probed;
-  }
-  if (url.pathname === "/register" && request.method === "POST") {
-    const limited = await registrationLimited(request, env.OAUTH_KV);
-    if (limited) return limited;
-  }
-  return providerFor(env).fetch(request, env, ctx);
-}

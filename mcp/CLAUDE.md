@@ -10,7 +10,7 @@ wrapper over `/api/v1/admin`. Own package.json and npm lockfile (no workspace de
 
 ## Security floor (rules 12 and 13)
 
-Each guard has a test marked PLANT; a guard is trusted only after its plant was seen red.
+Each guard has a test marked PLANT; a guard is trusted only after its plant was seen red. The door (`src/index.ts`) is site-runtime's `adminMcpWorker`, and its guards' PLANT tests live there (`test/admin-mcp.test.mjs`).
 
 ## Commands (in mcp/)
 
