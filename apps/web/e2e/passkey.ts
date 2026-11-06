@@ -155,13 +155,19 @@ export async function signInThroughLogin(page: Page, email: string, baseURL: str
   // The page also offers the passkey to the email field's autofill, and Chromium's virtual
   // authenticator answers that at once. Click only if the autofill has not signed in, so one
   // sign-in runs.
-  const leftLogin = () => !new URL(signIn.url()).pathname.startsWith("/login");
-  await signIn
-    .waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 3_000 })
-    .catch(() => {});
-  if (!leftLogin()) {
-    await signIn.getByRole("button", { name: /sign in with a passkey/i }).click();
-    await signIn.waitForURL((url) => !url.pathname.startsWith("/login"));
+  const offLogin = (url: URL) => !url.pathname.startsWith("/login");
+  await signIn.waitForURL(offLogin, { timeout: 3_000 }).catch(() => {});
+  if (!offLogin(new URL(signIn.url()))) {
+    // The autofill can still answer after the wait above, and then the button is gone with the
+    // page: a click on it waits for a button that never comes back (the live run that timed
+    // out on /onboarding). So the click races the page leaving /login, and either one ends it.
+    const left = signIn.waitForURL(offLogin);
+    const clicked = signIn
+      .getByRole("button", { name: /sign in with a passkey/i })
+      .click()
+      .catch(() => {});
+    await Promise.race([left, clicked]);
+    await left;
   }
   const landed = signIn.url();
   await signIn.close();
