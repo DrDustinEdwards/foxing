@@ -1,5 +1,6 @@
 import { env } from "cloudflare:test";
-import { companion, companionRepo, createDb, schema } from "@foxing/core";
+import { COMPANION_QUOTA, type companion, companionRepo, createDb, schema } from "@foxing/core";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { testApi } from "./test-api";
 
@@ -102,6 +103,7 @@ describe("companion repository (direct core calls, local D1)", () => {
 describe("companion route (forged x-test-user session, API-contract layer)", () => {
   beforeEach(async () => {
     const d = db();
+    await d.delete(schema.companionUsage);
     await d.delete(schema.companionMessages);
     await d.delete(schema.companionThreads);
     await d.delete(schema.profiles);
@@ -152,23 +154,46 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
     expect(text).toContain("event: done");
   });
 
-  it("returns 429 quota once the daily cost ceiling is already reached", async () => {
+  it("reserves quota before the model call: parallel requests cannot all pass the cap, and a failed reply still counts", async () => {
     const bookId = await seedBook();
     await seedUserAndProfile("u_over", "plus");
-    const key = companion.quotaKey("u_over");
-    await env.APP_KV.put(key, JSON.stringify({ costCents: 999, requests: 1 }));
+    const usage = () =>
+      db()
+        .select()
+        .from(schema.companionUsage)
+        .where(eq(schema.companionUsage.userId, "u_over"))
+        .then((rows) => rows[0]);
 
-    const res = await call(apiWith(stubCaller()), "u_over", {
+    // A failed reply keeps its worst-case reservation: the model may have been billed for it.
+    const failed = await call(apiWith(throwingCaller()), "u_over", {
       action: "chat",
       bookId,
       message: "hi",
     });
-    expect(res.status).toBe(429);
-    const body = (await res.json()) as {
+    await failed.text();
+    const afterFailure = await usage();
+    expect(afterFailure.requests).toBe(1);
+    expect(afterFailure.costCents).toBeGreaterThan(0);
+
+    // One cent under the ceiling: of five requests sent at once, only the first reservation fits.
+    await db()
+      .update(schema.companionUsage)
+      .set({ costCents: COMPANION_QUOTA.dailyCostCeilingCents - 1 })
+      .where(eq(schema.companionUsage.userId, "u_over"));
+    const api = apiWith(stubCaller());
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        call(api, "u_over", { action: "chat", bookId, message: "hi" }),
+      ),
+    );
+    expect(results.map((r) => r.status).sort()).toEqual([200, 429, 429, 429, 429]);
+    const refused = (await results.find((r) => r.status === 429)?.json()) as {
       error: { code: string; details?: { resets_at?: string } };
     };
-    expect(body.error.code).toBe("quota");
-    expect(body.error.details?.resets_at).toBeTruthy();
+    expect(refused.error.code).toBe("quota");
+    expect(refused.error.details?.resets_at).toBeTruthy();
+    await Promise.all(results.map((r) => r.text().catch(() => "")));
+    expect((await usage()).requests).toBe(2);
   });
 
   it("surfaces a stream failure as a visible SSE error event, not a silent drop", async () => {

@@ -7,13 +7,7 @@ import { logEvent } from "@dustinedwards/site-runtime/log";
 import { checkProse } from "@dustinedwards/site-runtime/prose";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
-import {
-  catalogRepo,
-  companion,
-  companionInput,
-  companionRepo,
-  type QuotaState,
-} from "@foxing/core";
+import { catalogRepo, companion, companionInput, companionRepo } from "@foxing/core";
 import { errors } from "../error";
 import { parseJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
@@ -31,16 +25,6 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
   if (profile?.subscriptionTier !== "plus") throw errors.planRequired();
 
   const db = c.get("db");
-  const kv = c.env.APP_KV;
-
-  // Quota check happens before the call: cost is only known once the call settles,
-  // so a request that is rejected here never touches the model.
-  const kvKey = companion.quotaKey(session.id);
-  const raw = await kv.get(kvKey);
-  const state: QuotaState = raw ? (JSON.parse(raw) as QuotaState) : companion.EMPTY_QUOTA_STATE;
-  if (companion.isOverQuota(state)) {
-    throw errors.quotaExceeded(companion.quotaResetsAt());
-  }
 
   const book = await catalogRepo.getBookById(db, input.bookId);
   if (!book) throw errors.notFound("Book not found.");
@@ -80,6 +64,15 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
   const model = companion.resolveModel(action.role);
   const system = action.systemPrompt(ctx);
   const maxTokens = companion.MAX_OUTPUT_TOKENS[action.role];
+
+  // Quota: reserve this call's worst case before the model is called, in one statement that also checks the cap, so
+  // parallel requests cannot all pass on the same count. It is settled to the real cost once the reply is whole; a
+  // reply that fails or is cancelled keeps the reservation, since the model may have been billed for it.
+  const inputChars =
+    system.length + userContent.length + ctx.history.reduce((n, m) => n + m.content.length, 0);
+  const reserved = companion.reserveCents(action.role, inputChars, maxTokens);
+  const quotaDay = await companionRepo.reserveUsage(db, session.id, reserved);
+  if (!quotaDay) throw errors.quotaExceeded(companion.quotaResetsAt());
 
   if (input.message) {
     await companionRepo.appendMessage(db, thread.id, "user", input.message, input.action);
@@ -124,6 +117,10 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
       return;
     }
 
+    // The reply is whole: its real cost replaces the reservation.
+    const costCents = companion.estimateCostCents(action.role, inputTokens, outputTokens);
+    await companionRepo.settleUsage(db, session.id, quotaDay, reserved, costCents);
+
     // The prose check (W1). The reply streams, so this runs once it is whole: it records which checks a
     // reply tripped (never the text or the reader) for the flagged replies to be counted and acted on.
     const flagged = checkProse(assistantText).filter(
@@ -138,10 +135,6 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
     }
 
     await companionRepo.appendMessage(db, thread.id, "assistant", assistantText, input.action);
-
-    const costCents = companion.estimateCostCents(action.role, inputTokens, outputTokens);
-    const nextState = companion.addUsage(state, costCents);
-    await kv.put(kvKey, JSON.stringify(nextState), { expirationTtl: 60 * 60 * 25 });
 
     await stream.writeSSE({ event: "done", data: JSON.stringify({ threadId: thread.id }) });
   });

@@ -13,19 +13,9 @@
 // stubbed model and a fake KV, no network and no binding.
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
 import { checkProse } from "@dustinedwards/site-runtime/prose";
-import {
-  EMPTY_QUOTA_STATE,
-  MODELS,
-  type QuotaState,
-  addUsage,
-  estimateCostCents,
-  isOverQuota,
-  quotaKey,
-  quotaResetsAt,
-  type StructuredCaller,
-} from "../companion";
+import { MODELS, estimateCostCents, reserveCents, type StructuredCaller } from "../companion";
 import type { Db } from "../db";
-import { catalogRepo, diaryRepo, libraryRepo, profilesRepo } from "../repositories";
+import { catalogRepo, companionRepo, diaryRepo, libraryRepo, profilesRepo } from "../repositories";
 import type { RecCandidate } from "../repositories";
 
 export interface Recommendation {
@@ -44,7 +34,7 @@ export interface RecommendationSet {
   isPlus: boolean;
 }
 
-/** The minimal KV surface the AI cache + quota need (a subset of Cloudflare KVNamespace),
+/** The minimal KV surface the AI cache needs (a subset of Cloudflare KVNamespace),
  *  so core takes no binding type. */
 export interface RecKv {
   get(key: string): Promise<string | null>;
@@ -54,7 +44,7 @@ export interface RecKv {
 export interface RecDeps {
   /** Real caller when ANTHROPIC_API_KEY is set, else null (tier 3 skipped). */
   caller: StructuredCaller | null;
-  /** KV for the AI cache + quota, or null (tier 3 recomputes / is skipped). */
+  /** KV for the AI cache (the quota is D1), or null (tier 3 recomputes / is skipped). */
   kv: RecKv | null;
   /** A refresh busts the AI cache (rate-limited); ignored for the data tiers. */
   refresh?: boolean;
@@ -293,6 +283,7 @@ function picksSchema(ids: string[]): Record<string, unknown> {
 }
 
 async function aiOverlay(
+  db: Db,
   userId: string,
   deps: RecDeps,
   dataRanked: RankedRec[],
@@ -321,19 +312,6 @@ async function aiOverlay(
     }
   }
 
-  // Quota guard (per-user daily cost ceiling). Over quota -> data ranking, no call.
-  const qkey = quotaKey(userId, now);
-  let quota: QuotaState = EMPTY_QUOTA_STATE;
-  const rawQuota = await kv.get(qkey);
-  if (rawQuota) {
-    try {
-      quota = JSON.parse(rawQuota) as QuotaState;
-    } catch {
-      quota = EMPTY_QUOTA_STATE;
-    }
-  }
-  if (isOverQuota(quota)) return null;
-
   const top = dataRanked.slice(0, AI_CANDIDATES);
   const allowed = new Set(top.map((r) => r.candidate.id));
   const candidateLines = top
@@ -352,21 +330,26 @@ async function aiOverlay(
     `From the candidates ONLY, choose up to ${TARGET} best for THIS reader, best first, each ` +
     "with a specific, warm one-line reason (max 12 words) for this reader.";
 
+  // Quota guard: the companion's daily counter, reserved before the call (companionRepo.reserveUsage). Over quota ->
+  // data ranking, no call. A call that throws keeps its reservation.
+  const maxTokens = 1024;
+  const reserved = reserveCents("fast", system.length + user.length, maxTokens);
+  const quotaDay = await companionRepo.reserveUsage(db, userId, reserved, now);
+  if (!quotaDay) return null;
+
   const { value, inputTokens, outputTokens } = await caller(
     {
       model: MODELS.fast,
       system,
       messages: [{ role: "user", content: user }],
-      maxTokens: 1024,
+      maxTokens,
       feature: "recommendations",
     },
     picksSchema([...allowed]),
   );
 
-  // Record the settled cost against the daily quota (best effort).
   const cost = estimateCostCents("fast", inputTokens, outputTokens);
-  const resetTtl = Math.max(60, Math.ceil((Date.parse(quotaResetsAt(now)) - now.getTime()) / 1000));
-  await kv.put(qkey, JSON.stringify(addUsage(quota, cost)), { expirationTtl: resetTtl });
+  await companionRepo.settleUsage(db, userId, quotaDay, reserved, cost);
 
   const selection = selectAiPicks(value, allowed);
   if (!selection || selection.length < 6) return null;
@@ -477,7 +460,7 @@ export async function getRecommendations(
   if (isPlus && deps.caller) {
     try {
       const profilePrompt = buildProfilePrompt(favoriteGenres, finished, rated, signals);
-      const ai = await aiOverlay(userId, deps, dataRanked, profilePrompt);
+      const ai = await aiOverlay(db, userId, deps, dataRanked, profilePrompt);
       if (ai && ai.length) return { recommendations: ai, aiPersonalized: true, isPlus };
     } catch {
       // fall through to the data ranking

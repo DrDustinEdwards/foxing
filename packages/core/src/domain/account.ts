@@ -33,6 +33,7 @@ import {
   clubs,
   companionMessages,
   companionThreads,
+  companionUsage,
   customShelfBooks,
   customShelves,
   diaryEntries,
@@ -173,6 +174,7 @@ const REGISTRY: Entry[] = [
   byColumn("reports", reports, reports.reporterId),
   byColumn("pushTokens", pushTokens, pushTokens.userId),
   byColumn("companionThreads", companionThreads, companionThreads.userId),
+  byColumn("companionUsage", companionUsage, companionUsage.userId),
   byColumn("profiles", profiles, profiles.id),
 ];
 
