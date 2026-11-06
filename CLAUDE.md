@@ -28,7 +28,7 @@ Run mobile commands in `apps/mobile`, web in `apps/web`; install at the root.
 
 ## Backup
 
-Nightly: the Worker's cron dumps D1 into the private `BACKUPS` R2 bucket with d1-dump (`apps/web/app/lib/backup.server.ts`); `/health` warns when the newest complete dump is over 26 hours old. Restore: the d1-dump README.
+Nightly: the Worker's cron dumps D1 into the private `BACKUPS` R2 bucket with d1-dump (`apps/web/app/lib/backup.server.ts`); `/health` warns when the newest complete dump is over 26 hours old. Checking the backups and backing up now are Capsid Admin's, for every site (`/api/operator`, site-runtime `./operator`, the `OPERATOR_TOKEN` bearer: `backup_status` and `backup_media`). Restore: the d1-dump README.
 
 `npx wrangler d1 export foxing` fails on the two FTS5 tables. If a dump by hand is needed, export per table, data only, `journal_posts` first (original prose that exists nowhere else), then `annotations`, `profiles`, `books`:
 

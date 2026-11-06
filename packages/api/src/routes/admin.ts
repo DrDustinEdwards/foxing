@@ -414,25 +414,6 @@ adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- Backup -------------------------------------------------------------------
-
-// Reads the backup state now: the newest complete D1 dump and each files pass, with a warning past 26 hours.
-// The same read as /health's backup field, which /health caches for an hour; this one is never cached.
-adminRoutes.get("/admin/backup", async (c) => {
-  requireAdmin(c);
-  return c.json(await c.get("backupStatus")(c.env));
-});
-
-// Runs the files backup now: the same passes as the nightly cron (the Worker's backupFilesNow), copy
-// only, so it writes nothing outside the backups bucket and is safe to repeat. A pass stops at its
-// write or time budget and the next run goes on from there.
-adminRoutes.post("/admin/backup/media", rateLimit("write"), async (c) => {
-  requireAdmin(c);
-  const files = await c.get("backupFiles")(c.env);
-  await audit(c, "backup.media", { passes: files.map((f) => f.name) });
-  return c.json({ files });
-});
-
 // ---- Broadcast notifications --------------------------------------------------
 
 adminRoutes.post("/admin/notifications/broadcast", rateLimit("write"), async (c) => {
