@@ -3,7 +3,7 @@
 // rendered by Capsomer's email templates (capsomer/email), which escape every value
 // and refuse a link that is not https.
 
-import { logEvent } from "@dustinedwards/site-runtime/log";
+import { sendEmail } from "@dustinedwards/site-runtime/email";
 import { type NoticeDetail, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import {
   type Brand,
@@ -17,22 +17,15 @@ import {
 
 const brand: Brand = { name: "Foxing", family: "fox" };
 
-/** Sends one mail. A link or code in it signs in, so a send error is logged with each of
- *  `secrets` (and the recipient) cut out of its message, never the body, and what is thrown
- *  is a plain error that holds none of the provider's words: Better Auth logs it as it is. */
+/** Sends one mail (site-runtime ./email: a link or code in `secrets` and the recipient are cut out of a logged
+ *  error, never the body). What is thrown holds none of the provider's words: Better Auth logs it as it is. */
 async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []): Promise<void> {
-  try {
-    await env.EMAIL.send({ to, from: { email: env.EMAIL_FROM, name: "Foxing" }, ...mail });
-  } catch (err) {
-    const e = err as { code?: string; message?: string };
-    let message = e.message ?? String(err);
-    for (const secret of [...secrets, to])
-      if (secret) message = message.split(secret).join("[cut]");
-    // The binding's error codes are short names (E_SENDER_NOT_VERIFIED); anything else is cut.
-    const code = /^[\w.-]{1,64}$/.test(e.code ?? "") ? (e.code as string) : "unknown";
-    logEvent("email_send_failed", { code, message }, { level: "error" });
-    throw new Error(`Email not sent (${code}).`);
-  }
+  const outcome = await sendEmail(
+    env.EMAIL,
+    { to, from: { email: env.EMAIL_FROM, name: "Foxing" }, ...mail },
+    { secrets },
+  );
+  if (!outcome.sent) throw new Error(`Email not sent (${outcome.code}).`);
 }
 
 /** The sign-in mail (site-runtime ./sign-in) on Capsomer's magic-link template: the link signs
