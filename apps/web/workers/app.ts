@@ -64,6 +64,7 @@ import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.serv
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import {
   backupFilesNow,
+  backupStatus,
   runBackup,
   runCoversBackup,
   runMediaBackup,
@@ -166,6 +167,7 @@ const api = createApi({
   // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
   isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
   backupFiles: (env) => backupFilesNow(env as unknown as Env),
+  backupStatus: async (env) => ({ ...(await backupStatus(env as unknown as Env)) }),
   deleteUser: (req, env, { successors }) =>
     deleteUserAccount(req, env as unknown as Env, successors),
   // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).

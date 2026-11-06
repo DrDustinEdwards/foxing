@@ -656,6 +656,23 @@ export const TOOLS: ToolDefinition[] = [
   },
 
   {
+    name: "foxing_check_backup",
+    scope: "read",
+    config: {
+      title: "Check the backups",
+      description:
+        "Reads the backup state now, uncached: the newest complete D1 dump's age and each files pass (the " +
+        "Journal's pictures, its earlier and deleted bytes, and the book covers) with when it last completed, " +
+        "and a warning when any is past 26 hours. /health reports the same fields but caches the read for an " +
+        "hour; this does not. Run foxing_backup_media to back up now.",
+      inputSchema: z.strictObject({}),
+      outputSchema: z.looseObject({ files: record }),
+      annotations: READ_ONLY,
+    },
+    handler: (env, _args, signal) => single(env, "GET", "/backup", { signal }),
+  },
+
+  {
     name: "foxing_backup_media",
     scope: "write",
     config: {
