@@ -44,6 +44,8 @@ export default defineConfig(async () => {
           bindings: {
             TEST_MIGRATIONS: migrations,
             ADMIN_EMAILS: "admin@example.com,admin2@example.com",
+            // site-runtime's admin idle key (withAdminIdle requires one); a fake test value.
+            ADMIN_IDLE_SECRET: "sample-admin-idle-secret-for-tests-only",
           },
         },
       }),
