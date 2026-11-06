@@ -11,7 +11,11 @@ import { handleMcp } from "../../src/mcp-handler";
 export { ToolCallLog } from "@dustinedwards/site-runtime/audit-log";
 export { RateLimiter as McpRateLimit } from "@dustinedwards/site-runtime/rate-limit/durable-object";
 
-const CALLER = { kind: "admin" as const, props: { email: "admin@conformance.invalid" }, scopes: ["foxing.read"] };
+const CALLER = {
+  kind: "admin" as const,
+  props: { email: "admin@conformance.invalid" },
+  scopes: ["foxing.read"],
+};
 
 export default {
   fetch(request, env, ctx) {

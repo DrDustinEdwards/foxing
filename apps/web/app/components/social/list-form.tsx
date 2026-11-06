@@ -83,7 +83,11 @@ export function ListForm({
         >
           {pending ? "Saving..." : mode === "create" ? "Create list" : "Save changes"}
         </button>
-        <button type="button" onClick={() => void navigate(redirectTo)} className="fx-list-form-btn">
+        <button
+          type="button"
+          onClick={() => void navigate(redirectTo)}
+          className="fx-list-form-btn"
+        >
           Cancel
         </button>
       </div>

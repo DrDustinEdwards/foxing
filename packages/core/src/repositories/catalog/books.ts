@@ -120,7 +120,10 @@ export async function listBooks(db: Db, params: BrowseParams = {}): Promise<Brow
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  const [{ count }] = await db.select({ count: sql<number>`COUNT(*)` }).from(books).where(where);
+  const [{ count }] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(where);
   const total = Number(count);
 
   return {

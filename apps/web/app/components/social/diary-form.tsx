@@ -114,7 +114,11 @@ export function DiaryForm({
         <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
           {pending ? "Saving..." : mode === "create" ? "Save entry" : "Save changes"}
         </button>
-        <button type="button" onClick={() => void navigate(redirectTo)} className="fx-diary-form-btn">
+        <button
+          type="button"
+          onClick={() => void navigate(redirectTo)}
+          className="fx-diary-form-btn"
+        >
           Cancel
         </button>
       </div>

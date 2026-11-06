@@ -53,12 +53,18 @@ const READER_DATA = "foxing-reader-data";
 
 function ok(data: Record<string, unknown>, outside: string | null = null): ToolOutput {
   if (outside) return outsideResult(outside, data);
-  return { content: [{ type: "text", text: JSON.stringify(data, null, 2) }], structuredContent: data };
+  return {
+    content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
+    structuredContent: data,
+  };
 }
 
 /** A result that opens with a line for the client, then the JSON. */
 function said(data: Record<string, unknown>, line: string): ToolOutput {
-  return { content: [{ type: "text", text: `${line}\n\n${JSON.stringify(data, null, 2)}` }], structuredContent: data };
+  return {
+    content: [{ type: "text", text: `${line}\n\n${JSON.stringify(data, null, 2)}` }],
+    structuredContent: data,
+  };
 }
 
 function inputError(message: string): ToolOutput {
@@ -88,7 +94,12 @@ function refusal(result: ApiCallResult): ToolOutput {
  */
 function wrapperFailure(cause: unknown): ToolOutput {
   const kind = cause instanceof ApiLegError ? cause.kind : "unexpected";
-  console.error(JSON.stringify({ tool_failure: kind, error: cause instanceof Error ? cause.message : String(cause) }));
+  console.error(
+    JSON.stringify({
+      tool_failure: kind,
+      error: cause instanceof Error ? cause.message : String(cause),
+    }),
+  );
   const message =
     cause instanceof ApiLegError
       ? `The MCP server could not complete its request to the Foxing admin API (${kind}). Nothing more is shown here; the detail is in the server's log.`
@@ -141,7 +152,8 @@ export function decodeCursor(cursor: string): number | null {
   }
 }
 
-const offsetOf = (args: Record<string, unknown>) => (typeof args.cursor === "string" ? (decodeCursor(args.cursor) ?? 0) : 0);
+const offsetOf = (args: Record<string, unknown>) =>
+  typeof args.cursor === "string" ? (decodeCursor(args.cursor) ?? 0) : 0;
 
 /** Pages a list the API returns whole ({ items }), keeping has_more and next_cursor honest. */
 function pageOf(items: unknown[], limit: number, offset: number) {
@@ -166,7 +178,10 @@ function apiPageResult(
     const result = await callAdmin(env, "GET", path, { signal, query });
     if (!result.ok) return refusal(result);
     const { next_offset: next, ...rest } = (result.data ?? {}) as Record<string, unknown>;
-    return ok({ ...rest, next_cursor: typeof next === "number" ? encodeCursor(next) : null }, outside);
+    return ok(
+      { ...rest, next_cursor: typeof next === "number" ? encodeCursor(next) : null },
+      outside,
+    );
   });
 }
 
@@ -189,8 +204,14 @@ async function confirmed(
     );
   }
   const issued = await confirmationFor(env, tool, args);
-  if (!issued) return wrapperFailure(new ApiLegError("ADMIN_OPERATOR_TOKEN is unset", "unconfigured"));
-  const pending = { confirmation_required: true, confirm: issued.token, expires_at: issued.expiresAt, preview };
+  if (!issued)
+    return wrapperFailure(new ApiLegError("ADMIN_OPERATOR_TOKEN is unset", "unconfigured"));
+  const pending = {
+    confirmation_required: true,
+    confirm: issued.token,
+    expires_at: issued.expiresAt,
+    preview,
+  };
   return said(
     pending,
     "Nothing was changed. Show the administrator this preview and ask them to approve it. Only on their yes, call " +
@@ -220,7 +241,11 @@ export interface ToolDefinition {
     outputSchema: z.ZodObject<z.ZodRawShape>;
     annotations: Annotations;
   };
-  handler: (env: ToolEnv, args: Record<string, unknown>, signal?: AbortSignal) => Promise<ToolOutput>;
+  handler: (
+    env: ToolEnv,
+    args: Record<string, unknown>,
+    signal?: AbortSignal,
+  ) => Promise<ToolOutput>;
 }
 
 const READ_ONLY: Annotations = {
@@ -255,9 +280,14 @@ const record = z.record(z.string(), z.unknown());
 const cursorSchema = z
   .string()
   .max(16)
-  .refine((c) => decodeCursor(c) !== null, "Invalid cursor: pass next_cursor from the previous page unchanged.")
+  .refine(
+    (c) => decodeCursor(c) !== null,
+    "Invalid cursor: pass next_cursor from the previous page unchanged.",
+  )
   .optional()
-  .describe("Optional. Pass next_cursor from the previous page, unchanged. Omit for the first page.");
+  .describe(
+    "Optional. Pass next_cursor from the previous page, unchanged. Omit for the first page.",
+  );
 
 const confirmSchema = z
   .string()
@@ -275,7 +305,6 @@ const confirmationFields = {
   expires_at: z.string().optional(),
   preview: record.optional(),
 };
-
 
 /** A page from the admin API (`page` in packages/api/src/routes/admin.ts), its offset as a cursor. */
 const apiPage = z.looseObject({
@@ -366,7 +395,11 @@ export const TOOLS: ToolDefinition[] = [
       apiPageResult(
         env,
         "/users",
-        { q: args.query as string | undefined, limit: args.limit as number | undefined, offset: args.cursor ? offsetOf(args) : undefined },
+        {
+          q: args.query as string | undefined,
+          limit: args.limit as number | undefined,
+          offset: args.cursor ? offsetOf(args) : undefined,
+        },
         READER_DATA,
         signal,
       ),
@@ -409,11 +442,17 @@ export const TOOLS: ToolDefinition[] = [
       annotations: READ_ONLY,
     },
     handler: (env, args, signal) =>
-      apiPageResult(env, "/books", {
-        q: args.query as string | undefined,
-        limit: args.limit as number | undefined,
-        offset: args.cursor ? offsetOf(args) : undefined,
-      }, null, signal),
+      apiPageResult(
+        env,
+        "/books",
+        {
+          q: args.query as string | undefined,
+          limit: args.limit as number | undefined,
+          offset: args.cursor ? offsetOf(args) : undefined,
+        },
+        null,
+        signal,
+      ),
   },
 
   {
@@ -445,7 +484,9 @@ export const TOOLS: ToolDefinition[] = [
       }),
       outputSchema: z.object({
         book_id: z.string().optional(),
-        applied: z.object({ fields: z.array(z.string()).optional(), staff_pick: z.boolean().optional() }).optional(),
+        applied: z
+          .object({ fields: z.array(z.string()).optional(), staff_pick: z.boolean().optional() })
+          .optional(),
         ...confirmationFields,
       }),
       annotations: {
@@ -480,28 +521,27 @@ export const TOOLS: ToolDefinition[] = [
         }
         const preview = { book_id: args.book_id, fields, staff_pick: pick ?? null };
         return confirmed(env, "foxing_edit_book", args, preview, async () => {
-        const applied: Record<string, unknown> = {};
-        if (Object.keys(fields).length > 0) {
-          const result = await callAdmin(env, "PATCH", `/books/${id}`, { signal, body: fields });
-          if (!result.ok) return refusal(result);
-          applied.fields = Object.keys(fields);
-        }
-        if (pick) {
-          const result = await callAdmin(env, "POST", `/books/${id}/staff-pick`, {
-            signal,
-            body: { on: pick.on, note: pick.note ?? null },
-          });
-          if (!result.ok) {
-            const out = refusal(result);
-            if (applied.fields) {
-              out.content[0].text =
-                `The field changes were applied; the staff pick was refused.\n${out.content[0].text}`;
-            }
-            return out;
+          const applied: Record<string, unknown> = {};
+          if (Object.keys(fields).length > 0) {
+            const result = await callAdmin(env, "PATCH", `/books/${id}`, { signal, body: fields });
+            if (!result.ok) return refusal(result);
+            applied.fields = Object.keys(fields);
           }
-          applied.staff_pick = pick.on;
-        }
-        return ok({ book_id: args.book_id, applied });
+          if (pick) {
+            const result = await callAdmin(env, "POST", `/books/${id}/staff-pick`, {
+              signal,
+              body: { on: pick.on, note: pick.note ?? null },
+            });
+            if (!result.ok) {
+              const out = refusal(result);
+              if (applied.fields) {
+                out.content[0].text = `The field changes were applied; the staff pick was refused.\n${out.content[0].text}`;
+              }
+              return out;
+            }
+            applied.staff_pick = pick.on;
+          }
+          return ok({ book_id: args.book_id, applied });
         });
       }),
   },
@@ -542,7 +582,8 @@ export const TOOLS: ToolDefinition[] = [
           const items = ((result.data as { items?: unknown[] })?.items ?? []) as unknown[];
           return ok(pageOf(items, (args.limit as number) ?? 20, offsetOf(args)));
         }
-        if (!args.botm_id) return inputError("Action get needs botm_id. Call action list for the ids.");
+        if (!args.botm_id)
+          return inputError("Action get needs botm_id. Call action list for the ids.");
         return single(env, "GET", `/botm/${encodeURIComponent(String(args.botm_id))}`, { signal });
       }),
   },
@@ -648,10 +689,13 @@ export const TOOLS: ToolDefinition[] = [
         });
         if (!picks.ok) return refusal(picks);
         const items = ((picks.data as { items?: unknown[] })?.items ?? []) as unknown[];
-        return ok({
-          clubs: (clubs.data as { items?: unknown[] })?.items ?? [],
-          picks: pageOf(items, (args.limit as number) ?? 20, offsetOf(args)),
-        }, READER_DATA);
+        return ok(
+          {
+            clubs: (clubs.data as { items?: unknown[] })?.items ?? [],
+            picks: pageOf(items, (args.limit as number) ?? 20, offsetOf(args)),
+          },
+          READER_DATA,
+        );
       }),
   },
 
@@ -674,7 +718,9 @@ export const TOOLS: ToolDefinition[] = [
       }),
       outputSchema: z.object({
         pick_id: z.string().optional(),
-        applied: z.object({ fields: z.array(z.string()).optional(), published: z.boolean().optional() }).optional(),
+        applied: z
+          .object({ fields: z.array(z.string()).optional(), published: z.boolean().optional() })
+          .optional(),
         ...confirmationFields,
       }),
       annotations: {
@@ -693,32 +739,33 @@ export const TOOLS: ToolDefinition[] = [
         if (args.curator_quote !== undefined) edits.curatorQuote = args.curator_quote;
         if (args.category !== undefined) edits.category = args.category;
         if (Object.keys(edits).length === 0 && args.publish === undefined) {
-          return inputError("Nothing to change. Pass publish, or at least one of notes, curator_quote or category.");
+          return inputError(
+            "Nothing to change. Pass publish, or at least one of notes, curator_quote or category.",
+          );
         }
         const preview = { pick_id: args.pick_id, fields: edits, publish: args.publish ?? null };
         return confirmed(env, "foxing_publish_club_pick", args, preview, async () => {
-        const applied: Record<string, unknown> = {};
-        if (Object.keys(edits).length > 0) {
-          const result = await callAdmin(env, "PATCH", `/picks/${id}`, { signal, body: edits });
-          if (!result.ok) return refusal(result);
-          applied.fields = Object.keys(edits);
-        }
-        if (args.publish !== undefined) {
-          const result = await callAdmin(env, "POST", `/picks/${id}/publish`, {
-            signal,
-            body: { on: args.publish },
-          });
-          if (!result.ok) {
-            const out = refusal(result);
-            if (applied.fields) {
-              out.content[0].text =
-                `The edits were applied; the publish change was refused.\n${out.content[0].text}`;
-            }
-            return out;
+          const applied: Record<string, unknown> = {};
+          if (Object.keys(edits).length > 0) {
+            const result = await callAdmin(env, "PATCH", `/picks/${id}`, { signal, body: edits });
+            if (!result.ok) return refusal(result);
+            applied.fields = Object.keys(edits);
           }
-          applied.published = args.publish;
-        }
-        return ok({ pick_id: args.pick_id, applied });
+          if (args.publish !== undefined) {
+            const result = await callAdmin(env, "POST", `/picks/${id}/publish`, {
+              signal,
+              body: { on: args.publish },
+            });
+            if (!result.ok) {
+              const out = refusal(result);
+              if (applied.fields) {
+                out.content[0].text = `The edits were applied; the publish change was refused.\n${out.content[0].text}`;
+              }
+              return out;
+            }
+            applied.published = args.publish;
+          }
+          return ok({ pick_id: args.pick_id, applied });
         });
       }),
   },
@@ -740,7 +787,10 @@ export const TOOLS: ToolDefinition[] = [
       apiPageResult(
         env,
         "/audit-log",
-        { limit: args.limit as number | undefined, offset: args.cursor ? offsetOf(args) : undefined },
+        {
+          limit: args.limit as number | undefined,
+          offset: args.cursor ? offsetOf(args) : undefined,
+        },
         READER_DATA,
         signal,
       ),

@@ -31,7 +31,8 @@ const confirmCall = async (name: string, args: Record<string, unknown>) => {
   assert.equal(preview.structuredContent?.confirmation_required, true, preview.content[0].text);
   return call(name, { ...args, confirm: preview.structuredContent?.confirm });
 };
-const path = (i = 0) => `${foxing.calls[i].method} ${foxing.calls[i].url.pathname}${foxing.calls[i].url.search}`;
+const path = (i = 0) =>
+  `${foxing.calls[i].method} ${foxing.calls[i].url.pathname}${foxing.calls[i].url.search}`;
 
 describe("every request", () => {
   test("carries the operator bearer and the acting admin, over the binding to /api/v1/admin", async () => {
@@ -46,7 +47,10 @@ describe("every request", () => {
 
   test("the token appears in no tool output", async () => {
     foxing.reply({ status: 403, body: { error: { code: "forbidden", message: "Admin only." } } });
-    const outputs = [await call("foxing_get_health"), await call("foxing_find_user", { query: "a" })];
+    const outputs = [
+      await call("foxing_get_health"),
+      await call("foxing_find_user", { query: "a" }),
+    ];
     for (const out of outputs) assert.ok(!JSON.stringify(out).includes(TOKEN));
   });
 });
@@ -64,7 +68,13 @@ describe("refusals", () => {
   test("the API's message, code and details come back verbatim as a tool error", async () => {
     foxing.reply({
       status: 422,
-      body: { error: { code: "validation", message: "Invalid request.", details: { fieldErrors: { limit: ["bad"] } } } },
+      body: {
+        error: {
+          code: "validation",
+          message: "Invalid request.",
+          details: { fieldErrors: { limit: ["bad"] } },
+        },
+      },
     });
     const out = await call("foxing_find_user", { limit: 50 });
     assert.equal(out.isError, true);
@@ -94,7 +104,11 @@ describe("refusals", () => {
 describe("what each tool sends", () => {
   test("foxing_find_user and foxing_inspect_book pass the search and the page", async () => {
     foxing.reply({ body: { items: [], has_more: true, next_offset: 15 } });
-    const page = await call("foxing_find_user", { query: "ada", limit: 5, cursor: encodeCursor(10) });
+    const page = await call("foxing_find_user", {
+      query: "ada",
+      limit: 5,
+      cursor: encodeCursor(10),
+    });
     assert.equal(page.structuredContent?.next_cursor, encodeCursor(15));
     assert.equal(page.structuredContent?.next_offset, undefined);
     await call("foxing_inspect_book", { query: "Persuasion" });
@@ -125,10 +139,20 @@ describe("what each tool sends", () => {
   });
 
   test("foxing_edit_book says which half landed when the staff pick is refused", async () => {
-    foxing.reply({ body: { ok: true } }, { status: 404, body: { error: { code: "not_found", message: "Not found." } } });
-    const out = await confirmCall("foxing_edit_book", { book_id: "b1", title: "X", staff_pick: { on: false } });
+    foxing.reply(
+      { body: { ok: true } },
+      { status: 404, body: { error: { code: "not_found", message: "Not found." } } },
+    );
+    const out = await confirmCall("foxing_edit_book", {
+      book_id: "b1",
+      title: "X",
+      staff_pick: { on: false },
+    });
     assert.equal(out.isError, true);
-    assert.match(out.content[0].text, /^The field changes were applied; the staff pick was refused\.\nNot found\./);
+    assert.match(
+      out.content[0].text,
+      /^The field changes were applied; the staff pick was refused\.\nNot found\./,
+    );
   });
 
   test("foxing_edit_book with nothing to change sends nothing", async () => {
@@ -156,7 +180,11 @@ describe("what each tool sends", () => {
       bookshopUrl: "https://bookshop.org/x",
     });
 
-    await confirmCall("foxing_set_book_of_month", { action: "update", botm_id: "m1", category: "Classics" });
+    await confirmCall("foxing_set_book_of_month", {
+      action: "update",
+      botm_id: "m1",
+      category: "Classics",
+    });
     assert.equal(path(1), "PATCH /api/v1/admin/botm/m1");
     assert.deepEqual(foxing.calls[1].body, { category: "Classics" });
 
@@ -166,7 +194,12 @@ describe("what each tool sends", () => {
 
     foxing.reply({ body: { items: [1, 2, 3] } });
     const page = await call("foxing_read_book_of_month", { action: "list", limit: 2 });
-    assert.deepEqual(page.structuredContent, { items: [1, 2], total: 3, has_more: true, next_cursor: encodeCursor(2) });
+    assert.deepEqual(page.structuredContent, {
+      items: [1, 2],
+      total: 3,
+      has_more: true,
+      next_cursor: encodeCursor(2),
+    });
   });
 
   test("foxing_set_book_of_month refuses a create with no month before any request", async () => {
@@ -176,7 +209,10 @@ describe("what each tool sends", () => {
   });
 
   test("foxing_review_club_picks reads the clubs and one club's picks, paged", async () => {
-    foxing.reply({ body: { items: [{ id: "c1" }] } }, { body: { items: [{ id: "p1" }, { id: "p2" }] } });
+    foxing.reply(
+      { body: { items: [{ id: "c1" }] } },
+      { body: { items: [{ id: "p1" }, { id: "p2" }] } },
+    );
     const out = await call("foxing_review_club_picks", { club_id: "c1", limit: 1 });
     assert.equal(path(0), "GET /api/v1/admin/pick-clubs");
     assert.equal(path(1), "GET /api/v1/admin/picks?club_id=c1");
@@ -188,7 +224,11 @@ describe("what each tool sends", () => {
   });
 
   test("foxing_publish_club_pick edits, then publishes", async () => {
-    await confirmCall("foxing_publish_club_pick", { pick_id: "p1", curator_quote: "Yes.", publish: true });
+    await confirmCall("foxing_publish_club_pick", {
+      pick_id: "p1",
+      curator_quote: "Yes.",
+      publish: true,
+    });
     assert.equal(path(0), "PATCH /api/v1/admin/picks/p1");
     assert.deepEqual(foxing.calls[0].body, { curatorQuote: "Yes." });
     assert.equal(path(1), "POST /api/v1/admin/picks/p1/publish");
@@ -219,7 +259,11 @@ describe("confirmation (T11)", () => {
     const preview = await call("foxing_edit_book", { book_id: "b1", title: "X" });
     const token = preview.structuredContent?.confirm;
     const changed = await call("foxing_edit_book", { book_id: "b2", title: "X", confirm: token });
-    const otherTool = await call("foxing_publish_club_pick", { pick_id: "b1", publish: true, confirm: token });
+    const otherTool = await call("foxing_publish_club_pick", {
+      pick_id: "b1",
+      publish: true,
+      confirm: token,
+    });
     assert.equal(changed.isError, true);
     assert.equal(otherTool.isError, true);
     assert.equal(foxing.calls.length, 0);

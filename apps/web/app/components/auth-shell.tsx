@@ -363,10 +363,7 @@ export function MagicLinkForm({
   };
 
   return (
-    <form
-      className="stack-3"
-      onSubmit={(event) => void sendLink(event)}
-    >
+    <form className="stack-3" onSubmit={(event) => void sendLink(event)}>
       <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
       {turnstileSiteKey ? <div ref={widget} /> : null}
       {refusal ? (
@@ -437,10 +434,7 @@ function SignInCodeForm({
   };
 
   return (
-    <form
-      className="stack-3"
-      onSubmit={(event) => void submitCode(event)}
-    >
+    <form className="stack-3" onSubmit={(event) => void submitCode(event)}>
       <p role="status" className="fx-auth-shell-text-2">
         Check your email. Open the sign-in link, or type the code from the same email here. Both
         work for {SIGN_IN_EXPIRES_IN_WORDS}.

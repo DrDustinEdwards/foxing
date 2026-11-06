@@ -204,9 +204,7 @@ async function tocFromNav(zip: JSZip, navHref: string): Promise<{ href: string; 
   if (!f) return [];
   const navXml = await f.async("string");
   const navDir = posix.dirname(navHref);
-  const tocMatch = navXml.match(
-    /<nav[^>]*epub:type="[^"]*\btoc\b[^"]*"[^>]*>([\s\S]*?)<\/nav>/i,
-  );
+  const tocMatch = navXml.match(/<nav[^>]*epub:type="[^"]*\btoc\b[^"]*"[^>]*>([\s\S]*?)<\/nav>/i);
   const scope = tocMatch ? tocMatch[1] : navXml;
   const re = /<a[^>]*href="([^"#]+)(?:#[^"]*)?"[^>]*>([\s\S]*?)<\/a>/gi;
   const out: { href: string; title: string }[] = [];

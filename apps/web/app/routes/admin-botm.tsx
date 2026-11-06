@@ -215,7 +215,11 @@ function BotmRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              void run(`/botm/${row.id}/publish`, { body: { on: !row.isPublished } }, "Could not update")
+              void run(
+                `/botm/${row.id}/publish`,
+                { body: { on: !row.isPublished } },
+                "Could not update",
+              )
             }
           >
             {row.isPublished ? "Unpublish" : "Publish"}

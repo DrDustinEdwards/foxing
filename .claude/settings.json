@@ -72,12 +72,7 @@
       "Bash(npx wrangler d1 execute *DROP*)",
       "Bash(npx wrangler secret*)"
     ],
-    "deny": [
-      "Bash(rm -rf *)",
-      "Read(./.env*)",
-      "Read(./.dev.vars)",
-      "Read(./apps/web/.dev.vars)"
-    ]
+    "deny": ["Bash(rm -rf *)", "Read(./.env*)", "Read(./.dev.vars)", "Read(./apps/web/.dev.vars)"]
   },
   "defaultMode": "acceptEdits"
 }

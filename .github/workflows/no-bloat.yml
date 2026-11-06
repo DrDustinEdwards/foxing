@@ -29,4 +29,4 @@ jobs:
     with:
       package-manager: npm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
-      install: 'npm ci --ignore-scripts'
+      install: "npm ci --ignore-scripts"
