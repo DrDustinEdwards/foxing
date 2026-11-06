@@ -3,6 +3,7 @@
 // via domain/push. The in-app notification list + read + prefs are here too so the
 // mobile client has one place for the notification surface.
 import {
+  markNotificationsReadInput,
   notificationPrefsInput,
   notificationsRepo,
   profilesRepo,
@@ -44,15 +45,9 @@ pushRoutes.get("/notifications", async (c) => {
 
 pushRoutes.post("/notifications/read", rateLimit("write"), async (c) => {
   const session = requireSession(c);
-  const body = (await c.req.raw
-    .clone()
-    .json()
-    .catch(() => ({}))) as { ids?: string[] };
-  if (Array.isArray(body.ids) && body.ids.length > 0) {
-    await notificationsRepo.markRead(c.get("db"), session.id, body.ids);
-  } else {
-    await notificationsRepo.markAllRead(c.get("db"), session.id);
-  }
+  const body = await parseJson(c, markNotificationsReadInput);
+  if ("ids" in body) await notificationsRepo.markRead(c.get("db"), session.id, body.ids);
+  else await notificationsRepo.markAllRead(c.get("db"), session.id);
   return c.json({ ok: true });
 });
 
