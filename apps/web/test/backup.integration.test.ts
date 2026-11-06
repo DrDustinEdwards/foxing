@@ -3,6 +3,7 @@ import { resetDb } from "@dustinedwards/devkit/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BACKUP_EXCLUDE } from "../app/lib/backup-checks";
 import { backupStatus, runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import { operatorTools } from "../app/lib/operator.server";
 import { healthResponse } from "@dustinedwards/site-runtime/health";
 
 // Real D1 (with the real migrations, FTS5 tables and triggers included) and real R2, in
@@ -149,6 +150,13 @@ describe("nightly backup", () => {
     ).toBe("earlier bytes");
     // The EPUBs and their reader files are fetched again, never backed up.
     expect(written.some((k) => k.includes("reader/"))).toBe(false);
+
+    // Capsid's backup_status (the operator API) answers every files pass by its name.
+    const answer = (await operatorTools(workerEnv).backup_status.run({})) as {
+      files: Record<string, { age_hours: number }>;
+    };
+    expect(Object.keys(answer.files)).toEqual(["journal", "journal-revisions", "covers"]);
+    expect(answer.files.covers.age_hours).toBeLessThan(1);
   });
 
   it("leaves an emptied database without a marker, throws, and health says so", async () => {

@@ -656,43 +656,6 @@ export const TOOLS: ToolDefinition[] = [
   },
 
   {
-    name: "foxing_check_backup",
-    scope: "read",
-    config: {
-      title: "Check the backups",
-      description:
-        "Reads the backup state now, uncached: the newest complete D1 dump's age and each files pass (the " +
-        "Journal's pictures, its earlier and deleted bytes, and the book covers) with when it last completed, " +
-        "and a warning when any is past 26 hours. /health reports the same fields but caches the read for an " +
-        "hour; this does not. Run foxing_backup_media to back up now.",
-      inputSchema: z.strictObject({}),
-      outputSchema: z.looseObject({ files: record }),
-      annotations: READ_ONLY,
-    },
-    handler: (env, _args, signal) => single(env, "GET", "/backup", { signal }),
-  },
-
-  {
-    name: "foxing_backup_media",
-    scope: "write",
-    config: {
-      title: "Back up the files now",
-      description:
-        "Runs the nightly files backup now: one pass each over the Journal's pictures, the Journal's earlier " +
-        "and deleted bytes, and the book covers into the backups bucket (files/journal/, files/journal-revisions/ " +
-        "and files/covers/), which Capsid copies to Amazon. It copies new and changed files and drops a copy " +
-        "only 30 days after its file is gone; it never writes or deletes in the media or covers buckets. A pass " +
-        "stops at its write or time budget and the next goes on from there. Reports each backup's counts and " +
-        "whether its pass completed. /health caches the backup read for an hour, so its backup fields may " +
-        "take up to an hour to show this run.",
-      inputSchema: z.strictObject({}),
-      outputSchema: z.looseObject({ files: z.array(record) }),
-      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
-    },
-    handler: (env, _args, signal) => single(env, "POST", "/backup/media", { signal }),
-  },
-
-  {
     name: "foxing_publish_club_pick",
     scope: "write",
     config: {
