@@ -1,0 +1,8 @@
+{
+  "unprobed": {
+    "EMAIL": "send_email has no read operation, and a probe would send a real email"
+  },
+  "checks": {
+    "COMPANION_CACHE_QUEUE": "companion-queue"
+  }
+}
