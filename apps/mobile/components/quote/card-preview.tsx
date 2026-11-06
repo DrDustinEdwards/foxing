@@ -1,44 +1,44 @@
-import { View, Text, Image } from 'react-native'
-import { Star, Highlighter, BookOpen, UsersThree } from 'phosphor-react-native'
-import { Fonts } from '@/constants/fonts'
-import type { CardType, TemplateDef } from './types'
+import { View, Text, Image } from "react-native";
+import { Star, Highlighter, BookOpen, UsersThree } from "phosphor-react-native";
+import { Fonts } from "@/constants/fonts";
+import type { CardType, TemplateDef } from "./types";
 
 interface CardPreviewProps {
-  cardType: CardType
-  template: TemplateDef
-  passage: string
-  bookTitle: string
-  author: string
-  coverUrl: string | null
-  rating: number
-  daysToRead: number | null
-  highlightCount: number | null
-  progress: number | null
-  clubName: string | null
-  memberCount: number | null
-  deepLink: string
+  cardType: CardType;
+  template: TemplateDef;
+  passage: string;
+  bookTitle: string;
+  author: string;
+  coverUrl: string | null;
+  rating: number;
+  daysToRead: number | null;
+  highlightCount: number | null;
+  progress: number | null;
+  clubName: string | null;
+  memberCount: number | null;
+  deepLink: string;
 }
 
 export function CardPreview(props: CardPreviewProps) {
-  const { cardType, template, bookTitle, author, deepLink } = props
+  const { cardType, template, bookTitle, author, deepLink } = props;
   const baseStyle = {
     aspectRatio: 4 / 5,
     borderRadius: 14,
-    overflow: 'hidden' as const,
+    overflow: "hidden" as const,
     backgroundColor: template.background,
     padding: 24,
     borderWidth: template.borderColor ? 1 : 0,
-    borderColor: template.borderColor ?? 'transparent',
-  }
+    borderColor: template.borderColor ?? "transparent",
+  };
 
-  if (cardType === 'finished') return <FinishedCard {...props} baseStyle={baseStyle} />
-  if (cardType === 'reading') return <ReadingCard {...props} baseStyle={baseStyle} />
-  if (cardType === 'club_invite') return <ClubInviteCard {...props} baseStyle={baseStyle} />
+  if (cardType === "finished") return <FinishedCard {...props} baseStyle={baseStyle} />;
+  if (cardType === "reading") return <ReadingCard {...props} baseStyle={baseStyle} />;
+  if (cardType === "club_invite") return <ClubInviteCard {...props} baseStyle={baseStyle} />;
 
   // Default "quote" card
   return (
     <View style={baseStyle}>
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={{ flex: 1, justifyContent: "center" }}>
         <Text
           style={{
             fontFamily: Fonts.bodyItalic,
@@ -48,12 +48,12 @@ export function CardPreview(props: CardPreviewProps) {
           }}
           numberOfLines={10}
         >
-          {props.passage ? `“${props.passage}”` : 'Your passage will appear here.'}
+          {props.passage ? `“${props.passage}”` : "Your passage will appear here."}
         </Text>
       </View>
       <CardFooter template={template} bookTitle={bookTitle} author={author} deepLink={deepLink} />
     </View>
-  )
+  );
 }
 
 function FinishedCard({
@@ -69,7 +69,7 @@ function FinishedCard({
 }: CardPreviewProps & { baseStyle: object }) {
   return (
     <View style={baseStyle}>
-      <View style={{ flex: 1, alignItems: 'center' }}>
+      <View style={{ flex: 1, alignItems: "center" }}>
         <Text
           style={{
             fontFamily: Fonts.bodyItalic,
@@ -91,9 +91,9 @@ function FinishedCard({
               width: 140,
               height: 210,
               borderRadius: 6,
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: "rgba(255,255,255,0.15)",
+              alignItems: "center",
+              justifyContent: "center",
               marginBottom: 16,
             }}
           >
@@ -105,7 +105,7 @@ function FinishedCard({
             fontFamily: Fonts.displayBold,
             fontSize: 18,
             color: template.bodyColor,
-            textAlign: 'center',
+            textAlign: "center",
           }}
           numberOfLines={2}
         >
@@ -125,7 +125,7 @@ function FinishedCard({
                 key={n}
                 color={template.bodyColor}
                 size={14}
-                weight={n <= rating ? 'fill' : 'regular'}
+                weight={n <= rating ? "fill" : "regular"}
               />
             ))}
           </View>
@@ -133,18 +133,14 @@ function FinishedCard({
         {daysToRead != null || highlightCount != null ? (
           <View className="flex-row items-center" style={{ marginTop: 10, gap: 12 }}>
             {daysToRead != null ? (
-              <Text
-                style={{ fontFamily: Fonts.mono, fontSize: 11, color: template.metaColor }}
-              >
-                {daysToRead} day{daysToRead === 1 ? '' : 's'}
+              <Text style={{ fontFamily: Fonts.mono, fontSize: 11, color: template.metaColor }}>
+                {daysToRead} day{daysToRead === 1 ? "" : "s"}
               </Text>
             ) : null}
             {highlightCount != null ? (
               <View className="flex-row items-center" style={{ gap: 4 }}>
                 <Highlighter color={template.metaColor} size={11} />
-                <Text
-                  style={{ fontFamily: Fonts.mono, fontSize: 11, color: template.metaColor }}
-                >
+                <Text style={{ fontFamily: Fonts.mono, fontSize: 11, color: template.metaColor }}>
                   {highlightCount}
                 </Text>
               </View>
@@ -154,7 +150,7 @@ function FinishedCard({
       </View>
       <CardFooter template={template} bookTitle="" author="" deepLink={deepLink} />
     </View>
-  )
+  );
 }
 
 function ReadingCard({
@@ -166,10 +162,10 @@ function ReadingCard({
   deepLink,
   baseStyle,
 }: CardPreviewProps & { baseStyle: object }) {
-  const pct = typeof progress === 'number' ? Math.round(progress * 100) : null
+  const pct = typeof progress === "number" ? Math.round(progress * 100) : null;
   return (
     <View style={baseStyle}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <Text
           style={{
             fontFamily: Fonts.bodyItalic,
@@ -191,9 +187,9 @@ function ReadingCard({
               width: 130,
               height: 195,
               borderRadius: 6,
-              backgroundColor: 'rgba(255,255,255,0.08)',
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: "rgba(255,255,255,0.08)",
+              alignItems: "center",
+              justifyContent: "center",
               marginBottom: 16,
             }}
           >
@@ -205,7 +201,7 @@ function ReadingCard({
             fontFamily: Fonts.displayBold,
             fontSize: 18,
             color: template.bodyColor,
-            textAlign: 'center',
+            textAlign: "center",
           }}
           numberOfLines={2}
         >
@@ -219,13 +215,13 @@ function ReadingCard({
           </Text>
         ) : null}
         {pct !== null ? (
-          <View style={{ marginTop: 18, width: '70%' }}>
+          <View style={{ marginTop: 18, width: "70%" }}>
             <View
               style={{
                 height: 4,
                 borderRadius: 2,
-                backgroundColor: 'rgba(255,255,255,0.18)',
-                overflow: 'hidden',
+                backgroundColor: "rgba(255,255,255,0.18)",
+                overflow: "hidden",
               }}
             >
               <View
@@ -241,7 +237,7 @@ function ReadingCard({
                 fontFamily: Fonts.mono,
                 fontSize: 11,
                 color: template.metaColor,
-                textAlign: 'center',
+                textAlign: "center",
                 marginTop: 6,
               }}
             >
@@ -262,7 +258,7 @@ function ReadingCard({
       </View>
       <CardFooter template={template} bookTitle="" author="" deepLink={deepLink} />
     </View>
-  )
+  );
 }
 
 function ClubInviteCard({
@@ -276,14 +272,14 @@ function ClubInviteCard({
 }: CardPreviewProps & { baseStyle: object }) {
   return (
     <View style={baseStyle}>
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
         <Text
           style={{
             fontFamily: Fonts.bodyItalic,
             fontSize: 14,
             color: template.metaColor,
             marginBottom: 10,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           You're invited to read with us
@@ -294,11 +290,11 @@ function ClubInviteCard({
             fontSize: 22,
             color: template.bodyColor,
             marginBottom: 18,
-            textAlign: 'center',
+            textAlign: "center",
           }}
           numberOfLines={2}
         >
-          {clubName ?? 'A Foxing Club'}
+          {clubName ?? "A Foxing Club"}
         </Text>
         {coverUrl ? (
           <Image
@@ -311,9 +307,9 @@ function ClubInviteCard({
               width: 110,
               height: 165,
               borderRadius: 6,
-              backgroundColor: 'rgba(0,0,0,0.05)',
-              alignItems: 'center',
-              justifyContent: 'center',
+              backgroundColor: "rgba(0,0,0,0.05)",
+              alignItems: "center",
+              justifyContent: "center",
               marginBottom: 14,
             }}
           >
@@ -325,7 +321,7 @@ function ClubInviteCard({
             fontFamily: Fonts.uiMedium,
             fontSize: 13,
             color: template.bodyColor,
-            textAlign: 'center',
+            textAlign: "center",
           }}
           numberOfLines={2}
         >
@@ -333,15 +329,20 @@ function ClubInviteCard({
         </Text>
         {memberCount != null ? (
           <Text
-            style={{ fontFamily: Fonts.mono, fontSize: 11, color: template.metaColor, marginTop: 4 }}
+            style={{
+              fontFamily: Fonts.mono,
+              fontSize: 11,
+              color: template.metaColor,
+              marginTop: 4,
+            }}
           >
-            {memberCount} member{memberCount === 1 ? '' : 's'}
+            {memberCount} member{memberCount === 1 ? "" : "s"}
           </Text>
         ) : null}
       </View>
       <CardFooter template={template} bookTitle="" author="" deepLink={deepLink} />
     </View>
-  )
+  );
 }
 
 function CardFooter({
@@ -350,10 +351,10 @@ function CardFooter({
   author,
   deepLink,
 }: {
-  template: TemplateDef
-  bookTitle: string
-  author: string
-  deepLink: string
+  template: TemplateDef;
+  bookTitle: string;
+  author: string;
+  deepLink: string;
 }) {
   return (
     <View>
@@ -389,7 +390,7 @@ function CardFooter({
           fontFamily: Fonts.display,
           fontSize: 11,
           color: template.wordmarkColor,
-          position: 'absolute',
+          position: "absolute",
           right: 0,
           bottom: 0,
         }}
@@ -397,5 +398,5 @@ function CardFooter({
         Foxing
       </Text>
     </View>
-  )
+  );
 }

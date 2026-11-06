@@ -1,20 +1,20 @@
-import { useColors } from '@/constants/colors'
-import { Section } from '@/components/goals/section'
-import { Pressable, Text, TextInput, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
+import { useColors } from "@/constants/colors";
+import { Section } from "@/components/goals/section";
+import { Pressable, Text, TextInput, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 interface PeriodGoalCardProps {
-  title: string
-  unitNoun: string
-  target: string
-  onChange: (next: string) => void
-  row: { target: number } | null
-  finished: number
-  saving: boolean
-  onSave: () => void
-  onRemove: () => void
-  max: number
-  colors: ReturnType<typeof useColors>
+  title: string;
+  unitNoun: string;
+  target: string;
+  onChange: (next: string) => void;
+  row: { target: number } | null;
+  finished: number;
+  saving: boolean;
+  onSave: () => void;
+  onRemove: () => void;
+  max: number;
+  colors: ReturnType<typeof useColors>;
 }
 
 export function PeriodGoalCard({
@@ -30,16 +30,14 @@ export function PeriodGoalCard({
   max,
   colors,
 }: PeriodGoalCardProps) {
-  const ratio = row ? Math.max(0, Math.min(1, finished / row.target)) : 0
+  const ratio = row ? Math.max(0, Math.min(1, finished / row.target)) : 0;
   return (
     <Section title={title}>
-      <View
-        className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-      >
+      <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <View className="flex-row items-center gap-2">
           <TextInput
             value={target}
-            onChangeText={(t) => onChange(t.replace(/[^0-9]/g, '').slice(0, 2))}
+            onChangeText={(t) => onChange(t.replace(/[^0-9]/g, "").slice(0, 2))}
             keyboardType="number-pad"
             maxLength={2}
             placeholder={String(Math.min(max, 4))}
@@ -49,7 +47,7 @@ export function PeriodGoalCard({
               width: 72,
               fontFamily: Fonts.uiMedium,
               fontSize: 20,
-              textAlign: 'center',
+              textAlign: "center",
               color: colors.textPrimary,
               backgroundColor: colors.bgBase,
               borderColor: colors.borderSubtle,
@@ -97,7 +95,7 @@ export function PeriodGoalCard({
                 height: 6,
                 borderRadius: 3,
                 backgroundColor: colors.bgSunken,
-                overflow: 'hidden',
+                overflow: "hidden",
               }}
             >
               <View
@@ -108,10 +106,7 @@ export function PeriodGoalCard({
                 }}
               />
             </View>
-            <View
-              className="flex-row items-center justify-between"
-              style={{ marginTop: 6 }}
-            >
+            <View className="flex-row items-center justify-between" style={{ marginTop: 6 }}>
               <Text
                 style={{
                   fontFamily: Fonts.mono,
@@ -137,5 +132,5 @@ export function PeriodGoalCard({
         ) : null}
       </View>
     </Section>
-  )
+  );
 }

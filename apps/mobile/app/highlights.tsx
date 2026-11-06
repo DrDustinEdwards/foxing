@@ -1,41 +1,43 @@
-import { useMyAnnotations } from '@foxing/client'
-import { useCallback } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { CaretLeft } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { useMyAnnotations } from "@foxing/client";
+import { useCallback } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { CaretLeft } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // Every highlight the reader has made, newest first, from GET /annotations.
 export default function HighlightsScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const highlights = useMyAnnotations(['highlight'])
-  const rows = highlights.data ?? []
-  const loading = highlights.isPending
+  const colors = useColors();
+  const router = useRouter();
+  const highlights = useMyAnnotations(["highlight"]);
+  const rows = highlights.data ?? [];
+  const loading = highlights.isPending;
 
   const swatch = useCallback(
     (c: string | null) => {
       switch (c) {
-        case 'amber': return colors.hlAmberT
-        case 'auburn': return colors.hlAuburnT
-        case 'yellow': return colors.hlYellowT
-        case 'sage': return colors.hlSageT
-        case 'cobalt': return colors.hlCobaltT
-        case 'crimson': return colors.hlCrimsonT
-        case 'purple': return colors.hlPurpleT
-        default: return colors.borderDefault
+        case "amber":
+          return colors.hlAmberT;
+        case "auburn":
+          return colors.hlAuburnT;
+        case "yellow":
+          return colors.hlYellowT;
+        case "sage":
+          return colors.hlSageT;
+        case "cobalt":
+          return colors.hlCobaltT;
+        case "crimson":
+          return colors.hlCrimsonT;
+        case "purple":
+          return colors.hlPurpleT;
+        default:
+          return colors.borderDefault;
       }
     },
-    [colors]
-  )
+    [colors],
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -44,7 +46,12 @@ export default function HighlightsScreen() {
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <Text
-          style={{ fontFamily: Fonts.display, fontSize: 18, color: colors.textPrimary, marginLeft: 4 }}
+          style={{
+            fontFamily: Fonts.display,
+            fontSize: 18,
+            color: colors.textPrimary,
+            marginLeft: 4,
+          }}
         >
           Highlights
         </Text>
@@ -62,11 +69,11 @@ export default function HighlightsScreen() {
                 fontFamily: Fonts.ui,
                 fontSize: 14,
                 color: colors.textTertiary,
-                textAlign: 'center',
+                textAlign: "center",
               }}
             >
               {highlights.error
-                ? 'Could not load your highlights.'
+                ? "Could not load your highlights."
                 : "You haven't saved any highlights yet. Long press a passage while reading to capture one."}
             </Text>
           </View>
@@ -75,13 +82,13 @@ export default function HighlightsScreen() {
             <Pressable
               key={h.id}
               onPress={() => {
-                if (h.bookId) router.push(`/reader/${h.bookId}`)
+                if (h.bookId) router.push(`/reader/${h.bookId}`);
               }}
               onLongPress={() => {
-                if (!h.bookId || !h.selectedText) return
+                if (!h.bookId || !h.selectedText) return;
                 router.push(
-                  `/quote-card?bookId=${h.bookId}&bookTitle=${encodeURIComponent(h.bookTitle ?? '')}&author=${encodeURIComponent(h.bookAuthor ?? '')}&passageText=${encodeURIComponent(h.selectedText)}` as never,
-                )
+                  `/quote-card?bookId=${h.bookId}&bookTitle=${encodeURIComponent(h.bookTitle ?? "")}&author=${encodeURIComponent(h.bookAuthor ?? "")}&passageText=${encodeURIComponent(h.selectedText)}` as never,
+                );
               }}
               delayLongPress={350}
               className="mb-3 rounded-2xl flex-row overflow-hidden border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
@@ -111,10 +118,7 @@ export default function HighlightsScreen() {
                     “{h.body}”
                   </Text>
                 ) : null}
-                <View
-                  className="flex-row items-center justify-between"
-                  style={{ marginTop: 8 }}
-                >
+                <View className="flex-row items-center justify-between" style={{ marginTop: 8 }}>
                   <Text
                     style={{
                       flex: 1,
@@ -124,7 +128,7 @@ export default function HighlightsScreen() {
                     }}
                     numberOfLines={1}
                   >
-                    {[h.bookTitle ?? h.sourceTitle, h.bookAuthor].filter(Boolean).join(' · ')}
+                    {[h.bookTitle ?? h.sourceTitle, h.bookAuthor].filter(Boolean).join(" · ")}
                   </Text>
                 </View>
               </View>
@@ -133,5 +137,5 @@ export default function HighlightsScreen() {
         )}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

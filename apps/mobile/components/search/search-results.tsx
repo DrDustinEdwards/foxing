@@ -1,11 +1,11 @@
-import { useColors } from '@/constants/colors'
-import { Image, Pressable, Text, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
-import type * as W from '@foxing/types'
-import { BookOpen, Plus, User, UserPlus, UsersThree } from 'phosphor-react-native'
+import { useColors } from "@/constants/colors";
+import { Image, Pressable, Text, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
+import type * as W from "@foxing/types";
+import { BookOpen, Plus, User, UserPlus, UsersThree } from "phosphor-react-native";
 
 export function ResultsSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View style={{ marginTop: 12 }}>
       <Text
@@ -13,7 +13,7 @@ export function ResultsSection({ title, children }: { title: string; children: R
           fontFamily: Fonts.uiMedium,
           fontSize: 11,
           color: colors.textTertiary,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.6,
           marginBottom: 8,
         }}
@@ -22,7 +22,7 @@ export function ResultsSection({ title, children }: { title: string; children: R
       </Text>
       {children}
     </View>
-  )
+  );
 }
 
 export function BookResult({
@@ -30,30 +30,27 @@ export function BookResult({
   onPress,
   onAdd,
 }: {
-  hit: W.BookCard
-  onPress: () => void
-  onAdd: () => void
+  hit: W.BookCard;
+  onPress: () => void;
+  onAdd: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
-    <Pressable
-      onPress={onPress}
-      className="flex-row items-center p-2 mb-1 rounded-xl"
-    >
+    <Pressable onPress={onPress} className="flex-row items-center p-2 mb-1 rounded-xl">
       <View
         style={{
           width: 40,
           height: 56,
           borderRadius: 4,
-          overflow: 'hidden',
+          overflow: "hidden",
           backgroundColor: colors.bgSunken,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           marginRight: 12,
         }}
       >
         {hit.coverUrl ? (
-          <Image source={{ uri: hit.coverUrl }} style={{ width: '100%', height: '100%' }} />
+          <Image source={{ uri: hit.coverUrl }} style={{ width: "100%", height: "100%" }} />
         ) : (
           <BookOpen color={colors.textTertiary} size={16} />
         )}
@@ -70,7 +67,7 @@ export function BookResult({
           numberOfLines={1}
         >
           {hit.author}
-          {hit.publicationYear ? ` · ${hit.publicationYear}` : ''}
+          {hit.publicationYear ? ` · ${hit.publicationYear}` : ""}
         </Text>
       </View>
       <Pressable
@@ -84,18 +81,18 @@ export function BookResult({
         <Plus color={colors.brandSubtleText} size={12} weight="bold" />
       </Pressable>
     </Pressable>
-  )
+  );
 }
 
 export function PersonResult({
   hit,
   onPress,
 }: {
-  hit: W.SearchSuggest['people'][number]
-  onPress: () => void
+  hit: W.SearchSuggest["people"][number];
+  onPress: () => void;
 }) {
-  const colors = useColors()
-  const initial = (hit.displayName || hit.username || '?')[0]?.toUpperCase() ?? '?'
+  const colors = useColors();
+  const initial = (hit.displayName || hit.username || "?")[0]?.toUpperCase() ?? "?";
   return (
     <Pressable onPress={onPress} className="flex-row items-center p-2 mb-1 rounded-xl">
       <View
@@ -103,10 +100,10 @@ export function PersonResult({
           width: 36,
           height: 36,
           borderRadius: 18,
-          overflow: 'hidden',
+          overflow: "hidden",
           backgroundColor: colors.brandSubtle,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           marginRight: 12,
         }}
       >
@@ -130,28 +127,34 @@ export function PersonResult({
       </View>
       <UserPlus color={colors.brandText} size={14} />
     </Pressable>
-  )
+  );
 }
 
-export function ClubResult({ hit, onPress }: { hit: W.SearchSuggest['clubs'][number]; onPress: () => void }) {
-  return <IconResult Icon={UsersThree} title={hit.name} subtitle="Book club" onPress={onPress} />
+export function ClubResult({
+  hit,
+  onPress,
+}: {
+  hit: W.SearchSuggest["clubs"][number];
+  onPress: () => void;
+}) {
+  return <IconResult Icon={UsersThree} title={hit.name} subtitle="Book club" onPress={onPress} />;
 }
 
 export function AuthorResult({
   hit,
   onPress,
 }: {
-  hit: W.SearchPage['authors'][number]
-  onPress: () => void
+  hit: W.SearchPage["authors"][number];
+  onPress: () => void;
 }) {
   return (
     <IconResult
       Icon={User}
       title={hit.name}
-      subtitle={`${hit.bookCount} book${hit.bookCount === 1 ? '' : 's'}`}
+      subtitle={`${hit.bookCount} book${hit.bookCount === 1 ? "" : "s"}`}
       onPress={onPress}
     />
-  )
+  );
 }
 
 function IconResult({
@@ -160,35 +163,45 @@ function IconResult({
   subtitle,
   onPress,
 }: {
-  Icon: typeof User
-  title: string
-  subtitle: string
-  onPress: () => void
+  Icon: typeof User;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
-    <Pressable onPress={onPress} accessibilityRole="link" className="flex-row items-center p-2 mb-1 rounded-xl">
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="link"
+      className="flex-row items-center p-2 mb-1 rounded-xl"
+    >
       <View
         style={{
           width: 36,
           height: 36,
           borderRadius: 8,
           backgroundColor: colors.brandSubtle,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           marginRight: 12,
         }}
       >
         <Icon color={colors.brandSubtleText} size={18} />
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }} numberOfLines={1}>
+        <Text
+          style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}
+          numberOfLines={1}
+        >
           {title}
         </Text>
-        <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }} numberOfLines={1}>
+        <Text
+          style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}
+          numberOfLines={1}
+        >
           {subtitle}
         </Text>
       </View>
     </Pressable>
-  )
+  );
 }

@@ -1,23 +1,23 @@
-import { View, Text, Pressable } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { CaretLeft, TextAa, BookmarkSimple } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { View, Text, Pressable } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { CaretLeft, TextAa, BookmarkSimple } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // Phase 1 reading chrome: the top bar is reduced to Back, a tappable
 // title/chapter that opens the Go To sheet, Bookmark, and Aa (typography).
 // Listen, Search, and the chapter-features (Sparkle) trigger moved to the
 // bottom bar (overflow + Companion button).
 interface ReaderTopBarProps {
-  chromeBg: string
-  isTablet: boolean
-  bookTitle: string
-  chapterTitle: string
-  isCurrentBookmarked: boolean
-  onBack: () => void
-  onOpenGoTo: () => void
-  onOpenSettings: () => void
-  onBookmarkTap: () => void
+  chromeBg: string;
+  isTablet: boolean;
+  bookTitle: string;
+  chapterTitle: string;
+  isCurrentBookmarked: boolean;
+  onBack: () => void;
+  onOpenGoTo: () => void;
+  onOpenSettings: () => void;
+  onBookmarkTap: () => void;
 }
 
 export function ReaderTopBar({
@@ -31,10 +31,10 @@ export function ReaderTopBar({
   onOpenSettings,
   onBookmarkTap,
 }: ReaderTopBarProps) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <SafeAreaView
-      edges={['top']}
+      edges={["top"]}
       pointerEvents="box-none"
       className="absolute top-0 left-0 right-0"
     >
@@ -65,7 +65,7 @@ export function ReaderTopBar({
             hitSlop={6}
             accessibilityRole="button"
             accessibilityLabel="Table of contents and location"
-            style={{ flex: 1, alignItems: 'center', paddingHorizontal: 6 }}
+            style={{ flex: 1, alignItems: "center", paddingHorizontal: 6 }}
           >
             <Text
               numberOfLines={1}
@@ -96,12 +96,12 @@ export function ReaderTopBar({
             className="px-2 py-2"
             hitSlop={6}
             accessibilityRole="button"
-            accessibilityLabel={isCurrentBookmarked ? 'Remove bookmark' : 'Add bookmark'}
+            accessibilityLabel={isCurrentBookmarked ? "Remove bookmark" : "Add bookmark"}
           >
             <BookmarkSimple
               color={colors.brandUi}
               size={22}
-              weight={isCurrentBookmarked ? 'fill' : 'regular'}
+              weight={isCurrentBookmarked ? "fill" : "regular"}
             />
           </Pressable>
           <Pressable
@@ -116,5 +116,5 @@ export function ReaderTopBar({
         </View>
       </View>
     </SafeAreaView>
-  )
+  );
 }

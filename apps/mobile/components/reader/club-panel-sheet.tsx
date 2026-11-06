@@ -1,6 +1,6 @@
-import { useBookAnnotations, useClubLive, useClubPage } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useEffect, useMemo, useState } from 'react'
+import { useBookAnnotations, useClubLive, useClubPage } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -11,11 +11,11 @@ import {
   Animated,
   Easing,
   useWindowDimensions,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { X as XIcon, ChatCircleDots } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { X as XIcon, ChatCircleDots } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // Half-height bottom-anchored panel that slides up over the bottom of
 // the reader. Unlike the rest of the reader sheets this is NOT a Modal,
@@ -29,15 +29,15 @@ import { Fonts } from '@/constants/fonts'
 //     (the club's live socket).
 
 interface ClubPanelSheetProps {
-  visible: boolean
-  club: { id: string; name: string }
-  bookId: string
-  bookTitle: string
-  onOpenComment: (comment: W.ResolvedComment) => void
-  onClose: () => void
+  visible: boolean;
+  club: { id: string; name: string };
+  bookId: string;
+  bookTitle: string;
+  onOpenComment: (comment: W.ResolvedComment) => void;
+  onClose: () => void;
 }
 
-type Tab = 'discussion' | 'members'
+type Tab = "discussion" | "members";
 
 export function ClubPanelSheet({
   visible,
@@ -47,42 +47,42 @@ export function ClubPanelSheet({
   onOpenComment,
   onClose,
 }: ClubPanelSheetProps) {
-  const colors = useColors()
-  const { height: screenHeight } = useWindowDimensions()
-  const panelHeight = Math.round(screenHeight * 0.55)
+  const colors = useColors();
+  const { height: screenHeight } = useWindowDimensions();
+  const panelHeight = Math.round(screenHeight * 0.55);
 
-  const [tab, setTab] = useState<Tab>('discussion')
-  const layers = useBookAnnotations(bookId)
-  const page = useClubPage(club.id)
-  const live = useClubLive(visible ? club.id : null)
+  const [tab, setTab] = useState<Tab>("discussion");
+  const layers = useBookAnnotations(bookId);
+  const page = useClubPage(club.id);
+  const live = useClubLive(visible ? club.id : null);
   const comments = (layers.data?.comments ?? [])
     .filter((c) => c.clubId === club.id && !c.parentId)
-    .sort((a, b) => b.createdAt - a.createdAt)
-  const members = (page.data?.members ?? []).filter((m) => m.status === 'active')
-  const loading = tab === 'discussion' ? layers.isPending : page.isPending
+    .sort((a, b) => b.createdAt - a.createdAt);
+  const members = (page.data?.members ?? []).filter((m) => m.status === "active");
+  const loading = tab === "discussion" ? layers.isPending : page.isPending;
 
   // Slide-up animation. Translate from off-screen to 0 when visible.
-  const slide = useMemo(() => new Animated.Value(panelHeight), [panelHeight])
+  const slide = useMemo(() => new Animated.Value(panelHeight), [panelHeight]);
   useEffect(() => {
     Animated.timing(slide, {
       toValue: visible ? 0 : panelHeight,
       duration: 220,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start()
-  }, [visible, panelHeight, slide])
+    }).start();
+  }, [visible, panelHeight, slide]);
 
   if (!visible) {
     // Keep the panel mounted only when visible so the Animated value
     // doesn't churn while the reader is uninvolved.
-    return null
+    return null;
   }
 
   return (
     <Animated.View
       pointerEvents="box-none"
       style={{
-        position: 'absolute',
+        position: "absolute",
         left: 0,
         right: 0,
         bottom: 0,
@@ -105,10 +105,10 @@ export function ClubPanelSheet({
           elevation: 12,
         }}
       >
-        <SafeAreaView edges={['bottom']} style={{ flex: 1 }}>
+        <SafeAreaView edges={["bottom"]} style={{ flex: 1 }}>
           <View
             style={{
-              alignSelf: 'center',
+              alignSelf: "center",
               width: 36,
               height: 4,
               borderRadius: 2,
@@ -168,13 +168,13 @@ export function ClubPanelSheet({
           >
             <TabButton
               label="Discussion"
-              active={tab === 'discussion'}
-              onPress={() => setTab('discussion')}
+              active={tab === "discussion"}
+              onPress={() => setTab("discussion")}
             />
             <TabButton
               label="Members"
-              active={tab === 'members'}
-              onPress={() => setTab('members')}
+              active={tab === "members"}
+              onPress={() => setTab("members")}
             />
           </View>
 
@@ -182,24 +182,21 @@ export function ClubPanelSheet({
             <View
               style={{
                 flex: 1,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <ActivityIndicator color={colors.brandUi} />
             </View>
-          ) : tab === 'discussion' ? (
-            <DiscussionList
-              comments={comments}
-              onOpenComment={onOpenComment}
-            />
+          ) : tab === "discussion" ? (
+            <DiscussionList comments={comments} onOpenComment={onOpenComment} />
           ) : (
             <MembersList members={members} online={new Set(live.presence)} />
           )}
         </SafeAreaView>
       </View>
     </Animated.View>
-  )
+  );
 }
 
 function TabButton({
@@ -207,11 +204,11 @@ function TabButton({
   active,
   onPress,
 }: {
-  label: string
-  active: boolean
-  onPress: () => void
+  label: string;
+  active: boolean;
+  onPress: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -221,7 +218,7 @@ function TabButton({
         paddingHorizontal: 14,
         paddingVertical: 10,
         borderBottomWidth: 2,
-        borderBottomColor: active ? colors.brandUi : 'transparent',
+        borderBottomColor: active ? colors.brandUi : "transparent",
         marginBottom: -1,
       }}
     >
@@ -235,24 +232,24 @@ function TabButton({
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }
 
 function DiscussionList({
   comments,
   onOpenComment,
 }: {
-  comments: W.ResolvedComment[]
-  onOpenComment: (c: W.ResolvedComment) => void
+  comments: W.ResolvedComment[];
+  onOpenComment: (c: W.ResolvedComment) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   if (comments.length === 0) {
     return (
       <View
         style={{
           flex: 1,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           paddingHorizontal: 24,
         }}
       >
@@ -263,13 +260,13 @@ function DiscussionList({
             fontSize: 13,
             color: colors.textTertiary,
             marginTop: 10,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           No discussion yet. Long-press a passage to start one.
         </Text>
       </View>
-    )
+    );
   }
   return (
     <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 24 }}>
@@ -302,29 +299,31 @@ function DiscussionList({
               lineHeight: 21,
             }}
           >
-            {c.gate.spoiler || c.gate.ahead ? 'Hidden for now, tap to read' : c.body}
+            {c.gate.spoiler || c.gate.ahead ? "Hidden for now, tap to read" : c.body}
           </Text>
         </Pressable>
       ))}
     </ScrollView>
-  )
+  );
 }
 
 function MembersList({ members, online }: { members: W.ClubMemberItem[]; online: Set<string> }) {
-  const colors = useColors()
+  const colors = useColors();
   if (members.length === 0) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>No members yet.</Text>
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+        <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
+          No members yet.
+        </Text>
       </View>
-    )
+    );
   }
   return (
     <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 24 }}>
       {members.map((m) => {
-        const name = m.profile?.displayName ?? m.profile?.username ?? 'Reader'
-        const initial = (name || '?')[0]?.toUpperCase() ?? '?'
-        const here = online.has(m.userId)
+        const name = m.profile?.displayName ?? m.profile?.username ?? "Reader";
+        const initial = (name || "?")[0]?.toUpperCase() ?? "?";
+        const here = online.has(m.userId);
         return (
           <View
             key={m.userId}
@@ -335,33 +334,45 @@ function MembersList({ members, online }: { members: W.ClubMemberItem[]; online:
                 width: 36,
                 height: 36,
                 borderRadius: 18,
-                overflow: 'hidden',
+                overflow: "hidden",
                 backgroundColor: colors.brandSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
                 marginRight: 12,
               }}
             >
               {m.profile?.avatarUrl ? (
-                <Image source={{ uri: m.profile.avatarUrl }} style={{ width: '100%', height: '100%' }} />
+                <Image
+                  source={{ uri: m.profile.avatarUrl }}
+                  style={{ width: "100%", height: "100%" }}
+                />
               ) : (
-                <Text style={{ fontFamily: Fonts.display, fontSize: 15, color: colors.brandSubtleText }}>
+                <Text
+                  style={{ fontFamily: Fonts.display, fontSize: 15, color: colors.brandSubtleText }}
+                >
                   {initial}
                 </Text>
               )}
             </View>
             <Text
               numberOfLines={1}
-              style={{ flex: 1, fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
+              style={{
+                flex: 1,
+                fontFamily: Fonts.uiMedium,
+                fontSize: 13,
+                color: colors.textPrimary,
+              }}
             >
               {name}
             </Text>
             {here ? (
-              <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.brandText }}>Here now</Text>
+              <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.brandText }}>
+                Here now
+              </Text>
             ) : null}
           </View>
-        )
+        );
       })}
     </ScrollView>
-  )
+  );
 }

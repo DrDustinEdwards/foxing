@@ -1,9 +1,9 @@
-import { useCreateMeeting, useCreatePoll } from '@foxing/client'
-import { useColors } from '@/constants/colors'
-import { useState } from 'react'
-import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native'
-import { CaretLeft } from 'phosphor-react-native'
-import { Fonts } from '@/constants/fonts'
+import { useCreateMeeting, useCreatePoll } from "@foxing/client";
+import { useColors } from "@/constants/colors";
+import { useState } from "react";
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { CaretLeft } from "phosphor-react-native";
+import { Fonts } from "@/constants/fonts";
 
 export function AddMeetingModal({
   visible,
@@ -11,28 +11,27 @@ export function AddMeetingModal({
   clubId,
   onCreated,
 }: {
-  visible: boolean
-  onClose: () => void
-  clubId: string
-  onCreated: () => void
+  visible: boolean;
+  onClose: () => void;
+  clubId: string;
+  onCreated: () => void;
 }) {
-  const colors = useColors()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [meetingDate, setMeetingDate] = useState('')
-  const [locationName, setLocationName] = useState('')
-  const [locationUrl, setLocationUrl] = useState('')
-  const [meetingType, setMeetingType] =
-    useState<'in_person' | 'virtual' | 'hybrid'>('in_person')
-  const createMeeting = useCreateMeeting()
-  const saving = createMeeting.pending
+  const colors = useColors();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [meetingDate, setMeetingDate] = useState("");
+  const [locationName, setLocationName] = useState("");
+  const [locationUrl, setLocationUrl] = useState("");
+  const [meetingType, setMeetingType] = useState<"in_person" | "virtual" | "hybrid">("in_person");
+  const createMeeting = useCreateMeeting();
+  const saving = createMeeting.pending;
 
   async function create() {
-    if (!title.trim() || !meetingDate.trim()) return
-    const date = new Date(meetingDate.trim())
+    if (!title.trim() || !meetingDate.trim()) return;
+    const date = new Date(meetingDate.trim());
     if (!Number.isFinite(date.getTime())) {
-      Alert.alert('Invalid date', 'Use a format like 2026-06-15T19:00')
-      return
+      Alert.alert("Invalid date", "Use a format like 2026-06-15T19:00");
+      return;
     }
     const ok = await createMeeting.run({
       clubId,
@@ -42,18 +41,18 @@ export function AddMeetingModal({
       locationName: locationName.trim() || undefined,
       locationUrl: locationUrl.trim() || undefined,
       meetingType,
-    })
+    });
     if (!ok) {
-      Alert.alert('Could not create', 'Check the details and try again.')
-      return
+      Alert.alert("Could not create", "Check the details and try again.");
+      return;
     }
-    setTitle('')
-    setDescription('')
-    setMeetingDate('')
-    setLocationName('')
-    setLocationUrl('')
-    setMeetingType('in_person')
-    onCreated()
+    setTitle("");
+    setDescription("");
+    setMeetingDate("");
+    setLocationName("");
+    setLocationUrl("");
+    setMeetingType("in_person");
+    onCreated();
   }
 
   return (
@@ -93,9 +92,7 @@ export function AddMeetingModal({
               paddingVertical: 8,
               borderRadius: 999,
               backgroundColor:
-                title.trim() && meetingDate.trim()
-                  ? colors.brandUi
-                  : colors.bgDisabled,
+                title.trim() && meetingDate.trim() ? colors.brandUi : colors.bgDisabled,
             }}
           >
             <Text
@@ -129,8 +126,8 @@ export function AddMeetingModal({
             multiline
           />
           <View className="flex-row" style={{ gap: 6 }}>
-            {(['in_person', 'virtual', 'hybrid'] as const).map((t) => {
-              const active = meetingType === t
+            {(["in_person", "virtual", "hybrid"] as const).map((t) => {
+              const active = meetingType === t;
               return (
                 <Pressable
                   key={t}
@@ -142,7 +139,7 @@ export function AddMeetingModal({
                     borderWidth: 1,
                     borderColor: active ? colors.brandUi : colors.borderSubtle,
                     backgroundColor: active ? colors.brandSubtle : colors.bgBase,
-                    alignItems: 'center',
+                    alignItems: "center",
                   }}
                 >
                   <Text
@@ -150,13 +147,13 @@ export function AddMeetingModal({
                       fontFamily: Fonts.uiMedium,
                       fontSize: 12,
                       color: active ? colors.brandSubtleText : colors.textSecondary,
-                      textTransform: 'capitalize',
+                      textTransform: "capitalize",
                     }}
                   >
-                    {t.replace('_', ' ')}
+                    {t.replace("_", " ")}
                   </Text>
                 </Pressable>
-              )
+              );
             })}
           </View>
           <FieldInput
@@ -173,7 +170,7 @@ export function AddMeetingModal({
         </ScrollView>
       </View>
     </Modal>
-  )
+  );
 }
 
 export function AddPollModal({
@@ -182,40 +179,40 @@ export function AddPollModal({
   clubId,
   onCreated,
 }: {
-  visible: boolean
-  onClose: () => void
-  clubId: string
-  onCreated: () => void
+  visible: boolean;
+  onClose: () => void;
+  clubId: string;
+  onCreated: () => void;
 }) {
-  const colors = useColors()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [options, setOptions] = useState<string[]>(['', ''])
-  const createPoll = useCreatePoll()
-  const saving = createPoll.pending
+  const colors = useColors();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
+  const createPoll = useCreatePoll();
+  const saving = createPoll.pending;
 
   async function create() {
-    if (!title.trim()) return
-    const filled = options.map((o) => o.trim()).filter(Boolean)
+    if (!title.trim()) return;
+    const filled = options.map((o) => o.trim()).filter(Boolean);
     if (filled.length < 2) {
-      Alert.alert('Need at least 2 options')
-      return
+      Alert.alert("Need at least 2 options");
+      return;
     }
     const ok = await createPoll.run({
       clubId,
       title: title.trim().slice(0, 200),
       description: description.trim() || undefined,
-      pollType: 'single',
+      pollType: "single",
       options: filled.map((label, idx) => ({ id: `o${idx + 1}`, label: label.slice(0, 120) })),
-    })
+    });
     if (!ok) {
-      Alert.alert('Could not create', 'Try again.')
-      return
+      Alert.alert("Could not create", "Try again.");
+      return;
     }
-    setTitle('')
-    setDescription('')
-    setOptions(['', ''])
-    onCreated()
+    setTitle("");
+    setDescription("");
+    setOptions(["", ""]);
+    onCreated();
   }
 
   return (
@@ -280,7 +277,7 @@ export function AddPollModal({
               fontFamily: Fonts.uiMedium,
               fontSize: 11,
               color: colors.textTertiary,
-              textTransform: 'uppercase',
+              textTransform: "uppercase",
               letterSpacing: 0.6,
             }}
           >
@@ -291,9 +288,9 @@ export function AddPollModal({
               <TextInput
                 value={opt}
                 onChangeText={(t) => {
-                  const next = [...options]
-                  next[idx] = t
-                  setOptions(next)
+                  const next = [...options];
+                  next[idx] = t;
+                  setOptions(next);
                 }}
                 placeholder={`Option ${idx + 1}`}
                 placeholderTextColor={colors.textTertiary}
@@ -312,9 +309,7 @@ export function AddPollModal({
               />
               {options.length > 2 ? (
                 <Pressable
-                  onPress={() =>
-                    setOptions(options.filter((_, i) => i !== idx))
-                  }
+                  onPress={() => setOptions(options.filter((_, i) => i !== idx))}
                   hitSlop={10}
                   style={{ padding: 6 }}
                 >
@@ -333,9 +328,9 @@ export function AddPollModal({
           ))}
           {options.length < 5 ? (
             <Pressable
-              onPress={() => setOptions([...options, ''])}
+              onPress={() => setOptions([...options, ""])}
               style={{
-                alignSelf: 'flex-start',
+                alignSelf: "flex-start",
                 paddingHorizontal: 12,
                 paddingVertical: 6,
                 borderRadius: 999,
@@ -357,7 +352,7 @@ export function AddPollModal({
         </ScrollView>
       </View>
     </Modal>
-  )
+  );
 }
 
 function FieldInput({
@@ -367,13 +362,13 @@ function FieldInput({
   placeholder,
   multiline,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
-  placeholder?: string
-  multiline?: boolean
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  multiline?: boolean;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View>
       <Text
@@ -381,7 +376,7 @@ function FieldInput({
           fontFamily: Fonts.uiMedium,
           fontSize: 11,
           color: colors.textTertiary,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.6,
           marginBottom: 4,
         }}
@@ -405,9 +400,9 @@ function FieldInput({
           paddingHorizontal: 10,
           paddingVertical: 8,
           minHeight: multiline ? 60 : undefined,
-          textAlignVertical: multiline ? 'top' : 'center',
+          textAlignVertical: multiline ? "top" : "center",
         }}
       />
     </View>
-  )
+  );
 }

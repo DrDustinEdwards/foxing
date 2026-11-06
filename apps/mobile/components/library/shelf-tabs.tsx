@@ -1,9 +1,9 @@
-import { Text, Pressable, ScrollView } from 'react-native'
-import { Plus } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import type * as W from '@foxing/types'
-import { STATUS_SHELVES, type ShelfKey } from '@/components/library/library-types'
+import { Text, Pressable, ScrollView } from "react-native";
+import { Plus } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import type * as W from "@foxing/types";
+import { STATUS_SHELVES, type ShelfKey } from "@/components/library/library-types";
 
 export function ShelfTabs({
   activeShelf,
@@ -12,13 +12,13 @@ export function ShelfTabs({
   onLongPressShelf,
   onNewShelf,
 }: {
-  activeShelf: ShelfKey
-  shelves: W.Shelf[]
-  onSelectShelf: (shelf: ShelfKey) => void
-  onLongPressShelf: (shelf: W.Shelf) => void
-  onNewShelf: () => void
+  activeShelf: ShelfKey;
+  shelves: W.Shelf[];
+  onSelectShelf: (shelf: ShelfKey) => void;
+  onLongPressShelf: (shelf: W.Shelf) => void;
+  onNewShelf: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <ScrollView
       horizontal
@@ -27,11 +27,11 @@ export function ShelfTabs({
       contentContainerStyle={{ paddingHorizontal: 12, gap: 6, paddingBottom: 4 }}
     >
       {STATUS_SHELVES.map((s) => {
-        const active = activeShelf.kind === 'status' && activeShelf.status === s.status
+        const active = activeShelf.kind === "status" && activeShelf.status === s.status;
         return (
           <Pressable
             key={s.status}
-            onPress={() => onSelectShelf({ kind: 'status', status: s.status, label: s.label })}
+            onPress={() => onSelectShelf({ kind: "status", status: s.status, label: s.label })}
             className="px-3 py-2 rounded-full border"
             style={{
               backgroundColor: active ? colors.bgSelected : colors.bgSurface,
@@ -48,14 +48,14 @@ export function ShelfTabs({
               {s.label}
             </Text>
           </Pressable>
-        )
+        );
       })}
       {shelves.map((s) => {
-        const active = activeShelf.kind === 'custom' && activeShelf.shelfId === s.id
+        const active = activeShelf.kind === "custom" && activeShelf.shelfId === s.id;
         return (
           <Pressable
             key={s.id}
-            onPress={() => onSelectShelf({ kind: 'custom', shelfId: s.id, label: s.name })}
+            onPress={() => onSelectShelf({ kind: "custom", shelfId: s.id, label: s.name })}
             onLongPress={() => onLongPressShelf(s)}
             delayLongPress={350}
             className="px-3 py-2 rounded-full border"
@@ -74,7 +74,7 @@ export function ShelfTabs({
               {s.name}
             </Text>
           </Pressable>
-        )
+        );
       })}
       <Pressable
         onPress={onNewShelf}
@@ -94,5 +94,5 @@ export function ShelfTabs({
         </Text>
       </Pressable>
     </ScrollView>
-  )
+  );
 }

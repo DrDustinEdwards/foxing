@@ -1,7 +1,7 @@
-import { useColors } from '@/constants/colors'
-import { Pressable, Text, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
-import { useState } from 'react'
+import { useColors } from "@/constants/colors";
+import { Pressable, Text, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
+import { useState } from "react";
 
 export function SecondaryButton({
   Icon,
@@ -9,12 +9,12 @@ export function SecondaryButton({
   onPress,
   active,
 }: {
-  Icon: React.ComponentType<{ color: string; size: number; weight?: 'regular' | 'fill' }>
-  label: string
-  onPress: () => void
-  active?: boolean
+  Icon: React.ComponentType<{ color: string; size: number; weight?: "regular" | "fill" }>;
+  label: string;
+  onPress: () => void;
+  active?: boolean;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -27,7 +27,7 @@ export function SecondaryButton({
       <Icon
         color={active ? colors.brandUi : colors.textSecondary}
         size={18}
-        weight={active ? 'fill' : 'regular'}
+        weight={active ? "fill" : "regular"}
       />
       <Text
         style={{
@@ -40,18 +40,18 @@ export function SecondaryButton({
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }
 
 export function SectionHeading({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
         fontFamily: Fonts.uiMedium,
         fontSize: 11,
         color: colors.textTertiary,
-        textTransform: 'uppercase',
+        textTransform: "uppercase",
         letterSpacing: 0.6,
         marginTop: 22,
         marginBottom: 10,
@@ -60,18 +60,18 @@ export function SectionHeading({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  )
+  );
 }
 
 export function ExpandableText({ text }: { text: string }) {
-  const colors = useColors()
-  const [expanded, setExpanded] = useState(false)
+  const colors = useColors();
+  const [expanded, setExpanded] = useState(false);
   if (!text) {
     return (
       <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
         A classic work from the public domain.
       </Text>
-    )
+    );
   }
   return (
     <View>
@@ -83,11 +83,18 @@ export function ExpandableText({ text }: { text: string }) {
       </Text>
       {text.length > 220 ? (
         <Pressable onPress={() => setExpanded((v) => !v)} hitSlop={4}>
-          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText, marginTop: 4 }}>
-            {expanded ? 'Show less' : 'Show more'}
+          <Text
+            style={{
+              fontFamily: Fonts.uiMedium,
+              fontSize: 12,
+              color: colors.brandText,
+              marginTop: 4,
+            }}
+          >
+            {expanded ? "Show less" : "Show more"}
           </Text>
         </Pressable>
       ) : null}
     </View>
-  )
+  );
 }

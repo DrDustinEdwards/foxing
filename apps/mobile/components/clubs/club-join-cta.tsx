@@ -1,7 +1,7 @@
-import type * as W from '@foxing/types'
-import { Pressable, Text } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import type * as W from "@foxing/types";
+import { Pressable, Text } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 export function ClubJoinCta({
   page,
@@ -9,16 +9,16 @@ export function ClubJoinCta({
   onJoin,
   onLeave,
 }: {
-  page: W.ClubPage
-  busy: boolean
-  onJoin: () => void
-  onLeave: () => void
+  page: W.ClubPage;
+  busy: boolean;
+  onJoin: () => void;
+  onLeave: () => void;
 }) {
-  const colors = useColors()
-  const membership = page.membership
+  const colors = useColors();
+  const membership = page.membership;
 
   if (page.isMember) {
-    const owner = membership?.role === 'owner'
+    const owner = membership?.role === "owner";
     return (
       <Pressable
         onPress={onLeave}
@@ -28,34 +28,34 @@ export function ClubJoinCta({
         style={{ borderColor: colors.borderInteractive }}
       >
         <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}>
-          {busy ? '…' : owner ? 'Owner' : 'Leave'}
+          {busy ? "…" : owner ? "Owner" : "Leave"}
         </Text>
       </Pressable>
-    )
+    );
   }
 
   // Joining a club that approves members, or one that is full, files a request or a
   // waitlist place; the server decides which.
-  const waiting = membership?.status === 'waitlisted' || membership?.status === 'requested'
+  const waiting = membership?.status === "waitlisted" || membership?.status === "requested";
   const label = busy
-    ? '…'
-    : membership?.status === 'waitlisted'
-      ? 'On the waitlist'
-      : membership?.status === 'requested'
-        ? 'Requested'
+    ? "…"
+    : membership?.status === "waitlisted"
+      ? "On the waitlist"
+      : membership?.status === "requested"
+        ? "Requested"
         : page.club.memberApproval
-          ? 'Ask to join'
-          : 'Join'
+          ? "Ask to join"
+          : "Join";
   return (
     <Pressable
       onPress={onJoin}
-      disabled={busy || waiting || membership?.status === 'banned'}
+      disabled={busy || waiting || membership?.status === "banned"}
       accessibilityRole="button"
       className="px-3 py-1 rounded-full"
       style={{
         backgroundColor: waiting ? colors.bgSelected : colors.brandUi,
         borderWidth: waiting ? 1 : 0,
-        borderColor: waiting ? colors.borderBrand : 'transparent',
+        borderColor: waiting ? colors.borderBrand : "transparent",
       }}
     >
       <Text
@@ -68,5 +68,5 @@ export function ClubJoinCta({
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }

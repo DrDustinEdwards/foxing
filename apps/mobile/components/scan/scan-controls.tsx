@@ -1,15 +1,15 @@
-import { useColors } from '@/constants/colors'
-import { Pressable, Text, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
+import { useColors } from "@/constants/colors";
+import { Pressable, Text, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 export function Section({
   colors,
   label,
   children,
 }: {
-  colors: ReturnType<typeof useColors>
-  label: string
-  children: React.ReactNode
+  colors: ReturnType<typeof useColors>;
+  label: string;
+  children: React.ReactNode;
 }) {
   return (
     <View style={{ marginTop: 14 }}>
@@ -18,7 +18,7 @@ export function Section({
           fontFamily: Fonts.uiMedium,
           fontSize: 11,
           color: colors.textTertiary,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.6,
           marginBottom: 8,
         }}
@@ -27,7 +27,7 @@ export function Section({
       </Text>
       {children}
     </View>
-  )
+  );
 }
 
 export function PrimaryBtn({
@@ -36,10 +36,10 @@ export function PrimaryBtn({
   onPress,
   disabled,
 }: {
-  colors: ReturnType<typeof useColors>
-  label: string
-  onPress: () => void
-  disabled?: boolean
+  colors: ReturnType<typeof useColors>;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
@@ -63,7 +63,7 @@ export function PrimaryBtn({
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }
 
 export function OutlineBtn({
@@ -72,10 +72,10 @@ export function OutlineBtn({
   onPress,
   disabled,
 }: {
-  colors: ReturnType<typeof useColors>
-  label: string
-  onPress: () => void
-  disabled?: boolean
+  colors: ReturnType<typeof useColors>;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
 }) {
   return (
     <Pressable
@@ -100,5 +100,5 @@ export function OutlineBtn({
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }

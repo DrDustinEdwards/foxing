@@ -1,7 +1,7 @@
-import { Pressable, Text, View } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { Avatar } from '@/components/feed/feed-row'
+import { Pressable, Text, View } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { Avatar } from "@/components/feed/feed-row";
 
 // One reader in a people list, with an optional action on the right.
 export function PersonRow({
@@ -9,11 +9,11 @@ export function PersonRow({
   onPress,
   action,
 }: {
-  person: { username: string; displayName: string | null; avatarUrl?: string | null }
-  onPress: () => void
-  action?: React.ReactNode
+  person: { username: string; displayName: string | null; avatarUrl?: string | null };
+  onPress: () => void;
+  action?: React.ReactNode;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Pressable
       onPress={onPress}
@@ -23,14 +23,20 @@ export function PersonRow({
     >
       <Avatar profile={{ avatarUrl: person.avatarUrl ?? null, ...person }} size={44} />
       <View style={{ flex: 1, marginLeft: 12 }}>
-        <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }} numberOfLines={1}>
+        <Text
+          style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}
+          numberOfLines={1}
+        >
           {person.displayName ?? person.username}
         </Text>
-        <Text style={{ fontFamily: Fonts.mono, fontSize: 12, color: colors.textTertiary }} numberOfLines={1}>
+        <Text
+          style={{ fontFamily: Fonts.mono, fontSize: 12, color: colors.textTertiary }}
+          numberOfLines={1}
+        >
           @{person.username}
         </Text>
       </View>
       {action}
     </Pressable>
-  )
+  );
 }

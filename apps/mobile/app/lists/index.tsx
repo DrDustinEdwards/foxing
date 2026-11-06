@@ -1,23 +1,17 @@
-import { useMyLists } from '@foxing/client'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { CaretLeft, Plus, Eye, EyeSlash } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { useMyLists } from "@foxing/client";
+import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { CaretLeft, Plus, Eye, EyeSlash } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // The reader's own lists from GET /lists; a create or delete elsewhere patches this.
 export default function MyListsScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const lists = useMyLists()
-  const rows = lists.data ?? []
+  const colors = useColors();
+  const router = useRouter();
+  const lists = useMyLists();
+  const rows = lists.data ?? [];
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -37,7 +31,7 @@ export default function MyListsScreen() {
           My lists
         </Text>
         <Pressable
-          onPress={() => router.push('/lists/new' as never)}
+          onPress={() => router.push("/lists/new" as never)}
           hitSlop={10}
           className="p-2"
           accessibilityRole="button"
@@ -58,10 +52,12 @@ export default function MyListsScreen() {
               fontFamily: Fonts.body,
               fontSize: 14,
               color: colors.textTertiary,
-              textAlign: 'center',
+              textAlign: "center",
             }}
           >
-            {lists.error ? 'Could not load your lists.' : 'No lists yet. Create one to start curating.'}
+            {lists.error
+              ? "Could not load your lists."
+              : "No lists yet. Create one to start curating."}
           </Text>
         </View>
       ) : (
@@ -72,10 +68,7 @@ export default function MyListsScreen() {
               onPress={() => router.push(`/lists/${l.id}` as never)}
               className="p-4 mb-3 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
             >
-              <View
-                className="flex-row items-center"
-                style={{ gap: 8, marginBottom: 4 }}
-              >
+              <View className="flex-row items-center" style={{ gap: 8, marginBottom: 4 }}>
                 <Text
                   style={{
                     flex: 1,
@@ -113,12 +106,12 @@ export default function MyListsScreen() {
                   color: colors.textTertiary,
                 }}
               >
-                {l.bookCount} book{l.bookCount === 1 ? '' : 's'}
+                {l.bookCount} book{l.bookCount === 1 ? "" : "s"}
               </Text>
             </Pressable>
           ))}
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }

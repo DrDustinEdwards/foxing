@@ -1,6 +1,6 @@
-import { useClubsIndex, useSetBookStatus } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useClubsIndex, useSetBookStatus } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -10,98 +10,100 @@ import {
   Alert,
   Image,
   ScrollView,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { CameraView, useCameraPermissions } from 'expo-camera'
-import * as Haptics from 'expo-haptics'
-import { CaretLeft } from 'phosphor-react-native'
-import { resolveScannedIsbn, type ResolvedMeta } from '@/lib/scan-book'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { OutlineBtn, PrimaryBtn, Section } from '@/components/scan/scan-controls'
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { CameraView, useCameraPermissions } from "expo-camera";
+import * as Haptics from "expo-haptics";
+import { CaretLeft } from "phosphor-react-native";
+import { resolveScannedIsbn, type ResolvedMeta } from "@/lib/scan-book";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { OutlineBtn, PrimaryBtn, Section } from "@/components/scan/scan-controls";
 
 const STATUS_LABELS: Array<{ value: W.ShelfStatus; label: string }> = [
-  { value: 'want', label: 'Want to read' },
-  { value: 'reading', label: 'Reading' },
-  { value: 'finished', label: 'Finished' },
-]
+  { value: "want", label: "Want to read" },
+  { value: "reading", label: "Reading" },
+  { value: "finished", label: "Finished" },
+];
 
 export default function ScanScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const [permission, requestPermission] = useCameraPermissions()
-  const [scanning, setScanning] = useState(true)
-  const [manualIsbn, setManualIsbn] = useState('')
-  const [book, setBook] = useState<W.BookCard | null>(null)
-  const [resolved, setResolved] = useState<ResolvedMeta | null>(null)
-  const [notFound, setNotFound] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const setStatus = useSetBookStatus()
-  const busy = setStatus.pending
+  const colors = useColors();
+  const router = useRouter();
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scanning, setScanning] = useState(true);
+  const [manualIsbn, setManualIsbn] = useState("");
+  const [book, setBook] = useState<W.BookCard | null>(null);
+  const [resolved, setResolved] = useState<ResolvedMeta | null>(null);
+  const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const setStatus = useSetBookStatus();
+  const busy = setStatus.pending;
   // Clubs the reader belongs to that are reading the scanned book right now.
-  const readingClubs = (useClubsIndex().data?.mine ?? []).filter((c) => book && c.currentBook?.id === book.id)
-  const detected = useRef(false)
+  const readingClubs = (useClubsIndex().data?.mine ?? []).filter(
+    (c) => book && c.currentBook?.id === book.id,
+  );
+  const detected = useRef(false);
 
   useEffect(() => {
-    if (!permission) return
+    if (!permission) return;
     if (!permission.granted && permission.canAskAgain) {
-      void requestPermission()
+      void requestPermission();
     }
-  }, [permission, requestPermission])
+  }, [permission, requestPermission]);
 
   const lookup = useCallback(async (isbnRaw: string) => {
-    setLoading(true)
-    setNotFound(false)
-    setBook(null)
-    setResolved(null)
-    const res = await resolveScannedIsbn(isbnRaw)
-    setLoading(false)
+    setLoading(true);
+    setNotFound(false);
+    setBook(null);
+    setResolved(null);
+    const res = await resolveScannedIsbn(isbnRaw);
+    setLoading(false);
     if (!res.ok) {
-      Alert.alert('Invalid ISBN', res.error)
-      detected.current = false
-      setScanning(true)
-      return
+      Alert.alert("Invalid ISBN", res.error);
+      detected.current = false;
+      setScanning(true);
+      return;
     }
-    setResolved(res.resolved)
+    setResolved(res.resolved);
     if (res.match) {
-      setBook(res.match)
+      setBook(res.match);
     } else {
-      setNotFound(true)
+      setNotFound(true);
     }
-  }, [])
+  }, []);
 
   const onBarcodeScanned = useCallback(
     async ({ data }: { data: string }) => {
-      if (detected.current) return
-      detected.current = true
-      setScanning(false)
+      if (detected.current) return;
+      detected.current = true;
+      setScanning(false);
       try {
-        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)
+        await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       } catch {
         // haptics are best-effort
       }
-      await lookup(data)
+      await lookup(data);
     },
     [lookup],
-  )
+  );
 
   function rescan() {
-    setBook(null)
-    setResolved(null)
-    setNotFound(false)
-    detected.current = false
-    setScanning(true)
+    setBook(null);
+    setResolved(null);
+    setNotFound(false);
+    detected.current = false;
+    setScanning(true);
   }
 
   async function handleAddToLibrary(status: W.ShelfStatus) {
-    if (!book) return
+    if (!book) return;
     if (!(await setStatus.run({ bookId: book.id, status, book }))) {
-      Alert.alert('Could not add', 'Check your connection and try again.')
-      return
+      Alert.alert("Could not add", "Check your connection and try again.");
+      return;
     }
-    const label = STATUS_LABELS.find((s) => s.value === status)?.label ?? 'library'
-    Alert.alert('Added to library', `${book.title} → ${label}.`)
+    const label = STATUS_LABELS.find((s) => s.value === status)?.label ?? "library";
+    Alert.alert("Added to library", `${book.title} → ${label}.`);
   }
 
   if (!permission) {
@@ -109,11 +111,10 @@ export default function ScanScreen() {
       <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
       </SafeAreaView>
-    )
+    );
   }
 
-  const showCamera =
-    permission.granted && scanning && !book && !notFound && !loading
+  const showCamera = permission.granted && scanning && !book && !notFound && !loading;
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -134,20 +135,20 @@ export default function ScanScreen() {
       </View>
 
       {showCamera ? (
-        <View style={{ flex: 1, position: 'relative' }}>
+        <View style={{ flex: 1, position: "relative" }}>
           <CameraView
             style={{ flex: 1 }}
             facing="back"
-            barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8'] }}
+            barcodeScannerSettings={{ barcodeTypes: ["ean13", "ean8"] }}
             onBarcodeScanned={(e) => void onBarcodeScanned(e)}
           />
           <View
             pointerEvents="none"
             style={{
-              position: 'absolute',
-              top: '40%',
-              left: '10%',
-              right: '10%',
+              position: "absolute",
+              top: "40%",
+              left: "10%",
+              right: "10%",
               height: 120,
               borderWidth: 2,
               borderColor: colors.textOnDark,
@@ -157,11 +158,11 @@ export default function ScanScreen() {
           />
           <Text
             style={{
-              position: 'absolute',
+              position: "absolute",
               bottom: 24,
               left: 16,
               right: 16,
-              textAlign: 'center',
+              textAlign: "center",
               color: colors.textOnDark,
               fontFamily: Fonts.uiMedium,
               fontSize: 13,
@@ -187,14 +188,14 @@ export default function ScanScreen() {
                   marginBottom: 8,
                 }}
               >
-                Camera permission is required to scan barcodes. You can also
-                enter the ISBN manually below.
+                Camera permission is required to scan barcodes. You can also enter the ISBN manually
+                below.
               </Text>
               {permission.canAskAgain ? (
                 <Pressable
                   onPress={() => void requestPermission()}
                   style={{
-                    alignSelf: 'flex-start',
+                    alignSelf: "flex-start",
                     paddingHorizontal: 14,
                     paddingVertical: 8,
                     borderRadius: 999,
@@ -229,14 +230,14 @@ export default function ScanScreen() {
                     width: 72,
                     height: 108,
                     borderRadius: 6,
-                    overflow: 'hidden',
+                    overflow: "hidden",
                     backgroundColor: colors.bgSunken,
                   }}
                 >
                   {book.coverUrl ? (
                     <Image
                       source={{ uri: book.coverUrl }}
-                      style={{ width: '100%', height: '100%' }}
+                      style={{ width: "100%", height: "100%" }}
                     />
                   ) : null}
                 </View>
@@ -278,7 +279,7 @@ export default function ScanScreen() {
 
               {/* LIBRARY: add with a status. */}
               <Section colors={colors} label="Add to your library">
-                <View className="flex-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                <View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
                   {STATUS_LABELS.map((s) => (
                     <OutlineBtn
                       key={s.value}
@@ -294,7 +295,7 @@ export default function ScanScreen() {
               {/* CLUBS: where the reader's clubs are reading it now. */}
               {readingClubs.length > 0 ? (
                 <Section colors={colors} label="Your clubs reading it">
-                  <View className="flex-row" style={{ gap: 8, flexWrap: 'wrap' }}>
+                  <View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
                     {readingClubs.map((c) => (
                       <OutlineBtn
                         key={c.id}
@@ -335,7 +336,7 @@ export default function ScanScreen() {
                   }}
                 >
                   Scanned: {resolved.title}
-                  {resolved.author ? ` · ${resolved.author}` : ''}
+                  {resolved.author ? ` · ${resolved.author}` : ""}
                 </Text>
               ) : (
                 <Text
@@ -353,7 +354,7 @@ export default function ScanScreen() {
                 <PrimaryBtn
                   colors={colors}
                   label="Search by title"
-                  onPress={() => router.push('/search' as never)}
+                  onPress={() => router.push("/search" as never)}
                 />
                 <OutlineBtn colors={colors} label="Try again" onPress={rescan} />
               </View>
@@ -365,7 +366,7 @@ export default function ScanScreen() {
               fontFamily: Fonts.uiMedium,
               fontSize: 11,
               color: colors.textTertiary,
-              textTransform: 'uppercase',
+              textTransform: "uppercase",
               letterSpacing: 0.6,
               marginTop: 8,
               marginBottom: 8,
@@ -376,9 +377,7 @@ export default function ScanScreen() {
           <View className="flex-row" style={{ gap: 8 }}>
             <TextInput
               value={manualIsbn}
-              onChangeText={(t) =>
-                setManualIsbn(t.replace(/[^0-9Xx]/g, '').slice(0, 13))
-              }
+              onChangeText={(t) => setManualIsbn(t.replace(/[^0-9Xx]/g, "").slice(0, 13))}
               keyboardType="number-pad"
               placeholder="9780000000000"
               placeholderTextColor={colors.textTertiary}
@@ -401,7 +400,7 @@ export default function ScanScreen() {
               disabled={!manualIsbn || loading}
               style={{
                 paddingHorizontal: 16,
-                justifyContent: 'center',
+                justifyContent: "center",
                 borderRadius: 10,
                 backgroundColor: manualIsbn ? colors.brandUi : colors.bgDisabled,
               }}
@@ -420,6 +419,5 @@ export default function ScanScreen() {
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }
-

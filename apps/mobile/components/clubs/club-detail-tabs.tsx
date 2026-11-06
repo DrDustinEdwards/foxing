@@ -1,30 +1,17 @@
-import type * as W from '@foxing/types'
-import { useMemo, useState } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  Image,
-  TextInput as RNTextInput,
-} from 'react-native'
-import {
-  CaretRight,
-  Sparkle,
-  ChatCircle,
-  BookOpen,
-  Plus,
-  PushPin,
-} from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { MeetingsPollsSection } from '@/components/clubs/meetings-polls-section'
-import { relativeTime } from '@/lib/relative-time'
+import type * as W from "@foxing/types";
+import { useMemo, useState } from "react";
+import { View, Text, Pressable, Image, TextInput as RNTextInput } from "react-native";
+import { CaretRight, Sparkle, ChatCircle, BookOpen, Plus, PushPin } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { MeetingsPollsSection } from "@/components/clubs/meetings-polls-section";
+import { relativeTime } from "@/lib/relative-time";
 
 const PACE_LABELS: Record<string, string> = {
-  chill: 'Chill, a chapter a week, no pressure.',
-  steady: 'Steady, two-to-three chapters a week.',
-  fast: 'Fast, daily reading.',
-}
+  chill: "Chill, a chapter a week, no pressure.",
+  steady: "Steady, two-to-three chapters a week.",
+  fast: "Fast, daily reading.",
+};
 
 export function DiscussionsTab({
   club,
@@ -38,33 +25,30 @@ export function DiscussionsTab({
   onNewThread,
   onOpen,
 }: {
-  club: W.ClubInfo
-  threads: W.ClubThreadItem[]
-  canPost: boolean
-  query: string
-  setQuery: (q: string) => void
-  nextUnlock: number | null
-  isLocked: (t: W.ClubThreadItem) => boolean
-  onAiStarter: () => void
-  onNewThread: () => void
-  onOpen: (t: W.ClubThreadItem) => void
+  club: W.ClubInfo;
+  threads: W.ClubThreadItem[];
+  canPost: boolean;
+  query: string;
+  setQuery: (q: string) => void;
+  nextUnlock: number | null;
+  isLocked: (t: W.ClubThreadItem) => boolean;
+  onAiStarter: () => void;
+  onNewThread: () => void;
+  onOpen: (t: W.ClubThreadItem) => void;
 }) {
-  const colors = useColors()
-  const [now] = useState(() => Date.now())
+  const colors = useColors();
+  const [now] = useState(() => Date.now());
   const countdown = useMemo(() => {
-    if (!nextUnlock) return null
-    const ms = nextUnlock - now
-    const d = Math.floor(ms / 86_400_000)
-    const h = Math.floor((ms % 86_400_000) / 3_600_000)
-    return `${d}d ${h}h`
-  }, [nextUnlock, now])
+    if (!nextUnlock) return null;
+    const ms = nextUnlock - now;
+    const d = Math.floor(ms / 86_400_000);
+    const h = Math.floor((ms % 86_400_000) / 3_600_000);
+    return `${d}d ${h}h`;
+  }, [nextUnlock, now]);
   return (
     <View>
       {countdown ? (
-        <View
-          className="p-3 mb-3 rounded-xl"
-          style={{ backgroundColor: colors.brandSubtle }}
-        >
+        <View className="p-3 mb-3 rounded-xl" style={{ backgroundColor: colors.brandSubtle }}>
           <Text
             style={{
               fontFamily: Fonts.uiMedium,
@@ -122,14 +106,14 @@ export function DiscussionsTab({
       ) : null}
 
       {threads.length === 0 ? (
-        <View style={{ paddingVertical: 48, alignItems: 'center' }}>
+        <View style={{ paddingVertical: 48, alignItems: "center" }}>
           <ChatCircle color={colors.textTertiary} size={32} weight="regular" />
           <Text
             style={{
               fontFamily: Fonts.body,
               fontSize: 14,
               color: colors.textTertiary,
-              textAlign: 'center',
+              textAlign: "center",
               marginTop: 12,
               paddingHorizontal: 24,
             }}
@@ -139,65 +123,67 @@ export function DiscussionsTab({
         </View>
       ) : (
         threads.map((t) => {
-          const locked = isLocked(t)
+          const locked = isLocked(t);
           return (
-          <Pressable
-            key={t.id}
-            onPress={() => onOpen(t)}
-            disabled={locked}
-            className="flex-row items-center p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-            style={{ opacity: locked ? 0.55 : 1 }}
-          >
-            <View style={{ flex: 1, paddingRight: 12 }}>
-              <View className="flex-row items-center gap-1">
-                {locked ? <Text style={{ fontSize: 12 }}>🔒</Text> : null}
-                {t.isPinned ? <PushPin color={colors.textTertiary} size={12} weight="fill" /> : null}
-                {t.isAiStarter ? (
-                  <Sparkle color={colors.brandUi} size={12} weight="regular" />
+            <Pressable
+              key={t.id}
+              onPress={() => onOpen(t)}
+              disabled={locked}
+              className="flex-row items-center p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
+              style={{ opacity: locked ? 0.55 : 1 }}
+            >
+              <View style={{ flex: 1, paddingRight: 12 }}>
+                <View className="flex-row items-center gap-1">
+                  {locked ? <Text style={{ fontSize: 12 }}>🔒</Text> : null}
+                  {t.isPinned ? (
+                    <PushPin color={colors.textTertiary} size={12} weight="fill" />
+                  ) : null}
+                  {t.isAiStarter ? (
+                    <Sparkle color={colors.brandUi} size={12} weight="regular" />
+                  ) : null}
+                  <Text
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      fontSize: 15,
+                      color: colors.textPrimary,
+                    }}
+                    numberOfLines={2}
+                  >
+                    {t.title}
+                  </Text>
+                </View>
+                {t.chapter ? (
+                  <Text
+                    style={{
+                      fontFamily: Fonts.ui,
+                      fontSize: 11,
+                      color: colors.textTertiary,
+                      marginTop: 4,
+                    }}
+                    numberOfLines={1}
+                  >
+                    {t.chapter}
+                  </Text>
                 ) : null}
                 <Text
                   style={{
-                    fontFamily: Fonts.uiMedium,
-                    fontSize: 15,
-                    color: colors.textPrimary,
-                  }}
-                  numberOfLines={2}
-                >
-                  {t.title}
-                </Text>
-              </View>
-              {t.chapter ? (
-                <Text
-                  style={{
-                    fontFamily: Fonts.ui,
+                    fontFamily: Fonts.mono,
                     fontSize: 11,
                     color: colors.textTertiary,
                     marginTop: 4,
                   }}
-                  numberOfLines={1}
                 >
-                  {t.chapter}
+                  {t.author ? `${t.author.displayName ?? t.author.username} · ` : ""}
+                  {relativeTime(t.createdAt)}
                 </Text>
-              ) : null}
-              <Text
-                style={{
-                  fontFamily: Fonts.mono,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  marginTop: 4,
-                }}
-              >
-                {t.author ? `${t.author.displayName ?? t.author.username} · ` : ''}
-                {relativeTime(t.createdAt)}
-              </Text>
-            </View>
-            <CaretRight color={colors.textTertiary} size={14} />
-          </Pressable>
-          )
+              </View>
+              <CaretRight color={colors.textTertiary} size={14} />
+            </Pressable>
+          );
         })
       )}
     </View>
-  )
+  );
 }
 
 export function ReadingTab({
@@ -205,17 +191,17 @@ export function ReadingTab({
   signedIn,
   onOpenBook,
 }: {
-  page: W.ClubPage
-  signedIn: boolean
-  onOpenBook: (slug: string) => void
+  page: W.ClubPage;
+  signedIn: boolean;
+  onOpenBook: (slug: string) => void;
 }) {
-  const colors = useColors()
-  const club = page.club
-  const [now] = useState(() => Date.now())
+  const colors = useColors();
+  const club = page.club;
+  const [now] = useState(() => Date.now());
   const scheduleSorted = useMemo(
     () => [...page.schedule].sort((a, b) => a.unlockDate - b.unlockDate),
     [page.schedule],
-  )
+  );
   return (
     <View>
       {club.currentBook ? (
@@ -228,22 +214,22 @@ export function ReadingTab({
               width: 72,
               height: 108,
               borderRadius: 6,
-              overflow: 'hidden',
+              overflow: "hidden",
               backgroundColor: colors.bgSunken,
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             {club.currentBook.coverUrl ? (
               <Image
                 source={{ uri: club.currentBook.coverUrl }}
-                style={{ width: '100%', height: '100%' }}
+                style={{ width: "100%", height: "100%" }}
               />
             ) : (
               <BookOpen color={colors.textTertiary} size={22} />
             )}
           </View>
-          <View style={{ flex: 1, marginLeft: 12, justifyContent: 'center' }}>
+          <View style={{ flex: 1, marginLeft: 12, justifyContent: "center" }}>
             <Text
               style={{ fontFamily: Fonts.uiMedium, fontSize: 16, color: colors.textPrimary }}
               numberOfLines={2}
@@ -264,9 +250,7 @@ export function ReadingTab({
           </View>
         </Pressable>
       ) : (
-        <View
-          className="p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-        >
+        <View className="p-4 mb-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
           <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>
             No book selected yet
           </Text>
@@ -284,31 +268,49 @@ export function ReadingTab({
         </View>
       )}
 
-      <View
-        className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-      >
-        <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary, textTransform: 'uppercase', letterSpacing: 0.6 }}>
-          Pace
-        </Text>
-        <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary, marginTop: 6 }}>
-          {PACE_LABELS[club.readingPace ?? ''] ?? club.readingPace ?? 'Set by the club'}
-        </Text>
-        {club.chaptersPerWeek ? (
-          <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textSecondary, marginTop: 2 }}>
-            {club.chaptersPerWeek} chapter{club.chaptersPerWeek === 1 ? '' : 's'} a week
-          </Text>
-        ) : null}
-      </View>
-
-      <View
-        className="p-4 mt-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-      >
+      <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <Text
           style={{
             fontFamily: Fonts.uiMedium,
             fontSize: 12,
             color: colors.textTertiary,
-            textTransform: 'uppercase',
+            textTransform: "uppercase",
+            letterSpacing: 0.6,
+          }}
+        >
+          Pace
+        </Text>
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 15,
+            color: colors.textPrimary,
+            marginTop: 6,
+          }}
+        >
+          {PACE_LABELS[club.readingPace ?? ""] ?? club.readingPace ?? "Set by the club"}
+        </Text>
+        {club.chaptersPerWeek ? (
+          <Text
+            style={{
+              fontFamily: Fonts.body,
+              fontSize: 13,
+              color: colors.textSecondary,
+              marginTop: 2,
+            }}
+          >
+            {club.chaptersPerWeek} chapter{club.chaptersPerWeek === 1 ? "" : "s"} a week
+          </Text>
+        ) : null}
+      </View>
+
+      <View className="p-4 mt-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
+        <Text
+          style={{
+            fontFamily: Fonts.uiMedium,
+            fontSize: 12,
+            color: colors.textTertiary,
+            textTransform: "uppercase",
             letterSpacing: 0.6,
           }}
         >
@@ -328,15 +330,15 @@ export function ReadingTab({
         ) : (
           <View style={{ marginTop: 8 }}>
             {scheduleSorted.map((s) => {
-              const ts = s.unlockDate
-              const isToday = new Date(ts).toDateString() === new Date(now).toDateString()
-              const status = isToday ? 'Today' : ts > now ? 'Upcoming' : 'Unlocked'
+              const ts = s.unlockDate;
+              const isToday = new Date(ts).toDateString() === new Date(now).toDateString();
+              const status = isToday ? "Today" : ts > now ? "Upcoming" : "Unlocked";
               const statusColor =
-                status === 'Today'
+                status === "Today"
                   ? colors.brandText
-                  : status === 'Upcoming'
+                  : status === "Upcoming"
                     ? colors.textTertiary
-                    : colors.info
+                    : colors.info;
               return (
                 <View
                   key={s.id}
@@ -374,7 +376,7 @@ export function ReadingTab({
                     {status}
                   </Text>
                 </View>
-              )
+              );
             })}
           </View>
         )}
@@ -382,31 +384,31 @@ export function ReadingTab({
 
       <MeetingsPollsSection page={page} signedIn={signedIn} />
     </View>
-  )
+  );
 }
 
 export function MembersTab({
   members,
   onOpenMember,
 }: {
-  members: W.ClubMemberItem[]
-  onOpenMember: (username: string) => void
+  members: W.ClubMemberItem[];
+  onOpenMember: (username: string) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   if (members.length === 0) {
     return (
-      <View style={{ paddingVertical: 32, alignItems: 'center' }}>
+      <View style={{ paddingVertical: 32, alignItems: "center" }}>
         <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
           No members yet.
         </Text>
       </View>
-    )
+    );
   }
   return (
     <View>
       {members.map((m) => {
-        const name = m.profile?.displayName ?? m.profile?.username ?? 'Reader'
-        const initial = (name || '?')[0]?.toUpperCase() ?? '?'
+        const name = m.profile?.displayName ?? m.profile?.username ?? "Reader";
+        const initial = (name || "?")[0]?.toUpperCase() ?? "?";
         return (
           <Pressable
             key={m.userId}
@@ -418,17 +420,17 @@ export function MembersTab({
                 width: 40,
                 height: 40,
                 borderRadius: 20,
-                overflow: 'hidden',
+                overflow: "hidden",
                 backgroundColor: colors.brandSubtle,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
                 marginRight: 12,
               }}
             >
               {m.profile?.avatarUrl ? (
                 <Image
                   source={{ uri: m.profile.avatarUrl }}
-                  style={{ width: '100%', height: '100%' }}
+                  style={{ width: "100%", height: "100%" }}
                 />
               ) : (
                 <Text
@@ -453,19 +455,19 @@ export function MembersTab({
                 style={{ fontFamily: Fonts.mono, fontSize: 11, color: colors.textTertiary }}
                 numberOfLines={1}
               >
-                @{m.profile?.username ?? 'reader'} · {m.role}
+                @{m.profile?.username ?? "reader"} · {m.role}
               </Text>
             </View>
             <CaretRight color={colors.textTertiary} size={14} />
           </Pressable>
-        )
+        );
       })}
     </View>
-  )
+  );
 }
 
 export function AboutTab({ club, threadCount }: { club: W.ClubInfo; threadCount: number }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View>
       {club.description ? (
@@ -493,23 +495,21 @@ export function AboutTab({ club, threadCount }: { club: W.ClubInfo; threadCount:
         </Text>
       )}
 
-      <Row label="Visibility" value={club.visibility === 'public' ? 'Public' : 'Invite-only'} />
+      <Row label="Visibility" value={club.visibility === "public" ? "Public" : "Invite-only"} />
       <Row label="Members" value={`${club.memberCount}`} />
       <Row label="Discussions" value={`${threadCount}`} />
       {club.readingPace ? <Row label="Pace" value={club.readingPace} /> : null}
-      {club.genreTags.length > 0 ? <Row label="Genres" value={club.genreTags.join(', ')} /> : null}
+      {club.genreTags.length > 0 ? <Row label="Genres" value={club.genreTags.join(", ")} /> : null}
       <Row label="Created" value={new Date(club.createdAt).toLocaleDateString()} />
       {club.joinCode ? <Row label="Invite code" value={club.joinCode} /> : null}
     </View>
-  )
+  );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
-    <View
-      className="flex-row items-center justify-between py-3 border-b border-border-subtle-light dark:border-border-subtle-dark"
-    >
+    <View className="flex-row items-center justify-between py-3 border-b border-border-subtle-light dark:border-border-subtle-dark">
       <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
         {label}
       </Text>
@@ -517,5 +517,5 @@ function Row({ label, value }: { label: string; value: string }) {
         {value}
       </Text>
     </View>
-  )
+  );
 }

@@ -1,18 +1,23 @@
-import { NOTIFICATION_LABELS, useMe, useSetNotificationPrefs, useSetVisibility } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useCallback, useEffect, useState } from 'react'
-import { View, Text, Pressable, ScrollView, Share, Modal } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import * as DocumentPicker from 'expo-document-picker'
-import { File, Paths } from 'expo-file-system'
-import * as Sharing from 'expo-sharing'
-import { CaretLeft, Trash } from 'phosphor-react-native'
-import { api } from '@/lib/api'
-import { importCsv, type ImportResult, type ImportSource } from '@/lib/import'
-import { rescheduleAll } from '@/lib/local-notifications'
-import { getHapticsEnabled, setHapticsEnabled } from '@/lib/haptics'
+import {
+  NOTIFICATION_LABELS,
+  useMe,
+  useSetNotificationPrefs,
+  useSetVisibility,
+} from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, Pressable, ScrollView, Share, Modal } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as DocumentPicker from "expo-document-picker";
+import { File, Paths } from "expo-file-system";
+import * as Sharing from "expo-sharing";
+import { CaretLeft, Trash } from "phosphor-react-native";
+import { api } from "@/lib/api";
+import { importCsv, type ImportResult, type ImportSource } from "@/lib/import";
+import { rescheduleAll } from "@/lib/local-notifications";
+import { getHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 import {
   APP_LANGUAGE_OPTIONS,
   DEFAULT_USER_PREFS,
@@ -20,78 +25,95 @@ import {
   getCalibratedWpm,
   getUserPrefs,
   setUserPrefs,
-} from '@/lib/user-prefs'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { LinkRow, MetaHeader, Section, SegmentedRow, TimeRow, ToggleRow } from '@/components/settings/settings-rows'
-import { ChangeEmailSheet, DeleteAccountSheet, LinkedAccounts } from '@/components/settings/account-sheets'
+} from "@/lib/user-prefs";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import {
+  LinkRow,
+  MetaHeader,
+  Section,
+  SegmentedRow,
+  TimeRow,
+  ToggleRow,
+} from "@/components/settings/settings-rows";
+import {
+  ChangeEmailSheet,
+  DeleteAccountSheet,
+  LinkedAccounts,
+} from "@/components/settings/account-sheets";
 
-const APP_VERSION = '1.0.0'
+const APP_VERSION = "1.0.0";
 // Device-only settings. The account's own (visibility, push switches, quiet hours) live
 // on the server through /me, the same ones the web settings page edits.
-const LOCAL_REMINDERS_KEY = 'notification_prefs'
-const READING_DEFAULTS_KEY = 'reading_defaults'
-const A11Y_HIGH_CONTRAST_KEY = 'a11y_high_contrast'
-const A11Y_REDUCE_MOTION_KEY = 'a11y_reduce_motion'
-const TTS_SPEED_KEY = 'tts_speed'
+const LOCAL_REMINDERS_KEY = "notification_prefs";
+const READING_DEFAULTS_KEY = "reading_defaults";
+const A11Y_HIGH_CONTRAST_KEY = "a11y_high_contrast";
+const A11Y_REDUCE_MOTION_KEY = "a11y_reduce_motion";
+const TTS_SPEED_KEY = "tts_speed";
 
 /** What lib/local-notifications schedules on the device. streakAtRisk follows the
  *  account's "streak" push switch, so one toggle governs streak nudges everywhere. */
 interface LocalReminders {
-  master: boolean
-  dailyReminder: boolean
-  reminderTime: string
-  streakAtRisk: boolean
+  master: boolean;
+  dailyReminder: boolean;
+  reminderTime: string;
+  streakAtRisk: boolean;
 }
 
 const DEFAULT_LOCAL_REMINDERS: LocalReminders = {
   master: true,
   dailyReminder: false,
-  reminderTime: '20:00',
+  reminderTime: "20:00",
   streakAtRisk: true,
-}
+};
 
 interface ReadingDefaults {
-  font: 'source-serif' | 'georgia' | 'opendyslexic' | 'system-sans'
-  size: 'S' | 'M' | 'L' | 'XL'
-  theme: 'default' | 'sepia' | 'dark' | 'oled'
-  keepAwake: boolean
+  font: "source-serif" | "georgia" | "opendyslexic" | "system-sans";
+  size: "S" | "M" | "L" | "XL";
+  theme: "default" | "sepia" | "dark" | "oled";
+  keepAwake: boolean;
 }
 
 const DEFAULT_READING_DEFAULTS: ReadingDefaults = {
-  font: 'source-serif',
-  size: 'M',
-  theme: 'default',
+  font: "source-serif",
+  size: "M",
+  theme: "default",
   keepAwake: false,
-}
+};
 
-type Sheet = 'email' | 'delete' | null
+type Sheet = "email" | "delete" | null;
 
 export default function SettingsScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const me = useMe().data
-  const profile = me?.profile ?? null
-  const setVisibility = useSetVisibility()
-  const setPrefs = useSetNotificationPrefs()
+  const colors = useColors();
+  const router = useRouter();
+  const me = useMe().data;
+  const profile = me?.profile ?? null;
+  const setVisibility = useSetVisibility();
+  const setPrefs = useSetNotificationPrefs();
 
-  const [hapticsOn, setHapticsOn] = useState(true)
-  const [readingDefaults, setReadingDefaults] = useState<ReadingDefaults>(DEFAULT_READING_DEFAULTS)
-  const [reminders, setReminders] = useState<LocalReminders>(DEFAULT_LOCAL_REMINDERS)
-  const [userPrefs, setUserPrefsState] = useState<UserPrefs>(DEFAULT_USER_PREFS)
-  const [calibratedWpm, setCalibratedWpmState] = useState<number | null>(null)
-  const [highContrast, setHighContrast] = useState(false)
-  const [reduceMotion, setReduceMotion] = useState(false)
-  const [ttsSpeed, setTtsSpeed] = useState<number>(1.0)
-  const [sheet, setSheet] = useState<Sheet>(null)
-  const [importing, setImporting] = useState<{ source: ImportSource; done: number; total: number } | null>(null)
-  const [importResult, setImportResult] = useState<(ImportResult & { source: ImportSource }) | null>(null)
-  const [exporting, setExporting] = useState(false)
-  const [dataError, setDataError] = useState<string | null>(null)
+  const [hapticsOn, setHapticsOn] = useState(true);
+  const [readingDefaults, setReadingDefaults] = useState<ReadingDefaults>(DEFAULT_READING_DEFAULTS);
+  const [reminders, setReminders] = useState<LocalReminders>(DEFAULT_LOCAL_REMINDERS);
+  const [userPrefs, setUserPrefsState] = useState<UserPrefs>(DEFAULT_USER_PREFS);
+  const [calibratedWpm, setCalibratedWpmState] = useState<number | null>(null);
+  const [highContrast, setHighContrast] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(false);
+  const [ttsSpeed, setTtsSpeed] = useState<number>(1.0);
+  const [sheet, setSheet] = useState<Sheet>(null);
+  const [importing, setImporting] = useState<{
+    source: ImportSource;
+    done: number;
+    total: number;
+  } | null>(null);
+  const [importResult, setImportResult] = useState<
+    (ImportResult & { source: ImportSource }) | null
+  >(null);
+  const [exporting, setExporting] = useState(false);
+  const [dataError, setDataError] = useState<string | null>(null);
 
   // ── Load device settings ─────────────────────────────────────────────────
   useEffect(() => {
-    let mounted = true
+    let mounted = true;
     void (async () => {
       const [local, defaults, hc, rm, tts] = await Promise.all([
         AsyncStorage.getItem(LOCAL_REMINDERS_KEY),
@@ -99,118 +121,136 @@ export default function SettingsScreen() {
         AsyncStorage.getItem(A11Y_HIGH_CONTRAST_KEY),
         AsyncStorage.getItem(A11Y_REDUCE_MOTION_KEY),
         AsyncStorage.getItem(TTS_SPEED_KEY),
-      ])
-      if (!mounted) return
+      ]);
+      if (!mounted) return;
       if (local) {
         try {
-          setReminders({ ...DEFAULT_LOCAL_REMINDERS, ...JSON.parse(local) })
-        } catch { /* ignore */ }
+          setReminders({ ...DEFAULT_LOCAL_REMINDERS, ...JSON.parse(local) });
+        } catch {
+          /* ignore */
+        }
       }
       if (defaults) {
         try {
-          setReadingDefaults({ ...DEFAULT_READING_DEFAULTS, ...JSON.parse(defaults) })
-        } catch { /* ignore */ }
+          setReadingDefaults({ ...DEFAULT_READING_DEFAULTS, ...JSON.parse(defaults) });
+        } catch {
+          /* ignore */
+        }
       }
-      if (hc === 'true') setHighContrast(true)
-      if (rm === 'true') setReduceMotion(true)
+      if (hc === "true") setHighContrast(true);
+      if (rm === "true") setReduceMotion(true);
       if (tts) {
-        const parsed = parseFloat(tts)
-        if (Number.isFinite(parsed) && parsed > 0) setTtsSpeed(parsed)
+        const parsed = parseFloat(tts);
+        if (Number.isFinite(parsed) && parsed > 0) setTtsSpeed(parsed);
       }
-      setHapticsOn(await getHapticsEnabled())
-      setUserPrefsState(await getUserPrefs())
-      setCalibratedWpmState(await getCalibratedWpm())
-    })()
+      setHapticsOn(await getHapticsEnabled());
+      setUserPrefsState(await getUserPrefs());
+      setCalibratedWpmState(await getCalibratedWpm());
+    })();
     return () => {
-      mounted = false
-    }
-  }, [])
+      mounted = false;
+    };
+  }, []);
 
   // ── Persistence helpers ──────────────────────────────────────────────────
   const updateReadingDefaults = useCallback(async (next: ReadingDefaults) => {
-    setReadingDefaults(next)
-    await AsyncStorage.setItem(READING_DEFAULTS_KEY, JSON.stringify(next))
-  }, [])
+    setReadingDefaults(next);
+    await AsyncStorage.setItem(READING_DEFAULTS_KEY, JSON.stringify(next));
+  }, []);
 
   const updateReminders = useCallback(async (next: LocalReminders) => {
-    setReminders(next)
-    await AsyncStorage.setItem(LOCAL_REMINDERS_KEY, JSON.stringify(next))
+    setReminders(next);
+    await AsyncStorage.setItem(LOCAL_REMINDERS_KEY, JSON.stringify(next));
     // Re-program the device's scheduled reminders to match.
-    rescheduleAll().catch(() => {})
-  }, [])
+    rescheduleAll().catch(() => {});
+  }, []);
 
   const updateUserPrefs = useCallback(async (next: UserPrefs) => {
-    setUserPrefsState(next)
-    await setUserPrefs(next)
-  }, [])
+    setUserPrefsState(next);
+    await setUserPrefs(next);
+  }, []);
 
   // ── Account settings (saved on toggle; the cached profile patches at once) ─
-  const visibility = profile?.visibility ?? {}
-  const saveVisibility = (patch: Partial<Required<W.MyProfile['visibility']>>) =>
+  const visibility = profile?.visibility ?? {};
+  const saveVisibility = (patch: Partial<Required<W.MyProfile["visibility"]>>) =>
     setVisibility.fire({
-      profile: visibility.profile ?? 'public',
-      progress: visibility.progress ?? 'public',
-      defaultAnnotation: visibility.defaultAnnotation ?? 'private',
+      profile: visibility.profile ?? "public",
+      progress: visibility.progress ?? "public",
+      defaultAnnotation: visibility.defaultAnnotation ?? "private",
       ...patch,
-    })
+    });
 
-  const categories = profile?.notificationPrefs.categories ?? {}
-  const quietHours = profile?.notificationPrefs.quietHours ?? null
-  const savePrefs = (next: { categories?: Record<string, boolean>; quietHours?: { start: string; end: string } | null }) =>
+  const categories = profile?.notificationPrefs.categories ?? {};
+  const quietHours = profile?.notificationPrefs.quietHours ?? null;
+  const savePrefs = (next: {
+    categories?: Record<string, boolean>;
+    quietHours?: { start: string; end: string } | null;
+  }) =>
     setPrefs.fire({
       categories: next.categories ?? categories,
       quietHours: next.quietHours !== undefined ? next.quietHours : quietHours,
-    })
+    });
   const toggleCategory = (cat: string, on: boolean) => {
-    savePrefs({ categories: { ...categories, [cat]: on } })
-    if (cat === 'streak') void updateReminders({ ...reminders, streakAtRisk: on })
-  }
+    savePrefs({ categories: { ...categories, [cat]: on } });
+    if (cat === "streak") void updateReminders({ ...reminders, streakAtRisk: on });
+  };
 
   // ── Data ─────────────────────────────────────────────────────────────────
   const runImport = async (source: ImportSource) => {
-    if (importing) return
-    setDataError(null)
+    if (importing) return;
+    setDataError(null);
     try {
       const pick = await DocumentPicker.getDocumentAsync({
-        type: ['text/csv', 'text/comma-separated-values', '*/*'],
+        type: ["text/csv", "text/comma-separated-values", "*/*"],
         copyToCacheDirectory: true,
-      })
-      const uri = pick.canceled ? null : pick.assets?.[0]?.uri
-      if (!uri) return
-      const text = await new File(uri).text()
-      setImporting({ source, done: 0, total: 0 })
-      const result = await importCsv(text, source, (done, total) => setImporting({ source, done, total }))
-      setImportResult({ ...result, source })
+      });
+      const uri = pick.canceled ? null : pick.assets?.[0]?.uri;
+      if (!uri) return;
+      const text = await new File(uri).text();
+      setImporting({ source, done: 0, total: 0 });
+      const result = await importCsv(text, source, (done, total) =>
+        setImporting({ source, done, total }),
+      );
+      setImportResult({ ...result, source });
     } catch {
-      setDataError(`Could not read that ${source} export.`)
+      setDataError(`Could not read that ${source} export.`);
     } finally {
-      setImporting(null)
+      setImporting(null);
     }
-  }
+  };
 
   // GET /account/export: the same JSON archive the web page downloads, handed to the share sheet.
   const exportData = async () => {
-    if (exporting) return
-    setExporting(true)
-    setDataError(null)
+    if (exporting) return;
+    setExporting(true);
+    setDataError(null);
     try {
-      const archive = await api.get<unknown>('/account/export')
-      const file = new File(Paths.cache, 'foxing-export.json')
-      file.write(JSON.stringify(archive, null, 2))
-      await Sharing.shareAsync(file.uri, { mimeType: 'application/json', dialogTitle: 'Your Foxing data' })
+      const archive = await api.get<unknown>("/account/export");
+      const file = new File(Paths.cache, "foxing-export.json");
+      file.write(JSON.stringify(archive, null, 2));
+      await Sharing.shareAsync(file.uri, {
+        mimeType: "application/json",
+        dialogTitle: "Your Foxing data",
+      });
     } catch {
-      setDataError('Could not prepare your data export. Check your connection and try again.')
+      setDataError("Could not prepare your data export. Check your connection and try again.");
     } finally {
-      setExporting(false)
+      setExporting(false);
     }
-  }
+  };
 
-  const accountError = setVisibility.error ?? setPrefs.error
+  const accountError = setVisibility.error ?? setPrefs.error;
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2" accessibilityRole="button" accessibilityLabel="Back">
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          className="p-2"
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <Text
@@ -233,34 +273,37 @@ export default function SettingsScreen() {
             label="Font"
             value={readingDefaults.font}
             options={[
-              { value: 'source-serif', label: 'Serif' },
-              { value: 'georgia', label: 'Georgia' },
-              { value: 'opendyslexic', label: 'OpenDys' },
-              { value: 'system-sans', label: 'Sans' },
+              { value: "source-serif", label: "Serif" },
+              { value: "georgia", label: "Georgia" },
+              { value: "opendyslexic", label: "OpenDys" },
+              { value: "system-sans", label: "Sans" },
             ]}
             onChange={(v) =>
-              void updateReadingDefaults({ ...readingDefaults, font: v as ReadingDefaults['font'] })
+              void updateReadingDefaults({ ...readingDefaults, font: v as ReadingDefaults["font"] })
             }
           />
           <SegmentedRow
             label="Size"
             value={readingDefaults.size}
-            options={(['S', 'M', 'L', 'XL'] as const).map((v) => ({ value: v, label: v }))}
+            options={(["S", "M", "L", "XL"] as const).map((v) => ({ value: v, label: v }))}
             onChange={(v) =>
-              void updateReadingDefaults({ ...readingDefaults, size: v as ReadingDefaults['size'] })
+              void updateReadingDefaults({ ...readingDefaults, size: v as ReadingDefaults["size"] })
             }
           />
           <SegmentedRow
             label="Theme"
             value={readingDefaults.theme}
             options={[
-              { value: 'default', label: 'Default' },
-              { value: 'sepia', label: 'Sepia' },
-              { value: 'dark', label: 'Dark' },
-              { value: 'oled', label: 'OLED' },
+              { value: "default", label: "Default" },
+              { value: "sepia", label: "Sepia" },
+              { value: "dark", label: "Dark" },
+              { value: "oled", label: "OLED" },
             ]}
             onChange={(v) =>
-              void updateReadingDefaults({ ...readingDefaults, theme: v as ReadingDefaults['theme'] })
+              void updateReadingDefaults({
+                ...readingDefaults,
+                theme: v as ReadingDefaults["theme"],
+              })
             }
           />
           <ToggleRow
@@ -273,8 +316,8 @@ export default function SettingsScreen() {
             sub="Subtle buzz on highlights, badges, and milestones"
             value={hapticsOn}
             onChange={(v) => {
-              setHapticsOn(v)
-              void setHapticsEnabled(v)
+              setHapticsOn(v);
+              void setHapticsEnabled(v);
             }}
           />
         </Section>
@@ -282,18 +325,18 @@ export default function SettingsScreen() {
         <Section title="Accessibility">
           <SegmentedRow
             label="Text-to-speech speed"
-            value={String(ttsSpeed) as '0.75' | '1' | '1.25' | '1.5'}
+            value={String(ttsSpeed) as "0.75" | "1" | "1.25" | "1.5"}
             options={[
-              { value: '0.75', label: '0.75×' },
-              { value: '1', label: '1×' },
-              { value: '1.25', label: '1.25×' },
-              { value: '1.5', label: '1.5×' },
+              { value: "0.75", label: "0.75×" },
+              { value: "1", label: "1×" },
+              { value: "1.25", label: "1.25×" },
+              { value: "1.5", label: "1.5×" },
             ]}
             onChange={(v) => {
-              const parsed = parseFloat(v)
-              if (!Number.isFinite(parsed) || parsed <= 0) return
-              setTtsSpeed(parsed)
-              void AsyncStorage.setItem(TTS_SPEED_KEY, String(parsed))
+              const parsed = parseFloat(v);
+              if (!Number.isFinite(parsed) || parsed <= 0) return;
+              setTtsSpeed(parsed);
+              void AsyncStorage.setItem(TTS_SPEED_KEY, String(parsed));
             }}
           />
           <ToggleRow
@@ -301,8 +344,8 @@ export default function SettingsScreen() {
             sub="Stronger contrast for text and icons"
             value={highContrast}
             onChange={(v) => {
-              setHighContrast(v)
-              void AsyncStorage.setItem(A11Y_HIGH_CONTRAST_KEY, v ? 'true' : 'false')
+              setHighContrast(v);
+              void AsyncStorage.setItem(A11Y_HIGH_CONTRAST_KEY, v ? "true" : "false");
             }}
           />
           <ToggleRow
@@ -310,8 +353,8 @@ export default function SettingsScreen() {
             sub="Disable page-turn and other animations"
             value={reduceMotion}
             onChange={(v) => {
-              setReduceMotion(v)
-              void AsyncStorage.setItem(A11Y_REDUCE_MOTION_KEY, v ? 'true' : 'false')
+              setReduceMotion(v);
+              void AsyncStorage.setItem(A11Y_REDUCE_MOTION_KEY, v ? "true" : "false");
             }}
           />
         </Section>
@@ -322,7 +365,7 @@ export default function SettingsScreen() {
             value={userPrefs.appLanguage}
             options={APP_LANGUAGE_OPTIONS}
             onChange={(v) =>
-              void updateUserPrefs({ ...userPrefs, appLanguage: v as UserPrefs['appLanguage'] })
+              void updateUserPrefs({ ...userPrefs, appLanguage: v as UserPrefs["appLanguage"] })
             }
           />
           <SegmentedRow
@@ -330,18 +373,18 @@ export default function SettingsScreen() {
             value={userPrefs.aiLanguage}
             options={APP_LANGUAGE_OPTIONS}
             onChange={(v) =>
-              void updateUserPrefs({ ...userPrefs, aiLanguage: v as UserPrefs['aiLanguage'] })
+              void updateUserPrefs({ ...userPrefs, aiLanguage: v as UserPrefs["aiLanguage"] })
             }
           />
           <SegmentedRow
             label="Reading speed unit"
             value={userPrefs.speedUnit}
             options={[
-              { value: 'wpm', label: 'Words/min' },
-              { value: 'pages_per_hour', label: 'Pages/hr' },
+              { value: "wpm", label: "Words/min" },
+              { value: "pages_per_hour", label: "Pages/hr" },
             ]}
             onChange={(v) =>
-              void updateUserPrefs({ ...userPrefs, speedUnit: v as UserPrefs['speedUnit'] })
+              void updateUserPrefs({ ...userPrefs, speedUnit: v as UserPrefs["speedUnit"] })
             }
           />
         </Section>
@@ -353,10 +396,7 @@ export default function SettingsScreen() {
             value={userPrefs.rememberPerBook}
             onChange={(v) => void updateUserPrefs({ ...userPrefs, rememberPerBook: v })}
           />
-          <View
-            className="px-3 py-3 border-t"
-            style={{ borderTopColor: colors.borderSubtle }}
-          >
+          <View className="px-3 py-3 border-t" style={{ borderTopColor: colors.borderSubtle }}>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary }}>
               Reading speed
             </Text>
@@ -369,10 +409,10 @@ export default function SettingsScreen() {
               }}
             >
               {calibratedWpm
-                ? userPrefs.speedUnit === 'pages_per_hour'
+                ? userPrefs.speedUnit === "pages_per_hour"
                   ? `${Math.round((calibratedWpm * 60) / 250)} pages/hr`
                   : `${calibratedWpm} wpm`
-                : 'Still learning your pace…'}
+                : "Still learning your pace…"}
             </Text>
             <Text
               style={{
@@ -390,13 +430,19 @@ export default function SettingsScreen() {
         <MetaHeader>Account</MetaHeader>
 
         {accountError ? (
-          <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, marginTop: 12 }} accessibilityRole="alert">
+          <Text
+            style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, marginTop: 12 }}
+            accessibilityRole="alert"
+          >
             {accountError}
           </Text>
         ) : null}
 
         <Section title="Sign-in">
-          <LinkRow label={me ? `Email: ${me.user.email}` : 'Email'} onPress={() => setSheet('email')} />
+          <LinkRow
+            label={me ? `Email: ${me.user.email}` : "Email"}
+            onPress={() => setSheet("email")}
+          />
           <LinkedAccounts Row={(row) => <LinkRow {...row} />} />
         </Section>
 
@@ -427,12 +473,22 @@ export default function SettingsScreen() {
             label="Quiet hours"
             sub="Pause notifications between these times, in your timezone"
             value={quietHours !== null}
-            onChange={(on) => savePrefs({ quietHours: on ? { start: '22:00', end: '07:00' } : null })}
+            onChange={(on) =>
+              savePrefs({ quietHours: on ? { start: "22:00", end: "07:00" } : null })
+            }
           />
           {quietHours ? (
             <>
-              <TimeRow label="From" value={quietHours.start} onChange={(start) => savePrefs({ quietHours: { ...quietHours, start } })} />
-              <TimeRow label="To" value={quietHours.end} onChange={(end) => savePrefs({ quietHours: { ...quietHours, end } })} />
+              <TimeRow
+                label="From"
+                value={quietHours.start}
+                onChange={(start) => savePrefs({ quietHours: { ...quietHours, start } })}
+              />
+              <TimeRow
+                label="To"
+                value={quietHours.end}
+                onChange={(end) => savePrefs({ quietHours: { ...quietHours, end } })}
+              />
             </>
           ) : null}
         </Section>
@@ -441,42 +497,48 @@ export default function SettingsScreen() {
           <ToggleRow
             label="Public profile"
             sub="Let other readers find your profile, library and reviews"
-            value={visibility.profile !== 'private'}
-            onChange={(on) => saveVisibility({ profile: on ? 'public' : 'private' })}
+            value={visibility.profile !== "private"}
+            onChange={(on) => saveVisibility({ profile: on ? "public" : "private" })}
           />
           <ToggleRow
             label="Share reading progress"
             sub="Show what you are currently reading on your profile"
-            value={visibility.progress !== 'private'}
-            onChange={(on) => saveVisibility({ progress: on ? 'public' : 'private' })}
+            value={visibility.progress !== "private"}
+            onChange={(on) => saveVisibility({ progress: on ? "public" : "private" })}
           />
           <SegmentedRow
             label="New highlights and notes are seen by"
-            value={visibility.defaultAnnotation ?? 'private'}
+            value={visibility.defaultAnnotation ?? "private"}
             options={[
-              { value: 'private', label: 'Only me' },
-              { value: 'friends', label: 'Close friends' },
-              { value: 'public', label: 'Everyone' },
+              { value: "private", label: "Only me" },
+              { value: "friends", label: "Close friends" },
+              { value: "public", label: "Everyone" },
             ]}
             onChange={(v) => saveVisibility({ defaultAnnotation: v })}
           />
         </Section>
 
         <Section title="Data">
-          {(['Goodreads', 'StoryGraph'] as const).map((source) => (
+          {(["Goodreads", "StoryGraph"] as const).map((source) => (
             <LinkRow
               key={source}
               label={
                 importing?.source === source
-                  ? `Importing… ${importing.done} of ${importing.total || '?'}`
+                  ? `Importing… ${importing.done} of ${importing.total || "?"}`
                   : `Import from ${source}`
               }
               onPress={() => void runImport(source)}
             />
           ))}
-          <LinkRow label={exporting ? 'Preparing export…' : 'Export my data'} onPress={() => void exportData()} />
+          <LinkRow
+            label={exporting ? "Preparing export…" : "Export my data"}
+            onPress={() => void exportData()}
+          />
           {dataError ? (
-            <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, padding: 12 }} accessibilityRole="alert">
+            <Text
+              style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, padding: 12 }}
+              accessibilityRole="alert"
+            >
               {dataError}
             </Text>
           ) : null}
@@ -496,7 +558,7 @@ export default function SettingsScreen() {
           </Text>
           <LinkRow
             label="Manage close friends"
-            onPress={() => router.push('/close-friends' as never)}
+            onPress={() => router.push("/close-friends" as never)}
           />
         </Section>
 
@@ -505,31 +567,38 @@ export default function SettingsScreen() {
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary }}>
               Version
             </Text>
-            <Text style={{ fontFamily: Fonts.mono, fontSize: 13, color: colors.textPrimary, marginTop: 4 }}>
+            <Text
+              style={{
+                fontFamily: Fonts.mono,
+                fontSize: 13,
+                color: colors.textPrimary,
+                marginTop: 4,
+              }}
+            >
               {APP_VERSION}
             </Text>
           </View>
           <LinkRow
             label="Privacy policy"
-            onPress={() => void Share.share({ message: 'https://foxing.app/privacy' })}
+            onPress={() => void Share.share({ message: "https://foxing.app/privacy" })}
           />
           <LinkRow
             label="Terms of service"
-            onPress={() => void Share.share({ message: 'https://foxing.app/terms' })}
+            onPress={() => void Share.share({ message: "https://foxing.app/terms" })}
           />
           <LinkRow
             label="Send feedback"
-            onPress={() => void Share.share({ message: 'mailto:feedback@foxing.app' })}
+            onPress={() => void Share.share({ message: "mailto:feedback@foxing.app" })}
           />
           <LinkRow
             label="Rate Foxing"
-            onPress={() => void Share.share({ message: 'https://foxing.app/rate' })}
+            onPress={() => void Share.share({ message: "https://foxing.app/rate" })}
           />
         </Section>
 
         <View style={{ marginTop: 24 }}>
           <Pressable
-            onPress={() => setSheet('delete')}
+            onPress={() => setSheet("delete")}
             accessibilityRole="button"
             accessibilityLabel="Delete account"
             className="flex-row items-center justify-center gap-2 px-3 py-3 rounded-xl border"
@@ -543,8 +612,12 @@ export default function SettingsScreen() {
         </View>
       </ScrollView>
 
-      <ChangeEmailSheet visible={sheet === 'email'} email={me?.user.email ?? ''} onClose={() => setSheet(null)} />
-      <DeleteAccountSheet visible={sheet === 'delete'} onClose={() => setSheet(null)} />
+      <ChangeEmailSheet
+        visible={sheet === "email"}
+        email={me?.user.email ?? ""}
+        onClose={() => setSheet(null)}
+      />
+      <DeleteAccountSheet visible={sheet === "delete"} onClose={() => setSheet(null)} />
 
       <Modal
         visible={importResult !== null}
@@ -579,7 +652,8 @@ export default function SettingsScreen() {
                 marginBottom: 14,
               }}
             >
-              {importResult?.imported ?? 0} books added to your library. {importResult?.skipped ?? 0} not found in the catalog.
+              {importResult?.imported ?? 0} books added to your library.{" "}
+              {importResult?.skipped ?? 0} not found in the catalog.
             </Text>
             <View className="flex-row justify-end">
               <Pressable
@@ -594,5 +668,5 @@ export default function SettingsScreen() {
         </Pressable>
       </Modal>
     </SafeAreaView>
-  )
+  );
 }

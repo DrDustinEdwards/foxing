@@ -1,61 +1,54 @@
-import { useDiary, useLibrary } from '@foxing/client'
-import { useMemo } from 'react'
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  ActivityIndicator,
-  Image,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { CaretLeft, Star, StarHalf, BookOpen } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { useDiary, useLibrary } from "@foxing/client";
+import { useMemo } from "react";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { CaretLeft, Star, StarHalf, BookOpen } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 interface Row {
-  bookId: string
-  slug: string
-  title: string
-  author: string
-  coverUrl: string | null
-  finishedAt: number | null
+  bookId: string;
+  slug: string;
+  title: string;
+  author: string;
+  coverUrl: string | null;
+  finishedAt: number | null;
   /** Half stars, 1 to 10, from the reader's latest diary entry for the book. */
-  ratingHalf: number | null
+  ratingHalf: number | null;
 }
 
 // Every finished book by the year it was finished: the library's finish dates with the
 // rating from the reader's diary.
 export default function ReadingTimelineScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const library = useLibrary()
-  const diary = useDiary()
-  const loading = library.isPending
+  const colors = useColors();
+  const router = useRouter();
+  const library = useLibrary();
+  const diary = useDiary();
+  const loading = library.isPending;
   const rows = useMemo<Row[]>(() => {
-    const rating = new Map<string, number>()
+    const rating = new Map<string, number>();
     // The diary is newest first, so the first rating seen for a book is its latest.
     for (const d of diary.data ?? []) {
-      if (d.ratingHalf && !rating.has(d.bookId)) rating.set(d.bookId, d.ratingHalf)
+      if (d.ratingHalf && !rating.has(d.bookId)) rating.set(d.bookId, d.ratingHalf);
     }
     return (library.data ?? [])
-      .filter((e) => e.status === 'finished')
+      .filter((e) => e.status === "finished")
       .map((e) => ({ ...e, ratingHalf: rating.get(e.bookId) ?? null }))
-      .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0))
-  }, [library.data, diary.data])
+      .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
+  }, [library.data, diary.data]);
 
   // Group by the year each book was finished.
   const grouped = useMemo(() => {
-    const m = new Map<string, Row[]>()
+    const m = new Map<string, Row[]>();
     for (const r of rows) {
-      const year = r.finishedAt ? new Date(r.finishedAt).getFullYear().toString() : 'Undated'
-      const list = m.get(year) ?? []
-      list.push(r)
-      m.set(year, list)
+      const year = r.finishedAt ? new Date(r.finishedAt).getFullYear().toString() : "Undated";
+      const list = m.get(year) ?? [];
+      list.push(r);
+      m.set(year, list);
     }
-    return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]))
-  }, [rows])
+    return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+  }, [rows]);
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -86,7 +79,7 @@ export default function ReadingTimelineScreen() {
               fontFamily: Fonts.body,
               fontSize: 14,
               color: colors.textTertiary,
-              textAlign: 'center',
+              textAlign: "center",
               marginTop: 12,
             }}
           >
@@ -119,21 +112,28 @@ export default function ReadingTimelineScreen() {
                       height: 42,
                       borderRadius: 4,
                       backgroundColor: colors.bgSunken,
-                      overflow: 'hidden',
+                      overflow: "hidden",
                       marginRight: 12,
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     {e.coverUrl ? (
-                      <Image source={{ uri: e.coverUrl }} style={{ width: '100%', height: '100%' }} />
+                      <Image
+                        source={{ uri: e.coverUrl }}
+                        style={{ width: "100%", height: "100%" }}
+                      />
                     ) : (
                       <BookOpen color={colors.textTertiary} size={12} />
                     )}
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
+                      style={{
+                        fontFamily: Fonts.uiMedium,
+                        fontSize: 13,
+                        color: colors.textPrimary,
+                      }}
                       numberOfLines={1}
                     >
                       {e.title}
@@ -149,8 +149,8 @@ export default function ReadingTimelineScreen() {
                     >
                       {e.author}
                       {e.finishedAt
-                        ? ` · ${new Date(e.finishedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`
-                        : ''}
+                        ? ` · ${new Date(e.finishedAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}`
+                        : ""}
                     </Text>
                   </View>
                   {e.ratingHalf ? (
@@ -168,7 +168,7 @@ export default function ReadingTimelineScreen() {
                             key={n}
                             color={colors.brandSecondary}
                             size={10}
-                            weight={n * 2 <= (e.ratingHalf ?? 0) ? 'fill' : 'regular'}
+                            weight={n * 2 <= (e.ratingHalf ?? 0) ? "fill" : "regular"}
                           />
                         ),
                       )}
@@ -181,5 +181,5 @@ export default function ReadingTimelineScreen() {
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }

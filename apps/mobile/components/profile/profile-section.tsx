@@ -1,7 +1,7 @@
-import { View, Text, Pressable } from 'react-native'
-import { CaretRight } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { View, Text, Pressable } from "react-native";
+import { CaretRight } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 export function Section({
   title,
@@ -9,12 +9,12 @@ export function Section({
   onAction,
   children,
 }: {
-  title: string
-  actionLabel?: string
-  onAction?: () => void
-  children: React.ReactNode
+  title: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  children: React.ReactNode;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View style={{ marginBottom: 24 }}>
       <View className="flex-row items-center justify-between mb-3">
@@ -32,5 +32,5 @@ export function Section({
       </View>
       {children}
     </View>
-  )
+  );
 }

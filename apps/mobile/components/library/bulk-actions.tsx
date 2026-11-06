@@ -1,9 +1,9 @@
-import { useColors } from '@/constants/colors'
-import { Pressable, Text } from 'react-native'
-import { Fonts } from '@/constants/fonts'
-import type * as W from '@foxing/types'
-import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import { STATUS_SHELVES } from '@/components/library/library-types'
+import { useColors } from "@/constants/colors";
+import { Pressable, Text } from "react-native";
+import { Fonts } from "@/constants/fonts";
+import type * as W from "@foxing/types";
+import { SheetScaffold } from "@/components/ui/sheet-scaffold";
+import { STATUS_SHELVES } from "@/components/library/library-types";
 
 export function BulkActionButton({
   Icon,
@@ -12,14 +12,14 @@ export function BulkActionButton({
   disabled,
   destructive,
 }: {
-  Icon: React.ComponentType<{ color: string; size: number; weight?: 'regular' | 'fill' }>
-  label: string
-  onPress: () => void
-  disabled?: boolean
-  destructive?: boolean
+  Icon: React.ComponentType<{ color: string; size: number; weight?: "regular" | "fill" }>;
+  label: string;
+  onPress: () => void;
+  disabled?: boolean;
+  destructive?: boolean;
 }) {
-  const colors = useColors()
-  const tint = disabled ? colors.textTertiary : destructive ? colors.error : colors.brandText
+  const colors = useColors();
+  const tint = disabled ? colors.textTertiary : destructive ? colors.error : colors.brandText;
   return (
     <Pressable
       onPress={onPress}
@@ -42,7 +42,7 @@ export function BulkActionButton({
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }
 
 export function BulkShelfPicker({
@@ -50,11 +50,11 @@ export function BulkShelfPicker({
   onClose,
   onPick,
 }: {
-  visible: boolean
-  onClose: () => void
-  onPick: (status: W.ShelfStatus) => void | Promise<void>
+  visible: boolean;
+  onClose: () => void;
+  onPick: (status: W.ShelfStatus) => void | Promise<void>;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <SheetScaffold
       visible={visible}
@@ -67,7 +67,7 @@ export function BulkShelfPicker({
             fontFamily: Fonts.uiMedium,
             fontSize: 11,
             color: colors.textTertiary,
-            textTransform: 'uppercase',
+            textTransform: "uppercase",
             letterSpacing: 0.6,
             paddingHorizontal: 20,
             marginBottom: 8,
@@ -77,23 +77,23 @@ export function BulkShelfPicker({
         </Text>
       }
     >
-          {STATUS_SHELVES.map((s, i) => (
-            <Pressable
-              key={s.status}
-              onPress={() => void onPick(s.status)}
-              accessibilityRole="button"
-              accessibilityLabel={`Move to ${s.label}`}
-              className="px-5 py-4"
-              style={{
-                borderTopWidth: i === 0 ? 0 : 1,
-                borderTopColor: colors.borderSubtle,
-              }}
-            >
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}>
-                {s.label}
-              </Text>
-            </Pressable>
-          ))}
+      {STATUS_SHELVES.map((s, i) => (
+        <Pressable
+          key={s.status}
+          onPress={() => void onPick(s.status)}
+          accessibilityRole="button"
+          accessibilityLabel={`Move to ${s.label}`}
+          className="px-5 py-4"
+          style={{
+            borderTopWidth: i === 0 ? 0 : 1,
+            borderTopColor: colors.borderSubtle,
+          }}
+        >
+          <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}>
+            {s.label}
+          </Text>
+        </Pressable>
+      ))}
     </SheetScaffold>
-  )
+  );
 }

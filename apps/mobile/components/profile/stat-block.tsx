@@ -1,9 +1,9 @@
-import { useColors } from '@/constants/colors'
-import { Text, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
+import { useColors } from "@/constants/colors";
+import { Text, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 export function StatBlock({ heading, children }: { heading: string; children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View>
       <Text
@@ -11,7 +11,7 @@ export function StatBlock({ heading, children }: { heading: string; children: Re
           fontFamily: Fonts.uiMedium,
           fontSize: 11,
           color: colors.textTertiary,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.6,
           marginBottom: 6,
         }}
@@ -22,13 +22,13 @@ export function StatBlock({ heading, children }: { heading: string; children: Re
         {children}
       </View>
     </View>
-  )
+  );
 }
 
 export function StatLine({ value, label }: { value: string; label: string }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
-    <View style={{ paddingHorizontal: 8, paddingVertical: 2, minWidth: '33%' }}>
+    <View style={{ paddingHorizontal: 8, paddingVertical: 2, minWidth: "33%" }}>
       <Text style={{ fontFamily: Fonts.displayBold, fontSize: 18, color: colors.brandText }}>
         {value}
       </Text>
@@ -36,5 +36,5 @@ export function StatLine({ value, label }: { value: string; label: string }) {
         {label}
       </Text>
     </View>
-  )
+  );
 }

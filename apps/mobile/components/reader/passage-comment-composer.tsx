@@ -1,8 +1,8 @@
-import { View, Text, TextInput, Pressable, ActivityIndicator, Switch } from 'react-native'
-import { PaperPlaneRight } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import type * as W from '@foxing/types'
+import { View, Text, TextInput, Pressable, ActivityIndicator, Switch } from "react-native";
+import { PaperPlaneRight } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import type * as W from "@foxing/types";
 
 export function PassageCommentComposer({
   body,
@@ -15,17 +15,17 @@ export function PassageCommentComposer({
   onCancelReply,
   onSend,
 }: {
-  body: string
-  onChangeBody: (text: string) => void
-  hasSpoilers: boolean
-  onChangeHasSpoilers: (value: boolean) => void
-  posting: boolean
-  canPost: boolean
-  replyTo: W.ResolvedComment | null
-  onCancelReply: () => void
-  onSend: () => void
+  body: string;
+  onChangeBody: (text: string) => void;
+  hasSpoilers: boolean;
+  onChangeHasSpoilers: (value: boolean) => void;
+  posting: boolean;
+  canPost: boolean;
+  replyTo: W.ResolvedComment | null;
+  onCancelReply: () => void;
+  onSend: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
 
   return (
     <>
@@ -43,7 +43,7 @@ export function PassageCommentComposer({
             }}
             numberOfLines={1}
           >
-            Replying to {replyTo.author.displayName ?? replyTo.author.username ?? 'reader'}
+            Replying to {replyTo.author.displayName ?? replyTo.author.username ?? "reader"}
           </Text>
           <Pressable onPress={onCancelReply} hitSlop={8}>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}>
@@ -58,10 +58,10 @@ export function PassageCommentComposer({
           onChangeText={onChangeBody}
           placeholder={
             !canPost
-              ? 'Select a club above to post'
+              ? "Select a club above to post"
               : replyTo
-                ? 'Write a reply…'
-                : 'Share your take on this passage…'
+                ? "Write a reply…"
+                : "Share your take on this passage…"
           }
           placeholderTextColor={colors.textTertiary}
           multiline
@@ -88,10 +88,9 @@ export function PassageCommentComposer({
             width: 40,
             height: 40,
             borderRadius: 20,
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor:
-              body.trim() && canPost ? colors.brandUi : colors.bgDisabled,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: body.trim() && canPost ? colors.brandUi : colors.bgDisabled,
             opacity: posting ? 0.7 : 1,
           }}
         >
@@ -120,5 +119,5 @@ export function PassageCommentComposer({
         </Text>
       </View>
     </>
-  )
+  );
 }

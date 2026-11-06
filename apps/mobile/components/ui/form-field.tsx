@@ -1,10 +1,10 @@
-import { View, Text } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { View, Text } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // The labeled text field every form sheet uses.
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
@@ -13,7 +13,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
           fontSize: 12,
           color: colors.textTertiary,
           marginBottom: 6,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.5,
         }}
       >
@@ -21,7 +21,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
       </Text>
       {children}
     </View>
-  )
+  );
 }
 
 export function inputStyle(colors: ReturnType<typeof useColors>) {
@@ -36,5 +36,5 @@ export function inputStyle(colors: ReturnType<typeof useColors>) {
     paddingHorizontal: 12,
     paddingVertical: 10,
     minHeight: 44,
-  } as const
+  } as const;
 }

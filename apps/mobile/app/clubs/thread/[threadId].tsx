@@ -1,98 +1,111 @@
-import { useClubLive, useCreatePost, useRemovePost, useThreadPage } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { View, Text, Pressable, ScrollView, ActivityIndicator, TextInput, Switch, Alert } from 'react-native'
-import { KeyboardStickyView } from 'react-native-keyboard-controller'
-import { Screen } from '@/components/ui/screen'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import { CaretLeft, Sparkle, ChatCircleDots, PaperPlaneRight } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { authClient } from '@/lib/api'
-import { PostCard } from '@/components/clubs/post-card'
+import { useClubLive, useCreatePost, useRemovePost, useThreadPage } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useCallback, useMemo, useRef, useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+  TextInput,
+  Switch,
+  Alert,
+} from "react-native";
+import { KeyboardStickyView } from "react-native-keyboard-controller";
+import { Screen } from "@/components/ui/screen";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { CaretLeft, Sparkle, ChatCircleDots, PaperPlaneRight } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { authClient } from "@/lib/api";
+import { PostCard } from "@/components/clubs/post-card";
 
 // A club thread: GET /threads/:id, kept fresh by the club's live socket while you
 // are a member, so new posts appear without a reload.
 export default function ThreadScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const { threadId } = useLocalSearchParams<{ threadId: string }>()
-  const session = authClient.useSession()
-  const viewerId = session.data?.user.id ?? null
-  const threadPage = useThreadPage(threadId ?? '')
-  const page = threadPage.data
-  useClubLive(page?.isMember ? page.club.id : null)
-  const createPost = useCreatePost()
-  const removePost = useRemovePost()
-  const posting = createPost.pending
-  const [body, setBody] = useState('')
-  const [hasSpoilers, setHasSpoilers] = useState(false)
-  const [replyTo, setReplyTo] = useState<W.ClubPostItem | null>(null)
+  const colors = useColors();
+  const router = useRouter();
+  const { threadId } = useLocalSearchParams<{ threadId: string }>();
+  const session = authClient.useSession();
+  const viewerId = session.data?.user.id ?? null;
+  const threadPage = useThreadPage(threadId ?? "");
+  const page = threadPage.data;
+  useClubLive(page?.isMember ? page.club.id : null);
+  const createPost = useCreatePost();
+  const removePost = useRemovePost();
+  const posting = createPost.pending;
+  const [body, setBody] = useState("");
+  const [hasSpoilers, setHasSpoilers] = useState(false);
+  const [replyTo, setReplyTo] = useState<W.ClubPostItem | null>(null);
   // Per-post reveal state for spoiler bodies. Defaults to hidden.
-  const [revealed, setRevealed] = useState<Set<string>>(new Set())
-  const scrollRef = useRef<ScrollView>(null)
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
+  const scrollRef = useRef<ScrollView>(null);
 
   // Arrange posts: top-level first, then nest direct replies under each.
   // We only render ONE level of nesting to keep the layout sane.
   const grouped = useMemo(() => {
-    const posts = page?.posts ?? []
-    const topLevel = posts.filter((p) => !p.parentPostId)
-    const childrenByParent = new Map<string, W.ClubPostItem[]>()
+    const posts = page?.posts ?? [];
+    const topLevel = posts.filter((p) => !p.parentPostId);
+    const childrenByParent = new Map<string, W.ClubPostItem[]>();
     for (const p of posts) {
       if (p.parentPostId) {
-        const list = childrenByParent.get(p.parentPostId) ?? []
-        list.push(p)
-        childrenByParent.set(p.parentPostId, list)
+        const list = childrenByParent.get(p.parentPostId) ?? [];
+        list.push(p);
+        childrenByParent.set(p.parentPostId, list);
       }
     }
-    return topLevel.map((p) => ({ post: p, replies: childrenByParent.get(p.id) ?? [] }))
-  }, [page?.posts])
+    return topLevel.map((p) => ({ post: p, replies: childrenByParent.get(p.id) ?? [] }));
+  }, [page?.posts]);
 
   const send = useCallback(async () => {
-    if (!threadId || !body.trim() || posting) return
+    if (!threadId || !body.trim() || posting) return;
     const ok = await createPost.run({
       threadId,
       parentPostId: replyTo?.id,
       content: body.trim(),
       hasSpoiler: hasSpoilers,
-    })
+    });
     if (ok) {
-      setBody('')
-      setHasSpoilers(false)
-      setReplyTo(null)
+      setBody("");
+      setHasSpoilers(false);
+      setReplyTo(null);
       // Scroll to end so the user sees their own post; small timeout lets
       // the new layout pass settle.
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300)
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
     }
-  }, [body, createPost, hasSpoilers, posting, replyTo, threadId])
+  }, [body, createPost, hasSpoilers, posting, replyTo, threadId]);
 
   // Long-press your own post to delete it.
   const openPostActions = useCallback(
     (post: W.ClubPostItem) => {
-      if (!threadId || !viewerId || post.author?.id !== viewerId) return
-      Alert.alert('Delete this post?', undefined, [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => removePost.fire({ threadId, postId: post.id }) },
-      ])
+      if (!threadId || !viewerId || post.author?.id !== viewerId) return;
+      Alert.alert("Delete this post?", undefined, [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => removePost.fire({ threadId, postId: post.id }),
+        },
+      ]);
     },
     [removePost, threadId, viewerId],
-  )
+  );
 
   const toggleReveal = useCallback((postId: string) => {
     setRevealed((prev) => {
-      const next = new Set(prev)
-      if (next.has(postId)) next.delete(postId)
-      else next.add(postId)
-      return next
-    })
-  }, [])
+      const next = new Set(prev);
+      if (next.has(postId)) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+  }, []);
 
   if (threadPage.isPending) {
     return (
       <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
       </Screen>
-    )
+    );
   }
   if (!page) {
     return (
@@ -102,17 +115,17 @@ export default function ThreadScreen() {
             fontFamily: Fonts.ui,
             fontSize: 14,
             color: colors.textTertiary,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           Thread not found.
         </Text>
       </Screen>
-    )
+    );
   }
 
-  const thread = page.thread
-  const canPost = page.isMember
+  const thread = page.thread;
+  const canPost = page.isMember;
 
   return (
     <Screen>
@@ -152,60 +165,60 @@ export default function ThreadScreen() {
         </View>
       </View>
 
-        <ScrollView
-          ref={scrollRef}
-          style={{ flex: 1 }}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, paddingTop: 8 }}
-        >
-          {grouped.length === 0 ? (
-            <View style={{ paddingVertical: 48, alignItems: 'center' }}>
-              <ChatCircleDots color={colors.textTertiary} size={32} weight="regular" />
-              <Text
-                style={{
-                  fontFamily: Fonts.body,
-                  fontSize: 13,
-                  color: colors.textTertiary,
-                  marginTop: 12,
-                }}
-              >
-                Be the first to reply.
-              </Text>
+      <ScrollView
+        ref={scrollRef}
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, paddingTop: 8 }}
+      >
+        {grouped.length === 0 ? (
+          <View style={{ paddingVertical: 48, alignItems: "center" }}>
+            <ChatCircleDots color={colors.textTertiary} size={32} weight="regular" />
+            <Text
+              style={{
+                fontFamily: Fonts.body,
+                fontSize: 13,
+                color: colors.textTertiary,
+                marginTop: 12,
+              }}
+            >
+              Be the first to reply.
+            </Text>
+          </View>
+        ) : (
+          grouped.map(({ post, replies }) => (
+            <View key={post.id}>
+              <PostCard
+                post={post}
+                revealed={revealed.has(post.id)}
+                canReply={canPost}
+                onToggleReveal={() => toggleReveal(post.id)}
+                onReply={() => setReplyTo(post)}
+                onOpenAuthor={(username) => router.push(`/u/${username}` as never)}
+                onLongPress={() => openPostActions(post)}
+              />
+              {replies.length > 0 ? (
+                <View style={{ marginLeft: 24 }}>
+                  {replies.map((r) => (
+                    <PostCard
+                      key={r.id}
+                      post={r}
+                      nested
+                      revealed={revealed.has(r.id)}
+                      canReply={false}
+                      onToggleReveal={() => toggleReveal(r.id)}
+                      onOpenAuthor={(username) => router.push(`/u/${username}` as never)}
+                      onLongPress={() => openPostActions(r)}
+                    />
+                  ))}
+                </View>
+              ) : null}
             </View>
-          ) : (
-            grouped.map(({ post, replies }) => (
-              <View key={post.id}>
-                <PostCard
-                  post={post}
-                  revealed={revealed.has(post.id)}
-                  canReply={canPost}
-                  onToggleReveal={() => toggleReveal(post.id)}
-                  onReply={() => setReplyTo(post)}
-                  onOpenAuthor={(username) => router.push(`/u/${username}` as never)}
-                  onLongPress={() => openPostActions(post)}
-                />
-                {replies.length > 0 ? (
-                  <View style={{ marginLeft: 24 }}>
-                    {replies.map((r) => (
-                      <PostCard
-                        key={r.id}
-                        post={r}
-                        nested
-                        revealed={revealed.has(r.id)}
-                        canReply={false}
-                        onToggleReveal={() => toggleReveal(r.id)}
-                        onOpenAuthor={(username) => router.push(`/u/${username}` as never)}
-                        onLongPress={() => openPostActions(r)}
-                      />
-                    ))}
-                  </View>
-                ) : null}
-              </View>
-            ))
-          )}
-        </ScrollView>
+          ))
+        )}
+      </ScrollView>
 
-        {canPost ? (
-          <KeyboardStickyView>
+      {canPost ? (
+        <KeyboardStickyView>
           <View
             className="border-t border-border-subtle-light dark:border-border-subtle-dark"
             style={{ backgroundColor: colors.bgSurface, padding: 10 }}
@@ -216,20 +229,29 @@ export default function ThreadScreen() {
                 style={{ backgroundColor: colors.bgSelected }}
               >
                 <Text
-                  style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textSecondary, flex: 1 }}
+                  style={{
+                    fontFamily: Fonts.ui,
+                    fontSize: 11,
+                    color: colors.textSecondary,
+                    flex: 1,
+                  }}
                   numberOfLines={1}
                 >
-                  Replying to {replyTo.author?.displayName ?? replyTo.author?.username ?? 'reader'}
+                  Replying to {replyTo.author?.displayName ?? replyTo.author?.username ?? "reader"}
                 </Text>
                 <Pressable onPress={() => setReplyTo(null)} hitSlop={8}>
-                  <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}>
+                  <Text
+                    style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandText }}
+                  >
                     Cancel
                   </Text>
                 </Pressable>
               </View>
             ) : null}
             {createPost.error ? (
-              <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.error, marginBottom: 6 }}>
+              <Text
+                style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.error, marginBottom: 6 }}
+              >
                 {createPost.error}
               </Text>
             ) : null}
@@ -237,7 +259,7 @@ export default function ThreadScreen() {
               <TextInput
                 value={body}
                 onChangeText={setBody}
-                placeholder={replyTo ? 'Write a reply…' : 'Share your thoughts…'}
+                placeholder={replyTo ? "Write a reply…" : "Share your thoughts…"}
                 placeholderTextColor={colors.textTertiary}
                 multiline
                 style={{
@@ -262,8 +284,8 @@ export default function ThreadScreen() {
                   width: 40,
                   height: 40,
                   borderRadius: 20,
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  alignItems: "center",
+                  justifyContent: "center",
                   backgroundColor: body.trim() ? colors.brandUi : colors.bgDisabled,
                   opacity: posting ? 0.7 : 1,
                 }}
@@ -282,14 +304,19 @@ export default function ThreadScreen() {
                 trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
               />
               <Text
-                style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary, marginLeft: 8 }}
+                style={{
+                  fontFamily: Fonts.ui,
+                  fontSize: 12,
+                  color: colors.textSecondary,
+                  marginLeft: 8,
+                }}
               >
                 Contains spoilers
               </Text>
             </View>
           </View>
-          </KeyboardStickyView>
-        ) : null}
+        </KeyboardStickyView>
+      ) : null}
     </Screen>
-  )
+  );
 }

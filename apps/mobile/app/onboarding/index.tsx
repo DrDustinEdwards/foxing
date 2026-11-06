@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -7,98 +7,98 @@ import {
   TextInput,
   Image,
   ActivityIndicator,
-} from 'react-native'
-import { Screen } from '@/components/ui/screen'
-import { Check, CaretLeft, CaretRight, BookOpen, X as XIcon } from 'phosphor-react-native'
-import { errorMessage, keys, useApi, useOnboarding, useUsernameAvailable } from '@foxing/client'
-import type { BookCard } from '@foxing/types'
-import { useQueryClient } from '@tanstack/react-query'
-import { authClient } from '@/lib/api'
-import { Colors, useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+} from "react-native";
+import { Screen } from "@/components/ui/screen";
+import { Check, CaretLeft, CaretRight, BookOpen, X as XIcon } from "phosphor-react-native";
+import { errorMessage, keys, useApi, useOnboarding, useUsernameAvailable } from "@foxing/client";
+import type { BookCard } from "@foxing/types";
+import { useQueryClient } from "@tanstack/react-query";
+import { authClient } from "@/lib/api";
+import { Colors, useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // The profile is created on the last step, so a reader who quits halfway comes back to
 // this flow (the root layout sends anyone signed in without a profile here).
-type StepId = 'welcome' | 'profile' | 'taste' | 'first_book'
-const STEP_ORDER: StepId[] = ['welcome', 'profile', 'taste', 'first_book']
+type StepId = "welcome" | "profile" | "taste" | "first_book";
+const STEP_ORDER: StepId[] = ["welcome", "profile", "taste", "first_book"];
 
-const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/
+const USERNAME_RE = /^[a-z0-9][a-z0-9_-]{1,28}[a-z0-9]$/;
 
 export default function OnboardingScreen() {
-  const colors = useColors()
-  const api = useApi()
-  const qc = useQueryClient()
-  const { data: session } = authClient.useSession()
-  const onboarding = useOnboarding()
-  const [step, setStep] = useState<StepId>('welcome')
-  const idx = STEP_ORDER.indexOf(step)
-  const [submitting, setSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const colors = useColors();
+  const api = useApi();
+  const qc = useQueryClient();
+  const { data: session } = authClient.useSession();
+  const onboarding = useOnboarding();
+  const [step, setStep] = useState<StepId>("welcome");
+  const idx = STEP_ORDER.indexOf(step);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Persisted draft across steps.
-  const [username, setUsername] = useState('')
-  const [displayName, setDisplayName] = useState(session?.user?.name ?? '')
-  const [genres, setGenres] = useState<Set<string>>(new Set())
-  const [goalBooks, setGoalBooks] = useState<string>('12')
-  const [picked, setPicked] = useState<Set<string>>(new Set())
+  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState(session?.user?.name ?? "");
+  const [genres, setGenres] = useState<Set<string>>(new Set());
+  const [goalBooks, setGoalBooks] = useState<string>("12");
+  const [picked, setPicked] = useState<Set<string>>(new Set());
 
-  const handle = username.trim().toLowerCase()
-  const handleOk = USERNAME_RE.test(handle)
-  const available = useUsernameAvailable(handle, handleOk)
+  const handle = username.trim().toLowerCase();
+  const handleOk = USERNAME_RE.test(handle);
+  const available = useUsernameAvailable(handle, handleOk);
 
   // One pass at the end: the profile, then the year goal and the picked books. The
   // root layout moves on to the tabs once "me" shows the profile.
   const finish = useCallback(
     async (save: boolean) => {
-      setSubmitting(true)
-      setError(null)
+      setSubmitting(true);
+      setError(null);
       try {
-        await api.post('/me/onboard', {
+        await api.post("/me/onboard", {
           username: handle,
           displayName: displayName.trim() || undefined,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           favoriteGenres: save ? [...genres] : undefined,
-        })
-        const target = parseInt(goalBooks, 10)
+        });
+        const target = parseInt(goalBooks, 10);
         await Promise.all([
           save && isValidGoal(goalBooks)
-            ? api.post('/goals', {
-                type: 'books',
+            ? api.post("/goals", {
+                type: "books",
                 target,
-                periodType: 'year',
+                periodType: "year",
                 year: new Date().getFullYear(),
               })
             : null,
-          ...(save ? [...picked] : []).map((id) => api.put(`/library/${id}`, { status: 'want' })),
-        ])
-        await qc.invalidateQueries({ queryKey: keys.me })
+          ...(save ? [...picked] : []).map((id) => api.put(`/library/${id}`, { status: "want" })),
+        ]);
+        await qc.invalidateQueries({ queryKey: keys.me });
       } catch (e) {
-        setError(errorMessage(e))
-        setSubmitting(false)
+        setError(errorMessage(e));
+        setSubmitting(false);
       }
     },
     [api, displayName, genres, goalBooks, handle, picked, qc],
-  )
+  );
 
   const next = useCallback(async () => {
-    const i = STEP_ORDER.indexOf(step)
-    if (i === STEP_ORDER.length - 1) await finish(true)
-    else setStep(STEP_ORDER[i + 1])
-  }, [finish, step])
+    const i = STEP_ORDER.indexOf(step);
+    if (i === STEP_ORDER.length - 1) await finish(true);
+    else setStep(STEP_ORDER[i + 1]);
+  }, [finish, step]);
 
   const back = useCallback(() => {
-    const i = STEP_ORDER.indexOf(step)
-    if (i > 0) setStep(STEP_ORDER[i - 1])
-  }, [step])
+    const i = STEP_ORDER.indexOf(step);
+    if (i > 0) setStep(STEP_ORDER[i - 1]);
+  }, [step]);
 
   const canAdvance =
-    step === 'welcome' ||
-    (step === 'profile' && handleOk && available === true) ||
-    (step === 'taste' && genres.size >= 2 && isValidGoal(goalBooks)) ||
-    step === 'first_book'
+    step === "welcome" ||
+    (step === "profile" && handleOk && available === true) ||
+    (step === "taste" && genres.size >= 2 && isValidGoal(goalBooks)) ||
+    step === "first_book";
 
-  if (step === 'welcome') {
-    return <Welcome onStart={() => void next()} />
+  if (step === "welcome") {
+    return <Welcome onStart={() => void next()} />;
   }
 
   return (
@@ -112,10 +112,7 @@ export default function OnboardingScreen() {
           accessibilityRole="button"
           accessibilityLabel="Back"
         >
-          <CaretLeft
-            color={idx === 0 ? colors.borderSubtle : colors.textPrimary}
-            size={20}
-          />
+          <CaretLeft color={idx === 0 ? colors.borderSubtle : colors.textPrimary} size={20} />
         </Pressable>
         <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary }}>
           {idx + 1} of {STEP_ORDER.length}
@@ -137,15 +134,25 @@ export default function OnboardingScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
-        {step === 'profile' ? (
+        {step === "profile" ? (
           <ProfileStep
             username={username}
             setUsername={setUsername}
             displayName={displayName}
             setDisplayName={setDisplayName}
-            status={!handle ? null : !handleOk ? 'invalid' : available === null ? 'checking' : available ? 'available' : 'taken'}
+            status={
+              !handle
+                ? null
+                : !handleOk
+                  ? "invalid"
+                  : available === null
+                    ? "checking"
+                    : available
+                      ? "available"
+                      : "taken"
+            }
           />
-        ) : step === 'taste' ? (
+        ) : step === "taste" ? (
           <TasteStep
             genres={genres}
             setGenres={setGenres}
@@ -173,25 +180,23 @@ export default function OnboardingScreen() {
         ) : null}
       </ScrollView>
 
-      <View
-        className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
-      >
+      <View className="flex-row items-center justify-between px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark">
         <Pressable
           onPress={() => {
             // Skip moves on without this step's picks; the profile itself is required.
-            const i = STEP_ORDER.indexOf(step)
-            if (i === STEP_ORDER.length - 1) void finish(false)
-            else setStep(STEP_ORDER[i + 1])
+            const i = STEP_ORDER.indexOf(step);
+            if (i === STEP_ORDER.length - 1) void finish(false);
+            else setStep(STEP_ORDER[i + 1]);
           }}
-          disabled={step === 'profile' || submitting}
+          disabled={step === "profile" || submitting}
           accessibilityRole="button"
           accessibilityLabel="Skip step"
-          accessibilityState={{ disabled: step === 'profile' || submitting }}
+          accessibilityState={{ disabled: step === "profile" || submitting }}
           className="px-4 py-2"
-          style={{ opacity: step === 'profile' ? 0 : 1 }}
+          style={{ opacity: step === "profile" ? 0 : 1 }}
         >
           <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textTertiary, fontSize: 13 }}>
-            {step === 'first_book' ? 'Skip for now' : 'Skip'}
+            {step === "first_book" ? "Skip for now" : "Skip"}
           </Text>
         </Pressable>
         <Pressable
@@ -199,7 +204,7 @@ export default function OnboardingScreen() {
           disabled={!canAdvance || submitting}
           accessibilityRole="button"
           accessibilityLabel={
-            idx === STEP_ORDER.length - 1 ? 'Finish onboarding' : 'Continue to next step'
+            idx === STEP_ORDER.length - 1 ? "Finish onboarding" : "Continue to next step"
           }
           accessibilityState={{ disabled: !canAdvance || submitting, busy: submitting }}
           className="flex-row items-center gap-1 px-5 py-2 rounded-full"
@@ -213,7 +218,7 @@ export default function OnboardingScreen() {
           ) : (
             <>
               <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                {idx === STEP_ORDER.length - 1 ? 'Start reading' : 'Next'}
+                {idx === STEP_ORDER.length - 1 ? "Start reading" : "Next"}
               </Text>
               {idx !== STEP_ORDER.length - 1 ? (
                 <CaretRight color={colors.textOnBrand} size={14} weight="bold" />
@@ -223,23 +228,23 @@ export default function OnboardingScreen() {
         </Pressable>
       </View>
     </Screen>
-  )
+  );
 }
 
 function isValidGoal(value: string): boolean {
-  const n = parseInt(value, 10)
-  return Number.isFinite(n) && n >= 1 && n <= 200
+  const n = parseInt(value, 10);
+  return Number.isFinite(n) && n >= 1 && n <= 200;
 }
 
 // ── Welcome ──────────────────────────────────────────────────────────────
 
 // Pinned-dark brand splash: dark-scheme tokens regardless of the system scheme.
-const C = Colors.dark
+const C = Colors.dark;
 
 function Welcome({ onStart }: { onStart: () => void }) {
   return (
     <View style={{ flex: 1, backgroundColor: C.bgBase }}>
-      <Screen style={{ alignItems: 'center', justifyContent: 'center', paddingHorizontal: 32 }}>
+      <Screen style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 32 }}>
         <Text
           style={{
             fontFamily: Fonts.display,
@@ -257,7 +262,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
             fontSize: 18,
             color: C.textPrimary,
             marginBottom: 48,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           reading, together.
@@ -279,7 +284,7 @@ function Welcome({ onStart }: { onStart: () => void }) {
         </Pressable>
       </Screen>
     </View>
-  )
+  );
 }
 
 // ── Taste (genres + reading goal) ────────────────────────────────────────
@@ -291,36 +296,36 @@ function TasteStep({
   goalBooks,
   setGoalBooks,
 }: {
-  genres: Set<string>
-  setGenres: (s: Set<string>) => void
-  options: string[]
-  goalBooks: string
-  setGoalBooks: (v: string) => void
+  genres: Set<string>;
+  setGenres: (s: Set<string>) => void;
+  options: string[];
+  goalBooks: string;
+  setGoalBooks: (v: string) => void;
 }) {
-  const colors = useColors()
-  const [year] = useState(() => new Date().getFullYear())
+  const colors = useColors();
+  const [year] = useState(() => new Date().getFullYear());
   return (
     <View>
       <Heading>What do you love to read?</Heading>
       <Sub>Pick at least two so we can tailor your feed.</Sub>
       <View className="flex-row flex-wrap" style={{ gap: 10 }}>
         {options.map((g) => {
-          const active = genres.has(g)
+          const active = genres.has(g);
           return (
             <Pressable
               key={g}
               onPress={() => {
-                const next = new Set(genres)
-                if (next.has(g)) next.delete(g)
-                else next.add(g)
-                setGenres(next)
+                const next = new Set(genres);
+                if (next.has(g)) next.delete(g);
+                else next.add(g);
+                setGenres(next);
               }}
               accessibilityRole="checkbox"
               accessibilityState={{ checked: active }}
               accessibilityLabel={g}
               className="flex-row items-center justify-center px-4 py-4 rounded-2xl border"
               style={{
-                width: '47%',
+                width: "47%",
                 backgroundColor: active ? colors.bgSelected : colors.bgSurface,
                 borderColor: active ? colors.borderBrand : colors.borderSubtle,
               }}
@@ -332,14 +337,14 @@ function TasteStep({
                   fontSize: 13,
                   color: active ? colors.brandText : colors.textPrimary,
                   marginLeft: active ? 6 : 0,
-                  textAlign: 'center',
+                  textAlign: "center",
                 }}
                 numberOfLines={2}
               >
                 {g}
               </Text>
             </Pressable>
-          )
+          );
         })}
       </View>
 
@@ -352,7 +357,7 @@ function TasteStep({
           </Text>
           <TextInput
             value={goalBooks}
-            onChangeText={(t) => setGoalBooks(t.replace(/[^0-9]/g, '').slice(0, 3))}
+            onChangeText={(t) => setGoalBooks(t.replace(/[^0-9]/g, "").slice(0, 3))}
             keyboardType="number-pad"
             maxLength={3}
             accessibilityLabel="Books per year goal"
@@ -367,7 +372,7 @@ function TasteStep({
               paddingHorizontal: 12,
               paddingVertical: 8,
               minWidth: 70,
-              textAlign: 'center',
+              textAlign: "center",
             }}
           />
           <Text style={{ fontFamily: Fonts.body, fontSize: 15, color: colors.textSecondary }}>
@@ -376,7 +381,7 @@ function TasteStep({
         </View>
       </View>
     </View>
-  )
+  );
 }
 
 // ── Profile (username + display name) ────────────────────────────────────
@@ -388,29 +393,31 @@ function ProfileStep({
   setDisplayName,
   status,
 }: {
-  username: string
-  setUsername: (v: string) => void
-  displayName: string
-  setDisplayName: (v: string) => void
-  status: 'invalid' | 'checking' | 'available' | 'taken' | null
+  username: string;
+  setUsername: (v: string) => void;
+  displayName: string;
+  setDisplayName: (v: string) => void;
+  status: "invalid" | "checking" | "available" | "taken" | null;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   const input =
-    'font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark'
+    "font-ui rounded-xl px-4 py-4 text-base bg-bg-surface-light dark:bg-bg-surface-dark text-text-primary-light dark:text-text-primary-dark border border-border-interactive-light dark:border-border-interactive-dark";
   const note =
-    status === 'invalid'
-      ? 'Use 3 to 30 lowercase letters, numbers, _ or -, not starting or ending with _ or -.'
-      : status === 'checking'
-        ? 'Checking...'
-        : status === 'available'
+    status === "invalid"
+      ? "Use 3 to 30 lowercase letters, numbers, _ or -, not starting or ending with _ or -."
+      : status === "checking"
+        ? "Checking..."
+        : status === "available"
           ? `${username.trim().toLowerCase()} is available`
-          : status === 'taken'
+          : status === "taken"
             ? `${username.trim().toLowerCase()} is taken`
-            : null
+            : null;
   return (
     <View>
       <Heading>Make your profile</Heading>
-      <Sub>Your username is how other readers find you. You can change your display name later.</Sub>
+      <Sub>
+        Your username is how other readers find you. You can change your display name later.
+      </Sub>
       <View className="gap-4">
         <View className="gap-1">
           <TextInput
@@ -429,11 +436,11 @@ function ProfileStep({
             <Text
               accessibilityLiveRegion="polite"
               className={`font-ui text-xs px-2 ${
-                status === 'available'
-                  ? 'text-success-light dark:text-success-dark'
-                  : status === 'checking'
-                    ? 'text-text-tertiary-light dark:text-text-tertiary-dark'
-                    : 'text-error-light dark:text-error-dark'
+                status === "available"
+                  ? "text-success-light dark:text-success-dark"
+                  : status === "checking"
+                    ? "text-text-tertiary-light dark:text-text-tertiary-dark"
+                    : "text-error-light dark:text-error-dark"
               }`}
             >
               {note}
@@ -451,7 +458,7 @@ function ProfileStep({
         />
       </View>
     </View>
-  )
+  );
 }
 
 // ── First Book ───────────────────────────────────────────────────────────
@@ -462,12 +469,12 @@ function FirstBookStep({
   picked,
   setPicked,
 }: {
-  books: BookCard[]
-  loading: boolean
-  picked: Set<string>
-  setPicked: (s: Set<string>) => void
+  books: BookCard[];
+  loading: boolean;
+  picked: Set<string>;
+  setPicked: (s: Set<string>) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View>
       <Heading>Start with a great book</Heading>
@@ -481,22 +488,22 @@ function FirstBookStep({
       ) : (
         <View className="flex-row flex-wrap" style={{ gap: 10 }}>
           {books.map((b) => {
-            const active = picked.has(b.id)
+            const active = picked.has(b.id);
             return (
               <Pressable
                 key={b.id}
                 onPress={() => {
-                  const next = new Set(picked)
-                  if (next.has(b.id)) next.delete(b.id)
-                  else next.add(b.id)
-                  setPicked(next)
+                  const next = new Set(picked);
+                  if (next.has(b.id)) next.delete(b.id);
+                  else next.add(b.id);
+                  setPicked(next);
                 }}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: active }}
                 accessibilityLabel={`${b.title} by ${b.author}`}
                 className="rounded-xl border overflow-hidden"
                 style={{
-                  width: '47%',
+                  width: "47%",
                   backgroundColor: active ? colors.bgSelected : colors.bgSurface,
                   borderColor: active ? colors.borderBrand : colors.borderSubtle,
                 }}
@@ -505,14 +512,14 @@ function FirstBookStep({
                   style={{
                     aspectRatio: 2 / 3,
                     backgroundColor: colors.bgSunken,
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   {b.coverUrl ? (
                     <Image
                       source={{ uri: b.coverUrl }}
-                      style={{ width: '100%', height: '100%' }}
+                      style={{ width: "100%", height: "100%" }}
                       accessibilityRole="image"
                       accessibilityLabel={`${b.title} cover`}
                     />
@@ -541,33 +548,33 @@ function FirstBookStep({
                 {active ? (
                   <View
                     style={{
-                      position: 'absolute',
+                      position: "absolute",
                       top: 6,
                       right: 6,
                       width: 22,
                       height: 22,
                       borderRadius: 11,
                       backgroundColor: colors.brandUi,
-                      alignItems: 'center',
-                      justifyContent: 'center',
+                      alignItems: "center",
+                      justifyContent: "center",
                     }}
                   >
                     <Check color={colors.textOnBrand} size={12} weight="bold" />
                   </View>
                 ) : null}
               </Pressable>
-            )
+            );
           })}
         </View>
       )}
     </View>
-  )
+  );
 }
 
 // ── Reusable layout bits ─────────────────────────────────────────────────
 
 function Heading({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
@@ -579,11 +586,11 @@ function Heading({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  )
+  );
 }
 
 function Sub({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
@@ -596,5 +603,5 @@ function Sub({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  )
+  );
 }
