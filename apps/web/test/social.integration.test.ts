@@ -268,4 +268,38 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(activity).toHaveLength(1);
     expect(activity[0].book?.id).toBe("b2");
   });
+
+  // -- Notifications ----------------------------------------------------------
+
+  it("POST /notifications/read marks the named ones, refuses a malformed body, and marks all only when asked", async () => {
+    await seedUser("alice");
+    await db()
+      .insert(schema.notifications)
+      .values(
+        ["n1", "n2", "n3"].map((id) => ({ id, userId: "alice", type: "new_follower", title: id })),
+      );
+    const unread = async () =>
+      (await db().select().from(schema.notifications).where(eq(schema.notifications.isRead, false)))
+        .map((n) => n.id)
+        .sort();
+
+    expect(
+      (await call("/notifications/read", { method: "POST", user: "alice", body: { ids: ["n1"] } }))
+        .status,
+    ).toBe(200);
+    expect(await unread()).toEqual(["n2", "n3"]);
+
+    // A malformed body used to fall through to mark-all.
+    for (const body of [{}, { ids: "n2" }, { ids: [] }, { all: false }, "not json"]) {
+      const res = await call("/notifications/read", { method: "POST", user: "alice", body });
+      expect(res.status).toBe(422);
+    }
+    expect(await unread()).toEqual(["n2", "n3"]);
+
+    expect(
+      (await call("/notifications/read", { method: "POST", user: "alice", body: { all: true } }))
+        .status,
+    ).toBe(200);
+    expect(await unread()).toEqual([]);
+  });
 });

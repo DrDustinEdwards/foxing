@@ -42,7 +42,18 @@ export async function parseJson<S extends z.ZodTypeAny>(
   schema: S,
   max = BODY_MAX_BYTES,
 ): Promise<z.infer<S>> {
-  const text = await readBody(c, max);
+  return validate(schema, await readBody(c, max));
+}
+
+/** parseJson for a body that may be left out: an empty one is validated as `{}`. */
+export async function parseOptionalJson<S extends z.ZodTypeAny>(
+  c: Context<Env>,
+  schema: S,
+): Promise<z.infer<S>> {
+  return validate(schema, (await readBody(c)) || "{}");
+}
+
+function validate<S extends z.ZodTypeAny>(schema: S, text: string): z.infer<S> {
   let body: unknown;
   try {
     body = JSON.parse(text);

@@ -3,8 +3,8 @@
 // user-owned, delete order) lives in @foxing/core domain/account.
 import { Hono } from "hono";
 import { checkSuccessors, clubsToHandOver, deleteAccountInput, exportAccount } from "@foxing/core";
-import { AppError, errors } from "../error";
-import { readBody, requireSession } from "../http";
+import { AppError } from "../error";
+import { parseOptionalJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
 import type { Env } from "../types";
 
@@ -49,20 +49,12 @@ accountRoutes.get("/account/clubs", async (c) => {
 // ({ successors }) is optional: an empty one takes the defaults.
 accountRoutes.delete("/account", rateLimit("write"), async (c) => {
   const session = requireSession(c);
-  const text = await readBody(c);
-  let raw: unknown = {};
-  try {
-    raw = text ? JSON.parse(text) : {};
-  } catch {
-    throw errors.validation({ body: "expected a JSON body" });
-  }
-  const input = deleteAccountInput.safeParse(raw);
-  if (!input.success) throw errors.validation(input.error.flatten());
+  const input = await parseOptionalJson(c, deleteAccountInput);
   // A bad pick is refused before anything is deleted.
-  await checkSuccessors(c.get("db"), session.id, input.data.successors);
+  await checkSuccessors(c.get("db"), session.id, input.successors);
   const done = await c.get("deleteUser")(c.req.raw, c.env, {
     userId: session.id,
-    successors: input.data.successors,
+    successors: input.successors,
   });
   if (done === "not_fresh") throw notFresh("delete your account");
   return c.body(null, 204);

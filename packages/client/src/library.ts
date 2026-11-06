@@ -269,7 +269,7 @@ export function useNotifications<S extends W.NotificationsPage | undefined = und
 export function useMarkNotificationsRead() {
   const api = useApi();
   return useWrite<{ ids?: string[] } | void>({
-    write: (vars) => api.post("/notifications/read", vars?.ids ? { ids: vars.ids } : {}),
+    write: (vars) => api.post("/notifications/read", vars?.ids ? { ids: vars.ids } : { all: true }),
     optimistic: (vars) => [
       patch<W.NotificationsPage>(keys.notifications, (page) => {
         const ids = vars?.ids ? new Set(vars.ids) : null;

@@ -22,3 +22,11 @@ export const notificationPrefsInput = z.object({
     .optional(),
 });
 export type NotificationPrefsInput = z.infer<typeof notificationPrefsInput>;
+
+// POST /notifications/read: the given notifications, or every one only when asked for by name. Anything else is a 422
+// that changes nothing (a malformed body used to mark all of them read). One page of ids fits one D1 IN list.
+export const markNotificationsReadInput = z.union([
+  z.strictObject({ ids: z.array(z.string().min(1).max(64)).min(1).max(90) }),
+  z.strictObject({ all: z.literal(true) }),
+]);
+export type MarkNotificationsReadInput = z.infer<typeof markNotificationsReadInput>;

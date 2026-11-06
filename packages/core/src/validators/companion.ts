@@ -9,6 +9,20 @@ export const companionSelection = z.object({
   chapter: z.string().max(200).nullish(),
 });
 
+/**
+ * The languages Translate offers (the mobile reader's LANGUAGES list). The name goes into the system prompt, so it is
+ * one of these, never free text a reader could write instructions in.
+ */
+export const TRANSLATE_LANGUAGES = [
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Italian",
+  "Japanese",
+  "Mandarin",
+] as const;
+
 export const companionInput = z.object({
   action: z.enum(PLUS_ACTION_NAMES as [string, ...string[]]),
   bookId: z.string().min(1),
@@ -17,6 +31,6 @@ export const companionInput = z.object({
   selection: companionSelection.optional(),
   /** Where the reader is, for chapter-scoped actions sent without a selection. */
   chapter: z.string().max(200).optional(),
-  targetLanguage: z.string().max(40).optional(),
+  targetLanguage: z.enum(TRANSLATE_LANGUAGES).optional(),
 });
 export type CompanionInput = z.infer<typeof companionInput>;

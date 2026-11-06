@@ -1,18 +1,12 @@
-// Pure quota logic (security-open-items.md item 4). The API route owns the actual KV
-// read/write (a Cloudflare binding); everything here is testable without one. Check
-// happens before a call is made (can't know real output tokens until it completes);
-// the call's actual cost is added to state only after it settles, so a request that
-// fails or is aborted never counts against the quota.
-import { COMPANION_QUOTA } from "../config/companion";
+// Pure quota logic (security-open-items.md item 4). The D1 counter is companionRepo.reserveUsage/settleUsage;
+// everything here is testable without a binding. A call's real cost is only known once it settles, so a request
+// reserves its worst case first (the cap is checked and the reservation added in one statement) and is settled to
+// the real cost after. A reply that fails or is canceled keeps its reservation: the model may have been billed.
+import { type CompanionRole, estimateCostCents } from "./models";
 
-export type QuotaState = { costCents: number; requests: number };
-
-export const EMPTY_QUOTA_STATE: QuotaState = { costCents: 0, requests: 0 };
-
-/** KV key for a user's quota counter, scoped to one UTC calendar day. */
-export function quotaKey(userId: string, date: Date = new Date()): string {
-  const stamp = date.toISOString().slice(0, 10).replace(/-/g, "");
-  return `companion-quota:${userId}:${stamp}`;
+/** The quota's day, YYYYMMDD in UTC: one counter row per reader per day. */
+export function quotaDay(date: Date = new Date()): string {
+  return date.toISOString().slice(0, 10).replace(/-/g, "");
 }
 
 /** ISO timestamp of the next UTC midnight, when the quota resets. */
@@ -21,15 +15,14 @@ export function quotaResetsAt(date: Date = new Date()): string {
   return next.toISOString();
 }
 
-/** True when either the cost ceiling or the request backstop has been reached. */
-export function isOverQuota(state: QuotaState): boolean {
-  return (
-    state.costCents >= COMPANION_QUOTA.dailyCostCeilingCents ||
-    state.requests >= COMPANION_QUOTA.dailyRequestBackstop
-  );
-}
-
-/** Fold one settled call's actual cost into the day's running quota state. */
-export function addUsage(state: QuotaState, costCents: number): QuotaState {
-  return { costCents: state.costCents + costCents, requests: state.requests + 1 };
+/**
+ * The most a call can cost, reserved before it is made: its input at one token per three characters (English runs
+ * nearer four, so this overestimates) and its full output cap.
+ */
+export function reserveCents(
+  role: CompanionRole,
+  inputChars: number,
+  maxOutputTokens: number,
+): number {
+  return estimateCostCents(role, Math.ceil(inputChars / 3), maxOutputTokens);
 }

@@ -155,6 +155,13 @@
       "when": 1793936027980,
       "tag": "0021_book_subjects",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "6",
+      "when": 1794022427980,
+      "tag": "0022_companion_usage",
+      "breakpoints": true
     }
   ]
 }
