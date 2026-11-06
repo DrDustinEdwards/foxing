@@ -47,7 +47,7 @@ export type UpdateClubInput = z.infer<typeof updateClubInput>;
 
 // -- Membership -------------------------------------------------------------
 
-// Role change target (approve/ban/unban/mute take no body beyond the path userId).
+// Role change target (approve and unban take no body beyond the path userId).
 export const setRoleInput = z.object({
   role: clubMemberRole,
 });
@@ -62,6 +62,12 @@ export const muteMemberInput = z.object({
     .max(60 * 24 * 365),
 });
 export type MuteMemberInput = z.infer<typeof muteMemberInput>;
+
+// The body is optional: a ban with no reason sends none.
+export const banMemberInput = z.object({
+  reason: z.string().trim().max(500).optional(),
+});
+export type BanMemberInput = z.infer<typeof banMemberInput>;
 
 // -- Threads + posts --------------------------------------------------------
 

@@ -10,6 +10,7 @@ import {
   type LiveMessage,
   clubsDomain,
   clubsRepo,
+  banMemberInput,
   createClubInput,
   createMeetingInput,
   createPollInput,
@@ -25,7 +26,7 @@ import {
   views,
 } from "@foxing/core";
 import { errors } from "../error";
-import { parseJson, requireSession } from "../http";
+import { parseJson, parseOptionalJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
 import type { Context } from "hono";
 import type { Env } from "../types";
@@ -154,16 +155,13 @@ clubRoutes.post("/clubs/:id/members/:userId/approve", rateLimit("write"), async 
 
 clubRoutes.post("/clubs/:id/members/:userId/ban", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
-  const reason = (await c.req.raw
-    .clone()
-    .json()
-    .catch(() => ({}))) as { reason?: string };
+  const { reason } = await parseOptionalJson(c, banMemberInput);
   const member = await clubsDomain.banMember(
     c.get("db"),
     actor,
     c.req.param("id"),
     c.req.param("userId"),
-    reason?.reason,
+    reason,
   );
   return c.json({ member });
 });
