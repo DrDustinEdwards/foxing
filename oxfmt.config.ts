@@ -9,7 +9,5 @@ export default defineConfig({
     "packages/core/migrations/",
     // Waits on Dustin (CLAUDE.md hard rule 9).
     "apps/discord/",
-    // Formatted in a stacked pull request of its own (CLAUDE.md hard rule 2: a web task never touches apps/mobile/).
-    "apps/mobile/",
   ],
 });

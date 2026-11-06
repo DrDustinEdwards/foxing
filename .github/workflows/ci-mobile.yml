@@ -1,6 +1,6 @@
 name: CI (mobile)
 
-# Lints apps/mobile with the root Oxlint config (oxlint.config.ts), the app's only CI check so far.
+# Lints and format-checks apps/mobile with the root Oxlint and Oxfmt configs (oxlint.config.ts, oxfmt.config.ts).
 on:
   push:
     branches: [main]
@@ -9,6 +9,7 @@ on:
       - "packages/client/**"
       - "packages/types/**"
       - "oxlint.config.ts"
+      - "oxfmt.config.ts"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/ci-mobile.yml"
@@ -18,6 +19,7 @@ on:
       - "packages/client/**"
       - "packages/types/**"
       - "oxlint.config.ts"
+      - "oxfmt.config.ts"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/ci-mobile.yml"
@@ -47,3 +49,5 @@ jobs:
       # which ci-cf.yml runs before its own Lint step.
       - name: Lint
         run: npm run lint -- apps/mobile
+      - name: Format check
+        run: npm run format:check -- apps/mobile
