@@ -123,7 +123,7 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@4d0c8fdb2f1794272b31d3c4354059eb2f19a26a # v0.22.0
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@3480f68abadcbcd50ddd72c826aa50787ea82bcc # v0.23.1
     with:
       worker-name: foxing
       # site-runtime withAdminIdle's key, minted once by the deploy and never shown (devkit "generated-secrets").

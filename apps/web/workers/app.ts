@@ -29,6 +29,7 @@ import {
 import { originalKey } from "@dustinedwards/site-runtime/image";
 import { logEvent, routeNamer, withRequestLog } from "@dustinedwards/site-runtime/log";
 import { countNotFound, pruneNotFound } from "@dustinedwards/site-runtime/not-found";
+import { operatorResponse } from "@dustinedwards/site-runtime/operator";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
 import {
   SPECULATION_RULES_HEADER,
@@ -62,13 +63,8 @@ import {
 } from "../app/lib/auth.server";
 import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
 import { FONT_PRELOADS } from "../app/lib/preloads";
-import {
-  backupFilesNow,
-  backupStatus,
-  runBackup,
-  runCoversBackup,
-  runMediaBackup,
-} from "../app/lib/backup.server";
+import { operatorTools } from "../app/lib/operator.server";
+import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { clubRoomHub } from "./club-room";
 import {
@@ -166,8 +162,6 @@ const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
   // The reader's own deletion is Better Auth's deleteUser (app/lib/auth.server.ts).
   isFresh: (req, env) => isFreshSession(req, env as unknown as Env),
-  backupFiles: (env) => backupFilesNow(env as unknown as Env),
-  backupStatus: async (env) => ({ ...(await backupStatus(env as unknown as Env)) }),
   deleteUser: (req, env, { successors }) =>
     deleteUserAccount(req, env as unknown as Env, successors),
   // Cloudflare Access must have signed the request for this admin's own email (site-runtime ./access).
@@ -253,6 +247,15 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) => {
 // Better Auth (/api/auth) checks origins against its trustedOrigins itself, and Carrel's site
 // API is a bearer-key server call, so neither comes through this.
 app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
+
+// The operator API (site-runtime ./operator): Capsid Admin's backups, behind the OPERATOR_TOKEN bearer.
+app.all("/api/operator", (c) =>
+  operatorResponse(c.req.raw, {
+    token: c.env.OPERATOR_TOKEN,
+    limiter: c.env.RATE_LIMITER,
+    tools: operatorTools(c.env),
+  }),
+);
 
 // Search-as-you-type answers do not depend on the viewer (public books, profiles and
 // clubs only), so they come from the edge cache for everyone, signed in or not.

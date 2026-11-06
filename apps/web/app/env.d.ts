@@ -31,6 +31,8 @@ interface Env {
   CARREL_SITE_KEY?: string;
   // Keys site-runtime's admin idle cookie (withAdminIdle `secret`). Minted by the deploy (devkit worker-deploy `generated-secrets`), never shown; unset, the admin paths fail (site-runtime 0.82 requires it).
   ADMIN_IDLE_SECRET: string;
+  // Capsid's bearer for /api/operator (site-runtime ./operator): its backups. Unset or short: the route answers 503.
+  OPERATOR_TOKEN?: string;
   // Operator bearer for /api/v1/admin/* (the admin MCP Worker). Unset: every bearer
   // request to the admin API is refused.
   ADMIN_OPERATOR_TOKEN?: string;
