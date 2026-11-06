@@ -10,7 +10,7 @@
  */
 
 import { auditLogCheck, type AuditEnv } from "@dustinedwards/site-runtime/audit-log";
-import { durableObjectCheck, healthResponse, kvCheck, type HealthCheck } from "@dustinedwards/site-runtime/health";
+import { durableObjectCheck, healthResponse, kvCheck, r2Check, type HealthCheck } from "@dustinedwards/site-runtime/health";
 import { isAdminUser, loginHandler, type LoginEnv as SharedLoginEnv } from "@dustinedwards/site-runtime/mcp-login";
 import type { Env } from "./api-handler";
 import { SCOPE_READ, SCOPE_WRITE } from "./auth";
@@ -39,7 +39,7 @@ write Journal posts; Carrel owns writing.</p>
 });
 
 /**
- * One check per binding in wrangler.jsonc.example. Every one is level fail: without OAUTH_KV no token is checked,
+ * One check per binding in wrangler.jsonc.example. Every one but audit-bucket is level fail: without OAUTH_KV no token is checked,
  * without FOXING no tool reaches the admin API, without MCP_RATE_LIMIT every /mcp call is a 429 (it fails closed) and
  * without TOOL_CALL_LOG every tool call is refused. The service binding is checked by presence only: a request over
  * it would be an admin API call. The Durable Object checks mint an id and wake no object.
@@ -50,9 +50,14 @@ function healthChecks(env: Env): HealthCheck[] {
     run: async () => typeof env.FOXING?.fetch === "function" || { ok: false, detail: "binding missing" },
   };
   return [
-    kvCheck("oauth-kv", env.OAUTH_KV),
-    foxing,
-    durableObjectCheck("mcp-rate-limit", env.MCP_RATE_LIMIT),
-    durableObjectCheck("tool-call-log", env.TOOL_CALL_LOG),
-  ].map((check) => ({ ...check, level: "fail" as const }));
+    ...[
+      kvCheck("oauth-kv", env.OAUTH_KV),
+      foxing,
+      durableObjectCheck("mcp-rate-limit", env.MCP_RATE_LIMIT),
+      durableObjectCheck("tool-call-log-binding", env.TOOL_CALL_LOG),
+    ].map((check) => ({ ...check, level: "fail" as const })),
+    // AUDIT_BUCKET holds only the nightly copies of the tool-call log, so a bucket that fails to answer warns and
+    // never takes the Worker to 503. One `head` of a fixed key, never a list.
+    { ...r2Check("audit-bucket", env.AUDIT_BUCKET as R2Bucket), level: "warn" as const },
+  ];
 }
