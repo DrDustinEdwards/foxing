@@ -18,6 +18,8 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["McpRateLimit", "ToolCallLog"] }],
   "vars": {
+    // A fake key for the tool-call log's signatures (site-runtime 0.84 requires one).
+    "AUDIT_SIGNING_KEY": "conformance-signing-key-not-a-real-one-0123456789",
     "PUBLIC_ORIGIN": "http://localhost:8789",
     "SITE_ORIGIN": "http://localhost:8790",
     "ACCESS_TEAM_DOMAIN": "https://conformance.cloudflareaccess.com"
