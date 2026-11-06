@@ -58,7 +58,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="divided">
               {users.map((u) => (
-                <UserRow key={u.id} user={u} onDone={reload} />
+                <UserRow key={u.id} user={u} onDone={() => void reload()} />
               ))}
             </ul>
           )}
@@ -97,7 +97,7 @@ function UserRow({
             variant={user.isSuspended ? "default" : "danger"}
             pending={suspend.pending}
             onClick={() =>
-              suspend.request(
+              void suspend.request(
                 `/users/${user.id}/suspend`,
                 { suspended: !user.isSuspended },
                 user.isSuspended ? "Unsuspend" : "Suspend",

@@ -180,7 +180,7 @@ const api = createApi({
   resolveCompanionCaller: (env) => {
     const caller = anthropicCaller(env as unknown as Env);
     if (caller) return caller;
-    // biome-ignore lint/correctness/useYield: throws on first iteration by design, never yields
+    // oxlint-disable-next-line eslint/require-yield -- throws on first iteration by design, never yields
     return async function* missingKey() {
       throw new Error(
         "ANTHROPIC_API_KEY is not configured. Run: wrangler secret put ANTHROPIC_API_KEY",

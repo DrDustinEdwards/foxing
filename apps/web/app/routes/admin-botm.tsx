@@ -42,14 +42,14 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="stack-6">
-        <CreateBotm onDone={reload} />
+        <CreateBotm onDone={() => void reload()} />
         <AdminCard title="Scheduled picks">
           {rows.length === 0 ? (
             <p className="meta">No picks yet. Create one above.</p>
           ) : (
             <ul className="divided">
               {rows.map((r) => (
-                <BotmRow key={r.id} row={r} onDone={reload} />
+                <BotmRow key={r.id} row={r} onDone={() => void reload()} />
               ))}
             </ul>
           )}
@@ -60,9 +60,8 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
 }
 
 function CreateBotm({ onDone }: { onDone: () => void }) {
-  const now = new Date();
-  const [year, setYear] = useState(now.getUTCFullYear());
-  const [month, setMonth] = useState(now.getUTCMonth() + 1);
+  const [year, setYear] = useState(() => new Date().getUTCFullYear());
+  const [month, setMonth] = useState(() => new Date().getUTCMonth() + 1);
   const [book, setBook] = useState<{ id: string; title: string; author: string } | null>(null);
   const [category, setCategory] = useState("");
   const [curatorNote, setCuratorNote] = useState("");
@@ -178,7 +177,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish immediately
         </label>
-        <AdminButton variant="primary" pending={pending} onClick={create}>
+        <AdminButton variant="primary" pending={pending} onClick={() => void create()}>
           {pending ? "Creating..." : "Create pick"}
         </AdminButton>
         <AdminError error={error} />
@@ -216,7 +215,7 @@ function BotmRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(`/botm/${row.id}/publish`, { body: { on: !row.isPublished } }, "Could not update")
+              void run(`/botm/${row.id}/publish`, { body: { on: !row.isPublished } }, "Could not update")
             }
           >
             {row.isPublished ? "Unpublish" : "Publish"}
@@ -224,7 +223,7 @@ function BotmRow({
           <AdminButton
             variant="danger"
             pending={pending}
-            onClick={() => run(`/botm/${row.id}`, { method: "DELETE" }, "Could not delete")}
+            onClick={() => void run(`/botm/${row.id}`, { method: "DELETE" }, "Could not delete")}
           >
             Delete
           </AdminButton>

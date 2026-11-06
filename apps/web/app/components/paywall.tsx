@@ -129,7 +129,7 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
 
         <button
           type="button"
-          onClick={startTrial}
+          onClick={() => void startTrial()}
           disabled={pending}
           className="cap-btn mt-5 fx-paywall-btn-2"
           data-variant="primary"

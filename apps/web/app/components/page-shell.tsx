@@ -148,7 +148,7 @@ function SiteNav() {
         sections={sections}
         extras={extras}
         themePrefKey={THEME_PREF_KEY}
-        account={user ? headerAccount(user, signingOut, signOut) : undefined}
+        account={user ? headerAccount(user, signingOut, () => void signOut()) : undefined}
         signIn={user ? undefined : { href: "/login" }}
         skipTo="#main"
         renderLink={renderLink}
@@ -163,6 +163,7 @@ function SiteNav() {
 }
 
 function SiteFooter() {
+  const [year] = useState(() => new Date().getFullYear());
   return (
     <footer className="fx-footer">
       <Container className="fx-footer-cols">
@@ -221,7 +222,7 @@ function SiteFooter() {
         />
       </Container>
       <Container className="fx-footer-base">
-        <p>&copy; {new Date().getFullYear()} Foxing. Read freely, keep the record.</p>
+        <p>&copy; {year} Foxing. Read freely, keep the record.</p>
         <p>
           <span aria-hidden="true">🦊</span> Made for readers.
         </p>

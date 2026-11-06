@@ -84,7 +84,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           Your username is how other readers find you. You can change your display name and favorite
           genres later in settings.
         </p>
-        <form onSubmit={onSubmitProfile} className="mt-8 fx-onboarding-form">
+        <form onSubmit={(e) => void onSubmitProfile(e)} className="mt-8 fx-onboarding-form">
           <label className="block">
             <span className="block fx-onboarding-label">Username</span>
             <input
@@ -184,7 +184,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
               <p className="mt-1 meta">{book.author}</p>
               <button
                 type="button"
-                onClick={() => startReading(book)}
+                onClick={() => void startReading(book)}
                 disabled={savingId !== null}
                 className="cap-btn mt-2 justify-center fx-onboarding-btn"
                 data-size="sm"
@@ -205,7 +205,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
       )}
 
       <div className="mt-10">
-        <button type="button" onClick={() => navigate("/home")} className="fx-onboarding-btn-2">
+        <button type="button" onClick={() => void navigate("/home")} className="fx-onboarding-btn-2">
           Skip for now
         </button>
       </div>

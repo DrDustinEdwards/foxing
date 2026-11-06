@@ -311,7 +311,7 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
         />
         <button
           type="button"
-          onClick={addShelf}
+          onClick={() => void addShelf()}
           disabled={create.pending}
           className="cap-btn"
           data-size="sm"

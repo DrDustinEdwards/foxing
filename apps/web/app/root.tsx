@@ -80,7 +80,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#faf6ee" />
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static no-flash theme script */}
+        {/* Raw HTML: static no-flash theme script. */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
         <Meta />
         <Links nonce={nonce} />

@@ -86,7 +86,7 @@ export default function start(el: HTMLElement): void {
     }
     const ctrl = new AbortController();
     pending = ctrl;
-    timer = setTimeout(async () => {
+    const suggest = async () => {
       try {
         const res = await fetch(`/api/v1/search/suggest?q=${encodeURIComponent(q)}`, {
           signal: ctrl.signal,
@@ -100,7 +100,8 @@ export default function start(el: HTMLElement): void {
       } catch {
         // Aborted or offline: the form still searches.
       }
-    }, SUGGEST_DELAY_MS);
+    };
+    timer = setTimeout(() => void suggest(), SUGGEST_DELAY_MS);
   });
 
   input.addEventListener("keydown", (e) => {

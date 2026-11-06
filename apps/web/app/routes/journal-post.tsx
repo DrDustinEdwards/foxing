@@ -183,7 +183,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             />
           ) : null}
 
-          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: trusted CMS markdown */}
+          {/* Raw HTML: trusted CMS markdown. */}
           <div className="article-prose e-content" dangerouslySetInnerHTML={{ __html: html }} />
         </article>
       </Container>

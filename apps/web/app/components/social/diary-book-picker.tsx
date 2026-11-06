@@ -27,7 +27,7 @@ export function DiaryBookPicker() {
             <li key={b.slug}>
               <button
                 type="button"
-                onClick={() => navigate(`/diary/new?book=${encodeURIComponent(b.slug)}`)}
+                onClick={() => void navigate(`/diary/new?book=${encodeURIComponent(b.slug)}`)}
                 className="fx-pick-option"
               >
                 <span className="fx-diary-book-picker-label">{b.title}</span>{" "}

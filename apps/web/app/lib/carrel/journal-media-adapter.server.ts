@@ -59,10 +59,11 @@ function fieldsOf(fields: MediaRecordFields): journalMediaRepo.JournalMediaField
     uploadedAt,
     trashedAt,
     sha256,
-    decorative,
-    copyright,
-    licenseUrl,
-    acquireLicenseUrl,
+    // The library's rights fields, which the table has no column for.
+    decorative: _decorative,
+    copyright: _copyright,
+    licenseUrl: _licenseUrl,
+    acquireLicenseUrl: _acquireLicenseUrl,
     ...rest
   } = fields;
   return {

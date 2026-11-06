@@ -96,7 +96,7 @@ export default function AdminNotifications() {
               className={adminInputClass}
             />
           </label>
-          <AdminButton variant="primary" pending={pending} onClick={send}>
+          <AdminButton variant="primary" pending={pending} onClick={() => void send()}>
             {pending ? "Sending..." : "Send broadcast"}
           </AdminButton>
           {sent !== null ? (

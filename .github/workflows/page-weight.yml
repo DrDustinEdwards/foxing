@@ -6,7 +6,7 @@ name: Page weight
 # budget_bytes, or grown past its baseline, fails the job, and so does a build
 # that cannot run.
 #
-# Separate from ci-cf.yml so it runs while that workflow's Lint (biome) step is
+# Separate from ci-cf.yml so it runs while that workflow's Lint step is
 # red on main. The paths are what the web client bundle is built from: apps/web
 # (minus its tests), the workspace packages it imports, and the lockfile.
 on:

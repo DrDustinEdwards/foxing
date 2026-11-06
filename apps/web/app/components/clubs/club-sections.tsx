@@ -113,7 +113,7 @@ export function ThreadsSection({
       </div>
 
       {open ? (
-        <form onSubmit={create} className="mt-3 fx-club-sections-card-2">
+        <form onSubmit={(e) => void create(e)} className="mt-3 fx-club-sections-card-2">
           <input
             name="title"
             required

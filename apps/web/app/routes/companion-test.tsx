@@ -89,7 +89,7 @@ function RunAction({
   return (
     <section className="fx-companion-test-card">
       <h2 className="display-1">Run an action</h2>
-      <form onSubmit={run} className="mt-4 fx-companion-test-form">
+      <form onSubmit={(e) => void run(e)} className="mt-4 fx-companion-test-form">
         <label className="block">
           <span className="fx-label">Action</span>
           <select
@@ -203,7 +203,7 @@ function CacheBatch() {
             className="cap-input fx-companion-test-input"
           />
         </label>
-        <button type="button" onClick={run} disabled={pending} className="cap-btn">
+        <button type="button" onClick={() => void run()} disabled={pending} className="cap-btn">
           {pending ? "Running..." : "Run batch"}
         </button>
       </div>

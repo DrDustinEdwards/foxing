@@ -46,14 +46,14 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
       </div>
 
       <div className="stack-6">
-        <CreateAnnouncement onDone={reload} />
+        <CreateAnnouncement onDone={() => void reload()} />
         <AdminCard title="Announcements">
           {announcements.length === 0 ? (
             <p className="meta">No announcements yet. Create one above.</p>
           ) : (
             <ul className="divided">
               {announcements.map((a) => (
-                <AnnouncementRow key={a.id} row={a} onDone={reload} />
+                <AnnouncementRow key={a.id} row={a} onDone={() => void reload()} />
               ))}
             </ul>
           )}
@@ -162,7 +162,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
           />
           Active immediately
         </label>
-        <AdminButton variant="primary" pending={pending} onClick={create}>
+        <AdminButton variant="primary" pending={pending} onClick={() => void create()}>
           {pending ? "Creating..." : "Create announcement"}
         </AdminButton>
         <AdminError error={error} />
@@ -201,7 +201,7 @@ function AnnouncementRow({
           <AdminButton
             pending={pending}
             onClick={() =>
-              run(
+              void run(
                 `/announcements/${row.id}`,
                 { method: "PATCH", body: { isActive: !row.isActive } },
                 "Could not update",
@@ -215,7 +215,7 @@ function AnnouncementRow({
               variant="danger"
               pending={pending}
               onClick={() =>
-                run(`/announcements/${row.id}`, { method: "DELETE" }, "Could not delete")
+                void run(`/announcements/${row.id}`, { method: "DELETE" }, "Could not delete")
               }
             >
               Confirm delete

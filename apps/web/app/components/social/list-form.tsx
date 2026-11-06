@@ -40,7 +40,7 @@ export function ListForm({
   }
 
   return (
-    <form onSubmit={submit} className="stack-6">
+    <form onSubmit={(e) => void submit(e)} className="stack-6">
       <label className="stack-2">
         <span className="group-label">Title</span>
         <input
@@ -83,7 +83,7 @@ export function ListForm({
         >
           {pending ? "Saving..." : mode === "create" ? "Create list" : "Save changes"}
         </button>
-        <button type="button" onClick={() => navigate(redirectTo)} className="fx-list-form-btn">
+        <button type="button" onClick={() => void navigate(redirectTo)} className="fx-list-form-btn">
           Cancel
         </button>
       </div>

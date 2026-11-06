@@ -75,7 +75,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
         </ul>
 
         {isMember ? (
-          <form onSubmit={post} className="mt-8">
+          <form onSubmit={(e) => void post(e)} className="mt-8">
             <label htmlFor="content" className="block fx-club-thread-field">
               Add a reply
             </label>
