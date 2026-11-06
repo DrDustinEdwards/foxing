@@ -59,6 +59,7 @@ export function FinishReviewSheet({
 
   useEffect(() => {
     if (!visible) return
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setPage(1)
     setRating(0)
     setReview('')
@@ -162,7 +163,7 @@ export function FinishReviewSheet({
           {page === 1 ? (
             <View className="flex-row gap-3">
               <Pressable
-                onPress={onDone}
+                onPress={() => void onDone()}
                 accessibilityRole="button"
                 accessibilityLabel="Done with review"
                 disabled={saving}
@@ -177,7 +178,7 @@ export function FinishReviewSheet({
                 </Text>
               </Pressable>
               <Pressable
-                onPress={onNext}
+                onPress={() => void onNext()}
                 accessibilityRole="button"
                 accessibilityLabel="Continue to tags"
                 disabled={saving}
@@ -201,7 +202,7 @@ export function FinishReviewSheet({
             </View>
           ) : (
             <Pressable
-              onPress={onDone}
+              onPress={() => void onDone()}
               accessibilityRole="button"
               accessibilityLabel="Save tags and finish"
               disabled={saving}

@@ -26,7 +26,6 @@ type NotificationsModule = {
 
 let Notifications: NotificationsModule | null = null
 try {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   Notifications = require('expo-notifications') as NotificationsModule
   // Set the default in-foreground behavior, show alerts even when the app
   // is open, since most of these are timely (streak risk at 8pm).

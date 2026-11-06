@@ -255,7 +255,7 @@ export default function ThreadScreen() {
                 }}
               />
               <Pressable
-                onPress={send}
+                onPress={() => void send()}
                 disabled={!body.trim() || posting}
                 accessibilityLabel="Send"
                 style={{

@@ -33,6 +33,7 @@ export function AddBookSheet({
     if (!visible) {
       // Reset to the chooser whenever the sheet closes so the next open
       // starts fresh instead of remembering the previous URL search state.
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it closes
       setMode('choose')
       setUrl('')
       setLookupBusy(false)
@@ -112,7 +113,7 @@ export function AddBookSheet({
                 autoCorrect={false}
                 keyboardType="url"
                 returnKeyType="search"
-                onSubmitEditing={submitUrl}
+                onSubmitEditing={() => void submitUrl()}
                 editable={!lookupBusy}
                 style={{
                   fontFamily: Fonts.body,
@@ -150,7 +151,7 @@ export function AddBookSheet({
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={submitUrl}
+                  onPress={() => void submitUrl()}
                   disabled={lookupBusy || !url.trim()}
                   className="px-4 py-2 rounded-full"
                   style={{

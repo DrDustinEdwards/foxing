@@ -19,10 +19,19 @@ export function CreateShelfModal({
 
   useEffect(() => {
     if (visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the modal each time it opens
       setName('')
       setSaving(false)
     }
   }, [visible])
+
+  const create = async () => {
+    if (!name.trim() || saving) return
+    setSaving(true)
+    await onCreate(name.trim())
+    setSaving(false)
+    onClose()
+  }
 
   return (
     <SheetScaffold
@@ -52,13 +61,7 @@ export function CreateShelfModal({
             </Text>
           </Pressable>
           <Pressable
-            onPress={async () => {
-              if (!name.trim() || saving) return
-              setSaving(true)
-              await onCreate(name.trim())
-              setSaving(false)
-              onClose()
-            }}
+            onPress={() => void create()}
             disabled={!name.trim() || saving}
             className="px-4 py-2 rounded-full"
             style={{

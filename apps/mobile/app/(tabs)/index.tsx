@@ -47,7 +47,7 @@ export default function Discover() {
       <ScrollView
         contentContainerStyle={{ paddingBottom: 48 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brandUi} />
+          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.brandUi} />
         }
       >
         <View className="px-4 pt-2 pb-3">

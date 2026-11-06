@@ -35,6 +35,7 @@ export function DiscussionStarterSheet({
   const colors = useColors()
   const companion = useCompanion()
   const createThread = useCreateThread()
+  const resetCreateThread = createThread.reset
   const generating = companion.pending
   const posting = createThread.pending
   const [title, setTitle] = useState('')
@@ -58,13 +59,14 @@ export function DiscussionStarterSheet({
 
   useEffect(() => {
     if (visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
       setTitle(bookTitle ? `Discussion: ${bookTitle}` : '')
       setOpening('')
       setHasSpoilers(false)
-      createThread.reset()
+      resetCreateThread()
       void generate()
     }
-  }, [visible, generate, bookTitle, createThread.reset])
+  }, [visible, generate, bookTitle, resetCreateThread])
 
   const post = useCallback(async () => {
     if (!title.trim() || !opening.trim() || posting) return
@@ -104,7 +106,7 @@ export function DiscussionStarterSheet({
       footer={
         <View className="flex-row items-center justify-end">
           <Pressable
-            onPress={post}
+            onPress={() => void post()}
             disabled={!title.trim() || !opening.trim() || posting}
             className="px-5 py-2 rounded-full"
             style={{
@@ -187,7 +189,7 @@ export function DiscussionStarterSheet({
                 </View>
 
                 <Pressable
-                  onPress={generate}
+                  onPress={() => void generate()}
                   className="flex-row items-center justify-center gap-2 mt-4 py-2 rounded-full border"
                   style={{ borderColor: colors.borderInteractive }}
                 >

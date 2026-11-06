@@ -545,7 +545,7 @@ export default function BookDetail() {
           {page.buys.map((b) => (
             <Pressable
               key={b.retailer}
-              onPress={() => Linking.openURL(b.url)}
+              onPress={() => void Linking.openURL(b.url)}
               accessibilityRole="link"
               accessibilityLabel={b.sponsored ? `${b.label} (affiliate link)` : b.label}
               className="px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-interactive-light dark:border-border-interactive-dark items-center"
@@ -902,27 +902,21 @@ export default function BookDetail() {
             id: 'reading',
             label: "I'm Reading This",
             Icon: Megaphone,
-            onPress: async () => {
-              try {
-                await Share.share({
-                  message: `I'm reading "${book.title}" by ${book.author} on Foxing. https://foxing.app/books/${book.slug}`,
-                })
-              } catch {
+            onPress: () =>
+              void Share.share({
+                message: `I'm reading "${book.title}" by ${book.author} on Foxing. https://foxing.app/books/${book.slug}`,
+              }).catch(() => {
                 /* user canceled */
-              }
-            },
+              }),
           },
           {
             id: 'link',
             label: 'Copy link',
             Icon: LinkIcon,
-            onPress: async () => {
-              try {
-                await Share.share({ message: `https://foxing.app/books/${book.slug}` })
-              } catch {
+            onPress: () =>
+              void Share.share({ message: `https://foxing.app/books/${book.slug}` }).catch(() => {
                 /* user canceled */
-              }
-            },
+              }),
           },
         ]}
       />

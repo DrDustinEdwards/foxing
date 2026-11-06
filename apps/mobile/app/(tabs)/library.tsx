@@ -41,7 +41,7 @@ export default function Library() {
   const [selectedBookIds, setSelectedBookIds] = useState<Set<string>>(new Set())
   const [bulkShelfPickerOpen, setBulkShelfPickerOpen] = useState(false)
 
-  const entries = library.data ?? []
+  const entries = useMemo(() => library.data ?? [], [library.data])
   const books = useMemo<BookRow[]>(() => {
     if (activeShelf.kind === 'status') return entries.filter((e) => e.status === activeShelf.status)
     const byId = new Map(entries.map((e) => [e.bookId, e]))
@@ -136,7 +136,7 @@ export default function Library() {
   // avoids the user's selection silently spanning a different list.
   useEffect(() => {
     if (editMode) exitBulkEdit()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- only a shelf change exits edit mode
   }, [activeShelf])
 
   const onLongPressShelf = useCallback(

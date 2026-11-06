@@ -209,8 +209,7 @@ export default function Reader() {
   const bookmarkCfis = useMemo(() => new Set(bookmarks.map((b) => b.cfi)), [bookmarks])
   const isCurrentBookmarked = useMemo(
     () => !!(positionRef.current.cfi && bookmarkCfis.has(positionRef.current.cfi)),
-    // Re-evaluate when progress changes since positionRef is a ref.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- re-evaluate when progress changes, since positionRef is a ref
     [bookmarkCfis, progress],
   )
 
@@ -338,7 +337,7 @@ export default function Reader() {
   useEffect(() => {
     if (session.isPending) return
     let mounted = true
-    loadPrefs(userId).then((loaded) => {
+    void loadPrefs(userId).then((loaded) => {
       if (!mounted) return
       setPrefs(loaded)
       setPrefsLoaded(true)
@@ -400,7 +399,7 @@ export default function Reader() {
   // module reference-counts.
   useEffect(() => {
     let active = false
-    ;(async () => {
+    void (async () => {
       try {
         const raw = await AsyncStorage.getItem('reading_defaults')
         const prefs = raw ? (JSON.parse(raw) as { keepAwake?: boolean }) : null
@@ -413,7 +412,7 @@ export default function Reader() {
     })()
     return () => {
       if (active) {
-        try { deactivateKeepAwake('foxing-reader') } catch {}
+        try { void deactivateKeepAwake('foxing-reader') } catch {}
       }
     }
   }, [])
@@ -440,7 +439,7 @@ export default function Reader() {
   useEffect(() => {
     if (!isTablet || !userId || readerState !== 'ready') return
     let canceled = false
-    AsyncStorage.getItem(`foxing.tablet-columns-applied.${userId}`).then((applied) => {
+    void AsyncStorage.getItem(`foxing.tablet-columns-applied.${userId}`).then((applied) => {
       if (canceled || applied === 'true') return
       if (prefs.columnMode === 'single') {
         changePrefs({ ...prefs, columnMode: 'two' })
@@ -450,9 +449,7 @@ export default function Reader() {
     return () => {
       canceled = true
     }
-    // changePrefs intentionally excluded, it's stable enough for this
-    // one-shot and re-adding it would re-fire when prefs change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // oxlint-disable-next-line react/exhaustive-deps -- a one-shot; changePrefs and prefs would re-fire it on every prefs change
   }, [isTablet, userId, readerState])
 
   const toggleChrome = useCallback(() => setChrome((v) => !v), [])
@@ -573,7 +570,7 @@ export default function Reader() {
     clearSleepInterval()
     setSleepTimer(null)
     setSleepRemainingMs(null)
-    try { await saveProgressRef.current() } catch {}
+    try { saveProgressRef.current() } catch {}
     setToast('Your place is saved.')
     // Brief delay so the toast registers before the reader unmounts and
     // the library tab paints over it.
@@ -604,7 +601,7 @@ export default function Reader() {
       const remaining = Math.max(0, endAt - Date.now())
       setSleepRemainingMs(remaining)
       if (remaining <= 0) {
-        expireSleepTimer()
+        void expireSleepTimer()
       }
     }, 1000)
   }, [expireSleepTimer])
@@ -738,7 +735,7 @@ export default function Reader() {
       case 'listen':
         // Pull the current chapter's plain text from the WebView, then
         // surface the TTS bar. The bar handles split-into-sentences locally.
-        ;(async () => {
+        void (async () => {
           try {
             const text = await (readerRef.current?.getChapterText?.() ?? Promise.resolve(''))
             setTtsText(text ?? '')
@@ -765,7 +762,7 @@ export default function Reader() {
   useEffect(() => {
     if (!book) return
     let mounted = true
-    loadPositionHistory(book.id).then((rows) => {
+    void loadPositionHistory(book.id).then((rows) => {
       if (mounted) positionHistoryRef.current = rows
     })
     return () => {
@@ -879,7 +876,7 @@ export default function Reader() {
             // transition. Wait until after the state update so the user
             // sees the new chapter momentarily before we save + navigate.
             if (sleepTimer?.kind === 'end_of_chapter') {
-              expireSleepTimer()
+              void expireSleepTimer()
             }
           }
           previousChapterRef.current = c.title

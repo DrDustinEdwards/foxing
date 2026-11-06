@@ -40,7 +40,7 @@ export default function SearchScreen() {
   useEffect(() => {
     // Autofocus on open.
     setTimeout(() => inputRef.current?.focus(), 50)
-    AsyncStorage.getItem(RECENT_KEY).then((raw) => {
+    void AsyncStorage.getItem(RECENT_KEY).then((raw) => {
       if (!raw) return
       try {
         const parsed = JSON.parse(raw) as string[]
@@ -98,7 +98,7 @@ export default function SearchScreen() {
             ref={inputRef}
             value={query}
             onChangeText={setQuery}
-            onSubmitEditing={() => commitRecent(query)}
+            onSubmitEditing={() => void commitRecent(query)}
             placeholder="Search Foxing"
             placeholderTextColor={colors.textTertiary}
             returnKeyType="search"
@@ -191,7 +191,7 @@ export default function SearchScreen() {
                     {r}
                   </Text>
                 </Pressable>
-                <Pressable onPress={() => removeRecent(r)} hitSlop={6} style={{ padding: 6 }}>
+                <Pressable onPress={() => void removeRecent(r)} hitSlop={6} style={{ padding: 6 }}>
                   <XIcon color={colors.textTertiary} size={14} />
                 </Pressable>
               </View>
@@ -228,7 +228,7 @@ export default function SearchScreen() {
                 key={b.id}
                 hit={b}
                 onPress={() => {
-                  commitRecent(b.title)
+                  void commitRecent(b.title)
                   router.push(`/book/${b.slug}` as never)
                 }}
                 onAdd={() =>

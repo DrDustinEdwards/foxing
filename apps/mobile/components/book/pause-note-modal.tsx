@@ -63,7 +63,7 @@ export function PauseNoteModal({
             </Text>
           </Pressable>
           <Pressable
-            onPress={onConfirm}
+            onPress={() => void onConfirm()}
             accessibilityRole="button"
             accessibilityLabel="Pause book"
             className="px-4 py-2 rounded-full"

@@ -43,6 +43,7 @@ export function CompanionSheet({
       return
     }
     if (request) void companion.run(request).then((answer) => answer && onAnswer?.(answer))
+    // oxlint-disable-next-line react/exhaustive-deps -- key stands in for request; companion's run and reset are stable, and onAnswer is read when the answer lands
   }, [visible, key])
 
   return (
@@ -81,7 +82,7 @@ export function CompanionSheet({
             This is a Foxing Plus feature.
           </Text>
           <Pressable
-            onPress={() => Linking.openURL('https://foxing.app/pricing')}
+            onPress={() => void Linking.openURL('https://foxing.app/pricing')}
             accessibilityRole="link"
             style={{ marginTop: 10 }}
           >

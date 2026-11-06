@@ -9,7 +9,7 @@ import {
   useUpdateGoal,
 } from '@foxing/client'
 import type * as W from '@foxing/types'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { useRouter } from 'expo-router'
@@ -40,13 +40,19 @@ function isCurrent(goal: W.Goal, period: Period, now: ReturnType<typeof currentP
 
 /** One period's goal: the target being typed, and save or remove against the server. */
 function usePeriodGoal(goals: W.GoalWithProgress[] | undefined, period: Period, max: number) {
-  const now = useMemo(() => currentPeriods(new Date()), [])
+  const [now] = useState(() => currentPeriods(new Date()))
   const row = goals?.find((g) => isCurrent(g.goal, period, now)) ?? null
   const create = useCreateGoal()
   const update = useUpdateGoal()
   const remove = useDeleteGoal()
-  const [draft, setDraft] = useState('')
-  useEffect(() => setDraft(row ? String(row.goal.target) : ''), [row?.goal.target])
+  // The draft follows the saved target whenever it changes.
+  const saved = row ? String(row.goal.target) : ''
+  const [draft, setDraft] = useState(saved)
+  const [followed, setFollowed] = useState(saved)
+  if (saved !== followed) {
+    setFollowed(saved)
+    setDraft(saved)
+  }
 
   const save = () => {
     const target = parseInt(draft, 10)
@@ -83,19 +89,22 @@ export default function GoalsScreen() {
   const month = usePeriodGoal(goals.data, 'month', 50)
   const week = usePeriodGoal(goals.data, 'week', 14)
 
+  // The day the screen opened: the year and month the goals are for.
+  const [today] = useState(() => new Date())
+
   // Where this year's pace lands: the finish rate so far, carried to the target.
   const projectedCompletion = useMemo(() => {
     const done = year.row?.progress ?? 0
     const target = year.row?.goal.target ?? 0
     if (!target || done === 0 || done >= target) return null
-    const start = new Date(new Date().getFullYear(), 0, 1).getTime()
-    const perDay = done / Math.max(1, (Date.now() - start) / 86_400_000)
-    return new Date(Date.now() + ((target - done) / perDay) * 86_400_000).toLocaleDateString(undefined, {
+    const start = new Date(today.getFullYear(), 0, 1).getTime()
+    const perDay = done / Math.max(1, (today.getTime() - start) / 86_400_000)
+    return new Date(today.getTime() + ((target - done) / perDay) * 86_400_000).toLocaleDateString(undefined, {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
     })
-  }, [year.row])
+  }, [year.row, today])
 
   const last7 = (stats?.week ?? []).map((d) => ({
     date: new Date(d.day).toISOString().slice(0, 10),
@@ -133,7 +142,7 @@ export default function GoalsScreen() {
         ) : null}
 
         <YearGoalCard
-          year={new Date().getFullYear()}
+          year={today.getFullYear()}
           target={year.draft}
           setTarget={year.setDraft}
           save={year.save}
@@ -145,7 +154,7 @@ export default function GoalsScreen() {
         />
 
         <PeriodGoalCard
-          title={`${MONTH_NAMES[new Date().getMonth()]} goal`}
+          title={`${MONTH_NAMES[today.getMonth()]} goal`}
           unitNoun="this month"
           target={month.draft}
           onChange={month.setDraft}

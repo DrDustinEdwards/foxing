@@ -100,7 +100,7 @@ export function BookmarkNamingModal({
               </Text>
             </Pressable>
             <Pressable
-              onPress={() => onSave(name.trim() || suggested)}
+              onPress={() => void onSave(name.trim() || suggested)}
               className="px-4 py-2 rounded-full"
               style={{ backgroundColor: colors.brandUi }}
             >

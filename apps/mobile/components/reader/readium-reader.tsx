@@ -366,7 +366,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(
     // changes the inline lambda's identity doesn't re-trigger the effect.
     useEffect(() => {
       let canceled = false
-      ;(async () => {
+      void (async () => {
         try {
           const uri = await ensureEpubLocalUri(epubUrl)
           if (!canceled) setLocalUri(uri)

@@ -106,6 +106,7 @@ export function FloatingPill({
   // (new word tap shouldn't inherit prior color-mode state).
   useEffect(() => {
     if (!visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the pill each time it hides
       setShowColors(false)
       setPendingColor(null)
       setPrivacyDraft('public')
@@ -218,7 +219,7 @@ export function FloatingPill({
               accessibilityLabel={`Highlight ${c}`}
               // First swatch gets focus so a screen-reader user lands on a
               // selectable color immediately when the picker opens.
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              // oxlint-disable-next-line typescript/no-explicit-any -- accessibilityAutoFocus is missing from React Native's Pressable props type
               {...(idx === 0 ? ({ accessibilityAutoFocus: true } as any) : {})}
               onPress={() => setPendingColor(c)}
               style={{

@@ -342,7 +342,7 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                   </Text>
                 </Pressable>
                 <Pressable
-                  onPress={markMastered}
+                  onPress={() => void markMastered()}
                   className="flex-1 rounded-full py-3 items-center flex-row justify-center bg-brand-ui-light dark:bg-brand-ui-dark"
                 >
                   <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand, marginRight: 6 }}>

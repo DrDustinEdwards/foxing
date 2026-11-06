@@ -124,6 +124,7 @@ export function MenuSheet({
   // the previous view's state.
   useEffect(() => {
     if (visible) {
+      // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
       setShowCompanion(initialView === 'companion')
     }
   }, [visible, initialView])
@@ -141,7 +142,7 @@ export function MenuSheet({
 
   function handleSelect(key: MenuItem['key'], label?: string) {
     if (key === 'share') {
-      handleShare()
+      void handleShare()
       onClose()
       return
     }

@@ -101,7 +101,7 @@ export default function ClubsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={index.isRefetching}
-              onRefresh={() => index.refetch()}
+              onRefresh={() => void index.refetch()}
               tintColor={colors.brandUi}
               colors={[colors.brandUi]}
             />

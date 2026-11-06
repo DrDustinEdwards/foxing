@@ -139,7 +139,7 @@ export default function ScanScreen() {
             style={{ flex: 1 }}
             facing="back"
             barcodeScannerSettings={{ barcodeTypes: ['ean13', 'ean8'] }}
-            onBarcodeScanned={onBarcodeScanned}
+            onBarcodeScanned={(e) => void onBarcodeScanned(e)}
           />
           <View
             pointerEvents="none"
@@ -192,7 +192,7 @@ export default function ScanScreen() {
               </Text>
               {permission.canAskAgain ? (
                 <Pressable
-                  onPress={requestPermission}
+                  onPress={() => void requestPermission()}
                   style={{
                     alignSelf: 'flex-start',
                     paddingHorizontal: 14,
@@ -285,7 +285,7 @@ export default function ScanScreen() {
                       colors={colors}
                       label={s.label}
                       disabled={busy}
-                      onPress={() => handleAddToLibrary(s.value)}
+                      onPress={() => void handleAddToLibrary(s.value)}
                     />
                   ))}
                 </View>
@@ -397,7 +397,7 @@ export default function ScanScreen() {
               }}
             />
             <Pressable
-              onPress={() => lookup(manualIsbn)}
+              onPress={() => void lookup(manualIsbn)}
               disabled={!manualIsbn || loading}
               style={{
                 paddingHorizontal: 16,

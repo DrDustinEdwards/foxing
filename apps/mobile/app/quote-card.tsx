@@ -308,7 +308,7 @@ export default function QuoteCardScreen() {
         className="flex-row items-center gap-2 px-4 py-3 border-t border-border-subtle-light dark:border-border-subtle-dark"
       >
           <Pressable
-            onPress={onSave}
+            onPress={() => void onSave()}
             disabled={saving}
             className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-full border"
             style={{ borderColor: colors.borderInteractive, opacity: saving ? 0.7 : 1 }}
@@ -323,7 +323,7 @@ export default function QuoteCardScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={onShare}
+            onPress={() => void onShare()}
             className="flex-1 flex-row items-center justify-center gap-2 py-3 rounded-full"
             style={{ backgroundColor: colors.brandUi }}
           >

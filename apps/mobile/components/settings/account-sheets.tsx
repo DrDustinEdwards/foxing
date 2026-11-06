@@ -127,7 +127,7 @@ export function ChangeEmailSheet({ visible, email, onClose }: { visible: boolean
       title="Email"
       action="Change"
       canSubmit={next.trim().includes('@')}
-      onSubmit={submit}
+      onSubmit={() => void submit()}
       onClose={close}
       {...action}
     >
@@ -246,7 +246,7 @@ export function DeleteAccountSheet({ visible, onClose }: { visible: boolean; onC
       pending={del.pending}
       done={null}
       error={del.error ?? (clubs.error ? 'Could not load your clubs.' : null)}
-      onSubmit={submit}
+      onSubmit={() => void submit()}
       onClose={onClose}
     >
       <Text style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 16 }}>

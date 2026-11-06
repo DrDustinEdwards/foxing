@@ -216,7 +216,7 @@ export default function ProfileScreen() {
             ) : null}
 
             <Pressable
-              onPress={signOut}
+              onPress={() => void signOut()}
               accessibilityRole="button"
               accessibilityLabel="Sign out of Foxing"
               className="flex-row justify-center items-center gap-2 rounded-xl py-4 border border-border-subtle-light dark:border-border-subtle-dark bg-bg-surface-light dark:bg-bg-surface-dark"

@@ -86,7 +86,7 @@ export function AddMeetingModal({
             New meeting
           </Text>
           <Pressable
-            onPress={create}
+            onPress={() => void create()}
             disabled={saving || !title.trim() || !meetingDate.trim()}
             style={{
               paddingHorizontal: 14,
@@ -242,7 +242,7 @@ export function AddPollModal({
             New poll
           </Text>
           <Pressable
-            onPress={create}
+            onPress={() => void create()}
             disabled={saving || !title.trim()}
             style={{
               paddingHorizontal: 14,

@@ -100,9 +100,10 @@ export default function ListDetailScreen() {
       {
         text: 'Delete',
         style: 'destructive',
-        onPress: async () => {
-          if (await del.run({ id: info.id })) router.back()
-        },
+        onPress: () =>
+          void del.run({ id: info.id }).then((deleted) => {
+            if (deleted) router.back()
+          }),
       },
     ])
   }
@@ -442,7 +443,7 @@ export default function ListDetailScreen() {
               Edit list
             </Text>
             <Pressable
-              onPress={saveEdit}
+              onPress={() => void saveEdit()}
               style={{
                 paddingHorizontal: 14,
                 paddingVertical: 8,

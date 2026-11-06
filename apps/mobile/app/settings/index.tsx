@@ -92,7 +92,7 @@ export default function SettingsScreen() {
   // ── Load device settings ─────────────────────────────────────────────────
   useEffect(() => {
     let mounted = true
-    ;(async () => {
+    void (async () => {
       const [local, defaults, hc, rm, tts] = await Promise.all([
         AsyncStorage.getItem(LOCAL_REMINDERS_KEY),
         AsyncStorage.getItem(READING_DEFAULTS_KEY),
@@ -239,7 +239,7 @@ export default function SettingsScreen() {
               { value: 'system-sans', label: 'Sans' },
             ]}
             onChange={(v) =>
-              updateReadingDefaults({ ...readingDefaults, font: v as ReadingDefaults['font'] })
+              void updateReadingDefaults({ ...readingDefaults, font: v as ReadingDefaults['font'] })
             }
           />
           <SegmentedRow
@@ -247,7 +247,7 @@ export default function SettingsScreen() {
             value={readingDefaults.size}
             options={(['S', 'M', 'L', 'XL'] as const).map((v) => ({ value: v, label: v }))}
             onChange={(v) =>
-              updateReadingDefaults({ ...readingDefaults, size: v as ReadingDefaults['size'] })
+              void updateReadingDefaults({ ...readingDefaults, size: v as ReadingDefaults['size'] })
             }
           />
           <SegmentedRow
@@ -260,21 +260,21 @@ export default function SettingsScreen() {
               { value: 'oled', label: 'OLED' },
             ]}
             onChange={(v) =>
-              updateReadingDefaults({ ...readingDefaults, theme: v as ReadingDefaults['theme'] })
+              void updateReadingDefaults({ ...readingDefaults, theme: v as ReadingDefaults['theme'] })
             }
           />
           <ToggleRow
             label="Keep screen awake while reading"
             value={readingDefaults.keepAwake}
-            onChange={(v) => updateReadingDefaults({ ...readingDefaults, keepAwake: v })}
+            onChange={(v) => void updateReadingDefaults({ ...readingDefaults, keepAwake: v })}
           />
           <ToggleRow
             label="Haptic feedback"
             sub="Subtle buzz on highlights, badges, and milestones"
             value={hapticsOn}
-            onChange={async (v) => {
+            onChange={(v) => {
               setHapticsOn(v)
-              await setHapticsEnabled(v)
+              void setHapticsEnabled(v)
             }}
           />
         </Section>
@@ -289,29 +289,29 @@ export default function SettingsScreen() {
               { value: '1.25', label: '1.25×' },
               { value: '1.5', label: '1.5×' },
             ]}
-            onChange={async (v) => {
+            onChange={(v) => {
               const parsed = parseFloat(v)
               if (!Number.isFinite(parsed) || parsed <= 0) return
               setTtsSpeed(parsed)
-              await AsyncStorage.setItem(TTS_SPEED_KEY, String(parsed))
+              void AsyncStorage.setItem(TTS_SPEED_KEY, String(parsed))
             }}
           />
           <ToggleRow
             label="High contrast mode"
             sub="Stronger contrast for text and icons"
             value={highContrast}
-            onChange={async (v) => {
+            onChange={(v) => {
               setHighContrast(v)
-              await AsyncStorage.setItem(A11Y_HIGH_CONTRAST_KEY, v ? 'true' : 'false')
+              void AsyncStorage.setItem(A11Y_HIGH_CONTRAST_KEY, v ? 'true' : 'false')
             }}
           />
           <ToggleRow
             label="Reduce motion"
             sub="Disable page-turn and other animations"
             value={reduceMotion}
-            onChange={async (v) => {
+            onChange={(v) => {
               setReduceMotion(v)
-              await AsyncStorage.setItem(A11Y_REDUCE_MOTION_KEY, v ? 'true' : 'false')
+              void AsyncStorage.setItem(A11Y_REDUCE_MOTION_KEY, v ? 'true' : 'false')
             }}
           />
         </Section>
@@ -322,7 +322,7 @@ export default function SettingsScreen() {
             value={userPrefs.appLanguage}
             options={APP_LANGUAGE_OPTIONS}
             onChange={(v) =>
-              updateUserPrefs({ ...userPrefs, appLanguage: v as UserPrefs['appLanguage'] })
+              void updateUserPrefs({ ...userPrefs, appLanguage: v as UserPrefs['appLanguage'] })
             }
           />
           <SegmentedRow
@@ -330,7 +330,7 @@ export default function SettingsScreen() {
             value={userPrefs.aiLanguage}
             options={APP_LANGUAGE_OPTIONS}
             onChange={(v) =>
-              updateUserPrefs({ ...userPrefs, aiLanguage: v as UserPrefs['aiLanguage'] })
+              void updateUserPrefs({ ...userPrefs, aiLanguage: v as UserPrefs['aiLanguage'] })
             }
           />
           <SegmentedRow
@@ -341,7 +341,7 @@ export default function SettingsScreen() {
               { value: 'pages_per_hour', label: 'Pages/hr' },
             ]}
             onChange={(v) =>
-              updateUserPrefs({ ...userPrefs, speedUnit: v as UserPrefs['speedUnit'] })
+              void updateUserPrefs({ ...userPrefs, speedUnit: v as UserPrefs['speedUnit'] })
             }
           />
         </Section>
@@ -351,7 +351,7 @@ export default function SettingsScreen() {
             label="Remember font and theme per book"
             sub="Each book reopens with the last typography you used for it"
             value={userPrefs.rememberPerBook}
-            onChange={(v) => updateUserPrefs({ ...userPrefs, rememberPerBook: v })}
+            onChange={(v) => void updateUserPrefs({ ...userPrefs, rememberPerBook: v })}
           />
           <View
             className="px-3 py-3 border-t"
@@ -405,13 +405,13 @@ export default function SettingsScreen() {
             label="Daily reading reminder"
             sub="Scheduled on this device"
             value={reminders.dailyReminder}
-            onChange={(v) => updateReminders({ ...reminders, dailyReminder: v })}
+            onChange={(v) => void updateReminders({ ...reminders, dailyReminder: v })}
           />
           {reminders.dailyReminder ? (
             <TimeRow
               label="Reminder time"
               value={reminders.reminderTime}
-              onChange={(t) => updateReminders({ ...reminders, reminderTime: t })}
+              onChange={(t) => void updateReminders({ ...reminders, reminderTime: t })}
             />
           ) : null}
           {Object.entries(NOTIFICATION_LABELS).map(([cat, { label, subtext }]) => (
@@ -471,10 +471,10 @@ export default function SettingsScreen() {
                   ? `Importing… ${importing.done} of ${importing.total || '?'}`
                   : `Import from ${source}`
               }
-              onPress={() => runImport(source)}
+              onPress={() => void runImport(source)}
             />
           ))}
-          <LinkRow label={exporting ? 'Preparing export…' : 'Export my data'} onPress={exportData} />
+          <LinkRow label={exporting ? 'Preparing export…' : 'Export my data'} onPress={() => void exportData()} />
           {dataError ? (
             <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, padding: 12 }} accessibilityRole="alert">
               {dataError}
@@ -511,19 +511,19 @@ export default function SettingsScreen() {
           </View>
           <LinkRow
             label="Privacy policy"
-            onPress={() => Share.share({ message: 'https://foxing.app/privacy' })}
+            onPress={() => void Share.share({ message: 'https://foxing.app/privacy' })}
           />
           <LinkRow
             label="Terms of service"
-            onPress={() => Share.share({ message: 'https://foxing.app/terms' })}
+            onPress={() => void Share.share({ message: 'https://foxing.app/terms' })}
           />
           <LinkRow
             label="Send feedback"
-            onPress={() => Share.share({ message: 'mailto:feedback@foxing.app' })}
+            onPress={() => void Share.share({ message: 'mailto:feedback@foxing.app' })}
           />
           <LinkRow
             label="Rate Foxing"
-            onPress={() => Share.share({ message: 'https://foxing.app/rate' })}
+            onPress={() => void Share.share({ message: 'https://foxing.app/rate' })}
           />
         </Section>
 

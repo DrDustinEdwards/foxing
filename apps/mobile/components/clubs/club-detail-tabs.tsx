@@ -1,5 +1,5 @@
 import type * as W from '@foxing/types'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import {
   View,
   Text,
@@ -50,13 +50,14 @@ export function DiscussionsTab({
   onOpen: (t: W.ClubThreadItem) => void
 }) {
   const colors = useColors()
+  const [now] = useState(() => Date.now())
   const countdown = useMemo(() => {
     if (!nextUnlock) return null
-    const ms = nextUnlock - Date.now()
+    const ms = nextUnlock - now
     const d = Math.floor(ms / 86_400_000)
     const h = Math.floor((ms % 86_400_000) / 3_600_000)
     return `${d}d ${h}h`
-  }, [nextUnlock])
+  }, [nextUnlock, now])
   return (
     <View>
       {countdown ? (
@@ -210,7 +211,7 @@ export function ReadingTab({
 }) {
   const colors = useColors()
   const club = page.club
-  const now = Date.now()
+  const [now] = useState(() => Date.now())
   const scheduleSorted = useMemo(
     () => [...page.schedule].sort((a, b) => a.unlockDate - b.unlockDate),
     [page.schedule],
@@ -328,7 +329,7 @@ export function ReadingTab({
           <View style={{ marginTop: 8 }}>
             {scheduleSorted.map((s) => {
               const ts = s.unlockDate
-              const isToday = new Date(ts).toDateString() === new Date().toDateString()
+              const isToday = new Date(ts).toDateString() === new Date(now).toDateString()
               const status = isToday ? 'Today' : ts > now ? 'Upcoming' : 'Unlocked'
               const statusColor =
                 status === 'Today'

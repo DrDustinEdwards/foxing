@@ -66,6 +66,7 @@ export function GoToSheet({
 
   useEffect(() => {
     if (!visible) return
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setTab('contents')
     setPercent(String(Math.round(currentProgress * 100)))
     setTocLoading(true)
@@ -379,7 +380,7 @@ function MyPlacesTab({
             </Pressable>
           ))}
           <Pressable
-            onPress={() => onClearHistory()}
+            onPress={() => void onClearHistory()}
             className="flex-row items-center justify-center mt-3 py-3 rounded-lg"
             accessibilityRole="button"
             accessibilityLabel="Clear reading history"

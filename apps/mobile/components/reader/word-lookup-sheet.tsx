@@ -27,6 +27,7 @@ export function WordLookupSheet({
   const colors = useColors()
   const [more, setMore] = useState(false)
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     if (visible) setMore(false)
   }, [visible, word])
 
