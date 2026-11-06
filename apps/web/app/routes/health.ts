@@ -3,6 +3,7 @@ import {
   aiCheck,
   authSpikeCheck,
   durableObjectCheck,
+  emailCheck,
   healthResponse,
   imagesCheck,
   kvCheck,
@@ -22,10 +23,9 @@ import type { Route } from "./+types/health";
 // Durable Objects (live club updates, and the API's limits), and a cron job that failed, overran,
 // went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts), and a spike of failed
 // sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck).
-// durableObjectCheck mints an id and sends nothing, queueCheck sends nothing and aiCheck runs nothing, so none is billed. Left
-// out: EMAIL (send_email has nothing to read, and a probe would send mail; apps/web/.ops-audit.json says so) and CARREL_RATE_LIMIT
-// (the rate-limiting binding has no read, and a probe would spend Carrel's budget). `sha` is the
-// deployed commit, which CI's deploy passes as DEPLOY_SHA (devkit's worker-deploy.yml; a manual
+// durableObjectCheck mints an id and sends nothing, queueCheck and emailCheck send nothing and aiCheck runs nothing, so none is
+// billed or mails anyone. Left out: CARREL_RATE_LIMIT (the rate-limiting binding has no read, and a probe would spend
+// Carrel's budget). `sha` is the deployed commit, which CI's deploy passes as DEPLOY_SHA (devkit's worker-deploy.yml; a manual
 // deploy has none).
 export function loader({ context }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -40,6 +40,7 @@ export function loader({ context }: Route.LoaderArgs) {
       kvCheck("kv", env.APP_KV),
       imagesCheck("images", env.IMAGES),
       aiCheck("ai", env.AI),
+      emailCheck("email", env.EMAIL),
       queueCheck("companion-queue", env.COMPANION_CACHE_QUEUE),
       durableObjectCheck("club-room", env.CLUB_ROOM),
       durableObjectCheck("rate-limiter", env.RATE_LIMITER),
