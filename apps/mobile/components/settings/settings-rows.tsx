@@ -1,10 +1,10 @@
-import { useColors } from '@/constants/colors'
-import { Pressable, Switch, Text, TextInput, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
-import { CaretRight } from 'phosphor-react-native'
+import { useColors } from "@/constants/colors";
+import { Pressable, Switch, Text, TextInput, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
+import { CaretRight } from "phosphor-react-native";
 
 export function MetaHeader({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
@@ -17,11 +17,11 @@ export function MetaHeader({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  )
+  );
 }
 
 export function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View
       style={{ marginTop: 18 }}
@@ -32,7 +32,7 @@ export function Section({ title, children }: { title: string; children: React.Re
           fontFamily: Fonts.uiMedium,
           fontSize: 11,
           color: colors.textTertiary,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.6,
           paddingHorizontal: 12,
           paddingTop: 10,
@@ -43,7 +43,7 @@ export function Section({ title, children }: { title: string; children: React.Re
       </Text>
       {children}
     </View>
-  )
+  );
 }
 
 export function ToggleRow({
@@ -52,12 +52,12 @@ export function ToggleRow({
   value,
   onChange,
 }: {
-  label: string
-  sub?: string
-  value: boolean
-  onChange: (v: boolean) => void
+  label: string;
+  sub?: string;
+  value: boolean;
+  onChange: (v: boolean) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View
       className="flex-row items-center px-3 py-3 border-t"
@@ -81,7 +81,7 @@ export function ToggleRow({
         trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
       />
     </View>
-  )
+  );
 }
 
 export function SegmentedRow<T extends string>({
@@ -90,23 +90,27 @@ export function SegmentedRow<T extends string>({
   options,
   onChange,
 }: {
-  label: string
-  value: T
-  options: Array<{ value: T; label: string }>
-  onChange: (v: T) => void
+  label: string;
+  value: T;
+  options: Array<{ value: T; label: string }>;
+  onChange: (v: T) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
-    <View
-      className="px-3 py-3 border-t"
-      style={{ borderTopColor: colors.borderSubtle }}
-    >
-      <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary, marginBottom: 6 }}>
+    <View className="px-3 py-3 border-t" style={{ borderTopColor: colors.borderSubtle }}>
+      <Text
+        style={{
+          fontFamily: Fonts.uiMedium,
+          fontSize: 12,
+          color: colors.textTertiary,
+          marginBottom: 6,
+        }}
+      >
         {label}
       </Text>
       <View className="flex-row" style={{ gap: 6 }}>
         {options.map((o) => {
-          const active = o.value === value
+          const active = o.value === value;
           return (
             <Pressable
               key={String(o.value)}
@@ -127,11 +131,11 @@ export function SegmentedRow<T extends string>({
                 {o.label}
               </Text>
             </Pressable>
-          )
+          );
         })}
       </View>
     </View>
-  )
+  );
 }
 
 export function TimeRow({
@@ -139,11 +143,11 @@ export function TimeRow({
   value,
   onChange,
 }: {
-  label: string
-  value: string
-  onChange: (v: string) => void
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View
       className="flex-row items-center px-3 py-3 border-t"
@@ -168,12 +172,12 @@ export function TimeRow({
           paddingHorizontal: 10,
           paddingVertical: 6,
           minWidth: 80,
-          textAlign: 'center',
+          textAlign: "center",
         }}
         maxLength={5}
       />
     </View>
-  )
+  );
 }
 
 export function LinkRow({
@@ -182,13 +186,13 @@ export function LinkRow({
   Icon,
   destructive,
 }: {
-  label: string
-  onPress: () => void
-  Icon?: React.ComponentType<{ color: string; size: number }>
-  destructive?: boolean
+  label: string;
+  onPress: () => void;
+  Icon?: React.ComponentType<{ color: string; size: number }>;
+  destructive?: boolean;
 }) {
-  const colors = useColors()
-  const tint = destructive ? colors.error : colors.textPrimary
+  const colors = useColors();
+  const tint = destructive ? colors.error : colors.textPrimary;
   return (
     <Pressable
       onPress={onPress}
@@ -205,5 +209,5 @@ export function LinkRow({
       </Text>
       <CaretRight color={colors.textTertiary} size={14} />
     </Pressable>
-  )
+  );
 }

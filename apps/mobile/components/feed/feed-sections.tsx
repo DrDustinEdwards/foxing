@@ -1,27 +1,27 @@
-import type * as W from '@foxing/types'
-import { useColors } from '@/constants/colors'
-import { useRouter } from 'expo-router'
-import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native'
-import { Bell, Newspaper, UserPlus } from 'phosphor-react-native'
-import { Fonts } from '@/constants/fonts'
-import { TrendingBookCard } from '@/components/feed/trending-book-card'
+import type * as W from "@foxing/types";
+import { useColors } from "@/constants/colors";
+import { useRouter } from "expo-router";
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from "react-native";
+import { Bell, Newspaper, UserPlus } from "phosphor-react-native";
+import { Fonts } from "@/constants/fonts";
+import { TrendingBookCard } from "@/components/feed/trending-book-card";
 
 export function FeedEmptyState({
   icon,
   title,
   body,
 }: {
-  icon: React.ReactNode
-  title: string
-  body: string
+  icon: React.ReactNode;
+  title: string;
+  body: string;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View
       style={{
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "center",
+        justifyContent: "center",
         paddingHorizontal: 32,
         paddingTop: 80,
         paddingBottom: 64,
@@ -32,8 +32,8 @@ export function FeedEmptyState({
           width: 64,
           height: 64,
           borderRadius: 32,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           backgroundColor: colors.brandSubtle,
           marginBottom: 16,
         }}
@@ -45,7 +45,7 @@ export function FeedEmptyState({
           fontFamily: Fonts.display,
           fontSize: 18,
           color: colors.textPrimary,
-          textAlign: 'center',
+          textAlign: "center",
           marginBottom: 6,
         }}
       >
@@ -56,18 +56,18 @@ export function FeedEmptyState({
           fontFamily: Fonts.body,
           fontSize: 14,
           color: colors.textTertiary,
-          textAlign: 'center',
+          textAlign: "center",
           lineHeight: 20,
         }}
       >
         {body}
       </Text>
     </View>
-  )
+  );
 }
 
 export function FeedListEmpty({ error }: { error: string | null }) {
-  const colors = useColors()
+  const colors = useColors();
   if (error) {
     return (
       <FeedEmptyState
@@ -75,7 +75,7 @@ export function FeedListEmpty({ error }: { error: string | null }) {
         title="Couldn't load feed"
         body={error}
       />
-    )
+    );
   }
   return (
     <FeedEmptyState
@@ -83,7 +83,7 @@ export function FeedListEmpty({ error }: { error: string | null }) {
       title="Your feed is quiet"
       body="Follow other readers to see their reviews, finishes and lists here."
     />
-  )
+  );
 }
 
 export function FeedListFooter({
@@ -91,33 +91,33 @@ export function FeedListFooter({
   hasMore,
   count,
 }: {
-  loadingMore: boolean
-  hasMore: boolean
-  count: number
+  loadingMore: boolean;
+  hasMore: boolean;
+  count: number;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   if (loadingMore) {
     return (
-      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+      <View style={{ paddingVertical: 16, alignItems: "center" }}>
         <ActivityIndicator color={colors.brandUi} />
       </View>
-    )
+    );
   }
   if (!hasMore && count > 0) {
     return (
-      <View style={{ paddingVertical: 16, alignItems: 'center' }}>
+      <View style={{ paddingVertical: 16, alignItems: "center" }}>
         <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
           You're all caught up.
         </Text>
       </View>
-    )
+    );
   }
-  return null
+  return null;
 }
 
 export function FeedHeader({ unread, onBell }: { unread: number; onBell: () => void }) {
-  const colors = useColors()
-  const router = useRouter()
+  const colors = useColors();
+  const router = useRouter();
   return (
     <View className="flex-row items-center justify-between px-4 pt-2 pb-3">
       <Text style={{ fontFamily: Fonts.displayBold, fontSize: 22, color: colors.textPrimary }}>
@@ -125,7 +125,7 @@ export function FeedHeader({ unread, onBell }: { unread: number; onBell: () => v
       </Text>
       <View className="flex-row items-center" style={{ gap: 12 }}>
         <Pressable
-          onPress={() => router.push('/discover-readers' as never)}
+          onPress={() => router.push("/discover-readers" as never)}
           hitSlop={6}
           accessibilityLabel="Find readers"
           className="px-3 py-1 rounded-full border"
@@ -151,15 +151,15 @@ export function FeedHeader({ unread, onBell }: { unread: number; onBell: () => v
           {unread > 0 ? (
             <View
               style={{
-                position: 'absolute',
+                position: "absolute",
                 top: 0,
                 right: 0,
                 minWidth: 16,
                 height: 16,
                 borderRadius: 8,
                 backgroundColor: colors.brandUi,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
                 paddingHorizontal: 4,
               }}
             >
@@ -170,14 +170,14 @@ export function FeedHeader({ unread, onBell }: { unread: number; onBell: () => v
                   color: colors.textOnBrand,
                 }}
               >
-                {unread > 99 ? '99+' : unread}
+                {unread > 99 ? "99+" : unread}
               </Text>
             </View>
           ) : null}
         </Pressable>
       </View>
     </View>
-  )
+  );
 }
 
 // "Popular on Foxing this month" + optional Find Readers card. Always rendered
@@ -190,13 +190,13 @@ export function PopularSection({
   onPressBook,
   sectionLabel,
 }: {
-  showFindReaders: boolean
-  onFindReaders: () => void
-  trending: W.BookCard[]
-  onPressBook: (slug: string) => void
-  sectionLabel: string | null
+  showFindReaders: boolean;
+  onFindReaders: () => void;
+  trending: W.BookCard[];
+  onPressBook: (slug: string) => void;
+  sectionLabel: string | null;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View style={{ marginBottom: 12 }}>
       {showFindReaders ? (
@@ -235,12 +235,8 @@ export function PopularSection({
 
       <SectionLabel>Popular on Foxing this month</SectionLabel>
       {trending.length === 0 ? (
-        <View
-          className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-        >
-          <Text
-            style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textTertiary }}
-          >
+        <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
+          <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textTertiary }}>
             Check back in a day, the community's still warming up.
           </Text>
         </View>
@@ -262,23 +258,23 @@ export function PopularSection({
         </View>
       ) : null}
     </View>
-  )
+  );
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
         fontFamily: Fonts.uiMedium,
         fontSize: 11,
         color: colors.textTertiary,
-        textTransform: 'uppercase',
+        textTransform: "uppercase",
         letterSpacing: 0.6,
         marginBottom: 8,
       }}
     >
       {children}
     </Text>
-  )
+  );
 }

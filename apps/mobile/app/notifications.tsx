@@ -1,42 +1,53 @@
-import { useMarkNotificationsRead, useNotifications } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useCallback, useMemo } from 'react'
-import { View, Text, Pressable, FlatList, ActivityIndicator, RefreshControl } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { CaretLeft, UserPlus, ChatCircleDots, Heart, Trophy, Bell, UsersThree, CalendarBlank, ChartBar, Megaphone } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { relativeTime } from '@/lib/relative-time'
+import { useMarkNotificationsRead, useNotifications } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useCallback, useMemo } from "react";
+import { View, Text, Pressable, FlatList, ActivityIndicator, RefreshControl } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import {
+  CaretLeft,
+  UserPlus,
+  ChatCircleDots,
+  Heart,
+  Trophy,
+  Bell,
+  UsersThree,
+  CalendarBlank,
+  ChartBar,
+  Megaphone,
+} from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { relativeTime } from "@/lib/relative-time";
 
-type BucketKey = 'today' | 'week' | 'earlier'
+type BucketKey = "today" | "week" | "earlier";
 const BUCKETS: Array<{ key: BucketKey; label: string }> = [
-  { key: 'today', label: 'Today' },
-  { key: 'week', label: 'This Week' },
-  { key: 'earlier', label: 'Earlier' },
-]
+  { key: "today", label: "Today" },
+  { key: "week", label: "This Week" },
+  { key: "earlier", label: "Earlier" },
+];
 
 // GET /notifications. Opening one marks it read in the cache straight away.
 export default function NotificationsScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const notifications = useNotifications()
-  const markRead = useMarkNotificationsRead()
-  const rows = useMemo(() => notifications.data?.notifications ?? [], [notifications.data])
-  const unreadCount = notifications.data?.unread ?? 0
+  const colors = useColors();
+  const router = useRouter();
+  const notifications = useNotifications();
+  const markRead = useMarkNotificationsRead();
+  const rows = useMemo(() => notifications.data?.notifications ?? [], [notifications.data]);
+  const unreadCount = notifications.data?.unread ?? 0;
 
   const onTap = useCallback(
     (n: W.NotificationItem) => {
-      if (!n.isRead) markRead.fire({ ids: [n.id] })
-      const route = notificationRoute(n)
-      if (route) router.push(route as never)
+      if (!n.isRead) markRead.fire({ ids: [n.id] });
+      const route = notificationRoute(n);
+      if (route) router.push(route as never);
     },
     [markRead, router],
-  )
+  );
 
-  const onMarkAll = useCallback(() => markRead.fire(), [markRead])
+  const onMarkAll = useCallback(() => markRead.fire(), [markRead]);
 
-  const buckets = useMemo(() => groupByBucket(rows), [rows])
+  const buckets = useMemo(() => groupByBucket(rows), [rows]);
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -74,16 +85,16 @@ export default function NotificationsScreen() {
         <FlatList
           data={flattenBuckets(buckets)}
           keyExtractor={(item) =>
-            item.kind === 'header' ? `h:${item.bucket}` : `n:${item.row.id}`
+            item.kind === "header" ? `h:${item.bucket}` : `n:${item.row.id}`
           }
           renderItem={({ item }) =>
-            item.kind === 'header' ? (
+            item.kind === "header" ? (
               <Text
                 style={{
                   fontFamily: Fonts.uiMedium,
                   fontSize: 11,
                   color: colors.textTertiary,
-                  textTransform: 'uppercase',
+                  textTransform: "uppercase",
                   letterSpacing: 0.6,
                   marginTop: 16,
                   marginBottom: 6,
@@ -108,19 +119,13 @@ export default function NotificationsScreen() {
         />
       )}
     </SafeAreaView>
-  )
+  );
 }
 
-function NotificationRowView({
-  row,
-  onPress,
-}: {
-  row: W.NotificationItem
-  onPress: () => void
-}) {
-  const colors = useColors()
-  const Icon = iconFor(row.type)
-  const unread = !row.isRead
+function NotificationRowView({ row, onPress }: { row: W.NotificationItem; onPress: () => void }) {
+  const colors = useColors();
+  const Icon = iconFor(row.type);
+  const unread = !row.isRead;
   return (
     <Pressable
       onPress={onPress}
@@ -137,8 +142,8 @@ function NotificationRowView({
           width: 36,
           height: 36,
           borderRadius: 18,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           backgroundColor: colors.brandSubtle,
           marginRight: 12,
         }}
@@ -174,17 +179,17 @@ function NotificationRowView({
         </Text>
       </View>
     </Pressable>
-  )
+  );
 }
 
 function EmptyState() {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View
       style={{
         flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
+        alignItems: "center",
+        justifyContent: "center",
         paddingHorizontal: 32,
       }}
     >
@@ -193,8 +198,8 @@ function EmptyState() {
           width: 64,
           height: 64,
           borderRadius: 32,
-          alignItems: 'center',
-          justifyContent: 'center',
+          alignItems: "center",
+          justifyContent: "center",
           backgroundColor: colors.brandSubtle,
           marginBottom: 16,
         }}
@@ -206,91 +211,91 @@ function EmptyState() {
           fontFamily: Fonts.display,
           fontSize: 18,
           color: colors.textPrimary,
-          textAlign: 'center',
+          textAlign: "center",
         }}
       >
         You're all caught up.
       </Text>
     </View>
-  )
+  );
 }
 
 function iconFor(type: string) {
   switch (type) {
-    case 'new_follower':
-      return UserPlus
-    case 'thread_reply':
-    case 'post_reply':
-      return ChatCircleDots
-    case 'reaction':
-      return Heart
-    case 'goal_met':
-      return Trophy
-    case 'club_request':
-    case 'club_approval':
-      return UsersThree
-    case 'announcement':
-      return Megaphone
-    case 'poll':
-      return ChartBar
-    case 'meeting_reminder':
-      return CalendarBlank
+    case "new_follower":
+      return UserPlus;
+    case "thread_reply":
+    case "post_reply":
+      return ChatCircleDots;
+    case "reaction":
+      return Heart;
+    case "goal_met":
+      return Trophy;
+    case "club_request":
+    case "club_approval":
+      return UsersThree;
+    case "announcement":
+      return Megaphone;
+    case "poll":
+      return ChartBar;
+    case "meeting_reminder":
+      return CalendarBlank;
     default:
-      return Bell
+      return Bell;
   }
 }
 
 // ── Grouping ─────────────────────────────────────────────────────────────
 
 function groupByBucket(rows: W.NotificationItem[]): Record<BucketKey, W.NotificationItem[]> {
-  const now = Date.now()
-  const dayMs = 86_400_000
-  const out: Record<BucketKey, W.NotificationItem[]> = { today: [], week: [], earlier: [] }
+  const now = Date.now();
+  const dayMs = 86_400_000;
+  const out: Record<BucketKey, W.NotificationItem[]> = { today: [], week: [], earlier: [] };
   for (const r of rows) {
-    const age = now - r.createdAt
-    if (age < dayMs) out.today.push(r)
-    else if (age < dayMs * 7) out.week.push(r)
-    else out.earlier.push(r)
+    const age = now - r.createdAt;
+    if (age < dayMs) out.today.push(r);
+    else if (age < dayMs * 7) out.week.push(r);
+    else out.earlier.push(r);
   }
-  return out
+  return out;
 }
 
 type ListItem =
-  | { kind: 'header'; bucket: BucketKey; label: string }
-  | { kind: 'row'; row: W.NotificationItem }
+  | { kind: "header"; bucket: BucketKey; label: string }
+  | { kind: "row"; row: W.NotificationItem };
 
 function flattenBuckets(buckets: Record<BucketKey, W.NotificationItem[]>): ListItem[] {
-  const out: ListItem[] = []
+  const out: ListItem[] = [];
   for (const b of BUCKETS) {
-    const list = buckets[b.key]
-    if (list.length === 0) continue
-    out.push({ kind: 'header', bucket: b.key, label: b.label })
-    for (const r of list) out.push({ kind: 'row', row: r })
+    const list = buckets[b.key];
+    if (list.length === 0) continue;
+    out.push({ kind: "header", bucket: b.key, label: b.label });
+    for (const r of list) out.push({ kind: "row", row: r });
   }
-  return out
+  return out;
 }
 
 // Where a notification leads, from the ids the server puts in its data.
 function notificationRoute(n: W.NotificationItem): string | null {
-  const str = (k: string) => (typeof n.data[k] === 'string' ? (n.data[k] as string) : null)
+  const str = (k: string) => (typeof n.data[k] === "string" ? (n.data[k] as string) : null);
   switch (n.type) {
-    case 'thread_reply':
-    case 'post_reply':
-    case 'announcement': {
-      const threadId = str('threadId')
-      return threadId ? `/clubs/thread/${threadId}` : null
+    case "thread_reply":
+    case "post_reply":
+    case "announcement": {
+      const threadId = str("threadId");
+      return threadId ? `/clubs/thread/${threadId}` : null;
     }
-    case 'club_approval':
-      return '/(tabs)/clubs'
-    case 'new_follower':
-      return '/follows'
-    case 'goal_met':
-      return '/goals'
-    case 'reaction': {
-      const target = str('targetId')
-      return str('targetType') === 'reading_list' && target ? `/lists/${target}` : null
+    case "club_approval":
+      return "/(tabs)/clubs";
+    case "new_follower":
+      return "/follows";
+    case "goal_met":
+      return "/goals";
+    case "reaction": {
+      const target = str("targetId");
+      return str("targetType") === "reading_list" && target ? `/lists/${target}` : null;
     }
     default:
-      return null
+      return null;
   }
 }

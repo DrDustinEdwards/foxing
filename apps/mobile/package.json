@@ -1,6 +1,7 @@
 {
   "name": "mobile",
   "version": "1.0.0",
+  "private": true,
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -74,6 +75,5 @@
     "@types/node": "^20.19.41",
     "@types/react": "~19.2.14",
     "typescript": "~6.0.3"
-  },
-  "private": true
+  }
 }

@@ -1,4 +1,4 @@
-const { withAppBuildGradle } = require('expo/config-plugins')
+const { withAppBuildGradle } = require("expo/config-plugins");
 
 // expo-build-properties@56 dropped support for the enableCoreLibraryDesugaring
 // key, but Readium's kotlin-toolkit AARs (readium-shared / readium-streamer /
@@ -8,10 +8,10 @@ const { withAppBuildGradle } = require('expo/config-plugins')
 //
 // The desugar_jdk_libs version is the latest compatible with AGP 8.7+ at the
 // time of writing (May 2026). If AGP is bumped, this may need to track.
-const DESUGAR_LIB_VERSION = '2.1.5'
+const DESUGAR_LIB_VERSION = "2.1.5";
 
 function injectCompileOptions(contents) {
-  if (contents.includes('coreLibraryDesugaringEnabled')) return contents
+  if (contents.includes("coreLibraryDesugaringEnabled")) return contents;
 
   // The generated SDK 56 app/build.gradle has no compileOptions block by
   // default; insert one just after the android { line.
@@ -25,11 +25,11 @@ function injectCompileOptions(contents) {
     }
 
 `,
-  )
+  );
 }
 
 function injectDesugarDependency(contents) {
-  if (contents.includes('desugar_jdk_libs')) return contents
+  if (contents.includes("desugar_jdk_libs")) return contents;
 
   return contents.replace(
     /dependencies\s*\{\n/,
@@ -37,17 +37,17 @@ function injectDesugarDependency(contents) {
     coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:${DESUGAR_LIB_VERSION}"
 
 `,
-  )
+  );
 }
 
 const withDesugaring = (config) => {
   return withAppBuildGradle(config, (config) => {
-    let contents = config.modResults.contents
-    contents = injectCompileOptions(contents)
-    contents = injectDesugarDependency(contents)
-    config.modResults.contents = contents
-    return config
-  })
-}
+    let contents = config.modResults.contents;
+    contents = injectCompileOptions(contents);
+    contents = injectDesugarDependency(contents);
+    config.modResults.contents = contents;
+    return config;
+  });
+};
 
-module.exports = withDesugaring
+module.exports = withDesugaring;

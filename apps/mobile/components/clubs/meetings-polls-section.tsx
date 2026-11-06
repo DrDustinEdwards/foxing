@@ -1,50 +1,41 @@
-import { useClosePoll, useRsvp, useVotePoll } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useState } from 'react'
-import { View, Text, Pressable } from 'react-native'
-import { Plus } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { ClubMeetingCard } from './club-meeting-card'
-import { ClubPollCard } from './club-poll-card'
-import { AddMeetingModal, AddPollModal } from './meeting-poll-modals'
+import { useClosePoll, useRsvp, useVotePoll } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useState } from "react";
+import { View, Text, Pressable } from "react-native";
+import { Plus } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { ClubMeetingCard } from "./club-meeting-card";
+import { ClubPollCard } from "./club-poll-card";
+import { AddMeetingModal, AddPollModal } from "./meeting-poll-modals";
 
 // The club page's upcoming meetings and open polls. RSVPs and votes patch the cached
 // club page, so counts move as soon as you tap.
-export function MeetingsPollsSection({
-  page,
-  signedIn,
-}: {
-  page: W.ClubPage
-  signedIn: boolean
-}) {
-  const colors = useColors()
-  const clubId = page.club.id
-  const canModerate = page.isModerator
-  const rsvp = useRsvp()
-  const votePoll = useVotePoll()
-  const closePoll = useClosePoll()
-  const [addMeetingOpen, setAddMeetingOpen] = useState(false)
-  const [addPollOpen, setAddPollOpen] = useState(false)
-  const [now] = useState(() => Date.now())
+export function MeetingsPollsSection({ page, signedIn }: { page: W.ClubPage; signedIn: boolean }) {
+  const colors = useColors();
+  const clubId = page.club.id;
+  const canModerate = page.isModerator;
+  const rsvp = useRsvp();
+  const votePoll = useVotePoll();
+  const closePoll = useClosePoll();
+  const [addMeetingOpen, setAddMeetingOpen] = useState(false);
+  const [addPollOpen, setAddPollOpen] = useState(false);
+  const [now] = useState(() => Date.now());
   const meetings = page.meetings
     .filter((m) => !m.isCancelled && (m.endDate ?? m.meetingDate) >= now)
     .sort((a, b) => a.meetingDate - b.meetingDate)
-    .slice(0, 5)
-  const polls = page.polls.filter((p) => !p.isClosed).slice(0, 3)
+    .slice(0, 5);
+  const polls = page.polls.filter((p) => !p.isClosed).slice(0, 3);
 
   return (
     <View style={{ marginTop: 16 }}>
-      <View
-        className="flex-row items-center justify-between"
-        style={{ marginBottom: 10 }}
-      >
+      <View className="flex-row items-center justify-between" style={{ marginBottom: 10 }}>
         <Text
           style={{
             fontFamily: Fonts.uiMedium,
             fontSize: 11,
             color: colors.textTertiary,
-            textTransform: 'uppercase',
+            textTransform: "uppercase",
             letterSpacing: 0.6,
           }}
         >
@@ -87,7 +78,7 @@ export function MeetingsPollsSection({
             fontFamily: Fonts.uiMedium,
             fontSize: 11,
             color: colors.textTertiary,
-            textTransform: 'uppercase',
+            textTransform: "uppercase",
             letterSpacing: 0.6,
           }}
         >
@@ -147,6 +138,5 @@ export function MeetingsPollsSection({
         onCreated={() => setAddPollOpen(false)}
       />
     </View>
-  )
+  );
 }
-

@@ -1,40 +1,34 @@
-import type * as W from '@foxing/types'
-import { View, Text, Pressable } from 'react-native'
-import { ChartBar } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import type * as W from "@foxing/types";
+import { View, Text, Pressable } from "react-native";
+import { ChartBar } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 function formatMeetingTime(at: number): string {
-  return new Date(at).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-  })
+  return new Date(at).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 export function ClubPollCard({
   p,
   onVote,
 }: {
-  p: W.ClubPollItem
-  onVote: (pollId: string, optionId: string) => void
+  p: W.ClubPollItem;
+  onVote: (pollId: string, optionId: string) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   // Tallies count first preferences, so a ranked poll shows where it stands now.
-  const total = p.voteCount
-  const myChoice = p.myVote?.[0] ?? null
-  const hasVoted = myChoice !== null || p.isClosed
+  const total = p.voteCount;
+  const myChoice = p.myVote?.[0] ?? null;
+  const hasVoted = myChoice !== null || p.isClosed;
   return (
-    <View
-      className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-    >
+    <View className="p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
       <View className="flex-row items-start" style={{ gap: 10 }}>
-        <ChartBar
-          color={colors.textSecondary}
-          size={18}
-          weight="regular"
-        />
+        <ChartBar color={colors.textSecondary} size={18} weight="regular" />
         <View style={{ flex: 1 }}>
           <Text
             style={{
@@ -61,14 +55,14 @@ export function ClubPollCard({
       </View>
       <View style={{ marginTop: 10 }}>
         {p.options.map((o) => {
-          const votes = p.tallies[o.id] ?? 0
-          const pct = total > 0 ? Math.round((votes / total) * 100) : 0
-          const voted = myChoice === o.id
+          const votes = p.tallies[o.id] ?? 0;
+          const pct = total > 0 ? Math.round((votes / total) * 100) : 0;
+          const voted = myChoice === o.id;
           return (
             <Pressable
               key={o.id}
               onPress={() => {
-                if (!p.isClosed) onVote(p.id, o.id)
+                if (!p.isClosed) onVote(p.id, o.id);
               }}
               accessibilityRole="radio"
               accessibilityState={{ selected: voted, disabled: p.isClosed }}
@@ -82,10 +76,7 @@ export function ClubPollCard({
                 marginBottom: 6,
               }}
             >
-              <View
-                className="flex-row items-center"
-                style={{ gap: 8 }}
-              >
+              <View className="flex-row items-center" style={{ gap: 8 }}>
                 <Text
                   style={{
                     flex: 1,
@@ -116,7 +107,7 @@ export function ClubPollCard({
                     height: 4,
                     borderRadius: 2,
                     backgroundColor: colors.bgSunken,
-                    overflow: 'hidden',
+                    overflow: "hidden",
                   }}
                 >
                   <View
@@ -129,7 +120,7 @@ export function ClubPollCard({
                 </View>
               ) : null}
             </Pressable>
-          )
+          );
         })}
       </View>
       <Text
@@ -140,9 +131,9 @@ export function ClubPollCard({
           marginTop: 6,
         }}
       >
-        {total} vote{total === 1 ? '' : 's'}
-        {p.isClosed ? ' · closed' : p.closesAt ? ` · closes ${formatMeetingTime(p.closesAt)}` : ''}
+        {total} vote{total === 1 ? "" : "s"}
+        {p.isClosed ? " · closed" : p.closesAt ? ` · closes ${formatMeetingTime(p.closesAt)}` : ""}
       </Text>
     </View>
-  )
+  );
 }

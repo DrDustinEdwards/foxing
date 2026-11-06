@@ -1,89 +1,80 @@
-import { useCreateClub, useSearch } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useCallback, useEffect, useState } from 'react'
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  Image,
-  ActivityIndicator,
-  Switch,
-} from 'react-native'
-import { X as XIcon, CaretLeft, CaretRight, Check, BookOpen } from 'phosphor-react-native'
-import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { useCreateClub, useSearch } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, TextInput, Pressable, Image, ActivityIndicator, Switch } from "react-native";
+import { X as XIcon, CaretLeft, CaretRight, Check, BookOpen } from "phosphor-react-native";
+import { SheetScaffold } from "@/components/ui/sheet-scaffold";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
-type ClubPace = 'chill' | 'steady' | 'fast'
+type ClubPace = "chill" | "steady" | "fast";
 
 const PACE_OPTIONS: Array<{ id: ClubPace; label: string; subtitle: string }> = [
-  { id: 'chill', label: 'Chill', subtitle: 'A chapter a week, no pressure.' },
-  { id: 'steady', label: 'Steady', subtitle: 'Two-to-three chapters a week.' },
-  { id: 'fast', label: 'Fast', subtitle: 'Daily reading, fast turnaround.' },
-]
+  { id: "chill", label: "Chill", subtitle: "A chapter a week, no pressure." },
+  { id: "steady", label: "Steady", subtitle: "Two-to-three chapters a week." },
+  { id: "fast", label: "Fast", subtitle: "Daily reading, fast turnaround." },
+];
 
 interface CreatedClub {
-  id: string
-  slug: string | null
-  name: string
-  isPublic: boolean
+  id: string;
+  slug: string | null;
+  name: string;
+  isPublic: boolean;
 }
 
-type Step = 'basics' | 'book' | 'pace' | 'invite'
-const STEP_ORDER: Step[] = ['basics', 'book', 'pace', 'invite']
+type Step = "basics" | "book" | "pace" | "invite";
+const STEP_ORDER: Step[] = ["basics", "book", "pace", "invite"];
 
 interface DraftState {
-  name: string
-  description: string
-  isPublic: boolean
-  book: W.BookCard | null
-  pace: ClubPace
+  name: string;
+  description: string;
+  isPublic: boolean;
+  book: W.BookCard | null;
+  pace: ClubPace;
 }
 
 const EMPTY_DRAFT: DraftState = {
-  name: '',
-  description: '',
+  name: "",
+  description: "",
   isPublic: true,
   book: null,
-  pace: 'chill',
-}
+  pace: "chill",
+};
 
 interface CreateClubSheetProps {
-  visible: boolean
-  onClose: () => void
-  onCreated?: (clubId: string) => void
+  visible: boolean;
+  onClose: () => void;
+  onCreated?: (clubId: string) => void;
 }
 
 export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheetProps) {
-  const colors = useColors()
-  const [step, setStep] = useState<Step>('basics')
-  const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT)
-  const createClub = useCreateClub()
-  const resetCreateClub = createClub.reset
-  const submitting = createClub.pending
-  const [created, setCreated] = useState<CreatedClub | null>(null)
-  const error = createClub.error ? "Couldn't create the club. Try again." : null
+  const colors = useColors();
+  const [step, setStep] = useState<Step>("basics");
+  const [draft, setDraft] = useState<DraftState>(EMPTY_DRAFT);
+  const createClub = useCreateClub();
+  const resetCreateClub = createClub.reset;
+  const submitting = createClub.pending;
+  const [created, setCreated] = useState<CreatedClub | null>(null);
+  const error = createClub.error ? "Couldn't create the club. Try again." : null;
 
   // Reset state every time the sheet (re)opens, a previous half-finished
   // draft shouldn't leak into a brand-new flow.
   useEffect(() => {
     if (visible) {
       // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
-      setStep('basics')
-      setDraft(EMPTY_DRAFT)
-      setCreated(null)
-      resetCreateClub()
+      setStep("basics");
+      setDraft(EMPTY_DRAFT);
+      setCreated(null);
+      resetCreateClub();
     }
-  }, [visible, resetCreateClub])
+  }, [visible, resetCreateClub]);
 
-  const idx = STEP_ORDER.indexOf(step)
-  const isLast = step === 'invite'
-  const canAdvance =
-    step === 'basics' ? draft.name.trim().length >= 2 : true
+  const idx = STEP_ORDER.indexOf(step);
+  const isLast = step === "invite";
+  const canAdvance = step === "basics" ? draft.name.trim().length >= 2 : true;
 
   const goNext = useCallback(async () => {
-    if (step === 'pace') {
+    if (step === "pace") {
       // Commit on transition into the Invite step so the user lands on the
       // "created" confirmation with the real club row in hand.
       const res = await createClub.run({
@@ -91,29 +82,29 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
         description: draft.description.trim() || undefined,
         currentBookId: draft.book?.id,
         readingPace: draft.pace,
-        visibility: draft.isPublic ? 'public' : 'private',
-      })
-      if (!res) return
-      const club = { ...res.club, name: draft.name.trim(), isPublic: draft.isPublic }
-      setCreated(club)
-      setStep('invite')
-      return
+        visibility: draft.isPublic ? "public" : "private",
+      });
+      if (!res) return;
+      const club = { ...res.club, name: draft.name.trim(), isPublic: draft.isPublic };
+      setCreated(club);
+      setStep("invite");
+      return;
     }
     if (isLast) {
-      if (created) onCreated?.(created.id)
-      onClose()
-      return
+      if (created) onCreated?.(created.id);
+      onClose();
+      return;
     }
-    setStep(STEP_ORDER[idx + 1])
-  }, [createClub, created, draft, idx, isLast, onClose, onCreated, step])
+    setStep(STEP_ORDER[idx + 1]);
+  }, [createClub, created, draft, idx, isLast, onClose, onCreated, step]);
 
   const goBack = useCallback(() => {
     if (idx === 0) {
-      onClose()
-      return
+      onClose();
+      return;
     }
-    setStep(STEP_ORDER[idx - 1])
-  }, [idx, onClose])
+    setStep(STEP_ORDER[idx - 1]);
+  }, [idx, onClose]);
 
   return (
     <SheetScaffold
@@ -163,7 +154,7 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
             ) : (
               <>
                 <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                  {isLast ? 'Done' : step === 'pace' ? 'Create' : 'Continue'}
+                  {isLast ? "Done" : step === "pace" ? "Create" : "Continue"}
                 </Text>
                 {!isLast ? <CaretRight color={colors.textOnBrand} size={14} weight="bold" /> : null}
               </>
@@ -172,37 +163,35 @@ export function CreateClubSheet({ visible, onClose, onCreated }: CreateClubSheet
         </View>
       }
     >
-            {step === 'basics' ? (
-              <BasicsStep draft={draft} setDraft={setDraft} />
-            ) : step === 'book' ? (
-              <BookStep draft={draft} setDraft={setDraft} />
-            ) : step === 'pace' ? (
-              <PaceStep draft={draft} setDraft={setDraft} />
-            ) : (
-              <InviteStep club={created} />
-            )}
-            {error ? (
-              <View
-                style={{
-                  marginTop: 16,
-                  padding: 12,
-                  borderRadius: 12,
-                  backgroundColor: colors.errorBg,
-                }}
-              >
-                <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>
-                  {error}
-                </Text>
-              </View>
-            ) : null}
+      {step === "basics" ? (
+        <BasicsStep draft={draft} setDraft={setDraft} />
+      ) : step === "book" ? (
+        <BookStep draft={draft} setDraft={setDraft} />
+      ) : step === "pace" ? (
+        <PaceStep draft={draft} setDraft={setDraft} />
+      ) : (
+        <InviteStep club={created} />
+      )}
+      {error ? (
+        <View
+          style={{
+            marginTop: 16,
+            padding: 12,
+            borderRadius: 12,
+            backgroundColor: colors.errorBg,
+          }}
+        >
+          <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error }}>{error}</Text>
+        </View>
+      ) : null}
     </SheetScaffold>
-  )
+  );
 }
 
 // ── Step bar ─────────────────────────────────────────────────────────────
 
 function StepBar({ count, index }: { count: number; index: number }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View className="flex-row gap-1 px-4 mb-2">
       {Array.from({ length: count }).map((_, i) => (
@@ -217,7 +206,7 @@ function StepBar({ count, index }: { count: number; index: number }) {
         />
       ))}
     </View>
-  )
+  );
 }
 
 // ── Basics ───────────────────────────────────────────────────────────────
@@ -226,10 +215,10 @@ function BasicsStep({
   draft,
   setDraft,
 }: {
-  draft: DraftState
-  setDraft: (next: DraftState) => void
+  draft: DraftState;
+  setDraft: (next: DraftState) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View>
       <StepTitle>The basics</StepTitle>
@@ -254,12 +243,10 @@ function BasicsStep({
         multiline
         numberOfLines={4}
         maxLength={400}
-        style={{ ...inputStyle(colors), height: 110, textAlignVertical: 'top' }}
+        style={{ ...inputStyle(colors), height: 110, textAlignVertical: "top" }}
       />
 
-      <View
-        className="flex-row items-center justify-between mt-4 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-      >
+      <View className="flex-row items-center justify-between mt-4 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <View style={{ flex: 1, paddingRight: 12 }}>
           <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>
             Public club
@@ -282,7 +269,7 @@ function BasicsStep({
         />
       </View>
     </View>
-  )
+  );
 }
 
 // ── Current book ────────────────────────────────────────────────────────
@@ -291,20 +278,20 @@ function BookStep({
   draft,
   setDraft,
 }: {
-  draft: DraftState
-  setDraft: (next: DraftState) => void
+  draft: DraftState;
+  setDraft: (next: DraftState) => void;
 }) {
-  const colors = useColors()
-  const [query, setQuery] = useState('')
-  const [term, setTerm] = useState('')
+  const colors = useColors();
+  const [query, setQuery] = useState("");
+  const [term, setTerm] = useState("");
   // Lightweight debounce, search after the user pauses typing.
   useEffect(() => {
-    const t = setTimeout(() => setTerm(query.trim().length >= 2 ? query.trim() : ''), 300)
-    return () => clearTimeout(t)
-  }, [query])
-  const search = useSearch(term)
-  const busy = term.length > 0 && search.isFetching
-  const results = term ? (search.data?.books ?? []).slice(0, 10) : []
+    const t = setTimeout(() => setTerm(query.trim().length >= 2 ? query.trim() : ""), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+  const search = useSearch(term);
+  const busy = term.length > 0 && search.isFetching;
+  const results = term ? (search.data?.books ?? []).slice(0, 10) : [];
 
   return (
     <View>
@@ -312,11 +299,9 @@ function BookStep({
       <StepHint>Optional, you can also start without a book and pick one later.</StepHint>
 
       {draft.book ? (
-        <View
-          className="flex-row p-3 rounded-xl border bg-bg-selected-light dark:bg-bg-selected-dark border-border-brand-light dark:border-border-brand-dark"
-        >
+        <View className="flex-row p-3 rounded-xl border bg-bg-selected-light dark:bg-bg-selected-dark border-border-brand-light dark:border-border-brand-dark">
           <BookCover book={draft.book} />
-          <View style={{ flex: 1, marginLeft: 12, justifyContent: 'center' }}>
+          <View style={{ flex: 1, marginLeft: 12, justifyContent: "center" }}>
             <Text
               style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}
               numberOfLines={2}
@@ -356,7 +341,7 @@ function BookStep({
             autoCorrect={false}
           />
           {busy ? (
-            <View style={{ padding: 12, alignItems: 'center' }}>
+            <View style={{ padding: 12, alignItems: "center" }}>
               <ActivityIndicator color={colors.brandUi} />
             </View>
           ) : null}
@@ -367,7 +352,7 @@ function BookStep({
               className="flex-row mt-2 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
             >
               <BookCover book={b} />
-              <View style={{ flex: 1, marginLeft: 12, justifyContent: 'center' }}>
+              <View style={{ flex: 1, marginLeft: 12, justifyContent: "center" }}>
                 <Text
                   style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}
                   numberOfLines={2}
@@ -391,30 +376,30 @@ function BookStep({
         </>
       )}
     </View>
-  )
+  );
 }
 
 function BookCover({ book }: { book: W.BookCard }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View
       style={{
         width: 40,
         height: 60,
         borderRadius: 4,
-        overflow: 'hidden',
+        overflow: "hidden",
         backgroundColor: colors.bgSunken,
       }}
     >
       {book.coverUrl ? (
-        <Image source={{ uri: book.coverUrl }} style={{ width: '100%', height: '100%' }} />
+        <Image source={{ uri: book.coverUrl }} style={{ width: "100%", height: "100%" }} />
       ) : (
-        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <BookOpen color={colors.textTertiary} size={16} />
         </View>
       )}
     </View>
-  )
+  );
 }
 
 // ── Pace ────────────────────────────────────────────────────────────────
@@ -423,17 +408,17 @@ function PaceStep({
   draft,
   setDraft,
 }: {
-  draft: DraftState
-  setDraft: (next: DraftState) => void
+  draft: DraftState;
+  setDraft: (next: DraftState) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View>
       <StepTitle>Reading pace</StepTitle>
       <StepHint>Sets expectations, you can change it any time.</StepHint>
 
       {PACE_OPTIONS.map((p) => {
-        const selected = draft.pace === p.id
+        const selected = draft.pace === p.id;
         return (
           <Pressable
             key={p.id}
@@ -461,34 +446,33 @@ function PaceStep({
             </View>
             {selected ? <Check color={colors.brandUi} size={18} weight="bold" /> : null}
           </Pressable>
-        )
+        );
       })}
     </View>
-  )
+  );
 }
 
 // ── Invite ──────────────────────────────────────────────────────────────
 
 function InviteStep({ club }: { club: CreatedClub | null }) {
-  const colors = useColors()
+  const colors = useColors();
   if (!club) {
     return (
       <View>
         <StepTitle>Almost there…</StepTitle>
         <StepHint>Tap Create on the previous step to finish.</StepHint>
       </View>
-    )
+    );
   }
   return (
     <View>
       <StepTitle>You're in</StepTitle>
       <StepHint>
-        {club.name} is live. {club.isPublic ? 'Anyone can find and join.' : 'Share the link to invite readers.'}
+        {club.name} is live.{" "}
+        {club.isPublic ? "Anyone can find and join." : "Share the link to invite readers."}
       </StepHint>
 
-      <View
-        className="p-4 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-      >
+      <View className="p-4 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary }}>
           Club link
         </Text>
@@ -505,13 +489,13 @@ function InviteStep({ club }: { club: CreatedClub | null }) {
         </Text>
       </View>
     </View>
-  )
+  );
 }
 
 // ── Reusable bits ────────────────────────────────────────────────────────
 
 function StepTitle({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
@@ -523,11 +507,11 @@ function StepTitle({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  )
+  );
 }
 
 function StepHint({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
@@ -540,11 +524,11 @@ function StepHint({ children }: { children: React.ReactNode }) {
     >
       {children}
     </Text>
-  )
+  );
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Text
       style={{
@@ -553,13 +537,13 @@ function Label({ children }: { children: React.ReactNode }) {
         color: colors.textTertiary,
         marginTop: 16,
         marginBottom: 6,
-        textTransform: 'uppercase',
+        textTransform: "uppercase",
         letterSpacing: 0.6,
       }}
     >
       {children}
     </Text>
-  )
+  );
 }
 
 function inputStyle(colors: ReturnType<typeof useColors>) {
@@ -573,5 +557,5 @@ function inputStyle(colors: ReturnType<typeof useColors>) {
     borderRadius: 12,
     paddingHorizontal: 12,
     paddingVertical: 10,
-  } as const
+  } as const;
 }

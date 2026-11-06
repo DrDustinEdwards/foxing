@@ -1,12 +1,18 @@
-import type * as W from '@foxing/types'
-import { View, Text, Pressable, Image } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import type * as W from "@foxing/types";
+import { View, Text, Pressable, Image } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // The books on the reader's public profile strip.
-export function FavoritesStrip({ books, onOpen }: { books: W.ProfileBook[]; onOpen: (slug: string) => void }) {
-  const colors = useColors()
-  if (books.length === 0) return null
+export function FavoritesStrip({
+  books,
+  onOpen,
+}: {
+  books: W.ProfileBook[];
+  onOpen: (slug: string) => void;
+}) {
+  const colors = useColors();
+  if (books.length === 0) return null;
   return (
     <View style={{ marginBottom: 16 }}>
       <Text
@@ -14,7 +20,7 @@ export function FavoritesStrip({ books, onOpen }: { books: W.ProfileBook[]; onOp
           fontFamily: Fonts.uiMedium,
           fontSize: 11,
           color: colors.textTertiary,
-          textTransform: 'uppercase',
+          textTransform: "uppercase",
           letterSpacing: 0.6,
           marginBottom: 8,
         }}
@@ -32,17 +38,23 @@ export function FavoritesStrip({ books, onOpen }: { books: W.ProfileBook[]; onOp
               width: 56,
               height: 84,
               borderRadius: 6,
-              overflow: 'hidden',
+              overflow: "hidden",
               backgroundColor: colors.bgSunken,
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
             {b.coverUrl ? (
-              <Image source={{ uri: b.coverUrl }} style={{ width: '100%', height: '100%' }} />
+              <Image source={{ uri: b.coverUrl }} style={{ width: "100%", height: "100%" }} />
             ) : (
               <Text
-                style={{ fontFamily: Fonts.display, fontSize: 10, color: colors.textTertiary, textAlign: 'center', paddingHorizontal: 4 }}
+                style={{
+                  fontFamily: Fonts.display,
+                  fontSize: 10,
+                  color: colors.textTertiary,
+                  textAlign: "center",
+                  paddingHorizontal: 4,
+                }}
                 numberOfLines={3}
               >
                 {b.title}
@@ -52,5 +64,5 @@ export function FavoritesStrip({ books, onOpen }: { books: W.ProfileBook[]; onOp
         ))}
       </View>
     </View>
-  )
+  );
 }

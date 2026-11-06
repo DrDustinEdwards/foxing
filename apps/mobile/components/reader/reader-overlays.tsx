@@ -1,42 +1,42 @@
-import { useColors } from '@/constants/colors'
-import { useEffect, useState } from 'react'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { Pressable, Modal as RNModal, TextInput as RNTextInput, Text, View } from 'react-native'
-import { Fonts } from '@/constants/fonts'
+import { useColors } from "@/constants/colors";
+import { useEffect, useState } from "react";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Pressable, Modal as RNModal, TextInput as RNTextInput, Text, View } from "react-native";
+import { Fonts } from "@/constants/fonts";
 
 // Lightweight transient toast, single instance, auto-dismisses. Kept local
 // to the reader because no other screen needs it yet.
 export function ReaderToast({ message, onHide }: { message: string | null; onHide: () => void }) {
-  const colors = useColors()
+  const colors = useColors();
   useEffect(() => {
-    if (!message) return
-    const t = setTimeout(onHide, 2500)
-    return () => clearTimeout(t)
-  }, [message, onHide])
-  if (!message) return null
+    if (!message) return;
+    const t = setTimeout(onHide, 2500);
+    return () => clearTimeout(t);
+  }, [message, onHide]);
+  if (!message) return null;
   return (
     <SafeAreaView
-      edges={['bottom']}
+      edges={["bottom"]}
       pointerEvents="none"
       className="absolute bottom-0 left-0 right-0"
     >
       <View
         className="mx-6 mb-6 px-4 py-3 rounded-xl"
-        style={{ backgroundColor: colors.tooltipBg, alignItems: 'center' }}
+        style={{ backgroundColor: colors.tooltipBg, alignItems: "center" }}
       >
         <Text
           style={{
             color: colors.tooltipText,
             fontFamily: Fonts.uiMedium,
             fontSize: 13,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           {message}
         </Text>
       </View>
     </SafeAreaView>
-  )
+  );
 }
 
 // Inline modal for naming a fresh bookmark. Defaults to "[Chapter] · X%"
@@ -46,12 +46,12 @@ export function BookmarkNamingModal({
   onCancel,
   onSave,
 }: {
-  suggested: string
-  onCancel: () => void
-  onSave: (name: string) => void | Promise<void>
+  suggested: string;
+  onCancel: () => void;
+  onSave: (name: string) => void | Promise<void>;
 }) {
-  const colors = useColors()
-  const [name, setName] = useState(suggested)
+  const colors = useColors();
+  const [name, setName] = useState(suggested);
   return (
     <RNModal visible animationType="fade" transparent onRequestClose={onCancel}>
       <Pressable
@@ -104,13 +104,11 @@ export function BookmarkNamingModal({
               className="px-4 py-2 rounded-full"
               style={{ backgroundColor: colors.brandUi }}
             >
-              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-                Save
-              </Text>
+              <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>Save</Text>
             </Pressable>
           </View>
         </Pressable>
       </Pressable>
     </RNModal>
-  )
+  );
 }

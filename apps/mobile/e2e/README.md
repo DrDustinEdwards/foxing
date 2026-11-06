@@ -10,15 +10,15 @@ These tests are not run in CI yet and need a booted emulator or simulator.
 
 ## What is covered
 
-| Flow | Check |
-| --- | --- |
-| `flows/01-open-and-render.yaml` | Deep link into a book, confirm the reader shell paints (no error state) |
-| `flows/02-paging.yaml` | Tap forward three pages, back three pages, reader survives |
-| `flows/03-tool-sheets.yaml` | Companion hub (This Chapter grid, Story So Far, Characters, Search) + overflow (Listen, Sleep Timer, Vocabulary, Quote Card, Share) |
-| `flows/04-text-selection.yaml` | Word tap to Look up; long press to Analyze |
-| `flows/05-typography.yaml` | Open the Aa typography sheet |
-| `flows/06-go-to.yaml` | Open the Go To sheet by tapping the title (TOC / Location / My Places) |
-| `flows/07-close.yaml` | Back out of the reader |
+| Flow                            | Check                                                                                                                               |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `flows/01-open-and-render.yaml` | Deep link into a book, confirm the reader shell paints (no error state)                                                             |
+| `flows/02-paging.yaml`          | Tap forward three pages, back three pages, reader survives                                                                          |
+| `flows/03-tool-sheets.yaml`     | Companion hub (This Chapter grid, Story So Far, Characters, Search) + overflow (Listen, Sleep Timer, Vocabulary, Quote Card, Share) |
+| `flows/04-text-selection.yaml`  | Word tap to Look up; long press to Analyze                                                                                          |
+| `flows/05-typography.yaml`      | Open the Aa typography sheet                                                                                                        |
+| `flows/06-go-to.yaml`           | Open the Go To sheet by tapping the title (TOC / Location / My Places)                                                              |
+| `flows/07-close.yaml`           | Back out of the reader                                                                                                              |
 
 `common/open-reader.yaml` is a shared subflow that launches the app and deep
 links to the reader.

@@ -1,6 +1,6 @@
-import { useBookAnnotations, useBookPage, useMyBook, useSetBookStatus } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useRef, useState } from 'react'
+import { useBookAnnotations, useBookPage, useMyBook, useSetBookStatus } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useRef, useState } from "react";
 import {
   View,
   Text,
@@ -11,9 +11,9 @@ import {
   Share,
   Alert,
   Linking,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   CaretLeft,
   ShareNetwork,
@@ -28,107 +28,115 @@ import {
   CheckCircle,
   Lightbulb,
   Student,
-} from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { authClient, queueWrite } from '@/lib/api'
-import { haptic } from '@/lib/haptics'
-import { FinishReviewSheet } from '@/components/book/finish-review-sheet'
-import { PrimaryCta } from '@/components/book/primary-cta'
-import { BottomSheetMenu } from '@/components/book/bottom-sheet-menu'
-import { PauseNoteModal } from '@/components/book/pause-note-modal'
-import { ExpandableText, SecondaryButton, SectionHeading } from '@/components/book/book-detail-parts'
-import { CompanionSheet } from '@/components/reader/companion-sheet'
+} from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { authClient, queueWrite } from "@/lib/api";
+import { haptic } from "@/lib/haptics";
+import { FinishReviewSheet } from "@/components/book/finish-review-sheet";
+import { PrimaryCta } from "@/components/book/primary-cta";
+import { BottomSheetMenu } from "@/components/book/bottom-sheet-menu";
+import { PauseNoteModal } from "@/components/book/pause-note-modal";
+import {
+  ExpandableText,
+  SecondaryButton,
+  SectionHeading,
+} from "@/components/book/book-detail-parts";
+import { CompanionSheet } from "@/components/reader/companion-sheet";
 
 function pacingLabel(p: string | null | undefined): string {
-  if (p === 'slow') return 'Slow-paced'
-  if (p === 'fast') return 'Fast-paced'
-  if (p === 'medium') return 'Medium-paced'
-  return ''
+  if (p === "slow") return "Slow-paced";
+  if (p === "fast") return "Fast-paced";
+  if (p === "medium") return "Medium-paced";
+  return "";
 }
 
 // The book page: the shared GET /books/:idOrSlug view (the same object the web page
 // renders) plus the reader's own shelf state. Status changes patch the cache, so the
 // page never reloads.
 export default function BookDetail() {
-  const colors = useColors()
-  const router = useRouter()
-  const { id } = useLocalSearchParams<{ id: string }>()
-  const session = authClient.useSession()
-  const signedIn = !!session.data
-  const pageQuery = useBookPage(id ?? '')
-  const page = pageQuery.data
-  const book = page?.book ?? null
-  const myBook = useMyBook(book?.id ?? '', undefined, signedIn && !!book)
-  const userBook = myBook.data ?? null
-  const annotations = useBookAnnotations(book?.id ?? '')
-  const setBookStatus = useSetBookStatus()
+  const colors = useColors();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const session = authClient.useSession();
+  const signedIn = !!session.data;
+  const pageQuery = useBookPage(id ?? "");
+  const page = pageQuery.data;
+  const book = page?.book ?? null;
+  const myBook = useMyBook(book?.id ?? "", undefined, signedIn && !!book);
+  const userBook = myBook.data ?? null;
+  const annotations = useBookAnnotations(book?.id ?? "");
+  const setBookStatus = useSetBookStatus();
 
-  const [statusMenuOpen, setStatusMenuOpen] = useState(false)
-  const [shareMenuOpen, setShareMenuOpen] = useState(false)
+  const [statusMenuOpen, setStatusMenuOpen] = useState(false);
+  const [shareMenuOpen, setShareMenuOpen] = useState(false);
   // Pause-note modal, captures the optional "why are you pausing?" note
   // when the user picks Pause from the status menu.
-  const [pauseModalOpen, setPauseModalOpen] = useState(false)
-  const [pauseNote, setPauseNote] = useState('')
+  const [pauseModalOpen, setPauseModalOpen] = useState(false);
+  const [pauseNote, setPauseNote] = useState("");
   // Finish review sheet, opens immediately after a fresh transition to
   // 'finished'. The celebration flow (quote card + series prompt) runs after
   // the sheet closes so we don't stack two routes on top of each other.
-  const [finishReviewOpen, setFinishReviewOpen] = useState(false)
-  const finishCelebrationRef = useRef<(() => void) | null>(null)
+  const [finishReviewOpen, setFinishReviewOpen] = useState(false);
+  const finishCelebrationRef = useRef<(() => void) | null>(null);
   // A Plus companion answer about the whole book.
-  const [companion, setCompanion] = useState<'book_insight' | 'deep_dive' | null>(null)
+  const [companion, setCompanion] = useState<"book_insight" | "deep_dive" | null>(null);
 
   // Collapsibles, About/Deep Dive default closed.
   // Content warnings also default closed so they don't dominate the page.
-  const [showDescription, setShowDescription] = useState(false)
-  const [showContentWarnings, setShowContentWarnings] = useState(false)
+  const [showDescription, setShowDescription] = useState(false);
+  const [showContentWarnings, setShowContentWarnings] = useState(false);
 
   function setStatus(status: W.ShelfStatus) {
-    setStatusMenuOpen(false)
-    if (!book) return
+    setStatusMenuOpen(false);
+    if (!book) return;
     if (!signedIn) {
-      router.push('/(auth)/login' as never)
-      return
+      router.push("/(auth)/login" as never);
+      return;
     }
-    const wasFinished = userBook?.status === 'finished'
-    setBookStatus.fire({ bookId: book.id, status, book })
-    if (status !== 'finished' || wasFinished) return
+    const wasFinished = userBook?.status === "finished";
+    setBookStatus.fire({ bookId: book.id, status, book });
+    if (status !== "finished" || wasFinished) return;
     // Fresh transition to finished: the review sheet first, then the celebration
     // (quote card, and the next book in the series) once it closes.
-    haptic.success()
-    const daysToRead = userBook?.startedAt ? Math.max(1, Math.round((Date.now() - userBook.startedAt) / 86_400_000)) : null
-    const highlightCount = (annotations.data?.mine ?? []).filter((m) => m.type === 'highlight').length
-    const next = page?.nextInSeries ?? null
+    haptic.success();
+    const daysToRead = userBook?.startedAt
+      ? Math.max(1, Math.round((Date.now() - userBook.startedAt) / 86_400_000))
+      : null;
+    const highlightCount = (annotations.data?.mine ?? []).filter(
+      (m) => m.type === "highlight",
+    ).length;
+    const next = page?.nextInSeries ?? null;
     finishCelebrationRef.current = () => {
       router.push({
-        pathname: '/quote-card',
+        pathname: "/quote-card",
         params: {
-          type: 'finished',
+          type: "finished",
           bookId: book.id,
           bookTitle: book.title,
           author: book.author,
-          coverUrl: book.coverUrl ?? '',
-          daysToRead: daysToRead != null ? String(daysToRead) : '',
+          coverUrl: book.coverUrl ?? "",
+          daysToRead: daysToRead != null ? String(daysToRead) : "",
           highlightCount: String(highlightCount),
         },
-      } as never)
-      if (!next) return
+      } as never);
+      if (!next) return;
       setTimeout(() => {
         Alert.alert(
-          `Next in ${book.seriesName ?? 'the series'}`,
+          `Next in ${book.seriesName ?? "the series"}`,
           `${next.title} is up next. Add it to your library?`,
           [
-            { text: 'Maybe later', style: 'cancel' },
+            { text: "Maybe later", style: "cancel" },
             {
-              text: 'Add to Want to Read',
-              onPress: () => setBookStatus.fire({ bookId: next.id, status: 'want', book: next }),
+              text: "Add to Want to Read",
+              onPress: () => setBookStatus.fire({ bookId: next.id, status: "want", book: next }),
             },
-            { text: 'Open', onPress: () => router.push(`/book/${next.slug}` as never) },
+            { text: "Open", onPress: () => router.push(`/book/${next.slug}` as never) },
           ],
-        )
-      }, 600)
-    }
-    setFinishReviewOpen(true)
+        );
+      }, 600);
+    };
+    setFinishReviewOpen(true);
   }
 
   // ── Render ───────────────────────────────────────────────────────────────
@@ -138,13 +146,18 @@ export default function BookDetail() {
       <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
         <ActivityIndicator color={colors.brandUi} />
       </SafeAreaView>
-    )
+    );
   }
   if (!book || !page) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
         <Text
-          style={{ fontFamily: Fonts.ui, fontSize: 14, color: colors.textTertiary, textAlign: 'center' }}
+          style={{
+            fontFamily: Fonts.ui,
+            fontSize: 14,
+            color: colors.textTertiary,
+            textAlign: "center",
+          }}
         >
           {pageQuery.isError && (pageQuery.error as { status?: number }).status !== 404
             ? "We couldn't load that book. Check your connection and try again."
@@ -154,18 +167,18 @@ export default function BookDetail() {
           <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Back</Text>
         </Pressable>
       </SafeAreaView>
-    )
+    );
   }
 
-  const description = page.ai.description ?? book.description
-  const readMinutes = book.wordCount ? Math.round(book.wordCount / 250) : null
+  const description = page.ai.description ?? book.description;
+  const readMinutes = book.wordCount ? Math.round(book.wordCount / 250) : null;
   const readingTimeLabel = readMinutes
     ? readMinutes >= 60
       ? `~${Math.round(readMinutes / 60)} hr read`
       : `~${readMinutes} min read`
-    : null
+    : null;
 
-  const subjects = (book.subjects ?? []).slice(0, 8)
+  const subjects = (book.subjects ?? []).slice(0, 8);
 
   return (
     <View className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -175,7 +188,7 @@ export default function BookDetail() {
           {book.coverUrl ? (
             <Image
               source={{ uri: book.coverUrl }}
-              style={{ width: '100%', height: '100%' }}
+              style={{ width: "100%", height: "100%" }}
               resizeMode="cover"
               blurRadius={4}
             />
@@ -185,7 +198,7 @@ export default function BookDetail() {
           <View
             pointerEvents="none"
             style={{
-              position: 'absolute',
+              position: "absolute",
               bottom: 0,
               left: 0,
               right: 0,
@@ -197,7 +210,7 @@ export default function BookDetail() {
           <View
             pointerEvents="none"
             style={{
-              position: 'absolute',
+              position: "absolute",
               bottom: 0,
               left: 0,
               right: 0,
@@ -208,13 +221,13 @@ export default function BookDetail() {
           />
           <View
             style={{
-              position: 'absolute',
+              position: "absolute",
               top: 0,
               left: 0,
               right: 0,
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
               paddingHorizontal: 12,
               paddingTop: 48,
             }}
@@ -229,8 +242,8 @@ export default function BookDetail() {
                 height: 36,
                 borderRadius: 18,
                 backgroundColor: colors.scrimLight,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <CaretLeft color={colors.textOnDark} size={18} />
@@ -245,8 +258,8 @@ export default function BookDetail() {
                 height: 36,
                 borderRadius: 18,
                 backgroundColor: colors.scrimLight,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
               <ShareNetwork color={colors.textOnDark} size={18} />
@@ -255,11 +268,11 @@ export default function BookDetail() {
           {/* Cover thumbnail centered over the bottom of the hero */}
           <View
             style={{
-              position: 'absolute',
+              position: "absolute",
               left: 0,
               right: 0,
               bottom: -30,
-              alignItems: 'center',
+              alignItems: "center",
             }}
           >
             <View
@@ -267,7 +280,7 @@ export default function BookDetail() {
                 width: 120,
                 height: 180,
                 borderRadius: 8,
-                overflow: 'hidden',
+                overflow: "hidden",
                 backgroundColor: colors.bgSurface,
                 borderWidth: 1,
                 borderColor: colors.borderSubtle,
@@ -276,17 +289,22 @@ export default function BookDetail() {
               {book.coverUrl ? (
                 <Image
                   source={{ uri: book.coverUrl }}
-                  style={{ width: '100%', height: '100%' }}
+                  style={{ width: "100%", height: "100%" }}
                   resizeMode="cover"
                   accessibilityRole="image"
                   accessibilityLabel={`${book.title} book cover`}
                 />
               ) : (
                 <View
-                  style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 8 }}
+                  style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 8 }}
                 >
                   <Text
-                    style={{ fontFamily: Fonts.display, fontSize: 14, color: colors.textTertiary, textAlign: 'center' }}
+                    style={{
+                      fontFamily: Fonts.display,
+                      fontSize: 14,
+                      color: colors.textTertiary,
+                      textAlign: "center",
+                    }}
                     numberOfLines={4}
                   >
                     {book.title}
@@ -303,22 +321,20 @@ export default function BookDetail() {
               fontFamily: Fonts.displayBold,
               fontSize: 22,
               color: colors.textPrimary,
-              textAlign: 'center',
+              textAlign: "center",
             }}
           >
             {book.title}
           </Text>
           <Pressable
-            onPress={() =>
-              book.authorSlug && router.push(`/author/${book.authorSlug}` as never)
-            }
+            onPress={() => book.authorSlug && router.push(`/author/${book.authorSlug}` as never)}
           >
             <Text
               style={{
                 fontFamily: Fonts.uiMedium,
                 fontSize: 14,
                 color: colors.brandText,
-                textAlign: 'center',
+                textAlign: "center",
                 marginTop: 4,
               }}
             >
@@ -331,11 +347,12 @@ export default function BookDetail() {
                 fontFamily: Fonts.ui,
                 fontSize: 11,
                 color: colors.textTertiary,
-                textAlign: 'center',
+                textAlign: "center",
                 marginTop: 2,
               }}
             >
-              {book.seriesName}{book.seriesOrder ? `, book ${book.seriesOrder}` : ''}
+              {book.seriesName}
+              {book.seriesOrder ? `, book ${book.seriesOrder}` : ""}
             </Text>
           ) : null}
           {readingTimeLabel ? (
@@ -344,7 +361,7 @@ export default function BookDetail() {
                 fontFamily: Fonts.mono,
                 fontSize: 11,
                 color: colors.textTertiary,
-                textAlign: 'center',
+                textAlign: "center",
                 marginTop: 4,
               }}
             >
@@ -372,7 +389,10 @@ export default function BookDetail() {
                     }}
                     numberOfLines={1}
                   >
-                    {s.split(/[\u2014\u2013\-:]/)[0].trim().slice(0, 40)}
+                    {s
+                      .split(/[\u2014\u2013\-:]/)[0]
+                      .trim()
+                      .slice(0, 40)}
                   </Text>
                 </View>
               ))}
@@ -384,13 +404,13 @@ export default function BookDetail() {
             userBook={userBook}
             onAddPress={() => setStatusMenuOpen(true)}
             onContinue={() => {
-              if (!book.readable) return
-              if (userBook?.status !== 'reading') setStatus('reading')
-              router.push(`/reader/${book.id}` as never)
+              if (!book.readable) return;
+              if (userBook?.status !== "reading") setStatus("reading");
+              router.push(`/reader/${book.id}` as never);
             }}
             onReread={() => {
-              setStatus('reading')
-              router.push(`/reader/${book.id}` as never)
+              setStatus("reading");
+              router.push(`/reader/${book.id}` as never);
             }}
           />
 
@@ -399,14 +419,14 @@ export default function BookDetail() {
             <SecondaryButton
               Icon={BookmarkSimple}
               label="Want"
-              onPress={() => setStatus('want')}
-              active={userBook?.status === 'want'}
+              onPress={() => setStatus("want")}
+              active={userBook?.status === "want"}
             />
             <SecondaryButton
               Icon={CheckCircle}
               label="Finished"
-              onPress={() => setStatus('finished')}
-              active={userBook?.status === 'finished'}
+              onPress={() => setStatus("finished")}
+              active={userBook?.status === "finished"}
             />
             <SecondaryButton
               Icon={ShareNetwork}
@@ -431,7 +451,7 @@ export default function BookDetail() {
                 marginLeft: 6,
               }}
             >
-              {book.rating ? book.rating.toFixed(1) : ''}
+              {book.rating ? book.rating.toFixed(1) : ""}
             </Text>
             <Text
               style={{
@@ -441,8 +461,10 @@ export default function BookDetail() {
                 marginLeft: 10,
               }}
             >
-              {book.ratingCount > 0 ? `${book.ratingCount} rating${book.ratingCount === 1 ? '' : 's'}, ` : ''}
-              {page.readerCount} reader{page.readerCount === 1 ? '' : 's'}
+              {book.ratingCount > 0
+                ? `${book.ratingCount} rating${book.ratingCount === 1 ? "" : "s"}, `
+                : ""}
+              {page.readerCount} reader{page.readerCount === 1 ? "" : "s"}
             </Text>
           </View>
           {book.moodTags && book.moodTags.length > 0 ? (
@@ -459,7 +481,11 @@ export default function BookDetail() {
                   style={{ backgroundColor: colors.brandSubtle }}
                 >
                   <Text
-                    style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.brandSubtleText }}
+                    style={{
+                      fontFamily: Fonts.uiMedium,
+                      fontSize: 11,
+                      color: colors.brandSubtleText,
+                    }}
                     numberOfLines={1}
                   >
                     {m}
@@ -469,10 +495,8 @@ export default function BookDetail() {
             </ScrollView>
           ) : null}
           {book.pacing ? (
-            <Text
-              style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary }}
-            >
-              Most readers say:{' '}
+            <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textSecondary }}>
+              Most readers say:{" "}
               <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textPrimary }}>
                 {pacingLabel(book.pacing)}
               </Text>
@@ -487,14 +511,12 @@ export default function BookDetail() {
               onPress={() => setShowContentWarnings((v) => !v)}
               accessibilityRole="button"
               accessibilityLabel={
-                showContentWarnings ? 'Hide content warnings' : 'Show content warnings'
+                showContentWarnings ? "Hide content warnings" : "Show content warnings"
               }
               accessibilityState={{ expanded: showContentWarnings }}
               className="flex-row items-center justify-between px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
             >
-              <Text
-                style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}
-              >
+              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.textPrimary }}>
                 Content warnings
               </Text>
               {showContentWarnings ? (
@@ -504,9 +526,7 @@ export default function BookDetail() {
               )}
             </Pressable>
             {showContentWarnings ? (
-              <View
-                className="mt-2 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-              >
+              <View className="mt-2 p-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
                 {book.contentWarnings.map((w) => (
                   <Text
                     key={w}
@@ -563,9 +583,7 @@ export default function BookDetail() {
           <Pressable
             onPress={() => setShowDescription((v) => !v)}
             accessibilityRole="button"
-            accessibilityLabel={
-              showDescription ? 'Hide about this book' : 'Show about this book'
-            }
+            accessibilityLabel={showDescription ? "Hide about this book" : "Show about this book"}
             accessibilityState={{ expanded: showDescription }}
             className="flex-row items-center justify-between px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
@@ -612,19 +630,25 @@ export default function BookDetail() {
         {/* Plus companion answers about the whole book. */}
         <SectionHeading>Ask the companion</SectionHeading>
         <View className="flex-row" style={{ paddingHorizontal: 20, gap: 8 }}>
-          {([
-            { action: 'book_insight', label: 'An insight', Icon: Lightbulb },
-            { action: 'deep_dive', label: 'Go deeper', Icon: Student },
-          ] as const).map((t) => (
+          {(
+            [
+              { action: "book_insight", label: "An insight", Icon: Lightbulb },
+              { action: "deep_dive", label: "Go deeper", Icon: Student },
+            ] as const
+          ).map((t) => (
             <Pressable
               key={t.action}
-              onPress={() => (signedIn ? setCompanion(t.action) : router.push('/(auth)/login' as never))}
+              onPress={() =>
+                signedIn ? setCompanion(t.action) : router.push("/(auth)/login" as never)
+              }
               accessibilityRole="button"
               className="flex-1 flex-row items-center justify-center px-4 py-3 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
               style={{ gap: 8 }}
             >
               <t.Icon color={colors.brandUi} size={18} />
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>{t.label}</Text>
+              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>
+                {t.label}
+              </Text>
             </Pressable>
           ))}
         </View>
@@ -639,8 +663,8 @@ export default function BookDetail() {
                   style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textSecondary }}
                 >
                   {a.awardName}
-                  {a.year ? ` ${a.year}` : ''}
-                  {a.distinction && a.distinction !== 'winner' ? `, ${a.distinction}` : ''}
+                  {a.year ? ` ${a.year}` : ""}
+                  {a.distinction && a.distinction !== "winner" ? `, ${a.distinction}` : ""}
                 </Text>
               ))}
             </View>
@@ -677,7 +701,7 @@ export default function BookDetail() {
                       color: colors.textPrimary,
                     }}
                   >
-                    {r.author?.displayName ?? r.author?.username ?? 'Reader'}
+                    {r.author?.displayName ?? r.author?.username ?? "Reader"}
                   </Text>
                   {r.ratingHalf ? (
                     <Text
@@ -688,8 +712,8 @@ export default function BookDetail() {
                         marginLeft: 8,
                       }}
                     >
-                      {'★'.repeat(Math.floor(r.ratingHalf / 2))}
-                      {r.ratingHalf % 2 ? '½' : ''}
+                      {"★".repeat(Math.floor(r.ratingHalf / 2))}
+                      {r.ratingHalf % 2 ? "½" : ""}
                     </Text>
                   ) : null}
                 </View>
@@ -702,7 +726,7 @@ export default function BookDetail() {
                   }}
                   numberOfLines={4}
                 >
-                  {r.containsSpoilers ? 'Contains spoilers.' : r.review}
+                  {r.containsSpoilers ? "Contains spoilers." : r.review}
                 </Text>
               </View>
             ))
@@ -731,11 +755,18 @@ export default function BookDetail() {
                     >
                       "{h.normalizedText}"
                     </Text>
-                    <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 6 }}>
+                    <Text
+                      style={{
+                        fontFamily: Fonts.ui,
+                        fontSize: 11,
+                        color: colors.textTertiary,
+                        marginTop: 6,
+                      }}
+                    >
                       Highlighted by {h.count} readers
                     </Text>
                   </View>
-                )
+                );
               })}
             </View>
           </>
@@ -752,10 +783,14 @@ export default function BookDetail() {
           </>
         ) : null}
 
-        <BookRow title="Readers also liked" books={page.related} onOpen={(slug) => router.push(`/book/${slug}` as never)} />
+        <BookRow
+          title="Readers also liked"
+          books={page.related}
+          onOpen={(slug) => router.push(`/book/${slug}` as never)}
+        />
         {page.nextInSeries ? (
           <BookRow
-            title={`Next in ${book.seriesName ?? 'the series'}`}
+            title={`Next in ${book.seriesName ?? "the series"}`}
             books={[page.nextInSeries]}
             onOpen={(slug) => router.push(`/book/${slug}` as never)}
           />
@@ -771,7 +806,9 @@ export default function BookDetail() {
             />
             <View style={{ paddingHorizontal: 20, marginTop: 10 }}>
               <Pressable
-                onPress={() => book.authorSlug && router.push(`/author/${book.authorSlug}` as never)}
+                onPress={() =>
+                  book.authorSlug && router.push(`/author/${book.authorSlug}` as never)
+                }
                 className="flex-row items-center"
               >
                 <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, fontSize: 13 }}>
@@ -796,7 +833,11 @@ export default function BookDetail() {
                 >
                   <View style={{ flex: 1 }}>
                     <Text
-                      style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}
+                      style={{
+                        fontFamily: Fonts.uiMedium,
+                        fontSize: 14,
+                        color: colors.textPrimary,
+                      }}
                       numberOfLines={1}
                     >
                       {c.name}
@@ -822,7 +863,6 @@ export default function BookDetail() {
             </View>
           </>
         ) : null}
-
       </ScrollView>
 
       {/* Add to Library status menu */}
@@ -831,27 +871,27 @@ export default function BookDetail() {
         title="Add to library"
         onClose={() => setStatusMenuOpen(false)}
         items={[
-          { id: 'want', label: 'Want to Read', onPress: () => setStatus('want') },
-          { id: 'reading', label: 'Currently Reading', onPress: () => setStatus('reading') },
+          { id: "want", label: "Want to Read", onPress: () => setStatus("want") },
+          { id: "reading", label: "Currently Reading", onPress: () => setStatus("reading") },
           ...(book.readable
             ? [
                 {
-                  id: 'now',
-                  label: 'Start Reading Now',
+                  id: "now",
+                  label: "Start Reading Now",
                   onPress: () => {
-                    setStatus('reading')
-                    router.push(`/reader/${book.id}` as never)
+                    setStatus("reading");
+                    router.push(`/reader/${book.id}` as never);
                   },
                 },
               ]
             : []),
-          { id: 'finished', label: 'Finished', onPress: () => setStatus('finished') },
+          { id: "finished", label: "Finished", onPress: () => setStatus("finished") },
           {
-            id: 'pause',
-            label: 'Pause Reading',
+            id: "pause",
+            label: "Pause Reading",
             onPress: () => {
-              setPauseNote('')
-              setPauseModalOpen(true)
+              setPauseNote("");
+              setPauseModalOpen(true);
             },
           },
         ]}
@@ -862,10 +902,10 @@ export default function BookDetail() {
         bookId={book.id}
         bookTitle={book.title}
         onClose={() => {
-          setFinishReviewOpen(false)
-          const run = finishCelebrationRef.current
-          finishCelebrationRef.current = null
-          if (run) run()
+          setFinishReviewOpen(false);
+          const run = finishCelebrationRef.current;
+          finishCelebrationRef.current = null;
+          if (run) run();
         }}
       />
 
@@ -875,10 +915,15 @@ export default function BookDetail() {
         onChangeNote={setPauseNote}
         onCancel={() => setPauseModalOpen(false)}
         onConfirm={() => {
-          setPauseModalOpen(false)
-          setStatus('paused')
-          const note = pauseNote.trim()
-          if (note) void queueWrite({ resource: 'user_book', verb: 'update', payload: { bookId: book.id, pausedNote: note } })
+          setPauseModalOpen(false);
+          setStatus("paused");
+          const note = pauseNote.trim();
+          if (note)
+            void queueWrite({
+              resource: "user_book",
+              verb: "update",
+              payload: { bookId: book.id, pausedNote: note },
+            });
         }}
       />
 
@@ -889,17 +934,17 @@ export default function BookDetail() {
         onClose={() => setShareMenuOpen(false)}
         items={[
           {
-            id: 'quote',
-            label: 'Create Quote Card',
+            id: "quote",
+            label: "Create Quote Card",
             Icon: ImageSquare,
             onPress: () => {
               router.push(
                 `/quote-card?bookId=${book.id}&bookTitle=${encodeURIComponent(book.title)}&author=${encodeURIComponent(book.author)}` as never,
-              )
+              );
             },
           },
           {
-            id: 'reading',
+            id: "reading",
             label: "I'm Reading This",
             Icon: Megaphone,
             onPress: () =>
@@ -910,8 +955,8 @@ export default function BookDetail() {
               }),
           },
           {
-            id: 'link',
-            label: 'Copy link',
+            id: "link",
+            label: "Copy link",
             Icon: LinkIcon,
             onPress: () =>
               void Share.share({ message: `https://foxing.app/books/${book.slug}` }).catch(() => {
@@ -923,13 +968,13 @@ export default function BookDetail() {
 
       <CompanionSheet
         visible={companion !== null}
-        title={companion === 'deep_dive' ? 'Go deeper' : 'An insight'}
+        title={companion === "deep_dive" ? "Go deeper" : "An insight"}
         eyebrow={book.title}
         request={companion ? { action: companion, bookId: book.id } : null}
         onClose={() => setCompanion(null)}
       />
     </View>
-  )
+  );
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────
@@ -939,12 +984,12 @@ function BookRow({
   books,
   onOpen,
 }: {
-  title: string
-  books: W.BookCard[]
-  onOpen: (slug: string) => void
+  title: string;
+  books: W.BookCard[];
+  onOpen: (slug: string) => void;
 }) {
-  const colors = useColors()
-  if (books.length === 0) return null
+  const colors = useColors();
+  if (books.length === 0) return null;
   return (
     <>
       <SectionHeading>{title}</SectionHeading>
@@ -966,25 +1011,28 @@ function BookRow({
                 width: 100,
                 height: 150,
                 borderRadius: 6,
-                overflow: 'hidden',
+                overflow: "hidden",
                 backgroundColor: colors.bgSunken,
-                alignItems: 'center',
-                justifyContent: 'center',
+                alignItems: "center",
+                justifyContent: "center",
                 marginBottom: 6,
               }}
             >
               {b.coverUrl ? (
-                <Image source={{ uri: b.coverUrl }} style={{ width: '100%', height: '100%' }} />
+                <Image source={{ uri: b.coverUrl }} style={{ width: "100%", height: "100%" }} />
               ) : (
                 <BookOpen color={colors.textTertiary} size={20} />
               )}
             </View>
-            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textPrimary }} numberOfLines={2}>
+            <Text
+              style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textPrimary }}
+              numberOfLines={2}
+            >
               {b.title}
             </Text>
           </Pressable>
         ))}
       </ScrollView>
     </>
-  )
+  );
 }

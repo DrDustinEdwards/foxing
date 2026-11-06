@@ -1,7 +1,7 @@
-import { View, Text, Pressable, TextInput, ActivityIndicator } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { Section } from './section'
+import { View, Text, Pressable, TextInput, ActivityIndicator } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { Section } from "./section";
 
 export function YearGoalCard({
   year,
@@ -14,30 +14,33 @@ export function YearGoalCard({
   projectedCompletion,
   colors,
 }: {
-  year: number
-  target: string
-  setTarget: (next: string) => void
-  save: () => void
-  saving: boolean
-  goalsRow: { target: number } | null
-  progress: number
-  projectedCompletion: string | null
-  colors: ReturnType<typeof useColors>
+  year: number;
+  target: string;
+  setTarget: (next: string) => void;
+  save: () => void;
+  saving: boolean;
+  goalsRow: { target: number } | null;
+  progress: number;
+  projectedCompletion: string | null;
+  colors: ReturnType<typeof useColors>;
 }) {
   return (
     <Section title={`${year} goal`}>
-      <View
-        className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
-      >
+      <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <Text
-          style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 10 }}
+          style={{
+            fontFamily: Fonts.body,
+            fontSize: 14,
+            color: colors.textSecondary,
+            marginBottom: 10,
+          }}
         >
           I want to read
         </Text>
         <View className="flex-row items-center gap-2">
           <TextInput
             value={target}
-            onChangeText={(t) => setTarget(t.replace(/[^0-9]/g, '').slice(0, 3))}
+            onChangeText={(t) => setTarget(t.replace(/[^0-9]/g, "").slice(0, 3))}
             keyboardType="number-pad"
             maxLength={3}
             placeholder="12"
@@ -48,7 +51,7 @@ export function YearGoalCard({
               width: 90,
               fontFamily: Fonts.uiMedium,
               fontSize: 22,
-              textAlign: 'center',
+              textAlign: "center",
               color: colors.textPrimary,
               backgroundColor: colors.bgBase,
               borderColor: colors.borderSubtle,
@@ -57,7 +60,9 @@ export function YearGoalCard({
               paddingVertical: 8,
             }}
           />
-          <Text style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, flex: 1 }}>
+          <Text
+            style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, flex: 1 }}
+          >
             books in {year}
           </Text>
           <Pressable
@@ -89,7 +94,7 @@ export function YearGoalCard({
                 height: 6,
                 borderRadius: 3,
                 backgroundColor: colors.bgSunken,
-                overflow: 'hidden',
+                overflow: "hidden",
               }}
             >
               <View
@@ -105,9 +110,7 @@ export function YearGoalCard({
                 {Math.round(progress * 100)}% complete
               </Text>
               {projectedCompletion ? (
-                <Text
-                  style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}
-                >
+                <Text style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary }}>
                   Projected: {projectedCompletion}
                 </Text>
               ) : null}
@@ -116,5 +119,5 @@ export function YearGoalCard({
         ) : null}
       </View>
     </Section>
-  )
+  );
 }

@@ -1,7 +1,7 @@
-import { View, Text, Pressable, TextInput } from 'react-native'
-import { SheetScaffold } from '@/components/ui/sheet-scaffold'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { View, Text, Pressable, TextInput } from "react-native";
+import { SheetScaffold } from "@/components/ui/sheet-scaffold";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // Pause confirmation + optional note. Centered modal, pauses are intentional
 // and the note tends to be a sentence at most, so a small dialog fits.
@@ -12,13 +12,13 @@ export function PauseNoteModal({
   onCancel,
   onConfirm,
 }: {
-  visible: boolean
-  note: string
-  onChangeNote: (v: string) => void
-  onCancel: () => void
-  onConfirm: () => void | Promise<void>
+  visible: boolean;
+  note: string;
+  onChangeNote: (v: string) => void;
+  onCancel: () => void;
+  onConfirm: () => void | Promise<void>;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <SheetScaffold
       visible={visible}
@@ -58,9 +58,7 @@ export function PauseNoteModal({
             accessibilityLabel="Cancel"
             className="px-4 py-2"
           >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>
-              Cancel
-            </Text>
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textSecondary }}>Cancel</Text>
           </Pressable>
           <Pressable
             onPress={() => void onConfirm()}
@@ -69,36 +67,34 @@ export function PauseNoteModal({
             className="px-4 py-2 rounded-full"
             style={{ backgroundColor: colors.brandUi }}
           >
-            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>
-              Pause
-            </Text>
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand }}>Pause</Text>
           </Pressable>
         </View>
       }
     >
-          <TextInput
-            value={note}
-            onChangeText={onChangeNote}
-            placeholder="Taking a break, life got busy..."
-            placeholderTextColor={colors.textTertiary}
-            multiline
-            maxLength={280}
-            accessibilityLabel="Pause note"
-            style={{
-              fontFamily: Fonts.body,
-              fontSize: 14,
-              color: colors.textPrimary,
-              backgroundColor: colors.bgBase,
-              borderColor: colors.borderSubtle,
-              borderWidth: 1,
-              borderRadius: 10,
-              paddingHorizontal: 12,
-              paddingVertical: 10,
-              minHeight: 80,
-              textAlignVertical: 'top',
-              marginBottom: 12,
-            }}
-          />
+      <TextInput
+        value={note}
+        onChangeText={onChangeNote}
+        placeholder="Taking a break, life got busy..."
+        placeholderTextColor={colors.textTertiary}
+        multiline
+        maxLength={280}
+        accessibilityLabel="Pause note"
+        style={{
+          fontFamily: Fonts.body,
+          fontSize: 14,
+          color: colors.textPrimary,
+          backgroundColor: colors.bgBase,
+          borderColor: colors.borderSubtle,
+          borderWidth: 1,
+          borderRadius: 10,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
+          minHeight: 80,
+          textAlignVertical: "top",
+          marginBottom: 12,
+        }}
+      />
     </SheetScaffold>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import type { BookRow } from '@/components/library/library-types'
-import { useColors } from '@/constants/colors'
-import { Image, Pressable, Text, View } from 'react-native'
-import { ArrowClockwise, Check, Pause, Play } from 'phosphor-react-native'
-import { Fonts } from '@/constants/fonts'
+import type { BookRow } from "@/components/library/library-types";
+import { useColors } from "@/constants/colors";
+import { Image, Pressable, Text, View } from "react-native";
+import { ArrowClockwise, Check, Pause, Play } from "phosphor-react-native";
+import { Fonts } from "@/constants/fonts";
 
 export function LibraryRow({
   row,
@@ -14,27 +14,25 @@ export function LibraryRow({
   onReread,
   onResume,
 }: {
-  row: BookRow
-  editMode: boolean
-  selected: boolean
-  onToggleSelect: () => void
-  onOpen: () => void
-  onLongPress?: () => void
-  onReread: () => void
-  onResume: () => void
+  row: BookRow;
+  editMode: boolean;
+  selected: boolean;
+  onToggleSelect: () => void;
+  onOpen: () => void;
+  onLongPress?: () => void;
+  onReread: () => void;
+  onResume: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Pressable
       onPress={editMode ? onToggleSelect : onOpen}
       onLongPress={editMode ? undefined : onLongPress}
       delayLongPress={400}
-      accessibilityRole={editMode ? 'checkbox' : 'button'}
+      accessibilityRole={editMode ? "checkbox" : "button"}
       accessibilityState={editMode ? { checked: selected } : undefined}
       accessibilityLabel={
-        editMode
-          ? `${selected ? 'Deselect' : 'Select'} ${row.title}`
-          : `Open ${row.title}`
+        editMode ? `${selected ? "Deselect" : "Select"} ${row.title}` : `Open ${row.title}`
       }
       className="flex-row mb-4 rounded-xl p-3 bg-bg-surface-light dark:bg-bg-surface-dark border border-border-subtle-light dark:border-border-subtle-dark"
       style={
@@ -51,11 +49,11 @@ export function LibraryRow({
             borderRadius: 11,
             borderWidth: 2,
             borderColor: selected ? colors.brandUi : colors.borderInteractive,
-            backgroundColor: selected ? colors.brandUi : 'transparent',
-            alignItems: 'center',
-            justifyContent: 'center',
+            backgroundColor: selected ? colors.brandUi : "transparent",
+            alignItems: "center",
+            justifyContent: "center",
             marginRight: 10,
-            alignSelf: 'center',
+            alignSelf: "center",
           }}
         >
           {selected ? <Check color={colors.textOnBrand} size={12} weight="bold" /> : null}
@@ -66,7 +64,7 @@ export function LibraryRow({
           width: 60,
           height: 90,
           borderRadius: 6,
-          overflow: 'hidden',
+          overflow: "hidden",
           backgroundColor: colors.bgSunken,
           marginRight: 12,
         }}
@@ -74,19 +72,19 @@ export function LibraryRow({
         {row.coverUrl ? (
           <Image
             source={{ uri: row.coverUrl }}
-            style={{ width: '100%', height: '100%' }}
+            style={{ width: "100%", height: "100%" }}
             accessibilityRole="image"
             accessibilityLabel={`${row.title} cover`}
           />
         ) : null}
-        {row.status === 'paused' ? (
+        {row.status === "paused" ? (
           <View
             style={{
-              position: 'absolute',
+              position: "absolute",
               inset: 0 as never,
               backgroundColor: colors.scrimLight,
-              alignItems: 'center',
-              justifyContent: 'center',
+              alignItems: "center",
+              justifyContent: "center",
             }}
             accessibilityLabel="Paused"
           >
@@ -94,7 +92,7 @@ export function LibraryRow({
           </View>
         ) : null}
       </View>
-      <View style={{ flex: 1, justifyContent: 'center' }}>
+      <View style={{ flex: 1, justifyContent: "center" }}>
         <Text
           style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}
           numberOfLines={2}
@@ -112,11 +110,11 @@ export function LibraryRow({
         >
           {row.author}
         </Text>
-        {row.status === 'paused' ? (
+        {row.status === "paused" ? (
           <Pressable
             onPress={(e) => {
-              e.stopPropagation()
-              onResume()
+              e.stopPropagation();
+              onResume();
             }}
             accessibilityRole="button"
             accessibilityLabel="Resume reading"
@@ -124,14 +122,12 @@ export function LibraryRow({
             style={{ backgroundColor: colors.brandUi, gap: 4 }}
           >
             <Play color={colors.textOnBrand} size={11} weight="fill" />
-            <Text
-              style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textOnBrand }}
-            >
+            <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 11, color: colors.textOnBrand }}>
               Resume
             </Text>
           </Pressable>
         ) : null}
-        {row.status === 'reading' ? (
+        {row.status === "reading" ? (
           <View style={{ marginTop: 8 }}>
             <View
               style={{
@@ -167,11 +163,11 @@ export function LibraryRow({
             </Text>
           </View>
         ) : null}
-        {row.status === 'finished' && !editMode ? (
+        {row.status === "finished" && !editMode ? (
           <Pressable
             onPress={(e) => {
-              e.stopPropagation()
-              onReread()
+              e.stopPropagation();
+              onReread();
             }}
             hitSlop={4}
             accessibilityRole="button"
@@ -185,5 +181,5 @@ export function LibraryRow({
         ) : null}
       </View>
     </Pressable>
-  )
+  );
 }

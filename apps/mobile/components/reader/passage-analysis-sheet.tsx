@@ -1,17 +1,17 @@
-import type { CompanionAction } from '@foxing/client'
-import { BookmarkSimple } from 'phosphor-react-native'
-import { useEffect, useState } from 'react'
-import { Pressable, ScrollView, Text, View } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { CompanionSheet } from './companion-sheet'
+import type { CompanionAction } from "@foxing/client";
+import { BookmarkSimple } from "phosphor-react-native";
+import { useEffect, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { CompanionSheet } from "./companion-sheet";
 
 const MODES: Array<{ action: CompanionAction; label: string }> = [
-  { action: 'passage_analysis', label: 'Analyze' },
-  { action: 'word_wise', label: 'Plain English' },
-  { action: 'deep_dive', label: 'Go deeper' },
-  { action: 'language_difficulty', label: 'Difficulty' },
-]
+  { action: "passage_analysis", label: "Analyze" },
+  { action: "word_wise", label: "Plain English" },
+  { action: "deep_dive", label: "Go deeper" },
+  { action: "language_difficulty", label: "Difficulty" },
+];
 
 // A selected passage: four ways to read it closer, and a save to the commonplace book.
 export function PassageAnalysisSheet({
@@ -22,39 +22,53 @@ export function PassageAnalysisSheet({
   onSavePassage,
   onClose,
 }: {
-  visible: boolean
-  passage: string
-  bookId: string
-  currentChapter?: string
-  onSavePassage: () => void
-  onClose: () => void
+  visible: boolean;
+  passage: string;
+  bookId: string;
+  currentChapter?: string;
+  onSavePassage: () => void;
+  onClose: () => void;
 }) {
-  const colors = useColors()
-  const [action, setAction] = useState<CompanionAction>('passage_analysis')
-  const [saved, setSaved] = useState(false)
+  const colors = useColors();
+  const [action, setAction] = useState<CompanionAction>("passage_analysis");
+  const [saved, setSaved] = useState(false);
   useEffect(() => {
-    if (!visible) return
+    if (!visible) return;
     // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
-    setAction('passage_analysis')
-    setSaved(false)
-  }, [visible, passage])
+    setAction("passage_analysis");
+    setSaved(false);
+  }, [visible, passage]);
 
   return (
     <CompanionSheet
       visible={visible}
-      title={MODES.find((m) => m.action === action)?.label ?? 'Analyze'}
-      request={{ action, bookId, selection: { text: passage.slice(0, 4000), chapter: currentChapter || null } }}
+      title={MODES.find((m) => m.action === action)?.label ?? "Analyze"}
+      request={{
+        action,
+        bookId,
+        selection: { text: passage.slice(0, 4000), chapter: currentChapter || null },
+      }}
       onClose={onClose}
     >
       <Text
         numberOfLines={4}
-        style={{ fontFamily: Fonts.body, fontStyle: 'italic', fontSize: 14, color: colors.textSecondary, marginBottom: 12 }}
+        style={{
+          fontFamily: Fonts.body,
+          fontStyle: "italic",
+          fontSize: 14,
+          color: colors.textSecondary,
+          marginBottom: 12,
+        }}
       >
         “{passage}”
       </Text>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 14 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8, marginBottom: 14 }}
+      >
         {MODES.map((m) => {
-          const active = m.action === action
+          const active = m.action === action;
           return (
             <Pressable
               key={m.action}
@@ -70,30 +84,36 @@ export function PassageAnalysisSheet({
                 borderColor: active ? colors.brandUi : colors.borderSubtle,
               }}
             >
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: active ? colors.textOnBrand : colors.textPrimary }}>
+              <Text
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  fontSize: 12,
+                  color: active ? colors.textOnBrand : colors.textPrimary,
+                }}
+              >
                 {m.label}
               </Text>
             </Pressable>
-          )
+          );
         })}
       </ScrollView>
       <View className="flex-row" style={{ marginBottom: 14 }}>
         <Pressable
           onPress={() => {
-            if (saved) return
-            onSavePassage()
-            setSaved(true)
+            if (saved) return;
+            onSavePassage();
+            setSaved(true);
           }}
           accessibilityRole="button"
           className="flex-row items-center"
           style={{ gap: 6 }}
         >
-          <BookmarkSimple color={colors.brandText} size={16} weight={saved ? 'fill' : 'regular'} />
+          <BookmarkSimple color={colors.brandText} size={16} weight={saved ? "fill" : "regular"} />
           <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.brandText }}>
-            {saved ? 'Saved to your commonplace book' : 'Save passage'}
+            {saved ? "Saved to your commonplace book" : "Save passage"}
           </Text>
         </Pressable>
       </View>
     </CompanionSheet>
-  )
+  );
 }

@@ -1,17 +1,17 @@
-import type * as W from '@foxing/types'
-import { View, Text } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { Section } from '@/components/profile/profile-section'
+import type * as W from "@foxing/types";
+import { View, Text } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { Section } from "@/components/profile/profile-section";
 
 export function RecentHighlightsSection({
   highlights,
   onViewAll,
 }: {
-  highlights: W.MyAnnotation[]
-  onViewAll: () => void
+  highlights: W.MyAnnotation[];
+  onViewAll: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <Section title="Recent Highlights" actionLabel="View all" onAction={onViewAll}>
       {highlights.map((h) => (
@@ -40,11 +40,12 @@ export function RecentHighlightsSection({
               }}
               numberOfLines={1}
             >
-              {h.bookTitle}{h.bookAuthor ? ` · ${h.bookAuthor}` : ''}
+              {h.bookTitle}
+              {h.bookAuthor ? ` · ${h.bookAuthor}` : ""}
             </Text>
           ) : null}
         </View>
       ))}
     </Section>
-  )
+  );
 }

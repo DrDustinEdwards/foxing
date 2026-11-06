@@ -1,10 +1,10 @@
-import { keys, useDiscover, useRecommendations } from '@foxing/client'
-import { useQueryClient } from '@tanstack/react-query'
-import { useRouter } from 'expo-router'
-import { MagnifyingGlass, Sparkle } from 'phosphor-react-native'
-import { useState } from 'react'
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
+import { keys, useDiscover, useRecommendations } from "@foxing/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { useRouter } from "expo-router";
+import { MagnifyingGlass, Sparkle } from "phosphor-react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   BrowseBy,
   ChipRow,
@@ -12,50 +12,61 @@ import {
   SectionRow,
   SectionWrap,
   TodaysPickHero,
-} from '@/components/discover/discover-sections'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+} from "@/components/discover/discover-sections";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 export default function Discover() {
-  const colors = useColors()
-  const router = useRouter()
-  const queryClient = useQueryClient()
-  const discover = useDiscover()
-  const recs = useRecommendations()
-  const [refreshing, setRefreshing] = useState(false)
+  const colors = useColors();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const discover = useDiscover();
+  const recs = useRecommendations();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const openBook = (slug: string) => router.push(`/book/${slug}` as never)
-  const openFilter = (type: 'subject' | 'era' | 'length', value: string, label: string) =>
+  const openBook = (slug: string) => router.push(`/book/${slug}` as never);
+  const openFilter = (type: "subject" | "era" | "length", value: string, label: string) =>
     router.push(
       `/discover/filter?type=${type}&value=${encodeURIComponent(value)}&label=${encodeURIComponent(label)}` as never,
-    )
+    );
 
   const onRefresh = async () => {
-    setRefreshing(true)
+    setRefreshing(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: keys.discover }),
       queryClient.invalidateQueries({ queryKey: keys.recommendations }),
-    ])
-    setRefreshing(false)
-  }
+    ]);
+    setRefreshing(false);
+  };
 
-  const page = discover.data
-  const recommended = recs.data?.recommendations ?? []
+  const page = discover.data;
+  const recommended = recs.data?.recommendations ?? [];
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <ScrollView
         contentContainerStyle={{ paddingBottom: 48 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} tintColor={colors.brandUi} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => void onRefresh()}
+            tintColor={colors.brandUi}
+          />
         }
       >
         <View className="px-4 pt-2 pb-3">
-          <Text style={{ fontFamily: Fonts.displayBold, fontSize: 22, color: colors.textPrimary, marginBottom: 12 }}>
+          <Text
+            style={{
+              fontFamily: Fonts.displayBold,
+              fontSize: 22,
+              color: colors.textPrimary,
+              marginBottom: 12,
+            }}
+          >
             Discover
           </Text>
           <Pressable
-            onPress={() => router.push('/search' as never)}
+            onPress={() => router.push("/search" as never)}
             accessibilityRole="search"
             accessibilityLabel="Search for books or authors"
             className="flex-row items-center"
@@ -76,35 +87,49 @@ export default function Discover() {
           </Pressable>
         </View>
 
-        {discover.isPending ? <ActivityIndicator color={colors.brandUi} style={{ marginTop: 24 }} /> : null}
+        {discover.isPending ? (
+          <ActivityIndicator color={colors.brandUi} style={{ marginTop: 24 }} />
+        ) : null}
         {discover.isError ? (
-          <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textSecondary, marginHorizontal: 16 }}>
+          <Text
+            style={{
+              fontFamily: Fonts.ui,
+              fontSize: 13,
+              color: colors.textSecondary,
+              marginHorizontal: 16,
+            }}
+          >
             Couldn't load Discover. Pull down to try again.
           </Text>
         ) : null}
 
         {page?.todaysPick ? (
-          <TodaysPickHero book={page.todaysPick.book} onOpen={() => openBook(page.todaysPick!.book.slug)} />
+          <TodaysPickHero
+            book={page.todaysPick.book}
+            onOpen={() => openBook(page.todaysPick!.book.slug)}
+          />
         ) : null}
 
         {page && page.genres.length > 0 ? (
           <ChipRow
             title="Browse by genre"
             values={page.genres.map((g) => g.subject)}
-            onPress={(subject) => openFilter('subject', subject, subject)}
+            onPress={(subject) => openFilter("subject", subject, subject)}
           />
         ) : null}
 
         <View style={{ marginTop: 12 }}>
           <Pressable
-            onPress={() => router.push('/find-next-book' as never)}
+            onPress={() => router.push("/find-next-book" as never)}
             accessibilityRole="button"
             accessibilityLabel="What are you in the mood for?"
             className="mx-4 p-3 rounded-2xl flex-row items-center justify-between"
             style={{ backgroundColor: colors.brandSubtle }}
           >
             <View style={{ flex: 1 }}>
-              <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.brandSubtleText }}>
+              <Text
+                style={{ fontFamily: Fonts.uiMedium, fontSize: 13, color: colors.brandSubtleText }}
+              >
                 What are you in the mood for?
               </Text>
               <Text
@@ -155,12 +180,16 @@ export default function Discover() {
               contentContainerStyle={{ paddingHorizontal: 16, gap: 10 }}
             >
               {page.clubs.map((c) => (
-                <ClubMiniCard key={c.id} club={c} onPress={() => router.push(`/clubs/${c.id}` as never)} />
+                <ClubMiniCard
+                  key={c.id}
+                  club={c}
+                  onPress={() => router.push(`/clubs/${c.id}` as never)}
+                />
               ))}
             </ScrollView>
           </SectionWrap>
         ) : null}
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

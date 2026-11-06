@@ -1,19 +1,28 @@
-import type * as W from '@foxing/types'
-import { View, Text, Pressable } from 'react-native'
-import { PencilSimple } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { Avatar } from '@/components/feed/feed-row'
+import type * as W from "@foxing/types";
+import { View, Text, Pressable } from "react-native";
+import { PencilSimple } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { Avatar } from "@/components/feed/feed-row";
 
 export function ProfileHeader({ profile, onEdit }: { profile: W.MyProfile; onEdit: () => void }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View className="items-center mt-2 mb-6">
       <Avatar profile={profile} size={80} />
-      <Text style={{ fontFamily: Fonts.displayBold, fontSize: 22, color: colors.textPrimary, marginTop: 14 }}>
+      <Text
+        style={{
+          fontFamily: Fonts.displayBold,
+          fontSize: 22,
+          color: colors.textPrimary,
+          marginTop: 14,
+        }}
+      >
         {profile.displayName ?? profile.username}
       </Text>
-      <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary, marginTop: 2 }}>
+      <Text
+        style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary, marginTop: 2 }}
+      >
         @{profile.username}
       </Text>
       {profile.bio ? (
@@ -23,7 +32,7 @@ export function ProfileHeader({ profile, onEdit }: { profile: W.MyProfile; onEdi
             fontSize: 14,
             color: colors.textSecondary,
             marginTop: 10,
-            textAlign: 'center',
+            textAlign: "center",
             lineHeight: 20,
             paddingHorizontal: 16,
           }}
@@ -44,5 +53,5 @@ export function ProfileHeader({ profile, onEdit }: { profile: W.MyProfile; onEdi
         </Text>
       </Pressable>
     </View>
-  )
+  );
 }

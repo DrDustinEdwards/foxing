@@ -1,7 +1,7 @@
-import type * as W from '@foxing/types'
-import { Pressable, Text } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import type * as W from "@foxing/types";
+import { Pressable, Text } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 export function PrimaryCta({
   userBook,
@@ -9,39 +9,43 @@ export function PrimaryCta({
   onContinue,
   onReread,
 }: {
-  userBook: W.MyBookState | null
-  onAddPress: () => void
-  onContinue: () => void
-  onReread: () => void
+  userBook: W.MyBookState | null;
+  onAddPress: () => void;
+  onContinue: () => void;
+  onReread: () => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   const label =
-    userBook?.status === 'reading'
+    userBook?.status === "reading"
       ? `Continue Reading, ${Math.round(userBook.progressPct)}%`
-      : userBook?.status === 'finished'
-        ? 'Read Again'
-        : userBook?.status === 'want' || userBook?.status === 'abandoned' || userBook?.status === 'paused'
-          ? 'Start Reading'
-          : 'Add to Library'
+      : userBook?.status === "finished"
+        ? "Read Again"
+        : userBook?.status === "want" ||
+            userBook?.status === "abandoned" ||
+            userBook?.status === "paused"
+          ? "Start Reading"
+          : "Add to Library";
   const onPress =
-    userBook?.status === 'reading'
+    userBook?.status === "reading"
       ? onContinue
-      : userBook?.status === 'finished'
+      : userBook?.status === "finished"
         ? onReread
-        : userBook?.status === 'want' || userBook?.status === 'abandoned' || userBook?.status === 'paused'
+        : userBook?.status === "want" ||
+            userBook?.status === "abandoned" ||
+            userBook?.status === "paused"
           ? onContinue
-          : onAddPress
+          : onAddPress;
   return (
     <Pressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={label}
       className="py-4 rounded-full"
-      style={{ backgroundColor: colors.brandUi, marginTop: 12, alignItems: 'center' }}
+      style={{ backgroundColor: colors.brandUi, marginTop: 12, alignItems: "center" }}
     >
       <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textOnBrand }}>
         {label}
       </Text>
     </Pressable>
-  )
+  );
 }

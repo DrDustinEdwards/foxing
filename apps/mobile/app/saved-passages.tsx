@@ -1,6 +1,6 @@
-import { useDeleteAnnotation, useMyAnnotations, useUpdateAnnotation } from '@foxing/client'
-import type * as W from '@foxing/types'
-import { useCallback, useMemo, useState } from 'react'
+import { useDeleteAnnotation, useMyAnnotations, useUpdateAnnotation } from "@foxing/client";
+import type * as W from "@foxing/types";
+import { useCallback, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -10,9 +10,9 @@ import {
   Switch,
   ActivityIndicator,
   Alert,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 import {
   CaretLeft,
   Trash,
@@ -20,81 +20,94 @@ import {
   PencilSimple,
   Check,
   BookOpen,
-} from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+} from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // Saved Passages, the merged Highlights + Commonplace view per task.md
 // Section 2a. Pulls every highlight where a note has been written, grouped
 // by book, with public toggle + share + delete.
 
 export default function SavedPassagesScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const highlights = useMyAnnotations(['highlight'])
-  const rows = useMemo(() => (highlights.data ?? []).filter((h) => h.body), [highlights.data])
-  const loading = highlights.isPending
-  const update = useUpdateAnnotation()
-  const del = useDeleteAnnotation()
-  const [editing, setEditing] = useState<string | null>(null)
-  const [noteDraft, setNoteDraft] = useState('')
+  const colors = useColors();
+  const router = useRouter();
+  const highlights = useMyAnnotations(["highlight"]);
+  const rows = useMemo(() => (highlights.data ?? []).filter((h) => h.body), [highlights.data]);
+  const loading = highlights.isPending;
+  const update = useUpdateAnnotation();
+  const del = useDeleteAnnotation();
+  const [editing, setEditing] = useState<string | null>(null);
+  const [noteDraft, setNoteDraft] = useState("");
 
   // Group by book title for the section headers, entries without a book
   // bucket into "Loose pages".
   const grouped = useMemo(() => {
-    const m = new Map<string, W.MyAnnotation[]>()
+    const m = new Map<string, W.MyAnnotation[]>();
     for (const r of rows) {
-      const key = r.bookTitle ?? r.sourceTitle ?? 'Loose pages'
-      const list = m.get(key) ?? []
-      list.push(r)
-      m.set(key, list)
+      const key = r.bookTitle ?? r.sourceTitle ?? "Loose pages";
+      const list = m.get(key) ?? [];
+      list.push(r);
+      m.set(key, list);
     }
-    return Array.from(m.entries())
-  }, [rows])
+    return Array.from(m.entries());
+  }, [rows]);
 
   // Edits patch the cached list at once and roll back if the server refuses them.
   const onTogglePublic = useCallback(
     (entry: W.MyAnnotation) => {
-      if (!entry.bookId) return
-      update.fire({ bookId: entry.bookId, id: entry.id, visibility: entry.visibility === 'public' ? 'private' : 'public' })
+      if (!entry.bookId) return;
+      update.fire({
+        bookId: entry.bookId,
+        id: entry.id,
+        visibility: entry.visibility === "public" ? "private" : "public",
+      });
     },
     [update],
-  )
+  );
 
   const onSaveNote = useCallback(
     (entry: W.MyAnnotation) => {
-      setEditing(null)
-      if (entry.bookId) update.fire({ bookId: entry.bookId, id: entry.id, body: noteDraft.trim() || null })
+      setEditing(null);
+      if (entry.bookId)
+        update.fire({ bookId: entry.bookId, id: entry.id, body: noteDraft.trim() || null });
     },
     [noteDraft, update],
-  )
+  );
 
   const onDelete = useCallback(
     (entry: W.MyAnnotation) => {
-      Alert.alert('Delete passage?', (entry.selectedText ?? '').slice(0, 120), [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert("Delete passage?", (entry.selectedText ?? "").slice(0, 120), [
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: () => {
-            if (entry.bookId) del.fire({ bookId: entry.bookId, id: entry.id })
+            if (entry.bookId) del.fire({ bookId: entry.bookId, id: entry.id });
           },
         },
-      ])
+      ]);
     },
     [del],
-  )
+  );
 
   function colorSwatchFor(c: string | null): string {
     switch (c) {
-      case 'amber': return colors.hlAmberT
-      case 'auburn': return colors.hlAuburnT
-      case 'yellow': return colors.hlYellowT
-      case 'sage': return colors.hlSageT
-      case 'cobalt': return colors.hlCobaltT
-      case 'crimson': return colors.hlCrimsonT
-      case 'purple': return colors.hlPurpleT
-      default: return colors.borderDefault
+      case "amber":
+        return colors.hlAmberT;
+      case "auburn":
+        return colors.hlAuburnT;
+      case "yellow":
+        return colors.hlYellowT;
+      case "sage":
+        return colors.hlSageT;
+      case "cobalt":
+        return colors.hlCobaltT;
+      case "crimson":
+        return colors.hlCrimsonT;
+      case "purple":
+        return colors.hlPurpleT;
+      default:
+        return colors.borderDefault;
     }
   }
 
@@ -134,7 +147,7 @@ export default function SavedPassagesScreen() {
               fontFamily: Fonts.body,
               fontSize: 14,
               color: colors.textTertiary,
-              textAlign: 'center',
+              textAlign: "center",
               marginTop: 12,
             }}
           >
@@ -150,7 +163,7 @@ export default function SavedPassagesScreen() {
                   fontFamily: Fonts.uiMedium,
                   fontSize: 11,
                   color: colors.textTertiary,
-                  textTransform: 'uppercase',
+                  textTransform: "uppercase",
                   letterSpacing: 0.6,
                   marginBottom: 8,
                 }}
@@ -178,8 +191,8 @@ export default function SavedPassagesScreen() {
                       <View
                         style={{
                           marginTop: 8,
-                          flexDirection: 'row',
-                          alignItems: 'center',
+                          flexDirection: "row",
+                          alignItems: "center",
                           gap: 6,
                         }}
                       >
@@ -219,8 +232,8 @@ export default function SavedPassagesScreen() {
                     ) : e.body ? (
                       <Pressable
                         onPress={() => {
-                          setNoteDraft(e.body ?? '')
-                          setEditing(e.id)
+                          setNoteDraft(e.body ?? "");
+                          setEditing(e.id);
                         }}
                         accessibilityRole="button"
                         accessibilityLabel="Edit note"
@@ -231,7 +244,7 @@ export default function SavedPassagesScreen() {
                             fontSize: 13,
                             color: colors.textSecondary,
                             marginTop: 6,
-                            fontStyle: 'italic',
+                            fontStyle: "italic",
                           }}
                         >
                           ✎ {e.body}
@@ -240,8 +253,8 @@ export default function SavedPassagesScreen() {
                     ) : (
                       <Pressable
                         onPress={() => {
-                          setNoteDraft('')
-                          setEditing(e.id)
+                          setNoteDraft("");
+                          setEditing(e.id);
                         }}
                         hitSlop={4}
                         accessibilityRole="button"
@@ -269,9 +282,9 @@ export default function SavedPassagesScreen() {
                         }}
                       >
                         {new Date(e.createdAt).toLocaleDateString(undefined, {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
                         })}
                       </Text>
                       <View className="flex-row items-center" style={{ gap: 14 }}>
@@ -286,7 +299,7 @@ export default function SavedPassagesScreen() {
                             Public
                           </Text>
                           <Switch
-                            value={e.visibility === 'public'}
+                            value={e.visibility === "public"}
                             onValueChange={() => onTogglePublic(e)}
                             trackColor={{ false: colors.bgDisabled, true: colors.toggleOn }}
                             accessibilityLabel="Public passage toggle"
@@ -295,13 +308,13 @@ export default function SavedPassagesScreen() {
                         <Pressable
                           onPress={() =>
                             router.push({
-                              pathname: '/quote-card',
+                              pathname: "/quote-card",
                               params: {
-                                type: 'quote',
-                                bookId: e.bookId ?? '',
-                                bookTitle: e.bookTitle ?? '',
-                                author: e.bookAuthor ?? '',
-                                passageText: e.selectedText ?? '',
+                                type: "quote",
+                                bookId: e.bookId ?? "",
+                                bookTitle: e.bookTitle ?? "",
+                                author: e.bookAuthor ?? "",
+                                passageText: e.selectedText ?? "",
                               },
                             } as never)
                           }
@@ -329,5 +342,5 @@ export default function SavedPassagesScreen() {
         </ScrollView>
       )}
     </SafeAreaView>
-  )
+  );
 }

@@ -1,21 +1,19 @@
-import { View, Text, Pressable } from 'react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { View, Text, Pressable } from "react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 export function AutoScrollSpeed({
   autoScrollWpm,
   onSelect,
 }: {
-  autoScrollWpm: number
-  onSelect: (wpm: number) => void
+  autoScrollWpm: number;
+  onSelect: (wpm: number) => void;
 }) {
-  const colors = useColors()
+  const colors = useColors();
   return (
     <View style={{ marginTop: 10 }}>
       <View className="flex-row items-center justify-between" style={{ marginBottom: 6 }}>
-        <Text
-          style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary }}
-        >
+        <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary }}>
           Speed
         </Text>
         <Text
@@ -30,7 +28,7 @@ export function AutoScrollSpeed({
       </View>
       <View className="flex-row" style={{ gap: 6 }}>
         {[100, 160, 220, 280, 340, 400].map((wpm) => {
-          const active = autoScrollWpm === wpm
+          const active = autoScrollWpm === wpm;
           return (
             <Pressable
               key={wpm}
@@ -52,9 +50,9 @@ export function AutoScrollSpeed({
                 {wpm}
               </Text>
             </Pressable>
-          )
+          );
         })}
       </View>
     </View>
-  )
+  );
 }

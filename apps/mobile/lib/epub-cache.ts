@@ -15,51 +15,57 @@
 // the URL keyed in the cache no longer matches the DB value, so the next
 // open swaps to the correct file.
 
-import * as FileSystem from 'expo-file-system/legacy'
+import * as FileSystem from "expo-file-system/legacy";
 
-const CACHE_DIR = `${FileSystem.documentDirectory}epubs/`
+const CACHE_DIR = `${FileSystem.documentDirectory}epubs/`;
 
 // Stable filename derived from the URL. FNV-1a × 2 (two seeds) gives a
 // 64-bit fingerprint as 16 hex chars, meaningfully stronger than the
 // 32-bit djb2 previously used here, and still pure JS with no native
 // crypto dependency.
 function cacheKey(remoteUrl: string): string {
-  let a = 0x811c9dc5
-  let b = 0x84222325
+  let a = 0x811c9dc5;
+  let b = 0x84222325;
   for (let i = 0; i < remoteUrl.length; i++) {
-    const c = remoteUrl.charCodeAt(i)
-    a ^= c; a = Math.imul(a, 0x01000193)
-    b ^= c; b = Math.imul(b, 0x05f5e101)
+    const c = remoteUrl.charCodeAt(i);
+    a ^= c;
+    a = Math.imul(a, 0x01000193);
+    b ^= c;
+    b = Math.imul(b, 0x05f5e101);
   }
-  const hex = (n: number) => (n >>> 0).toString(16).padStart(8, '0')
-  return `${hex(a)}${hex(b)}`
+  const hex = (n: number) => (n >>> 0).toString(16).padStart(8, "0");
+  return `${hex(a)}${hex(b)}`;
 }
 
-function epubPath(key: string): string { return `${CACHE_DIR}${key}.epub` }
-function sidecarPath(key: string): string { return `${CACHE_DIR}${key}.url` }
+function epubPath(key: string): string {
+  return `${CACHE_DIR}${key}.epub`;
+}
+function sidecarPath(key: string): string {
+  return `${CACHE_DIR}${key}.url`;
+}
 
 async function ensureDir() {
-  const info = await FileSystem.getInfoAsync(CACHE_DIR)
-  if (!info.exists) await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true })
+  const info = await FileSystem.getInfoAsync(CACHE_DIR);
+  if (!info.exists) await FileSystem.makeDirectoryAsync(CACHE_DIR, { intermediates: true });
 }
 
 async function readSidecar(key: string): Promise<string | null> {
   try {
-    const info = await FileSystem.getInfoAsync(sidecarPath(key))
-    if (!info.exists) return null
-    return await FileSystem.readAsStringAsync(sidecarPath(key))
+    const info = await FileSystem.getInfoAsync(sidecarPath(key));
+    if (!info.exists) return null;
+    return await FileSystem.readAsStringAsync(sidecarPath(key));
   } catch {
-    return null
+    return null;
   }
 }
 
 async function writeSidecar(key: string, remoteUrl: string): Promise<void> {
-  await FileSystem.writeAsStringAsync(sidecarPath(key), remoteUrl)
+  await FileSystem.writeAsStringAsync(sidecarPath(key), remoteUrl);
 }
 
 async function evictCacheEntry(key: string): Promise<void> {
-  await FileSystem.deleteAsync(epubPath(key), { idempotent: true })
-  await FileSystem.deleteAsync(sidecarPath(key), { idempotent: true })
+  await FileSystem.deleteAsync(epubPath(key), { idempotent: true });
+  await FileSystem.deleteAsync(sidecarPath(key), { idempotent: true });
 }
 
 // One-time-per-session sweep: any .epub file without a matching .url
@@ -67,25 +73,26 @@ async function evictCacheEntry(key: string): Promise<void> {
 // different naming scheme. Delete those orphans so they don't waste
 // disk and so the next download lands a fresh, sidecar-tagged copy.
 // Cheap (10s of files, one stat each) and runs at most once per launch.
-let cleanedOnce = false
+let cleanedOnce = false;
 async function cleanupOrphans(): Promise<void> {
-  if (cleanedOnce) return
-  cleanedOnce = true
+  if (cleanedOnce) return;
+  cleanedOnce = true;
   try {
-    const entries = await FileSystem.readDirectoryAsync(CACHE_DIR)
-    const epubs = entries.filter((n) => n.endsWith('.epub'))
-    let removed = 0
+    const entries = await FileSystem.readDirectoryAsync(CACHE_DIR);
+    const epubs = entries.filter((n) => n.endsWith(".epub"));
+    let removed = 0;
     for (const name of epubs) {
-      const key = name.replace(/\.epub$/, '')
-      const sidecar = await FileSystem.getInfoAsync(sidecarPath(key))
+      const key = name.replace(/\.epub$/, "");
+      const sidecar = await FileSystem.getInfoAsync(sidecarPath(key));
       if (!sidecar.exists) {
-        await FileSystem.deleteAsync(epubPath(key), { idempotent: true })
-        removed++
+        await FileSystem.deleteAsync(epubPath(key), { idempotent: true });
+        removed++;
       }
     }
-    if (removed > 0) console.log(`[epub-cache] swept ${removed} orphan file(s) from older cache scheme`)
+    if (removed > 0)
+      console.log(`[epub-cache] swept ${removed} orphan file(s) from older cache scheme`);
   } catch (e) {
-    console.warn('[epub-cache] orphan sweep failed', e instanceof Error ? e.message : e)
+    console.warn("[epub-cache] orphan sweep failed", e instanceof Error ? e.message : e);
   }
 }
 
@@ -95,38 +102,38 @@ async function cleanupOrphans(): Promise<void> {
 // ensureEpubLocallyCached does, so this is the cheap path for callers
 // that don't need the raw bytes.
 export async function ensureEpubLocalUri(remoteUrl: string): Promise<string> {
-  await ensureDir()
-  await cleanupOrphans()
+  await ensureDir();
+  await cleanupOrphans();
 
-  const key = cacheKey(remoteUrl)
-  const epub = epubPath(key)
+  const key = cacheKey(remoteUrl);
+  const epub = epubPath(key);
 
-  const info = await FileSystem.getInfoAsync(epub)
-  let cached = info.exists
+  const info = await FileSystem.getInfoAsync(epub);
+  let cached = info.exists;
 
   if (cached) {
-    const sidecarUrl = await readSidecar(key)
+    const sidecarUrl = await readSidecar(key);
     if (sidecarUrl !== remoteUrl) {
-      console.log('[epub-cache] sidecar mismatch, evicting', {
+      console.log("[epub-cache] sidecar mismatch, evicting", {
         key,
         sidecar: sidecarUrl,
         requested: remoteUrl,
-      })
-      await evictCacheEntry(key)
-      cached = false
+      });
+      await evictCacheEntry(key);
+      cached = false;
     }
   }
 
   if (!cached) {
-    console.log(`[epub-cache] downloading ${remoteUrl}`)
-    const result = await FileSystem.downloadAsync(remoteUrl, epub)
+    console.log(`[epub-cache] downloading ${remoteUrl}`);
+    const result = await FileSystem.downloadAsync(remoteUrl, epub);
     if (result.status !== 200) {
-      await evictCacheEntry(key)
-      throw new Error(`download failed: HTTP ${result.status}`)
+      await evictCacheEntry(key);
+      throw new Error(`download failed: HTTP ${result.status}`);
     }
-    await writeSidecar(key, remoteUrl)
+    await writeSidecar(key, remoteUrl);
   }
 
-  console.log(`[epub-cache] ${cached ? 'hit' : 'miss'} ${epub}`)
-  return epub
+  console.log(`[epub-cache] ${cached ? "hit" : "miss"} ${epub}`);
+  return epub;
 }

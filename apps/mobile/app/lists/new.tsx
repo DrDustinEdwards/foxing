@@ -1,5 +1,5 @@
-import { useCreateList } from '@foxing/client'
-import { useState } from 'react'
+import { useCreateList } from "@foxing/client";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -8,34 +8,34 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useRouter } from 'expo-router'
-import { CaretLeft, Eye, EyeSlash } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { CaretLeft, Eye, EyeSlash } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 export default function NewListScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(false)
-  const create = useCreateList()
-  const saving = create.pending
+  const colors = useColors();
+  const router = useRouter();
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
+  const create = useCreateList();
+  const saving = create.pending;
 
   async function save() {
-    if (!title.trim()) return
+    if (!title.trim()) return;
     const res = await create.run({
       title: title.trim().slice(0, 80),
       description: description.trim() || null,
       isPublic,
-    })
+    });
     if (!res) {
-      Alert.alert('Could not create the list', 'Check your connection and try again.')
-      return
+      Alert.alert("Could not create the list", "Check your connection and try again.");
+      return;
     }
-    router.replace(`/lists/${res.list.id}` as never)
+    router.replace(`/lists/${res.list.id}` as never);
   }
 
   return (
@@ -118,7 +118,7 @@ export default function NewListScreen() {
             paddingHorizontal: 12,
             paddingVertical: 10,
             minHeight: 80,
-            textAlignVertical: 'top',
+            textAlignVertical: "top",
           }}
         />
         <Pressable
@@ -137,10 +137,10 @@ export default function NewListScreen() {
               color: colors.textPrimary,
             }}
           >
-            {isPublic ? 'Public list' : 'Private to you'}
+            {isPublic ? "Public list" : "Private to you"}
           </Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
-  )
+  );
 }

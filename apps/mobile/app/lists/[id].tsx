@@ -1,5 +1,12 @@
-import { useAddListBook, useDeleteList, useListPage, useRemoveListBook, useSearch, useUpdateList } from '@foxing/client'
-import { useState } from 'react'
+import {
+  useAddListBook,
+  useDeleteList,
+  useListPage,
+  useRemoveListBook,
+  useSearch,
+  useUpdateList,
+} from "@foxing/client";
+import { useState } from "react";
 import {
   View,
   Text,
@@ -10,9 +17,9 @@ import {
   Image,
   Alert,
   Modal,
-} from 'react-native'
-import { SafeAreaView } from 'react-native-safe-area-context'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   CaretLeft,
   Plus,
@@ -21,91 +28,95 @@ import {
   EyeSlash,
   MagnifyingGlass,
   PencilSimple,
-} from 'phosphor-react-native'
-import { authClient } from '@/lib/api'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
-import { ListLikeButton } from '@/components/lists/list-like-button'
+} from "phosphor-react-native";
+import { authClient } from "@/lib/api";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
+import { ListLikeButton } from "@/components/lists/list-like-button";
 
 // A reading list from GET /lists/:id. Its owner edits, adds and removes books in place;
 // everyone else can like it.
 export default function ListDetailScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const { id } = useLocalSearchParams<{ id: string }>()
-  const listQuery = useListPage(id ?? '')
-  const page = listQuery.data
-  const signedIn = Boolean(authClient.useSession().data)
-  const update = useUpdateList()
-  const del = useDeleteList()
-  const addBookTo = useAddListBook()
-  const removeBookFrom = useRemoveListBook()
-  const [editing, setEditing] = useState(false)
-  const [editTitle, setEditTitle] = useState('')
-  const [editDescription, setEditDescription] = useState('')
-  const [editPublic, setEditPublic] = useState(false)
-  const [adding, setAdding] = useState(false)
-  const [bookQuery, setBookQuery] = useState('')
-  const search = useSearch(bookQuery.trim().length >= 2 ? bookQuery : '')
-  const bookResults = (search.data?.books ?? []).slice(0, 10)
-  const info = page?.list ?? null
-  const books = page?.books ?? []
-  const loading = listQuery.isPending
+  const colors = useColors();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const listQuery = useListPage(id ?? "");
+  const page = listQuery.data;
+  const signedIn = Boolean(authClient.useSession().data);
+  const update = useUpdateList();
+  const del = useDeleteList();
+  const addBookTo = useAddListBook();
+  const removeBookFrom = useRemoveListBook();
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editPublic, setEditPublic] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [bookQuery, setBookQuery] = useState("");
+  const search = useSearch(bookQuery.trim().length >= 2 ? bookQuery : "");
+  const bookResults = (search.data?.books ?? []).slice(0, 10);
+  const info = page?.list ?? null;
+  const books = page?.books ?? [];
+  const loading = listQuery.isPending;
 
   function startEditing() {
-    if (!info) return
-    setEditTitle(info.title)
-    setEditDescription(info.description ?? '')
-    setEditPublic(info.isPublic)
-    setEditing(true)
+    if (!info) return;
+    setEditTitle(info.title);
+    setEditDescription(info.description ?? "");
+    setEditPublic(info.isPublic);
+    setEditing(true);
   }
 
   async function addBook(bookId: string) {
-    if (!info) return
+    if (!info) return;
     if (!(await addBookTo.run({ listId: info.id, bookId }))) {
-      Alert.alert('Could not add the book', 'Check your connection and try again.')
-      return
+      Alert.alert("Could not add the book", "Check your connection and try again.");
+      return;
     }
-    setBookQuery('')
-    setAdding(false)
+    setBookQuery("");
+    setAdding(false);
   }
 
   function removeBook(bookId: string) {
-    if (!info) return
-    Alert.alert('Remove book?', 'It stays in your library.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Remove', style: 'destructive', onPress: () => removeBookFrom.fire({ listId: info.id, bookId }) },
-    ])
+    if (!info) return;
+    Alert.alert("Remove book?", "It stays in your library.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => removeBookFrom.fire({ listId: info.id, bookId }),
+      },
+    ]);
   }
 
   async function saveEdit() {
-    if (!info) return
+    if (!info) return;
     const saved = await update.run({
       id: info.id,
       title: editTitle.trim().slice(0, 80) || info.title,
       description: editDescription.trim() || null,
       isPublic: editPublic,
-    })
+    });
     if (!saved) {
-      Alert.alert('Could not save', 'Check your connection and try again.')
-      return
+      Alert.alert("Could not save", "Check your connection and try again.");
+      return;
     }
-    setEditing(false)
+    setEditing(false);
   }
 
   function deleteList() {
-    if (!info) return
-    Alert.alert('Delete list?', 'This cannot be undone.', [
-      { text: 'Cancel', style: 'cancel' },
+    if (!info) return;
+    Alert.alert("Delete list?", "This cannot be undone.", [
+      { text: "Cancel", style: "cancel" },
       {
-        text: 'Delete',
-        style: 'destructive',
+        text: "Delete",
+        style: "destructive",
         onPress: () =>
           void del.run({ id: info.id }).then((deleted) => {
-            if (deleted) router.back()
+            if (deleted) router.back();
           }),
       },
-    ])
+    ]);
   }
 
   if (loading) {
@@ -113,7 +124,7 @@ export default function ListDetailScreen() {
       <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
         <ActivityIndicator color={colors.brandUi} />
       </SafeAreaView>
-    )
+    );
   }
   if (!info) {
     return (
@@ -123,16 +134,16 @@ export default function ListDetailScreen() {
             fontFamily: Fonts.body,
             fontSize: 14,
             color: colors.textTertiary,
-            textAlign: 'center',
+            textAlign: "center",
           }}
         >
           List not found.
         </Text>
       </SafeAreaView>
-    )
+    );
   }
 
-  const isOwn = page?.isOwner ?? false
+  const isOwn = page?.isOwner ?? false;
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -163,7 +174,12 @@ export default function ListDetailScreen() {
             <PencilSimple color={colors.textSecondary} size={20} />
           </Pressable>
         ) : (
-          <ListLikeButton listId={info.id} liked={page?.liked ?? false} count={page?.likeCount ?? 0} canLike={signedIn} />
+          <ListLikeButton
+            listId={info.id}
+            liked={page?.liked ?? false}
+            count={page?.likeCount ?? 0}
+            canLike={signedIn}
+          />
         )}
       </View>
 
@@ -180,10 +196,7 @@ export default function ListDetailScreen() {
             {info.description}
           </Text>
         ) : null}
-        <View
-          className="flex-row items-center"
-          style={{ gap: 8, marginBottom: 16 }}
-        >
+        <View className="flex-row items-center" style={{ gap: 8, marginBottom: 16 }}>
           <Text
             style={{
               fontFamily: Fonts.mono,
@@ -191,10 +204,10 @@ export default function ListDetailScreen() {
               color: colors.textTertiary,
             }}
           >
-            {books.length} book{books.length === 1 ? '' : 's'}
+            {books.length} book{books.length === 1 ? "" : "s"}
             {info.isPublic && (page?.likeCount ?? 0) > 0
-              ? ` · ${page?.likeCount} like${page?.likeCount === 1 ? '' : 's'}`
-              : ''}
+              ? ` · ${page?.likeCount} like${page?.likeCount === 1 ? "" : "s"}`
+              : ""}
           </Text>
           {info.isPublic ? (
             <Eye color={colors.info} size={14} />
@@ -229,20 +242,20 @@ export default function ListDetailScreen() {
           >
             <Pressable
               onPress={() => {
-                if (b.book) router.push(`/book/${b.book.slug}` as never)
+                if (b.book) router.push(`/book/${b.book.slug}` as never);
               }}
               style={{
                 width: 48,
                 height: 72,
                 borderRadius: 4,
-                overflow: 'hidden',
+                overflow: "hidden",
                 backgroundColor: colors.bgSunken,
               }}
             >
               {b.book?.coverUrl ? (
                 <Image
                   source={{ uri: b.book.coverUrl }}
-                  style={{ width: '100%', height: '100%' }}
+                  style={{ width: "100%", height: "100%" }}
                 />
               ) : null}
             </Pressable>
@@ -255,7 +268,7 @@ export default function ListDetailScreen() {
                 }}
                 numberOfLines={2}
               >
-                {b.book?.title ?? 'Unknown'}
+                {b.book?.title ?? "Unknown"}
               </Text>
               <Text
                 style={{
@@ -266,7 +279,7 @@ export default function ListDetailScreen() {
                 }}
                 numberOfLines={1}
               >
-                {b.book?.author ?? ''}
+                {b.book?.author ?? ""}
               </Text>
               {b.note ? (
                 <Text
@@ -283,11 +296,7 @@ export default function ListDetailScreen() {
               ) : null}
             </View>
             {isOwn ? (
-              <Pressable
-                onPress={() => removeBook(b.bookId)}
-                hitSlop={10}
-                style={{ padding: 4 }}
-              >
+              <Pressable onPress={() => removeBook(b.bookId)} hitSlop={10} style={{ padding: 4 }}>
                 <Trash color={colors.textTertiary} size={16} />
               </Pressable>
             ) : null}
@@ -300,7 +309,7 @@ export default function ListDetailScreen() {
             style={{
               marginTop: 24,
               padding: 12,
-              alignItems: 'center',
+              alignItems: "center",
             }}
           >
             <Text
@@ -324,11 +333,7 @@ export default function ListDetailScreen() {
       >
         <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
           <View className="flex-row items-center px-3 py-2">
-            <Pressable
-              onPress={() => setAdding(false)}
-              hitSlop={10}
-              className="p-2"
-            >
+            <Pressable onPress={() => setAdding(false)} hitSlop={10} className="p-2">
               <CaretLeft color={colors.textPrimary} size={22} />
             </Pressable>
             <Text
@@ -375,20 +380,15 @@ export default function ListDetailScreen() {
                     width: 40,
                     height: 60,
                     borderRadius: 4,
-                    overflow: 'hidden',
+                    overflow: "hidden",
                     backgroundColor: colors.bgSunken,
                   }}
                 >
                   {b.coverUrl ? (
-                    <Image
-                      source={{ uri: b.coverUrl }}
-                      style={{ width: '100%', height: '100%' }}
-                    />
+                    <Image source={{ uri: b.coverUrl }} style={{ width: "100%", height: "100%" }} />
                   ) : null}
                 </View>
-                <View
-                  style={{ flex: 1, marginLeft: 12, justifyContent: 'center' }}
-                >
+                <View style={{ flex: 1, marginLeft: 12, justifyContent: "center" }}>
                   <Text
                     style={{
                       fontFamily: Fonts.uiMedium,
@@ -424,11 +424,7 @@ export default function ListDetailScreen() {
       >
         <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
           <View className="flex-row items-center px-3 py-2">
-            <Pressable
-              onPress={() => setEditing(false)}
-              hitSlop={10}
-              className="p-2"
-            >
+            <Pressable onPress={() => setEditing(false)} hitSlop={10} className="p-2">
               <CaretLeft color={colors.textPrimary} size={22} />
             </Pressable>
             <Text
@@ -499,7 +495,7 @@ export default function ListDetailScreen() {
                 paddingHorizontal: 12,
                 paddingVertical: 10,
                 minHeight: 80,
-                textAlignVertical: 'top',
+                textAlignVertical: "top",
               }}
             />
             <Pressable
@@ -518,12 +514,12 @@ export default function ListDetailScreen() {
                   color: colors.textPrimary,
                 }}
               >
-                {editPublic ? 'Public list' : 'Private to you'}
+                {editPublic ? "Public list" : "Private to you"}
               </Text>
             </Pressable>
           </ScrollView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>
-  )
+  );
 }

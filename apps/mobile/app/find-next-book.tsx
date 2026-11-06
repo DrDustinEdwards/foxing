@@ -1,20 +1,20 @@
-import { useRecommendations, useRefreshRecommendations, useSetBookStatus } from '@foxing/client'
-import { View, Text, Pressable, ScrollView, ActivityIndicator, Linking } from 'react-native'
-import { Screen } from '@/components/ui/screen'
-import { useRouter } from 'expo-router'
-import { ArrowClockwise, CaretLeft } from 'phosphor-react-native'
-import { useColors } from '@/constants/colors'
-import { Fonts } from '@/constants/fonts'
+import { useRecommendations, useRefreshRecommendations, useSetBookStatus } from "@foxing/client";
+import { View, Text, Pressable, ScrollView, ActivityIndicator, Linking } from "react-native";
+import { Screen } from "@/components/ui/screen";
+import { useRouter } from "expo-router";
+import { ArrowClockwise, CaretLeft } from "phosphor-react-native";
+import { useColors } from "@/constants/colors";
+import { Fonts } from "@/constants/fonts";
 
 // What to read next: GET /recommendations, the same picks and reasons as the web
 // page (personalised by AI for Plus readers). Refresh asks for a fresh set.
 export default function FindNextBookScreen() {
-  const colors = useColors()
-  const router = useRouter()
-  const recs = useRecommendations()
-  const refresh = useRefreshRecommendations()
-  const setBookStatus = useSetBookStatus()
-  const data = recs.data
+  const colors = useColors();
+  const router = useRouter();
+  const recs = useRecommendations();
+  const refresh = useRefreshRecommendations();
+  const setBookStatus = useSetBookStatus();
+  const data = recs.data;
 
   return (
     <Screen>
@@ -66,14 +66,21 @@ export default function FindNextBookScreen() {
           )
         ) : (
           <>
-            <Text style={{ fontFamily: Fonts.body, fontSize: 14, color: colors.textSecondary, marginBottom: 14 }}>
+            <Text
+              style={{
+                fontFamily: Fonts.body,
+                fontSize: 14,
+                color: colors.textSecondary,
+                marginBottom: 14,
+              }}
+            >
               {data.aiPersonalized
-                ? 'Picks chosen for your reading, with a reason for each.'
-                : 'Picks drawn from what you read and love, with a reason for each.'}
+                ? "Picks chosen for your reading, with a reason for each."
+                : "Picks drawn from what you read and love, with a reason for each."}
             </Text>
             {!data.isPlus ? (
               <Pressable
-                onPress={() => void Linking.openURL('https://foxing.app/pricing')}
+                onPress={() => void Linking.openURL("https://foxing.app/pricing")}
                 accessibilityRole="link"
                 className="p-3 mb-4 rounded-2xl border"
                 style={{ borderColor: colors.borderBrand, backgroundColor: colors.bgSelected }}
@@ -84,7 +91,14 @@ export default function FindNextBookScreen() {
               </Pressable>
             ) : null}
             {refresh.error ? (
-              <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.error, marginBottom: 12 }}>
+              <Text
+                style={{
+                  fontFamily: Fonts.body,
+                  fontSize: 13,
+                  color: colors.error,
+                  marginBottom: 12,
+                }}
+              >
                 {refresh.error}
               </Text>
             ) : null}
@@ -98,12 +112,21 @@ export default function FindNextBookScreen() {
                   key={r.bookId}
                   className="p-3 mb-3 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
                 >
-                  <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}>
+                  <Text
+                    style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}
+                  >
                     {r.title}
                   </Text>
-                  <Text style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, marginTop: 2 }}>
+                  <Text
+                    style={{
+                      fontFamily: Fonts.ui,
+                      fontSize: 12,
+                      color: colors.textTertiary,
+                      marginTop: 2,
+                    }}
+                  >
                     {r.author}
-                    {r.publicationYear ? ` · ${r.publicationYear}` : ''}
+                    {r.publicationYear ? ` · ${r.publicationYear}` : ""}
                   </Text>
                   <Text
                     style={{
@@ -116,17 +139,30 @@ export default function FindNextBookScreen() {
                   >
                     {r.reason}
                   </Text>
-                  <View className="flex-row items-center justify-end" style={{ marginTop: 10, gap: 10 }}>
+                  <View
+                    className="flex-row items-center justify-end"
+                    style={{ marginTop: 10, gap: 10 }}
+                  >
                     <Pressable
                       onPress={() =>
-                        setBookStatus.fire({ bookId: r.bookId, status: 'want', book: { ...r, id: r.bookId } })
+                        setBookStatus.fire({
+                          bookId: r.bookId,
+                          status: "want",
+                          book: { ...r, id: r.bookId },
+                        })
                       }
                       accessibilityRole="button"
                       accessibilityLabel={`Add ${r.title} to Want to Read`}
                       className="px-3 py-1 rounded-full border"
                       style={{ borderColor: colors.borderInteractive }}
                     >
-                      <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textPrimary }}>
+                      <Text
+                        style={{
+                          fontFamily: Fonts.uiMedium,
+                          fontSize: 12,
+                          color: colors.textPrimary,
+                        }}
+                      >
                         Add to Want to Read
                       </Text>
                     </Pressable>
@@ -137,7 +173,13 @@ export default function FindNextBookScreen() {
                       className="px-3 py-1 rounded-full"
                       style={{ backgroundColor: colors.brandUi }}
                     >
-                      <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textOnBrand }}>
+                      <Text
+                        style={{
+                          fontFamily: Fonts.uiMedium,
+                          fontSize: 12,
+                          color: colors.textOnBrand,
+                        }}
+                      >
                         Open
                       </Text>
                     </Pressable>
@@ -149,5 +191,5 @@ export default function FindNextBookScreen() {
         )}
       </ScrollView>
     </Screen>
-  )
+  );
 }
