@@ -20,13 +20,8 @@
     "@better-auth/passkey": "1.7.17",
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.33.0",
     "@dustinedwards/d1-dump": "github:DrDustinEdwards/d1-dump#v0.13.1",
-<<<<<<< HEAD
-    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.25.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.84.0",
-=======
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.26.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.84.0",
->>>>>>> origin/main
     "@fontsource-variable/dm-sans": "5.3.0",
     "@fontsource-variable/fraunces": "5.3.0",
     "@fontsource-variable/source-serif-4": "5.3.1",
