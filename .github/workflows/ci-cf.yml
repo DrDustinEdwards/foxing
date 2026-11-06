@@ -61,14 +61,26 @@ jobs:
         run: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc
       - name: Cloudflare typegen
         run: npm exec -w web -- wrangler types
-      - name: Typecheck core
-        run: npm exec -w @foxing/core -- tsc --noEmit
-      - name: Typecheck api
-        run: npm exec -w @foxing/api -- tsc --noEmit
-      - name: Typecheck client
-        run: npm exec -w @foxing/client -- tsc --noEmit
-      - name: Typecheck web
-        run: npm run type-check -w web
+      # The four typechecks are independent (none reads another's output), so they run at once on the
+      # runner's cores. Each one's output goes to a file and is printed in order afterward, a failure
+      # is named, and the step fails if any of them did.
+      - name: Typecheck (core, api, client, web)
+        run: |
+          mkdir -p "$RUNNER_TEMP/tc"
+          npm exec -w @foxing/core -- tsc --noEmit > "$RUNNER_TEMP/tc/core.log" 2>&1 & p_core=$!
+          npm exec -w @foxing/api -- tsc --noEmit > "$RUNNER_TEMP/tc/api.log" 2>&1 & p_api=$!
+          npm exec -w @foxing/client -- tsc --noEmit > "$RUNNER_TEMP/tc/client.log" 2>&1 & p_client=$!
+          npm run type-check -w web > "$RUNNER_TEMP/tc/web.log" 2>&1 & p_web=$!
+          fail=0
+          for name in core api client web; do
+            pid="p_$name"
+            if wait "${!pid}"; then status=ok; else status=FAILED; fail=1; fi
+            echo "::group::Typecheck $name ($status)"
+            cat "$RUNNER_TEMP/tc/$name.log"
+            echo "::endgroup::"
+            if [ "$status" = FAILED ]; then echo "::error::Typecheck $name failed"; fi
+          done
+          exit "$fail"
       - name: Lint (biome)
         run: npm run lint:cf
       - name: Drizzle migration check
