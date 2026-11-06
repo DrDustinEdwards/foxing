@@ -27,7 +27,7 @@ links to the reader.
 
 1. Install Maestro: https://maestro.mobile.dev/getting-started/installing-maestro
 2. Build and install a dev/preview build of the app on a booted emulator or
-   simulator (`pnpm --filter mobile ios` or `android`, or an EAS build).
+   simulator (`npm run ios -w mobile` or `android`, or an EAS build).
 3. Sign in once, manually, on that device. The flows do not log in; the reader
    renders for an authenticated session, and a signed-out deep link can bounce
    to the auth stack. State is preserved between flows (`clearState` is not set).

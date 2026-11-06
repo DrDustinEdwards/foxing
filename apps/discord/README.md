@@ -5,8 +5,8 @@ A Vite + React SPA that runs as a Discord Activity inside voice and text channel
 ## Local development
 
 ```
-pnpm install
-pnpm --filter @foxing/discord-activity dev
+npm install
+npm run dev -w @foxing/discord-activity
 ```
 
 Dev server runs on `:5174`. API calls are proxied to `FOXING_API_URL` (defaults to `https://foxing.app`). Override with a local `.env` if you need to hit a dev API.
@@ -14,7 +14,7 @@ Dev server runs on `:5174`. API calls are proxied to `FOXING_API_URL` (defaults 
 ## Build
 
 ```
-pnpm --filter @foxing/discord-activity build
+npm run build -w @foxing/discord-activity
 ```
 
 Output is in `apps/discord/dist`.
@@ -24,7 +24,7 @@ Output is in `apps/discord/dist`.
 Deploy this package to a **separate Vercel project** with:
 
 - Root directory: `apps/discord`
-- Build command: `pnpm build`
+- Build command: `npm run build`
 - Output directory: `dist`
 - Framework preset: Vite
 

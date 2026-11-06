@@ -23,13 +23,8 @@
 //      WebView mechanism) and onSelectionChange keeps firing so the
 //      Foxing floating pill is the only user-facing surface.
 //
-// Why not pnpm patchedDependencies: EAS's frozen-lockfile install fails
-// with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH whenever patchedDependencies
-// is set, even with a matching lockfile entry. Their image's pnpm
-// validates patches in a way that disagrees with our local pnpm.
-//
-// Why not patch-package: it can't resolve packages through pnpm's
-// symlinked .pnpm/ store on Windows.
+// Why not patch-package: a postinstall script needs no extra dependency
+// and works the same on EAS, CI and Windows.
 
 import { createRequire } from 'node:module'
 import { dirname, join } from 'node:path'
@@ -77,9 +72,7 @@ const ORIGINAL_GATE_REGEX =
 
 function resolveTargetFile() {
   // Resolve the package's installed path through require.resolve so we
-  // follow pnpm's symlink into the .pnpm store. This way the write
-  // lands on the canonical content-addressable file the symlink points
-  // to, not a stale tree somewhere else.
+  // find the installed copy, wherever npm hoisted it.
   const require = createRequire(import.meta.url)
   try {
     const pkgJson = require.resolve('react-native-readium/package.json')

@@ -9,8 +9,7 @@ on:
       - "packages/**"
       - "scripts/**"
       - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
+      - "package-lock.json"
       - "knip.jsonc"
       - ".jscpd.json"
       - ".no-bloat.json"
@@ -28,6 +27,6 @@ jobs:
   report:
     uses: DrDustinEdwards/devkit/.github/workflows/no-bloat.yml@0c1b0a6aa70b7991888cc2d5686af6e8a8e28f3d # v0.21.3
     with:
-      package-manager: pnpm
+      package-manager: npm
       # No lifecycle scripts. devkit-no-bloat runs Knip and jscpd through npx at the versions in .no-bloat.json.
-      install: 'git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile --ignore-scripts'
+      install: 'npm ci --ignore-scripts'

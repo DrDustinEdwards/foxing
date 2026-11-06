@@ -16,8 +16,7 @@ on:
       - "packages/core/**"
       - "packages/api/**"
       - "package.json"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
+      - "package-lock.json"
       - ".route-weight.json"
       - ".github/workflows/page-weight.yml"
       - "!apps/web/test/**"
@@ -40,17 +39,16 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version-file: .nvmrc
-          cache: pnpm
-      - run: git config --global url.https://github.com/.insteadOf "git@github.com:" && pnpm install --frozen-lockfile
+          cache: npm
+      - run: npm ci
       # wrangler.jsonc is gitignored; the Cloudflare Vite plugin needs a config
       # present to build. Placeholder ids are fine: nothing is deployed.
       - name: Stage wrangler config
         run: cp apps/web/wrangler.jsonc.example apps/web/wrangler.jsonc
       - name: Build web
-        run: pnpm build:web
+        run: npm run build:web
       - name: Page weight
-        run: pnpm run check:page-weight
+        run: npm run check:page-weight

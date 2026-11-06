@@ -16,9 +16,14 @@
 {
   "$schema": "https://unpkg.com/knip@6.38.0/schema.json",
   "workspaces": {
+    // apps/discord is not an npm workspace (it deploys on its own with its own
+    // lock), so Knip leaves it out.
     ".": {
       "entry": ["scripts/**/*.{ts,mjs}"],
-      "project": ["scripts/**/*.{ts,mjs}"]
+      "project": ["scripts/**/*.{ts,mjs}"],
+      // vite is declared at the root only so npm hoists vite 8 for the Cloudflare
+      // and React Router plugins that hoist there; apps/web builds with it.
+      "ignoreDependencies": ["vite"]
     },
     "apps/web": {
       // workers/app.ts is wrangler's `main`; the *.setup.ts files are Playwright
@@ -72,9 +77,6 @@
       // NativeWind cannot find ./tailwind.config and the load fails. The file stays
       // an entry above, so its own requires are still counted.
       "metro": false
-    },
-    "apps/discord": {
-      "project": ["src/**/*.{ts,tsx,css}"]
     },
     "packages/core": {
       "project": ["src/**/*.ts", "test/**/*.ts"]

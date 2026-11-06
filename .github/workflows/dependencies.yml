@@ -10,7 +10,6 @@ on:
     paths:
       - "**/package.json"
       - "**/package-lock.json"
-      - "**/pnpm-lock.yaml"
       - "**/requirements*.txt"
       - "**/pyproject.toml"
       - "osv-scanner.toml"
@@ -20,7 +19,6 @@ on:
     paths:
       - "**/package.json"
       - "**/package-lock.json"
-      - "**/pnpm-lock.yaml"
       - "**/requirements*.txt"
       - "**/pyproject.toml"
       - "osv-scanner.toml"
