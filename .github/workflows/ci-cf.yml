@@ -13,8 +13,9 @@ on:
       - ".github/workflows/ci-cf.yml"
       # The root lint covers the admin MCP too, so a change there runs the Lint step.
       - "mcp/**"
-      # The lint config and the root lint script decide what the Lint step checks.
+      # The lint and format configs and the root scripts decide what the Lint and Format check steps check.
       - "oxlint.config.ts"
+      - "oxfmt.config.ts"
       - "package.json"
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "package-lock.json"
@@ -28,8 +29,9 @@ on:
       - ".github/workflows/ci-cf.yml"
       # The root lint covers the admin MCP too, so a change there runs the Lint step.
       - "mcp/**"
-      # The lint config and the root lint script decide what the Lint step checks.
+      # The lint and format configs and the root scripts decide what the Lint and Format check steps check.
       - "oxlint.config.ts"
+      - "oxfmt.config.ts"
       - "package.json"
       # A lockfile change alone (a git dependency's pin) changes what is built and deployed.
       - "package-lock.json"
@@ -95,6 +97,8 @@ jobs:
           npx wrangler types
       - name: Lint
         run: npm run lint
+      - name: Format check
+        run: npm run format:check
       - name: Drizzle migration check
         run: npm exec -w @foxing/core -- drizzle-kit check
       # Raw console.* calls in server code against .console.json's baseline (a rise fails; log
