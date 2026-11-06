@@ -54,7 +54,7 @@ function healthChecks(env: Env): HealthCheck[] {
       kvCheck("oauth-kv", env.OAUTH_KV),
       foxing,
       durableObjectCheck("mcp-rate-limit", env.MCP_RATE_LIMIT),
-      durableObjectCheck("tool-call-log", env.TOOL_CALL_LOG),
+      durableObjectCheck("tool-call-log-binding", env.TOOL_CALL_LOG),
     ].map((check) => ({ ...check, level: "fail" as const })),
     // AUDIT_BUCKET holds only the nightly copies of the tool-call log, so a bucket that fails to answer warns and
     // never takes the Worker to 503. One `head` of a fixed key, never a list.
