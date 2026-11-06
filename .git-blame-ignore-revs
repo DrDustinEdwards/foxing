@@ -1,3 +1,5 @@
 # Formatting-only commits, which GitHub blame skips.
 # Format with the shared Oxfmt config (apps/mobile follows in its own pull request).
 d5061e84519f67b7ecd24e421a17b742809738f4
+# Format apps/mobile with the shared Oxfmt config.
+fe377f50a1e44195971114675eff4f96719b3260
