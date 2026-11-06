@@ -21,5 +21,7 @@ jobs:
       - run: npm ci
       - run: npx expo prebuild --platform android --no-install
         working-directory: apps/mobile
+      # Install CMake and the NDK once, up front: Gradle's parallel native tasks otherwise race to install them.
+      - run: echo y | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "cmake;3.22.1" "ndk;27.1.12297006" "ndk;27.0.12077973" > /dev/null
       - run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a
         working-directory: apps/mobile/android
