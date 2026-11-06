@@ -8,10 +8,12 @@ export default defineConfig({
     "typescript/no-non-null-assertion": "off",
     // off in devkit 0.24.0
     "react/only-export-components": "off",
-    // Every flagged role is the ARIA pattern the element needs: the search combobox's listbox and
-    // options, star ratings as one image, a progress bar and live status lines on plain text. The
-    // suggested tags (select, option, img, progress, output, dialog) would change behavior and styling.
+    // off in devkit 0.24.0
     "jsx-a11y/prefer-tag-over-role": "off",
+    // off in devkit 0.24.0
+    "jsx-a11y/control-has-associated-label": "off",
+    // off in devkit 0.24.0
+    "jsx-a11y/media-has-caption": "off",
   },
   // devkit's ignore patterns (Oxlint does not carry ignorePatterns through extends), then apps/mobile,
   // a separate change (CLAUDE.md hard rule 2), and apps/discord, which waits on Dustin (hard rule 9).

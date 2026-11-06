@@ -98,7 +98,6 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
               key={s.slug}
               id={`${listId}-${i}`}
               role="option"
-              aria-label={`${s.title}, ${s.author}`}
               tabIndex={-1}
               aria-selected={active === i}
               className="cap-option"
