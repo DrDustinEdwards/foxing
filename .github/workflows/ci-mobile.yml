@@ -1,18 +1,9 @@
 name: CI (mobile)
 
 # Lints and format-checks apps/mobile with the root Oxlint and Oxfmt configs (oxlint.config.ts, oxfmt.config.ts).
+# Pull requests only: no deploy reads it, and the merge was checked as a pull request (devkit README, "No second run on
+# main").
 on:
-  push:
-    branches: [main]
-    paths:
-      - "apps/mobile/**"
-      - "packages/client/**"
-      - "packages/types/**"
-      - "oxlint.config.ts"
-      - "oxfmt.config.ts"
-      - "package.json"
-      - "package-lock.json"
-      - ".github/workflows/ci-mobile.yml"
   pull_request:
     paths:
       - "apps/mobile/**"
@@ -27,10 +18,10 @@ on:
 permissions:
   contents: read
 
-# A newer push to a pull request cancels its older run; a push to the default branch never does.
+# A newer push to a pull request cancels its older run.
 concurrency:
-  group: ci-mobile-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ci-mobile-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   lint:
