@@ -152,7 +152,7 @@ describe("nightly backup", () => {
     expect(written.some((k) => k.includes("reader/"))).toBe(false);
 
     // Capsid's backup_status (the operator API) answers every files pass by its name.
-    const answer = (await operatorTools(workerEnv).backup_status.run({})) as {
+    const answer = (await operatorTools(workerEnv, () => []).backup_status.run({})) as {
       files: Record<string, { age_hours: number }>;
     };
     expect(Object.keys(answer.files)).toEqual(["journal", "journal-revisions", "covers"]);

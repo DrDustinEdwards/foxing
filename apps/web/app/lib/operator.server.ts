@@ -1,10 +1,13 @@
-// The operator API's tools: the door Capsid Admin's backups reach Foxing through (/api/operator, site-runtime
-// ./operator, one implementation on every site; workers/app.ts mounts it). Checking the backups and backing up now
-// are Capsid Admin's, for every site in one place (Dustin, 2026-11-06), so they are not admin API routes here.
+// The operator API's tools: the door Capsid Admin reaches Foxing through (/api/operator, site-runtime ./operator, one
+// implementation on every site; workers/app.ts mounts it). Checking the backups, backing up now and running any
+// scheduled job now are Capsid Admin's, for every site in one place (Dustin, 2026-11-06 and 2026-11-07), so they are
+// not admin API routes here.
+import { runJobTool, type CronJob } from "@dustinedwards/site-runtime/cron";
 import type { OperatorTool } from "@dustinedwards/site-runtime/operator";
-import { backupFilesNow, backupStatus } from "./backup.server";
+import { backupStatus } from "./backup.server";
 
-export function operatorTools(env: Env): Record<string, OperatorTool> {
+/** `jobs` is every cron job with its work (workers/app.ts), for run_job. */
+export function operatorTools(env: Env, jobs: () => CronJob[]): Record<string, OperatorTool> {
   return {
     backup_status: {
       description:
@@ -16,12 +19,6 @@ export function operatorTools(env: Env): Record<string, OperatorTool> {
         return { ...dump, files: { journal: files, "journal-revisions": revisions, covers } };
       },
     },
-    backup_media: {
-      description:
-        "Runs the nightly files backup now: one pass each over the Journal's pictures, its earlier and deleted bytes, " +
-        "and the book covers (files/journal/, files/journal-revisions/, files/covers/). Copy only; each pass goes on " +
-        "where its last stopped.",
-      run: async () => ({ files: await backupFilesNow(env) }),
-    },
+    run_job: runJobTool(env.DB, jobs),
   };
 }
