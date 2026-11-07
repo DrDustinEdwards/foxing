@@ -80,10 +80,7 @@
   text-align: center;
 }
 .cover-img-fallback > span {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  overflow: hidden;
+  overflow-wrap: anywhere;
   font-family: var(--display);
   font-size: 0.875rem;
   line-height: 1.25;
