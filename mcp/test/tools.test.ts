@@ -37,7 +37,7 @@ const path = (i = 0) =>
 describe("every request", () => {
   test("carries the operator bearer and the acting admin, over the binding to /api/v1/admin", async () => {
     await call("foxing_get_health");
-    assert.equal(foxing.calls.length, 1);
+    assert.equal(foxing.calls.length, 2);
     const sent = foxing.calls[0];
     assert.equal(sent.url.origin, "https://foxing.app");
     assert.equal(sent.url.pathname, "/api/v1/admin/stats");
@@ -238,6 +238,124 @@ describe("what each tool sends", () => {
   test("foxing_read_audit_log pages the site's log", async () => {
     await call("foxing_read_audit_log", { limit: 10, cursor: encodeCursor(20) });
     assert.equal(path(), "GET /api/v1/admin/audit-log?limit=10&offset=20");
+  });
+});
+
+describe("health, moderation and catalog health", () => {
+  test("foxing_get_health folds in the 404 report, and survives the report being refused", async () => {
+    const stats = { totalUsers: 1, recentSignups: [] };
+    foxing.reply(
+      { body: stats },
+      {
+        body: {
+          days: 7,
+          items: [
+            { path: "/old", hits: 5 },
+            { path: "/x", hits: 2 },
+          ],
+        },
+      },
+    );
+    const out = await call("foxing_get_health");
+    assert.equal(path(0), "GET /api/v1/admin/stats");
+    assert.equal(path(1), "GET /api/v1/admin/not-found?days=7&limit=10");
+    assert.deepEqual(out.structuredContent?.notFound, {
+      days: 7,
+      totalHits: 7,
+      top: [
+        { path: "/old", hits: 5 },
+        { path: "/x", hits: 2 },
+      ],
+    });
+
+    foxing.reply(
+      { body: stats },
+      { status: 500, body: { error: { code: "internal", message: "boom" } } },
+    );
+    const degraded = await call("foxing_get_health");
+    assert.notEqual(degraded.isError, true);
+    assert.match(
+      String(
+        (degraded.structuredContent?.notFound as { unavailable: string } | undefined)?.unavailable,
+      ),
+      /boom/,
+    );
+    assert.equal(degraded.structuredContent?.totalUsers, 1);
+  });
+
+  test("foxing_moderate_user passes the API's two steps through: preview, then perform with its token", async () => {
+    const token = "a".repeat(64);
+    foxing.reply(
+      {
+        body: {
+          preview: { kind: "suspend", from: false, to: true, summary: "@ada is suspended" },
+          confirm: { token, expiresAt: "2026-11-07T16:00:00.000Z" },
+        },
+      },
+      { body: { ok: true } },
+    );
+    const preview = await call("foxing_moderate_user", { user_id: "u/1", suspended: true });
+    assert.equal(path(0), "POST /api/v1/admin/users/u%2F1/suspend");
+    assert.deepEqual(foxing.calls[0].body, { suspended: true });
+    assert.equal(preview.structuredContent?.confirmation_required, true);
+    assert.equal(preview.structuredContent?.confirm, token);
+    assert.match(preview.content[0].text, /<data label="foxing-reader-data">/);
+
+    const done = await call("foxing_moderate_user", {
+      user_id: "u/1",
+      suspended: true,
+      confirm: token,
+    });
+    assert.deepEqual(foxing.calls[1].body, { suspended: true, confirm: token });
+    assert.deepEqual(done.structuredContent, { ok: true, user_id: "u/1", suspended: true });
+  });
+
+  test("foxing_moderate_user relays the API's refusal of a stale token", async () => {
+    foxing.reply({
+      status: 409,
+      body: {
+        error: { code: "conflict", message: "This confirmation has expired or was already used." },
+      },
+    });
+    const out = await call("foxing_moderate_user", {
+      user_id: "u1",
+      suspended: false,
+      confirm: "b".repeat(64),
+    });
+    assert.equal(out.isError, true);
+    assert.match(out.content[0].text, /^This confirmation has expired/);
+    const schema = tool("foxing_moderate_user").config.inputSchema;
+    assert.equal(
+      schema.safeParse({ user_id: "u", suspended: true, confirm: "short" }).success,
+      false,
+    );
+  });
+
+  test("foxing_check_catalog sends the check and the page, and turns the offset into a cursor", async () => {
+    foxing.reply({
+      body: {
+        checkedBooks: 2,
+        checks: [],
+        publishedWithoutBook: { botm: 0, picks: 0 },
+        items: [],
+        has_more: true,
+        next_offset: 30,
+      },
+    });
+    const out = await call("foxing_check_catalog", {
+      check: "duplicate_isbn",
+      limit: 10,
+      cursor: encodeCursor(20),
+    });
+    assert.equal(
+      path(),
+      "GET /api/v1/admin/catalog-health?check=duplicate_isbn&limit=10&offset=20",
+    );
+    assert.equal(out.structuredContent?.next_cursor, encodeCursor(30));
+    assert.equal(
+      tool("foxing_check_catalog").config.inputSchema.safeParse({ check: "nope" }).success,
+      false,
+    );
   });
 });
 

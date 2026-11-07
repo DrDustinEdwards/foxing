@@ -8,7 +8,9 @@
  * are set honestly, with the reasoning beside any that is not obvious.
  * RESPONSES (rule 7) page every list with has_more and an opaque next_cursor (checklist T8).
  * CONFIRMATION (checklist T11): the three tools that overwrite or publish change nothing until called again with the
- * token their first answer carries (confirm.ts).
+ * token their first answer carries (confirm.ts). foxing_moderate_user is the exception: the admin API has its own
+ * preview-then-perform step for a suspension (packages/api/src/admin-confirm.ts), so the tool passes that step through
+ * and its token is the API's, not this server's.
  *
  * ONLY TOOLS THE API OFFERS. This server adds no route of its own, so a design
  * tool whose API route does not exist yet is not here:
@@ -16,9 +18,7 @@
  * - foxing_award_badge (no badge route),
  * - foxing_run_task (the one task route, /ops/companion-cache-batch, is outside
  *   /admin and takes no operator bearer),
- * - foxing_moderate_user and foxing_stage_tier_change, which wait for the
- *   preview-then-perform admin routes (DrDustinEdwards/foxing#20), so a tier
- *   change from here can only ever be staged for Dustin to confirm in the app.
+ * - foxing_stage_tier_change: a tier change stays in the app for Dustin (tier and award decisions are his).
  * create_journal_post is dropped for good: Carrel owns writing (rule 11). Book
  * of the Month delete stays in the admin screen.
  *
@@ -321,6 +321,9 @@ const localPage = z.object({
   next_cursor: z.string().nullable(),
 });
 
+/** The window foxing_get_health reports 404s over. */
+const NOT_FOUND_DAYS = 7;
+
 const yearSchema = z.number().int().min(2000).max(2100);
 const monthSchema = z.number().int().min(1).max(12);
 
@@ -357,10 +360,14 @@ export const TOOLS: ToolDefinition[] = [
     config: {
       title: "Foxing platform snapshot",
       description:
-        "One look at foxing.app's numbers from D1: total users, Plus users, suspended users, books, " +
-        "staff picks, reader clubs, published Journal posts, published Book of the Month entries, and " +
-        "the ten newest sign-ups (id, username, tier, when). Read only. It does not yet report errors, " +
-        "logs or the deploy: the admin API has no route for those.",
+        "One look at foxing.app: total users, Plus users, suspended users, books, staff picks, reader " +
+        "clubs, published Journal posts, published Book of the Month entries, the ten newest sign-ups " +
+        "(id, username, tier, when), and notFound: the pages visitors asked for that do not exist " +
+        "(broken links), most-hit first, over the last 7 days, each with its hits and the sites that " +
+        "linked to it. Scanner probes (/wp-admin, .env and the like) are left out. If the 404 report " +
+        "cannot be read, notFound says so and the rest is still returned. Read only. It does not yet " +
+        "report errors, logs or the deploy: the admin API has no route for those. For problems in the " +
+        "book data use foxing_check_catalog.",
       inputSchema: z.strictObject({}),
       outputSchema: z.looseObject({
         totalUsers: z.number(),
@@ -372,10 +379,41 @@ export const TOOLS: ToolDefinition[] = [
         publishedJournal: z.number(),
         publishedBotm: z.number(),
         recentSignups: z.array(record),
+        notFound: z
+          .object({
+            days: z.number().int().optional(),
+            totalHits: z.number().int().optional(),
+            top: z.array(record).optional(),
+            unavailable: z.string().optional(),
+          })
+          .describe("The 404 report; `unavailable` says why it is missing."),
       }),
       annotations: READ_ONLY,
     },
-    handler: (env, _args, signal) => single(env, "GET", "/stats", { signal }, READER_DATA),
+    handler: (env, _args, signal) =>
+      guarded(async () => {
+        const stats = await callAdmin(env, "GET", "/stats", { signal });
+        if (!stats.ok) return refusal(stats);
+        const report = await callAdmin(env, "GET", "/not-found", {
+          signal,
+          query: { days: NOT_FOUND_DAYS, limit: 10 },
+        });
+        let notFound: Record<string, unknown>;
+        if (report.ok) {
+          const items = ((report.data as { items?: Array<{ hits?: number }> })?.items ??
+            []) as Array<{ hits?: number }>;
+          notFound = {
+            days: NOT_FOUND_DAYS,
+            totalHits: items.reduce((n, row) => n + Number(row.hits ?? 0), 0),
+            top: items,
+          };
+        } else {
+          notFound = {
+            unavailable: `The 404 report was refused (${report.status}): ${report.error}`,
+          };
+        }
+        return ok({ ...(stats.data as Record<string, unknown>), notFound }, READER_DATA);
+      }),
   },
 
   {
@@ -788,6 +826,154 @@ export const TOOLS: ToolDefinition[] = [
         env,
         "/audit-log",
         {
+          limit: args.limit as number | undefined,
+          offset: args.cursor ? offsetOf(args) : undefined,
+        },
+        READER_DATA,
+        signal,
+      ),
+  },
+
+  {
+    name: "foxing_moderate_user",
+    scope: "write",
+    config: {
+      title: "Suspend or unsuspend a reader",
+      description:
+        "Suspends a reader or lifts a suspension. A suspended reader can still sign in and read, but every " +
+        "write they send is refused. Two steps, both on the same arguments: first call with user_id and " +
+        "suspended (true suspends, false unsuspends). That changes nothing and returns the API's preview " +
+        "(who, from, to, what it means) and a single-use confirm token good for two minutes. Show the " +
+        "preview to the administrator; only on their yes, call again with the same user_id and suspended " +
+        "plus confirm. If the reader changed in between, or the token expired or was used, the API refuses " +
+        "and you preview again. Find the id with foxing_find_user. Every suspension is recorded in " +
+        "Foxing's admin audit log (foxing_read_audit_log).",
+      inputSchema: z.strictObject({
+        user_id: idSchema("reader"),
+        suspended: z.boolean().describe("true suspends the reader, false lifts the suspension."),
+        confirm: z
+          .string()
+          .regex(/^[0-9a-f]{64}$/, "Pass the confirm token from the preview, unchanged.")
+          .optional()
+          .describe(
+            "Leave out on the first call: it changes nothing and returns a preview and a confirm " +
+              "token. After the administrator approves the preview, call again with the same " +
+              "arguments and this token.",
+          ),
+      }),
+      outputSchema: z.looseObject({
+        ok: z.boolean().optional(),
+        user_id: z.string().optional(),
+        suspended: z.boolean().optional(),
+        confirmation_required: z.literal(true).optional(),
+        confirm: z.string().optional(),
+        expires_at: z.string().optional(),
+        preview: record.optional(),
+        next_step: z.string().optional(),
+      }),
+      annotations: {
+        readOnlyHint: false,
+        // Not destructive: nothing is deleted, and the same tool lifts it. It does restrict a person, which is
+        // what the API's preview and token are for.
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    handler: (env, args, signal) =>
+      guarded(async () => {
+        const body: Record<string, unknown> = { suspended: args.suspended };
+        if (typeof args.confirm === "string") body.confirm = args.confirm;
+        const result = await callAdmin(
+          env,
+          "POST",
+          `/users/${encodeURIComponent(String(args.user_id))}/suspend`,
+          { signal, body },
+        );
+        if (!result.ok) return refusal(result);
+        if (typeof args.confirm === "string") {
+          return ok({ ok: true, user_id: args.user_id, suspended: args.suspended });
+        }
+        // The preview names the reader (username, display name): reader-written text, so it is marked as data.
+        const { preview, confirm } = result.data as {
+          preview?: Record<string, unknown>;
+          confirm?: { token?: string; expiresAt?: string };
+        };
+        return ok(
+          {
+            confirmation_required: true,
+            confirm: confirm?.token,
+            expires_at: confirm?.expiresAt,
+            preview,
+            next_step:
+              "Nothing was changed. Show the administrator this preview and ask them to approve it. Only on " +
+              "their yes, call foxing_moderate_user again with exactly the same user_id and suspended plus " +
+              "confirm. The token is good for two minutes and only for this change.",
+          },
+          READER_DATA,
+        );
+      }),
+  },
+
+  {
+    name: "foxing_check_catalog",
+    scope: "read",
+    config: {
+      title: "Check the catalog's health",
+      description:
+        "Audits every book in the catalog for data problems and returns counts for all checks plus the " +
+        "affected books, errors first, a page at a time. Checks: missing_cover, cover_not_hosted (cover " +
+        "is not on Foxing's covers host), missing_description, missing_epub, missing_year and " +
+        "missing_subjects (these four only for catalog books, not reader-added community ones), " +
+        "invalid_isbn (wrong length or failing check digit), isbn_mismatch (ISBN-10 and ISBN-13 are " +
+        "different editions), duplicate_isbn, duplicate_gutenberg_id, duplicate_title_author (a " +
+        "possible duplicate: case, accents, punctuation and a leading article are ignored), " +
+        "bad_retailer_link (a Bookshop.org or Amazon link that is not an https link to that retailer). " +
+        "Also counts published Book of the Month entries and celebrity picks with no book " +
+        "(publishedWithoutBook). Start with no arguments for the counts; pass check to list one " +
+        "check's books. Each finding has bookId, title, author, slug, severity and a detail line; fix " +
+        "with foxing_edit_book. Read only.",
+      inputSchema: z.strictObject({
+        check: z
+          .enum([
+            "missing_cover",
+            "cover_not_hosted",
+            "missing_description",
+            "missing_epub",
+            "missing_year",
+            "missing_subjects",
+            "invalid_isbn",
+            "isbn_mismatch",
+            "duplicate_isbn",
+            "duplicate_gutenberg_id",
+            "duplicate_title_author",
+            "bad_retailer_link",
+          ])
+          .optional()
+          .describe("Optional. List only this check's books. Omit to list all, errors first."),
+        limit: limitSchema,
+        cursor: cursorSchema,
+      }),
+      outputSchema: apiPage.extend({
+        checkedBooks: z.number().int(),
+        checks: z.array(
+          z.object({
+            check: z.string(),
+            severity: z.enum(["error", "warning"]),
+            count: z.number().int(),
+            meaning: z.string(),
+          }),
+        ),
+        publishedWithoutBook: z.object({ botm: z.number().int(), picks: z.number().int() }),
+      }),
+      annotations: READ_ONLY,
+    },
+    handler: (env, args, signal) =>
+      apiPageResult(
+        env,
+        "/catalog-health",
+        {
+          check: args.check as string | undefined,
           limit: args.limit as number | undefined,
           offset: args.cursor ? offsetOf(args) : undefined,
         },

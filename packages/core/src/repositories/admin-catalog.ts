@@ -1,6 +1,12 @@
 import type { Db } from "../db";
 import { bookOfTheMonth, books, clubs, externalBookClubPicks, externalBookClubs } from "../schema";
-import { desc, eq, like, or } from "drizzle-orm";
+import { and, desc, eq, isNull, like, or, sql } from "drizzle-orm";
+import {
+  auditCatalog,
+  summarize,
+  type CatalogCheck,
+  type HealthBook,
+} from "../domain/catalog-health";
 
 // ---- Books --------------------------------------------------------------------
 
@@ -35,6 +41,58 @@ export async function listBooksAdmin(
     .orderBy(desc(books.updatedAt))
     .limit(limit)
     .offset(opts.offset ?? 0);
+}
+
+export type CatalogHealth = {
+  checkedBooks: number;
+  checks: ReturnType<typeof summarize>;
+  /** Published Book of the Month entries and celebrity picks whose book is gone or never set. */
+  publishedWithoutBook: { botm: number; picks: number };
+  findings: ReturnType<typeof auditCatalog>;
+};
+
+/**
+ * Reads every book once (the catalog is a few thousand rows, a handful of short columns each) and runs the checks of
+ * domain/catalog-health.ts. `only` keeps the findings of one check; the counts always cover all of them.
+ */
+export async function getCatalogHealth(
+  db: Db,
+  opts: { coverOrigin: string; only?: CatalogCheck },
+): Promise<CatalogHealth> {
+  const rows: HealthBook[] = await db
+    .select({
+      id: books.id,
+      title: books.title,
+      author: books.author,
+      slug: books.slug,
+      sourceType: books.sourceType,
+      coverUrl: books.coverUrl,
+      description: books.description,
+      epubUrl: books.epubUrl,
+      isbn: books.isbn,
+      isbn13: books.isbn13,
+      publicationYear: books.publicationYear,
+      subjects: books.subjects,
+      gutenbergId: books.gutenbergId,
+      amazonUrl: books.amazonUrl,
+      bookshopUrl: books.bookshopUrl,
+    })
+    .from(books);
+  const [botm] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(bookOfTheMonth)
+    .where(and(eq(bookOfTheMonth.isPublished, true), isNull(bookOfTheMonth.bookId)));
+  const [picks] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(externalBookClubPicks)
+    .where(and(eq(externalBookClubPicks.isPublished, true), isNull(externalBookClubPicks.bookId)));
+  const all = auditCatalog(rows, opts.coverOrigin);
+  return {
+    checkedBooks: rows.length,
+    checks: summarize(all),
+    publishedWithoutBook: { botm: botm?.n ?? 0, picks: picks?.n ?? 0 },
+    findings: opts.only ? all.filter((f) => f.check === opts.only) : all,
+  };
 }
 
 export type BookMetaPatch = {
