@@ -486,12 +486,22 @@ export async function listAuthorSlugs(db: Db): Promise<string[]> {
   return rows.map((r) => r.author_slug);
 }
 
-/** Minimal rows for the sitemap: catalog slugs, last-modified and cover. */
-export async function listSitemapBooks(
-  db: Db,
-): Promise<Array<{ slug: string; updatedAt: Date; coverUrl: string | null }>> {
+/** Minimal rows for the sitemap: catalog slugs, last-modified, cover and author (whose page changes when a book of theirs does). */
+export async function listSitemapBooks(db: Db): Promise<
+  Array<{
+    slug: string;
+    updatedAt: Date;
+    coverUrl: string | null;
+    authorSlug: string | null;
+  }>
+> {
   const rows = await db
-    .select({ slug: books.slug, updatedAt: books.updatedAt, coverUrl: books.coverUrl })
+    .select({
+      slug: books.slug,
+      updatedAt: books.updatedAt,
+      coverUrl: books.coverUrl,
+      authorSlug: books.authorSlug,
+    })
     .from(books)
     .where(eq(books.sourceType, "catalog"))
     .orderBy(asc(books.slug));

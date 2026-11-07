@@ -32,6 +32,16 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return urls.length > 0 ? { images: urls } : {};
   };
 
+  // An author's page changes when a book of theirs does, so its lastmod is their newest book's. Bing reads an
+  // accurate lastmod as its recrawl signal, and a page with no honest date gets none (Prelum's audit flags a sitemap
+  // that is mostly undated).
+  const authorUpdated = new Map<string, Date>();
+  for (const b of books) {
+    if (!b.authorSlug) continue;
+    const seen = authorUpdated.get(b.authorSlug);
+    if (!seen || b.updatedAt > seen) authorUpdated.set(b.authorSlug, b.updatedAt);
+  }
+
   // Paths here; Prelum's sitemapDocument takes absolute URLs, made below.
   const urls: SitemapEntry[] = [
     { loc: "/", priority: 1, ...covers([homePick?.book, ...homeBooks.books]) },
@@ -50,7 +60,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       priority: 0.8,
       ...(b.coverUrl ? { images: [b.coverUrl] } : {}),
     })),
-    ...authors.map((slug) => ({ loc: `/authors/${slug}`, priority: 0.6 })),
+    ...authors.map((slug) => ({
+      loc: `/authors/${slug}`,
+      lastmod: authorUpdated.get(slug),
+      priority: 0.6,
+    })),
     ...awards.map((a) => ({ loc: `/awards/${a.slug}`, priority: 0.5 })),
     ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, priority: 0.5 })),
     ...posts.map((p) => ({
