@@ -194,7 +194,6 @@ function SiteFooter() {
             { to: "/picks", label: "Celebrity picks" },
             { to: "/book-of-the-month", label: "Book of the Month" },
             { to: "/journal", label: "The Journal" },
-            { to: "/lists", label: "Reading lists" },
           ]}
         />
         <FooterCol

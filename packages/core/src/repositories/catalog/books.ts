@@ -476,14 +476,17 @@ export async function listAwardWinnerIds(db: Db, bookIds: string[]): Promise<str
   return [...found];
 }
 
-/** Distinct author slugs across the catalog, for the sitemap. */
-export async function listAuthorSlugs(db: Db): Promise<string[]> {
-  const rows = await db.all<{ author_slug: string }>(sql`
-    SELECT DISTINCT author_slug FROM books
+/** Distinct author slugs across the catalog with the newest change to any of their books, for the sitemap. */
+export async function listSitemapAuthors(
+  db: Db,
+): Promise<Array<{ slug: string; updatedAt: Date }>> {
+  const rows = await db.all<{ author_slug: string; updated_at: number }>(sql`
+    SELECT author_slug, MAX(updated_at) AS updated_at FROM books
     WHERE source_type = 'catalog' AND author_slug IS NOT NULL AND author_slug != ''
+    GROUP BY author_slug
     ORDER BY author_slug
   `);
-  return rows.map((r) => r.author_slug);
+  return rows.map((r) => ({ slug: r.author_slug, updatedAt: new Date(Number(r.updated_at)) }));
 }
 
 /** Minimal rows for the sitemap: catalog slugs, last-modified and cover. */

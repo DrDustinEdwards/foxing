@@ -75,7 +75,7 @@ export default function Author({ loaderData }: Route.ComponentProps) {
         />
         <BookGrid>
           {author.books.map((b, i) => (
-            <BookCard key={b.slug} book={b} position={i} />
+            <BookCard key={b.slug} book={b} position={i} headingLevel={2} />
           ))}
         </BookGrid>
       </Container>

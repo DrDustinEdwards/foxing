@@ -16,26 +16,13 @@
 //   MEDIA outside journal/  the public-domain EPUBs (se/, pg*.epub) and their exploded reader files
 //              (reader/, from scripts/explode-epubs). Dustin, 2026-11-05: they can be fetched again,
 //              so they are not backed up; 3.4 GB in 73,000 files would also never finish a pass.
-import {
-  type BackupHealth,
-  backupFiles,
-  backupHealth,
-  filesHealth,
-  runCheckedBackup,
-} from "@dustinedwards/d1-dump";
+import { createSiteBackup } from "@dustinedwards/d1-dump";
 import {
   BACKUP_COUNTED_TABLES,
   BACKUP_CREDENTIAL_ALLOW,
   BACKUP_EXCLUDE,
   BACKUP_REQUIRED_TABLES,
 } from "./backup-checks";
-
-const JOURNAL_BACKUP = { name: "journal", prefix: "journal/" };
-const COVERS_BACKUP = { name: "covers" };
-// The Journal library's earlier and deleted bytes (journal-media-adapter.server.ts) sit in BACKUPS under
-// journal-media/, outside files/, so Amazon's copy would never take them. They are copied under
-// files/journal-revisions/ in the same bucket, where the revert path keeps reading the originals.
-const REVISIONS_BACKUP = { name: "journal-revisions", prefix: "journal-media/" };
 
 /**
  * Dump, check, then mark complete and prune, by d1-dump's runCheckedBackup. Its `counted` check
@@ -45,51 +32,38 @@ const REVISIONS_BACKUP = { name: "journal-revisions", prefix: "journal-media/" }
  * BackupIncomplete, so the failure shows as a failed Cron invocation and the health age keeps
  * growing toward its 26 hour warning. Pruning keeps d1-dump's default retention: the newest
  * complete run of each of the last 14 days, 8 ISO weeks and 6 months.
+ *
+ * The Journal library's earlier and deleted bytes (journal-media-adapter.server.ts) sit in BACKUPS under
+ * journal-media/, outside files/, so Amazon's copy would never take them. They are copied under
+ * files/journal-revisions/ in the same bucket, where the revert path keeps reading the originals.
+ * /health reports each pass under `files` by name: journal, covers and journal-revisions.
  */
-export async function runBackup(env: Env): Promise<void> {
-  await runCheckedBackup(env.DB, env.BACKUPS, {
+const backup = createSiteBackup<Env>({
+  dump: {
     exclude: [...BACKUP_EXCLUDE],
     required: [...BACKUP_REQUIRED_TABLES],
     counted: [...BACKUP_COUNTED_TABLES],
     // d1-dump refuses a dump holding a column named for a credential (a token, a password, a
     // secret, a key or a refresh or code hash) unless it is excluded above or allowed with a reason.
     credentials: { allow: BACKUP_CREDENTIAL_ALLOW },
-  });
-}
-
-/** One files pass's answer: its name, whether it completed, and its counts. */
-const passResult = (run: Awaited<ReturnType<typeof backupFiles>>) => ({
-  name: run.name,
-  complete: run.complete,
-  ...run.counts,
+  },
+  files: [
+    { name: "journal", prefix: "journal/", source: (env) => env.MEDIA },
+    { name: "covers", source: (env) => env.COVERS },
+    {
+      name: "journal-revisions",
+      prefix: "journal-media/",
+      source: (env) => env.BACKUPS,
+    },
+  ],
 });
 
-export async function runMediaBackup(env: Env) {
-  const journal = await backupFiles(env.MEDIA, env.BACKUPS, JOURNAL_BACKUP);
-  const revisions = await backupFiles(env.BACKUPS, env.BACKUPS, REVISIONS_BACKUP);
-  return { files: [passResult(journal), passResult(revisions)] };
-}
+export const runBackup = async (env: Env): Promise<void> => void (await backup.runBackup(env));
 
-export async function runCoversBackup(env: Env) {
-  return { files: [passResult(await backupFiles(env.COVERS, env.BACKUPS, COVERS_BACKUP))] };
-}
+export const runMediaBackup = (env: Env) =>
+  backup.runFilesBackup(env, ["journal", "journal-revisions"]);
 
-/** The newest complete dump's age, with the Journal pictures' pass under `files` and the covers pass's
- *  under `covers`, for /health. Warns past 26 hours. Never throws. */
-export async function backupStatus(
-  env: Env,
-  now?: Date,
-): Promise<BackupHealth & { files: BackupHealth; covers: BackupHealth; revisions: BackupHealth }> {
-  const [dump, files, covers, revisions] = await Promise.all([
-    backupHealth(env.BACKUPS, { now }),
-    filesHealth(env.BACKUPS, { name: JOURNAL_BACKUP.name, now }),
-    filesHealth(env.BACKUPS, { ...COVERS_BACKUP, now }),
-    filesHealth(env.BACKUPS, { name: REVISIONS_BACKUP.name, now }),
-  ]);
-  const warning =
-    dump.warning ??
-    (files.warning && `journal files: ${files.warning}`) ??
-    (covers.warning && `cover files: ${covers.warning}`) ??
-    (revisions.warning && `journal revisions: ${revisions.warning}`);
-  return { ...dump, files, covers, revisions, ...(warning ? { warning } : {}) };
-}
+export const runCoversBackup = (env: Env) => backup.runFilesBackup(env, ["covers"]);
+
+/** The newest complete dump's age, with each files pass under `files` by name, for /health. Warns past 26 hours. Never throws. */
+export const backupStatus = (env: Env, now?: Date) => backup.status(env, now);

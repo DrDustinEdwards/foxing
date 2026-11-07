@@ -66,6 +66,19 @@ export async function listAwards(db: Db): Promise<AwardSummary[]> {
   return rows.map((r) => ({ ...r, count: Number(r.count) }));
 }
 
+/** Each award with the newest change to its award rows or to a catalog book that holds it, for the sitemap. */
+export async function listSitemapAwards(db: Db): Promise<Array<{ slug: string; updatedAt: Date }>> {
+  const rows = await db.all<{ slug: string; updated_at: number }>(sql`
+    SELECT ba.award_slug AS slug, MAX(MAX(b.updated_at), MAX(ba.created_at)) AS updated_at
+    FROM book_awards ba
+    JOIN books b ON b.id = ba.book_id
+    WHERE b.source_type = 'catalog'
+    GROUP BY ba.award_slug
+    ORDER BY ba.award_slug
+  `);
+  return rows.map((r) => ({ slug: r.slug, updatedAt: new Date(Number(r.updated_at)) }));
+}
+
 export async function getAwardBySlug(db: Db, slug: string): Promise<AwardDetail | null> {
   const rows = await db.all<{
     name: string;

@@ -5,6 +5,7 @@
 // verification, since Workers has no synchronous crypto).
 import Stripe from "stripe";
 import { TRIAL_DAYS } from "./config";
+import { pickCurrentSubscription } from "./webhook";
 
 export type BillingCheckoutArgs = {
   priceId: string;
@@ -32,7 +33,16 @@ export interface BillingClient {
   createPortalSession(args: BillingPortalArgs): Promise<{ url: string }>;
   verifyWebhook(payload: string, signature: string): Promise<BillingEventLite>;
   getSubscription(subscriptionId: string): Promise<BillingSubscriptionLite>;
+  /** The customer's current subscription (newest live one, else newest), or null when none. */
+  getCurrentSubscription(customerId: string): Promise<BillingSubscriptionLite | null>;
 }
+
+/** The Stripe API version every request is made with. Pinned, so an SDK upgrade never changes
+ *  it silently (https://docs.stripe.com/sdks/set-version). Foxhound pins the same version.
+ *  The webhook endpoint in the Stripe Dashboard must use this version too, since an
+ *  endpoint's version decides the shape of the events it receives
+ *  (https://docs.stripe.com/webhooks/versioning). */
+export const STRIPE_API_VERSION = "2026-10-28.endive";
 
 export type StripeBillingConfig = { secretKey: string; webhookSecret: string };
 
@@ -56,6 +66,7 @@ export function notConfiguredBilling(): BillingClient {
     createPortalSession: fail,
     verifyWebhook: fail,
     getSubscription: fail,
+    getCurrentSubscription: fail,
   };
 }
 
@@ -68,9 +79,23 @@ function readPeriodEnd(sub: Stripe.Subscription): number | null {
   return typeof item?.current_period_end === "number" ? item.current_period_end : null;
 }
 
+function lite(sub: Stripe.Subscription): BillingSubscriptionLite {
+  return {
+    status: sub.status,
+    currentPeriodEnd: readPeriodEnd(sub),
+    customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+  };
+}
+
 export function createStripeBilling(config: StripeBillingConfig): BillingClient {
   const stripe = new Stripe(config.secretKey, {
+    apiVersion: STRIPE_API_VERSION,
     httpClient: Stripe.createFetchHttpClient(),
+    // Two automatic retries with backoff (the SDK adds idempotency keys where safe), and a
+    // timeout well under a Worker request's budget (SDK defaults: 1 retry, 80 s).
+    maxNetworkRetries: 2,
+    timeout: 20_000,
+    appInfo: { name: "Foxing" },
   });
   const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
@@ -115,12 +140,19 @@ export function createStripeBilling(config: StripeBillingConfig): BillingClient 
     },
 
     async getSubscription(subscriptionId) {
-      const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      return {
-        status: sub.status,
-        currentPeriodEnd: readPeriodEnd(sub),
-        customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
-      };
+      return lite(await stripe.subscriptions.retrieve(subscriptionId));
+    },
+
+    async getCurrentSubscription(customerId) {
+      // Newest first. Resolving by customer, not by the event's subscription, keeps a late
+      // event for an old subscription from downgrading someone who has since resubscribed.
+      const { data } = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "all",
+        limit: 10,
+      });
+      const current = pickCurrentSubscription(data);
+      return current ? lite(current) : null;
     },
   };
 }

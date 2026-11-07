@@ -50,7 +50,7 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
           ) : (
             <BookGrid>
               {books.map((b) => (
-                <BookCard key={b.slug} book={b} />
+                <BookCard key={b.slug} book={b} headingLevel={2} />
               ))}
             </BookGrid>
           )}

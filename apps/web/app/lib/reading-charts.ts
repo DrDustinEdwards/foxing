@@ -15,25 +15,18 @@ const count = (n: number, one: string, many = `${one}s`) =>
   `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
 const whole = (n: number) => n.toLocaleString("en-US");
 
-// One row per counted thing, so Enarratio counts the rows and keeps its value ticks whole.
-const rows = <K extends string>(key: K, items: Array<[string, number]>) =>
-  items.flatMap(([name, n]) =>
-    Array.from({ length: n }, () => ({ [key]: name }) as Record<K, string>),
-  );
-
 /** Books finished in each month of a year, as bars. */
 export function monthsChart(monthly: number[], year: number) {
   const total = monthly.reduce((a, b) => a + b, 0);
   const top = monthly.indexOf(Math.max(...monthly));
   const alt = `${count(total, "book")} finished in ${year}, the most in ${MONTH_NAMES[top]} (${monthly[top]}).`;
-  const data = rows(
-    "month",
-    monthly.map((books, i) => [MONTH_ABBR[i], books]),
-  );
+  const data = monthly.map((books, i) => ({ month: MONTH_ABBR[i], books }));
   return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "month",
+      y: "books",
+      wholeNumbers: true,
       xDomain: MONTH_ABBR,
       width,
       height: 220,
@@ -53,14 +46,13 @@ export function monthsChart(monthly: number[], year: number) {
 export function genresChart(genres: Array<{ name: string; value: number }>, year: number) {
   const [top] = genres;
   const alt = `${top.name} led ${year} with ${count(top.value, "book")}, of the ${genres.length} most-read genres.`;
-  const data = rows(
-    "genre",
-    genres.map((g) => [g.name, g.value]),
-  );
+  const data = genres.map((g) => ({ genre: g.name, books: g.value }));
   return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "genre",
+      y: "books",
+      wholeNumbers: true,
       xDomain: genres.map((g) => g.name),
       orientation: "horizontal",
       width,
@@ -118,14 +110,13 @@ export function pollChart(
   const alt = tied
     ? `${leaders.join(" and ")} ${verb} with ${count(most, "vote")} each, of ${count(total, "vote")}.`
     : `${leaders[0]} ${verb} with ${most} of ${count(total, "vote")}.`;
-  const data = rows(
-    "option",
-    options.map((o) => [o.label, o.votes]),
-  );
+  const data = options.map((o) => ({ option: o.label, votes: o.votes }));
   return (width: number, fit: ChartFit = {}) =>
     barChart({
       data,
       x: "option",
+      y: "votes",
+      wholeNumbers: true,
       xDomain: options.map((o) => o.label),
       orientation: "horizontal",
       width,

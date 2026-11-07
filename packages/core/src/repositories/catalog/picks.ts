@@ -43,6 +43,19 @@ export function listExternalClubs(db: Db): Promise<ClubSummary[]> {
   return cachedRead(db, "catalog:external-clubs:v1", 300, () => readExternalClubs(db));
 }
 
+/** Each active club with the newest change to it or to one of its published picks, for the sitemap. */
+export async function listSitemapClubs(db: Db): Promise<Array<{ slug: string; updatedAt: Date }>> {
+  const rows = await db.all<{ slug: string; updated_at: number }>(sql`
+    SELECT c.slug AS slug, MAX(c.created_at, COALESCE(MAX(p.updated_at), 0)) AS updated_at
+    FROM external_book_clubs c
+    LEFT JOIN external_book_club_picks p ON p.club_id = c.id AND p.is_published = 1
+    WHERE c.is_active = 1
+    GROUP BY c.id
+    ORDER BY c.slug
+  `);
+  return rows.map((r) => ({ slug: r.slug, updatedAt: new Date(Number(r.updated_at)) }));
+}
+
 async function readExternalClubs(db: Db): Promise<ClubSummary[]> {
   const rows = await db.all<{
     slug: string;
