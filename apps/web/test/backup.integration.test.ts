@@ -103,7 +103,7 @@ async function health(at?: Date) {
         last_ok: string | null;
         age_hours: number | null;
         warning?: string;
-        files: { age_hours: number | null; warning?: string };
+        files: Record<string, { age_hours: number | null; warning?: string }>;
       };
     } & Record<string, unknown>,
   };
