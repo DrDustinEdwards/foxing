@@ -481,7 +481,7 @@ const CACHE_LAST_BATCH_KEY = "companion-cache:last-batch";
 // ALL still uncached when the next run finds them means nothing was written: the job fails, and /health says so.
 async function enqueueCompanionCache(env: Env): Promise<void> {
   const db = createDb(env.DB);
-  const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
+  const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 200;
   const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
   const ids = books.map((book) => book.id);
   const last = ((await env.APP_KV.get(CACHE_LAST_BATCH_KEY, "json")) as string[] | null) ?? [];

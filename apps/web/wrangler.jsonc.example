@@ -86,8 +86,9 @@
     // Affiliate tags applied to buy links at render (public, not secret). Blank = no tag.
     "AMAZON_ASSOC_TAG": "",
     "BOOKSHOP_AFFILIATE_ID": "",
-    // How many catalog books the daily cron enqueues for cache generation. Small on
-    // purpose (Phase 4a proof scope); raise once real cost-per-book is measured.
-    "COMPANION_CACHE_BATCH_SIZE": "20"
+    // The most catalog books one cron run enqueues for cache generation. It is a ceiling, not a quota: only books
+    // missing a cached action are enqueued, so once the catalog is cached the cost is just the new books. Measured
+    // 2026-11-07: about $0.02 a book (4 Sonnet calls), so a full 200-book run is about $4.
+    "COMPANION_CACHE_BATCH_SIZE": "200"
   }
 }
