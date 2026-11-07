@@ -11,8 +11,8 @@ export type BookCardData = {
   publicationYear?: number | null;
 };
 
-/** The most cards a grid row holds (five from 80rem, catalog.css): the covers above the fold on any screen. */
-const GRID_FIRST_ROW = 5;
+/** Two rows of the most cards a row holds (five from 80rem, catalog.css): on a 1440 by 900 screen the second row is above the fold too, and web.dev says not to lazy-load images in the initial viewport. */
+const GRID_FIRST_ROW = 10;
 
 /**
  * Content-card variant (design-system Rule 15): the edge strengthens on hover and the
