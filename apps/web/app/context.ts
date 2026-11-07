@@ -4,11 +4,9 @@ import type { catalogRepo } from "@foxing/core";
 import { createContext } from "react-router";
 
 import { cloudflareContext, cspNonceContext } from "@dustinedwards/site-runtime/context";
-import type { CloudflareContext } from "@dustinedwards/site-runtime/context";
 
 // The request context and the render nonce are site-runtime's (./context), re-exported so routes keep one import.
 export { cloudflareContext, cspNonceContext };
-export type { CloudflareContext };
 
 /**
  * The post a Carrel preview draws (app/lib/carrel/journal-adapter.server.ts): the journal route
