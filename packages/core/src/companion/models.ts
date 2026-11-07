@@ -7,7 +7,7 @@
 // quota-bounded, safety-evaluated path and a silent model swap breaks cost math and
 // invalidates the eval.
 export const MODELS = {
-  fast: "claude-haiku-4-5-20251001", // cheap, high-frequency (word_lookup, word_aspect, ...)
+  fast: "claude-haiku-5-5", // cheap, high-frequency (word_lookup, word_aspect, ...)
   standard: "claude-sonnet-5", // default. Sonnet 4.6 is LEGACY -- do not use it.
   deep: "claude-opus-5-5", // heavy reasoning (deep_dive, reading_personality)
 } as const;
@@ -23,7 +23,7 @@ export function resolveModel(role: CompanionRole): string {
 // MODELS whenever a pinned model changes -- quota math is meaningless against a stale
 // rate.
 const RATES_PER_MTOK: Record<CompanionRole, { input: number; output: number }> = {
-  fast: { input: 1, output: 5 }, // Haiku 4.5
+  fast: { input: 0.1, output: 0.5 }, // Haiku 5.5 (prompts up to 100,000 tokens; $0.50/$2.50 above that)
   standard: { input: 2, output: 10 }, // Sonnet 5 (standard price since Anthropic dropped the planned September 2026 increase)
   deep: { input: 4, output: 20 }, // Opus 5.5
 };
