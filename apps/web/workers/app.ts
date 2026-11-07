@@ -639,6 +639,7 @@ const withMarkdownCopies = markdownCopies(
   (request: Request, env: Env, ctx: ExecutionContext) => handleFetch(request, env, ctx),
   {
     origin: SITE_ORIGIN,
+    siteMarkdown: false,
     llmsFullSkip: (path) => CATALOG.some((prefix) => path.startsWith(prefix)),
     skip: (path) =>
       path === "/journal/rss.xml" ||
