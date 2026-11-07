@@ -1,6 +1,9 @@
 // Secrets are set via `wrangler secret put`; they are not in wrangler.jsonc, so
 // `wrangler types` does not include them. Augment the generated global Env.
 interface Env {
+  // "1" or "true" puts the site in maintenance: every path but /health answers the 503 page (site-runtime
+  // ./maintenance). A dashboard var.
+  MAINTENANCE?: string;
   BETTER_AUTH_SECRET: string;
   // Turnstile on the email link (site-runtime ./sign-in): on only when both are set.
   TURNSTILE_SITE_KEY?: string;
