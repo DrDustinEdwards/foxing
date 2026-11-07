@@ -382,10 +382,6 @@
   }
 }
 .fx-pick-club-text {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
   font-family: var(--fx-body);
   font-size: 0.875rem;
   line-height: 1.25rem;
