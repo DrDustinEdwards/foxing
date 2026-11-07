@@ -197,6 +197,18 @@ export async function listTags(db: Db): Promise<JournalTag[]> {
   return rows.map((r) => ({ tag: r.tag, count: Number(r.count) }));
 }
 
+/** Each tag on published posts with the newest change to a post that carries it, for the sitemap. */
+export async function listSitemapTags(db: Db): Promise<Array<{ tag: string; updatedAt: Date }>> {
+  const rows = await db.all<{ tag: string; updated_at: number }>(sql`
+    SELECT je.value AS tag, MAX(journal_posts.updated_at) AS updated_at
+    FROM journal_posts, json_each(journal_posts.tags) je
+    WHERE journal_posts.is_published = 1 AND je.value IS NOT NULL AND je.value != ''
+    GROUP BY je.value
+    ORDER BY tag ASC
+  `);
+  return rows.map((r) => ({ tag: r.tag, updatedAt: new Date(Number(r.updated_at)) }));
+}
+
 /** Published posts carrying one tag, newest first. */
 export async function listPostsByTag(
   db: Db,
