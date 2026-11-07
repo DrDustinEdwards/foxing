@@ -2,7 +2,7 @@ import { kvPageRecord } from "@drdustinedwards/site-helpers/lastmod";
 import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
 import { catalogRepo, views } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
-import { PAGE_DATES_KEY, TRACKED_PAGES } from "~/lib/page-dates";
+import { PAGE_DATES_KEY } from "~/lib/page-dates";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
