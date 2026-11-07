@@ -12,6 +12,7 @@
 // Everything else (versions, lists, lenses, history, revert, shrink, turns) is site-api's.
 
 import {
+  PICTURE_RESIZE,
   pictureLimits,
   datedKey,
   type MediaAdapter,
@@ -28,10 +29,6 @@ import { suggestFor } from "./media-suggest.server";
 
 type Row = journalMediaRepo.JournalMediaRow;
 type Revision = journalMediaRepo.JournalMediaRevision;
-
-/** What an upload shrinks to unless it says `resize=no`: Journal pages show a picture at most the
- * column's width, about 1,200 CSS pixels, so 2,560 keeps it sharp on a 2x screen. */
-const RESIZE = { maxEdge: 2560, quality: 85 };
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
 
@@ -169,7 +166,7 @@ export function journalMediaAdapter(options: {
     key: datedKey("journal/"),
     // No Journal page is sized by a file's address (pages name the bytes' hash,
     // lib/journal-images.server.ts), so a replace may change a picture's size and a turn turns in place.
-    resize: RESIZE,
+    resize: PICTURE_RESIZE,
     usage: (keys) => usesOf(db, keys),
     // BACKUPS is private and never served.
     history: { bucket: env.BACKUPS, prefix: "journal-media/replaced/" },
