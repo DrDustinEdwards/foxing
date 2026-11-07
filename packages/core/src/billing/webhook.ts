@@ -9,6 +9,15 @@ export function tierForStatus(status: string): "free" | "plus" {
   return status === "active" || status === "trialing" ? "plus" : "free";
 }
 
+const ENDED = new Set(["canceled", "incomplete_expired"]);
+
+/** The customer's current subscription out of their list, newest first: the newest one still
+ *  live, else the newest. A late event for an old subscription must not decide the tier of
+ *  someone who has since resubscribed. */
+export function pickCurrentSubscription<T extends { status: string }>(newestFirst: T[]): T | null {
+  return newestFirst.find((s) => !ENDED.has(s.status)) ?? newestFirst[0] ?? null;
+}
+
 export type BillingIntent =
   // checkout.session.completed: links the Foxing user to the Stripe customer and points
   // at the new subscription so the route can fetch its live status/period.
