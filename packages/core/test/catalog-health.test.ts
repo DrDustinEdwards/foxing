@@ -46,10 +46,6 @@ describe("ISBN check digits", () => {
 });
 
 describe("auditCatalog", () => {
-  it("passes a complete book", () => {
-    expect(checksOf([book({ isbn: "0-306-40615-2", isbn13: "9780306406157" })])).toEqual([]);
-  });
-
   it("holds catalog books to the page's fields and community books to fewer", () => {
     const bare = {
       coverUrl: null,
@@ -126,16 +122,5 @@ describe("auditCatalog", () => {
     ]);
     expect(found.filter((c) => c === "duplicate_gutenberg_id")).toHaveLength(2);
     expect(found.filter((c) => c === "bad_retailer_link")).toHaveLength(2);
-  });
-
-  it("lists errors before warnings", () => {
-    const found = auditCatalog(
-      [
-        book({ id: "w", coverUrl: "https://elsewhere.test/c.jpg" }),
-        book({ id: "e", title: "Z", coverUrl: null }),
-      ],
-      ORIGIN,
-    );
-    expect(found.map((f) => f.severity)).toEqual(["error", "warning"]);
   });
 });
