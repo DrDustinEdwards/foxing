@@ -3,15 +3,10 @@
 import type { catalogRepo } from "@foxing/core";
 import { createContext } from "react-router";
 
-export type CloudflareContext = { env: Env; ctx: ExecutionContext };
+import { cloudflareContext, cspNonceContext } from "@dustinedwards/site-runtime/context";
 
-export const cloudflareContext = createContext<CloudflareContext>();
-
-/**
- * This request's Content-Security-Policy nonce (workers/security-headers.ts, cspNonceFor), for the
- * server entry and the root Layout to put on every script they render. Unset outside a page render.
- */
-export const cspNonceContext = createContext<string | undefined>(undefined);
+// The request context and the render nonce are site-runtime's (./context), re-exported so routes keep one import.
+export { cloudflareContext, cspNonceContext };
 
 /**
  * The post a Carrel preview draws (app/lib/carrel/journal-adapter.server.ts): the journal route
