@@ -15,6 +15,7 @@ import {
 } from "@dustinedwards/site-runtime/access";
 import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import { runJobs, type CronJob } from "@dustinedwards/site-runtime/cron";
+import { maintenanceOn, maintenanceResponse } from "@dustinedwards/site-runtime/maintenance";
 import {
   SHARED_CACHE_CONTROL,
   cacheKey,
@@ -569,6 +570,9 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // 404 is an answer about a record, not a broken link, so it is not.
 async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const url = new URL(request.url);
+  // The maintenance page (site-runtime ./maintenance): every path but /health answers 503 while the MAINTENANCE var is on.
+  if (maintenanceOn(env) && url.pathname !== "/health")
+    return withSecurityHeaders(maintenanceResponse({ siteName: "Foxing" }), request);
   let response = withSecurityHeaders(await app.fetch(request, env, ctx), request);
   // A Journal post Carrel deleted or trashed answers 410, not 404 (site-api tombstones, gone_paths); an API's 404 is
   // an answer about a record and stays one.
