@@ -36,7 +36,7 @@ import {
  * The Journal library's earlier and deleted bytes (journal-media-adapter.server.ts) sit in BACKUPS under
  * journal-media/, outside files/, so Amazon's copy would never take them. They are copied under
  * files/journal-revisions/ in the same bucket, where the revert path keeps reading the originals.
- * /health reports the passes as `files` (the Journal's pictures), `covers` and `revisions`.
+ * /health reports each pass under `files` by name: journal, covers and journal-revisions.
  */
 const backup = createSiteBackup<Env>({
   dump: {
@@ -48,14 +48,12 @@ const backup = createSiteBackup<Env>({
     credentials: { allow: BACKUP_CREDENTIAL_ALLOW },
   },
   files: [
-    { name: "journal", prefix: "journal/", source: (env) => env.MEDIA, label: "journal files" },
-    { name: "covers", source: (env) => env.COVERS, label: "cover files" },
+    { name: "journal", prefix: "journal/", source: (env) => env.MEDIA },
+    { name: "covers", source: (env) => env.COVERS },
     {
       name: "journal-revisions",
       prefix: "journal-media/",
-      key: "revisions",
       source: (env) => env.BACKUPS,
-      label: "journal revisions",
     },
   ],
 });
@@ -67,6 +65,5 @@ export const runMediaBackup = (env: Env) =>
 
 export const runCoversBackup = (env: Env) => backup.runFilesBackup(env, ["covers"]);
 
-/** The newest complete dump's age, with the Journal pictures' pass under `files`, the covers pass's under
- *  `covers` and the revisions' under `revisions`, for /health. Warns past 26 hours. Never throws. */
+/** The newest complete dump's age, with each files pass under `files` by name, for /health. Warns past 26 hours. Never throws. */
 export const backupStatus = (env: Env, now?: Date) => backup.status(env, now);

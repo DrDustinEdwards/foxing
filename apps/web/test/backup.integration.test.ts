@@ -157,7 +157,7 @@ describe("nightly backup", () => {
     expect(status).toBe(200);
     expect(body.backup.age_hours).toBeLessThan(1);
     expect(body.backup.warning).toBeUndefined();
-    expect(body.backup.files.age_hours).toBeLessThan(1);
+    expect(body.backup.files.journal.age_hours).toBeLessThan(1);
     expect(await (await env.BACKUPS.get("files/journal/journal/sample.png"))?.text()).toBe(
       "sample bytes",
     );
@@ -175,7 +175,7 @@ describe("nightly backup", () => {
     const answer = (await operatorTools(workerEnv, backupJobs).backup_status.run({})) as {
       files: Record<string, { age_hours: number }>;
     };
-    expect(Object.keys(answer.files)).toEqual(["journal", "journal-revisions", "covers"]);
+    expect(Object.keys(answer.files)).toEqual(["journal", "covers", "journal-revisions"]);
     expect(answer.files.covers.age_hours).toBeLessThan(1);
   });
 
