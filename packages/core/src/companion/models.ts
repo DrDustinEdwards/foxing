@@ -2,7 +2,7 @@
 // registry references a ROLE (fast|standard|deep), never a raw model id, so a model
 // change never needs to touch more than this file.
 //
-// To change a model: edit here, then RE-RUN THE D10 ADVERSARIAL EVAL. Never use
+// To change a model: edit here, then RE-RUN THE D10 ADVERSARIAL EVAL (node --experimental-strip-types packages/core/eval/companion-eval.mjs). Never use
 // auto-resolving family aliases ("sonnet", "opus", "haiku") -- this is a paid,
 // quota-bounded, safety-evaluated path and a silent model swap breaks cost math and
 // invalidates the eval.
