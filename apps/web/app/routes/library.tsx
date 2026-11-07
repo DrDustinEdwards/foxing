@@ -18,6 +18,7 @@ import { useState } from "react";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
+import { Tabs, TabsList, TabsTrigger } from "capsomer/react/tabs";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
@@ -78,25 +79,23 @@ export default function Library({ loaderData }: Route.ComponentProps) {
 
         <div className="mt-8 fx-library-grid">
           <div>
-            {/* Status tabs */}
-            <div className="cap-tabs-list" role="tablist" aria-label="Reading status">
-              {STATUS_TABS.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === t.value}
-                  onClick={() => setTab(t.value)}
-                  className="cap-tab"
-                >
-                  {t.label}
-                  {counts[t.value] ? (
-                    <span className="cap-tab-count">{counts[t.value]}</span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as ShelfStatus)}>
+              <TabsList aria-label="Reading status">
+                {STATUS_TABS.map((t) => (
+                  <TabsTrigger
+                    key={t.value}
+                    value={t.value}
+                    id={`library-tab-${t.value}`}
+                    aria-controls="library-panel"
+                    count={counts[t.value] || undefined}
+                  >
+                    {t.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
 
+            <div role="tabpanel" id="library-panel" aria-labelledby={`library-tab-${tab}`} tabIndex={0}>
             {shown.length === 0 ? (
               <div className="mt-10 text-center fx-library-card">
                 <p className="meta">{EMPTY_COPY[tab]}</p>
@@ -161,6 +160,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                 ))}
               </div>
             )}
+            </div>
           </div>
 
           {/* Sidebar: streak, goals, shelves */}
