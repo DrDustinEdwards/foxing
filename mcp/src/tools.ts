@@ -423,7 +423,7 @@ export const TOOLS: ToolDefinition[] = [
       title: "Find Foxing users",
       description:
         "Searches readers by username or display name, newest first, a page at a time. Each has id, " +
-        "username, displayName, tier (free or plus), isAdmin (an email on the site's ADMIN_EMAILS setting), " +
+        "username, displayName, tier (free or plus), isAdmin (an email on the site's ADMIN_EMAIL and CO_OWNER_EMAILS setting), " +
         "isSuspended and createdAt. Pass a user's id to foxing_get_user_state for everything about them.",
       inputSchema: z.strictObject({ query: querySchema, limit: limitSchema, cursor: cursorSchema }),
       outputSchema: apiPage,

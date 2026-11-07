@@ -1,5 +1,5 @@
 // Admin: Analytics. Read-only. At-a-glance platform counts plus the full recent operator
-// audit log. Gated on ADMIN_EMAILS; adminRepo reads run in-process.
+// audit log. Gated on ADMIN_EMAIL and CO_OWNER_EMAILS; adminRepo reads run in-process.
 import { adminRepo, createDb } from "@foxing/core";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { cloudflareContext } from "~/context";

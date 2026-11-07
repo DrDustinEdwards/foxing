@@ -1,6 +1,6 @@
 // Minimal admin surface for the companion cache pipeline: an on-demand trigger to run
 // a small batch NOW (proving cost, not waiting for the daily cron), gated on the
-// admin list (ADMIN_EMAILS, core isAdminAccount, applied by profileMw) like /admin/*.
+// admin list (ADMIN_EMAIL and CO_OWNER_EMAILS, core isAdminAccount, applied by profileMw) like /admin/*.
 import { Hono } from "hono";
 import { companion } from "@foxing/core";
 import { AppError, errors } from "../error";

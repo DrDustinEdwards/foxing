@@ -130,7 +130,7 @@ export type AdminUserRow = {
   createdAt: Date;
 };
 
-/** `isAdmin` is the admin list's answer (isAdminAccount: the email on ADMIN_EMAILS in `admins`). */
+/** `isAdmin` is the admin list's answer (isAdminAccount: the email on ADMIN_EMAIL and CO_OWNER_EMAILS in `admins`). */
 export async function listUsers(
   db: Db,
   opts: { q?: string; limit?: number; offset?: number; admins: AdminSettings },

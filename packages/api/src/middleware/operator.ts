@@ -4,7 +4,7 @@
 // grants nothing by itself. The named actor replaces any cookie session and then goes
 // through the same checks a signed-in admin does, read from D1 on every request:
 // profileMw blocks a suspended actor's writes and requireAdmin (routes/admin.ts) checks
-// the actor's email against ADMIN_EMAILS and its suspension. A request with no Authorization header is untouched.
+// the actor's email against ADMIN_EMAIL and CO_OWNER_EMAILS and its suspension. A request with no Authorization header is untouched.
 import { safeEqual } from "@dustinedwards/site-runtime/compare";
 import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
 import { adminRepo } from "@foxing/core";

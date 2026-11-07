@@ -1,11 +1,11 @@
 // Who is an admin (checklist G5: one list per site, checked in code as well as by Access). The
-// list is the ADMIN_EMAILS setting, read by site-runtime's adminEmails (comma-separated, compared
-// lower case). Unset, nobody is an admin.
-import { adminEmails } from "@dustinedwards/site-runtime/access";
+// roster is ADMIN_EMAIL (the main admin) and CO_OWNER_EMAILS (comma-separated co-owners), read by
+// site-runtime's isAdminEmail, compared lower case. Unset ADMIN_EMAIL: nobody is an admin.
+import { isAdminEmail } from "@dustinedwards/site-runtime/access";
 
-export type AdminSettings = { ADMIN_EMAILS?: string; ADMIN_EMAIL?: string };
+export type AdminSettings = { ADMIN_EMAIL?: string; CO_OWNER_EMAILS?: string };
 
-/** Whether this account's email is on ADMIN_EMAILS. */
+/** Whether this account's email is the main admin or a co-owner. */
 export function isAdminAccount(env: AdminSettings, email: string): boolean {
-  return adminEmails(env).includes(email.trim().toLowerCase());
+  return isAdminEmail(env, email);
 }

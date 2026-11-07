@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import worker from "../workers/app";
 import { testApi } from "./test-api";
 
-// The admin write surface is gated on the admin list (ADMIN_EMAILS, set in vitest.config.ts) and logs every mutation to
+// The admin write surface is gated on the admin list (ADMIN_EMAIL and CO_OWNER_EMAILS, set in vitest.config.ts) and logs every mutation to
 // admin_audit_log. This drives the API contract directly (the x-test-user stub stands in
 // for the Better Auth session the Worker injects). The visible admin UI is covered by the
 // Playwright admin specs, which need a seeded admin account.
@@ -58,15 +58,17 @@ describe("admin write surface gate + audit log", () => {
     await seedUser("reader");
   });
 
-  it("lets ADMIN_EMAILS alone decide, in any case, and unset admits nobody", async () => {
-    const asUser = (user: string, ADMIN_EMAILS: string) =>
+  it("lets ADMIN_EMAIL and CO_OWNER_EMAILS alone decide, in any case, and unset admits nobody", async () => {
+    const asUser = (user: string, ADMIN_EMAIL: string, CO_OWNER_EMAILS = "") =>
       api.fetch(
         new Request("https://test.local/admin/users", { headers: { "x-test-user": user } }),
-        { ...env, ADMIN_EMAILS } as never,
+        { ...env, ADMIN_EMAIL, CO_OWNER_EMAILS } as never,
       );
     expect((await asUser("reader", " Reader@Example.com ")).status).toBe(200);
     expect((await asUser("admin", " Reader@Example.com ")).status).toBe(403);
     expect((await asUser("admin", "")).status).toBe(403);
+    expect((await asUser("admin", "", "admin@example.com")).status).toBe(403);
+    expect((await asUser("reader", "admin@example.com", " Reader@Example.com")).status).toBe(200);
   });
 
   it("rejects an anonymous request with 401", async () => {

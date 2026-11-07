@@ -55,7 +55,7 @@ export default [
     route("goals", "routes/demos/goals.tsx"),
   ]),
 
-  // Admin (operator-only, gated on ADMIN_EMAILS in every loader). Reads run
+  // Admin (operator-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS in every loader). Reads run
   // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
   route("admin", "routes/admin.tsx"),
   route("admin/book-of-month", "routes/admin-botm.tsx"),
