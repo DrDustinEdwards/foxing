@@ -1,7 +1,7 @@
 name: access-drift
 
 # The daily Access drift check (area 3, I2), devkit's reusable workflow: the Access application in front
-# of /admin must let in exactly the addresses on the Worker's ADMIN_EMAILS, which the site serves hashed at
+# of /admin must let in exactly the addresses on the Worker's ADMIN_EMAIL and CO_OWNER_EMAILS, which the site serves hashed at
 # /admin/access-drift to the Access service token (workers/app.ts). No copy of the list is kept in GitHub.
 # Until all four secrets are set the job fails, by design.
 

@@ -13,7 +13,7 @@
  * is Foxing's own is below: its name, its consent paragraphs, its binding and its MCP server (mcp-handler.ts).
  *
  * Access rather than Foxing's own Better Auth: this server's sign-in stays independent of foxing.app's sessions. The
- * Foxing account the API acts as is FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAILS)
+ * Foxing account the API acts as is FOXING_ADMIN_ID, and the API re-checks that account's admin standing (ADMIN_EMAIL and CO_OWNER_EMAILS)
  * on every call.
  */
 

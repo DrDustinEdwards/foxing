@@ -417,7 +417,7 @@ export async function renameJournalPost(
 
 /**
  * The Journal's staff, whom a post may credit: every account whose email is on the admin list
- * (ADMIN_EMAILS, lower case), by display name. Admin is that setting, never a stored row.
+ * (ADMIN_EMAIL and CO_OWNER_EMAILS, lower case), by display name. Admin is that setting, never a stored row.
  */
 export async function listJournalStaff(
   db: Db,

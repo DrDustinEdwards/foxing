@@ -6,7 +6,7 @@
  * admin API owns every rule (packages/api/src/routes/admin.ts): it resolves the
  * operator bearer to the acting admin named in X-Foxing-Admin-Id
  * (packages/api/src/middleware/operator.ts), re-checks that account's email
- * against the site's ADMIN_EMAILS and its suspension on every request, validates the input, writes the
+ * against the site's ADMIN_EMAIL and CO_OWNER_EMAILS and its suspension on every request, validates the input, writes the
  * admin_audit_log and rate limits. Nothing here interprets a rule.
  *
  * A service binding is still HTTP, not an in-process call: the request crosses

@@ -43,7 +43,8 @@ export default defineConfig(async () => {
           // The admin list (core isAdminAccount): the suites' admins are these test emails.
           bindings: {
             TEST_MIGRATIONS: migrations,
-            ADMIN_EMAILS: "admin@example.com,admin2@example.com",
+            ADMIN_EMAIL: "admin@example.com",
+            CO_OWNER_EMAILS: "admin2@example.com",
             // site-runtime's admin idle key (withAdminIdle requires one); a fake test value.
             ADMIN_IDLE_SECRET: "sample-admin-idle-secret-for-tests-only",
           },

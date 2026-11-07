@@ -1,11 +1,11 @@
 // Admin surface. Callers are a signed-in admin (cookie session) or the admin MCP
 // Worker (operator bearer naming the acting admin, middleware/operator.ts); both pass
 // the same requireAdmin check. Reads wrap adminRepo and page with limit and offset.
-// Every mutation is gated on the admin list (ADMIN_EMAILS) and wrapped in an admin_audit_log entry
+// Every mutation is gated on the admin list (ADMIN_EMAIL and CO_OWNER_EMAILS) and wrapped in an admin_audit_log entry
 // (actor + source ip, plus via: "operator" for bearer calls). Every write returns a
 // plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
 // changes (suspend, tier) are preview then perform; see below. Who is an admin is the
-// ADMIN_EMAILS setting alone, so no route grants or revokes it.
+// ADMIN_EMAIL and CO_OWNER_EMAILS setting alone, so no route grants or revokes it.
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { adminRepo, CATALOG_CHECK_NAMES, type Db, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
