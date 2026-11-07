@@ -17,10 +17,6 @@ export type BillingIntent =
   | {
       op: "sync";
       customerId: string;
-      /** The subscription's id, so the route can read its current state: Stripe does not
-       *  guarantee event order, so an older event must never overwrite a newer state
-       *  (https://docs.stripe.com/webhooks, "Event ordering"). */
-      subscriptionId: string | null;
       tier: "free" | "plus";
       status: string;
       periodEnd: number | null;
@@ -57,7 +53,6 @@ export function interpretStripeEvent(event: BillingEventLite): BillingIntent {
       return {
         op: "sync",
         customerId,
-        subscriptionId: str(o.id),
         tier: tierForStatus(status),
         status,
         periodEnd: num(o.current_period_end),

@@ -42,16 +42,14 @@ async function applyIntent(db: Db, client: BillingClient, intent: BillingIntent)
       // Not linked yet (subscription event raced ahead of checkout.completed); the link
       // event will set the correct state. Skip rather than guess.
       if (!profile) return;
-      // Stripe does not guarantee event order, so read the subscription as it is now and
-      // apply that; the event only says that something changed. Without an id, fall back
-      // to the event's own snapshot.
-      const live = intent.subscriptionId
-        ? await client.getSubscription(intent.subscriptionId)
-        : null;
+      // Stripe does not guarantee event order, so apply the customer's current subscription;
+      // the event only says that something changed (https://docs.stripe.com/webhooks).
+      const live = await client.getCurrentSubscription(intent.customerId);
+      const status = live?.status ?? "canceled";
       await profilesRepo.setSubscriptionState(db, profile.id, {
-        tier: live ? billing.tierForStatus(live.status) : intent.tier,
-        status: live ? live.status : intent.status,
-        periodEnd: fromUnixSeconds(live ? live.currentPeriodEnd : intent.periodEnd),
+        tier: billing.tierForStatus(status),
+        status,
+        periodEnd: fromUnixSeconds(live?.currentPeriodEnd ?? null),
       });
       return;
     }

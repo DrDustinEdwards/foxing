@@ -32,6 +32,8 @@ export interface BillingClient {
   createPortalSession(args: BillingPortalArgs): Promise<{ url: string }>;
   verifyWebhook(payload: string, signature: string): Promise<BillingEventLite>;
   getSubscription(subscriptionId: string): Promise<BillingSubscriptionLite>;
+  /** The customer's current subscription (newest live one, else newest), or null when none. */
+  getCurrentSubscription(customerId: string): Promise<BillingSubscriptionLite | null>;
 }
 
 /** The Stripe API version every request is made with. Pinned, so an SDK upgrade never changes
@@ -63,6 +65,7 @@ export function notConfiguredBilling(): BillingClient {
     createPortalSession: fail,
     verifyWebhook: fail,
     getSubscription: fail,
+    getCurrentSubscription: fail,
   };
 }
 
@@ -73,6 +76,16 @@ function readPeriodEnd(sub: Stripe.Subscription): number | null {
   if (typeof top === "number") return top;
   const item = sub.items?.data?.[0] as unknown as { current_period_end?: number } | undefined;
   return typeof item?.current_period_end === "number" ? item.current_period_end : null;
+}
+
+const ENDED = new Set(["canceled", "incomplete_expired"]);
+
+function lite(sub: Stripe.Subscription): BillingSubscriptionLite {
+  return {
+    status: sub.status,
+    currentPeriodEnd: readPeriodEnd(sub),
+    customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
+  };
 }
 
 export function createStripeBilling(config: StripeBillingConfig): BillingClient {
@@ -128,12 +141,19 @@ export function createStripeBilling(config: StripeBillingConfig): BillingClient 
     },
 
     async getSubscription(subscriptionId) {
-      const sub = await stripe.subscriptions.retrieve(subscriptionId);
-      return {
-        status: sub.status,
-        currentPeriodEnd: readPeriodEnd(sub),
-        customerId: typeof sub.customer === "string" ? sub.customer : sub.customer.id,
-      };
+      return lite(await stripe.subscriptions.retrieve(subscriptionId));
+    },
+
+    async getCurrentSubscription(customerId) {
+      // Newest first. Resolving by customer, not by the event's subscription, keeps a late
+      // event for an old subscription from downgrading someone who has since resubscribed.
+      const { data } = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "all",
+        limit: 10,
+      });
+      const current = data.find((s) => !ENDED.has(s.status)) ?? data[0];
+      return current ? lite(current) : null;
     },
   };
 }
