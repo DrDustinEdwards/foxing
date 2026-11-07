@@ -75,7 +75,11 @@
   // book_ai_cache rows. See packages/core/src/companion/cache-generator.ts.
   "queues": {
     "producers": [{ "queue": "foxing-companion-cache", "binding": "COMPANION_CACHE_QUEUE" }],
-    "consumers": [{ "queue": "foxing-companion-cache", "max_batch_size": 5, "max_retries": 3 }]
+    // max_concurrency keeps the 4 calls a book needs under the model's rate limit; a rate-limited message waits a
+    // minute longer each attempt, so max_retries leaves room for that.
+    "consumers": [
+      { "queue": "foxing-companion-cache", "max_batch_size": 5, "max_concurrency": 2, "max_retries": 6 }
+    ]
   },
   // 0 8: companion cache and the covers copy. */5: push sweep. 17 3: nightly backup, media copy, 404 prune. Every minute:
   // Carrel's schedules, hook retries and content trash. Each trigger's jobs: app/lib/cron-jobs.ts.
