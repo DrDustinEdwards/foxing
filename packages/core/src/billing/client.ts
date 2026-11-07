@@ -34,6 +34,13 @@ export interface BillingClient {
   getSubscription(subscriptionId: string): Promise<BillingSubscriptionLite>;
 }
 
+/** The Stripe API version every request is made with. Pinned, so an SDK upgrade never changes
+ *  it silently (https://docs.stripe.com/sdks/set-version). Foxhound pins the same version.
+ *  The webhook endpoint in the Stripe Dashboard must use this version too, since an
+ *  endpoint's version decides the shape of the events it receives
+ *  (https://docs.stripe.com/webhooks/versioning). */
+export const STRIPE_API_VERSION = "2026-10-28.endive";
+
 export type StripeBillingConfig = { secretKey: string; webhookSecret: string };
 
 /** Thrown by the not-configured stub so the API can answer 503 rather than a raw 500,
@@ -70,7 +77,13 @@ function readPeriodEnd(sub: Stripe.Subscription): number | null {
 
 export function createStripeBilling(config: StripeBillingConfig): BillingClient {
   const stripe = new Stripe(config.secretKey, {
+    apiVersion: STRIPE_API_VERSION,
     httpClient: Stripe.createFetchHttpClient(),
+    // Two automatic retries with backoff (the SDK adds idempotency keys where safe), and a
+    // timeout well under a Worker request's budget (SDK defaults: 1 retry, 80 s).
+    maxNetworkRetries: 2,
+    timeout: 20_000,
+    appInfo: { name: "Foxing" },
   });
   const cryptoProvider = Stripe.createSubtleCryptoProvider();
 

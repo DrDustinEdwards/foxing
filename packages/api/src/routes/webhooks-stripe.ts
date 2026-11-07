@@ -42,10 +42,16 @@ async function applyIntent(db: Db, client: BillingClient, intent: BillingIntent)
       // Not linked yet (subscription event raced ahead of checkout.completed); the link
       // event will set the correct state. Skip rather than guess.
       if (!profile) return;
+      // Stripe does not guarantee event order, so read the subscription as it is now and
+      // apply that; the event only says that something changed. Without an id, fall back
+      // to the event's own snapshot.
+      const live = intent.subscriptionId
+        ? await client.getSubscription(intent.subscriptionId)
+        : null;
       await profilesRepo.setSubscriptionState(db, profile.id, {
-        tier: intent.tier,
-        status: intent.status,
-        periodEnd: fromUnixSeconds(intent.periodEnd),
+        tier: live ? billing.tierForStatus(live.status) : intent.tier,
+        status: live ? live.status : intent.status,
+        periodEnd: fromUnixSeconds(live ? live.currentPeriodEnd : intent.periodEnd),
       });
       return;
     }

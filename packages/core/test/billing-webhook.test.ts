@@ -42,11 +42,12 @@ describe("interpretStripeEvent", () => {
     const active = interpretStripeEvent({
       id: "evt_3",
       type: "customer.subscription.updated",
-      object: { customer: "cus_1", status: "active", current_period_end: 1780000000 },
+      object: { id: "sub_1", customer: "cus_1", status: "active", current_period_end: 1780000000 },
     });
     expect(active).toMatchObject({
       op: "sync",
       customerId: "cus_1",
+      subscriptionId: "sub_1",
       tier: "plus",
       status: "active",
       periodEnd: 1780000000,

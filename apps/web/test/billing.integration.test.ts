@@ -9,7 +9,10 @@ import { testApi } from "./test-api";
 // the user to plus. This is the seam the Worker fills with the real client in prod.
 type BillingEventLite = Awaited<ReturnType<BillingClient["verifyWebhook"]>>;
 
-function stubBilling(event?: BillingEventLite): {
+function stubBilling(
+  event?: BillingEventLite,
+  liveStatus = "active",
+): {
   client: BillingClient;
   prices: { monthly: string; annual: string };
 } {
@@ -27,7 +30,7 @@ function stubBilling(event?: BillingEventLite): {
         return event;
       },
       async getSubscription() {
-        return { status: "active", currentPeriodEnd: 1780000000, customerId: "cus_1" };
+        return { status: liveStatus, currentPeriodEnd: 1780000000, customerId: "cus_1" };
       },
     },
   };
@@ -174,5 +177,26 @@ describe("billing API (web -> api -> core -> D1)", () => {
     );
     expect(res.status).toBe(200);
     expect(await tierOf("u_cancel")).toBe("free");
+  });
+
+  it("applies the subscription's current state, not a stale event's", async () => {
+    await seedProfile("u_stale", { subscriptionTier: "plus", stripeCustomerId: "cus_stale" });
+    // An older "active" update arrives after the cancellation: Stripe does not order events.
+    const event: BillingEventLite = {
+      id: "evt_stale_1",
+      type: "customer.subscription.updated",
+      object: { id: "sub_stale", customer: "cus_stale", status: "active" },
+    };
+    const api = apiWith(stubBilling(event, "canceled"));
+    const res = await api.fetch(
+      new Request("https://test.local/webhooks/stripe", {
+        method: "POST",
+        headers: { "stripe-signature": "test" },
+        body: "{}",
+      }),
+      env as never,
+    );
+    expect(res.status).toBe(200);
+    expect(await tierOf("u_stale")).toBe("free");
   });
 });
