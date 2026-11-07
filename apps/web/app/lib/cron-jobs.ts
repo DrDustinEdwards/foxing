@@ -1,7 +1,9 @@
 // Each Cron Trigger's jobs: name, how often its trigger fires and how long a run may take. The keys
 // must match wrangler.jsonc triggers.crons. workers/app.ts gives each job its work and runs the list
 // through site-runtime's runJobs (each isolated, timed and recorded in cron_runs); /health's cron
-// check reads the same list, so a job whose trigger never fires warns as "never ran".
+// check reads the same list, so a job whose trigger never fires warns as "never ran". The operator API's run_job
+// runs any of them now through the same runJobs path (site-runtime runJobTool); the three marked backup are what
+// Capsid Admin's back up now runs.
 //
 // Timeouts: a trigger's jobs share one invocation, which Cloudflare stops at fifteen minutes. The
 // nightly dump and the media pass (d1-dump's own five-minute budget) take the most; a job past its
@@ -10,8 +12,8 @@ export const CRON_TRIGGERS = {
   // Nightly: dump D1, copy the MEDIA bucket's new and changed objects, prune the 404 counts and
   // the sign-in events (site-runtime pruneAuthEvents: a deleted user's after 30 days, all after a year).
   "17 3 * * *": [
-    { name: "backup", everyMinutes: 1440, timeoutMs: 5 * 60_000 },
-    { name: "media-backup", everyMinutes: 1440, timeoutMs: 6 * 60_000 },
+    { name: "backup", backup: true, everyMinutes: 1440, timeoutMs: 5 * 60_000 },
+    { name: "media-backup", backup: true, everyMinutes: 1440, timeoutMs: 6 * 60_000 },
     { name: "prune-404", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "prune-auth-events", everyMinutes: 1440, timeoutMs: 60_000 },
   ],
@@ -26,7 +28,7 @@ export const CRON_TRIGGERS = {
   "0 8 * * *": [
     { name: "prune-expired-auth", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "companion-cache", everyMinutes: 1440, timeoutMs: 60_000 },
-    { name: "covers-backup", everyMinutes: 1440, timeoutMs: 6 * 60_000 },
+    { name: "covers-backup", backup: true, everyMinutes: 1440, timeoutMs: 6 * 60_000 },
   ],
 } as const;
 

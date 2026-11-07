@@ -3,6 +3,7 @@ import { resetDb } from "@dustinedwards/devkit/d1";
 import { beforeEach, describe, expect, it } from "vitest";
 import { BACKUP_EXCLUDE } from "../app/lib/backup-checks";
 import { backupStatus, runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import { CRON_TRIGGERS } from "../app/lib/cron-jobs";
 import { operatorTools } from "../app/lib/operator.server";
 import { healthResponse } from "@dustinedwards/site-runtime/health";
 
@@ -11,6 +12,19 @@ import { healthResponse } from "@dustinedwards/site-runtime/health";
 // credential-column check against the schema is d1-dump's own, on in every run here.
 const workerEnv = env as unknown as Env;
 const now = Date.now();
+
+// The cron's jobs marked backup, with the work the Worker gives them (workers/app.ts CRON_RUNS):
+// what Capsid Admin's back up now, run_job { backup: true }, runs.
+const BACKUP_RUNS: Record<string, (env: Env) => Promise<unknown>> = {
+  backup: runBackup,
+  "media-backup": runMediaBackup,
+  "covers-backup": runCoversBackup,
+};
+const backupJobs = () =>
+  Object.values(CRON_TRIGGERS)
+    .flat()
+    .filter((job) => "backup" in job && job.backup)
+    .map((job) => ({ ...job, run: () => BACKUP_RUNS[job.name](workerEnv) }));
 
 const SECRETS = [
   "SECRET-SESSION-TOKEN",
@@ -106,9 +120,15 @@ describe("nightly backup", () => {
       "earlier bytes",
     );
     await env.MEDIA.put("reader/sample-book/chapter.xhtml", "re-derivable from the EPUB");
-    await runBackup(workerEnv);
-    await runMediaBackup(workerEnv);
-    await runCoversBackup(workerEnv);
+    // Through the operator API's run_job, the path the cron runs, recorded in cron_runs.
+    const ran = (await operatorTools(workerEnv, backupJobs).run_job.run({ backup: true })) as {
+      runs: { job: string; status: string }[];
+    };
+    expect(ran.runs.map((r) => [r.job, r.status])).toEqual([
+      ["backup", "ok"],
+      ["media-backup", "ok"],
+      ["covers-backup", "ok"],
+    ]);
 
     const written = await keys();
     expect(written.some((k) => k.endsWith("/_complete.json"))).toBe(true);
@@ -152,7 +172,7 @@ describe("nightly backup", () => {
     expect(written.some((k) => k.includes("reader/"))).toBe(false);
 
     // Capsid's backup_status (the operator API) answers every files pass by its name.
-    const answer = (await operatorTools(workerEnv).backup_status.run({})) as {
+    const answer = (await operatorTools(workerEnv, backupJobs).backup_status.run({})) as {
       files: Record<string, { age_hours: number }>;
     };
     expect(Object.keys(answer.files)).toEqual(["journal", "journal-revisions", "covers"]);

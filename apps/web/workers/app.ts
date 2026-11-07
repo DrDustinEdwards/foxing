@@ -14,7 +14,7 @@ import {
   withAdminIdle,
 } from "@dustinedwards/site-runtime/access";
 import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
-import { runJobs } from "@dustinedwards/site-runtime/cron";
+import { runJobs, type CronJob } from "@dustinedwards/site-runtime/cron";
 import {
   SHARED_CACHE_CONTROL,
   cacheKey,
@@ -248,12 +248,12 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) => {
 // API is a bearer-key server call, so neither comes through this.
 app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
 
-// The operator API (site-runtime ./operator): Capsid Admin's backups, behind the OPERATOR_TOKEN bearer.
+// The operator API (site-runtime ./operator): Capsid Admin's backups and run_job, behind the OPERATOR_TOKEN bearer.
 app.all("/api/operator", (c) =>
   operatorResponse(c.req.raw, {
     token: c.env.OPERATOR_TOKEN,
     limiter: c.env.RATE_LIMITER,
-    tools: operatorTools(c.env),
+    tools: operatorTools(c.env, () => cronJobs(c.env)),
   }),
 );
 
@@ -492,6 +492,13 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "companion-cache": enqueueCompanionCache,
   "prune-expired-auth": (env) => deleteExpiredAuthRows(createDb(env.DB), new Date()),
 };
+
+/** Every job on every trigger with its work: what the operator API's run_job runs now. */
+function cronJobs(env: Env): CronJob[] {
+  return Object.values(CRON_TRIGGERS)
+    .flat()
+    .map((job) => ({ ...job, run: () => CRON_RUNS[job.name](env) }));
+}
 
 async function scheduled(event: ScheduledController, env: Env): Promise<void> {
   const jobs: readonly (typeof CRON_TRIGGERS)[keyof typeof CRON_TRIGGERS][number][] | undefined =

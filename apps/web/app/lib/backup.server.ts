@@ -57,38 +57,21 @@ export async function runBackup(env: Env): Promise<void> {
   });
 }
 
-export async function runMediaBackup(env: Env): Promise<void> {
-  await backupFiles(env.MEDIA, env.BACKUPS, JOURNAL_BACKUP);
-  await backupFiles(env.BACKUPS, env.BACKUPS, REVISIONS_BACKUP);
+/** One files pass's answer: its name, whether it completed, and its counts. */
+const passResult = (run: Awaited<ReturnType<typeof backupFiles>>) => ({
+  name: run.name,
+  complete: run.complete,
+  ...run.counts,
+});
+
+export async function runMediaBackup(env: Env) {
+  const journal = await backupFiles(env.MEDIA, env.BACKUPS, JOURNAL_BACKUP);
+  const revisions = await backupFiles(env.BACKUPS, env.BACKUPS, REVISIONS_BACKUP);
+  return { files: [passResult(journal), passResult(revisions)] };
 }
 
-export async function runCoversBackup(env: Env): Promise<void> {
-  await backupFiles(env.COVERS, env.BACKUPS, COVERS_BACKUP);
-}
-
-/**
- * The three files passes now, for the admin API's "run the backup now" (admin MCP). The same backupFiles
- * calls as the media-backup and covers-backup cron jobs, each going on where its last stopped. Copy only:
- * nothing is written or deleted in MEDIA or COVERS. A failed pass throws after the others have run.
- */
-export async function backupFilesNow(env: Env) {
-  const passes = [
-    { name: JOURNAL_BACKUP.name, run: () => backupFiles(env.MEDIA, env.BACKUPS, JOURNAL_BACKUP) },
-    {
-      name: REVISIONS_BACKUP.name,
-      run: () => backupFiles(env.BACKUPS, env.BACKUPS, REVISIONS_BACKUP),
-    },
-    { name: COVERS_BACKUP.name, run: () => backupFiles(env.COVERS, env.BACKUPS, COVERS_BACKUP) },
-  ];
-  const results = await Promise.allSettled(passes.map((p) => p.run()));
-  const failed = results.flatMap((r, i) =>
-    r.status === "rejected" ? [`${passes[i]?.name}: ${String(r.reason)}`] : [],
-  );
-  if (failed.length > 0) throw new Error(`files backup failed: ${failed.join("; ")}`);
-  return results.map((r) => {
-    const run = (r as PromiseFulfilledResult<Awaited<ReturnType<typeof backupFiles>>>).value;
-    return { name: run.name, complete: run.complete, ...run.counts };
-  });
+export async function runCoversBackup(env: Env) {
+  return { files: [passResult(await backupFiles(env.COVERS, env.BACKUPS, COVERS_BACKUP))] };
 }
 
 /** The newest complete dump's age, with the Journal pictures' pass under `files` and the covers pass's
