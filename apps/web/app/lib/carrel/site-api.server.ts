@@ -52,7 +52,7 @@ function previewRenderer(env: Env, ctx: ExecutionContext, origin: string, render
   return (slug: string, post: JournalPreview) => {
     const context = new RouterContextProvider();
     context.set(cloudflareContext, { env, ctx });
-    context.set(cspNonceContext, undefined);
+    context.set(cspNonceContext, null);
     context.set(journalPreviewContext, post);
     return render(
       new Request(`${origin}/journal/${slug}`, { headers: { accept: "text/html" } }),

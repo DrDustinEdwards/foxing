@@ -5,7 +5,7 @@ import { ServerRouter } from "react-router";
 import type { EntryContext, RouterContextProvider } from "react-router";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { isbot } from "isbot";
-import { cspNonceContext } from "./context";
+import { getNonce } from "@dustinedwards/site-runtime/context";
 import { NonceContext } from "./lib/nonce";
 
 export default async function handleRequest(
@@ -19,7 +19,7 @@ export default async function handleRequest(
   const userAgent = request.headers.get("user-agent");
   // The request's CSP nonce (workers/security-headers.ts): on React's streaming scripts, React
   // Router's hydration scripts and, through NonceContext, every script the root Layout renders.
-  const nonce = loadContext.get(cspNonceContext);
+  const nonce = getNonce(loadContext);
 
   const body = await renderToReadableStream(
     <NonceContext.Provider value={nonce}>
