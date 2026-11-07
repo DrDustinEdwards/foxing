@@ -1,6 +1,8 @@
+import { kvPageRecord } from "@drdustinedwards/site-helpers/lastmod";
 import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
 import { catalogRepo, views } from "@foxing/core";
 import { hashUrls, pingIndexNow } from "~/lib/indexnow";
+import { PAGE_DATES_KEY } from "~/lib/page-dates";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
@@ -13,66 +15,55 @@ const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env, ctx } = loaderBase(context, request);
 
-  const [books, authors, awards, clubs, posts, tags, homePick, homeBooks, browse] =
+  const [books, authors, awards, clubs, posts, tags, homePick, homeBooks, browse, pageDates] =
     await Promise.all([
       catalogRepo.listSitemapBooks(db),
-      catalogRepo.listAuthorSlugs(db),
-      catalogRepo.listAwards(db),
-      catalogRepo.listExternalClubs(db),
+      catalogRepo.listSitemapAuthors(db),
+      catalogRepo.listSitemapAwards(db),
+      catalogRepo.listSitemapClubs(db),
       catalogRepo.listPublishedSlugs(db),
-      catalogRepo.listTags(db),
+      catalogRepo.listSitemapTags(db),
       // The covers the home page and /books show, read as their loaders read them (marketing.tsx, books.tsx), for
       // their image entries.
       catalogRepo.getTodaysPick(db),
       catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
       views.browse(db, parseFilters(new URL("/books", request.url))),
+      // The hubs and the pages written in code have no row to date them: the daily page-dates job keeps the day each last changed.
+      kvPageRecord(env.APP_KV, PAGE_DATES_KEY).load(),
     ]);
+  const hub = (path: string) => ({ lastmod: pageDates?.[path]?.lastmod });
   const covers = (list: Array<{ coverUrl?: string | null } | null | undefined>) => {
     const urls = [...new Set(list.flatMap((b) => (b?.coverUrl ? [b.coverUrl] : [])))];
     return urls.length > 0 ? { images: urls } : {};
   };
 
-  // An author's page changes when a book of theirs does, so its lastmod is their newest book's. Bing reads an
-  // accurate lastmod as its recrawl signal, and a page with no honest date gets none (Prelum's audit flags a sitemap
-  // that is mostly undated).
-  const authorUpdated = new Map<string, Date>();
-  for (const b of books) {
-    if (!b.authorSlug) continue;
-    const seen = authorUpdated.get(b.authorSlug);
-    if (!seen || b.updatedAt > seen) authorUpdated.set(b.authorSlug, b.updatedAt);
-  }
-
   // Paths here; Prelum's sitemapDocument takes absolute URLs, made below.
   const urls: SitemapEntry[] = [
-    { loc: "/", priority: 1, ...covers([homePick?.book, ...homeBooks.books]) },
-    { loc: "/books", priority: 0.9, ...covers(browse.books) },
-    { loc: "/awards", priority: 0.7 },
-    { loc: "/picks", priority: 0.7 },
-    { loc: "/book-of-the-month", priority: 0.7 },
-    { loc: "/journal", priority: 0.7 },
-    { loc: "/journal/archive", priority: 0.5 },
-    { loc: "/about", priority: 0.3 },
-    { loc: "/accessibility", priority: 0.3 },
-    { loc: "/features", priority: 0.4 },
+    { loc: "/", ...hub("/"), priority: 1, ...covers([homePick?.book, ...homeBooks.books]) },
+    { loc: "/books", ...hub("/books"), priority: 0.9, ...covers(browse.books) },
+    { loc: "/awards", ...hub("/awards"), priority: 0.7 },
+    { loc: "/picks", ...hub("/picks"), priority: 0.7 },
+    { loc: "/book-of-the-month", ...hub("/book-of-the-month"), priority: 0.7 },
+    { loc: "/journal", ...hub("/journal"), priority: 0.7 },
+    { loc: "/journal/archive", ...hub("/journal/archive"), priority: 0.5 },
+    { loc: "/about", ...hub("/about"), priority: 0.3 },
+    { loc: "/accessibility", ...hub("/accessibility"), priority: 0.3 },
+    { loc: "/features", ...hub("/features"), priority: 0.4 },
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,
       lastmod: b.updatedAt,
       priority: 0.8,
       ...(b.coverUrl ? { images: [b.coverUrl] } : {}),
     })),
-    ...authors.map((slug) => ({
-      loc: `/authors/${slug}`,
-      lastmod: authorUpdated.get(slug),
-      priority: 0.6,
-    })),
-    ...awards.map((a) => ({ loc: `/awards/${a.slug}`, priority: 0.5 })),
-    ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, priority: 0.5 })),
+    ...authors.map((a) => ({ loc: `/authors/${a.slug}`, lastmod: a.updatedAt, priority: 0.6 })),
+    ...awards.map((a) => ({ loc: `/awards/${a.slug}`, lastmod: a.updatedAt, priority: 0.5 })),
+    ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, lastmod: c.updatedAt, priority: 0.5 })),
     ...posts.map((p) => ({
       loc: `/journal/${p.slug}`,
       lastmod: p.updatedAt,
       priority: 0.6,
     })),
-    ...tags.map((t) => ({ loc: journalTagPath(t.tag), priority: 0.4 })),
+    ...tags.map((t) => ({ loc: journalTagPath(t.tag), lastmod: t.updatedAt, priority: 0.4 })),
   ];
 
   // IndexNow: ping only when the URL set actually changed since the last sitemap

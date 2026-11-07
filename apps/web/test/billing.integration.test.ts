@@ -9,7 +9,13 @@ import { testApi } from "./test-api";
 // the user to plus. This is the seam the Worker fills with the real client in prod.
 type BillingEventLite = Awaited<ReturnType<BillingClient["verifyWebhook"]>>;
 
-function stubBilling(event?: BillingEventLite): {
+/** Customer ids the webhook asked for the current subscription of. */
+const asked: string[] = [];
+
+function stubBilling(
+  event?: BillingEventLite,
+  current?: Awaited<ReturnType<BillingClient["getCurrentSubscription"]>>,
+): {
   client: BillingClient;
   prices: { monthly: string; annual: string };
 } {
@@ -28,6 +34,12 @@ function stubBilling(event?: BillingEventLite): {
       },
       async getSubscription() {
         return { status: "active", currentPeriodEnd: 1780000000, customerId: "cus_1" };
+      },
+      async getCurrentSubscription(customerId: string) {
+        asked.push(customerId);
+        return current === undefined
+          ? { status: "active", currentPeriodEnd: 1780000000, customerId }
+          : current;
       },
     },
   };
@@ -163,7 +175,8 @@ describe("billing API (web -> api -> core -> D1)", () => {
       type: "customer.subscription.deleted",
       object: { customer: "cus_9", status: "active" },
     };
-    const api = apiWith(stubBilling(event));
+    // The event says active (a late one); the customer's current state is no subscription.
+    const api = apiWith(stubBilling(event, null));
     const res = await api.fetch(
       new Request("https://test.local/webhooks/stripe", {
         method: "POST",
@@ -174,5 +187,6 @@ describe("billing API (web -> api -> core -> D1)", () => {
     );
     expect(res.status).toBe(200);
     expect(await tierOf("u_cancel")).toBe("free");
+    expect(asked).toContain("cus_9");
   });
 });

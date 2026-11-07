@@ -18,6 +18,7 @@ import { useState } from "react";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
+import { Tabs, TabsList, TabsTrigger } from "capsomer/react/tabs";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
@@ -78,89 +79,93 @@ export default function Library({ loaderData }: Route.ComponentProps) {
 
         <div className="mt-8 fx-library-grid">
           <div>
-            {/* Status tabs */}
-            <div className="cap-tabs-list" role="tablist" aria-label="Reading status">
-              {STATUS_TABS.map((t) => (
-                <button
-                  key={t.value}
-                  type="button"
-                  role="tab"
-                  aria-selected={tab === t.value}
-                  onClick={() => setTab(t.value)}
-                  className="cap-tab"
-                >
-                  {t.label}
-                  {counts[t.value] ? (
-                    <span className="cap-tab-count">{counts[t.value]}</span>
-                  ) : null}
-                </button>
-              ))}
-            </div>
-
-            {shown.length === 0 ? (
-              <div className="mt-10 text-center fx-library-card">
-                <p className="meta">{EMPTY_COPY[tab]}</p>
-                <Link to="/books" className="mt-2 fx-library-link">
-                  Find a book
-                </Link>
-              </div>
-            ) : (
-              <div className="mt-6 fx-library-grid-2">
-                {shown.map((e) => (
-                  <div key={e.bookId} className="fx-library-card-2">
-                    <Link to={`/books/${e.slug}`} className="relative block">
-                      <CoverImage
-                        src={e.coverUrl}
-                        alt={`Cover of ${e.title}`}
-                        fallbackLabel={e.title}
-                        sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
-                      />
-                      {e.status === "paused" || e.status === "abandoned" ? (
-                        <span className="fx-library-label-2">
-                          {e.status === "paused" ? "Paused" : "Set aside"}
-                        </span>
-                      ) : null}
-                      {e.status === "reading" && e.progressPct > 0 ? (
-                        <span
-                          className="fx-library-label-3"
-                          role="progressbar"
-                          aria-label="Reading progress"
-                          aria-valuemin={0}
-                          aria-valuemax={100}
-                          aria-valuenow={Math.min(100, Math.round(e.progressPct))}
-                          aria-valuetext={`${Math.min(100, Math.round(e.progressPct))}% read`}
-                        >
-                          <span
-                            className="block fx-library-label-4"
-                            style={{ width: `${Math.min(100, e.progressPct)}%` }}
-                          />
-                        </span>
-                      ) : null}
-                    </Link>
-                    <div className="mt-3 fx-library-box">
-                      <Link to={`/books/${e.slug}`} className="fx-library-link-2">
-                        {e.title}
-                      </Link>
-                      <p className="mt-1 meta">{e.author}</p>
-                    </div>
-                    <div className="mt-2 fx-library-box">
-                      <BookStatusControl
-                        book={{
-                          id: e.bookId,
-                          slug: e.slug,
-                          title: e.title,
-                          author: e.author,
-                          coverUrl: e.coverUrl,
-                        }}
-                        currentStatus={e.status}
-                        signedIn
-                        loginHref="/login"
-                      />
-                    </div>
-                  </div>
+            <Tabs value={tab} onValueChange={(v) => setTab(v as ShelfStatus)}>
+              <TabsList aria-label="Reading status">
+                {STATUS_TABS.map((t) => (
+                  <TabsTrigger
+                    key={t.value}
+                    value={t.value}
+                    id={`library-tab-${t.value}`}
+                    aria-controls="library-panel"
+                    count={counts[t.value] || undefined}
+                  >
+                    {t.label}
+                  </TabsTrigger>
                 ))}
-              </div>
-            )}
+              </TabsList>
+            </Tabs>
+
+            <div
+              role="tabpanel"
+              id="library-panel"
+              aria-labelledby={`library-tab-${tab}`}
+              tabIndex={0}
+            >
+              {shown.length === 0 ? (
+                <div className="mt-10 text-center fx-library-card">
+                  <p className="meta">{EMPTY_COPY[tab]}</p>
+                  <Link to="/books" className="mt-2 fx-library-link">
+                    Find a book
+                  </Link>
+                </div>
+              ) : (
+                <div className="mt-6 fx-library-grid-2">
+                  {shown.map((e) => (
+                    <div key={e.bookId} className="fx-library-card-2">
+                      <Link to={`/books/${e.slug}`} className="relative block">
+                        <CoverImage
+                          src={e.coverUrl}
+                          alt={`Cover of ${e.title}`}
+                          fallbackLabel={e.title}
+                          sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+                        />
+                        {e.status === "paused" || e.status === "abandoned" ? (
+                          <span className="fx-library-label-2">
+                            {e.status === "paused" ? "Paused" : "Set aside"}
+                          </span>
+                        ) : null}
+                        {e.status === "reading" && e.progressPct > 0 ? (
+                          <span
+                            className="fx-library-label-3"
+                            role="progressbar"
+                            aria-label="Reading progress"
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-valuenow={Math.min(100, Math.round(e.progressPct))}
+                            aria-valuetext={`${Math.min(100, Math.round(e.progressPct))}% read`}
+                          >
+                            <span
+                              className="block fx-library-label-4"
+                              style={{ width: `${Math.min(100, e.progressPct)}%` }}
+                            />
+                          </span>
+                        ) : null}
+                      </Link>
+                      <div className="mt-3 fx-library-box">
+                        <Link to={`/books/${e.slug}`} className="fx-library-link-2">
+                          {e.title}
+                        </Link>
+                        <p className="mt-1 meta">{e.author}</p>
+                      </div>
+                      <div className="mt-2 fx-library-box">
+                        <BookStatusControl
+                          book={{
+                            id: e.bookId,
+                            slug: e.slug,
+                            title: e.title,
+                            author: e.author,
+                            coverUrl: e.coverUrl,
+                          }}
+                          currentStatus={e.status}
+                          signedIn
+                          loginHref="/login"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Sidebar: streak, goals, shelves */}

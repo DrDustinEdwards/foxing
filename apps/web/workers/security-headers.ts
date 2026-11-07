@@ -2,19 +2,9 @@
 // own values, @dustinedwards/site-runtime, with Foxing's registry entry; ./header-set.ts) and the
 // Content-Security-Policy built from the list below of what Foxing really loads. workers/app.ts calls withSecurityHeaders on every response, redirects, API, errors and cache
 // hits included. No other file sets a security header.
-import { applyHeaderSet, corpFor } from "@dustinedwards/site-runtime/headers";
-import {
-  buildContentSecurityPolicy,
-  buildStagedPolicy,
-  CSP_REPORT_GROUP,
-  CSP_REPORT_PATH,
-  generateNonce,
-  renewNonce,
-  reportingEndpoints,
-  type CspSources,
-  type SitePolicy,
-} from "@dustinedwards/site-runtime/csp";
+import { CSP_REPORT_PATH, type CspSources, type SitePolicy } from "@dustinedwards/site-runtime/csp";
 import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
+import { pageSecurity } from "@dustinedwards/site-runtime/page-headers";
 import { ipKey, limit } from "@dustinedwards/site-runtime/rate-limit";
 import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
@@ -83,54 +73,25 @@ function readerPolicy(nonce?: string): SitePolicy {
   };
 }
 
-// One nonce per request, issued to the render (app/entry.server.tsx, app/root.tsx via
-// cspNonceContext) and read back here when the response leaves.
-const issued = new WeakMap<Request, string>();
+// The glue every site shares (site-runtime ./page-headers): the header set beside the policy, its Report-Only companion
+// and Reporting-Endpoints, Cross-Origin-Resource-Policy by type, and a fresh nonce per reader for a page the edge cache
+// stored. A route's own Content-Security-Policy wins. What the registry entry stages (Trusted Types, default-src 'none')
+// rides Report-Only beside the policy.
+const page = pageSecurity({
+  set: securityHeaders,
+  // The reader's policy is for the document /read/:slug renders; a response with no nonce is not that document.
+  policy: ({ nonce, url }) =>
+    nonce !== undefined && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce),
+  staged: { trustedTypes: true, denyUnlisted: true },
+  corp: true,
+  renew: true,
+});
 
 /** This request's nonce, made on first ask. The page render and its header share it. */
-export function cspNonceFor(request: Request): string {
-  let nonce = issued.get(request);
-  if (!nonce) {
-    nonce = generateNonce();
-    issued.set(request, nonce);
-  }
-  return nonce;
-}
+export const cspNonceFor = page.nonceFor;
 
-const NONCE_IN_POLICY = /'nonce-([A-Za-z0-9+/_=-]+)'/;
-
-function isHtml(headers: Headers): boolean {
-  return (headers.get("Content-Type") ?? "").toLowerCase().includes("text/html");
-}
-
-/**
- * The response with Foxing's headers. A page from the edge cache still carries the nonce it was rendered with;
- * site-runtime's renewNonce gives it a fresh one per reader, rewriting only the elements that carry the old value, so
- * no two readers share a nonce and no injected element gains one. Cross-Origin-Resource-Policy follows the type
- * (corpFor): the OG cards and covers other sites embed are cross-origin, pages and JSON same-origin.
- */
-export function withSecurityHeaders(response: Response, request: Request): Response {
-  const rendered = NONCE_IN_POLICY.exec(response.headers.get("Content-Security-Policy") ?? "")?.[1];
-  if (isHtml(response.headers) && rendered && rendered !== issued.get(request)) {
-    const fresh = generateNonce();
-    issued.set(request, fresh);
-    response = renewNonce(response, fresh);
-  }
-  const html = isHtml(response.headers);
-  const nonce = html ? issued.get(request) : undefined;
-  const url = new URL(request.url);
-  const policy = html && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce);
-  // What the registry entry stages (Trusted Types, default-src 'none') rides Report-Only beside the policy.
-  const staged = buildStagedPolicy(policy, { trustedTypes: true, denyUnlisted: true });
-  // applyHeaderSet passes a WebSocket upgrade (101) through untouched and rebuilds every other response.
-  return applyHeaderSet(response, {
-    ...securityHeaders,
-    "Cross-Origin-Resource-Policy": corpFor(response.headers.get("Content-Type")),
-    "Content-Security-Policy": buildContentSecurityPolicy(policy).value,
-    [staged.name]: staged.value,
-    "Reporting-Endpoints": reportingEndpoints(CSP_REPORT_GROUP, new URL(CSP_REPORT_PATH, url)),
-  });
-}
+/** The response with Foxing's headers; workers/app.ts runs it on every response the Worker sends. */
+export const withSecurityHeaders = page.withSecurityHeaders;
 
 /** Reports one address may send a minute before the rest are dropped (still 204). */
 const CSP_REPORTS_PER_MINUTE = 20;

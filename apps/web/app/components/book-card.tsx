@@ -11,8 +11,8 @@ export type BookCardData = {
   publicationYear?: number | null;
 };
 
-/** The most cards a grid row holds (five from 80rem, catalog.css): the covers above the fold on any screen. */
-const GRID_FIRST_ROW = 5;
+/** Two rows of the most cards a row holds (five from 80rem, catalog.css): on a 1440 by 900 screen the second row is above the fold too, and web.dev says not to lazy-load images in the initial viewport. */
+const GRID_FIRST_ROW = 10;
 
 /**
  * Content-card variant (design-system Rule 15): the edge strengthens on hover and the
@@ -22,12 +22,16 @@ export function BookCard({
   book,
   className,
   position,
+  headingLevel = 3,
 }: {
   book: BookCardData;
   className?: string;
   /** The card's place in its grid, from 0: the first is the page's LCP and the first row (up to five across) loads at once. */
   position?: number;
+  /** The title's heading level: 2 when the grid sits directly under the page's h1, 3 under a section h2. */
+  headingLevel?: 2 | 3;
 }) {
+  const Title = headingLevel === 2 ? "h2" : "h3";
   return (
     <Link to={`/books/${book.slug}`} className={cn("fx-book-card", className)}>
       <CoverImage
@@ -39,7 +43,7 @@ export function BookCard({
         sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
       />
       <div className="fx-book-card-body">
-        <h3 className="fx-book-card-title">{book.title}</h3>
+        <Title className="fx-book-card-title">{book.title}</Title>
         <p className="mt-1 meta">
           {book.author}
           {book.publicationYear ? (

@@ -12,6 +12,8 @@
 // Everything else (versions, lists, lenses, history, revert, shrink, turns) is site-api's.
 
 import {
+  PICTURE_RESIZE,
+  pictureLimits,
   datedKey,
   type MediaAdapter,
   type MediaLibraryStore,
@@ -27,24 +29,6 @@ import { suggestFor } from "./media-suggest.server";
 
 type Row = journalMediaRepo.JournalMediaRow;
 type Revision = journalMediaRepo.JournalMediaRevision;
-
-/** What an upload shrinks to unless it says `resize=no`: Journal pages show a picture at most the
- * column's width, about 1,200 CSS pixels, so 2,560 keeps it sharp on a 2x screen. */
-const RESIZE = { maxEdge: 2560, quality: 85 };
-
-/** Large enough for a camera file, which the upload then shrinks. HEIC and HEIF are stored as JPEG. */
-const LIMITS = {
-  maxBytes: 20 * 1024 * 1024,
-  types: [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/avif",
-    "image/gif",
-    "image/heic",
-    "image/heif",
-  ],
-};
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
 
@@ -175,14 +159,14 @@ export function journalMediaAdapter(options: {
     store: journalMediaStore(db),
     bucket: env.MEDIA,
     images: env.IMAGES,
-    limits: LIMITS,
+    limits: pictureLimits(),
     // Absolute, as the Journal's cover_image_url must be.
     url: (key) => `${SITE_ORIGIN}${journalMediaRepo.JOURNAL_MEDIA_PATH}${key}`,
     // journal/<yyyy>/<mm>/<name>-<hash>.<ext>: the only MEDIA prefix the /media route serves.
     key: datedKey("journal/"),
     // No Journal page is sized by a file's address (pages name the bytes' hash,
     // lib/journal-images.server.ts), so a replace may change a picture's size and a turn turns in place.
-    resize: RESIZE,
+    resize: PICTURE_RESIZE,
     usage: (keys) => usesOf(db, keys),
     // BACKUPS is private and never served.
     history: { bucket: env.BACKUPS, prefix: "journal-media/replaced/" },
@@ -191,8 +175,5 @@ export function journalMediaAdapter(options: {
     onWrite: ({ op, id, changeId, newId }) =>
       audit(`journal-media.${op}`, { key: id, changeId, ...(newId ? { newId } : {}) }),
     suggest: (picture, id) => suggestFor(env, picture, id),
-    // The package checks every address and each redirect before this fetch runs.
-    importFetch: ((input: RequestInfo | URL, init?: RequestInit) =>
-      fetch(input, init)) as typeof fetch,
   });
 }

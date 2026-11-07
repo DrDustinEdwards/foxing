@@ -28,6 +28,8 @@ export const CRON_TRIGGERS = {
   "0 8 * * *": [
     { name: "prune-expired-auth", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "companion-cache", everyMinutes: 1440, timeoutMs: 60_000 },
+    // The day each hub and code-written page last changed, for /sitemap.xml's lastmod (app/lib/page-dates.ts).
+    { name: "page-dates", everyMinutes: 1440, timeoutMs: 2 * 60_000 },
     { name: "covers-backup", backup: true, everyMinutes: 1440, timeoutMs: 6 * 60_000 },
   ],
 } as const;

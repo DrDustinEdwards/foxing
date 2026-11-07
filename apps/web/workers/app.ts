@@ -6,6 +6,9 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
+import { kvPageRecord, trackPageDates } from "@drdustinedwards/site-helpers/lastmod";
+import { markdownPath } from "@drdustinedwards/site-helpers/llms";
+import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import {
   ACCESS_LOGOUT_PATH,
@@ -56,6 +59,7 @@ import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { images } from "../app/lib/images";
+import { SITE_ORIGIN } from "../app/lib/origins";
 import {
   deleteUserAccount,
   getAuth,
@@ -67,6 +71,7 @@ import { FONT_PRELOADS } from "../app/lib/preloads";
 import { operatorTools } from "../app/lib/operator.server";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
+import { PAGE_DATES_KEY, TRACKED_PAGES } from "../app/lib/page-dates";
 import { clubRoomHub } from "./club-room";
 import {
   CSP_REPORT_PATH,
@@ -492,6 +497,7 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,
   "prune-expired-auth": (env) => deleteExpiredAuthRows(createDb(env.DB), new Date()),
+  "page-dates": runPageDates,
 };
 
 /** Every job on every trigger with its work: what the operator API's run_job runs now. */
@@ -585,6 +591,63 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
   return response;
 }
 
+// Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown,
+// and /llms-full.txt is the prose pages in the sitemap's order. Only the pages a signed-out reader can read are listed
+// here. The catalog's 1,400 book pages and 650 author pages are database records an agent fetches one at a time, so each
+// has its copy but stays out of llms-full.txt, which leaves the hubs, the picks, the awards and the Journal.
+/** Keeps the day each hub and code-written page last changed, from what its Markdown copy says: /sitemap.xml's lastmod. */
+async function runPageDates(env: Env) {
+  const ctx = {
+    waitUntil() {},
+    passThroughOnException() {},
+    props: {},
+  } as unknown as ExecutionContext;
+  const store = kvPageRecord(env.APP_KV, PAGE_DATES_KEY);
+  return trackPageDates({
+    paths: [...TRACKED_PAGES],
+    read: async (path) => {
+      const response = await withMarkdownCopies(
+        new Request(`${SITE_ORIGIN}${markdownPath(path)}`),
+        env,
+        ctx,
+      );
+      return response.ok ? response.text() : null;
+    },
+    ...store,
+  });
+}
+
+const COPIED = new Set([
+  "/",
+  "/about",
+  "/accessibility",
+  "/app-guide",
+  "/awards",
+  "/book-of-the-month",
+  "/books",
+  "/features",
+  "/guide",
+  "/journal",
+  "/journal/archive",
+  "/picks",
+  "/privacy",
+  "/terms",
+]);
+const COPIED_UNDER = ["/awards/", "/picks/", "/journal/", "/books/", "/authors/"];
+const CATALOG = ["/books/", "/authors/"];
+const withMarkdownCopies = markdownCopies(
+  (request: Request, env: Env, ctx: ExecutionContext) => handleFetch(request, env, ctx),
+  {
+    origin: SITE_ORIGIN,
+    siteMarkdown: false,
+    llmsFullSkip: (path) => CATALOG.some((prefix) => path.startsWith(prefix)),
+    skip: (path) =>
+      path === "/journal/rss.xml" ||
+      path.startsWith("/journal/tag/") ||
+      !(COPIED.has(path) || COPIED_UNDER.some((prefix) => path.startsWith(prefix))),
+  },
+);
+
 // The admin pages and the browser admin APIs behind the same Access application.
 const ADMIN_PAGES = "/admin";
 const ADMIN_APIS = ["/api/v1/admin", "/api/v1/ops"];
@@ -647,7 +710,7 @@ export default {
         );
       return new URL(request.url).pathname === ADMIN_LIST_PATH
         ? adminList(request, env)
-        : withAdminIdleSignOut(request, env, () => handleFetch(request, env, ctx));
+        : withAdminIdleSignOut(request, env, () => withMarkdownCopies(request, env, ctx));
     },
     {
       sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA,

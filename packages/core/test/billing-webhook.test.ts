@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { interpretStripeEvent, tierForStatus } from "../src/billing/webhook";
+import {
+  interpretStripeEvent,
+  pickCurrentSubscription,
+  tierForStatus,
+} from "../src/billing/webhook";
 
 describe("tierForStatus", () => {
   it("is plus while the subscription is active or in its trial", () => {
@@ -87,5 +91,18 @@ describe("interpretStripeEvent", () => {
     expect(interpretStripeEvent({ id: "evt_7", type: "customer.created", object: {} }).op).toBe(
       "ignore",
     );
+  });
+});
+
+describe("pickCurrentSubscription", () => {
+  it("prefers the newest live subscription over a newer ended one", () => {
+    const resubscribed = [{ status: "canceled" }, { status: "trialing" }, { status: "canceled" }];
+    expect(pickCurrentSubscription(resubscribed)).toEqual({ status: "trialing" });
+  });
+
+  it("falls back to the newest when none is live, and to null when there is none", () => {
+    const ended = [{ status: "canceled" }, { status: "incomplete_expired" }];
+    expect(pickCurrentSubscription(ended)).toEqual({ status: "canceled" });
+    expect(pickCurrentSubscription([])).toBeNull();
   });
 });
