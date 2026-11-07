@@ -21,10 +21,10 @@ export function resolveModel(role: CompanionRole): string {
 // Per-million-token USD rates for the pinned models above (checked against
 // platform.claude.com/docs/en/about-claude/pricing on 2026-11-05). Update alongside
 // MODELS whenever a pinned model changes -- quota math is meaningless against a stale
-// rate. Sonnet 5 is introductory pricing through 2026-08-31; revisit after that date.
+// rate.
 const RATES_PER_MTOK: Record<CompanionRole, { input: number; output: number }> = {
   fast: { input: 1, output: 5 }, // Haiku 4.5
-  standard: { input: 2, output: 10 }, // Sonnet 5 (introductory, through 2026-08-31)
+  standard: { input: 2, output: 10 }, // Sonnet 5 (standard price since Anthropic dropped the planned September 2026 increase)
   deep: { input: 4, output: 20 }, // Opus 5.5
 };
 
