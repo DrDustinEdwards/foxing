@@ -277,8 +277,9 @@ const CACHED_ACTIONS: CompanionAction[] = [
     role: "standard",
     systemPrompt: () =>
       "You write a short, factual author biography for a catalog page: who they were, when they " +
-      "wrote, and why this book matters in their body of work. A short paragraph. Open with what is " +
-      "distinctive about how they write, not their dates or birthplace, and do not end on their legacy.",
+      "wrote, and why this book matters in their body of work. One paragraph of at most 200 words. " +
+      "Open with what is distinctive about how they write, not their dates or birthplace, and do not " +
+      "end on their legacy.",
     buildContext: (ctx) => ({
       userContent: `Write a biography for ${ctx.book.author}, author of ${bookLine(ctx)}.`,
     }),
