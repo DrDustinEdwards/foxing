@@ -188,7 +188,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
           <>
             <BookGrid>
               {result.books.map((b, i) => (
-                <BookCard key={b.slug} book={b} position={i} />
+                <BookCard key={b.slug} book={b} position={i} headingLevel={2} />
               ))}
             </BookGrid>
             <Pagination filters={filters} result={result} query={query} />
