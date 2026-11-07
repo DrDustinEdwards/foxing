@@ -6,6 +6,7 @@
 // Order matters: API routes register before the React Router catch-all.
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
 import { WorkerEntrypoint } from "cloudflare:workers";
+import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import {
   ACCESS_LOGOUT_PATH,
@@ -56,6 +57,7 @@ import { cloudflareContext, cspNonceContext } from "../app/context";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { images } from "../app/lib/images";
+import { SITE_ORIGIN } from "../app/lib/origins";
 import {
   deleteUserAccount,
   getAuth,
@@ -585,6 +587,38 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
   return response;
 }
 
+// Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown,
+// and /llms-full.txt is every one of them in the sitemap's order. Only the pages a signed-out reader can read are listed
+// here; the catalog's 1,400 book pages and 650 author pages are a database, not prose, so they get no copy and stay out
+// of llms-full.txt, which leaves the hubs, the picks, the awards and the Journal.
+const COPIED = new Set([
+  "/",
+  "/about",
+  "/accessibility",
+  "/app-guide",
+  "/awards",
+  "/book-of-the-month",
+  "/books",
+  "/features",
+  "/guide",
+  "/journal",
+  "/journal/archive",
+  "/picks",
+  "/privacy",
+  "/terms",
+]);
+const COPIED_UNDER = ["/awards/", "/picks/", "/journal/"];
+const withMarkdownCopies = markdownCopies(
+  (request: Request, env: Env, ctx: ExecutionContext) => handleFetch(request, env, ctx),
+  {
+    origin: SITE_ORIGIN,
+    skip: (path) =>
+      path === "/journal/rss.xml" ||
+      path.startsWith("/journal/tag/") ||
+      !(COPIED.has(path) || COPIED_UNDER.some((prefix) => path.startsWith(prefix))),
+  },
+);
+
 // The admin pages and the browser admin APIs behind the same Access application.
 const ADMIN_PAGES = "/admin";
 const ADMIN_APIS = ["/api/v1/admin", "/api/v1/ops"];
@@ -647,7 +681,7 @@ export default {
         );
       return new URL(request.url).pathname === ADMIN_LIST_PATH
         ? adminList(request, env)
-        : withAdminIdleSignOut(request, env, () => handleFetch(request, env, ctx));
+        : withAdminIdleSignOut(request, env, () => withMarkdownCopies(request, env, ctx));
     },
     {
       sha: (env) => (env as { DEPLOY_SHA?: string }).DEPLOY_SHA,
