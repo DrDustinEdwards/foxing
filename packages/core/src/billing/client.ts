@@ -5,6 +5,7 @@
 // verification, since Workers has no synchronous crypto).
 import Stripe from "stripe";
 import { TRIAL_DAYS } from "./config";
+import { pickCurrentSubscription } from "./webhook";
 
 export type BillingCheckoutArgs = {
   priceId: string;
@@ -78,8 +79,6 @@ function readPeriodEnd(sub: Stripe.Subscription): number | null {
   return typeof item?.current_period_end === "number" ? item.current_period_end : null;
 }
 
-const ENDED = new Set(["canceled", "incomplete_expired"]);
-
 function lite(sub: Stripe.Subscription): BillingSubscriptionLite {
   return {
     status: sub.status,
@@ -152,7 +151,7 @@ export function createStripeBilling(config: StripeBillingConfig): BillingClient 
         status: "all",
         limit: 10,
       });
-      const current = data.find((s) => !ENDED.has(s.status)) ?? data[0];
+      const current = pickCurrentSubscription(data);
       return current ? lite(current) : null;
     },
   };
