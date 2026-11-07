@@ -566,12 +566,15 @@ async function queue(
       });
       message.ack();
     } catch (err) {
+      // A rate limit is the queue running ahead of the model's quota, not a fault: warn, and retry later
+      // (a minute longer each attempt) instead of at once. Anything else is an error.
+      const limited = err instanceof Error && err.message.includes("(rate_limited)");
       logEvent(
         "companion_cache_failed",
         { book_id: message.body.bookId, error: err },
-        { level: "error" },
+        { level: limited ? "warn" : "error" },
       );
-      message.retry();
+      message.retry(limited ? { delaySeconds: 60 * message.attempts } : undefined);
     }
   }
 }
