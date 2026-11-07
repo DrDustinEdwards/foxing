@@ -473,15 +473,29 @@ async function runPushSweep(env: Env): Promise<void> {
   await kv.put("push:last_sweep", String(now));
 }
 
+const CACHE_LAST_BATCH_KEY = "companion-cache:last-batch";
+
+// Enqueues the next books that need their cached actions. The generation runs in the queue consumer, so a
+// consumer whose model calls all fail would leave this job "ok" and /health green (the cache sat at 560 rows from
+// 2026-11-02 while every call failed). The books come back oldest-updated first, so a batch whose books are
+// ALL still uncached when the next run finds them means nothing was written: the job fails, and /health says so.
 async function enqueueCompanionCache(env: Env): Promise<void> {
   const db = createDb(env.DB);
   const limit = Number(env.COMPANION_CACHE_BATCH_SIZE) || 20;
   const books = await catalogRepo.findBooksNeedingCache(db, companion.CACHED_ACTION_NAMES, limit);
+  const ids = books.map((book) => book.id);
+  const last = ((await env.APP_KV.get(CACHE_LAST_BATCH_KEY, "json")) as string[] | null) ?? [];
+  const stalled = last.length > 0 && last.every((id) => ids.includes(id));
+  await env.APP_KV.put(CACHE_LAST_BATCH_KEY, JSON.stringify(ids));
   await Promise.all(
     books.map((book) =>
       env.COMPANION_CACHE_QUEUE.send({ bookId: book.id } satisfies CacheJobMessage),
     ),
   );
+  if (stalled)
+    throw new Error(
+      `the last batch of ${last.length} books is still uncached: the model calls are failing (see companion_cache_failed and anthropic_call in the logs)`,
+    );
 }
 
 // Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
