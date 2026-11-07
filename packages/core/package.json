@@ -21,7 +21,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.39.1",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.40.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.97.0",
     "@foxing/types": "*",
     "drizzle-orm": "^0.45.2",
