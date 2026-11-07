@@ -12,6 +12,7 @@
 // Everything else (versions, lists, lenses, history, revert, shrink, turns) is site-api's.
 
 import {
+  pictureLimits,
   datedKey,
   type MediaAdapter,
   type MediaLibraryStore,
@@ -31,20 +32,6 @@ type Revision = journalMediaRepo.JournalMediaRevision;
 /** What an upload shrinks to unless it says `resize=no`: Journal pages show a picture at most the
  * column's width, about 1,200 CSS pixels, so 2,560 keeps it sharp on a 2x screen. */
 const RESIZE = { maxEdge: 2560, quality: 85 };
-
-/** Large enough for a camera file, which the upload then shrinks. HEIC and HEIF are stored as JPEG. */
-const LIMITS = {
-  maxBytes: 20 * 1024 * 1024,
-  types: [
-    "image/jpeg",
-    "image/png",
-    "image/webp",
-    "image/avif",
-    "image/gif",
-    "image/heic",
-    "image/heif",
-  ],
-};
 
 const iso = (d: Date | null) => (d ? d.toISOString() : null);
 
@@ -175,7 +162,7 @@ export function journalMediaAdapter(options: {
     store: journalMediaStore(db),
     bucket: env.MEDIA,
     images: env.IMAGES,
-    limits: LIMITS,
+    limits: pictureLimits(),
     // Absolute, as the Journal's cover_image_url must be.
     url: (key) => `${SITE_ORIGIN}${journalMediaRepo.JOURNAL_MEDIA_PATH}${key}`,
     // journal/<yyyy>/<mm>/<name>-<hash>.<ext>: the only MEDIA prefix the /media route serves.
@@ -191,8 +178,5 @@ export function journalMediaAdapter(options: {
     onWrite: ({ op, id, changeId, newId }) =>
       audit(`journal-media.${op}`, { key: id, changeId, ...(newId ? { newId } : {}) }),
     suggest: (picture, id) => suggestFor(env, picture, id),
-    // The package checks every address and each redirect before this fetch runs.
-    importFetch: ((input: RequestInfo | URL, init?: RequestInit) =>
-      fetch(input, init)) as typeof fetch,
   });
 }
