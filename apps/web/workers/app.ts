@@ -588,9 +588,9 @@ async function handleFetch(request: Request, env: Env, ctx: ExecutionContext): P
 }
 
 // Prelum's markdownCopies: each public page has a Markdown copy at its path plus .md and answers Accept: text/markdown,
-// and /llms-full.txt is every one of them in the sitemap's order. Only the pages a signed-out reader can read are listed
-// here; the catalog's 1,400 book pages and 650 author pages are a database, not prose, so they get no copy and stay out
-// of llms-full.txt, which leaves the hubs, the picks, the awards and the Journal.
+// and /llms-full.txt is the prose pages in the sitemap's order. Only the pages a signed-out reader can read are listed
+// here. The catalog's 1,400 book pages and 650 author pages are database records an agent fetches one at a time, so each
+// has its copy but stays out of llms-full.txt, which leaves the hubs, the picks, the awards and the Journal.
 const COPIED = new Set([
   "/",
   "/about",
@@ -607,11 +607,13 @@ const COPIED = new Set([
   "/privacy",
   "/terms",
 ]);
-const COPIED_UNDER = ["/awards/", "/picks/", "/journal/"];
+const COPIED_UNDER = ["/awards/", "/picks/", "/journal/", "/books/", "/authors/"];
+const CATALOG = ["/books/", "/authors/"];
 const withMarkdownCopies = markdownCopies(
   (request: Request, env: Env, ctx: ExecutionContext) => handleFetch(request, env, ctx),
   {
     origin: SITE_ORIGIN,
+    llmsFullSkip: (path) => CATALOG.some((prefix) => path.startsWith(prefix)),
     skip: (path) =>
       path === "/journal/rss.xml" ||
       path.startsWith("/journal/tag/") ||
