@@ -78,7 +78,7 @@ describe("handleMcp", () => {
       annotations: Record<string, unknown>;
     }>;
     assert.deepEqual(listed.map((t) => t.name).sort(), TOOLS.map((t) => t.name).sort());
-    assert.equal(listed.length, 10);
+    assert.equal(listed.length, 12);
     for (const t of listed) {
       assert.match(t.name, /^foxing_[a-z_]+$/);
       for (const hint of ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]) {
@@ -104,12 +104,16 @@ describe("handleMcp", () => {
       publishedBotm: 1,
       recentSignups: [],
     };
-    foxing.reply({ body: stats });
+    foxing.reply({ body: stats }, { body: { days: 7, items: [] } });
     const message = await rpc("tools/call", { name: "foxing_get_health", arguments: {} });
-    assert.equal(foxing.calls.length, 1);
+    assert.equal(foxing.calls.length, 2);
     assert.equal(foxing.calls[0].url.pathname, "/api/v1/admin/stats");
     // The stats carry readers' text (recent sign-ups), so the shared data notice rides beside them (S2).
-    assert.deepEqual(message.result.structuredContent, { notice: OUTSIDE_DATA_NOTICE, ...stats });
+    assert.deepEqual(message.result.structuredContent, {
+      notice: OUTSIDE_DATA_NOTICE,
+      ...stats,
+      notFound: { days: 7, totalHits: 0, top: [] },
+    });
     assert.deepEqual(
       log.rows.map((r) => r.phase),
       ["started", "finished"],
@@ -121,7 +125,8 @@ describe("handleMcp", () => {
       (t: { name: string }) => t.name,
     );
     assert.ok(listed.includes("foxing_get_health"));
-    assert.ok(!listed.includes("foxing_edit_book"));
+    assert.ok(!listed.includes("foxing_edit_book") && !listed.includes("foxing_moderate_user"));
+    assert.ok(listed.includes("foxing_check_catalog"));
     // Every tool's scope is fixed, so the read grant's list is read-only throughout (the live check's T7).
     assert.ok(
       listed.includes("foxing_read_book_of_month") && !listed.includes("foxing_set_book_of_month"),

@@ -163,6 +163,84 @@ async function previewPlus(target: string, actor = "admin"): Promise<string> {
 const performPlus = (target: string, token: string, actor = "admin") =>
   post(`/admin/users/${target}/tier`, actor, { tier: "plus", confirm: token });
 
+describe("admin 404 report and catalog health", () => {
+  beforeEach(async () => {
+    const db = createDb(env.DB);
+    await db.delete(schema.profiles);
+    await db.delete(schema.user);
+    await db.delete(schema.books);
+    await env.DB.prepare("DELETE FROM page_404_daily").run();
+    await seedUser("admin");
+    await seedUser("reader");
+  });
+
+  const get = (pathname: string, user: string | null = "admin") =>
+    call(pathname, { headers: user ? { "x-test-user": user } : {} });
+
+  it("reports the counted 404s, most-hit first, with probes left out; admin only", async () => {
+    const day = Math.floor(Date.now() / 86_400_000) * 86_400_000;
+    const insert = env.DB.prepare(
+      "INSERT INTO page_404_daily (id, day, path, referrer_host, kind, hit_count) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+    );
+    await env.DB.batch([
+      insert.bind("a", day, "/old-page", "example.com", "page", 5),
+      insert.bind("b", day, "/other", "", "page", 2),
+      insert.bind("c", day, "/wp-login.php", "", "probe", 40),
+    ]);
+    const res = await get("/admin/not-found?days=7");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      days: number;
+      items: Array<{ path: string; hits: number }>;
+    };
+    expect(body.items.map((i) => [i.path, i.hits])).toEqual([
+      ["/old-page", 5],
+      ["/other", 2],
+    ]);
+    expect((await get("/admin/not-found", "reader")).status).toBe(403);
+    expect((await get("/admin/not-found?days=0")).status).toBe(422);
+  });
+
+  it("finds the catalog's problems: counts for every check, findings for the one asked", async () => {
+    const db = createDb(env.DB);
+    const base = {
+      author: "Jane Austen",
+      source: "gutenberg",
+      sourceType: "catalog",
+      language: "en",
+      description: "A novel.",
+      epubUrl: "https://covers.foxing.app/x.epub",
+      coverUrl: "https://covers.foxing.app/x.jpg",
+      publicationYear: 1813,
+      subjects: ["Fiction"],
+    };
+    await db.insert(schema.books).values([
+      { ...base, id: "ok", title: "Emma", slug: "emma" },
+      { ...base, id: "p1", title: "Pride and Prejudice", slug: "pride-1" },
+      { ...base, id: "p2", title: "The Pride & Prejudice", slug: "pride-2", coverUrl: null },
+      { ...base, id: "bad", title: "Persuasion", slug: "persuasion", isbn: "0306406153" },
+    ]);
+    const res = await get("/admin/catalog-health?check=duplicate_title_author");
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      checkedBooks: number;
+      checks: Array<{ check: string; count: number }>;
+      items: Array<{ bookId: string; check: string }>;
+    };
+    expect(body.checkedBooks).toBe(4);
+    const counts = Object.fromEntries(body.checks.map((c) => [c.check, c.count]));
+    expect(counts).toMatchObject({
+      duplicate_title_author: 2,
+      missing_cover: 1,
+      invalid_isbn: 1,
+      missing_description: 0,
+    });
+    expect(body.items.map((i) => i.bookId).sort()).toEqual(["p1", "p2"]);
+    expect((await get("/admin/catalog-health?check=nope")).status).toBe(422);
+    expect((await get("/admin/catalog-health", "reader")).status).toBe(403);
+  });
+});
+
 describe("admin role changes: preview then perform", () => {
   beforeEach(async () => {
     vi.useRealTimers();

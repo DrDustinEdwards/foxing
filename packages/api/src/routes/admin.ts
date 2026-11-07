@@ -6,7 +6,8 @@
 // plain result; the admin UI surfaces a visible error on non-2xx. Role and permission
 // changes (suspend, tier) are preview then perform; see below. Who is an admin is the
 // ADMIN_EMAILS setting alone, so no route grants or revokes it.
-import { adminRepo, type Db, deleteAccount } from "@foxing/core";
+import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
+import { adminRepo, CATALOG_CHECK_NAMES, type Db, deleteAccount } from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { z } from "zod";
@@ -152,6 +153,52 @@ adminRoutes.get("/admin/audit-log", async (c) => {
   return c.json(
     await page(query, (limit, offset) => adminRepo.listAuditLog(c.get("db"), limit, offset)),
   );
+});
+
+// The 404s the Worker counts per path and referring host (workers/app.ts countNotFound, pruned nightly by the
+// prune-404 job), site-runtime's report: most-hit first, scanner probes left out unless asked for.
+adminRoutes.get("/admin/not-found", async (c) => {
+  requireAdmin(c);
+  const query = parseQuery(
+    c,
+    z.object({
+      days: z.coerce.number().int().min(1).max(90).default(30),
+      limit: z.coerce.number().int().min(1).max(MAX_PAGE).default(20),
+      include_probes: z.enum(["true", "false"]).default("false"),
+    }),
+  );
+  const items = await notFoundReport(c.env.DB, {
+    days: query.days,
+    limit: query.limit,
+    includeProbes: query.include_probes === "true",
+  });
+  return c.json({ days: query.days, items });
+});
+
+// What is wrong with the catalog (core domain/catalog-health.ts): counts per check, and the findings, one page
+// at a time, errors first. `check` narrows the findings to one check; the counts always cover all.
+// Must match COVER_ORIGIN in apps/web/app/lib/origins.ts.
+const COVER_ORIGIN = "https://covers.foxing.app";
+
+adminRoutes.get("/admin/catalog-health", async (c) => {
+  requireAdmin(c);
+  const query = parseQuery(
+    c,
+    pageQuery.omit({ q: true }).extend({ check: z.enum(CATALOG_CHECK_NAMES).optional() }),
+  );
+  const health = await adminRepo.getCatalogHealth(c.get("db"), {
+    coverOrigin: COVER_ORIGIN,
+    only: query.check,
+  });
+  const { findings, ...rest } = health;
+  const rows = findings.slice(query.offset, query.offset + query.limit + 1);
+  const hasMore = rows.length > query.limit;
+  return c.json({
+    ...rest,
+    items: rows.slice(0, query.limit),
+    has_more: hasMore,
+    next_offset: hasMore ? query.offset + query.limit : null,
+  });
 });
 
 // ---- Users --------------------------------------------------------------------
