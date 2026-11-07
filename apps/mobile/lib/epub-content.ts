@@ -146,7 +146,7 @@ async function openEpub(remoteUrl: string): Promise<OpenedEpub> {
 // remaining tags. Block-level elements get a trailing newline so paragraph
 // boundaries survive into the text output, the sentence splitter in TtsBar
 // then divides those into individual utterances.
-function htmlToText(html: string): string {
+function epubHtmlToText(html: string): string {
   const noScript = html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "");
@@ -180,7 +180,7 @@ function htmlToParagraphs(html: string): string[] {
     if (text) blocks.push(text);
   }
   if (blocks.length > 0) return blocks;
-  return htmlToText(html)
+  return epubHtmlToText(html)
     .split(/\n\n+/)
     .map((p) => p.trim())
     .filter((p) => p.length > 0);
@@ -246,7 +246,7 @@ export async function getChapterContent(
   if (!file) return { text: "", paragraphs: [] };
   const html = await file.async("text");
   return {
-    text: htmlToText(html),
+    text: epubHtmlToText(html),
     paragraphs: htmlToParagraphs(html),
   };
 }
