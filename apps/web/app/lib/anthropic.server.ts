@@ -1,5 +1,5 @@
 // The one place the Worker builds the companion's model callers, on site-runtime's
-// Anthropic caller: its route (AI Gateway once AI_GATEWAY_BASE_URL is set), timeout, one
+// Anthropic caller: its route (straight to Anthropic), timeout, one
 // retry layer, stop-reason check and log line. A reply that did not finish (cut off,
 // refused, failed) throws here, so companion chat, Find next book and the catalog cache
 // queue never store or cache it as complete. Null with no key.
