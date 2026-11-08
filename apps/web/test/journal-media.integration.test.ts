@@ -1,6 +1,6 @@
 // The Journal's media library through the real Worker entry (workers/app.ts): Carrel's site API
 // with the key, and the /media/journal/* route that serves what it stores. Real D1 with the real
-// migrations and real local R2. Cloudflare Images and Workers AI have no local emulation, so both
+// migrations and real local R2. Cloudflare Images has no local emulation and Anthropic is not called from a test, so both
 // are stand-ins of their recorded shape: the image stand-in measures by the size it is given and
 // appends what it was asked to do, so its output differs from its input.
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
@@ -283,16 +283,38 @@ describe("Journal media: what Carrel's library reads", () => {
   it("suggests tags and alt text from the model, and applies neither", async () => {
     const item = await upload("suggest-case");
     const sent: string[] = [];
-    const AI = {
-      run: async (model: string, input: unknown) => {
-        sent.push(model, JSON.stringify(input));
-        return { response: { alt: "A stack of old books.", tags: ["Books", "books", "x y!"] } };
-      },
-    };
-    const res = await carrel("GET", `/media/${enc(item.id)}/suggestions`, undefined, { AI });
+    const realFetch = globalThis.fetch;
+    globalThis.fetch = (async (url: unknown, init?: { body?: string }) => {
+      sent.push(String(url), init?.body ?? "");
+      return Response.json({
+        id: "msg_1",
+        type: "message",
+        role: "assistant",
+        stop_reason: "end_turn",
+        content: [
+          {
+            type: "text",
+            text: JSON.stringify({
+              alt: "A stack of old books.",
+              tags: ["Books", "books", "x y!"],
+            }),
+          },
+        ],
+        usage: { input_tokens: 10, output_tokens: 20 },
+      });
+    }) as typeof fetch;
+    let res: Response;
+    try {
+      res = await carrel("GET", `/media/${enc(item.id)}/suggestions`, undefined, {
+        ANTHROPIC_API_KEY: "sk-ant-test",
+      });
+    } finally {
+      globalThis.fetch = realFetch;
+    }
     expect(res.status, await res.clone().text()).toBe(200);
     expect(await res.json()).toMatchObject({ alt: "A stack of old books.", tags: ["books"] });
-    expect(sent.join()).toContain("data:image/jpeg;base64,");
+    expect(sent[0]).toBe("https://api.anthropic.com/v1/messages");
+    expect(sent[1]).toContain('"media_type":"image/jpeg"');
     expect(await read<MediaDetail>(carrel("GET", `/media/${enc(item.id)}`))).toMatchObject({
       alt: "",
       tags: [],

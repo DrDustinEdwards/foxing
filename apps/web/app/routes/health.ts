@@ -1,6 +1,5 @@
 import { cronCheck } from "@dustinedwards/site-runtime/cron";
 import {
-  aiCheck,
   authSpikeCheck,
   durableObjectCheck,
   emailCheck,
@@ -19,11 +18,11 @@ import type { Route } from "./+types/health";
 // ALONE: without it no page, sign-in or API answer works, so 503 is true. Everything else warns,
 // because the catalog still renders without it: the newest dump or a files pass older than 26 hours
 // (under `backup`), the MEDIA and COVERS buckets, APP_KV, Images (cover and journal picture sizes),
-// Workers AI and the companion cache queue (the companion only), the ClubRoom and rate limiter
+// the companion cache queue (the companion only), the ClubRoom and rate limiter
 // Durable Objects (live club updates, and the API's limits), and a cron job that failed, overran,
 // went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts), and a spike of failed
 // sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck).
-// durableObjectCheck mints an id and sends nothing, queueCheck and emailCheck send nothing and aiCheck runs nothing, so none is
+// durableObjectCheck mints an id and sends nothing, queueCheck and emailCheck send nothing, so none is
 // billed or mails anyone. Left out: CARREL_RATE_LIMIT (the rate-limiting binding has no read, and a probe would spend
 // Carrel's budget). `sha` is the deployed commit, which CI's deploy passes as DEPLOY_SHA (devkit's worker-deploy.yml; a manual
 // deploy has none).
@@ -39,7 +38,6 @@ export function loader({ context }: Route.LoaderArgs) {
       r2Check("covers", env.COVERS),
       kvCheck("kv", env.APP_KV),
       imagesCheck("images", env.IMAGES),
-      aiCheck("ai", env.AI),
       emailCheck("email", env.EMAIL),
       queueCheck("companion-queue", env.COMPANION_CACHE_QUEUE),
       durableObjectCheck("club-room", env.CLUB_ROOM),
