@@ -4,7 +4,7 @@
 // These texts are public catalog pages, so a reply that did not finish (the caller throws)
 // or that trips a high prose finding (a refusal, a cutoff note, a blank, chatbot markup, a
 // blurb tell) is never written: the generation throws and the queue retries it.
-import { checkProse } from "@dustinedwards/site-runtime/prose";
+import { checkProse, OUT_OF_PLACE } from "@dustinedwards/site-runtime/prose";
 import type { Db } from "../db";
 import * as catalogBooksRepo from "../repositories/catalog/books";
 import * as companionRepo from "../repositories/companion";
@@ -66,7 +66,11 @@ export async function generateCachedActionsForBook(
       feature: "catalog-cache",
     });
 
-    const findings = checkProse(text).filter(
+    // A word on the stock list that is part of the book's own title or author ("Lyrical Ballads", "His
+    // Masterpiece") is a name, not a habit: the reply must be free to say it.
+    const own = `${book.title} ${book.author}`.toLowerCase();
+    const allow = OUT_OF_PLACE.filter((w) => own.includes(w));
+    const findings = checkProse(text, { allow }).filter(
       (i) => i.severity === "high" || i.severity === "critical",
     );
     if (findings.length) {
