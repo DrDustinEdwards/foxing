@@ -19,8 +19,8 @@ interface Env {
   // Not yet set (Phase 4a precheck, 2026-07-10): companion routes fall back to a
   // caller that errors cleanly until `wrangler secret put ANTHROPIC_API_KEY` runs.
   ANTHROPIC_API_KEY?: string;
-  // AI Gateway in front of the Anthropic calls (site-runtime's anthropicRoute): the
-  // gateway's .../anthropic endpoint and its authentication token. Unset: Anthropic directly.
+  // AI Gateway for the picture suggester's Workers AI calls (site-runtime ./ai-gateway): the
+  // gateway's endpoint and its authentication token. Claude calls never use it: they go straight to Anthropic.
   AI_GATEWAY_BASE_URL?: string;
   AI_GATEWAY_TOKEN?: string;
   // Not yet set (Phase 4b gate): billing routes use the not-configured stub (503) until

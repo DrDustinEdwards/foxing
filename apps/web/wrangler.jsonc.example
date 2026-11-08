@@ -48,7 +48,7 @@
   ],
   // The Journal's media library: Cloudflare Images measures, turns, mirrors and shrinks its
   // pictures (site-runtime ./image editImage), and Workers AI suggests their alt text and tags,
-  // through the AI Gateway that AI_GATEWAY_BASE_URL names when it is set.
+  // through the AI Gateway that AI_GATEWAY_BASE_URL names when it is set (Claude calls never use it).
   "images": { "binding": "IMAGES" },
   "ai": { "binding": "AI" },
   // The live layer: one ClubRoom Durable Object per club (fan-out only, never writes
