@@ -1,5 +1,5 @@
-// Tags and alt text a model suggests for a Journal picture: site-api's mediaSuggester (Workers AI,
-// through the site's AI Gateway when AI_GATEWAY_BASE_URL names one). Nothing here writes: a
+// Tags and alt text a model suggests for a Journal picture: site-api's mediaSuggester (Claude Haiku 5.5,
+// straight at Anthropic with ANTHROPIC_API_KEY). Nothing here writes: a
 // suggestion reaches the file only when a person accepts it in Carrel, as an alt or a tags write.
 // Only the Journal's own uploads, made with the Carrel key, are ever sent; no reader's data reaches
 // the model.

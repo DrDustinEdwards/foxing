@@ -47,10 +47,9 @@
     { "binding": "BACKUPS", "bucket_name": "foxing-backups" }
   ],
   // The Journal's media library: Cloudflare Images measures, turns, mirrors and shrinks its
-  // pictures (site-runtime ./image editImage), and Workers AI suggests their alt text and tags,
-  // through the AI Gateway that AI_GATEWAY_BASE_URL names when it is set (Claude calls never use it).
+  // pictures (site-runtime ./image editImage), and Claude Haiku 5.5 suggests their alt text and tags,
+  // straight at Anthropic with the secret ANTHROPIC_API_KEY.
   "images": { "binding": "IMAGES" },
-  "ai": { "binding": "AI" },
   // The live layer: one ClubRoom Durable Object per club (fan-out only, never writes
   // D1). See workers/club-room.ts. RATE_LIMITER is site-runtime's exact counter behind
   // @foxing/api's rateLimit (packages/api/src/middleware/rate-limit.ts).
