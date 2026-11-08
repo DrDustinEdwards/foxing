@@ -294,7 +294,10 @@ describe("Journal media: what Carrel's library reads", () => {
         content: [
           {
             type: "text",
-            text: JSON.stringify({ alt: "A stack of old books.", tags: ["Books", "books", "x y!"] }),
+            text: JSON.stringify({
+              alt: "A stack of old books.",
+              tags: ["Books", "books", "x y!"],
+            }),
           },
         ],
         usage: { input_tokens: 10, output_tokens: 20 },
