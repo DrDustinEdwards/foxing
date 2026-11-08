@@ -1,4 +1,20 @@
 {
+  "libraries": {
+    "rehype-autolink-headings": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "rehype-slug": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "rehype-stringify": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "remark-directive": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "remark-gfm": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "remark-parse": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "remark-rehype": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "remark-smartypants": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "unified": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "hast-util-from-html": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "hast-util-to-mdast": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "hast-util-to-string": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "mdast-util-gfm": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them",
+    "mdast-util-to-markdown": "peer of Prelum's ./render/nomath and ./markdown-copy, which render the Journal and write each page's Markdown copy; npm installs an optional peer only when the app declares it, and Foxing's own code imports none of them"
+  },
   "spelling": {
     "contracts": [
       "\\w+[cC]ancelled\\w*|[cC]ancelled[A-Z_]\\w*|CANCELLED",
