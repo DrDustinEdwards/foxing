@@ -117,6 +117,10 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+/* The series page lists its parts in an ol; each item holds one card, at the row's height. */
+.fx-journal-tag-grid > li {
+  display: grid;
+}
 .fx-journal-tag-card {
   display: flex;
   flex-direction: column;

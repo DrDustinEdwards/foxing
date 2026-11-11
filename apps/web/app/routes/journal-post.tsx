@@ -8,13 +8,35 @@ import { pictureProps } from "@dustinedwards/site-runtime/image";
 import { renderJournalBody } from "~/lib/journal-body.server";
 import { journalArticleImages, journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { articleLd, buildMeta, ldJson } from "~/lib/seo";
+import { articleLd, buildMeta, journalSeriesPath, ldJson } from "~/lib/seo";
+import { SeriesNav } from "capsomer/react/series-nav";
+import "~/styles/journal-series.css";
 import type { Route } from "./+types/journal-post";
 import { markup } from "capsomer/behavior/trusted-html";
 
 function fmtDate(d: Date | null): string | null {
   if (!d) return null;
   return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+}
+
+// The series nav's parts: the live posts of the series in reading order. A Carrel preview of a part
+// not yet live joins at its part number, so the preview shows the nav the post will have.
+function seriesNav(
+  post: { slug: string; title: string; series: string | null; seriesPart: number | null },
+  live: Array<{ slug: string; title: string; seriesPart: number | null }>,
+) {
+  const parts = live.some((p) => p.slug === post.slug)
+    ? live
+    : [...live, post].sort(
+        (a, b) =>
+          (a.seriesPart ?? Number.POSITIVE_INFINITY) - (b.seriesPart ?? Number.POSITIVE_INFINITY),
+      );
+  return {
+    name: post.series ?? "",
+    href: journalSeriesPath(post.series ?? ""),
+    current: `/journal/${post.slug}`,
+    parts: parts.map((p) => ({ href: `/journal/${p.slug}`, title: p.title })),
+  };
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -41,7 +63,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     throw new Response("Not found", { status: 404 });
   }
 
-  const [cover, articleImages, credits] = await Promise.all([
+  const [cover, articleImages, author, seriesParts] = await Promise.all([
     post.coverImageUrl
       ? journalCovers(db, [post.coverImageUrl]).then((covers) =>
           covers.get(post.coverImageUrl ?? ""),
@@ -49,7 +71,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       : undefined,
     // The Article's picture is the cover, else the share image Carrel set.
     journalArticleImages(db, post.coverImageUrl ?? post.ogImageUrl),
-    catalogRepo.getJournalCredits(db, post),
+    catalogRepo.getJournalAuthor(db, post),
+    post.series ? catalogRepo.listJournalSeriesParts(db, post.series) : [],
   ]);
 
   return {
@@ -58,15 +81,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     articleImages,
     preview: preview !== null,
     // The byline names a staff member only when the post credits one; otherwise it is Foxing's.
-    author: credits.author,
-    series: post.series
-      ? {
-          name: post.series,
-          part: post.seriesPart,
-          // A part past the live count (a later part published first) still reads sensibly.
-          total: Math.max(credits.seriesTotal ?? 1, post.seriesPart ?? 1),
-        }
-      : null,
+    author,
+    series: post.series ? seriesNav(post, seriesParts) : null,
     post: {
       slug: post.slug,
       title: post.title,
@@ -147,13 +163,6 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
           <header className="mb-8">
             <Eyebrow>The Journal</Eyebrow>
             <h1 className="mt-3 fx-journal-post-title">{post.title}</h1>
-            {series ? (
-              <p className="mt-2 fx-journal-post-row">
-                {series.part
-                  ? `Part ${series.part} of ${series.total} in ${series.name}`
-                  : `Part of ${series.name}`}
-              </p>
-            ) : null}
             <div className="mt-4 fx-journal-post-row">
               {author ? (
                 <span>
@@ -184,6 +193,8 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
               })}
             />
           ) : null}
+
+          {series ? <SeriesNav {...series} /> : null}
 
           {/* Raw HTML: trusted CMS markdown. */}
           <div className="article-prose e-content" dangerouslySetInnerHTML={markup(html)} />

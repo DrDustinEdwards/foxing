@@ -32,6 +32,11 @@ export function journalTagPath(tag: string): string {
   return `/journal/tag/${encodeURIComponent(tag)}`;
 }
 
+/** A journal series' page, every part in order. Series names are free text, encoded like tags. */
+export function journalSeriesPath(series: string): string {
+  return `/journal/series/${encodeURIComponent(series)}`;
+}
+
 /** Prelum's head builder with the site-wide share card (routes/og-site.tsx), for a page without a card
  *  of its own. A long title drops the suffix and is cut at a word for search; the share card keeps it whole. */
 const head = defineHead({
