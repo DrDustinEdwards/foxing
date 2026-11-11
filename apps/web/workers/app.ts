@@ -18,7 +18,7 @@ import {
 } from "@dustinedwards/site-runtime/access";
 import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import type { CronJob } from "@dustinedwards/site-runtime/cron";
-import { UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
+import { authHandler } from "@dustinedwards/site-runtime/sign-in-form";
 import { IMMUTABLE_CACHE } from "@dustinedwards/site-runtime/image";
 import { r2ObjectResponse } from "@dustinedwards/site-runtime/r2-object";
 import { logEvent } from "@dustinedwards/site-runtime/log";
@@ -199,14 +199,8 @@ mountCarrel(app, (request, context) => reactRouterHandler(request, context));
 
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
 // minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and
-// passkey challenges, so no browser or proxy keeps one (checklist D10).
-app.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  const answer = await (await getAuth(c.env)).handler(c.req.raw);
-  // A copy, since a redirect's headers are immutable.
-  const res = new Response(answer.body, answer);
-  if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", UNCACHED);
-  return res;
-});
+// passkey challenges, so no browser or proxy keeps one (checklist D10): site-runtime authHandler.
+app.on(["GET", "POST"], "/api/auth/*", async (c) => authHandler(await getAuth(c.env), c.req.raw));
 
 // Every write is an /api/v1 route (the admin API included), none reached through React Router's
 // own Origin check, so a browser write from another origin is refused here. An absent Origin

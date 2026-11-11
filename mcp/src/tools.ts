@@ -35,6 +35,7 @@ import { z } from "zod";
 import { ApiLegError, callAdmin, type ApiCallResult, type ApiEnv } from "./api-client";
 import { confirmationFor, isConfirmed } from "./confirm";
 
+import { errorMessage } from "@dustinedwards/site-runtime/log";
 export type ToolEnv = Partial<ApiEnv> & Partial<AuditEnv> & { ADMIN_EMAIL?: string };
 
 /** The MCP content shape a tool returns. */
@@ -97,7 +98,7 @@ function wrapperFailure(cause: unknown): ToolOutput {
   console.error(
     JSON.stringify({
       tool_failure: kind,
-      error: cause instanceof Error ? cause.message : String(cause),
+      error: errorMessage(cause),
     }),
   );
   const message =
