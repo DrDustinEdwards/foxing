@@ -34,6 +34,7 @@ function sitePolicy(nonce?: string): SitePolicy {
     // React style={{...}} props render style="" attributes, which a nonce cannot cover.
     styleAttributesInline: true,
     cloudflareWebAnalytics: true,
+    trustedTypes: TRUSTED_TYPES_NAMES,
   };
 }
 
@@ -66,19 +67,20 @@ function readerPolicy(nonce?: string): SitePolicy {
     nonceStyles: false,
     baseUriSelf: true,
     cloudflareWebAnalytics: true,
+    trustedTypes: TRUSTED_TYPES_NAMES,
   };
 }
 
 // The glue every site shares (site-runtime ./page-headers): the header set beside the policy, its Report-Only companion
 // and Reporting-Endpoints, Cross-Origin-Resource-Policy by type, and a fresh nonce per reader for a page the edge cache
-// stored. A route's own Content-Security-Policy wins. What the registry entry stages (Trusted Types, default-src 'none')
-// rides Report-Only beside the policy.
+// stored. A route's own Content-Security-Policy wins. Trusted Types is enforced in both policies above; what the registry
+// entry still stages (default-src 'none') rides Report-Only beside the policy.
 const page = pageSecurity({
   set: securityHeaders,
   // The reader's policy is for the document /read/:slug renders; a response with no nonce is not that document.
   policy: ({ nonce, url }) =>
     nonce !== undefined && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce),
-  staged: { trustedTypes: TRUSTED_TYPES_NAMES, denyUnlisted: true },
+  staged: { denyUnlisted: true },
   corp: true,
   renew: true,
 });
