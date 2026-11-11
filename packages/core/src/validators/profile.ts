@@ -22,8 +22,8 @@ export const updateMeInput = z
   .object({
     displayName: z.string().trim().max(80).nullable(),
     bio: z.string().max(500).nullable(),
-    avatarUrl: z.string().url().nullable(),
-    backdropUrl: z.string().url().nullable(),
+    avatarUrl: z.url({ protocol: /^https?$/ }).nullable(),
+    backdropUrl: z.url({ protocol: /^https?$/ }).nullable(),
     customUrl: z.string().max(120).nullable(),
     favoriteGenres: z.array(z.string().max(40)).max(20).nullable(),
     languagePreference: z.string().max(10).nullable(),

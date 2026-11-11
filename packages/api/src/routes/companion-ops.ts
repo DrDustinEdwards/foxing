@@ -3,7 +3,7 @@
 // admin list (ADMIN_EMAIL and CO_OWNER_EMAILS, core isAdminAccount, applied by profileMw) like /admin/*.
 import { Hono } from "hono";
 import { companion } from "@foxing/core";
-import { AppError, errors } from "../error";
+import { errors } from "../error";
 import { readBody, requireSession } from "../http";
 import type { Env } from "../types";
 
@@ -20,16 +20,21 @@ companionOpsRoutes.post("/ops/companion-cache-batch", async (c) => {
   const profile = c.get("profile");
   if (!profile?.isAdmin) throw errors.forbidden("Admin only.");
 
-  const body = await readBody(c)
-    .then(JSON.parse)
-    .catch((err) => {
-      if (err instanceof AppError) throw err;
-      return {};
-    });
+  // An empty body takes the default; a body that is not JSON is refused before any paid call, instead of
+  // running the default five-book batch.
+  const text = await readBody(c);
+  let body: { limit?: unknown } = {};
+  if (text.trim()) {
+    try {
+      body = JSON.parse(text) as { limit?: unknown };
+    } catch {
+      throw errors.validation({ body: "not JSON" });
+    }
+  }
   const limit = Math.min(MAX_BATCH, Math.max(1, Number(body?.limit) || 5));
 
   const streamCompanion = c.get("streamCompanion");
-  const results = await companion.runCacheBatch(c.get("db"), streamCompanion, limit);
+  const { results, failures } = await companion.runCacheBatch(c.get("db"), streamCompanion, limit);
 
   const totalCostCents = results.reduce((sum, r) => sum + r.costCents, 0);
   return c.json({
@@ -37,5 +42,6 @@ companionOpsRoutes.post("/ops/companion-cache-batch", async (c) => {
     actionsGenerated: results.length,
     totalCostCents,
     results,
+    failures,
   });
 });

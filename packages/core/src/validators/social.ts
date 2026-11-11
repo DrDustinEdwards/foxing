@@ -34,7 +34,11 @@ export type UpdateDiaryInput = z.infer<typeof updateDiaryInput>;
 export const createListInput = z.object({
   title: z.string().min(1).max(200),
   description: z.string().max(4000).nullable().optional(),
-  coverUrl: z.string().url().max(2000).nullable().optional(),
+  coverUrl: z
+    .url({ protocol: /^https?$/ })
+    .max(2000)
+    .nullable()
+    .optional(),
   isPublic: z.boolean().optional(),
 });
 export type CreateListInput = z.infer<typeof createListInput>;
@@ -43,7 +47,11 @@ export const updateListInput = z
   .object({
     title: z.string().min(1).max(200).optional(),
     description: z.string().max(4000).nullable().optional(),
-    coverUrl: z.string().url().max(2000).nullable().optional(),
+    coverUrl: z
+      .url({ protocol: /^https?$/ })
+      .max(2000)
+      .nullable()
+      .optional(),
     isPublic: z.boolean().optional(),
   })
   .refine((v) => Object.keys(v).length > 0, { message: "no fields to update" });

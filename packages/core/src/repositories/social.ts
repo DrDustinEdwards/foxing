@@ -3,7 +3,8 @@
 // authorization and no event emission (those live in domain/social.ts). Reads run
 // in-process from web/mobile loaders; writes are called by the API after the domain
 // layer authorized them.
-import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
+import { olderThan } from "@dustinedwards/site-runtime/d1";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { uniqueSlug } from "../domain/slug";
 import {
@@ -255,17 +256,25 @@ export async function removeBookFromList(db: Db, listId: string, bookId: string)
 export async function listActivityByAuthors(
   db: Db,
   authorIds: string[],
-  opts: { cursor?: number | null; limit?: number } = {},
+  opts: { cursor?: { at: number; id: string } | null; limit?: number } = {},
 ): Promise<ActivityEvent[]> {
   if (authorIds.length === 0) return [];
   const limit = Math.min(opts.limit ?? 40, 100);
   const conds = [inArray(activityEvents.userId, authorIds)];
-  if (opts.cursor) conds.push(lt(activityEvents.createdAt, new Date(opts.cursor)));
+  if (opts.cursor)
+    conds.push(
+      olderThan(
+        activityEvents.createdAt,
+        activityEvents.id,
+        new Date(opts.cursor.at),
+        opts.cursor.id,
+      ),
+    );
   return db
     .select()
     .from(activityEvents)
     .where(and(...conds))
-    .orderBy(desc(activityEvents.createdAt))
+    .orderBy(desc(activityEvents.createdAt), desc(activityEvents.id))
     .limit(limit);
 }
 
@@ -274,16 +283,24 @@ export async function listActivityByAuthors(
 export async function listFollowerNotifications(
   db: Db,
   viewerId: string,
-  opts: { cursor?: number | null; limit?: number } = {},
+  opts: { cursor?: { at: number; id: string } | null; limit?: number } = {},
 ): Promise<FollowerNotification[]> {
   const limit = Math.min(opts.limit ?? 40, 100);
   const conds = [eq(notifications.userId, viewerId), eq(notifications.type, "new_follower")];
-  if (opts.cursor) conds.push(lt(notifications.createdAt, new Date(opts.cursor)));
+  if (opts.cursor)
+    conds.push(
+      olderThan(
+        notifications.createdAt,
+        notifications.id,
+        new Date(opts.cursor.at),
+        opts.cursor.id,
+      ),
+    );
   return db
     .select()
     .from(notifications)
     .where(and(...conds))
-    .orderBy(desc(notifications.createdAt))
+    .orderBy(desc(notifications.createdAt), desc(notifications.id))
     .limit(limit);
 }
 
