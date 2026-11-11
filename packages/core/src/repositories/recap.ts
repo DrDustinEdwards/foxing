@@ -1,9 +1,10 @@
 // Year in Reading data access. Reads the books a user finished within a
-// calendar year (UTC), with the detail the recap + OG image need. Rating overlays come
+// calendar year in the reader's own timezone (UTC without one), with the detail the recap + OG image need. Rating overlays come
 // from diaryRepo. Pure DB reads; the domain assembles the recap payload.
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 import type { Db } from "../db";
 import { books, userBooks } from "../schema";
+import { periodRange } from "./library";
 
 export type FinishedBook = {
   bookId: string;
@@ -19,9 +20,11 @@ export async function listFinishedInYear(
   db: Db,
   userId: string,
   year: number,
+  timezone: string | null = null,
 ): Promise<FinishedBook[]> {
-  const start = new Date(Date.UTC(year, 0, 1));
-  const end = new Date(Date.UTC(year + 1, 0, 1));
+  // The same local year as the recap's monthly chart (views/library finishedSpread) and the year goal, so the count and
+  // the chart agree for a finish late on Dec 31 or early on Jan 1.
+  const { start, end } = periodRange("year", year, null, null, timezone);
   return db
     .select({
       bookId: userBooks.bookId,

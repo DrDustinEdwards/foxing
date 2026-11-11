@@ -25,8 +25,13 @@ export type Recap = {
   finished: RecapBook[]; // all finishes, oldest first
 };
 
-export async function getRecap(db: Db, userId: string, year: number): Promise<Recap> {
-  const finishedRows = await recapRepo.listFinishedInYear(db, userId, year);
+export async function getRecap(
+  db: Db,
+  userId: string,
+  year: number,
+  timezone: string | null = null,
+): Promise<Recap> {
+  const finishedRows = await recapRepo.listFinishedInYear(db, userId, year, timezone);
 
   // Overlay each finish with the user's latest rating for that book, all in one query.
   const ratings = await diaryRepo.latestRatingsForBooks(

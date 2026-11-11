@@ -2,6 +2,7 @@
 // close friends, sign-in (passkeys, Google and Apple), signed-in devices, data export, and
 // account deletion. Every write shows a visible pending + role=alert error, never a silent no-op.
 import { readCapped } from "@dustinedwards/site-runtime/body";
+import { securityHistoryWords } from "@dustinedwards/site-runtime/sign-in-words";
 import {
   accountSessions,
   needsSecondPasskey,
@@ -9,7 +10,6 @@ import {
   passkeyRows,
   revokeSessionById,
   securityHistory,
-  type SecurityHistoryEntry,
   signInMethods,
 } from "@dustinedwards/site-runtime/sign-in";
 import { createDb, views } from "@foxing/core";
@@ -103,7 +103,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       ],
     },
     activity: history.map((h) => ({
-      what: activityLabel(h),
+      what: securityHistoryWords(h),
       when: `${dateTimeLabel.format(h.at)} UTC`,
       device: h.device,
       location: h.location,
@@ -149,35 +149,6 @@ const dateTimeLabel = new Intl.DateTimeFormat("en-US", {
   timeStyle: "short",
   timeZone: "UTC",
 });
-
-const WAY_IN: Record<string, string> = {
-  link: "an email link",
-  code: "an email code",
-  passkey: "a passkey",
-  google: "Google",
-  apple: "Apple",
-};
-
-/** One line of the security history, in plain words. */
-function activityLabel({ kind, via }: SecurityHistoryEntry): string {
-  const way = via ? (WAY_IN[via] ?? via) : null;
-  switch (kind) {
-    case "sign-in":
-      return way ? `Signed in with ${way}` : "Signed in";
-    case "passkey-added":
-      return "Passkey added";
-    case "passkey-removed":
-      return "Passkey removed";
-    case "sign-in-linked":
-      return way ? `${way} connected` : "Sign-in method connected";
-    case "sign-in-unlinked":
-      return way ? `${way} disconnected` : "Sign-in method disconnected";
-    case "email-changed":
-      return "Email changed";
-    case "recovery":
-      return "Signed in by email with no passkey left; other devices signed out";
-  }
-}
 
 export function meta() {
   return [{ title: "Settings | Foxing" }, { name: "robots", content: "noindex" }];
