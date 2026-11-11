@@ -1,0 +1,4 @@
+{
+  "dirs": ["apps/web/app", "apps/mobile", "apps/discord"],
+  "declared_in": ["node_modules/capsomer"]
+}
