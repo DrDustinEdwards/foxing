@@ -1,53 +1,23 @@
 /* The Journal: the index, archive, tag pages and a post. */
 
-/* Journal article prose: Source Serif body on a comfortable measure. */
-.article-prose {
-  font-family: var(--fx-body);
-  font-size: 1.1875rem;
-  line-height: 1.75;
-  color: var(--muted);
-}
-.article-prose > * + * {
-  margin-block-start: 1.25em;
-}
-.article-prose :is(h2, h3) {
-  font-family: var(--display);
-  color: var(--text);
-  line-height: 1.2;
-  margin-block-start: 1.8em;
-}
-.article-prose h2 {
-  font-size: 1.6rem;
-}
-.article-prose h3 {
-  font-size: 1.3rem;
-}
-.article-prose a {
-  color: var(--accent-text);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-.article-prose strong {
-  color: var(--text);
-  font-weight: 600;
-}
-.article-prose blockquote {
-  border-inline-start: 3px solid var(--accent-line);
-  padding-inline-start: 1.1rem;
-  font-style: italic;
-  color: var(--dim);
-}
-.article-prose :is(ul, ol) {
-  padding-inline-start: 1.3rem;
-}
-.article-prose ul {
-  list-style: disc;
-}
-.article-prose ol {
-  list-style: decimal;
-}
-.article-prose li + li {
-  margin-block-start: 0.4em;
+/* Journal article prose: Capsomer's prose blocks (capsomer/prose-blocks.css) on data-context="prose",
+   in Foxing's reading look, set by token. Source Serif body on a comfortable measure. */
+.article-prose[data-context="prose"] {
+  --prose: var(--fx-body);
+  --fs-prose: 1.1875rem;
+  --leading: 1.75;
+  --prose-ink: var(--muted);
+  --prose-strong-ink: var(--text);
+  --prose-heading-face: var(--display);
+  --prose-heading-ink: var(--text);
+  --prose-heading-space: 1.8em;
+  --prose-h2-size: 1.6rem;
+  --prose-h3-size: 1.3rem;
+  --prose-flow: 1.25em;
+  --prose-quote-line: var(--accent-line);
+  --prose-quote-ink: var(--dim);
+  --prose-quote-style: italic;
+  --link-decoration: underline;
 }
 
 .fx-journal-archive-stack {
