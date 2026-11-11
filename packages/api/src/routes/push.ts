@@ -39,7 +39,7 @@ pushRoutes.get("/notifications", async (c) => {
   const session = requireSession(c);
   const cursor = c.req.query("cursor");
   return c.json(
-    await views.notifications(c.get("db"), session.id, { cursor: cursor ? Number(cursor) : null }),
+    await views.notifications(c.get("db"), session.id, { cursor: cursor ?? null }),
   );
 });
 

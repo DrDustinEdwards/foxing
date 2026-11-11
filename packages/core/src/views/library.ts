@@ -2,6 +2,7 @@
 // notifications in their /api/v1 wire shape (@foxing/types). One function per view,
 // called by the web loader in-process and by the matching GET route, so the page's
 // first paint and every later refetch are the same object.
+import { decodeCursor, encodeCursor } from "@dustinedwards/site-runtime/d1";
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import * as annotationsRepo from "../repositories/annotations";
@@ -198,10 +199,11 @@ export async function myBook(db: Db, userId: string, bookId: string): Promise<W.
 export async function notifications(
   db: Db,
   userId: string,
-  opts: { cursor?: number | null; limit?: number } = {},
+  opts: { cursor?: string | null; limit?: number } = {},
 ): Promise<W.NotificationsPage> {
+  const limit = Math.min(opts.limit ?? 50, 100);
   const [rows, unread] = await Promise.all([
-    notificationsRepo.listForUser(db, userId, { cursor: opts.cursor, limit: opts.limit ?? 50 }),
+    notificationsRepo.listForUser(db, userId, { cursor: decodeCursor(opts.cursor), limit }),
     notificationsRepo.unreadCount(db, userId),
   ]);
   return {
@@ -215,6 +217,8 @@ export async function notifications(
       createdAt: n.createdAt.getTime(),
     })),
     unread,
+    nextCursor:
+      rows.length === limit ? encodeCursor(rows[limit - 1]!.createdAt.getTime(), rows[limit - 1]!.id) : null,
   };
 }
 
