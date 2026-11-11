@@ -554,7 +554,7 @@
   font-size: 0.75rem;
   line-height: 1rem;
   color: var(--text);
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }

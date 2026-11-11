@@ -137,12 +137,12 @@ function single(
  */
 const CURSOR = /^c([0-9]{1,7})$/;
 
-export function encodeCursor(offset: number): string {
+export function encodeOffsetCursor(offset: number): string {
   return base64url(`c${offset}`);
 }
 
 /** The offset a cursor names, or null for anything this server did not issue. */
-export function decodeCursor(cursor: string): number | null {
+export function decodeOffsetCursor(cursor: string): number | null {
   if (!/^[A-Za-z0-9_-]{1,16}$/.test(cursor)) return null;
   try {
     const match = CURSOR.exec(atob(cursor.replace(/-/g, "+").replace(/_/g, "/")));
@@ -153,7 +153,7 @@ export function decodeCursor(cursor: string): number | null {
 }
 
 const offsetOf = (args: Record<string, unknown>) =>
-  typeof args.cursor === "string" ? (decodeCursor(args.cursor) ?? 0) : 0;
+  typeof args.cursor === "string" ? (decodeOffsetCursor(args.cursor) ?? 0) : 0;
 
 /** Pages a list the API returns whole ({ items }), keeping has_more and next_cursor honest. */
 function pageOf(items: unknown[], limit: number, offset: number) {
@@ -162,7 +162,7 @@ function pageOf(items: unknown[], limit: number, offset: number) {
     items: items.slice(offset, offset + limit),
     total: items.length,
     has_more: hasMore,
-    next_cursor: hasMore ? encodeCursor(offset + limit) : null,
+    next_cursor: hasMore ? encodeOffsetCursor(offset + limit) : null,
   };
 }
 
@@ -179,7 +179,7 @@ function apiPageResult(
     if (!result.ok) return refusal(result);
     const { next_offset: next, ...rest } = (result.data ?? {}) as Record<string, unknown>;
     return ok(
-      { ...rest, next_cursor: typeof next === "number" ? encodeCursor(next) : null },
+      { ...rest, next_cursor: typeof next === "number" ? encodeOffsetCursor(next) : null },
       outside,
     );
   });
@@ -281,7 +281,7 @@ const cursorSchema = z
   .string()
   .max(16)
   .refine(
-    (c) => decodeCursor(c) !== null,
+    (c) => decodeOffsetCursor(c) !== null,
     "Invalid cursor: pass next_cursor from the previous page unchanged.",
   )
   .optional()
@@ -332,8 +332,18 @@ const botmFields = {
   book_id: z.string().min(1).max(100).nullable().optional().describe("The book's id, or null."),
   category: z.string().max(200).nullable().optional(),
   curator_note: z.string().max(5000).nullable().optional().describe("Foxing's note on the pick."),
-  bookshop_url: z.string().url().max(1000).nullable().optional().describe("Bookshop.org link."),
-  amazon_url: z.string().url().max(1000).nullable().optional().describe("Amazon link."),
+  bookshop_url: z
+    .url({ protocol: /^https?$/ })
+    .max(1000)
+    .nullable()
+    .optional()
+    .describe("Bookshop.org link."),
+  amazon_url: z
+    .url({ protocol: /^https?$/ })
+    .max(1000)
+    .nullable()
+    .optional()
+    .describe("Amazon link."),
 };
 
 function botmBody(args: Record<string, unknown>): Record<string, unknown> {

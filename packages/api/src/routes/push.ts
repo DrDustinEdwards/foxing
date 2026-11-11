@@ -38,9 +38,7 @@ pushRoutes.delete("/push/:token", rateLimit("write"), async (c) => {
 pushRoutes.get("/notifications", async (c) => {
   const session = requireSession(c);
   const cursor = c.req.query("cursor");
-  return c.json(
-    await views.notifications(c.get("db"), session.id, { cursor: cursor ? Number(cursor) : null }),
-  );
+  return c.json(await views.notifications(c.get("db"), session.id, { cursor: cursor ?? null }));
 });
 
 pushRoutes.post("/notifications/read", rateLimit("write"), async (c) => {

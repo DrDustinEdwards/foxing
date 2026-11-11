@@ -1,24 +1,13 @@
 import { drizzle } from "drizzle-orm/d1";
 import { getTableColumns } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { chunked, D1_MAX_BOUND_PARAMS, IN_LIST_CHUNK, rowsPerInsert } from "../src/db";
+import { D1_MAX_BOUND_PARAMS, rowsPerInsert } from "../src/db";
 import { notifications } from "../src/schema";
 
 // D1 refuses a statement with more than 100 bound parameters. A broadcast once
-// inserted 200 notification rows at a time and failed past about 14 readers.
+// inserted 200 notification rows at a time and failed past about 14 readers. chunked and rowsPerInsert
+// themselves are tested in site-runtime ./d1; this proves the notifications table fits.
 describe("D1 chunking", () => {
-  it("splits in order and keeps every item", () => {
-    const items = Array.from({ length: 205 }, (_, i) => i);
-    const parts = chunked(items);
-    expect(parts.map((p) => p.length)).toEqual([IN_LIST_CHUNK, IN_LIST_CHUNK, 25]);
-    expect(parts.flat()).toEqual(items);
-    expect(chunked([])).toEqual([]);
-  });
-
-  it("an IN list chunk stays under the limit", () => {
-    expect(IN_LIST_CHUNK).toBeLessThanOrEqual(D1_MAX_BOUND_PARAMS);
-  });
-
   it("a full notifications insert chunk binds at most 100 parameters", () => {
     const db = drizzle({} as D1Database);
     const columns = Object.keys(getTableColumns(notifications)).length;

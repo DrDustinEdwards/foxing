@@ -8,7 +8,7 @@ import { beforeEach, describe, test } from "node:test";
 
 import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
 
-import { encodeCursor, TOOLS, type ToolEnv } from "../src/tools.ts";
+import { encodeOffsetCursor, TOOLS, type ToolEnv } from "../src/tools.ts";
 import { FOXING_ADMIN_ID, TOKEN, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
 
 let foxing: FakeFoxing;
@@ -107,9 +107,9 @@ describe("what each tool sends", () => {
     const page = await call("foxing_find_user", {
       query: "ada",
       limit: 5,
-      cursor: encodeCursor(10),
+      cursor: encodeOffsetCursor(10),
     });
-    assert.equal(page.structuredContent?.next_cursor, encodeCursor(15));
+    assert.equal(page.structuredContent?.next_cursor, encodeOffsetCursor(15));
     assert.equal(page.structuredContent?.next_offset, undefined);
     await call("foxing_inspect_book", { query: "Persuasion" });
     assert.equal(path(0), "GET /api/v1/admin/users?q=ada&limit=5&offset=10");
@@ -198,7 +198,7 @@ describe("what each tool sends", () => {
       items: [1, 2],
       total: 3,
       has_more: true,
-      next_cursor: encodeCursor(2),
+      next_cursor: encodeOffsetCursor(2),
     });
   });
 
@@ -219,7 +219,12 @@ describe("what each tool sends", () => {
     assert.deepEqual(out.structuredContent, {
       notice: OUTSIDE_DATA_NOTICE,
       clubs: [{ id: "c1" }],
-      picks: { items: [{ id: "p1" }], total: 2, has_more: true, next_cursor: encodeCursor(1) },
+      picks: {
+        items: [{ id: "p1" }],
+        total: 2,
+        has_more: true,
+        next_cursor: encodeOffsetCursor(1),
+      },
     });
   });
 
@@ -236,7 +241,7 @@ describe("what each tool sends", () => {
   });
 
   test("foxing_read_audit_log pages the site's log", async () => {
-    await call("foxing_read_audit_log", { limit: 10, cursor: encodeCursor(20) });
+    await call("foxing_read_audit_log", { limit: 10, cursor: encodeOffsetCursor(20) });
     assert.equal(path(), "GET /api/v1/admin/audit-log?limit=10&offset=20");
   });
 });
@@ -345,13 +350,13 @@ describe("health, moderation and catalog health", () => {
     const out = await call("foxing_check_catalog", {
       check: "duplicate_isbn",
       limit: 10,
-      cursor: encodeCursor(20),
+      cursor: encodeOffsetCursor(20),
     });
     assert.equal(
       path(),
       "GET /api/v1/admin/catalog-health?check=duplicate_isbn&limit=10&offset=20",
     );
-    assert.equal(out.structuredContent?.next_cursor, encodeCursor(30));
+    assert.equal(out.structuredContent?.next_cursor, encodeOffsetCursor(30));
     assert.equal(
       tool("foxing_check_catalog").config.inputSchema.safeParse({ check: "nope" }).success,
       false,
@@ -392,6 +397,6 @@ describe("cursors (T8)", () => {
   test("a cursor this server did not issue fails validation", () => {
     const schema = tool("foxing_find_user").config.inputSchema;
     assert.equal(schema.safeParse({ cursor: "10" }).success, false);
-    assert.equal(schema.safeParse({ cursor: encodeCursor(10) }).success, true);
+    assert.equal(schema.safeParse({ cursor: encodeOffsetCursor(10) }).success, true);
   });
 });

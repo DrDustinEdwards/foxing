@@ -10,13 +10,14 @@ export const pushRegisterInput = z.object({
 export type PushRegisterInput = z.infer<typeof pushRegisterInput>;
 
 // notification_prefs (json on profiles): per-category booleans + quiet hours in the
-// profile timezone. Used by the push delivery gate (domain/push.ts).
+// profile timezone, each a 24-hour HH:MM (00:00 to 23:59; zod's ISO time without seconds, so 99:99 is refused).
+// Used by the push delivery gate (domain/push.ts).
 export const notificationPrefsInput = z.object({
   categories: z.record(z.string(), z.boolean()).optional(),
   quietHours: z
     .object({
-      start: z.string().regex(/^\d{2}:\d{2}$/),
-      end: z.string().regex(/^\d{2}:\d{2}$/),
+      start: z.iso.time({ precision: -1 }),
+      end: z.iso.time({ precision: -1 }),
     })
     .nullable()
     .optional(),

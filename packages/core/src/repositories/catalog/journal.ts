@@ -64,8 +64,11 @@ export async function listPublishedPosts(
     .limit(pageSize)
     .offset((page - 1) * pageSize);
 
-  const rows = await db.select({ slug: journalPosts.slug }).from(journalPosts).where(where);
-  const total = rows.length;
+  const [counted] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(journalPosts)
+    .where(where);
+  const total = counted?.n ?? 0;
 
   return {
     posts,

@@ -1,4 +1,4 @@
-import { inList, notInList } from "@dustinedwards/site-runtime/d1";
+import { inList, likeContains, notInList } from "@dustinedwards/site-runtime/d1";
 import type { Db } from "../db";
 import {
   and,
@@ -9,7 +9,6 @@ import {
   inArray,
   isNotNull,
   isNull,
-  like,
   lt,
   or,
   sql,
@@ -56,11 +55,11 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
         : eq(journalPosts.authorId, query.authorId),
     );
   if (query.q) {
-    const pattern = `%${query.q.toLowerCase()}%`;
+    // SQLite's LIKE already ignores ASCII case; likeContains makes a typed % or _ match itself.
     const match = or(
-      like(sql`lower(${journalPosts.title})`, pattern),
-      like(sql`lower(${journalPosts.content})`, pattern),
-      like(journalPosts.slug, pattern),
+      likeContains(journalPosts.title, query.q),
+      likeContains(journalPosts.content, query.q),
+      likeContains(journalPosts.slug, query.q),
     );
     if (match) where.push(match);
   }
@@ -70,9 +69,8 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
     );
   if (query.publishedAfter) where.push(gte(journalPosts.publishedAt, query.publishedAfter));
   if (query.publishedBefore) where.push(lt(journalPosts.publishedAt, query.publishedBefore));
-  // The slug lists come from site-api's schedule table and have no ceiling, so each binds as one JSON parameter
-  // (D1 refuses over 100), never one parameter per slug; this filter sits under a paged query, so it cannot chunk.
-  if (query.slugs) where.push(query.slugs.length ? inList(journalPosts.slug, query.slugs) : sql`0`);
+  if (query.slugs)
+    where.push(query.slugs.length ? inList(journalPosts.slug, query.slugs) : sql`0`);
   if (query.exceptSlugs?.length) where.push(notInList(journalPosts.slug, query.exceptSlugs));
   return and(...where);
 }
