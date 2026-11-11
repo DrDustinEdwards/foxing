@@ -60,7 +60,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                 Private {lists.length - publicCount}
               </FilterTab>
             </nav>
-            <ul className="stack-3">
+            <ul className="cap-stack" data-gap="4">
               {shown.map((l) => (
                 <li key={l.id}>
                   <EntityCard to={`/lists/${l.id}`}>
@@ -99,7 +99,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
 function CoverStack({ covers }: { covers: string[] }) {
   return (
     <div className="shrink-0 fx-lists-row-5">
-      {covers.map((src, i) => (
+      {covers.map((src) => (
         <CoverPicture
           key={src}
           src={src}
@@ -107,7 +107,6 @@ function CoverStack({ covers }: { covers: string[] }) {
           use="coverThumb"
           sizes="44px"
           className="fx-lists-img"
-          style={{ zIndex: covers.length - i }}
         />
       ))}
     </div>

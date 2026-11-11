@@ -50,9 +50,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="stack-8">
-        <header className="stack">
-          <div className="row-4 spread top">
+      <Container className="cap-stack" data-gap="7">
+        <header className="cap-stack">
+          <div className="cap-spread" data-gap="5" data-align="start">
             <div>
               <h1 className="display-4">{list.title}</h1>
               {owner ? (
@@ -66,7 +66,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                 </Link>
               ) : null}
             </div>
-            <div className="row">
+            <div className="cap-cluster" data-gap="4">
               <LikeButton
                 targetType="reading_list"
                 targetId={list.id}
@@ -92,7 +92,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
             body={isOwner ? "Search above to add books." : undefined}
           />
         ) : (
-          <ol className="stack-3">
+          <ol className="cap-stack" data-gap="4">
             {books.map((entry, i) => (
               <li key={entry.bookId} className="fx-list-detail-card">
                 <div className="fx-list-detail-row">

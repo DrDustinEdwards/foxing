@@ -1,89 +1,36 @@
-// Book typeahead for admin forms (BOTM, celebrity picks). Reuses the public
-// /api/v1/search/suggest endpoint, which returns { id, slug, title, author }, so no new
-// endpoint is needed. Emits the selected book id (or null when cleared).
-import { useEffect, useRef, useState } from "react";
-import { adminInputClass } from "./admin-form";
-
-type Suggestion = { id: string; slug: string; title: string; author: string };
+// Book picker for admin forms (BOTM, celebrity picks): the chosen book with a Change button, or
+// BookCombobox to choose one from the public /api/v1/search/suggest. Emits the selected book (or
+// null when cleared).
+import { BookCombobox, type SuggestedBook } from "../book-combobox";
 
 export function BookPicker({
+  label,
   selected,
   onPick,
 }: {
+  label: string;
   selected: { id: string; title: string; author: string } | null;
-  onPick: (book: Suggestion | null) => void;
+  onPick: (book: SuggestedBook | null) => void;
 }) {
-  const [q, setQ] = useState("");
-  const [results, setResults] = useState<Suggestion[]>([]);
-  const [open, setOpen] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (q.trim().length < 2) return;
-    if (timer.current) clearTimeout(timer.current);
-    const suggest = async () => {
-      try {
-        const res = await fetch(`/api/v1/search/suggest?q=${encodeURIComponent(q)}`);
-        const body = (await res.json()) as { books?: Suggestion[] };
-        setResults(body.books ?? []);
-        setOpen(true);
-      } catch {
-        setResults([]);
-      }
-    };
-    timer.current = setTimeout(() => void suggest(), 200);
-    return () => {
-      if (timer.current) clearTimeout(timer.current);
-    };
-  }, [q]);
-
-  // A query too short to search shows no suggestions.
-  const shown = q.trim().length < 2 ? [] : results;
-
   if (selected) {
     return (
-      <div className="py-2 fx-book-picker-card">
-        <span className="fx-book-picker-label">
-          <span className="fx-book-picker-label-2">{selected.title}</span>
-          <span className="dim"> by {selected.author}</span>
-        </span>
-        <button type="button" onClick={() => onPick(null)} className="shrink-0 fx-book-picker-btn">
-          Change
-        </button>
+      <div>
+        <span className="fx-label">{label}</span>
+        <div className="py-2 fx-book-picker-card">
+          <span className="fx-book-picker-label">
+            <span className="fx-book-picker-label-2">{selected.title}</span>
+            <span className="dim"> by {selected.author}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => onPick(null)}
+            className="shrink-0 fx-book-picker-btn"
+          >
+            Change
+          </button>
+        </div>
       </div>
     );
   }
-
-  return (
-    <div className="relative">
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        onFocus={() => shown.length > 0 && setOpen(true)}
-        placeholder="Search the catalog by title or author"
-        className={adminInputClass}
-        aria-label="Search for a book"
-      />
-      {open && shown.length > 0 ? (
-        <ul className="mt-1 fx-book-picker-list">
-          {shown.map((b) => (
-            <li key={b.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  onPick(b);
-                  setOpen(false);
-                  setQ("");
-                }}
-                className="fx-pick-option"
-              >
-                <span className="strong">{b.title}</span>
-                <span className="dim"> by {b.author}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
+  return <BookCombobox label={label} onPick={onPick} />;
 }

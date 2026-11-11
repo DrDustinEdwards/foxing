@@ -1,80 +1,30 @@
 // The account panel of Capsomer's site header for a signed-in reader: identity and tier badge,
 // real stats (from the root loader's navUser), grouped links and a compact icon footer bar,
 // matching the legacy dropdown (no scroll). Capsomer draws the button and the panel around it,
-// and closes the panel when a link in it is followed. Icons are inline SVG (web uses no icon
-// library, Rule 10).
+// and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons);
+// the four the shared set lacks pass their own path on its grid.
 import type { HeaderAccount } from "capsomer/react/site-header";
-import type { ReactElement } from "react";
+import { Icon, type IconName } from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 
-// Inline icon paths (16px, stroke currentColor). One <svg> chrome, per-name path data.
-const ICONS: Record<string, ReactElement> = {
-  stats: <path d="M5 20V11M12 20V5M19 20v-6" />,
-  goals: (
-    <>
-      <circle cx="12" cy="12" r="8" />
-      <circle cx="12" cy="12" r="3.2" />
-    </>
-  ),
-  year: (
-    <>
-      <circle cx="12" cy="8" r="6" />
-      <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-    </>
-  ),
-  vocabulary: (
-    <>
-      <path d="M12 7c-1.6-1-4-1.6-7-1.3V18c3-.3 5.4.3 7 1.3 1.6-1 4-1.6 7-1.3V5.7c-3-.3-5.4.3-7 1.3z" />
-      <path d="M12 7v12.3" />
-    </>
-  ),
-  collections: (
-    <path d="M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z" />
-  ),
-  findnext: (
-    <>
-      <path d="M11 4l1.5 4L16.5 9.5 12.5 11 11 15l-1.5-4L5.5 9.5 9.5 8z" />
-      <path d="M17.5 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z" />
-    </>
-  ),
-  profile: (
-    <>
-      <circle cx="12" cy="8.5" r="3.5" />
-      <path d="M5.5 19.5a6.5 6.5 0 0 1 13 0" />
-    </>
-  ),
-  settings: (
-    <>
-      <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
-      <circle cx="12" cy="12" r="3" />
-    </>
-  ),
-  admin: <path d="M12 3.5l7 2.8v4.7c0 4.3-2.9 7.2-7 8.5-4.1-1.3-7-4.2-7-8.5V6.3z" />,
-  signout: (
-    <>
-      <path d="M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2" />
-      <path d="M10 12h10M17 9l3 3-3 3" />
-    </>
-  ),
+// Each menu icon: a name in Capsomer's set, or Foxing's own drawing on the same 24-unit grid.
+const OWN = {
+  findnext:
+    "M11 4l1.5 4L16.5 9.5 12.5 11 11 15l-1.5-4L5.5 9.5 9.5 8zM17.5 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z",
+  profile: "M12 5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7zM5.5 19.5a6.5 6.5 0 0 1 13 0",
+  admin: "M12 3.5l7 2.8v4.7c0 4.3-2.9 7.2-7 8.5-4.1-1.3-7-4.2-7-8.5V6.3z",
+  signout:
+    "M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2M10 12h10M17 9l3 3-3 3",
 };
+type MenuIcon = IconName | keyof typeof OWN;
 
-function Icon({ name }: { name: keyof typeof ICONS }) {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {ICONS[name]}
-    </svg>
+function MenuIconSvg({ name }: { name: MenuIcon }) {
+  return name in OWN ? (
+    <Icon d={OWN[name as keyof typeof OWN]} />
+  ) : (
+    <Icon name={name as IconName} />
   );
 }
 
@@ -84,7 +34,7 @@ function Icon({ name }: { name: keyof typeof ICONS }) {
 const READING_LINKS = [
   { to: "/stats", label: "Stats", icon: "stats" as const },
   { to: "/goals", label: "Goals", icon: "goals" as const },
-  { to: "/year", label: "Year in reading", icon: "year" as const },
+  { to: "/year", label: "Year in reading", icon: "award" as const },
 ];
 const COLLECTION_LINKS = [
   { to: "/lists", label: "Lists" },
@@ -102,12 +52,12 @@ function MenuLink({
   to: string;
   label: string;
   sublabel?: string;
-  icon: keyof typeof ICONS;
+  icon: MenuIcon;
 }) {
   return (
     <Link to={to} className="fx-acct-link">
       <span className="fx-acct-icon">
-        <Icon name={icon} />
+        <MenuIconSvg name={icon} />
       </span>
       <span className="min-0 fx-account-panel-label">
         <span className="fx-acct-label">{label}</span>
@@ -122,7 +72,7 @@ function CollectionsRow() {
   return (
     <div className="fx-acct-row">
       <span className="fx-acct-icon">
-        <Icon name="collections" />
+        <Icon name="folder" />
       </span>
       <div className="min-0">
         <span className="fx-acct-label">Collections</span>
@@ -148,7 +98,7 @@ function FooterAction({
   danger,
   disabled,
 }: {
-  icon: keyof typeof ICONS;
+  icon: MenuIcon;
   label: string;
   to?: string;
   onClick?: () => void;
@@ -157,7 +107,7 @@ function FooterAction({
 }) {
   const inner = (
     <>
-      <Icon name={icon} />
+      <MenuIconSvg name={icon} />
       <span>{label}</span>
     </>
   );
@@ -249,7 +199,7 @@ function AccountPanel({
       <div className="fx-acct-who">
         <Avatar src={user.avatarUrl} name={user.displayName} size="md" />
         <div className="min-0">
-          <p className="row-1 strong sans small">
+          <p className="cap-cluster strong sans small" data-gap="2">
             <span className="truncate">{user.displayName}</span>
             <TierBadge tier={user.subscriptionTier} />
           </p>
@@ -270,7 +220,7 @@ function AccountPanel({
         {READING_LINKS.map((l) => (
           <MenuLink key={l.to} to={l.to} label={l.label} icon={l.icon} />
         ))}
-        <MenuLink to="/vocabulary" label="Vocabulary" sublabel={vocab} icon="vocabulary" />
+        <MenuLink to="/vocabulary" label="Vocabulary" sublabel={vocab} icon="book" />
       </div>
 
       <div className="fx-acct-group">

@@ -1,6 +1,6 @@
-import { cn } from "~/lib/cn";
+import { cn } from "capsomer/react/hooks";
 import { coverAttributes } from "~/lib/images";
-import { Picture } from "./picture";
+import { Picture } from "capsomer/react/picture";
 
 type Props = {
   src: string | null | undefined;
@@ -59,10 +59,14 @@ export function CoverPicture({
   use,
   sizes,
   ...rest
-}: Omit<React.ComponentProps<typeof Picture>, "attrs"> & {
+}: {
   src: string;
+  alt: string;
   use?: "cover" | "coverThumb";
   sizes?: string;
+  priority?: boolean;
+  eager?: boolean;
+  className?: string;
 }) {
   return <Picture attrs={coverAttributes(src, { use, sizes })} {...rest} />;
 }

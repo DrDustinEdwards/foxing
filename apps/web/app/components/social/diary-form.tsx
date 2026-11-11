@@ -52,14 +52,14 @@ export function DiaryForm({
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} className="stack-6">
+    <form onSubmit={(e) => void submit(e)} className="cap-stack" data-gap="6">
       <p className="ui">
         Logging <span className="strong">{bookTitle}</span>
       </p>
 
-      <fieldset className="stack-2">
+      <fieldset className="cap-stack" data-gap="3">
         <legend className="group-label">Rating</legend>
-        <div className="row-2 wrap">
+        <div className="cap-cluster" data-gap="3">
           <select
             value={ratingHalf ?? ""}
             onChange={(e) => setRatingHalf(e.target.value === "" ? null : Number(e.target.value))}
@@ -75,7 +75,7 @@ export function DiaryForm({
         </div>
       </fieldset>
 
-      <label className="stack-2">
+      <label className="cap-stack" data-gap="3">
         <span className="group-label">Review</span>
         <textarea
           value={review}
@@ -86,12 +86,12 @@ export function DiaryForm({
         />
       </label>
 
-      <label className="row-2 ui">
+      <label className="cap-cluster ui" data-gap="3">
         <input type="checkbox" checked={spoilers} onChange={(e) => setSpoilers(e.target.checked)} />
         This review contains spoilers
       </label>
 
-      <label className="stack-2">
+      <label className="cap-stack" data-gap="3">
         <span className="group-label">Who can see this</span>
         <select
           value={visibility}
@@ -110,7 +110,7 @@ export function DiaryForm({
         </p>
       ) : null}
 
-      <div className="row">
+      <div className="cap-cluster" data-gap="4">
         <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
           {pending ? "Saving..." : mode === "create" ? "Save entry" : "Save changes"}
         </button>

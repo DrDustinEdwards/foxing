@@ -3,6 +3,7 @@
 // without a reload. This is the two-context DO gate surface -- a post made in
 // one browser context shows up in another that has this thread open.
 import { useClubLive, useCreatePost, useThreadPage } from "@foxing/client";
+import { Time } from "capsomer/react/time";
 import { createDb, views } from "@foxing/core";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
@@ -67,7 +68,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
                 <p className="fx-club-thread-text">{p.content}</p>
                 <p className="mt-2 fx-club-thread-caps">
                   {p.author?.id === viewerId ? "You" : "Member"} ·{" "}
-                  {new Date(p.createdAt).toLocaleString()}
+                  <Time at={p.createdAt} format="exact" />
                 </p>
               </li>
             ))

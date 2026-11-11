@@ -46,7 +46,7 @@ export default function Awards({ loaderData }: Route.ComponentProps) {
           {awards.map((a) => (
             <EntityCard key={a.slug} to={`/awards/${a.slug}`}>
               <h2 className="fx-awards-title">{a.name}</h2>
-              <p className="mt-2 meta">
+              <p className="meta">
                 {a.count} {a.count === 1 ? "title" : "titles"}
                 {a.scope ? ` · ${a.scope}` : ""}
               </p>

@@ -13,7 +13,7 @@ export function ReadingActivity({
   streak: Streak;
 }) {
   return (
-    <section className="stack">
+    <section className="cap-stack">
       <h2 className="display-2">Reading activity</h2>
       <div className="card card-5">
         {weeks.some((w) => w.books > 0) ? (

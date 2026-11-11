@@ -5,14 +5,16 @@
 // On a page that does not hydrate the search-palette island (islands/search-palette.ts) is the same
 // menu, from the same commands (lib/search-commands.ts).
 import { CommandMenu } from "capsomer/react/command-menu";
+import { useRemembered } from "capsomer/react/hooks";
 import { useEffect, useState } from "react";
 import { useNavigate, useRouteLoaderData } from "react-router";
 import {
   liveCommands,
   PALETTE_LABEL,
   PALETTE_PLACEHOLDER,
+  parseRecent,
   quickCommands,
-  readRecent,
+  RECENT_KEY,
 } from "~/lib/search-commands";
 import type { loader as RootLoader } from "~/root";
 
@@ -21,13 +23,11 @@ export function CommandPalette() {
   const root = useRouteLoaderData<typeof RootLoader>("root");
   const signedIn = !!root?.navUser;
   const [open, setOpen] = useState(false);
-  const [recent, setRecent] = useState<string[]>([]);
+  // Recent searches follow the stored value, so a search run from the palette shows next time.
+  const recent = parseRecent(useRemembered(RECENT_KEY)[0]);
 
   useEffect(() => {
-    const onOpen = () => {
-      setRecent(readRecent());
-      setOpen(true);
-    };
+    const onOpen = () => setOpen(true);
     window.addEventListener("foxing:search-open", onOpen);
     return () => window.removeEventListener("foxing:search-open", onOpen);
   }, []);
@@ -38,11 +38,7 @@ export function CommandPalette() {
   return (
     <CommandMenu
       open={open}
-      onOpenChange={(next) => {
-        // Recent searches are read again each time the palette opens.
-        if (next) setRecent(readRecent());
-        setOpen(next);
-      }}
+      onOpenChange={setOpen}
       commands={commands}
       search={(q, signal) => liveCommands(q, signal, go)}
       label={PALETTE_LABEL}

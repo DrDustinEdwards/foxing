@@ -50,14 +50,14 @@ export default function People({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="stack-10">
+      <Container className="cap-stack" data-gap="8">
         <PageHeader
           eyebrow="Your Foxing"
           title="People"
           lede="The readers you follow and who follow you."
         />
 
-        <section className="stack">
+        <section className="cap-stack">
           <h2 className="display-2">Following</h2>
           {following.length === 0 ? (
             <EmptyState
@@ -65,7 +65,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
               body="Open a reader's profile to follow them."
             />
           ) : (
-            <ul className="stack-2">
+            <ul className="cap-stack" data-gap="3">
               {following.map((p) => (
                 <Row key={p.id} p={p}>
                   <CloseFriendToggle userId={p.id} isClose={p.isClose} />
@@ -75,12 +75,12 @@ export default function People({ loaderData }: Route.ComponentProps) {
           )}
         </section>
 
-        <section className="stack">
+        <section className="cap-stack">
           <h2 className="display-2">Followers</h2>
           {followers.length === 0 ? (
             <p className="meta">No followers yet.</p>
           ) : (
-            <ul className="stack-2">
+            <ul className="cap-stack" data-gap="3">
               {followers.map((p) => (
                 <Row key={p.id} p={p}>
                   <FollowButton userId={p.id} following={p.isFollowing} signedIn />
@@ -90,7 +90,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
           )}
         </section>
 
-        <section className="stack">
+        <section className="cap-stack">
           <h2 className="display-2">Close friends</h2>
           <p className="ui">
             Close friends see your friends-only reviews, activity, and shared annotations.
@@ -98,7 +98,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
           {closeFriends.length === 0 ? (
             <p className="meta">No close friends yet. Add someone from your Following list.</p>
           ) : (
-            <ul className="stack-2">
+            <ul className="cap-stack" data-gap="3">
               {closeFriends.map((p) => (
                 <Row key={p.id} p={p}>
                   <CloseFriendToggle userId={p.id} isClose />

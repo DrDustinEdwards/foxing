@@ -190,8 +190,8 @@ function CacheBatch() {
         Generate the 4 free-cached actions for up to a handful of catalog books missing them. Runs
         synchronously; keep this small.
       </p>
-      <div className="mt-4 row">
-        <label className="row-2">
+      <div className="mt-4 cap-cluster" data-gap="4">
+        <label className="cap-cluster" data-gap="3">
           <span className="ui">Books</span>
           <input
             type="number"

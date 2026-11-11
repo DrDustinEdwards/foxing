@@ -36,9 +36,9 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
         <h1 className="display-3">Users</h1>
       </div>
 
-      <div className="stack-6">
+      <div className="cap-stack" data-gap="6">
         <AdminCard>
-          <form method="get" className="row-2">
+          <form method="get" className="cap-cluster" data-gap="3">
             <input
               type="search"
               name="q"
@@ -79,7 +79,7 @@ function UserRow({
 
   return (
     <li className="py-3">
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <div className="min-0">
           <p className="sans small strong">
             @{user.username}
@@ -92,7 +92,7 @@ function UserRow({
           </p>
           <p className="truncate meta">{user.displayName ?? "No name set"}</p>
         </div>
-        <div className="row-2 shrink-0">
+        <div className="cap-cluster shrink-0" data-gap="3">
           <AdminButton
             variant={user.isSuspended ? "default" : "danger"}
             pending={suspend.pending}

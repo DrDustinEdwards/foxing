@@ -30,7 +30,7 @@ export function YearView({
 
   return (
     <PageShell>
-      <Container className="stack-8">
+      <Container className="cap-stack" data-gap="7">
         <PageHeader
           eyebrow={`Year in Reading ${year}`}
           title="Your reading year"
@@ -38,7 +38,7 @@ export function YearView({
         />
         {notice}
 
-        <nav aria-label="Choose a year" className="row-2 wrap">
+        <nav aria-label="Choose a year" className="cap-cluster" data-gap="3">
           {years.map((y) => (
             <Link
               key={y}
@@ -61,7 +61,7 @@ export function YearView({
             <YearNumbers recap={recap} />
 
             {monthly.some((n) => n > 0) ? (
-              <section className="stack">
+              <section className="cap-stack">
                 <h2 className="display-2">Your reading months</h2>
                 <div className="card card-5">
                   <ChartFrame draw={monthsChart(monthly, year)} />
@@ -70,7 +70,7 @@ export function YearView({
             ) : null}
 
             {genres.length > 0 ? (
-              <section className="stack">
+              <section className="cap-stack">
                 <h2 className="display-2">Genre spread</h2>
                 <div className="card card-5">
                   <ChartFrame draw={genresChart(genres, year)} />
@@ -130,9 +130,9 @@ export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
 export function TopBooks({ books }: { books: RecapPage["recap"]["topBooks"] }) {
   if (books.length === 0) return null;
   return (
-    <section className="stack">
+    <section className="cap-stack">
       <h2 className="display-2">Top books</h2>
-      <ol className="stack-2">
+      <ol className="cap-stack" data-gap="3">
         {books.map((b) => (
           <li key={b.bookId} className="py-3 fx-year-card-2">
             <Link to={`/books/${b.slug}`} className="fx-year-link">

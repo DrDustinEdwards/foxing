@@ -60,7 +60,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="divided">
               {stats.recentSignups.map((u) => (
-                <li key={u.id} className="py-2 row spread">
+                <li key={u.id} className="py-2 cap-spread" data-gap="4" data-align="center">
                   <Link to={`/admin/users/${u.id}`} className="fx-admin-link">
                     @{u.username}
                   </Link>
@@ -79,7 +79,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
           ) : (
             <ul className="divided">
               {audit.map((a) => (
-                <li key={a.id} className="py-2 row spread">
+                <li key={a.id} className="py-2 cap-spread" data-gap="4" data-align="center">
                   <span className="fx-admin-label">{a.action}</span>
                   <span className="mono fine">{fmt.format(a.performedAt)}</span>
                 </li>

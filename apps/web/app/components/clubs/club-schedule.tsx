@@ -8,6 +8,7 @@ import {
 } from "@foxing/client";
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
+import { Time } from "capsomer/react/time";
 import { useState } from "react";
 import { pollChart } from "~/lib/reading-charts";
 import { ErrorText } from "./club-sections";
@@ -48,7 +49,7 @@ export function PollsSection({
 
   return (
     <section>
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="display-2">Polls</h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "New poll"}
@@ -75,7 +76,7 @@ export function PollsSection({
               className="cap-input"
             />
           ))}
-          <div className="row">
+          <div className="cap-cluster" data-gap="4">
             {optionCount < 6 ? (
               <button
                 type="button"
@@ -107,7 +108,7 @@ export function PollsSection({
             const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
               <div key={poll.id} className="card">
-                <div className="row spread">
+                <div className="cap-spread" data-gap="4" data-align="center">
                   <p className="strong sans">{poll.title}</p>
                   {poll.isClosed ? (
                     <span className="fx-club-schedule-caps">Closed</span>
@@ -189,7 +190,7 @@ export function MeetingsSection({
 
   return (
     <section>
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="display-1">Meetings</h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "Add"}
@@ -229,7 +230,11 @@ export function MeetingsSection({
           {meetings.map((m) => (
             <li key={m.id} className="fx-club-schedule-card-3">
               <p className="fx-club-schedule-text-3">{m.title}</p>
-              <p className="fine">{new Date(m.meetingDate).toLocaleString()}</p>
+              {/* The viewer's zone, named, with UTC beside it, so members in other zones read the same
+                  moment; Capsomer's Time hydrates cleanly from the server's UTC. */}
+              <p className="fine">
+                <Time at={m.meetingDate} format="exact" />
+              </p>
               {!m.isCancelled ? (
                 <div className="mt-2 fx-club-schedule-row">
                   {(["going", "maybe", "not_going"] as const).map((s) => (

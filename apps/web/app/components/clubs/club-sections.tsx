@@ -44,7 +44,7 @@ export function MembershipControls({
           {membership?.status === "requested" ? "Request pending" : "Join club"}
         </button>
       ) : (
-        <div className="stack-2">
+        <div className="cap-stack" data-gap="3">
           {joinCode ? (
             <div className="py-2 fx-club-sections-card">
               <p className="group-label">Invite link</p>
@@ -105,7 +105,7 @@ export function ThreadsSection({
 
   return (
     <section>
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="display-2">Discussions</h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-sections-btn-2">
           {open ? "Cancel" : "New thread"}

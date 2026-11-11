@@ -54,7 +54,7 @@ export function AuthShell({
  *  all, so the browser follows Better Auth's redirect. */
 export function ConfirmButtonForm({ label, limited }: { label: string; limited?: boolean }) {
   return (
-    <form method="post" className="stack-3">
+    <form method="post" className="cap-stack" data-gap="4">
       {limited ? (
         <p role="alert" className="error">
           Too many tries. Wait a minute, then try again.
@@ -243,7 +243,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   };
 
   return (
-    <div className="stack-3">
+    <div className="cap-stack" data-gap="4">
       <button
         type="button"
         disabled={pending}
@@ -287,7 +287,7 @@ export function signInErrorMessage(code: string | null): string | null {
 /** "or" rule between the provider button and the email options. */
 export function AuthDivider() {
   return (
-    <div className="row" aria-hidden="true">
+    <div className="cap-cluster" data-gap="4" aria-hidden="true">
       <span className="fx-auth-shell-label-2" />
       <span className="fx-auth-shell-label-3">or</span>
       <span className="fx-auth-shell-label-2" />
@@ -363,8 +363,16 @@ export function MagicLinkForm({
   };
 
   return (
-    <form className="stack-3" onSubmit={(event) => void sendLink(event)}>
-      <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
+    <form className="cap-stack" data-gap="4" onSubmit={(event) => void sendLink(event)}>
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        required
+        autoComplete="username webauthn"
+        spellCheck={false}
+        enterKeyHint="send"
+      />
       {turnstileSiteKey ? <div ref={widget} /> : null}
       {refusal ? (
         <p role="alert" className="error">
@@ -434,7 +442,7 @@ function SignInCodeForm({
   };
 
   return (
-    <form className="stack-3" onSubmit={(event) => void submitCode(event)}>
+    <form className="cap-stack" data-gap="4" onSubmit={(event) => void submitCode(event)}>
       <p role="status" className="fx-auth-shell-text-2">
         Check your email. Open the sign-in link, or type the code from the same email here. Both
         work for {SIGN_IN_EXPIRES_IN_WORDS}.
@@ -445,6 +453,10 @@ function SignInCodeForm({
         required
         inputMode="numeric"
         autoComplete="one-time-code"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        enterKeyHint="done"
         pattern="[0-9]{6}"
         maxLength={6}
       />

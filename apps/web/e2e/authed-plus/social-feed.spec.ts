@@ -25,14 +25,9 @@ async function handleFromMe(page: Page): Promise<string> {
 async function logReview(page: Page, reviewText: string, visibility: string) {
   // A fill before hydration never reaches the picker's state, so no results would come.
   await page.goto("/diary/new", { waitUntil: "networkidle" });
-  await page.getByLabel(/find the book to log/i).fill("the");
-  // Pick the first suggestion from the picker's own result list (the page header has
-  // buttons of its own, so "the first button on the page" is never a suggestion).
-  await page
-    .getByRole("list", { name: /matching books/i })
-    .getByRole("button")
-    .first()
-    .click();
+  await page.getByRole("combobox", { name: /find the book to log/i }).fill("the");
+  // Pick the first suggestion from the picker's own listbox.
+  await page.getByRole("listbox").getByRole("option").first().click();
   await expect(page.getByText(/^Logging/)).toBeVisible();
 
   await page.getByLabel(/^Review$/i).fill(reviewText);

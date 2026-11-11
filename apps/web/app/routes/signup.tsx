@@ -32,7 +32,7 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
         </>
       }
     >
-      <div className="stack">
+      <div className="cap-stack">
         <SocialButtons methods={methods} />
         {methods.google || methods.apple ? <AuthDivider /> : null}
         <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} />

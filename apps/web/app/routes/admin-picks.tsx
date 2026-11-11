@@ -48,7 +48,7 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
         <h1 className="display-3">Celebrity Picks</h1>
       </div>
 
-      <div className="stack-6">
+      <div className="cap-stack" data-gap="6">
         <AdminCard title="Curator">
           <ul className="fx-admin-picks-row">
             <li>
@@ -102,7 +102,7 @@ function PickRow({
 
   return (
     <li className="py-3">
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <div className="min-0">
           <p className="sans small strong">
             {pick.clubName}
@@ -120,7 +120,7 @@ function PickRow({
             {pick.category ? ` · ${pick.category}` : ""}
           </p>
         </div>
-        <div className="row-2 shrink-0">
+        <div className="cap-cluster shrink-0" data-gap="3">
           <AdminButton pending={pending} onClick={() => setEditing((v) => !v)}>
             {editing ? "Close" : "Edit"}
           </AdminButton>

@@ -248,7 +248,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             {book.subjects.length > 0 ? (
               <div className="mt-8">
                 <Eyebrow className="mb-3">Subjects</Eyebrow>
-                <div className="row-2 wrap">
+                <div className="cap-cluster" data-gap="3">
                   {book.subjects.slice(0, 12).map((s) => (
                     <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>
                       {s}

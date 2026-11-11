@@ -169,7 +169,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Sidebar: streak, goals, shelves */}
-          <aside className="stack-6">
+          <aside className="cap-stack" data-gap="6">
             <StreakCard streak={streak} />
             <GoalsCard goals={goals} />
             <ShelvesCard shelves={shelves} />
@@ -211,7 +211,7 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
       {goals.length === 0 ? (
         <p className="meta">No goals set.</p>
       ) : (
-        <ul className="stack-3">
+        <ul className="cap-stack" data-gap="4">
           {goals.map(({ goal, progress }) => (
             <li key={goal.id}>
               <div className="fx-library-row">

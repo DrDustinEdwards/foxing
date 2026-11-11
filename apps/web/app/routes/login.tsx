@@ -48,7 +48,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
         </p>
       ) : null}
 
-      <div className="stack">
+      <div className="cap-stack">
         <PasskeyButton redirectTo={next ?? undefined} />
         <SocialButtons methods={methods} next={next ?? undefined} />
         <AuthDivider />

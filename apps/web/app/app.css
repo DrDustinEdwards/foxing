@@ -21,6 +21,7 @@
 @import "capsomer/tabs.css";
 @import "capsomer/chips.css";
 @import "capsomer/listbox.css";
+@import "capsomer/combobox.css";
 @import "capsomer/command-menu.css";
 @import "capsomer/breadcrumb.css";
 @import "capsomer/avatar.css";
@@ -31,6 +32,10 @@
 @import "capsomer/skeleton.css";
 @import "capsomer/meter.css";
 @import "capsomer/table.css";
+@import "capsomer/card.css";
+@import "capsomer/icons.css";
+@import "capsomer/picture.css";
+@import "capsomer/time.css";
 @import "capsomer/chart-frame.css";
 /* The whole chart stylesheet: Enarratio's base, the token mapping, gridlines and series inks. */
 @import "capsomer/enarratio.css";

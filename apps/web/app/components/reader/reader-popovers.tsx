@@ -138,7 +138,7 @@ export function AttributionPopover({
           : { background: canvas.bg, color: canvas.text }
       }
     >
-      <div className="mb-2 row-2">
+      <div className="mb-2 cap-cluster" data-gap="3">
         <span
           className="fx-reader-popovers-label"
           style={{ background: tintFor((other.color as HighlightColor) ?? "amber", "light") }}
@@ -341,7 +341,7 @@ export function NoteComposer({
         placeholder="Add a note"
         className="cap-input fx-reader-note"
       />
-      <div className="mt-2 row-2 spread">
+      <div className="mt-2 cap-spread" data-gap="3" data-align="center">
         {canShareToClub ? (
           <label className="fx-reader-popovers-row-7">
             <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
@@ -350,7 +350,7 @@ export function NoteComposer({
         ) : (
           <span />
         )}
-        <div className="row-2">
+        <div className="cap-cluster" data-gap="3">
           <button type="button" onClick={onCancel} className="fx-reader-popovers-btn-8">
             Cancel
           </button>
@@ -431,7 +431,7 @@ export function EditPopover({
         <button type="button" onClick={onDelete} className="fx-reader-popovers-btn-11">
           Delete
         </button>
-        <div className="row-2">
+        <div className="cap-cluster" data-gap="3">
           <button type="button" onClick={onClose} className="fx-reader-popovers-btn-8">
             Close
           </button>

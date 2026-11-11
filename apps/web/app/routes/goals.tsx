@@ -87,12 +87,12 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
 
         <CreateGoal />
 
-        <section className="stack">
+        <section className="cap-stack">
           <h2 className="display-2">Active</h2>
           {active.length === 0 ? (
             <EmptyState title="No active goals." body="Set a target above to start tracking." />
           ) : (
-            <ul className="stack-3">
+            <ul className="cap-stack" data-gap="4">
               {active.map((g) => (
                 <GoalItem key={g.goal.id} row={g} active now={now} />
               ))}
@@ -101,9 +101,9 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
         </section>
 
         {past.length > 0 ? (
-          <section className="stack">
+          <section className="cap-stack">
             <h2 className="display-2">Past</h2>
-            <ul className="stack-3">
+            <ul className="cap-stack" data-gap="4">
               {past.map((g) => (
                 <GoalItem key={g.goal.id} row={g} active={false} now={now} />
               ))}
@@ -182,7 +182,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
             <GoalBadge tone="neutral">Behind by {pacing.behind}</GoalBadge>
           ) : null}
         </span>
-        <div className="shrink-0 row">
+        <div className="shrink-0 cap-cluster" data-gap="4">
           <button type="button" onClick={() => setEditing((v) => !v)} className="fx-goals-btn">
             {editing ? "Cancel" : "Edit"}
           </button>
@@ -202,7 +202,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
       />
 
       {editing ? (
-        <div className="mt-3 row-2">
+        <div className="mt-3 cap-cluster" data-gap="3">
           <label className="sans small">
             <span className="cap-sr-only">New target</span>
             <input
@@ -245,7 +245,7 @@ function CreateGoal() {
   return (
     <section className="card">
       <p className="mb-3 fx-goals-text">Set a new goal</p>
-      <div className="row-2 wrap">
+      <div className="cap-cluster" data-gap="3">
         <label className="sans small">
           <span className="cap-sr-only">Number of books</span>
           <input

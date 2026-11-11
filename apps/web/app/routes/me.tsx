@@ -49,7 +49,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="stack-8">
+      <Container className="cap-stack" data-gap="7">
         <header className="items-start fx-me-stack">
           <Avatar src={profile.avatarUrl} name={name} size="lg" />
           <div className="min-0">
@@ -59,7 +59,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
           </div>
         </header>
 
-        <nav className="row-2 wrap" aria-label="Your Foxing shortcuts">
+        <nav className="cap-cluster" data-gap="3" aria-label="Your Foxing shortcuts">
           {[
             { to: `/u/${profile.username}`, label: "Public profile" },
             { to: "/diary/new", label: "Log a book" },
@@ -95,7 +95,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         {profile.favoriteGenres.length > 0 ? (
           <section>
             <Eyebrow className="mb-3">Favorite genres</Eyebrow>
-            <div className="row-2 wrap">
+            <div className="cap-cluster" data-gap="3">
               {profile.favoriteGenres.map((g) => (
                 <Chip key={g}>{g}</Chip>
               ))}

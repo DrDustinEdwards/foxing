@@ -60,7 +60,7 @@ export function AdminCard({
   return (
     <section className="fx-admin-shell-card">
       {title || action ? (
-        <div className="mb-4 row-4 spread">
+        <div className="mb-4 cap-spread" data-gap="5" data-align="center">
           {title ? <h2 className="display-1">{title}</h2> : <span />}
           {action}
         </div>
