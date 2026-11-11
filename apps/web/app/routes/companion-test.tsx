@@ -12,6 +12,7 @@ import { cloudflareContext } from "~/context";
 import { loaderBase } from "~/lib/loader.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/companion-test";
+import { formatMoney } from "@dustinedwards/site-runtime/money";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -210,7 +211,7 @@ function CacheBatch() {
       {result ? (
         <p className="mt-4 fx-companion-test-text-2" role="status">
           {result.booksProcessed} books, {result.actionsGenerated} actions,{" "}
-          {(result.totalCostCents / 100).toFixed(2)} USD.
+          {formatMoney(result.totalCostCents, "usd")}.
         </p>
       ) : null}
       {error ? (
