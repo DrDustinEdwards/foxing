@@ -3,7 +3,7 @@
 // returns a draw for ChartFrame's `draw`, which takes `fit`: for a bar chart the height the server's
 // drawing showed at the frame's width, so the redraw does not push the page down on a phone; for the
 // weeks heat strip nothing, since a primitive keeps its own height. The figure carries the title, the
-// finding, the drawing and the numbers behind "Show data". The stats page and /year share the
+// finding, the drawing and, hidden, the numbers. The stats page and /year share the
 // months and genres charts.
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
