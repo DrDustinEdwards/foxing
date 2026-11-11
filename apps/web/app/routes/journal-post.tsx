@@ -177,9 +177,11 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
           {cover ? (
             <Picture
               picture={pictureProps(cover, {
-                  alt: post.coverImageAlt ?? "",
-                  priority: true,
-                  className: "mb-10 fx-journal-post-img", focus: post.coverFocus })}
+                alt: post.coverImageAlt ?? "",
+                priority: true,
+                className: "mb-10 fx-journal-post-img",
+                focus: post.coverFocus,
+              })}
             />
           ) : null}
 
