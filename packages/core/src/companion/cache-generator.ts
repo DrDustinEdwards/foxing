@@ -10,6 +10,7 @@ import type { Db } from "../db";
 import * as catalogBooksRepo from "../repositories/catalog/books";
 import * as companionRepo from "../repositories/companion";
 import type { CompanionCaller } from "./client";
+import { emptyUsage } from "./models";
 import { estimateCostCents, MAX_OUTPUT_TOKENS, resolveModel } from "./models";
 import {
   CACHED_ACTION_NAMES,
@@ -27,14 +28,12 @@ export type CacheGenerationResult = {
   costCents: number;
 };
 
-const NO_USAGE: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
-
 async function collectText(
   caller: CompanionCaller,
   args: Parameters<CompanionCaller>[0],
 ): Promise<{ text: string; usage: Usage }> {
   let text = "";
-  let usage = NO_USAGE;
+  let usage = emptyUsage();
   for await (const event of caller(args)) {
     if (event.type === "text") text += event.delta;
     else usage = event.usage;
