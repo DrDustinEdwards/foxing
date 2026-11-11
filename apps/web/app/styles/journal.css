@@ -155,11 +155,6 @@
   font-family: var(--fx-body);
   color: var(--muted);
 }
-.fx-journal-tag-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
 
 .fx-journal-text {
   margin-top: -1.5rem;
@@ -178,11 +173,6 @@
   @media (min-width: 64rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-}
-.fx-journal-row {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
 }
 .fx-journal-card {
   display: grid;

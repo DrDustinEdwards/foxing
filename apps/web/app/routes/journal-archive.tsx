@@ -1,6 +1,8 @@
 import { catalogRepo } from "@foxing/core";
 import { Link } from "capsomer/react/link";
+import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { PageShell } from "~/components/page-shell";
+import { Pager } from "~/components/pager";
 import { Breadcrumbs, Container, EmptyState, PageHeader, TagPill } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, journalTagPath, SITE_NAME } from "~/lib/seo";
@@ -8,7 +10,7 @@ import type { Route } from "./+types/journal-archive";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
-  const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
+  const page = parsePage(new URL(request.url).searchParams.get("page"));
   const [result, tags] = await Promise.all([
     catalogRepo.listPublishedPosts(db, { page, pageSize: 30 }),
     catalogRepo.listTags(db),
@@ -89,28 +91,14 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
           </ul>
         )}
 
-        {result.pageCount > 1 ? (
-          <nav
-            aria-label="Pagination"
-            className="mt-12 cap-cluster"
-            data-gap="5"
-            data-justify="center"
-          >
-            {result.page > 1 ? (
-              <Link to={`/journal/archive?page=${result.page - 1}`} rel="prev" className="cap-btn">
-                Newer
-              </Link>
-            ) : null}
-            <span className="ui">
-              Page {result.page} of {result.pageCount}
-            </span>
-            {result.page < result.pageCount ? (
-              <Link to={`/journal/archive?page=${result.page + 1}`} rel="next" className="cap-btn">
-                Older
-              </Link>
-            ) : null}
-          </nav>
-        ) : null}
+        <Pager
+          page={result.page}
+          pageCount={result.pageCount}
+          hrefFor={(n) => pageHref("/journal/archive", {}, n)}
+          prevLabel="Newer"
+          nextLabel="Older"
+          label="Journal pages"
+        />
       </Container>
     </PageShell>
   );

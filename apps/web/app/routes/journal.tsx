@@ -1,7 +1,9 @@
 import type { ImageAttributes } from "@dustinedwards/site-runtime/image";
 import { catalogRepo } from "@foxing/core";
 import { Link } from "capsomer/react/link";
+import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { PageShell } from "~/components/page-shell";
+import { Pager } from "~/components/pager";
 import { Picture } from "capsomer/react/picture";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
 import { pictureProps } from "@dustinedwards/site-runtime/image";
@@ -17,7 +19,7 @@ function fmtDate(d: Date | null): string | null {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
-  const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
+  const page = parsePage(new URL(request.url).searchParams.get("page"));
   const result = await catalogRepo.listPublishedPosts(db, { page });
   const covers = await journalCovers(
     db,
@@ -77,23 +79,14 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
           </div>
         )}
 
-        {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="mt-12 justify-center fx-journal-row">
-            {result.page > 1 ? (
-              <Link to={`/journal?page=${result.page - 1}`} rel="prev" className="cap-btn">
-                Newer
-              </Link>
-            ) : null}
-            <span className="ui">
-              Page {result.page} of {result.pageCount}
-            </span>
-            {result.page < result.pageCount ? (
-              <Link to={`/journal?page=${result.page + 1}`} rel="next" className="cap-btn">
-                Older
-              </Link>
-            ) : null}
-          </nav>
-        ) : null}
+        <Pager
+          page={result.page}
+          pageCount={result.pageCount}
+          hrefFor={(n) => pageHref("/journal", {}, n)}
+          prevLabel="Newer"
+          nextLabel="Older"
+          label="Journal pages"
+        />
       </Container>
     </PageShell>
   );

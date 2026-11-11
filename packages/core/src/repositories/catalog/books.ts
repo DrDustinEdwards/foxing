@@ -3,6 +3,7 @@
 // rev 3). Readability is derived (catalog AND epub_url present), never a column.
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { pageEnvelope } from "capsomer/behavior/pagination";
 import { inList } from "@dustinedwards/site-runtime/d1";
 import { chunked, type Db } from "../../db";
 import { bookAwards, books, userBooks } from "../../schema";
@@ -102,7 +103,6 @@ function browseConditions(params: BrowseParams) {
 
 /** Browse with filters + offset pagination (page numbers are crawlable for SEO). */
 export async function listBooks(db: Db, params: BrowseParams = {}): Promise<BrowseResult> {
-  const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(60, Math.max(1, params.pageSize ?? 24));
   const where = browseConditions(params);
 
@@ -113,27 +113,25 @@ export async function listBooks(db: Db, params: BrowseParams = {}): Promise<Brow
         ? [sql`${books.publicationYear} ASC NULLS LAST`, asc(books.title)]
         : [asc(sql`${books.title} COLLATE NOCASE`)];
 
+  const [{ count }] = await db
+    .select({ count: sql<number>`COUNT(*)` })
+    .from(books)
+    .where(where);
+  const { page, perPage, pageCount, total, offset } = pageEnvelope(
+    params.page ?? 1,
+    pageSize,
+    Number(count),
+  );
+
   const rows = await db
     .select(CARD_COLUMNS)
     .from(books)
     .where(where)
     .orderBy(...order)
-    .limit(pageSize)
-    .offset((page - 1) * pageSize);
+    .limit(perPage)
+    .offset(offset);
 
-  const [{ count }] = await db
-    .select({ count: sql<number>`COUNT(*)` })
-    .from(books)
-    .where(where);
-  const total = Number(count);
-
-  return {
-    books: rows.map(toCard),
-    total,
-    page,
-    pageSize,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
-  };
+  return { books: rows.map(toCard), total, page, pageSize: perPage, pageCount };
 }
 
 /**

@@ -1,7 +1,9 @@
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
+import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { PageShell } from "~/components/page-shell";
+import { Pager } from "~/components/pager";
 import { Breadcrumbs, Container, EmptyState, PageHeader } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, journalTagPath, SITE_NAME } from "~/lib/seo";
@@ -19,7 +21,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
   const tag = params.tag;
   if (!tag) throw redirect("/journal/archive");
-  const page = Math.max(1, Number(new URL(request.url).searchParams.get("page")) || 1);
+  const page = parsePage(new URL(request.url).searchParams.get("page"));
   const result = await catalogRepo.listPostsByTag(db, tag, { page });
   return { tag, result };
 }
@@ -90,31 +92,14 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
           </div>
         )}
 
-        {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="mt-12 justify-center fx-journal-tag-row">
-            {result.page > 1 ? (
-              <Link
-                to={`${journalTagPath(tag)}?page=${result.page - 1}`}
-                rel="prev"
-                className="cap-btn"
-              >
-                Newer
-              </Link>
-            ) : null}
-            <span className="ui">
-              Page {result.page} of {result.pageCount}
-            </span>
-            {result.page < result.pageCount ? (
-              <Link
-                to={`${journalTagPath(tag)}?page=${result.page + 1}`}
-                rel="next"
-                className="cap-btn"
-              >
-                Older
-              </Link>
-            ) : null}
-          </nav>
-        ) : null}
+        <Pager
+          page={result.page}
+          pageCount={result.pageCount}
+          hrefFor={(n) => pageHref(journalTagPath(tag), {}, n)}
+          prevLabel="Newer"
+          nextLabel="Older"
+          label="Journal pages"
+        />
       </Container>
     </PageShell>
   );
