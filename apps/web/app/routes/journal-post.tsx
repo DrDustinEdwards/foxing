@@ -1,3 +1,5 @@
+import proseBlocks from "capsomer/prose-blocks.css?url";
+import prose from "capsomer/prose.css?url";
 import { goneResponse, renameRedirect } from "@dustinedwards/site-runtime/url";
 import { catalogRepo } from "@foxing/core";
 import { journalPreviewContext } from "~/context";
@@ -88,6 +90,13 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export const headers = listingPageHeaders;
+
+// Capsomer's reading context and prose blocks, on the post page only: the rest of the site has no
+// rendered Markdown, so it does not carry the stylesheet. Foxing's look is set by token in journal.css.
+export const links: Route.LinksFunction = () => [
+  { rel: "stylesheet", href: prose },
+  { rel: "stylesheet", href: proseBlocks },
+];
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Essay not found | Foxing" }];
@@ -184,7 +193,11 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
           ) : null}
 
           {/* Raw HTML: trusted CMS markdown. */}
-          <div className="article-prose e-content" dangerouslySetInnerHTML={{ __html: html }} />
+          <div
+            className="article-prose e-content"
+            data-context="prose"
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
         </article>
       </Container>
     </PageShell>
