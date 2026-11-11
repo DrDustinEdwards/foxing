@@ -276,7 +276,7 @@ export function useMarkNotificationsRead() {
         const notifications = page.notifications.map((n) =>
           !ids || ids.has(n.id) ? { ...n, isRead: true } : n,
         );
-        return { notifications, unread: notifications.filter((n) => !n.isRead).length };
+        return { ...page, notifications, unread: notifications.filter((n) => !n.isRead).length };
       }),
     ],
     invalidates: () => [keys.notifications],

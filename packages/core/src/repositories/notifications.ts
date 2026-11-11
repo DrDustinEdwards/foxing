@@ -1,7 +1,8 @@
 // Notifications read/mark data access. Notifications are WRITTEN only by the
 // core event emitter; this repo is the read + mark-read surface the mobile client and
 // in-app UI use. Push delivery of these is gated in domain/push.ts.
-import { and, desc, eq, gt, inArray, lt, sql } from "drizzle-orm";
+import { olderThan } from "@dustinedwards/site-runtime/d1";
+import { and, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { notifications } from "../schema";
 
@@ -10,16 +11,24 @@ export type Notification = typeof notifications.$inferSelect;
 export async function listForUser(
   db: Db,
   userId: string,
-  opts: { cursor?: number | null; limit?: number } = {},
+  opts: { cursor?: { at: number; id: string } | null; limit?: number } = {},
 ): Promise<Notification[]> {
   const limit = Math.min(opts.limit ?? 40, 100);
   const conds = [eq(notifications.userId, userId)];
-  if (opts.cursor) conds.push(lt(notifications.createdAt, new Date(opts.cursor)));
+  if (opts.cursor)
+    conds.push(
+      olderThan(
+        notifications.createdAt,
+        notifications.id,
+        new Date(opts.cursor.at),
+        opts.cursor.id,
+      ),
+    );
   return db
     .select()
     .from(notifications)
     .where(and(...conds))
-    .orderBy(desc(notifications.createdAt))
+    .orderBy(desc(notifications.createdAt), desc(notifications.id))
     .limit(limit);
 }
 

@@ -16,8 +16,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user } = await requireProfile(env, request);
   const url = new URL(request.url);
   const cursor = url.searchParams.get("cursor");
-  const page = await views.feed(createDb(env.DB), user.id, cursor ? Number(cursor) : null);
-  return { page, cursor: cursor ? Number(cursor) : null };
+  const page = await views.feed(createDb(env.DB), user.id, cursor);
+  return { page, cursor };
 }
 
 export function meta() {
@@ -80,7 +80,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
 
         {nextCursor ? (
           <div className="mt-6 text-center">
-            <Link to={`/feed?cursor=${nextCursor}`} className="link sans small">
+            <Link to={`/feed?cursor=${encodeURIComponent(nextCursor)}`} className="link sans small">
               Older activity
             </Link>
           </div>

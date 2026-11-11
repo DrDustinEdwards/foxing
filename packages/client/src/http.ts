@@ -162,7 +162,6 @@ export function qs(params: Record<string, string | number | boolean | null | und
   return `?${entries.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`).join("&")}`;
 }
 
-/** The message to show for a failed mutation or query, or null. */
 /** A failed write, worded for the reader: what failed first, then the server's reason. */
 export function writeErrorMessage(error: unknown): string | null {
   if (!error) return null;
@@ -171,7 +170,8 @@ export function writeErrorMessage(error: unknown): string | null {
   return `Could not save: ${error.message}`;
 }
 
-export function errorMessage(error: unknown): string | null {
+/** The message to show for a failed mutation or query, or null. */
+export function failedRequestMessage(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof ApiError) return error.message;
   return OFFLINE_MESSAGE;

@@ -418,14 +418,14 @@ export function listRecCandidatesByAuthors(
     .filter(Boolean)
     .slice(0, 40);
   if (list.length === 0) return Promise.resolve([]);
-  const inList = sql.join(
+  const placeholders = sql.join(
     list.map((a) => sql`${a}`),
     sql`, `,
   );
   return db
     .select(REC_COLUMNS)
     .from(books)
-    .where(and(readableCatalog, sql`lower(${books.author}) IN (${inList})`))
+    .where(and(readableCatalog, sql`lower(${books.author}) IN (${placeholders})`))
     .orderBy(sql`${books.weightedRating} DESC NULLS LAST`, asc(books.title))
     .limit(limit);
 }
@@ -439,7 +439,7 @@ export function listRecCandidatesBySubjects(
 ): Promise<RecCandidate[]> {
   const list = [...new Set(subjects.map((s) => s.toLowerCase()).filter(Boolean))].slice(0, 40);
   if (list.length === 0) return Promise.resolve([]);
-  const inList = sql.join(
+  const placeholders = sql.join(
     list.map((s) => sql`${s}`),
     sql`, `,
   );
@@ -449,7 +449,7 @@ export function listRecCandidatesBySubjects(
     .where(
       and(
         readableCatalog,
-        sql`EXISTS (SELECT 1 FROM book_subjects bs WHERE bs.book_id = ${books.id} AND lower(bs.subject) IN (${inList}))`,
+        sql`EXISTS (SELECT 1 FROM book_subjects bs WHERE bs.book_id = ${books.id} AND lower(bs.subject) IN (${placeholders}))`,
       ),
     )
     .orderBy(
