@@ -244,7 +244,6 @@ function compareKeys(a: Key, b: Key): number {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
-
 // -- Public profile bundle helpers ------------------------------------------
 
 /** Visibilities a viewer may see of a target's content. Owner sees all; a viewer who is

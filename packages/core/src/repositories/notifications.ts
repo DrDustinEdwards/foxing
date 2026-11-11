@@ -17,7 +17,12 @@ export async function listForUser(
   const conds = [eq(notifications.userId, userId)];
   if (opts.cursor)
     conds.push(
-      olderThan(notifications.createdAt, notifications.id, new Date(opts.cursor.at), opts.cursor.id),
+      olderThan(
+        notifications.createdAt,
+        notifications.id,
+        new Date(opts.cursor.at),
+        opts.cursor.id,
+      ),
     );
   return db
     .select()

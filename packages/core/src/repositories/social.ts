@@ -263,7 +263,12 @@ export async function listActivityByAuthors(
   const conds = [inArray(activityEvents.userId, authorIds)];
   if (opts.cursor)
     conds.push(
-      olderThan(activityEvents.createdAt, activityEvents.id, new Date(opts.cursor.at), opts.cursor.id),
+      olderThan(
+        activityEvents.createdAt,
+        activityEvents.id,
+        new Date(opts.cursor.at),
+        opts.cursor.id,
+      ),
     );
   return db
     .select()
@@ -284,7 +289,12 @@ export async function listFollowerNotifications(
   const conds = [eq(notifications.userId, viewerId), eq(notifications.type, "new_follower")];
   if (opts.cursor)
     conds.push(
-      olderThan(notifications.createdAt, notifications.id, new Date(opts.cursor.at), opts.cursor.id),
+      olderThan(
+        notifications.createdAt,
+        notifications.id,
+        new Date(opts.cursor.at),
+        opts.cursor.id,
+      ),
     );
   return db
     .select()

@@ -332,8 +332,18 @@ const botmFields = {
   book_id: z.string().min(1).max(100).nullable().optional().describe("The book's id, or null."),
   category: z.string().max(200).nullable().optional(),
   curator_note: z.string().max(5000).nullable().optional().describe("Foxing's note on the pick."),
-  bookshop_url: z.url({ protocol: /^https?$/ }).max(1000).nullable().optional().describe("Bookshop.org link."),
-  amazon_url: z.url({ protocol: /^https?$/ }).max(1000).nullable().optional().describe("Amazon link."),
+  bookshop_url: z
+    .url({ protocol: /^https?$/ })
+    .max(1000)
+    .nullable()
+    .optional()
+    .describe("Bookshop.org link."),
+  amazon_url: z
+    .url({ protocol: /^https?$/ })
+    .max(1000)
+    .nullable()
+    .optional()
+    .describe("Amazon link."),
 };
 
 function botmBody(args: Record<string, unknown>): Record<string, unknown> {
