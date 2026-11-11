@@ -154,11 +154,15 @@ export async function getBookById(db: Db, id: string): Promise<Book | null> {
 /** Books by ids, returned in the order the ids were given (for FTS result ordering). */
 export async function getBooksByIds(db: Db, ids: string[]): Promise<BookCard[]> {
   if (ids.length === 0) return [];
-  const rows = await db
-    .select(CARD_COLUMNS)
-    .from(books)
-    .where(and(inArray(books.id, ids), eq(books.sourceType, "catalog")));
-  const byId = new Map(rows.map((r) => [r.id, toCard(r)]));
+  const byId = new Map<string, BookCard>();
+  // A reading list can hold more books than one D1 statement may bind.
+  for (const chunk of chunked([...new Set(ids)])) {
+    const rows = await db
+      .select(CARD_COLUMNS)
+      .from(books)
+      .where(and(inArray(books.id, chunk), eq(books.sourceType, "catalog")));
+    for (const r of rows) byId.set(r.id, toCard(r));
+  }
   return ids.map((id) => byId.get(id)).filter((b): b is BookCard => !!b);
 }
 

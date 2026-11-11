@@ -13,7 +13,7 @@ const db = () => createDb(env.DB);
 
 // A caller that answers `value` as the parsed structured reply. No network.
 function stubCaller(value: unknown): StructuredCaller {
-  return async () => ({ value, inputTokens: 20, outputTokens: 40 });
+  return async () => ({ value, usage: { input: 20, output: 40, cacheRead: 0, cacheWrite: 0 } });
 }
 
 async function seedUser(id: string, tier: "free" | "plus", favoriteGenres: string[] | null) {

@@ -4,7 +4,7 @@
 // in-process from web/mobile loaders; writes are called by the API after the domain
 // layer authorized them.
 import { and, desc, eq, inArray, lt, sql } from "drizzle-orm";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import { uniqueSlug } from "../domain/slug";
 import {
   activityEvents,
@@ -259,14 +259,24 @@ export async function listActivityByAuthors(
 ): Promise<ActivityEvent[]> {
   if (authorIds.length === 0) return [];
   const limit = Math.min(opts.limit ?? 40, 100);
-  const conds = [inArray(activityEvents.userId, authorIds)];
-  if (opts.cursor) conds.push(lt(activityEvents.createdAt, new Date(opts.cursor)));
-  return db
-    .select()
-    .from(activityEvents)
-    .where(and(...conds))
-    .orderBy(desc(activityEvents.createdAt))
-    .limit(limit);
+  const before = opts.cursor ? lt(activityEvents.createdAt, new Date(opts.cursor)) : undefined;
+  // One query per chunk of authors (D1's 100-parameter limit), each its own newest `limit`; the newest `limit`
+  // of them all is the same page one unchunked query would return.
+  const parts = await Promise.all(
+    chunked(authorIds).map((chunk) =>
+      db
+        .select()
+        .from(activityEvents)
+        .where(and(inArray(activityEvents.userId, chunk), before))
+        .orderBy(desc(activityEvents.createdAt))
+        .limit(limit),
+    ),
+  );
+  if (parts.length === 1) return parts[0];
+  return parts
+    .flat()
+    .sort((a, b) => (b.createdAt?.getTime() ?? 0) - (a.createdAt?.getTime() ?? 0))
+    .slice(0, limit);
 }
 
 /** The viewer's own new_follower notifications, for the feed self-channel ("X followed

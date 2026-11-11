@@ -24,5 +24,12 @@ export function reserveCents(
   inputChars: number,
   maxOutputTokens: number,
 ): number {
-  return estimateCostCents(role, Math.ceil(inputChars / 3), maxOutputTokens);
+  // Every input token at the uncached price, the dearest a prompt can be except a cache write, which is never more
+  // than a quarter above it and is covered by the one-token-per-three-characters overestimate.
+  return estimateCostCents(role, {
+    input: Math.ceil(inputChars / 3),
+    output: maxOutputTokens,
+    cacheRead: 0,
+    cacheWrite: 0,
+  });
 }

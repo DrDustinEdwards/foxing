@@ -1,4 +1,4 @@
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import {
   and,
   asc,
@@ -10,7 +10,6 @@ import {
   isNull,
   like,
   lt,
-  notInArray,
   or,
   sql,
   type SQL,
@@ -70,9 +69,18 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
     );
   if (query.publishedAfter) where.push(gte(journalPosts.publishedAt, query.publishedAfter));
   if (query.publishedBefore) where.push(lt(journalPosts.publishedAt, query.publishedBefore));
+  // The slug lists come from site-api's schedule table and have no ceiling, so each binds as ONE JSON parameter
+  // (D1 refuses over 100), never one parameter per slug; this filter sits under a paged query, so it cannot chunk.
   if (query.slugs)
-    where.push(query.slugs.length ? inArray(journalPosts.slug, query.slugs) : sql`0`);
-  if (query.exceptSlugs?.length) where.push(notInArray(journalPosts.slug, query.exceptSlugs));
+    where.push(
+      query.slugs.length
+        ? sql`${journalPosts.slug} IN (SELECT value FROM json_each(${JSON.stringify(query.slugs)}))`
+        : sql`0`,
+    );
+  if (query.exceptSlugs?.length)
+    where.push(
+      sql`${journalPosts.slug} NOT IN (SELECT value FROM json_each(${JSON.stringify(query.exceptSlugs)}))`,
+    );
   return and(...where);
 }
 
@@ -439,10 +447,13 @@ export async function journalPeopleNames(
   ids: ReadonlyArray<string | null>,
 ): Promise<Map<string, string>> {
   const wanted = [...new Set(ids.filter((id): id is string => id !== null))];
-  if (wanted.length === 0) return new Map();
-  const rows = await db
-    .select({ id: profiles.id, displayName: profiles.displayName, username: profiles.username })
-    .from(profiles)
-    .where(inArray(profiles.id, wanted));
-  return new Map(rows.map((r) => [r.id, r.displayName ?? r.username]));
+  const names = new Map<string, string>();
+  for (const chunk of chunked(wanted)) {
+    const rows = await db
+      .select({ id: profiles.id, displayName: profiles.displayName, username: profiles.username })
+      .from(profiles)
+      .where(inArray(profiles.id, chunk));
+    for (const r of rows) names.set(r.id, r.displayName ?? r.username);
+  }
+  return names;
 }

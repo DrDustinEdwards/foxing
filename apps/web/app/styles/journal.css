@@ -124,11 +124,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.25rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
 }
 .fx-journal-tag-caps {
@@ -191,11 +191,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.25rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
   @media (min-width: 40rem) {
     padding: 2rem;
@@ -245,11 +245,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
 }
 .fx-journal-img-2 {

@@ -24,7 +24,7 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.75rem;
-  box-shadow: var(--fx-shadow-md);
+  box-shadow: var(--shadow-m);
 }
 .fx-auth-shell-text {
   margin-top: 0.375rem;
@@ -100,7 +100,7 @@
   background-color: var(--fx-charcoal);
   padding: 2rem;
   color: var(--fx-on-dark);
-  box-shadow: var(--fx-shadow-md);
+  box-shadow: var(--shadow-m);
 }
 .fx-paywall-btn {
   position: absolute;

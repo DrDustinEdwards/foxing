@@ -2,7 +2,7 @@
 // after sign-in and pruned when Expo reports DeviceNotRegistered. loadDeliveryContext
 // gives the Queue consumer everything the push gate needs for one notification.
 import { and, eq, inArray } from "drizzle-orm";
-import type { Db } from "../db";
+import { chunked, type Db } from "../db";
 import type { NotificationPrefs } from "../domain/push";
 import { notifications, profiles, pushTokens } from "../schema";
 
@@ -36,8 +36,8 @@ export async function listTokens(db: Db, userId: string): Promise<PushToken[]> {
 /** Prune tokens Expo reported as unregistered (DeviceNotRegistered). Keyed by token
  *  value alone -- a dead token is dead for whichever user owned it. */
 export async function pruneTokens(db: Db, tokens: string[]): Promise<void> {
-  if (tokens.length === 0) return;
-  await db.delete(pushTokens).where(inArray(pushTokens.token, tokens));
+  for (const chunk of chunked(tokens))
+    await db.delete(pushTokens).where(inArray(pushTokens.token, chunk));
 }
 
 export type DeliveryContext = {
