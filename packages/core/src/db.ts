@@ -6,26 +6,14 @@ import { attachKv, type KvLike } from "./kv-cache";
 export type Schema = typeof schema;
 export type Db = DrizzleD1Database<Schema>;
 
-// D1 refuses a statement with more than 100 bound parameters ("too many SQL variables").
-// Every IN list and every multi-row insert is cut to fit, through these two, so the limit
-// is written once.
-export const D1_MAX_BOUND_PARAMS = 100;
-/** The longest IN list, with room left for the query's other parameters. */
-export const IN_LIST_CHUNK = 90;
-
-/** `items` in slices of at most `size`, in order. */
-export function chunked<T>(items: readonly T[], size: number = IN_LIST_CHUNK): T[][] {
-  if (!Number.isInteger(size) || size < 1)
-    throw new RangeError(`chunk size must be a positive integer, got ${size}`);
-  const out: T[][] = [];
-  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
-  return out;
-}
-
-/** How many rows of a table one INSERT may carry: every column can be a bound parameter. */
-export function rowsPerInsert(columns: number): number {
-  return Math.max(1, Math.floor(D1_MAX_BOUND_PARAMS / columns));
-}
+// D1's statement limits (100 bound parameters) live in site-runtime ./d1, one copy for every site.
+export {
+  chunked,
+  D1_MAX_BOUND_PARAMS,
+  IN_LIST_CHUNK,
+  inList,
+  rowsPerInsert,
+} from "@dustinedwards/site-runtime/d1";
 
 // D1 occasionally throws at statement execution for reasons unrelated to the query:
 // a lost edge connection, a storage object reset, or an isolate cold-start blip.

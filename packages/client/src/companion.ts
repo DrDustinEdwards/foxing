@@ -2,7 +2,7 @@
 // server builds every prompt; a screen sends only the action, the book and what the
 // reader picked or typed. Plus only: a free reader gets ApiError code "plus_required".
 import { useCallback, useRef, useState } from "react";
-import { ApiError, errorMessage } from "./http";
+import { ApiError, failedRequestMessage } from "./http";
 import { useApi } from "./provider";
 
 export type CompanionAction =
@@ -95,5 +95,5 @@ export function useCompanion() {
   }, []);
 
   const planRequired = error instanceof ApiError && error.code === "plus_required";
-  return { run, reset, text, pending, error: errorMessage(error), planRequired, threadId };
+  return { run, reset, text, pending, error: failedRequestMessage(error), planRequired, threadId };
 }

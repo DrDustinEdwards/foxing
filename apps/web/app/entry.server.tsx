@@ -6,7 +6,7 @@ import type { EntryContext, RouterContextProvider } from "react-router";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { isbot } from "isbot";
 import { getNonce } from "@dustinedwards/site-runtime/context";
-import { NonceContext } from "./lib/nonce";
+import { NonceContext } from "@dustinedwards/site-runtime/nonce";
 
 // React Router prints every route error, so each scanner 404 wrote a stack trace; a route 404 is counted, not logged.
 export { handleServerError as handleError } from "@dustinedwards/site-runtime/log";

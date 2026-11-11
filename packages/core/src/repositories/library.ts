@@ -532,8 +532,53 @@ export async function listGoals(db: Db, userId: string): Promise<ReadingGoal[]> 
     .orderBy(desc(readingGoals.year));
 }
 
-/** Half-open [start, end) date range for a goal period. */
+/** The instant a calendar day starts in the reader's timezone, from that day's UTC midnight (`dayStartUtc`); the
+ *  UTC midnight itself when they have no zone or Intl does not know it. Inverse of localDay. */
+export function localMidnight(dayStartUtc: number, timezone: string | null): number {
+  if (!timezone) return dayStartUtc;
+  const offset = (at: number): number => {
+    try {
+      const parts = Object.fromEntries(
+        new Intl.DateTimeFormat("en-US", {
+          timeZone: timezone,
+          hourCycle: "h23",
+          year: "numeric",
+          month: "numeric",
+          day: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+        })
+          .formatToParts(new Date(at))
+          .map((p) => [p.type, Number(p.value)]),
+      ) as Record<string, number>;
+      const wall = Date.UTC(parts.year!, parts.month! - 1, parts.day!, parts.hour!, parts.minute!);
+      return wall - Math.floor(at / 60_000) * 60_000;
+    } catch {
+      return 0;
+    }
+  };
+  // Two steps settle a day whose offset changes (a daylight saving switch) between UTC midnight and local midnight.
+  const first = dayStartUtc - offset(dayStartUtc);
+  return dayStartUtc - offset(first);
+}
+
+/** Half-open [start, end) date range for a goal period, its days in the reader's timezone (UTC without one), so
+ *  goal progress counts the same days as the streak and the stats page. */
 export function periodRange(
+  periodType: string,
+  year: number,
+  month?: number | null,
+  week?: number | null,
+  timezone: string | null = null,
+): { start: Date; end: Date } {
+  const { start, end } = utcPeriodRange(periodType, year, month, week);
+  return {
+    start: new Date(localMidnight(start.getTime(), timezone)),
+    end: new Date(localMidnight(end.getTime(), timezone)),
+  };
+}
+
+function utcPeriodRange(
   periodType: string,
   year: number,
   month?: number | null,
@@ -564,8 +609,9 @@ export async function countFinishedInPeriod(
   db: Db,
   userId: string,
   goal: { periodType: string; year: number; month?: number | null; week?: number | null },
+  timezone: string | null = null,
 ): Promise<number> {
-  const { start, end } = periodRange(goal.periodType, goal.year, goal.month, goal.week);
+  const { start, end } = periodRange(goal.periodType, goal.year, goal.month, goal.week, timezone);
   const rows = await db
     .select({ n: sql<number>`count(*)` })
     .from(userBooks)

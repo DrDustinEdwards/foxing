@@ -7,7 +7,8 @@
 // additive announcements table. Dashboard, audit and users live here; the catalog,
 // journal and announcement surfaces live in their own modules, re-exported below so
 // adminRepo stays one namespace.
-import { and, desc, eq, like, or, sql, type SQL } from "drizzle-orm";
+import { and, desc, eq, or, sql, type SQL } from "drizzle-orm";
+import { likeContains } from "@dustinedwards/site-runtime/d1";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import type { Db } from "../db";
 import { type AdminSettings, isAdminAccount } from "../domain/admins";
@@ -150,7 +151,7 @@ export async function listUsers(
     .from(profiles)
     .leftJoin(user, eq(user.id, profiles.id))
     .where(
-      q ? or(like(profiles.username, `%${q}%`), like(profiles.displayName, `%${q}%`)) : undefined,
+      q ? or(likeContains(profiles.username, q), likeContains(profiles.displayName, q)) : undefined,
     )
     .orderBy(desc(profiles.createdAt))
     .limit(limit)
