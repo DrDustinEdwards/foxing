@@ -66,7 +66,10 @@
   "ratelimits": [
     // Carrel's site API (/api/carrel/v1), per caller address. Its namespace_id must be used by
     // no other Worker in the account, or the two would share one counter.
-    { "name": "CARREL_RATE_LIMIT", "namespace_id": "1104", "simple": { "limit": 120, "period": 60 } }
+    { "name": "CARREL_RATE_LIMIT", "namespace_id": "1104", "simple": { "limit": 120, "period": 60 } },
+    // The CSP report sink (site-runtime ./worker), 60 reports a minute per caller address, the network's one
+    // setting; over it, or with no binding, a report is dropped (still 204). dei 7716, Foxhound 7718, Carrel 7703.
+    { "name": "CSP_REPORT_RATE_LIMIT", "namespace_id": "7717", "simple": { "limit": 60, "period": 60 } }
   ],
   "send_email": [{ "name": "EMAIL" }],
   // The companion cache pipeline. Cron finds catalog books missing a cached
