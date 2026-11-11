@@ -26,7 +26,7 @@ import "@fontsource/dm-mono/500.css";
 import stylesheet from "./app.css?url";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
-import { useNonce } from "./lib/nonce";
+import { useNonce } from "@dustinedwards/site-runtime/nonce";
 import { SITE_NAME } from "./lib/seo";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;

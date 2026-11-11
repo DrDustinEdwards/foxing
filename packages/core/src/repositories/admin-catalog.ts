@@ -1,6 +1,7 @@
 import type { Db } from "../db";
 import { bookOfTheMonth, books, clubs, externalBookClubPicks, externalBookClubs } from "../schema";
-import { and, desc, eq, isNull, like, or, sql } from "drizzle-orm";
+import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
+import { likeContains } from "@dustinedwards/site-runtime/d1";
 import {
   auditCatalog,
   summarize,
@@ -37,7 +38,7 @@ export async function listBooksAdmin(
       publicationYear: books.publicationYear,
     })
     .from(books)
-    .where(q ? or(like(books.title, `%${q}%`), like(books.author, `%${q}%`)) : undefined)
+    .where(q ? or(likeContains(books.title, q), likeContains(books.author, q)) : undefined)
     .orderBy(desc(books.updatedAt))
     .limit(limit)
     .offset(opts.offset ?? 0);
@@ -251,7 +252,7 @@ export async function listClubsAdmin(
       createdAt: clubs.createdAt,
     })
     .from(clubs)
-    .where(q ? like(clubs.name, `%${q}%`) : undefined)
+    .where(q ? likeContains(clubs.name, q) : undefined)
     .orderBy(desc(clubs.createdAt))
     .limit(limit)
     .offset(opts.offset ?? 0);

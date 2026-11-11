@@ -9,6 +9,7 @@
 // The bug this prevents: "follows implies friends" leaking friends-only content to every
 // follower. A plain follower must never see a friends-only event. resolveFeed is a PURE
 // function so the whole matrix is unit-tested without D1.
+import { decodeCursor, encodeCursor } from "@dustinedwards/site-runtime/d1";
 import { eq } from "drizzle-orm";
 import type { Db } from "../db";
 import { emit, type EventActor } from "../events";
@@ -179,14 +180,16 @@ export async function removeBookFromList(
 // Load both relationship graphs, fetch candidate activity + the viewer's own
 // new_follower notifications, resolve visibility (pure), merge by created_at, page.
 
-export type FeedPage = { items: FeedItem[]; nextCursor: number | null };
+/** `nextCursor` is site-runtime encodeCursor's `<ms>.<id>` of the last row, or null on the last page. */
+export type FeedPage = { items: FeedItem[]; nextCursor: string | null };
 
 export async function getFeed(
   db: Db,
   viewerId: string,
-  opts: { cursor?: number | null; limit?: number } = {},
+  opts: { cursor?: string | null; limit?: number } = {},
 ): Promise<FeedPage> {
   const limit = Math.min(opts.limit ?? 30, 100);
+  const cursor = decodeCursor(opts.cursor);
   const [followingIds, closeFriendAuthorIds] = await Promise.all([
     socialRepo.listFollowingIds(db, viewerId),
     socialRepo.listCloseFriendOfIds(db, viewerId),
@@ -195,8 +198,8 @@ export async function getFeed(
   const authorIds = [...new Set([...followingIds, ...closeFriendAuthorIds])];
   // Over-fetch candidates because some will be filtered out by visibility.
   const [candidates, followerNotifs] = await Promise.all([
-    socialRepo.listActivityByAuthors(db, authorIds, { cursor: opts.cursor, limit: limit * 3 }),
-    socialRepo.listFollowerNotifications(db, viewerId, { cursor: opts.cursor, limit }),
+    socialRepo.listActivityByAuthors(db, authorIds, { cursor, limit: limit * 3 }),
+    socialRepo.listFollowerNotifications(db, viewerId, { cursor, limit }),
   ]);
 
   const visible = resolveFeed({ viewerId, followingIds, closeFriendAuthorIds, events: candidates });
@@ -209,17 +212,36 @@ export async function getFeed(
       createdAt: notification.createdAt,
     })),
   ];
-  items.sort((a, b) => tsOf(b) - tsOf(a));
+  items.sort((a, b) => compareKeys(keyOf(b), keyOf(a)));
 
-  const page = items.slice(0, limit);
-  const nextCursor = page.length === limit ? tsOf(page[page.length - 1]) : null;
-  return { items: page, nextCursor };
+  // Each source was read only down to its last row. Below the higher of those edges a full source may still hold
+  // rows, so the page stops there and the next page starts from it. A page the visibility filter thinned keeps
+  // paging instead of ending early.
+  const edges = [
+    candidates.length === limit * 3 ? candidates.at(-1) : undefined,
+    followerNotifs.length === limit ? followerNotifs.at(-1) : undefined,
+  ]
+    .filter((row) => row !== undefined)
+    .map((row) => ({ at: row.createdAt?.getTime() ?? 0, id: row.id }));
+  const edge = edges.sort((a, b) => compareKeys(b, a))[0];
+  const known = edge ? items.filter((item) => compareKeys(keyOf(item), edge) > 0) : items;
+  const page = known.slice(0, limit);
+  const last = page.length === limit ? keyOf(page[page.length - 1]) : edge;
+  return { items: page, nextCursor: last ? encodeCursor(last.at, last.id) : null };
 }
 
-function tsOf(item: FeedItem): number {
+type Key = { at: number; id: string };
+
+function keyOf(item: FeedItem): Key {
   return item.kind === "activity"
-    ? (item.event.createdAt?.getTime() ?? 0)
-    : (item.createdAt?.getTime() ?? 0);
+    ? { at: item.event.createdAt?.getTime() ?? 0, id: item.event.id }
+    : { at: item.createdAt?.getTime() ?? 0, id: item.notification.id };
+}
+
+/** The feed's order, newest first, as SQLite orders `created_at DESC, id DESC` (ids compared as plain text). */
+function compareKeys(a: Key, b: Key): number {
+  if (a.at !== b.at) return a.at - b.at;
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
 // -- Public profile bundle helpers ------------------------------------------

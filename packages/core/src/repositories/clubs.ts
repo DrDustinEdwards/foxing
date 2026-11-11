@@ -1,10 +1,11 @@
+import { likeContains } from "@dustinedwards/site-runtime/d1";
 // Club data access. Pure DB reads/writes over the 10 club tables; no
 // permission logic and no event emission (that lives in domain/clubs.ts). Reads are
 // called in-process from web/mobile loaders; writes are called by the API layer after
 // the domain layer has authorized them. All fan-out to the live layer happens AFTER
 // these commit -- this file never touches a Durable Object. Threads and posts live in
 // clubs-threads.ts, polls, meetings and schedule in clubs-events.ts (re-exported below).
-import { and, desc, eq, inArray, isNotNull, like, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import { chunked, type Db } from "../db";
 import { uniqueSlug } from "../domain/slug";
@@ -53,11 +54,10 @@ export async function searchClubs(
 ): Promise<{ id: string; slug: string; name: string }[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  const term = `%${q.replace(/[%_]/g, "")}%`;
   const rows = await db
     .select({ id: clubs.id, slug: clubs.slug, name: clubs.name })
     .from(clubs)
-    .where(and(like(clubs.name, term), eq(clubs.visibility, "public"), isNotNull(clubs.slug)))
+    .where(and(likeContains(clubs.name, q), eq(clubs.visibility, "public"), isNotNull(clubs.slug)))
     .limit(limit);
   return rows.filter((r): r is { id: string; slug: string; name: string } => r.slug != null);
 }

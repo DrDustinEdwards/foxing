@@ -1,6 +1,7 @@
+import { likeContains } from "@dustinedwards/site-runtime/d1";
 // Profiles repository. All profile data access goes through here so an org/classroom
 // tenancy layer (Foxing Edu) can be added later without touching call sites.
-import { and, eq, inArray, like, or, sql } from "drizzle-orm";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
 import { profiles } from "../schema";
 import type { UpdateMeInput } from "../validators/profile";
@@ -58,7 +59,6 @@ export async function getProfileSummaries(
 export async function searchProfiles(db: Db, query: string, limit = 4): Promise<ProfileSummary[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  const term = `%${q.replace(/[%_]/g, "")}%`;
   return db
     .select({
       id: profiles.id,
@@ -69,7 +69,7 @@ export async function searchProfiles(db: Db, query: string, limit = 4): Promise<
     .from(profiles)
     .where(
       and(
-        or(like(profiles.username, term), like(profiles.displayName, term)),
+        or(likeContains(profiles.username, q), likeContains(profiles.displayName, q)),
         sql`coalesce(json_extract(${profiles.visibility}, '$.profile'), 'public') = 'public'`,
       ),
     )

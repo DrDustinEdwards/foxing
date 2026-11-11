@@ -1,4 +1,5 @@
 import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
+import { safeNextPath } from "@dustinedwards/site-runtime/sign-in-form";
 import { useSearchParams } from "react-router";
 import {
   AuthDivider,
@@ -10,7 +11,6 @@ import {
   signInErrorMessage,
 } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
-import { safeNextPath } from "~/lib/auth-client";
 import type { Route } from "./+types/login";
 
 export function meta() {
@@ -21,7 +21,10 @@ export function meta() {
 export function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const next = new URL(request.url).searchParams.get("next");
-  return { methods: signInMethods(env, { social: true }), next: next ? safeNextPath(next) : null };
+  return {
+    methods: signInMethods(env, { social: true }),
+    next: next ? safeNextPath(next, { fallback: "/me" }) : null,
+  };
 }
 
 export default function Login({ loaderData }: Route.ComponentProps) {
