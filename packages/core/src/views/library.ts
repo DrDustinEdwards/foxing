@@ -60,7 +60,11 @@ export async function shelfDetail(
 
 /** Goals with progress; books-type goals count finishes in their period. */
 export async function goals(db: Db, userId: string): Promise<W.GoalWithProgress[]> {
-  const rows = await libraryRepo.listGoals(db, userId);
+  const [rows, profile] = await Promise.all([
+    libraryRepo.listGoals(db, userId),
+    profilesRepo.getProfileById(db, userId),
+  ]);
+  const tz = profile?.timezone ?? null;
   return Promise.all(
     rows.map(async (goal) => ({
       goal: {
@@ -73,7 +77,7 @@ export async function goals(db: Db, userId: string): Promise<W.GoalWithProgress[
         week: goal.week,
       },
       progress:
-        goal.type === "books" ? await libraryRepo.countFinishedInPeriod(db, userId, goal) : 0,
+        goal.type === "books" ? await libraryRepo.countFinishedInPeriod(db, userId, goal, tz) : 0,
     })),
   );
 }
@@ -105,17 +109,23 @@ export async function finishedSpread(
   db: Db,
   userId: string,
   year: number,
+  timezone: string | null = null,
 ): Promise<Pick<W.ReadingStats, "monthly" | "genres">> {
+  // A day either side, so a finish late on Dec 31 or early on Jan 1 in the reader's own zone is read, then each
+  // finish is placed by its local calendar day: the same day the streak counts.
   const finished = await libraryRepo.listFinishedInRangeForStats(
     db,
     userId,
-    Date.UTC(year, 0, 1),
-    Date.UTC(year + 1, 0, 1),
+    Date.UTC(year, 0, 1) - DAY_MS,
+    Date.UTC(year + 1, 0, 1) + DAY_MS,
   );
   const monthly = Array<number>(12).fill(0);
   const genreCounts = new Map<string, number>();
   for (const b of finished) {
-    if (b.finishedAt) monthly[b.finishedAt.getUTCMonth()] += 1;
+    if (!b.finishedAt) continue;
+    const local = new Date(localDay(b.finishedAt.getTime(), timezone) * DAY_MS);
+    if (local.getUTCFullYear() !== year) continue;
+    monthly[local.getUTCMonth()] += 1;
     for (const subject of b.subjects ?? []) {
       const name = subject.trim();
       if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
@@ -131,15 +141,20 @@ export async function finishedSpread(
 }
 
 export async function stats(db: Db, userId: string, now = Date.now()): Promise<W.ReadingStats> {
-  const year = new Date(now).getUTCFullYear();
-  const today = Math.floor(now / DAY_MS) * DAY_MS;
+  // Every bucket is a day in the reader's own timezone, as the streak is: `day` is that calendar day's UTC
+  // midnight, so a client reading it as a UTC date gets the reader's date.
+  const profile = await profilesRepo.getProfileById(db, userId);
+  const tz = profile?.timezone ?? null;
+  const today = localDay(now, tz) * DAY_MS;
+  const year = new Date(today).getUTCFullYear();
   const weekStart = today - 6 * DAY_MS;
   const [finishedThisYear, goals, spread, s, sessions] = await Promise.all([
-    libraryRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }),
+    libraryRepo.countFinishedInPeriod(db, userId, { periodType: "year", year }, tz),
     libraryRepo.listGoals(db, userId),
-    finishedSpread(db, userId, year),
+    finishedSpread(db, userId, year, tz),
     streak(db, userId, now),
-    libraryRepo.listSessionsSince(db, userId, weekStart),
+    // A day earlier than the local week start: UTC+14 is a day ahead of UTC.
+    libraryRepo.listSessionsSince(db, userId, weekStart - DAY_MS),
   ]);
 
   const week = Array.from({ length: 7 }, (_, i) => ({
@@ -149,7 +164,7 @@ export async function stats(db: Db, userId: string, now = Date.now()): Promise<W
   }));
   for (const session of sessions) {
     const start = session.startedAt.getTime();
-    const slot = week[Math.floor((start - weekStart) / DAY_MS)];
+    const slot = week[localDay(start, tz) - weekStart / DAY_MS];
     if (!slot) continue;
     slot.pages += session.pagesRead;
     if (session.endedAt) slot.minutes += Math.round((session.endedAt.getTime() - start) / 60_000);
@@ -218,7 +233,9 @@ export async function notifications(
     })),
     unread,
     nextCursor:
-      rows.length === limit ? encodeCursor(rows[limit - 1]!.createdAt.getTime(), rows[limit - 1]!.id) : null,
+      rows.length === limit
+        ? encodeCursor(rows[limit - 1]!.createdAt.getTime(), rows[limit - 1]!.id)
+        : null,
   };
 }
 

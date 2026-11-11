@@ -311,7 +311,7 @@ export async function recap(
   }
   const [recap, spread] = await Promise.all([
     recapDomain.getRecap(db, p.id, year),
-    finishedSpread(db, p.id, year),
+    finishedSpread(db, p.id, year, p.timezone ?? null),
   ]);
   return { recap, displayName: p.displayName ?? p.username, username: p.username, ...spread };
 }
