@@ -19,7 +19,8 @@ import {
 import { ADMIN_LIST_PATH, adminListResponse } from "@dustinedwards/site-runtime/access-drift";
 import type { CronJob } from "@dustinedwards/site-runtime/cron";
 import { UNCACHED } from "@dustinedwards/site-runtime/edge-cache";
-import { originalKey } from "@dustinedwards/site-runtime/image";
+import { IMMUTABLE_CACHE } from "@dustinedwards/site-runtime/image";
+import { r2ObjectResponse } from "@dustinedwards/site-runtime/r2-object";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
@@ -267,69 +268,79 @@ app.get("/reader-assets/*", async (c) => {
   const rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
   // Guard against traversal; keys are always reader/<slug>/<path>.
   if (!rest || rest.includes("..")) return plainNotFound();
-  const key = `reader/${rest}`;
 
   const cache = edgeCache();
   const mediaRequest = new Request(url.toString(), { method: "GET" });
-  const cached = await cache.match(mediaRequest);
-  if (cached) return cached;
-
-  const obj = await c.env.MEDIA.get(key);
-  if (!obj) return plainNotFound();
-
-  const ext = rest.split(".").pop()?.toLowerCase() ?? "";
-  const stored =
-    obj.httpMetadata?.contentType ?? READER_ASSET_CONTENT_TYPES[ext] ?? "application/octet-stream";
-  // A book's own scripts never run. Readium's frames are same-origin, so the reader's CSP ('self')
-  // would let an EPUB's external <script src> load from here; served as text/plain, nosniff makes
-  // the browser refuse to run it. (Its inline scripts are refused by the CSP, which they carry no
-  // nonce for.)
-  const contentType = /javascript|ecmascript/i.test(stored) ? "text/plain; charset=utf-8" : stored;
-
-  const res = new Response(obj.body, {
-    headers: {
-      "Content-Type": contentType,
-      "Cache-Control": "public, max-age=31536000, immutable",
-      "X-Robots-Tag": "noindex",
-      ETag: obj.httpEtag,
-    },
+  if (c.req.method === "GET") {
+    const cached = await cache.match(mediaRequest);
+    if (cached) return cached;
+  }
+  // site-runtime's r2ObjectResponse answers HEAD, ranges, 304 and the ETag; the reader's bucket view types each file.
+  const res = await r2ObjectResponse(c.req.raw, readerAssets(c.env.MEDIA, rest), `reader/${rest}`, {
+    cacheControl: IMMUTABLE_CACHE,
+    noindex: true,
   });
-  c.executionCtx.waitUntil(cache.put(mediaRequest, res.clone()));
+  if (res.status === 200 && c.req.method === "GET")
+    c.executionCtx.waitUntil(cache.put(mediaRequest, res.clone()));
   return res;
 });
+
+/**
+ * The MEDIA bucket as the reader's files: each object's Content-Type is its stored one, else the type its extension
+ * names. A book's own scripts never run: Readium's frames are same-origin, so the reader's CSP ('self') would let an
+ * EPUB's external <script src> load from here; served as text/plain, nosniff makes the browser refuse to run it. (Its
+ * inline scripts are refused by the CSP, which they carry no nonce for.)
+ */
+function readerAssets(bucket: R2Bucket, path: string) {
+  const ext = path.split(".").pop()?.toLowerCase() ?? "";
+  const typed = <T extends R2Object | null>(object: T): T => {
+    if (!object) return object;
+    return new Proxy(object, {
+      get(target, property) {
+        if (property === "writeHttpMetadata")
+          return (headers: Headers) => {
+            target.writeHttpMetadata(headers);
+            const stored =
+              headers.get("Content-Type") ??
+              READER_ASSET_CONTENT_TYPES[ext] ??
+              "application/octet-stream";
+            headers.set(
+              "Content-Type",
+              /javascript|ecmascript/i.test(stored) ? "text/plain; charset=utf-8" : stored,
+            );
+          };
+        const value = Reflect.get(target, property, target);
+        return typeof value === "function" ? value.bind(target) : value;
+      },
+    });
+  };
+  return {
+    head: async (key: string) => typed(await bucket.head(key)),
+    get: async (key: string, options?: { range?: Headers }) =>
+      typed(await bucket.get(key, options)),
+  };
+}
 
 // Every picture a page shows (app/lib/images.ts): covers from the COVERS bucket under covers/, and the
 // Journal's media library (app/lib/carrel/journal-media-adapter.server.ts) from MEDIA under journal/
 // only, so no other key (a reader asset, say) is ever served from here. A size is a year-long
 // immutable copy; a Journal address without its `v` (a replace or a turn keeps the key) an hour.
-app.get("/media/*", async (c) => {
-  let key: string;
-  try {
-    // A size URL is suffixed (photo.jpg.webp?w=640); the stored key is the original's.
-    key = originalKey(
-      decodeURIComponent(new URL(c.req.url).pathname.slice("/media/".length)),
-      c.req.raw,
-    );
-  } catch {
-    return plainNotFound();
-  }
-  if (key.split("/").some((part) => part === "" || part === "." || part === ".."))
-    return plainNotFound();
-  const [bucket, stored] = key.startsWith("covers/")
-    ? [c.env.COVERS, key.slice("covers/".length)]
-    : key.startsWith("journal/")
-      ? [c.env.MEDIA, key]
-      : [null, ""];
-  if (!bucket) return plainNotFound();
-  const versioned = key.startsWith("covers/") || c.req.query("v") !== undefined;
-  return images.respond(c.req.raw, {
-    object: await bucket.get(stored),
+app.get("/media/*", (c) =>
+  images.serve(c.req.raw, {
+    read: (key) =>
+      key.startsWith("covers/")
+        ? c.env.COVERS.get(key.slice("covers/".length))
+        : key.startsWith("journal/")
+          ? c.env.MEDIA.get(key)
+          : Promise.resolve(null),
     images: c.env.IMAGES,
     cache: edgeCache(),
-    reread: () => bucket.get(stored),
-    ...(versioned ? {} : { cacheControl: "public, max-age=3600" }),
-  });
-});
+    cacheControl: ({ key, url }) =>
+      key.startsWith("covers/") || url.searchParams.has("v")
+        ? IMMUTABLE_CACHE
+        : "public, max-age=3600",
+  }),
+);
 
 // The writes that can change a stored page: Carrel's (the Journal and its pictures) and the admin API's (catalog,
 // picks, awards, book of the month), the admin MCP's included. Each accepted one purges every stored page; a failed
