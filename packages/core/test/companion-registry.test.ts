@@ -101,12 +101,14 @@ describe("call cost", () => {
       output: 0,
       cacheRead: 0,
       cacheWrite: 0,
+      cacheWrite1h: 0,
     });
     const cached = estimateCostCents("standard", {
       input: 100,
       output: 0,
       cacheRead: 200_000,
       cacheWrite: 50_000,
+      cacheWrite1h: 0,
     });
     // Sonnet 5: 100 x $2 + 200,000 reads x $0.20 + 50,000 writes x $2.50 per million = $0.1652, rounded up.
     expect(uncached).toBe(1);

@@ -27,7 +27,7 @@ export type CacheGenerationResult = {
   costCents: number;
 };
 
-const NO_USAGE: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+const NO_USAGE: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
 
 async function collectText(
   caller: CompanionCaller,
@@ -83,7 +83,7 @@ export async function generateCachedActionsForBook(
       bookId: book.id,
       action: name,
       outputChars: text.length,
-      inputTokens: usage.input + usage.cacheRead + usage.cacheWrite,
+      inputTokens: usage.input + usage.cacheRead + usage.cacheWrite + usage.cacheWrite1h,
       outputTokens: usage.output,
       costCents: estimateCostCents(def.role, usage),
     });

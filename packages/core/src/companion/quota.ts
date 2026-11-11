@@ -31,5 +31,6 @@ export function reserveCents(
     output: maxOutputTokens,
     cacheRead: 0,
     cacheWrite: 0,
+    cacheWrite1h: 0,
   });
 }

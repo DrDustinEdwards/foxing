@@ -82,7 +82,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
 
   return streamSSE(c, async (stream) => {
     let assistantText = "";
-    let usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 };
+    let usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
 
     try {
       for await (const event of streamCompanion({
