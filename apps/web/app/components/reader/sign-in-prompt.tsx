@@ -12,7 +12,13 @@ import {
 } from "capsomer/react/dialog";
 import { Link } from "capsomer/react/link";
 
-export default function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClose: () => void }) {
+export default function SignInPrompt({
+  loginHref,
+  onClose,
+}: {
+  loginHref: string;
+  onClose: () => void;
+}) {
   // Capsomer's Dialog: a native modal, so focus stays inside, the reader behind is
   // inert, and Esc, the backdrop and Keep reading close it.
   return (
@@ -39,4 +45,3 @@ export default function SignInPrompt({ loginHref, onClose }: { loginHref: string
     </Dialog>
   );
 }
-
