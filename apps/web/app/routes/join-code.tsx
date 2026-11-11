@@ -13,7 +13,7 @@ import type { Route } from "./+types/join-code";
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect(`/login?redirect=/join/${params.code}`);
+  if (!session?.user) throw redirect(`/login?next=/join/${params.code}`);
 
   const db = createDb(env.DB);
   const club = await clubsRepo.getClubByJoinCode(db, params.code);
