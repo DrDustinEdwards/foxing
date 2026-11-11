@@ -10,7 +10,7 @@
     },
     "jscpd": {
       "clones": 282,
-      "lines": 3004,
+      "lines": 3012,
       "percentage": 3.4
     },
     "tests": {
