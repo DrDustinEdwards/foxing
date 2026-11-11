@@ -37,11 +37,19 @@ export async function changeBookStatus(
     await emit(db, "library.status.finished", actor, { bookId, title });
     await libraryRepo.incrementBooksFinished(db, actor.userId);
 
-    // goal_met: a books-type goal whose finished count now equals its target.
-    const goals = await libraryRepo.listGoals(db, actor.userId);
+    // goal_met: a books-type goal whose finished count now equals its target, its period in the reader's days.
+    const [goals, profile] = await Promise.all([
+      libraryRepo.listGoals(db, actor.userId),
+      profilesRepo.getProfileById(db, actor.userId),
+    ]);
     for (const g of goals) {
       if (g.type !== "books") continue;
-      const progress = await libraryRepo.countFinishedInPeriod(db, actor.userId, g);
+      const progress = await libraryRepo.countFinishedInPeriod(
+        db,
+        actor.userId,
+        g,
+        profile?.timezone ?? null,
+      );
       if (progress === g.target) {
         await emit(db, "goal.met", actor, { goalId: g.id, goalType: g.type, target: g.target });
       }

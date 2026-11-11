@@ -9,11 +9,6 @@ export const authClient = createAuthClient({
 
 export const { signIn } = authClient;
 
-/** Only a path on this site, never another origin (`//host` or `/\host`); else /me. */
-export function safeNextPath(next: string | null): string {
-  return next?.startsWith("/") && !next.startsWith("//") && !next.includes("\\") ? next : "/me";
-}
-
 /**
  * Adding a passkey and disconnecting Google or Apple need a sign-in from the last 10 minutes
  * (site-runtime ./sign-in, FRESH_SECONDS). On Better Auth's SESSION_NOT_FRESH the reader signs in

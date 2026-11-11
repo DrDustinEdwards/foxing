@@ -102,9 +102,10 @@ export async function runCacheBatch(
   db: Db,
   caller: CompanionCaller,
   limit: number,
-): Promise<CacheGenerationResult[]> {
+): Promise<{ results: CacheGenerationResult[]; failures: { bookId: string; error: string }[] }> {
   const books = await catalogBooksRepo.findBooksNeedingCache(db, CACHED_ACTION_NAMES, limit);
   const results: CacheGenerationResult[] = [];
+  const failures: { bookId: string; error: string }[] = [];
   for (const book of books) {
     const ctx: CompanionBookContext = {
       id: book.id,
@@ -114,7 +115,16 @@ export async function runCacheBatch(
       publicationYear: book.publicationYear,
       subjects: book.subjects,
     };
-    results.push(...(await generateCachedActionsForBook(db, caller, ctx)));
+    // One book that fails (a prose finding, a model error) is recorded and skipped, so it no longer stops every
+    // book behind it on every run. The others' rows are written; the failed one is picked again next run.
+    try {
+      results.push(...(await generateCachedActionsForBook(db, caller, ctx)));
+    } catch (err) {
+      failures.push({ bookId: book.id, error: err instanceof Error ? err.message : String(err) });
+    }
   }
-  return results;
+  if (failures.length && failures.length === books.length) {
+    throw new Error(`every book in the batch failed: ${failures.map((f) => f.error).join("; ")}`);
+  }
+  return { results, failures };
 }

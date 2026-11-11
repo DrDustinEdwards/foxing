@@ -119,7 +119,7 @@ socialRoutes.get("/lists/:id", async (c) => {
 socialRoutes.get("/feed", async (c) => {
   const session = requireSession(c);
   const cursor = c.req.query("cursor");
-  return c.json(await views.feed(c.get("db"), session.id, cursor ? Number(cursor) : null));
+  return c.json(await views.feed(c.get("db"), session.id, cursor ?? null));
 });
 
 // -- Recap ------------------------------------------------------------------

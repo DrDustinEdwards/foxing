@@ -28,20 +28,20 @@ export type Recap = {
 export async function getRecap(db: Db, userId: string, year: number): Promise<Recap> {
   const finishedRows = await recapRepo.listFinishedInYear(db, userId, year);
 
-  // Overlay each finish with the user's latest rating for that book.
-  const withRatings: RecapBook[] = await Promise.all(
-    finishedRows.map(async (b) => {
-      const latest = await diaryRepo.latestEntryForBook(db, userId, b.bookId);
-      return {
-        bookId: b.bookId,
-        title: b.title,
-        author: b.author,
-        slug: b.slug,
-        coverUrl: b.coverUrl,
-        ratingHalf: latest?.ratingHalf ?? null,
-      };
-    }),
+  // Overlay each finish with the user's latest rating for that book, all in one query.
+  const ratings = await diaryRepo.latestRatingsForBooks(
+    db,
+    userId,
+    finishedRows.map((b) => b.bookId),
   );
+  const withRatings: RecapBook[] = finishedRows.map((b) => ({
+    bookId: b.bookId,
+    title: b.title,
+    author: b.author,
+    slug: b.slug,
+    coverUrl: b.coverUrl,
+    ratingHalf: ratings.get(b.bookId) ?? null,
+  }));
 
   const rated = withRatings.filter((b) => b.ratingHalf != null);
   const averageRating =
