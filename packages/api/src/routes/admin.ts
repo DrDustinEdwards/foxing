@@ -376,8 +376,8 @@ const botmInput = z.object({
   month: z.number().int().min(1).max(12),
   category: z.string().max(200).nullable().optional(),
   curatorNote: z.string().max(5000).nullable().optional(),
-  amazonUrl: z.string().url().max(1000).nullable().optional(),
-  bookshopUrl: z.string().url().max(1000).nullable().optional(),
+  amazonUrl: z.url({ protocol: /^https?$/ }).max(1000).nullable().optional(),
+  bookshopUrl: z.url({ protocol: /^https?$/ }).max(1000).nullable().optional(),
   isPublished: z.boolean().optional(),
 });
 
@@ -484,7 +484,7 @@ const announcementInput = z.object({
   title: z.string().min(1).max(200),
   body: z.string().min(1).max(5000),
   placement: z.enum(["banner", "home", "journal"]).optional(),
-  linkUrl: z.string().url().max(1000).nullable().optional(),
+  linkUrl: z.url({ protocol: /^https?$/ }).max(1000).nullable().optional(),
   linkLabel: z.string().max(120).nullable().optional(),
   isActive: z.boolean().optional(),
   startsAt: z.coerce.date().nullable().optional(),
