@@ -1,3 +1,6 @@
+// First, before any module that builds a Zod schema: React Router evaluates the route modules ahead of entry.client's
+// startPage(), and Zod's caught new Function("") probe is a Trusted Types violation under the enforced policy.
+import "@dustinedwards/site-runtime/zod-jitless";
 import { iconLinks } from "@drdustinedwards/site-helpers/icons";
 import { createApiClient, createFoxingQueryClient, FoxingDataProvider } from "@foxing/client";
 import { ErrorPage, errorTitle } from "capsomer/react/error-page";
