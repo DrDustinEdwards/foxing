@@ -368,4 +368,3 @@ export async function deleteAccount(
   ];
   await db.batch(stmts as [BatchItem<"sqlite">, ...BatchItem<"sqlite">[]]);
 }
-
