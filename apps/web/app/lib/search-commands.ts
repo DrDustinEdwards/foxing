@@ -3,6 +3,7 @@
 // quick links are its commands; typing federates catalog books, authors, people and clubs from
 // /api/v1/search/suggest. No React and relative imports only: the islands are bundled on their own.
 import type { Command } from "capsomer/behavior/command-menu";
+import { readStored, writeStored } from "capsomer/behavior/hooks";
 
 /** The header's search button: its name, and how /site.js finds it on a page that does not hydrate. */
 export const SEARCH_BUTTON_LABEL = "Search the catalog";
@@ -16,7 +17,8 @@ type Suggest = {
   clubs?: { slug: string; name: string }[];
 };
 
-const RECENT_KEY = "foxing:recent-searches";
+/** Where recent searches are kept in this browser (Capsomer's stored values: localStorage, or the page alone). */
+export const RECENT_KEY = "foxing:recent-searches";
 const RECENT_MAX = 6;
 
 // GO TO quick links. Public entries show to everyone; the signed-in set is appended for
@@ -35,10 +37,9 @@ const SIGNED_IN_LINKS = [
   { to: "/settings", label: "Settings" },
 ];
 
-export function readRecent(): string[] {
-  if (typeof window === "undefined") return [];
+/** The recent searches in a stored value; anything else reads as none. */
+export function parseRecent(raw: string | null): string[] {
   try {
-    const raw = window.localStorage.getItem(RECENT_KEY);
     const parsed = raw ? (JSON.parse(raw) as unknown) : [];
     return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
   } catch {
@@ -46,13 +47,13 @@ export function readRecent(): string[] {
   }
 }
 
+export function readRecent(): string[] {
+  return typeof window === "undefined" ? [] : parseRecent(readStored(RECENT_KEY));
+}
+
 function pushRecent(query: string) {
   const next = [query, ...readRecent().filter((r) => r !== query)].slice(0, RECENT_MAX);
-  try {
-    window.localStorage.setItem(RECENT_KEY, JSON.stringify(next));
-  } catch {
-    /* storage disabled: recents just do not persist */
-  }
+  writeStored(RECENT_KEY, JSON.stringify(next));
 }
 
 /** How a command moves the reader: React Router's navigate on a hydrated page, a page load otherwise. */

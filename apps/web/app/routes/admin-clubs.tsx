@@ -44,9 +44,9 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
         <h1 className="display-3">Clubs</h1>
       </div>
 
-      <div className="stack-6">
+      <div className="cap-stack" data-gap="6">
         <AdminCard title="Search">
-          <form method="get" className="row-2">
+          <form method="get" className="cap-cluster" data-gap="3">
             <input name="q" defaultValue={q} placeholder="Club name" className={adminInputClass} />
             <AdminButton variant="primary" type="submit">
               Search
@@ -82,7 +82,7 @@ function ClubRow({
 
   return (
     <li className="py-3">
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <div className="min-0">
           <p className="sans small strong">
             {club.name}
@@ -96,7 +96,7 @@ function ClubRow({
             {club.slug ? `/${club.slug}` : "No slug"} · {club.visibility}
           </p>
         </div>
-        <div className="shrink-0 row-2">
+        <div className="shrink-0 cap-cluster" data-gap="3">
           {club.slug ? (
             <Link to={`/clubs/${club.slug}`} className="cap-btn">
               View

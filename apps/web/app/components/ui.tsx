@@ -1,17 +1,24 @@
 import { Link } from "capsomer/react/link";
-import { cn } from "~/lib/cn";
+import { cn } from "capsomer/react/hooks";
 
 /** Page-width container. One measure for every catalog surface. */
 export function Container({
   children,
   className,
   as: As = "div",
+  "data-gap": gap,
 }: {
   children: React.ReactNode;
   className?: string;
   as?: React.ElementType;
+  /** A layout class's gap step (capsomer/utilities.css), when className holds one. */
+  "data-gap"?: string;
 }) {
-  return <As className={cn("fx-wrap", className)}>{children}</As>;
+  return (
+    <As className={cn("fx-wrap", className)} data-gap={gap}>
+      {children}
+    </As>
+  );
 }
 
 /** Small-caps DM Mono section eyebrow (design-system Rule 07). */
@@ -117,8 +124,9 @@ export function Button({
 }
 
 /**
- * Entity-card variant (design-system Rule 15): shadow-sm -> shadow-md on hover, the
- * border stays subtle. Used for awards, clubs, journal cards. Renders as a link.
+ * Capsomer's card (capsomer/card.css), one destination: the link wraps the <article>, whose
+ * heading and text are its own children. Foxing's entity look (design-system Rule 15: shadow-sm to
+ * shadow-md on hover, the border stays quiet) is ui.css .fx-entity. Awards, clubs, lists.
  */
 export function EntityCard({
   to,
@@ -130,8 +138,8 @@ export function EntityCard({
   className?: string;
 }) {
   return (
-    <Link to={to} className={cn("fx-entity", className)}>
-      {children}
+    <Link to={to} className={className}>
+      <article className="cap-card fx-entity">{children}</article>
     </Link>
   );
 }

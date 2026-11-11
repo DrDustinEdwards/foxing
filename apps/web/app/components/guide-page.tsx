@@ -30,7 +30,7 @@ export function Section({
     <section id={id} className="fx-guide-section">
       <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
       <h2 className="fx-guide-title">{heading}</h2>
-      <div className="mt-4 stack">{children}</div>
+      <div className="mt-4 cap-stack">{children}</div>
     </section>
   );
 }
@@ -41,7 +41,7 @@ export function Prose({ children }: { children: React.ReactNode }) {
 
 export function FeatureList({ items }: { items: string[] }) {
   return (
-    <ul className="stack-2">
+    <ul className="cap-stack" data-gap="3">
       {items.map((item) => (
         <li key={item} className="fx-guide-row-2">
           <span aria-hidden="true" className="accent-ui">

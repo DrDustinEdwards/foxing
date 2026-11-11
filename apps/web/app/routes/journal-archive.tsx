@@ -90,7 +90,12 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
         )}
 
         {result.pageCount > 1 ? (
-          <nav aria-label="Pagination" className="mt-12 justify-center row-4">
+          <nav
+            aria-label="Pagination"
+            className="mt-12 cap-cluster"
+            data-gap="5"
+            data-justify="center"
+          >
             {result.page > 1 ? (
               <Link to={`/journal/archive?page=${result.page - 1}`} rel="prev" className="cap-btn">
                 Newer

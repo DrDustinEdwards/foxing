@@ -43,7 +43,7 @@ export function BillingSection({
   return (
     <Card title="Plan">
       {isPlus ? (
-        <div className="stack-3">
+        <div className="cap-stack" data-gap="4">
           <p className="ui">
             You are on <span className="strong">Foxing Plus</span>
             {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
@@ -58,7 +58,7 @@ export function BillingSection({
           </button>
         </div>
       ) : (
-        <div className="stack-3">
+        <div className="cap-stack" data-gap="4">
           <p className="ui">
             You are on the <span className="strong">Free</span> plan. Clubs and the whole social
             layer are free. Plus adds the AI reading companion.
@@ -103,7 +103,7 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
 
   return (
     <Card title="Visibility">
-      <form onSubmit={(e) => void save(e)} className="stack">
+      <form onSubmit={(e) => void save(e)} className="cap-stack">
         <ToggleRow
           checked={profile === "public"}
           onChange={(on) => setProfile(on ? "public" : "private")}
@@ -171,12 +171,12 @@ export function NotificationsSection({
 
   return (
     <Card title="Notifications">
-      <form onSubmit={(e) => void save(e)} className="stack">
+      <form onSubmit={(e) => void save(e)} className="cap-stack">
         <p className="ui">
           Choose which push notifications the mobile app sends you. Quiet hours pause them overnight
           in your timezone.
         </p>
-        <div className="stack-3">
+        <div className="cap-stack" data-gap="4">
           {Object.keys(NOTIFICATION_LABELS).map((cat) => (
             <ToggleRow
               key={cat}
@@ -194,7 +194,7 @@ export function NotificationsSection({
           subtext="Pause notifications between these times."
         />
         {quietOn ? (
-          <div className="row">
+          <div className="cap-cluster" data-gap="4">
             <label className="ui">
               From
               <input
@@ -231,7 +231,7 @@ export function NotificationsSection({
 export function AppearanceSection() {
   return (
     <Card title="Appearance">
-      <div className="row-4 spread">
+      <div className="cap-spread" data-gap="5" data-align="center">
         <div className="fx-preference-sections-stack">
           <span className="sans small strong">Theme</span>
           <span className="fine">

@@ -174,7 +174,7 @@ function OperatorControls({
 
   return (
     <AdminCard title="Operator controls">
-      <div className="stack-6">
+      <div className="cap-stack" data-gap="6">
         <div>
           <div className="fx-admin-user-detail-row">
             <AdminButton
@@ -211,7 +211,7 @@ function OperatorControls({
             maxLength={2000}
             className={adminInputClass}
           />
-          <div className="row">
+          <div className="cap-cluster" data-gap="4">
             <AdminButton
               pending={pending}
               disabled={title.trim().length === 0}

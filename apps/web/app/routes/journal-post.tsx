@@ -2,9 +2,9 @@ import { goneResponse, renameRedirect } from "@dustinedwards/site-runtime/url";
 import { catalogRepo } from "@foxing/core";
 import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
-import { Picture } from "~/components/picture";
+import { Picture } from "capsomer/react/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
-import { focalPosition } from "@dustinedwards/site-runtime/image";
+import { pictureProps } from "@dustinedwards/site-runtime/image";
 import { renderJournalBody } from "~/lib/journal-body.server";
 import { journalArticleImages, journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
@@ -176,11 +176,12 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
 
           {cover ? (
             <Picture
-              attrs={cover}
-              alt={post.coverImageAlt ?? ""}
-              className="mb-10 fx-journal-post-img"
-              priority
-              style={{ objectPosition: focalPosition(post.coverFocus) }}
+              picture={pictureProps(cover, {
+                alt: post.coverImageAlt ?? "",
+                priority: true,
+                className: "mb-10 fx-journal-post-img",
+                focus: post.coverFocus,
+              })}
             />
           ) : null}
 

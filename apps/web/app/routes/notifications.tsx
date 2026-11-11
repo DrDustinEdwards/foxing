@@ -56,7 +56,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
             body="Replies, follows, and club activity will show up here."
           />
         ) : (
-          <ul className="stack-2">
+          <ul className="cap-stack" data-gap="3">
             {notifications.map((n) => (
               <li key={n.id} className="items-start fx-notifications-card">
                 <span aria-hidden="true" className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"} />

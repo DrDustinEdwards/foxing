@@ -60,7 +60,7 @@ export function SubmitRow({
 }) {
   return (
     <>
-      <div className="row">
+      <div className="cap-cluster" data-gap="4">
         <button type="submit" disabled={disabled} className="cap-btn">
           {pending ? pendingLabel : label}
         </button>

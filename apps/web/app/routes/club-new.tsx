@@ -81,7 +81,7 @@ export default function ClubNew() {
               <option value="private">Private - members only, join by link</option>
             </select>
           </div>
-          <label className="row-2 ui">
+          <label className="cap-cluster ui" data-gap="3">
             <input type="checkbox" name="memberApproval" className="fx-club-new-input-2" />
             Approve each member before they join
           </label>

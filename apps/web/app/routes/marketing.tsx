@@ -6,7 +6,7 @@ import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
-import { Button, Container, Eyebrow } from "~/components/ui";
+import { Button, Container, EntityCard, Eyebrow } from "~/components/ui";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, ldJson, organizationLd, websiteLd } from "~/lib/seo";
@@ -90,7 +90,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <div className="measure-xl center mt-8">
             <SearchBox />
           </div>
-          <div className="row wrap justify-center mt-5">
+          <div className="cap-cluster mt-5" data-gap="4" data-justify="center">
             <Button to="/books">Browse the library</Button>
             <Button to="/awards" variant="secondary">
               Award winners
@@ -136,7 +136,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {/* From the shelves */}
       <Container className="mt-16">
-        <div className="row spread items-end mb-6">
+        <div className="cap-spread mb-6" data-gap="4" data-align="end">
           <h2 className="display-2">From the shelves</h2>
           <Link to="/books" className="link sans small">
             See all
@@ -153,18 +153,18 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* From the Journal */}
       {posts.length > 0 ? (
         <Container className="mt-16">
-          <div className="row spread items-end mb-6">
+          <div className="cap-spread mb-6" data-gap="4" data-align="end">
             <h2 className="display-2">From the Journal</h2>
             <Link to="/journal" className="link sans small">
               All essays
             </Link>
           </div>
-          <div className="grid-3">
+          <div className="cap-grid" data-cols="3" data-gap="5">
             {posts.map((p) => (
-              <Link key={p.slug} to={`/journal/${p.slug}`} className="fx-entity">
-                <h3 className="display-0 fx-entity-title">{p.title}</h3>
-                {p.excerpt ? <p className="mt-2 clamp-3 muted">{p.excerpt}</p> : null}
-              </Link>
+              <EntityCard key={p.slug} to={`/journal/${p.slug}`}>
+                <h3 className="display-0">{p.title}</h3>
+                {p.excerpt ? <p className="clamp-3 muted">{p.excerpt}</p> : null}
+              </EntityCard>
             ))}
           </div>
         </Container>
@@ -181,7 +181,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             Read free on the web today. The iOS and Android apps are on the way, with your library,
             highlights, and streak carried across.
           </p>
-          <div className="row wrap justify-center mt-6">
+          <div className="cap-cluster mt-6" data-gap="4" data-justify="center">
             <Button to="/signup">Join free on web</Button>
             <Button to="/books" variant="secondary">
               Browse the library
@@ -266,7 +266,7 @@ function ValueColumn({
   children: React.ReactNode;
 }) {
   return (
-    <div className="stack-3">
+    <div className="cap-stack" data-gap="4">
       <span className="accent-ui">{icon}</span>
       <h2 className="display-0">{heading}</h2>
       <p className="muted">{children}</p>

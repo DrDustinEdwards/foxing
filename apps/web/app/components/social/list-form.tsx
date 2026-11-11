@@ -40,8 +40,8 @@ export function ListForm({
   }
 
   return (
-    <form onSubmit={(e) => void submit(e)} className="stack-6">
-      <label className="stack-2">
+    <form onSubmit={(e) => void submit(e)} className="cap-stack" data-gap="6">
+      <label className="cap-stack" data-gap="3">
         <span className="group-label">Title</span>
         <input
           value={title}
@@ -53,7 +53,7 @@ export function ListForm({
         />
       </label>
 
-      <label className="stack-2">
+      <label className="cap-stack" data-gap="3">
         <span className="group-label">Description</span>
         <textarea
           value={description}
@@ -63,7 +63,7 @@ export function ListForm({
         />
       </label>
 
-      <label className="row-2 ui">
+      <label className="cap-cluster ui" data-gap="3">
         <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
         Make this list public
       </label>
@@ -74,7 +74,7 @@ export function ListForm({
         </p>
       ) : null}
 
-      <div className="row">
+      <div className="cap-cluster" data-gap="4">
         <button
           type="submit"
           disabled={pending || title.trim() === ""}

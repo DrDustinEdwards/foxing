@@ -15,7 +15,9 @@ import {
   useUpdateAnnotation,
 } from "@foxing/client";
 import type { ReaderAnnotations } from "@foxing/types";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { readStored } from "capsomer/behavior/hooks";
+import { useRemembered } from "capsomer/react/hooks";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { HighlightColor } from "@foxing/core";
 import type {
   CreateEngineOptions,
@@ -25,14 +27,8 @@ import type {
   TocEntry,
 } from "~/lib/reader/engine.client";
 import { enrichSelectionLocator, progressPctFromLocator, type Locator } from "~/lib/reader/locator";
+import { READING_CANVAS, type ReaderSettings, type ReaderTheme } from "~/lib/reader/settings";
 import {
-  DEFAULT_SETTINGS,
-  READING_CANVAS,
-  type ReaderSettings,
-  type ReaderTheme,
-} from "~/lib/reader/settings";
-import {
-  DEFAULT_LAYERS,
   LAYERS_KEY,
   type LayerState,
   PROGRESS_DEBOUNCE,
@@ -42,8 +38,8 @@ import {
   type ReaderPopular,
   SETTINGS_KEY,
   layerShown,
-  loadLayers,
-  loadSettings,
+  parseLayers,
+  parseSettings,
   samePosition,
   visibleFrame,
 } from "./reader-types";
@@ -82,7 +78,10 @@ export function ReaderView(props: ReaderViewProps) {
 
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [errorMsg, setErrorMsg] = useState("");
-  const [settings, setSettings] = useState<ReaderSettings>(DEFAULT_SETTINGS);
+  // Reading settings and layers are kept in this browser (Capsomer's useRemembered): the defaults
+  // on the server and while hydrating, then the stored choice.
+  const [storedSettings, rememberSettings] = useRemembered(SETTINGS_KEY);
+  const settings = useMemo(() => parseSettings(storedSettings), [storedSettings]);
   // The layers live in the shared cache: every write below patches it first (the
   // highlight is on the page before the server answers) and rolls back on failure.
   const resolved = useBookAnnotations(book.id, props.layers).data;
@@ -90,7 +89,8 @@ export function ReaderView(props: ReaderViewProps) {
   const others = resolved.others as unknown as ReaderOther[];
   const comments = resolved.comments as unknown as ReaderComment[];
   const popular = resolved.popular as unknown as ReaderPopular[];
-  const [layers, setLayers] = useState<LayerState>(DEFAULT_LAYERS);
+  const [storedLayers, rememberLayers] = useRemembered(LAYERS_KEY);
+  const layers = useMemo(() => parseLayers(storedLayers), [storedLayers]);
   // Ids the reader chose to reveal past their spoiler/ahead gate, this session only.
   const [revealed, setRevealed] = useState<Set<string>>(() => new Set());
   // The other reader's annotation whose attribution popover is open (distinct from the
@@ -219,12 +219,9 @@ export function ReaderView(props: ReaderViewProps) {
   // for a reading session or read through refs, so re-running on their identity
   // would needlessly rebuild the navigator.
   useEffect(() => {
-    const initial = loadSettings();
-    setSettings(initial);
+    const initial = parseSettings(readStored(SETTINGS_KEY));
     settingsRef.current = initial;
-    const initialLayers = loadLayers();
-    setLayers(initialLayers);
-    layersRef.current = initialLayers;
+    layersRef.current = parseLayers(readStored(LAYERS_KEY));
 
     let destroyed = false;
     void (async () => {
@@ -353,20 +350,13 @@ export function ReaderView(props: ReaderViewProps) {
 
   const updateSettings = useCallback(
     (patch: Partial<ReaderSettings>) => {
-      setSettings((prev) => {
-        const next = { ...prev, ...patch };
-        settingsRef.current = next;
-        try {
-          localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
-        } catch {
-          /* ignore quota/private-mode */
-        }
-        engineRef.current?.applySettings(next).catch(() => {});
-        if (patch.theme) redraw();
-        return next;
-      });
+      const next = { ...settingsRef.current, ...patch };
+      settingsRef.current = next;
+      rememberSettings(JSON.stringify(next));
+      engineRef.current?.applySettings(next).catch(() => {});
+      if (patch.theme) redraw();
     },
-    [redraw],
+    [redraw, rememberSettings],
   );
 
   const requireSignIn = useCallback((): boolean => {
@@ -462,18 +452,15 @@ export function ReaderView(props: ReaderViewProps) {
     // oxlint-disable-next-line react/exhaustive-deps -- redraw reads live refs; these are the triggers
   }, [layers, annotations, others, popular]);
 
-  const toggleLayer = useCallback((key: keyof LayerState) => {
-    setLayers((prev) => {
+  const toggleLayer = useCallback(
+    (key: keyof LayerState) => {
+      const prev = layersRef.current;
       const next = { ...prev, [key]: !prev[key] };
       layersRef.current = next;
-      try {
-        localStorage.setItem(LAYERS_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore quota/private-mode */
-      }
-      return next;
-    });
-  }, []);
+      rememberLayers(JSON.stringify(next));
+    },
+    [rememberLayers],
+  );
 
   const reveal = useCallback((id: string) => {
     setRevealed((prev) => {

@@ -93,7 +93,9 @@ function FacetGroup({ label, children }: { label: string; children: React.ReactN
   return (
     <div>
       <p className="fx-books-caps">{label}</p>
-      <div className="row-2 wrap">{children}</div>
+      <div className="cap-cluster" data-gap="3">
+        {children}
+      </div>
     </div>
   );
 }
@@ -153,7 +155,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
             ))}
           </FacetGroup>
           <div className="fx-books-row">
-            <div className="row-2">
+            <div className="cap-cluster" data-gap="3">
               <span className="group-label">Sort</span>
               {(
                 [
