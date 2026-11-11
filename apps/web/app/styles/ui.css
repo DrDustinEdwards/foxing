@@ -35,13 +35,13 @@ a.fx-tag:hover {
   border-radius: var(--fx-radius-card);
   background: var(--surface);
   padding: 1.25rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   @media (prefers-reduced-motion: no-preference) {
     transition: box-shadow var(--dur-base) var(--ease-out);
   }
 }
 .fx-entity:hover {
-  box-shadow: var(--fx-shadow-md);
+  box-shadow: var(--shadow-m);
 }
 .fx-entity:hover .fx-entity-title {
   color: var(--accent-text);

@@ -269,6 +269,33 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(activity[0].book?.id).toBe("b2");
   });
 
+  it("GET /feed still answers, newest first, for a reader who follows more people than D1 binds in one query", async () => {
+    // D1 refuses a statement with over 100 bound parameters; the feed once put every followed author in one IN list
+    // and failed at about 95 follows. 150 authors span two chunks; the newest event is in the last one.
+    const d = db();
+    const authors = Array.from({ length: 150 }, (_, i) => `a${String(i).padStart(3, "0")}`);
+    await seedUser("carol");
+    for (const id of authors) await seedUser(id);
+    const base = Date.UTC(2026, 0, 1);
+    for (const [i, id] of authors.entries()) {
+      await d.insert(schema.follows).values({ followerId: "carol", followingId: id });
+      await d.insert(schema.activityEvents).values({
+        id: `e-${id}`,
+        userId: id,
+        type: "list_created",
+        data: {},
+        visibility: "public",
+        createdAt: new Date(base + i * 60_000),
+      });
+    }
+
+    const res = await call("/feed", { user: "carol" });
+    expect(res.status).toBe(200);
+    const { rows } = (await res.json()) as { rows: { kind: string; id: string }[] };
+    const activity = rows.filter((r) => r.kind === "activity").map((r) => r.id);
+    expect(activity.slice(0, 3)).toEqual(["e-a149", "e-a148", "e-a147"]);
+  });
+
   // -- Notifications ----------------------------------------------------------
 
   it("POST /notifications/read marks the named ones, refuses a malformed body, and marks all for a body naming no ids", async () => {

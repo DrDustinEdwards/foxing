@@ -101,7 +101,7 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.5rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
     grid-template-columns: minmax(0, 132px) minmax(0, 1fr);
     align-items: center;
@@ -129,7 +129,7 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.5rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
 }
 .fx-home-title-3 {
   font-family: var(--display);

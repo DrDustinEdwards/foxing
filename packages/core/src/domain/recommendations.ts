@@ -337,7 +337,7 @@ async function aiOverlay(
   const quotaDay = await companionRepo.reserveUsage(db, userId, reserved, now);
   if (!quotaDay) return null;
 
-  const { value, inputTokens, outputTokens } = await caller(
+  const { value, usage } = await caller(
     {
       model: MODELS.fast,
       system,
@@ -348,7 +348,7 @@ async function aiOverlay(
     picksSchema([...allowed]),
   );
 
-  const cost = estimateCostCents("fast", inputTokens, outputTokens);
+  const cost = estimateCostCents("fast", usage);
   await companionRepo.settleUsage(db, userId, quotaDay, reserved, cost);
 
   const selection = selectAiPicks(value, allowed);
