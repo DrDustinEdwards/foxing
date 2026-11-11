@@ -9,8 +9,8 @@
       "Unused files": 2
     },
     "jscpd": {
-      "clones": 284,
-      "lines": 3028,
+      "clones": 283,
+      "lines": 3014,
       "percentage": 3.41
     },
     "tests": {
