@@ -339,7 +339,7 @@ export function NoteComposer({
         value={draft.text}
         onChange={(e) => onChange({ ...draft, text: e.target.value })}
         placeholder="Add a note"
-        className="cap-input fx-reader-note"
+        className="cap-input"
       />
       <div className="mt-2 row-2 spread">
         {canShareToClub ? (

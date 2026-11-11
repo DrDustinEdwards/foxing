@@ -672,11 +672,6 @@
 .fx-reader-swatch[aria-pressed="true"] {
   box-shadow: 0 0 0 2px var(--ring);
 }
-.fx-reader-note {
-  block-size: 6rem;
-  inline-size: 100%;
-  resize: none;
-}
 
 /* The annotation popovers: at the selection when anchored, otherwise docked above the bottom bar. */
 .fx-reader-pop {

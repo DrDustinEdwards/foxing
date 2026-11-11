@@ -196,17 +196,11 @@
   line-height: 1rem;
   color: var(--muted);
 }
+/* The reading progress on a cover: Capsomer's native progress bar (cap-meter-bar), along the cover's foot. */
 .fx-library-label-3 {
   position: absolute;
+  inset-inline: 0;
   bottom: 0;
-  height: 0.25rem;
-  background-color: var(--sunken);
-  left: 0;
-  right: 0;
-}
-.fx-library-label-4 {
-  height: 100%;
-  background-color: var(--accent);
 }
 .fx-library-box {
   padding-inline: 0.125rem;
