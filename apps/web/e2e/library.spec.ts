@@ -8,6 +8,6 @@ test.describe("library", () => {
     await page.goto("/library");
     // The loader redirects with the return path in the `redirect` param; accept either
     // an encoded (%2F) or literal slash so the assertion tracks the actual redirect.
-    await expect(page).toHaveURL(/\/login\?redirect=(%2F|\/)library/);
+    await expect(page).toHaveURL(/\/login\?next=(%2F|\/)library/);
   });
 });

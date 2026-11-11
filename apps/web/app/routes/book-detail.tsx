@@ -68,7 +68,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       myBook,
       shelves,
       bookId: book.id,
-      loginHref: `/login?redirect=/books/${book.slug}`,
+      loginHref: `/login?next=/books/${book.slug}`,
       buys: page.buys,
       book: {
         slug: book.slug,

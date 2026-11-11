@@ -13,7 +13,7 @@ import type { Route } from "./+types/shelf-detail";
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect(`/login?redirect=/shelves/${params.id}`);
+  if (!session?.user) throw redirect(`/login?next=/shelves/${params.id}`);
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const detail = await views.shelfDetail(createDb(env.DB), session.user.id, params.id);
   if (!detail) throw new Response("Not found", { status: 404 });

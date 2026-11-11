@@ -12,7 +12,7 @@ import type { Route } from "./+types/club-new";
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?redirect=/clubs/new");
+  if (!session?.user) throw redirect("/login?next=/clubs/new");
   return null;
 }
 

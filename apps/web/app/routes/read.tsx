@@ -34,7 +34,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     // root-relative manifest URL leaves internal images broken.
     manifestUrl: `${origin}/reader-assets/${book.slug}/manifest.json`,
     signedIn: !!userId,
-    loginHref: `/login?redirect=${encodeURIComponent(`/read/${book.slug}`)}`,
+    loginHref: `/login?next=${encodeURIComponent(`/read/${book.slug}`)}`,
     layers: resolved,
     shareableClubs: page.shareableClubs,
     initialLocator: page.initialLocator as Locator | null,
