@@ -28,7 +28,7 @@ type Open = {
   expiresAt: string;
 };
 
-function errorMessage(body: unknown, status: number, fallback: string): string {
+function apiErrorMessage(body: unknown, status: number, fallback: string): string {
   const b = body as { error?: { message?: string } } | null;
   return b?.error?.message ?? `${fallback} (${status}).`;
 }
@@ -57,7 +57,7 @@ export function useRoleChange(opts: { onDone: () => void }) {
     try {
       const result = await adminFetch(path, { body });
       if (!result.ok) {
-        setError(errorMessage(result.body, result.status, "Could not preview the change"));
+        setError(apiErrorMessage(result.body, result.status, "Could not preview the change"));
         return;
       }
       const { preview, confirm } = result.body as PreviewResponse;
@@ -122,7 +122,7 @@ function RoleChangeDialog({
         body: { ...change.body, confirm: change.token },
       });
       if (!result.ok) {
-        setError(errorMessage(result.body, result.status, "Could not apply the change"));
+        setError(apiErrorMessage(result.body, result.status, "Could not apply the change"));
         return;
       }
       closeThen(onDone);
