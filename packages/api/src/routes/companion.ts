@@ -82,8 +82,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
 
   return streamSSE(c, async (stream) => {
     let assistantText = "";
-    let inputTokens = 0;
-    let outputTokens = 0;
+    let usage = companion.emptyUsage();
 
     try {
       for await (const event of streamCompanion({
@@ -99,8 +98,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
           assistantText += event.delta;
           await stream.writeSSE({ event: "delta", data: event.delta });
         } else {
-          inputTokens = event.inputTokens;
-          outputTokens = event.outputTokens;
+          usage = event.usage;
         }
       }
     } catch (err) {
@@ -118,7 +116,7 @@ companionRoutes.post("/companion", rateLimit("companion"), async (c) => {
     }
 
     // The reply is whole: its real cost replaces the reservation.
-    const costCents = companion.estimateCostCents(action.role, inputTokens, outputTokens);
+    const costCents = companion.estimateCostCents(action.role, usage);
     await companionRepo.settleUsage(db, session.id, quotaDay, reserved, costCents);
 
     // The prose check (W1). The reply streams, so this runs once it is whole: it records which checks a

@@ -127,18 +127,17 @@ jobs:
     concurrency:
       group: deploy
       cancel-in-progress: false
-    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@250d737c13b6f4c74987652818d262cb1d1c9cf7 # v0.27.0
+    uses: DrDustinEdwards/devkit/.github/workflows/worker-deploy.yml@be764c572506cf64f434eb7ad026c9389440e7cd # v0.33.0
     with:
       worker-name: foxing
       # site-runtime withAdminIdle's key, minted once by the deploy and never shown (devkit "generated-secrets").
       generated-secrets: ADMIN_IDLE_SECRET
       health-url: https://foxing.app/health
-      verify-command: >-
-        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://foxing.app/ || true);
-        echo "home page answered $code";
-        if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
+      verify-command: node "$DEVKIT_DIR/bin/verify-deploy.mjs" https://foxing.app
       working-directory: apps/web
-      install: "npm ci"
+      # The whole workspace, from the root: an npm ci run in apps/web installs only what web needs, and drops the root
+      # copy of site-runtime that site-api (a peer) resolves when web's own copy is nested, so the build failed (2026-11-11).
+      install: "cd ../.. && npm ci"
       pre-deploy: >-
         sed -e "s|<D1_DATABASE_ID>|${{ vars.D1_DATABASE_ID }}|"
         -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|"

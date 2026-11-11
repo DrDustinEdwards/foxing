@@ -1,3 +1,4 @@
+import { inList, likeContains, notInList } from "@dustinedwards/site-runtime/d1";
 import type { Db } from "../db";
 import {
   and,
@@ -8,9 +9,7 @@ import {
   inArray,
   isNotNull,
   isNull,
-  like,
   lt,
-  notInArray,
   or,
   sql,
   type SQL,
@@ -56,11 +55,11 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
         : eq(journalPosts.authorId, query.authorId),
     );
   if (query.q) {
-    const pattern = `%${query.q.toLowerCase()}%`;
+    // SQLite's LIKE already ignores ASCII case; likeContains makes a typed % or _ match itself.
     const match = or(
-      like(sql`lower(${journalPosts.title})`, pattern),
-      like(sql`lower(${journalPosts.content})`, pattern),
-      like(journalPosts.slug, pattern),
+      likeContains(journalPosts.title, query.q),
+      likeContains(journalPosts.content, query.q),
+      likeContains(journalPosts.slug, query.q),
     );
     if (match) where.push(match);
   }
@@ -70,9 +69,8 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
     );
   if (query.publishedAfter) where.push(gte(journalPosts.publishedAt, query.publishedAfter));
   if (query.publishedBefore) where.push(lt(journalPosts.publishedAt, query.publishedBefore));
-  if (query.slugs)
-    where.push(query.slugs.length ? inArray(journalPosts.slug, query.slugs) : sql`0`);
-  if (query.exceptSlugs?.length) where.push(notInArray(journalPosts.slug, query.exceptSlugs));
+  if (query.slugs) where.push(query.slugs.length ? inList(journalPosts.slug, query.slugs) : sql`0`);
+  if (query.exceptSlugs?.length) where.push(notInList(journalPosts.slug, query.exceptSlugs));
   return and(...where);
 }
 
@@ -443,6 +441,6 @@ export async function journalPeopleNames(
   const rows = await db
     .select({ id: profiles.id, displayName: profiles.displayName, username: profiles.username })
     .from(profiles)
-    .where(inArray(profiles.id, wanted));
+    .where(inList(profiles.id, wanted));
   return new Map(rows.map((r) => [r.id, r.displayName ?? r.username]));
 }

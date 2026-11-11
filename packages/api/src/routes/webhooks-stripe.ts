@@ -66,7 +66,10 @@ async function applyIntent(db: Db, client: BillingClient, intent: BillingIntent)
 
 stripeWebhookRoutes.post("/webhooks/stripe", async (c) => {
   const signature = c.req.header("stripe-signature");
-  if (!signature) throw errors.validation({ signature: "missing stripe-signature header" });
+  if (!signature)
+    throw errors.validation([
+      { path: "stripe-signature", message: "Missing stripe-signature header." },
+    ]);
 
   const payload = await readBody(c, WEBHOOK_BODY_MAX_BYTES, true);
   const { client } = c.get("billing");

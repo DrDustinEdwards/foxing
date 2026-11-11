@@ -10,6 +10,10 @@ import {
 } from "@readium/navigator";
 import type { HighlightColor } from "@foxing/core";
 import {
+  allowDocumentParsing,
+  installTrustedTypes,
+} from "@dustinedwards/site-runtime/trusted-types";
+import {
   decorationStyleFor,
   noteOutlineStyleFor,
   otherDecorationStyleFor,
@@ -131,6 +135,44 @@ async function nonceReadiumInjectables(nav: EpubNavigator): Promise<void> {
   }
 }
 
+/**
+ * The one markup Readium writes inside a book frame (@readium/navigator-html-injectables 2.5, the decoration template
+ * for a highlight it draws as a box): an empty div with Readium's marker, a class and a style it computes. Matched
+ * whole, so no other element or attribute can ride along.
+ */
+const READIUM_DECORATION =
+  /^<div data-readium="true" class="readium-[\w-]+" style="[^"<>]*"><\/div>$/;
+
+/** Where a book frame finds the call that gives it the page's default policy (see readerFramePolicy). */
+const FRAME_POLICY_KEY = "foxing:reader-frame-policy";
+
+/**
+ * The script Readium puts first in every book frame, so the frame has a Trusted Types default policy before any of
+ * Readium's frame code runs. A blob: frame inherits this page's Content-Security-Policy, with
+ * require-trusted-types-for, but not its policies; without one, Readium's highlight styles and decoration boxes would be
+ * refused. The frame asks this page for the same default policy every site uses (site-runtime ./trusted-types), with
+ * Readium's decoration template let through. Like Readium's own frame scripts it carries the page's nonce.
+ */
+function readerFramePolicy(nonce: string | undefined): IInjectableRule {
+  const page = window as unknown as Record<string, (frame: Window) => void>;
+  page[FRAME_POLICY_KEY] = (frame) => {
+    installTrustedTypes({ target: frame, allowHtml: (html) => READIUM_DECORATION.test(html) });
+  };
+  const source = `window.parent[${JSON.stringify(FRAME_POLICY_KEY)}]?.(window);`;
+  return {
+    resources: [/.*/],
+    prepend: [
+      {
+        id: "foxing-trusted-types",
+        as: "script",
+        target: "head",
+        blob: new Blob([source], { type: "text/javascript" }),
+        ...(nonce ? { attributes: { nonce } } : {}),
+      },
+    ],
+  };
+}
+
 function serialize(loc: unknown): Locator {
   const anyLoc = loc as { serialize?: () => Locator };
   return anyLoc?.serialize ? anyLoc.serialize() : (loc as Locator);
@@ -204,7 +246,30 @@ function readSelectionContext(
   return null;
 }
 
+/**
+ * Opens the reader. Readium parses each chapter with DOMParser into an inert document, adds its helpers and loads it
+ * into a blob: frame as a whole new document; nothing it parses is moved into this page. The page's Trusted Types
+ * default policy (site-runtime ./trusted-types) escapes markup at that sink unless the page holds
+ * allowDocumentParsing(), so the reader holds it from opening until destroy().
+ */
 export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
+  const releaseParsing = allowDocumentParsing();
+  try {
+    const engine = await openEngine(opts);
+    return {
+      ...engine,
+      destroy: async () => {
+        await engine.destroy();
+        releaseParsing();
+      },
+    };
+  } catch (error) {
+    releaseParsing();
+    throw error;
+  }
+}
+
+async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
   const { container, manifestUrl, initialLocator, settings, listeners } = opts;
 
   const manifestJson = await (await fetch(manifestUrl)).json();
@@ -268,6 +333,7 @@ export async function createEngine(opts: CreateEngineOptions): Promise<ReaderEng
   const nav = new EpubNavigator(container, pub, navListeners, positions, initial, {
     preferences: initialEpubPreferences(settings),
     defaults: {},
+    injectables: { rules: [readerFramePolicy(pageNonce())], allowedDomains: [] },
   } as never);
   await nonceReadiumInjectables(nav);
   await nav.load();

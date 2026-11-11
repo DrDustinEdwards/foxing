@@ -4,12 +4,13 @@ import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "capsomer/react/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
-import { focusedPicture } from "~/lib/focus";
+import { pictureProps } from "@dustinedwards/site-runtime/image";
 import { renderJournalBody } from "~/lib/journal-body.server";
 import { journalArticleImages, journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
+import { markup } from "capsomer/behavior/trusted-html";
 
 function fmtDate(d: Date | null): string | null {
   if (!d) return null;
@@ -175,20 +176,15 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
 
           {cover ? (
             <Picture
-              picture={focusedPicture(
-                cover,
-                {
+              picture={pictureProps(cover, {
                   alt: post.coverImageAlt ?? "",
                   priority: true,
-                  className: "mb-10 fx-journal-post-img",
-                },
-                post.coverFocus,
-              )}
+                  className: "mb-10 fx-journal-post-img", focus: post.coverFocus })}
             />
           ) : null}
 
           {/* Raw HTML: trusted CMS markdown. */}
-          <div className="article-prose e-content" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="article-prose e-content" dangerouslySetInnerHTML={markup(html)} />
         </article>
       </Container>
     </PageShell>

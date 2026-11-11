@@ -32,8 +32,7 @@ export function anthropicCaller(env: Env): companion.CompanionCaller | null {
       if (event.type === "text") yield event;
       else if (!event.result.ok) throw failed(event.result);
       else {
-        const { usage } = event.result;
-        yield { type: "done", inputTokens: usage.input, outputTokens: usage.output };
+        yield { type: "done", usage: event.result.usage };
       }
     }
   };
@@ -44,10 +43,6 @@ export function anthropicStructured(env: Env): companion.StructuredCaller | null
   return async (args, schema) => {
     const result = await structured(env, APP, request(args), schema, { feature: args.feature });
     if (!result.ok) throw failed(result);
-    return {
-      value: result.value,
-      inputTokens: result.usage.input,
-      outputTokens: result.usage.output,
-    };
+    return { value: result.value, usage: result.usage };
   };
 }

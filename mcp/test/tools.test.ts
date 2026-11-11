@@ -8,7 +8,7 @@ import { beforeEach, describe, test } from "node:test";
 
 import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
 
-import { encodeCursor, TOOLS, type ToolEnv } from "../src/tools.ts";
+import { encodeOffsetCursor, TOOLS, type ToolEnv } from "../src/tools.ts";
 import { FOXING_ADMIN_ID, TOKEN, fakeFoxing, fakeLog, freshEnv, type FakeFoxing } from "./fakes.ts";
 
 let foxing: FakeFoxing;
@@ -46,7 +46,7 @@ describe("every request", () => {
   });
 
   test("the token appears in no tool output", async () => {
-    foxing.reply({ status: 403, body: { error: { code: "forbidden", message: "Admin only." } } });
+    foxing.reply({ status: 403, body: { code: "forbidden", detail: "Admin only." } });
     const outputs = [
       await call("foxing_get_health"),
       await call("foxing_find_user", { query: "a" }),
@@ -69,18 +69,19 @@ describe("refusals", () => {
     foxing.reply({
       status: 422,
       body: {
-        error: {
-          code: "validation",
-          message: "Invalid request.",
-          details: { fieldErrors: { limit: ["bad"] } },
-        },
+        type: "about:blank",
+        title: "Unprocessable Content",
+        status: 422,
+        code: "validation",
+        detail: "Invalid request.",
+        errors: [{ path: "limit", message: "bad" }],
       },
     });
     const out = await call("foxing_find_user", { limit: 50 });
     assert.equal(out.isError, true);
     assert.equal(
       out.content[0].text,
-      'Invalid request.\ncode: validation\ndetails: {"fieldErrors":{"limit":["bad"]}}',
+      'Invalid request.\ncode: validation\ndetails: {"errors":[{"path":"limit","message":"bad"}]}',
     );
     assert.equal(out.structuredContent?.status, 422);
   });
@@ -107,9 +108,9 @@ describe("what each tool sends", () => {
     const page = await call("foxing_find_user", {
       query: "ada",
       limit: 5,
-      cursor: encodeCursor(10),
+      cursor: encodeOffsetCursor(10),
     });
-    assert.equal(page.structuredContent?.next_cursor, encodeCursor(15));
+    assert.equal(page.structuredContent?.next_cursor, encodeOffsetCursor(15));
     assert.equal(page.structuredContent?.next_offset, undefined);
     await call("foxing_inspect_book", { query: "Persuasion" });
     assert.equal(path(0), "GET /api/v1/admin/users?q=ada&limit=5&offset=10");
@@ -141,7 +142,7 @@ describe("what each tool sends", () => {
   test("foxing_edit_book says which half landed when the staff pick is refused", async () => {
     foxing.reply(
       { body: { ok: true } },
-      { status: 404, body: { error: { code: "not_found", message: "Not found." } } },
+      { status: 404, body: { code: "not_found", detail: "Not found." } },
     );
     const out = await confirmCall("foxing_edit_book", {
       book_id: "b1",
@@ -198,7 +199,7 @@ describe("what each tool sends", () => {
       items: [1, 2],
       total: 3,
       has_more: true,
-      next_cursor: encodeCursor(2),
+      next_cursor: encodeOffsetCursor(2),
     });
   });
 
@@ -219,7 +220,12 @@ describe("what each tool sends", () => {
     assert.deepEqual(out.structuredContent, {
       notice: OUTSIDE_DATA_NOTICE,
       clubs: [{ id: "c1" }],
-      picks: { items: [{ id: "p1" }], total: 2, has_more: true, next_cursor: encodeCursor(1) },
+      picks: {
+        items: [{ id: "p1" }],
+        total: 2,
+        has_more: true,
+        next_cursor: encodeOffsetCursor(1),
+      },
     });
   });
 
@@ -236,7 +242,7 @@ describe("what each tool sends", () => {
   });
 
   test("foxing_read_audit_log pages the site's log", async () => {
-    await call("foxing_read_audit_log", { limit: 10, cursor: encodeCursor(20) });
+    await call("foxing_read_audit_log", { limit: 10, cursor: encodeOffsetCursor(20) });
     assert.equal(path(), "GET /api/v1/admin/audit-log?limit=10&offset=20");
   });
 });
@@ -268,10 +274,7 @@ describe("health, moderation and catalog health", () => {
       ],
     });
 
-    foxing.reply(
-      { body: stats },
-      { status: 500, body: { error: { code: "internal", message: "boom" } } },
-    );
+    foxing.reply({ body: stats }, { status: 500, body: { code: "internal", detail: "boom" } });
     const degraded = await call("foxing_get_health");
     assert.notEqual(degraded.isError, true);
     assert.match(
@@ -284,7 +287,7 @@ describe("health, moderation and catalog health", () => {
   });
 
   test("foxing_moderate_user passes the API's two steps through: preview, then perform with its token", async () => {
-    const token = "a".repeat(64);
+    const token = `${"a".repeat(40)}.${"a".repeat(43)}`;
     foxing.reply(
       {
         body: {
@@ -314,13 +317,14 @@ describe("health, moderation and catalog health", () => {
     foxing.reply({
       status: 409,
       body: {
-        error: { code: "conflict", message: "This confirmation has expired or was already used." },
+        code: "conflict",
+        detail: "This confirmation has expired or was already used.",
       },
     });
     const out = await call("foxing_moderate_user", {
       user_id: "u1",
       suspended: false,
-      confirm: "b".repeat(64),
+      confirm: `${"b".repeat(40)}.${"b".repeat(43)}`,
     });
     assert.equal(out.isError, true);
     assert.match(out.content[0].text, /^This confirmation has expired/);
@@ -345,13 +349,13 @@ describe("health, moderation and catalog health", () => {
     const out = await call("foxing_check_catalog", {
       check: "duplicate_isbn",
       limit: 10,
-      cursor: encodeCursor(20),
+      cursor: encodeOffsetCursor(20),
     });
     assert.equal(
       path(),
       "GET /api/v1/admin/catalog-health?check=duplicate_isbn&limit=10&offset=20",
     );
-    assert.equal(out.structuredContent?.next_cursor, encodeCursor(30));
+    assert.equal(out.structuredContent?.next_cursor, encodeOffsetCursor(30));
     assert.equal(
       tool("foxing_check_catalog").config.inputSchema.safeParse({ check: "nope" }).success,
       false,
@@ -392,6 +396,6 @@ describe("cursors (T8)", () => {
   test("a cursor this server did not issue fails validation", () => {
     const schema = tool("foxing_find_user").config.inputSchema;
     assert.equal(schema.safeParse({ cursor: "10" }).success, false);
-    assert.equal(schema.safeParse({ cursor: encodeCursor(10) }).success, true);
+    assert.equal(schema.safeParse({ cursor: encodeOffsetCursor(10) }).success, true);
   });
 });

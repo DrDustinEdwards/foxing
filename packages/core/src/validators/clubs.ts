@@ -2,6 +2,7 @@
 // in enums.ts. Every club write route parses its body through one of these at the
 // boundary; core domain functions trust the parsed shape.
 import { z } from "zod";
+import { webUrl } from "./web-url";
 import {
   clubMemberRole,
   clubThreadType,
@@ -16,7 +17,7 @@ import {
 export const createClubInput = z.object({
   name: z.string().min(1).max(120),
   description: z.string().max(4000).optional(),
-  coverUrl: z.string().url().max(2000).optional(),
+  coverUrl: webUrl().optional(),
   visibility: clubVisibility.optional(),
   memberApproval: z.boolean().optional(),
   maxMembers: z.number().int().positive().max(100000).optional(),
@@ -31,7 +32,7 @@ export const updateClubInput = z
   .object({
     name: z.string().min(1).max(120).optional(),
     description: z.string().max(4000).nullable().optional(),
-    coverUrl: z.string().url().max(2000).nullable().optional(),
+    coverUrl: webUrl().nullable().optional(),
     visibility: clubVisibility.optional(),
     memberApproval: z.boolean().optional(),
     maxMembers: z.number().int().positive().max(100000).nullable().optional(),
@@ -134,7 +135,7 @@ export const createMeetingInput = z.object({
   meetingType: meetingType.optional(),
   locationName: z.string().max(240).optional(),
   locationAddress: z.string().max(500).optional(),
-  locationUrl: z.string().url().max(2000).optional(),
+  locationUrl: webUrl().optional(),
   isRecurring: z.boolean().optional(),
   recurrenceRule: z.string().max(500).optional(),
   rsvpLimit: z.number().int().positive().max(100000).optional(),

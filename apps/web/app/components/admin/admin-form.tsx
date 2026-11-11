@@ -21,8 +21,8 @@ export async function adminFetch(
 }
 
 function messageFrom(result: Result, fallback: string): string {
-  const b = result.body as { error?: { message?: string } } | null;
-  return b?.error?.message ?? `${fallback} (${result.status}).`;
+  const b = result.body as { detail?: string } | null;
+  return b?.detail ?? `${fallback} (${result.status}).`;
 }
 
 /** Drives one admin mutation: pending flag, visible error, and an onDone callback.

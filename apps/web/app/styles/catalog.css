@@ -52,7 +52,7 @@ a:hover > .fx-book > :is(h2, h3) {
   border-radius: var(--fx-radius-cover);
   background-color: var(--sunken);
   box-shadow:
-    var(--fx-shadow-sm),
+    var(--shadow-s),
     0 0 0 1px var(--line);
 }
 .cover-img-photo {
@@ -97,7 +97,7 @@ a:hover > .fx-book > :is(h2, h3) {
   border: 1px solid var(--line);
   border-radius: var(--fx-radius-card);
   background: var(--raised);
-  box-shadow: var(--fx-shadow-lg);
+  box-shadow: var(--shadow-l);
   text-align: start;
 }
 
@@ -180,12 +180,12 @@ a:hover > .fx-book > :is(h2, h3) {
   border-radius: var(--fx-radius-card);
   background: var(--surface);
   padding: 0.75rem 1rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   @media (prefers-reduced-motion: no-preference) {
     transition: box-shadow 150ms;
   }
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
 }
 .fx-grouped-results-title {
@@ -218,7 +218,7 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--text);
   transition-property: color, background-color, border-color;
   transition-duration: 150ms;
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
@@ -353,7 +353,7 @@ a:hover > .fx-book > :is(h2, h3) {
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.5rem;
-  box-shadow: var(--fx-shadow-md);
+  box-shadow: var(--shadow-m);
   @media (min-width: 40rem) {
     padding: 2.5rem;
   }
@@ -476,7 +476,7 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--text);
   transition-property: color, background-color, border-color;
   transition-duration: 150ms;
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
@@ -508,7 +508,7 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--text);
   transition-property: color, background-color, border-color;
   transition-duration: 150ms;
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }

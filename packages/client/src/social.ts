@@ -12,7 +12,7 @@ import { patch, patchAll, useSeededQuery, useWrite } from "./query";
 // --- Reads ------------------------------------------------------------------
 
 export function useFeed<S extends W.FeedPage | undefined = undefined>(
-  cursor: number | null,
+  cursor: string | null,
   seed?: S,
 ) {
   const api = useApi();
@@ -31,7 +31,7 @@ export function useFeedPages() {
   return useInfiniteQuery({
     queryKey: [...keys.feed, "pages"],
     queryFn: ({ pageParam }) => api.get<W.FeedPage>(`/feed${qs({ cursor: pageParam })}`),
-    initialPageParam: null as number | null,
+    initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor,
   });
 }

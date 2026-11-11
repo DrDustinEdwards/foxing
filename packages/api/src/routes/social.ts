@@ -119,7 +119,7 @@ socialRoutes.get("/lists/:id", async (c) => {
 socialRoutes.get("/feed", async (c) => {
   const session = requireSession(c);
   const cursor = c.req.query("cursor");
-  return c.json(await views.feed(c.get("db"), session.id, cursor ? Number(cursor) : null));
+  return c.json(await views.feed(c.get("db"), session.id, cursor ?? null));
 });
 
 // -- Recap ------------------------------------------------------------------
@@ -127,7 +127,8 @@ socialRoutes.get("/feed", async (c) => {
 socialRoutes.get("/recap/:year", async (c) => {
   const session = requireSession(c);
   const year = Number(c.req.param("year"));
-  if (!Number.isInteger(year)) throw errors.validation({ year: "expected a year" });
+  if (!Number.isInteger(year))
+    throw errors.validation([{ path: "year", message: "Expected a year." }]);
   const recap = await views.recap(c.get("db"), { userId: session.id }, year, session.id);
   if (!recap) throw errors.notFound("Profile not found.");
   return c.json(recap);
@@ -136,7 +137,8 @@ socialRoutes.get("/recap/:year", async (c) => {
 // Public recap: only when the target profile is public (or is the viewer's own).
 socialRoutes.get("/u/:username/recap/:year", async (c) => {
   const year = Number(c.req.param("year"));
-  if (!Number.isInteger(year)) throw errors.validation({ year: "expected a year" });
+  if (!Number.isInteger(year))
+    throw errors.validation([{ path: "year", message: "Expected a year." }]);
   const recap = await views.recap(
     c.get("db"),
     { username: c.req.param("username") },

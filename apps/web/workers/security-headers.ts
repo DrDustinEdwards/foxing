@@ -2,16 +2,12 @@
 // own values, @dustinedwards/site-runtime, with Foxing's registry entry; ./header-set.ts) and the
 // Content-Security-Policy built from the list below of what Foxing really loads. workers/app.ts calls withSecurityHeaders on every response, redirects, API, errors and cache
 // hits included. No other file sets a security header.
-import { CSP_REPORT_PATH, type CspSources, type SitePolicy } from "@dustinedwards/site-runtime/csp";
-import { receiveCspReport } from "@dustinedwards/site-runtime/csp-report";
+import type { CspSources, SitePolicy } from "@dustinedwards/site-runtime/csp";
 import { pageSecurity } from "@dustinedwards/site-runtime/page-headers";
-import { ipKey, limit } from "@dustinedwards/site-runtime/rate-limit";
 import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 import { securityHeaders } from "./header-set";
-
-/** Where browsers send violation reports: the family's path and group (site-runtime's CSP_REPORT_PATH, /csp-report, and CSP_REPORT_GROUP), the builder's defaults. */
-export { CSP_REPORT_PATH };
+import { TRUSTED_TYPES_NAMES } from "@dustinedwards/site-runtime/trusted-types";
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
@@ -82,36 +78,11 @@ const page = pageSecurity({
   // The reader's policy is for the document /read/:slug renders; a response with no nonce is not that document.
   policy: ({ nonce, url }) =>
     nonce !== undefined && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce),
-  staged: { trustedTypes: true, denyUnlisted: true },
+  staged: { trustedTypes: TRUSTED_TYPES_NAMES, denyUnlisted: true },
   corp: true,
   renew: true,
 });
 
-/** This request's nonce, made on first ask. The page render and its header share it. */
-export const cspNonceFor = page.nonceFor;
-
-/** The response with Foxing's headers; workers/app.ts runs it on every response the Worker sends. */
+/** The response with Foxing's headers; the shared Worker (workers/app.ts) runs it on every response it sends, with the
+ *  nonce each page was rendered with. Reports go to its /csp-report sink. */
 export const withSecurityHeaders = page.withSecurityHeaders;
-
-/** Reports one address may send a minute before the rest are dropped (still 204). */
-const CSP_REPORTS_PER_MINUTE = 20;
-
-/**
- * The report sink: the family's one receiver (@dustinedwards/site-runtime/csp-report). It answers
- * every POST 204, reads at most 16 KB, logs at most 10 violations as trimmed JSON lines (origin and
- * path only; no address, user agent or cookie) and stores nothing. Per address, on its own
- * `csp-report` bucket of the RATE_LIMITER Durable Object, so it never spends a reader's write or
- * companion budget. It fails open: a limiter outage costs only log lines.
- */
-export function handleCspReport(request: Request, env: Env): Promise<Response> {
-  const allow = async (r: Request) => {
-    const verdict = await limit(
-      env.RATE_LIMITER,
-      ipKey("csp-report", r).key,
-      [{ limit: CSP_REPORTS_PER_MINUTE, windowSeconds: 60 }],
-      { onUnavailable: "allow" },
-    );
-    return verdict.status !== "limited";
-  };
-  return receiveCspReport(request, { headers: securityHeaders, allow });
-}

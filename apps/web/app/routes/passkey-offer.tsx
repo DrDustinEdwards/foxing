@@ -3,12 +3,13 @@
 // that cannot make one goes straight on (site-runtime shouldOfferPasskey, canOfferPasskey). `next`
 // is where they were headed (/me, or /onboarding for a new reader), a path on this site only.
 import { dismissPasskeyOffer, shouldOfferPasskey } from "@dustinedwards/site-runtime/sign-in";
+import { safeNextPath } from "@dustinedwards/site-runtime/sign-in-form";
 import { canOfferPasskey } from "@dustinedwards/site-runtime/sign-in-client";
 import { useEffect, useState } from "react";
 import { Form, redirect } from "react-router";
 import { AuthShell } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
-import { authClient, safeNextPath, signInAgainIfStale } from "~/lib/auth-client";
+import { authClient, signInAgainIfStale } from "~/lib/auth-client";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
 
@@ -19,7 +20,7 @@ export function meta() {
 /** The signed-in reader, their auth and where they were headed; no session goes to /login. */
 async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  const next = safeNextPath(new URL(request.url).searchParams.get("next"));
+  const next = safeNextPath(new URL(request.url).searchParams.get("next"), { fallback: "/me" });
   const auth = await getAuth(env);
   const session = await auth.api.getSession(sessionLookup(request));
   if (!session?.user) throw redirect("/login");

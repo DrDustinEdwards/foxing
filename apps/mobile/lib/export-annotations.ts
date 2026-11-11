@@ -1,5 +1,6 @@
 // Annotation exporters, text / csv / markdown. Pure functions: take a list
 // of highlights + book metadata, return a string ready to hand to Share.
+import { csvRow, toCsv } from "@dustinedwards/site-runtime/csv";
 
 export interface ExportableHighlight {
   text: string;
@@ -33,7 +34,7 @@ export function exportAsCsv(
   const header = ["Chapter", "Highlight", "Note", "Color"];
   const rows = highlights.map((h) => [h.chapter ?? "", h.text ?? "", h.note ?? "", h.color ?? ""]);
   const titleRow = [`# ${bookTitle}${author ? `, ${author}` : ""}`];
-  return [csvRow(titleRow), csvRow(header), ...rows.map(csvRow)].join("\n") + "\n";
+  return `${csvRow(titleRow)}\r\n${toCsv(header, rows)}`;
 }
 
 export function exportAsMarkdown(
@@ -78,17 +79,4 @@ export function exportAsMarkdown(
     lines.pop();
   }
   return lines.join("\n") + "\n";
-}
-
-// CSV per RFC 4180: quote any field that contains a comma, quote, or newline,
-// and double any embedded quote.
-function csvRow(cells: string[]): string {
-  return cells.map(csvEscape).join(",");
-}
-
-function csvEscape(v: string): string {
-  if (v == null) return "";
-  const s = String(v);
-  if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
-  return s;
 }

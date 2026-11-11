@@ -323,7 +323,7 @@
   border: 1px solid var(--line);
   background-color: var(--sunken);
   object-fit: cover;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
 }
 
 .fx-me-stack {
@@ -522,7 +522,7 @@
   font-size: 0.75rem;
   line-height: 1rem;
   color: var(--text);
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }

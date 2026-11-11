@@ -124,11 +124,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.25rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
 }
 .fx-journal-tag-caps {
@@ -143,7 +143,7 @@
   font-size: 1.125rem;
   line-height: 1.375;
   color: var(--text);
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
@@ -191,11 +191,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.25rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
   @media (min-width: 40rem) {
     padding: 2rem;
@@ -224,7 +224,7 @@
   font-size: 1.875rem;
   line-height: 1.25;
   color: var(--text);
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
@@ -245,11 +245,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
 }
 .fx-journal-img-2 {
@@ -263,7 +263,7 @@
   font-size: 1.25rem;
   line-height: 1.375;
   color: var(--text);
-  .group:hover & {
+  a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }

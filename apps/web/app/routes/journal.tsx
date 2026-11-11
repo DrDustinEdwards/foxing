@@ -4,7 +4,7 @@ import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "capsomer/react/picture";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
-import { focusedPicture } from "~/lib/focus";
+import { pictureProps } from "@dustinedwards/site-runtime/image";
 import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, journalLd, ldJson } from "~/lib/seo";
@@ -107,11 +107,7 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
       {cover ? (
         <div className="fx-journal-box">
           <Picture
-            picture={focusedPicture(
-              cover,
-              { alt: post.coverImageAlt ?? "", priority: true, className: "fx-journal-img" },
-              post.coverFocus,
-            )}
+            picture={pictureProps(cover, { alt: post.coverImageAlt ?? "", priority: true, className: "fx-journal-img", focus: post.coverFocus })}
           />
         </div>
       ) : (
@@ -132,11 +128,7 @@ function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
     <Link to={`/journal/${post.slug}`} className="group fx-journal-card-2">
       {cover ? (
         <Picture
-          picture={focusedPicture(
-            { ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" },
-            { alt: post.coverImageAlt ?? "", className: "mb-4 fx-journal-img-2" },
-            post.coverFocus,
-          )}
+          picture={pictureProps({ ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" }, { alt: post.coverImageAlt ?? "", className: "mb-4 fx-journal-img-2", focus: post.coverFocus })}
         />
       ) : null}
       <h3 className="fx-journal-title-2">{post.title}</h3>
