@@ -51,7 +51,11 @@ export default function Search({ loaderData }: Route.ComponentProps) {
   const { q, filters, result, authors, genres } = loaderData;
 
   function hrefFor(page: number) {
-    return pageHref("/search", { q, genre: filters.genre, era: filters.era, length: filters.length }, page);
+    return pageHref(
+      "/search",
+      { q, genre: filters.genre, era: filters.era, length: filters.length },
+      page,
+    );
   }
 
   return (
