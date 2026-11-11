@@ -1,7 +1,7 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
 import { pageEnvelope } from "capsomer/behavior/pagination";
-import { and, desc, eq, getTableColumns, isNotNull, lte, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, getTableColumns, isNotNull, lte, sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import { journalPosts, journalSlugRedirects, profiles } from "../../schema";
 
@@ -105,35 +105,62 @@ export async function getJournalSlugRedirect(db: Db, slug: string): Promise<stri
 }
 
 /**
- * The byline and series line of a post: its credited staff member's display name (null when it
- * credits Foxing alone), and how many live posts its series has, this one counted.
+ * The byline of a post: its credited staff member's display name, or null when it credits Foxing
+ * alone.
  */
-export async function getJournalCredits(
+export async function getJournalAuthor(
   db: Db,
-  post: { slug: string; authorId: string | null; series: string | null },
-): Promise<{ author: string | null; seriesTotal: number | null }> {
-  const [person] = post.authorId
-    ? await db
-        .select({ displayName: profiles.displayName, username: profiles.username })
-        .from(profiles)
-        .where(eq(profiles.id, post.authorId))
-        .limit(1)
-    : [];
-  let seriesTotal: number | null = null;
-  if (post.series) {
-    const [others] = await db
-      .select({ n: sql<number>`count(*)` })
-      .from(journalPosts)
-      .where(
-        and(
-          eq(journalPosts.series, post.series),
-          eq(journalPosts.isPublished, true),
-          ne(journalPosts.slug, post.slug),
-        ),
-      );
-    seriesTotal = (others?.n ?? 0) + 1;
-  }
-  return { author: person ? (person.displayName ?? person.username) : null, seriesTotal };
+  post: { authorId: string | null },
+): Promise<string | null> {
+  if (!post.authorId) return null;
+  const [person] = await db
+    .select({ displayName: profiles.displayName, username: profiles.username })
+    .from(profiles)
+    .where(eq(profiles.id, post.authorId))
+    .limit(1);
+  return person ? (person.displayName ?? person.username) : null;
+}
+
+export type JournalSeriesPart = JournalCard & { seriesPart: number | null };
+
+/**
+ * The live posts of one series, in reading order: by part number, a post with none after the
+ * numbered ones, then by publish date. For a post's series nav and the series' own page.
+ */
+export async function listJournalSeriesParts(db: Db, series: string): Promise<JournalSeriesPart[]> {
+  return db
+    .select({ ...CARD_COLUMNS, seriesPart: journalPosts.seriesPart })
+    .from(journalPosts)
+    .where(and(eq(journalPosts.series, series), eq(journalPosts.isPublished, true)))
+    .orderBy(
+      sql`${journalPosts.seriesPart} IS NULL`,
+      asc(journalPosts.seriesPart),
+      asc(journalPosts.publishedAt),
+    );
+}
+
+/** Each series on published posts with the newest change to one of its posts, for the sitemap. */
+export async function listSitemapSeries(
+  db: Db,
+): Promise<Array<{ series: string; updatedAt: Date }>> {
+  const rows = await db
+    .select({
+      series: journalPosts.series,
+      updatedAt: sql<number>`MAX(${journalPosts.updatedAt})`,
+    })
+    .from(journalPosts)
+    .where(
+      and(
+        isNotNull(journalPosts.series),
+        eq(journalPosts.isPublished, true),
+        eq(journalPosts.noindex, false),
+      ),
+    )
+    .groupBy(journalPosts.series)
+    .orderBy(asc(journalPosts.series));
+  return rows.flatMap((r) =>
+    r.series ? [{ series: r.series, updatedAt: new Date(Number(r.updatedAt)) }] : [],
+  );
 }
 
 /**

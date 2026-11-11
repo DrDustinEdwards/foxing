@@ -255,3 +255,28 @@ describe("journal tags + archive", () => {
     expect(result.posts[0].publishedAt?.toISOString().slice(0, 10)).toBe("2026-02-01");
   });
 });
+
+describe("journal series", () => {
+  it("lists a series' live parts in reading order, an unnumbered part last", async () => {
+    await db().delete(schema.journalPosts);
+    const part = (slug: string, seriesPart: number | null, isPublished = true) => ({
+      title: slug,
+      slug,
+      content: "...",
+      series: "Reading Middlemarch",
+      seriesPart,
+      isPublished,
+      publishedAt: new Date("2026-03-01"),
+    });
+    await db()
+      .insert(schema.journalPosts)
+      .values([
+        part("afterword", null),
+        part("part-two", 2),
+        part("part-one", 1),
+        part("draft", 3, false),
+      ]);
+    const parts = await catalogRepo.listJournalSeriesParts(db(), "Reading Middlemarch");
+    expect(parts.map((p) => p.slug)).toEqual(["part-one", "part-two", "afterword"]);
+  });
+});

@@ -5,7 +5,7 @@ import { submitIndexNowIfChanged } from "@drdustinedwards/site-helpers/indexnow"
 import { INDEXNOW_KEY } from "~/lib/indexnow";
 import { SITE_ORIGIN } from "~/lib/origins";
 import { PAGE_DATES_KEY } from "~/lib/page-dates";
-import { absoluteUrl, journalTagPath } from "~/lib/seo";
+import { absoluteUrl, journalSeriesPath, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
 import { parseFilters } from "./books";
@@ -17,22 +17,34 @@ const SITEMAP_HASH_KEY = "indexnow:sitemap-hash";
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env, ctx } = loaderBase(context, request);
 
-  const [books, authors, awards, clubs, posts, tags, homePick, homeBooks, browse, pageDates] =
-    await Promise.all([
-      catalogRepo.listSitemapBooks(db),
-      catalogRepo.listSitemapAuthors(db),
-      catalogRepo.listSitemapAwards(db),
-      catalogRepo.listSitemapClubs(db),
-      catalogRepo.listPublishedSlugs(db),
-      catalogRepo.listSitemapTags(db),
-      // The covers the home page and /books show, read as their loaders read them (marketing.tsx, books.tsx), for
-      // their image entries.
-      catalogRepo.getTodaysPick(db),
-      catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
-      views.browse(db, parseFilters(new URL("/books", request.url))),
-      // The hubs and the pages written in code have no row to date them: the daily page-dates job keeps the day each last changed.
-      kvPageRecord(env.APP_KV, PAGE_DATES_KEY).load(),
-    ]);
+  const [
+    books,
+    authors,
+    awards,
+    clubs,
+    posts,
+    tags,
+    series,
+    homePick,
+    homeBooks,
+    browse,
+    pageDates,
+  ] = await Promise.all([
+    catalogRepo.listSitemapBooks(db),
+    catalogRepo.listSitemapAuthors(db),
+    catalogRepo.listSitemapAwards(db),
+    catalogRepo.listSitemapClubs(db),
+    catalogRepo.listPublishedSlugs(db),
+    catalogRepo.listSitemapTags(db),
+    catalogRepo.listSitemapSeries(db),
+    // The covers the home page and /books show, read as their loaders read them (marketing.tsx, books.tsx), for
+    // their image entries.
+    catalogRepo.getTodaysPick(db),
+    catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
+    views.browse(db, parseFilters(new URL("/books", request.url))),
+    // The hubs and the pages written in code have no row to date them: the daily page-dates job keeps the day each last changed.
+    kvPageRecord(env.APP_KV, PAGE_DATES_KEY).load(),
+  ]);
   const hub = (path: string) => ({ lastmod: pageDates?.[path]?.lastmod });
   const covers = (list: Array<{ coverUrl?: string | null } | null | undefined>) => {
     const urls = [...new Set(list.flatMap((b) => (b?.coverUrl ? [b.coverUrl] : [])))];
@@ -66,6 +78,11 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       priority: 0.6,
     })),
     ...tags.map((t) => ({ loc: journalTagPath(t.tag), lastmod: t.updatedAt, priority: 0.4 })),
+    ...series.map((s) => ({
+      loc: journalSeriesPath(s.series),
+      lastmod: s.updatedAt,
+      priority: 0.5,
+    })),
   ];
 
   // IndexNow: ping only when the URL set changed since the last sitemap request

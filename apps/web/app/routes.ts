@@ -87,6 +87,7 @@ export default [
   route("journal", "routes/journal.tsx"),
   route("journal/archive", "routes/journal-archive.tsx"),
   route("journal/tag/:tag", "routes/journal-tag.tsx"),
+  route("journal/series/:series", "routes/journal-series.tsx"),
   route("journal/:slug", "routes/journal-post.tsx"),
   route("journal/rss.xml", "routes/journal-rss.tsx"),
   route("search", "routes/search.tsx"),

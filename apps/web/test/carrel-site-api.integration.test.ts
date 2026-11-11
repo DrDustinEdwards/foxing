@@ -502,7 +502,10 @@ describe("Carrel site API: the Journal adapter", () => {
     expect(html).toContain('class="fx-footer"');
     expect(html).toContain('<h1 class="mt-3 fx-journal-post-title">Preview me</h1>');
     expect(html).toContain('By <span class="p-author h-card">Ada Reader</span>');
-    expect(html).toContain("Part 3 of 3 in Rereading Eliot");
+    // The series nav: no part is live yet, so the preview is the series' only part.
+    expect(html.replaceAll("<!-- -->", "")).toContain(
+      'Part 1 of 1: <a href="/journal/series/Rereading%20Eliot"',
+    );
     expect(html).toContain("<p>New body.</p>");
     expect(html.match(/<meta name="robots"[^>]*>/g)).toEqual([
       '<meta name="robots" content="noindex"/>',
