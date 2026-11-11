@@ -5,7 +5,7 @@
 // user set the viewer is entitled to), so an unauthorized row is never fetched, let
 // alone returned. The domain layer (domain/reader-annotations) composes these and
 // applies the courtesy spoiler/progress gate; it never widens what the SQL admits.
-import { and, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
+import { and, eq, gte, inArray, isNotNull, ne, or, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
 import { annotations, clubBooks, clubMembers, clubs, closeFriends, profiles } from "../schema";
 
@@ -295,12 +295,15 @@ export type PopularRow = {
  *  club-scoped one. The representative locator is the earliest public highlight of that
  *  passage, used to anchor the subtle underline layer. */
 export async function popularHighlights(db: Db, bookId: string): Promise<PopularRow[]> {
+  // Grouped in SQL, so a book with many public highlights sends back one row per popular passage, not every row.
+  // SQLite takes a bare column (locator) from the row that min() picked, which is the earliest highlight.
+  const readers = sql<number>`count(distinct ${annotations.userId})`;
   const rows = await db
     .select({
-      userId: annotations.userId,
       normalizedText: annotations.normalizedText,
+      count: readers,
       locator: annotations.locator,
-      createdAt: annotations.createdAt,
+      earliest: sql<number>`min(${annotations.createdAt})`,
     })
     .from(annotations)
     .where(
@@ -310,36 +313,14 @@ export async function popularHighlights(db: Db, bookId: string): Promise<Popular
         eq(annotations.visibility, "public"),
         isNotNull(annotations.normalizedText),
       ),
-    );
-
-  const groups = new Map<
-    string,
-    { users: Set<string>; locator: Record<string, unknown> | null; earliest: number }
-  >();
-  for (const r of rows) {
-    const key = r.normalizedText as string;
-    const at = r.createdAt instanceof Date ? r.createdAt.getTime() : 0;
-    const g = groups.get(key);
-    if (!g) {
-      groups.set(key, {
-        users: new Set([r.userId]),
-        locator: r.locator ?? null,
-        earliest: at,
-      });
-    } else {
-      g.users.add(r.userId);
-      if (at < g.earliest) {
-        g.earliest = at;
-        g.locator = r.locator ?? null;
-      }
-    }
-  }
-
-  const out: PopularRow[] = [];
-  for (const [normalizedText, g] of groups) {
-    if (g.users.size >= 3) out.push({ normalizedText, count: g.users.size, locator: g.locator });
-  }
-  return out;
+    )
+    .groupBy(annotations.normalizedText)
+    .having(gte(readers, popularThreshold()));
+  return rows.map((r) => ({
+    normalizedText: r.normalizedText as string,
+    count: Number(r.count),
+    locator: r.locator ?? null,
+  }));
 }
 
 /** The distinct-user threshold a passage must clear to count as a popular highlight. */
