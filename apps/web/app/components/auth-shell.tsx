@@ -364,7 +364,15 @@ export function MagicLinkForm({
 
   return (
     <form className="stack-3" onSubmit={(event) => void sendLink(event)}>
-      <Field label="Email" name="email" type="email" required autoComplete="username webauthn" />
+      <Field
+        label="Email"
+        name="email"
+        type="email"
+        required
+        autoComplete="username webauthn"
+        spellCheck={false}
+        enterKeyHint="send"
+      />
       {turnstileSiteKey ? <div ref={widget} /> : null}
       {refusal ? (
         <p role="alert" className="error">
@@ -445,6 +453,10 @@ function SignInCodeForm({
         required
         inputMode="numeric"
         autoComplete="one-time-code"
+        autoCapitalize="none"
+        autoCorrect="off"
+        spellCheck={false}
+        enterKeyHint="done"
         pattern="[0-9]{6}"
         maxLength={6}
       />

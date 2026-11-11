@@ -32,25 +32,27 @@ export function BookCard({
   headingLevel?: 2 | 3;
 }) {
   const Title = headingLevel === 2 ? "h2" : "h3";
+  // One destination, so one link wraps the card's <article>; the regions (cover, title, byline)
+  // are the article's own children, with no body wrapper (Modern Web Guidance "card").
   return (
-    <Link to={`/books/${book.slug}`} className={cn("fx-book-card", className)}>
-      <CoverImage
-        src={book.coverUrl}
-        alt={`${book.title} by ${book.author}`}
-        fallbackLabel={book.title}
-        priority={position === 0}
-        eager={position !== undefined && position < GRID_FIRST_ROW}
-        sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
-      />
-      <div className="fx-book-card-body">
+    <Link to={`/books/${book.slug}`} className={cn("fx-book-card-link", className)}>
+      <article className="fx-book-card">
+        <CoverImage
+          src={book.coverUrl}
+          alt={`${book.title} by ${book.author}`}
+          fallbackLabel={book.title}
+          priority={position === 0}
+          eager={position !== undefined && position < GRID_FIRST_ROW}
+          sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+        />
         <Title className="fx-book-card-title">{book.title}</Title>
-        <p className="mt-1 meta">
+        <p className="meta">
           {book.author}
           {book.publicationYear ? (
             <span className="dim"> &middot; {book.publicationYear}</span>
           ) : null}
         </p>
-      </div>
+      </article>
     </Link>
   );
 }

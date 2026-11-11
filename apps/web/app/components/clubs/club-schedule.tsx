@@ -8,6 +8,7 @@ import {
 } from "@foxing/client";
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
+import { Time } from "capsomer/react/time";
 import { useState } from "react";
 import { pollChart } from "~/lib/reading-charts";
 import { ErrorText } from "./club-sections";
@@ -229,7 +230,11 @@ export function MeetingsSection({
           {meetings.map((m) => (
             <li key={m.id} className="fx-club-schedule-card-3">
               <p className="fx-club-schedule-text-3">{m.title}</p>
-              <p className="fine">{new Date(m.meetingDate).toLocaleString()}</p>
+              {/* The viewer's zone, named, with UTC beside it, so members in other zones read the same
+                  moment; Capsomer's Time hydrates cleanly from the server's UTC. */}
+              <p className="fine">
+                <Time at={m.meetingDate} format="exact" />
+              </p>
               {!m.isCancelled ? (
                 <div className="mt-2 fx-club-schedule-row">
                   {(["going", "maybe", "not_going"] as const).map((s) => (

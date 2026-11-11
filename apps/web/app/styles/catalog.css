@@ -2,9 +2,15 @@
    search filters and results, the book page. */
 
 /* Content card (design-system Rule 15): the edge strengthens on hover, the title turns accent. */
+.fx-book-card-link,
+.fx-book-card-link:hover {
+  display: block;
+  color: inherit;
+}
 .fx-book-card {
   display: flex;
   flex-direction: column;
+  block-size: 100%;
   border: 1px solid var(--line);
   border-radius: var(--fx-radius-card);
   background: var(--surface);
@@ -12,14 +18,19 @@
   @media (prefers-reduced-motion: no-preference) {
     transition: border-color var(--dur-base) var(--ease-out);
   }
+  & > :is(h2, h3, p) {
+    padding-inline: 0.125rem;
+  }
+  & > :is(h2, h3) {
+    margin-block-start: 0.75rem;
+  }
+  & > p {
+    margin-block-start: 0.25rem;
+    padding-block-end: 0.25rem;
+  }
 }
-.fx-book-card:hover {
+.fx-book-card-link:hover .fx-book-card {
   border-color: var(--line-strong);
-  color: inherit;
-}
-.fx-book-card-body {
-  margin-block-start: 0.75rem;
-  padding: 0 0.125rem 0.25rem;
 }
 .fx-book-card-title {
   font-family: var(--display);
@@ -27,7 +38,7 @@
   line-height: 1.35;
   color: var(--text);
 }
-.fx-book-card:hover .fx-book-card-title {
+.fx-book-card-link:hover .fx-book-card-title {
   color: var(--accent-text);
 }
 .fx-book-grid {

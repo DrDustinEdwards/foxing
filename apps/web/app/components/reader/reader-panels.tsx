@@ -1,4 +1,5 @@
 import type { HighlightColor } from "@foxing/core";
+import { Dialog, DialogTitle } from "capsomer/react/dialog";
 import { Link } from "capsomer/react/link";
 import type { TocEntry } from "~/lib/reader/engine.client";
 import { type Locator, tintFor } from "~/lib/reader/locator";
@@ -103,6 +104,8 @@ export function SidePanel({
   );
 }
 
+// A small modal: a Capsomer dialog (native <dialog>), so focus, Esc, the backdrop and the page
+// behind behave as every other modal on the network.
 function Modal({
   title,
   children,
@@ -113,18 +116,17 @@ function Modal({
   onClose: () => void;
 }) {
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Close"
-        className="fx-reader-panels-btn-3"
-        onClick={onClose}
-      />
-      <div role="dialog" aria-modal aria-label={title} className="fx-reader-panels-card">
-        <h2 className="mb-2 fx-reader-panels-title-2">{title}</h2>
-        {children}
-      </div>
-    </>
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      size="sm"
+      className="fx-reader-panels-card"
+    >
+      <DialogTitle className="mb-2 fx-reader-panels-title-2">{title}</DialogTitle>
+      {children}
+    </Dialog>
   );
 }
 

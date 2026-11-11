@@ -83,19 +83,9 @@
   color: var(--muted);
 }
 
-.fx-paywall-row {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  background-color: color-mix(in srgb, #000 70%, transparent);
-  padding: 1rem;
-}
+/* The paywall's look on Capsomer's dialog (paywall.tsx): Capsomer places, sizes and animates it. */
 .fx-paywall-card {
-  width: 100%;
-  max-width: 28rem;
-  overflow: hidden;
+  --cap-dialog-w: 28rem;
   border-radius: var(--fx-radius-hero);
   background-color: var(--fx-charcoal);
   padding: 2rem;
