@@ -5,7 +5,14 @@
 // origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
-import { article, itemList, pageImage, thing, website } from "@drdustinedwards/site-helpers/schema";
+import {
+  article,
+  itemList,
+  organization,
+  pageImage,
+  thing,
+  website,
+} from "@drdustinedwards/site-helpers/schema";
 import type { MetaDescriptor } from "react-router";
 import { COVER_SIZE } from "./images";
 import { SITE_ORIGIN } from "./origins";
@@ -38,6 +45,9 @@ const head = defineHead({
     alt: "Foxing: read the classics, free.",
   },
   suffix: ` | ${SITE_NAME}`,
+  description: DEFAULT_DESCRIPTION,
+  // The home page's title is already whole.
+  wholeHomeTitle: true,
   // The sections a page's BreadcrumbList passes through; Prelum builds the only one a page has.
   sections: { "/books": "Books", "/awards": "Awards", "/picks": "Picks", "/journal": "Journal" },
 });
@@ -60,37 +70,10 @@ type MetaInput = {
   breadcrumbs?: Array<{ name: string; path: string }>;
 };
 
-/** The full standard head from Prelum's defineHead: title, description, canonical, Open Graph, Twitter. */
-export function buildMeta(input: MetaInput): MetaDescriptor[] {
-  const {
-    title,
-    description = DEFAULT_DESCRIPTION,
-    pathname,
-    image,
-    imageAlt,
-    type,
-    noindex,
-    canonical,
-    pageType,
-    breadcrumbs,
-  } = input;
-  // Routes pass location.pathname, so /x/ would name /x/ as canonical; the page is /x.
-  const path = pathname.replace(/\/+$/, "") || "/";
-  return head({
-    path,
-    // The home page's title is already whole.
-    title,
-    fullTitle: path === "/",
-    description,
-    image: image
-      ? { ...(typeof image === "string" ? { url: image } : image), alt: imageAlt }
-      : undefined,
-    type,
-    noindex,
-    canonical,
-    pageType,
-    breadcrumbs,
-  });
+/** The full standard head from Prelum's defineHead: title, description, canonical, Open Graph, Twitter. Routes pass
+ *  location.pathname; Prelum drops a trailing slash, so /x/ names /x as canonical. */
+export function buildMeta({ pathname, ...page }: MetaInput): MetaDescriptor[] {
+  return head({ ...page, path: pathname });
 }
 
 /** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */
@@ -101,8 +84,8 @@ const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 /** Foxing itself, on the home page, where Google reads an Organization's name and logo
  *  (https://developers.google.com/search/docs/appearance/structured-data/organization). The logo is the 512 px app icon. */
 export function organizationLd(): Record<string, unknown> {
-  return thing("Organization", {
-    "@id": ORGANIZATION_ID,
+  return organization({
+    id: ORGANIZATION_ID,
     name: SITE_NAME,
     url: absoluteUrl("/"),
     description: DEFAULT_DESCRIPTION,
