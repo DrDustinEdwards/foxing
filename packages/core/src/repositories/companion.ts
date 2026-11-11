@@ -1,5 +1,6 @@
 // Companion persistence: per-book conversation threads/messages, and the free-cached
 // catalog generator output, and the daily usage quota. All companion data access goes through here.
+import { reserveSettle } from "@dustinedwards/site-runtime/ai-caps";
 import { and, desc, eq, sql } from "drizzle-orm";
 import { quotaDay } from "../companion/quota";
 import { COMPANION_QUOTA } from "../config/companion";
@@ -154,4 +155,15 @@ export async function settleUsage(
     .update(companionUsage)
     .set({ costCents: sql`max(0, ${companionUsage.costCents} + ${actualCents - reservedCents})` })
     .where(and(eq(companionUsage.userId, userId), eq(companionUsage.day, day)));
+}
+
+/**
+ * A reader's companion quota as site-runtime's reserveSettle: reserve the worst case (reserveUsage), run the call, settle
+ * to its real cost (settleUsage). Null from the reserve is a spent quota; a call that throws keeps its reservation.
+ */
+export function companionQuota<T>(db: Db, userId: string, now: Date = new Date()) {
+  return reserveSettle<T, string>({
+    reserve: (cents) => reserveUsage(db, userId, cents, now),
+    settle: (day, reserved, actual) => settleUsage(db, userId, day, reserved, actual),
+  });
 }

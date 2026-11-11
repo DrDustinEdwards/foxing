@@ -330,26 +330,28 @@ async function aiOverlay(
     `From the candidates ONLY, choose up to ${TARGET} best for THIS reader, best first, each ` +
     "with a specific, warm one-line reason (max 12 words) for this reader.";
 
-  // Quota guard: the companion's daily counter, reserved before the call (companionRepo.reserveUsage). Over quota ->
-  // data ranking, no call. A call that throws keeps its reservation.
+  // Quota guard: the companion's daily counter, reserved before the call and settled to its real cost after
+  // (companionRepo.companionQuota). Over quota -> data ranking, no call. A call that throws keeps its reservation.
   const maxTokens = 1024;
-  const reserved = reserveCents("fast", system.length + user.length, maxTokens);
-  const quotaDay = await companionRepo.reserveUsage(db, userId, reserved, now);
-  if (!quotaDay) return null;
-
-  const { value, usage } = await caller(
-    {
-      model: MODELS.fast,
-      system,
-      messages: [{ role: "user", content: user }],
-      maxTokens,
-      feature: "recommendations",
-    },
-    picksSchema([...allowed]),
-  );
-
-  const cost = estimateCostCents("fast", usage);
-  await companionRepo.settleUsage(db, userId, quotaDay, reserved, cost);
+  const run = await companionRepo.companionQuota<Awaited<ReturnType<typeof caller>>["value"]>(
+    db,
+    userId,
+    now,
+  )(reserveCents("fast", system.length + user.length, maxTokens), async () => {
+    const { value, usage } = await caller(
+      {
+        model: MODELS.fast,
+        system,
+        messages: [{ role: "user", content: user }],
+        maxTokens,
+        feature: "recommendations",
+      },
+      picksSchema([...allowed]),
+    );
+    return { value, actual: estimateCostCents("fast", usage) };
+  });
+  if (!run.ok) return null;
+  const { value } = run;
 
   const selection = selectAiPicks(value, allowed);
   if (!selection || selection.length < 6) return null;
