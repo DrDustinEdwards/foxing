@@ -1,10 +1,11 @@
 import { views } from "@foxing/core";
+import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
 import { FilterBar } from "~/components/search/filter-bar";
 import { GroupedResults } from "~/components/search/grouped-results";
-import { Pagination } from "~/components/search/pagination";
+import { Pager } from "~/components/pager";
 import { Container, PageHeader } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
@@ -14,7 +15,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
   const url = new URL(request.url);
   const q = (url.searchParams.get("q") ?? "").trim();
-  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const page = parsePage(url.searchParams.get("page"));
   const filters = {
     genre: url.searchParams.get("genre") || undefined,
     era: url.searchParams.get("era") || undefined,
@@ -50,13 +51,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
   const { q, filters, result, authors, genres } = loaderData;
 
   function hrefFor(page: number) {
-    const sp = new URLSearchParams();
-    sp.set("q", q);
-    if (filters.genre) sp.set("genre", filters.genre);
-    if (filters.era) sp.set("era", filters.era);
-    if (filters.length) sp.set("length", filters.length);
-    if (page > 1) sp.set("page", String(page));
-    return `/search?${sp.toString()}`;
+    return pageHref("/search", { q, genre: filters.genre, era: filters.era, length: filters.length }, page);
   }
 
   return (
@@ -75,7 +70,12 @@ export default function Search({ loaderData }: Route.ComponentProps) {
               fuzzy={result.fuzzy}
               authors={authors}
             />
-            <Pagination page={result.page} pageCount={result.pageCount} hrefFor={hrefFor} />
+            <Pager
+              page={result.page}
+              pageCount={result.pageCount}
+              hrefFor={hrefFor}
+              label="Result pages"
+            />
           </>
         ) : (
           <p className="mt-8 muted sans">

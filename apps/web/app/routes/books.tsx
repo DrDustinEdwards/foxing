@@ -1,7 +1,9 @@
 import { catalogRepo, views } from "@foxing/core";
+import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
+import { Pager } from "~/components/pager";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
 import { buildMeta, itemListLd, ldJson } from "~/lib/seo";
@@ -23,7 +25,7 @@ export function parseFilters(url: URL): Filters {
     era: p.get("era") || undefined,
     length: p.get("length") || undefined,
     sort: sort === "year-desc" || sort === "year-asc" ? sort : "title",
-    page: Math.max(1, Number(p.get("page")) || 1),
+    page: parsePage(p.get("page")),
   };
 }
 
@@ -193,46 +195,26 @@ export default function Books({ loaderData }: Route.ComponentProps) {
                 <BookCard key={b.slug} book={b} position={i} headingLevel={2} />
               ))}
             </BookGrid>
-            <Pagination filters={filters} result={result} query={query} />
+            <Pager
+              page={result.page}
+              pageCount={result.pageCount}
+              hrefFor={(n) =>
+                pageHref(
+                  "/books",
+                  {
+                    subject: filters.subject,
+                    era: filters.era,
+                    length: filters.length,
+                    sort: filters.sort === "title" ? undefined : filters.sort,
+                  },
+                  n,
+                )
+              }
+              label="Book pages"
+            />
           </>
         )}
       </Container>
     </PageShell>
-  );
-}
-
-function Pagination({
-  filters,
-  result,
-  query,
-}: {
-  filters: Filters;
-  result: { page: number; pageCount: number };
-  query: (f: Filters, o: Partial<Record<string, string | null>>) => string;
-}) {
-  if (result.pageCount <= 1) return null;
-  const prev = result.page > 1 ? query(filters, { page: String(result.page - 1) }) : null;
-  const next =
-    result.page < result.pageCount ? query(filters, { page: String(result.page + 1) }) : null;
-  return (
-    <nav aria-label="Pagination" className="mt-12 justify-center fx-books-row-2">
-      {prev ? (
-        <Link to={prev} rel="prev" className="cap-btn">
-          Previous
-        </Link>
-      ) : (
-        <span className="py-2 fx-books-label">Previous</span>
-      )}
-      <span className="ui">
-        Page {result.page} of {result.pageCount}
-      </span>
-      {next ? (
-        <Link to={next} rel="next" className="cap-btn">
-          Next
-        </Link>
-      ) : (
-        <span className="py-2 fx-books-label">Next</span>
-      )}
-    </nav>
   );
 }

@@ -1,5 +1,6 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
+import { pageEnvelope } from "capsomer/behavior/pagination";
 import { and, desc, eq, getTableColumns, isNotNull, lte, ne, sql } from "drizzle-orm";
 import type { Db } from "../../db";
 import { journalPosts, journalSlugRedirects, profiles } from "../../schema";
@@ -52,31 +53,28 @@ export async function listPublishedPosts(
   db: Db,
   opts: { page?: number; pageSize?: number } = {},
 ): Promise<JournalListResult> {
-  const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 12));
   const where = eq(journalPosts.isPublished, true);
+
+  const [counted] = await db
+    .select({ n: sql<number>`count(*)` })
+    .from(journalPosts)
+    .where(where);
+  const { page, perPage, pageCount, total, offset } = pageEnvelope(
+    opts.page ?? 1,
+    pageSize,
+    Number(counted?.n ?? 0),
+  );
 
   const posts = await db
     .select(CARD_COLUMNS)
     .from(journalPosts)
     .where(where)
     .orderBy(desc(journalPosts.featured), desc(journalPosts.publishedAt))
-    .limit(pageSize)
-    .offset((page - 1) * pageSize);
+    .limit(perPage)
+    .offset(offset);
 
-  const [counted] = await db
-    .select({ n: sql<number>`count(*)` })
-    .from(journalPosts)
-    .where(where);
-  const total = counted?.n ?? 0;
-
-  return {
-    posts,
-    total,
-    page,
-    pageSize,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
-  };
+  return { posts, total, page, pageSize: perPage, pageCount };
 }
 
 export async function getPostBySlug(
@@ -218,10 +216,18 @@ export async function listPostsByTag(
   tag: string,
   opts: { page?: number; pageSize?: number } = {},
 ): Promise<JournalListResult> {
-  const page = Math.max(1, opts.page ?? 1);
   const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 24));
   const where = sql`journal_posts.is_published = 1
     AND EXISTS (SELECT 1 FROM json_each(journal_posts.tags) je WHERE je.value = ${tag})`;
+
+  const [{ n }] = await db.all<{ n: number }>(sql`
+    SELECT COUNT(*) AS n FROM journal_posts WHERE ${where}
+  `);
+  const { page, perPage, pageCount, total, offset } = pageEnvelope(
+    opts.page ?? 1,
+    pageSize,
+    Number(n),
+  );
 
   const rows = await db.all<{
     slug: string;
@@ -240,12 +246,8 @@ export async function listPostsByTag(
     FROM journal_posts
     WHERE ${where}
     ORDER BY featured DESC, published_at DESC
-    LIMIT ${pageSize} OFFSET ${(page - 1) * pageSize}
+    LIMIT ${perPage} OFFSET ${offset}
   `);
-  const [{ n }] = await db.all<{ n: number }>(sql`
-    SELECT COUNT(*) AS n FROM journal_posts WHERE ${where}
-  `);
-  const total = Number(n);
 
   return {
     posts: rows.map((r) => ({
@@ -262,7 +264,7 @@ export async function listPostsByTag(
     })),
     total,
     page,
-    pageSize,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+    pageSize: perPage,
+    pageCount,
   };
 }
