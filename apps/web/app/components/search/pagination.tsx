@@ -1,6 +1,6 @@
 // Numbered prev/next pagination for query results. Crawlable links (rel prev/next)
 // whose hrefs preserve the query and active filters via the caller's hrefFor.
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 
 export function Pagination({
   page,
@@ -15,17 +15,17 @@ export function Pagination({
   return (
     <nav aria-label="Pagination" className="mt-12 justify-center row-4">
       {page > 1 ? (
-        <Link to={hrefFor(page - 1)} rel="prev" className="cap-btn">
+        <ButtonLink to={hrefFor(page - 1)} rel="prev">
           Previous
-        </Link>
+        </ButtonLink>
       ) : null}
       <span className="ui">
         Page {page} of {pageCount}
       </span>
       {page < pageCount ? (
-        <Link to={hrefFor(page + 1)} rel="next" className="cap-btn">
+        <ButtonLink to={hrefFor(page + 1)} rel="next">
           Next
-        </Link>
+        </ButtonLink>
       ) : null}
     </nav>
   );

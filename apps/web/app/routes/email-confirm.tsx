@@ -10,7 +10,7 @@ import {
 } from "@dustinedwards/site-runtime/sign-in";
 import { signalCurrentUserDetails } from "@dustinedwards/site-runtime/sign-in-client";
 import { createDb, profilesRepo } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { useEffect } from "react";
 import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
@@ -72,9 +72,9 @@ const PROBLEM: Record<EmailLinkProblem, { title: string; text: string }> = {
 
 function SettingsLink() {
   return (
-    <Link to="/settings" className="cap-btn full" data-variant="primary" data-size="lg">
+    <ButtonLink to="/settings" block variant="primary" size="lg">
       Go to Settings
-    </Link>
+    </ButtonLink>
   );
 }
 

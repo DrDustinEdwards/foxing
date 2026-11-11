@@ -15,7 +15,7 @@ import {
   signalUnknownCredential,
 } from "@dustinedwards/site-runtime/sign-in-client";
 import { useFetcher, useRevalidator } from "react-router";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;
@@ -234,9 +234,9 @@ export function AdminSection() {
   return (
     <Card title="Admin">
       <p className="ui">You have operator access to the Foxing admin tools.</p>
-      <Link to="/admin" className="cap-btn mt-4 fx-account-sections-link">
+      <ButtonLink to="/admin" className="mt-4">
         Open admin dashboard
-      </Link>
+      </ButtonLink>
     </Card>
   );
 }
@@ -512,9 +512,9 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
     return (
       <Card title="Signed-in devices">
         <p className="ui">To see where you are signed in, sign in again.</p>
-        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink to="/login?next=%2Fsettings" className="mt-4">
           Sign in again
-        </Link>
+        </ButtonLink>
       </Card>
     );
 
@@ -623,13 +623,13 @@ export function DataSection({ fresh }: { fresh: boolean }) {
         {fresh ? null : " It holds everything, so sign in again first."}
       </p>
       {fresh ? (
-        <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink href="/api/v1/account/export" className="mt-4">
           Download your data
-        </a>
+        </ButtonLink>
       ) : (
-        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink to="/login?next=%2Fsettings" className="mt-4">
           Sign in again
-        </Link>
+        </ButtonLink>
       )}
     </Card>
   );
@@ -722,9 +722,9 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
           This permanently removes your account and all of your data. To keep someone else from
           doing it on a device you left signed in, sign in again first.
         </p>
-        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink to="/login?next=%2Fsettings" className="mt-4">
           Sign in again
-        </Link>
+        </ButtonLink>
       </section>
     );
 

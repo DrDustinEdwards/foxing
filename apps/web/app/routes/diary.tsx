@@ -6,7 +6,8 @@ import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
+import { Rating } from "capsomer/react/rating";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
@@ -25,16 +26,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 const fmtDate = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
-
-function Stars({ ratingHalf }: { ratingHalf: number | null }) {
-  if (ratingHalf == null) return null;
-  return (
-    <span role="img" aria-label={`${ratingHalf / 2} stars`} className="fx-diary-label">
-      {"★".repeat(Math.floor(ratingHalf / 2))}
-      {ratingHalf % 2 === 1 ? "½" : ""}
-    </span>
-  );
-}
 
 const VIS_LABEL: Record<string, string> = {
   private: "Private",
@@ -118,9 +109,9 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-8 items-end fx-diary-row">
           <PageHeader eyebrow="Reading" title="Your diary" className="mb-0" />
-          <Link to="/diary/new" className="cap-btn shrink-0" data-variant="primary">
+          <ButtonLink to="/diary/new" className="shrink-0" variant="primary">
             New entry
-          </Link>
+          </ButtonLink>
         </div>
 
         {entries.length === 0 ? (
@@ -231,7 +222,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
               {reread ? <RereadBadge /> : null}
             </div>
             <div className="mt-1 row">
-              <Stars ratingHalf={e.ratingHalf} />
+              {e.ratingHalf == null ? null : <Rating value={e.ratingHalf / 2} size="sm" />}
               {e.logDate ? <span className="mono fine">{fmtDate.format(e.logDate)}</span> : null}
             </div>
           </div>

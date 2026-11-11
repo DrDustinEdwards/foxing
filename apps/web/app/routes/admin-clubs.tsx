@@ -4,7 +4,7 @@
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
@@ -97,11 +97,7 @@ function ClubRow({
           </p>
         </div>
         <div className="shrink-0 row-2">
-          {club.slug ? (
-            <Link to={`/clubs/${club.slug}`} className="cap-btn">
-              View
-            </Link>
-          ) : null}
+          {club.slug ? <ButtonLink to={`/clubs/${club.slug}`}>View</ButtonLink> : null}
           <AdminButton
             pending={pending}
             onClick={() =>

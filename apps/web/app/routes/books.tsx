@@ -1,5 +1,5 @@
 import { catalogRepo, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
@@ -215,9 +215,9 @@ function Pagination({
   return (
     <nav aria-label="Pagination" className="mt-12 justify-center fx-books-row-2">
       {prev ? (
-        <Link to={prev} rel="prev" className="cap-btn">
+        <ButtonLink to={prev} rel="prev">
           Previous
-        </Link>
+        </ButtonLink>
       ) : (
         <span className="py-2 fx-books-label">Previous</span>
       )}
@@ -225,9 +225,9 @@ function Pagination({
         Page {result.page} of {result.pageCount}
       </span>
       {next ? (
-        <Link to={next} rel="next" className="cap-btn">
+        <ButtonLink to={next} rel="next">
           Next
-        </Link>
+        </ButtonLink>
       ) : (
         <span className="py-2 fx-books-label">Next</span>
       )}

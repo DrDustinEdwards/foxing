@@ -1,6 +1,8 @@
 import { faqPage } from "@drdustinedwards/site-helpers/schema";
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
+import { CtaBand } from "capsomer/react/cta-band";
+import { Hero } from "capsomer/react/hero";
 import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
@@ -80,23 +82,23 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <PageShell>
       {/* Hero */}
       <Container className="py-6">
-        <div className="fx-hero">
-          <Eyebrow className="mb-4">A reading home for the classics</Eyebrow>
-          <h1 className="fx-hero-title">Read the classics. Keep the record.</h1>
-          <p className="lead measure-xl center mt-5">
-            {total.toLocaleString()} books, free to read. Track what you finish, mark the passages
-            that stay with you, and follow the picks worth reading.
-          </p>
-          <div className="measure-xl center mt-8">
-            <SearchBox />
-          </div>
-          <div className="row wrap justify-center mt-5">
-            <Button to="/books">Browse the library</Button>
-            <Button to="/awards" variant="secondary">
-              Award winners
-            </Button>
-          </div>
-        </div>
+        <Hero
+          align="center"
+          eyebrow="A reading home for the classics"
+          title="Read the classics. Keep the record."
+          lead={`${total.toLocaleString()} books, free to read. Track what you finish, mark the passages that stay with you, and follow the picks worth reading.`}
+          actions={
+            <>
+              <div className="fx-hero-search">
+                <SearchBox />
+              </div>
+              <Button to="/books">Browse the library</Button>
+              <Button to="/awards" variant="secondary">
+                Award winners
+              </Button>
+            </>
+          }
+        />
       </Container>
 
       <ValueProps />
@@ -174,21 +176,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           web rather than linking dead store pages. Swap in store badges when mobile
           ships. */}
       <Container className="mt-16">
-        <section className="card card-hero fx-cta">
-          <Eyebrow className="mb-3">Start reading</Eyebrow>
-          <h2 className="fx-cta-title">Read the classics. Finally understand them.</h2>
-          <p className="measure-xl center mt-4 muted">
-            Read free on the web today. The iOS and Android apps are on the way, with your library,
-            highlights, and streak carried across.
-          </p>
-          <div className="row wrap justify-center mt-6">
-            <Button to="/signup">Join free on web</Button>
-            <Button to="/books" variant="secondary">
-              Browse the library
-            </Button>
-          </div>
-          <p className="mt-4 card-label">iOS and Android apps coming soon</p>
-        </section>
+        <CtaBand
+          eyebrow="Start reading"
+          title="Read the classics. Finally understand them."
+          note="iOS and Android apps coming soon"
+          actions={
+            <>
+              <Button to="/signup">Join free on web</Button>
+              <Button to="/books" variant="secondary">
+                Browse the library
+              </Button>
+            </>
+          }
+        >
+          Read free on the web today. The iOS and Android apps are on the way, with your library,
+          highlights, and streak carried across.
+        </CtaBand>
       </Container>
     </PageShell>
   );

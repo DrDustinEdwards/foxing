@@ -1,4 +1,4 @@
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { cn } from "~/lib/cn";
 
 /** Page-width container. One measure for every catalog surface. */
@@ -70,11 +70,8 @@ export function FilterTab({
 type ButtonProps = {
   children: React.ReactNode;
   to?: string;
-  href?: string;
   variant?: "primary" | "secondary" | "ghost";
   className?: string;
-  rel?: string;
-  target?: string;
   type?: "button" | "submit";
 };
 
@@ -82,35 +79,25 @@ type ButtonProps = {
 // secondary its outlined default, ghost its quiet variant in the accent text (fx-btn-ghost).
 const BUTTON_VARIANT = { primary: "primary", secondary: undefined, ghost: "quiet" } as const;
 
-/** One button, three intents. Renders as Link (to), anchor (href), or button. */
+/** One button, two intents. Renders as ButtonLink (to) or button. */
 export function Button({
   children,
   to,
-  href,
   variant = "primary",
   className,
-  rel,
-  target,
   type = "button",
 }: ButtonProps) {
-  const cls = cn("cap-btn", variant === "ghost" && "fx-btn-ghost", className);
+  const extra = cn(variant === "ghost" && "fx-btn-ghost", className);
   const v = BUTTON_VARIANT[variant];
   if (to) {
     return (
-      <Link to={to} className={cls} data-variant={v}>
+      <ButtonLink to={to} className={extra || undefined} variant={v}>
         {children}
-      </Link>
-    );
-  }
-  if (href) {
-    return (
-      <a href={href} rel={rel} target={target} className={cls} data-variant={v}>
-        {children}
-      </a>
+      </ButtonLink>
     );
   }
   return (
-    <button type={type} className={cls} data-variant={v}>
+    <button type={type} className={cn("cap-btn", extra)} data-variant={v}>
       {children}
     </button>
   );

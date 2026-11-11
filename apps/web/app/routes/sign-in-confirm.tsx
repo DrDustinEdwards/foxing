@@ -7,7 +7,7 @@ import {
   confirmSignInLink,
   signInLinkProblem,
 } from "@dustinedwards/site-runtime/sign-in";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
@@ -44,13 +44,13 @@ export default function SignInConfirm({ loaderData, actionData }: Route.Componen
     return (
       <AuthShell title={title} subtitle={text}>
         {problem === "signed-in" ? (
-          <Link to="/me" className="cap-btn full" data-variant="primary" data-size="lg">
+          <ButtonLink to="/me" block variant="primary" size="lg">
             Go to Foxing
-          </Link>
+          </ButtonLink>
         ) : (
-          <Link to="/login" className="cap-btn full" data-variant="primary" data-size="lg">
+          <ButtonLink to="/login" block variant="primary" size="lg">
             Get a new link
-          </Link>
+          </ButtonLink>
         )}
       </AuthShell>
     );

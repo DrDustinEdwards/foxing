@@ -4,7 +4,7 @@
 // get data-driven picks with a subtle upgrade affordance; Plus readers get AI-personalised
 // reasons. Refresh busts the AI cache (rate-limited in core).
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -48,9 +48,9 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             }
             className="mb-0"
           />
-          <Link to="/find-next-book?refresh=1" className="cap-btn shrink-0">
+          <ButtonLink to="/find-next-book?refresh=1" className="shrink-0">
             Refresh
-          </Link>
+          </ButtonLink>
         </div>
 
         {!isPlus ? (

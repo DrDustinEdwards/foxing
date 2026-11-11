@@ -4,7 +4,7 @@
 import { useClubsIndex } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { redirect } from "react-router";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -45,9 +45,9 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="row-4 wrap spread">
           <h1 className="display-4">Book clubs</h1>
-          <Link to="/clubs/new" className="cap-btn" data-variant="primary">
+          <ButtonLink to="/clubs/new" variant="primary">
             New club
-          </Link>
+          </ButtonLink>
         </div>
 
         <section className="mt-10">

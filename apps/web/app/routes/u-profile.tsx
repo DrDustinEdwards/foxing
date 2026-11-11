@@ -6,7 +6,8 @@
 import { thing } from "@drdustinedwards/site-helpers/schema";
 import { useProfilePage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
+import { Rating } from "capsomer/react/rating";
 import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
@@ -61,16 +62,6 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
 // render (module scope would freeze it into the build).
 function currentYear(): number {
   return new Date().getUTCFullYear();
-}
-
-function Stars({ ratingHalf }: { ratingHalf: number | null }) {
-  if (ratingHalf == null) return null;
-  return (
-    <span role="img" aria-label={`${ratingHalf / 2} stars`} className="fx-u-profile-label">
-      {"★".repeat(Math.floor(ratingHalf / 2))}
-      {ratingHalf % 2 === 1 ? "½" : ""}
-    </span>
-  );
 }
 
 function activityLabel(type: string, data: Record<string, unknown>): string {
@@ -153,9 +144,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             </div>
           </div>
           {isOwner ? (
-            <Link to="/me" className="cap-btn">
-              Edit profile
-            </Link>
+            <ButtonLink to="/me">Edit profile</ButtonLink>
           ) : (
             <div className="items-end fx-u-profile-stack-2">
               <FollowButton userId={profile.id} following={isFollowing} signedIn={signedIn} />
@@ -294,7 +283,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                           "A book"
                         )}
                       </p>
-                      <Stars ratingHalf={d.ratingHalf} />
+                      {d.ratingHalf == null ? null : <Rating value={d.ratingHalf / 2} size="sm" />}
                     </div>
                     {d.review ? (
                       <p className="mt-2 fx-u-profile-quote">

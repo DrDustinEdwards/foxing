@@ -1,6 +1,6 @@
 import type { ImageAttributes } from "@dustinedwards/site-runtime/image";
 import { catalogRepo } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "~/components/picture";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
@@ -80,17 +80,17 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
         {result.pageCount > 1 ? (
           <nav aria-label="Pagination" className="mt-12 justify-center fx-journal-row">
             {result.page > 1 ? (
-              <Link to={`/journal?page=${result.page - 1}`} rel="prev" className="cap-btn">
+              <ButtonLink to={`/journal?page=${result.page - 1}`} rel="prev">
                 Newer
-              </Link>
+              </ButtonLink>
             ) : null}
             <span className="ui">
               Page {result.page} of {result.pageCount}
             </span>
             {result.page < result.pageCount ? (
-              <Link to={`/journal?page=${result.page + 1}`} rel="next" className="cap-btn">
+              <ButtonLink to={`/journal?page=${result.page + 1}`} rel="next">
                 Older
-              </Link>
+              </ButtonLink>
             ) : null}
           </nav>
         ) : null}
