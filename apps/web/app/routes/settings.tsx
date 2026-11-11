@@ -1,37 +1,57 @@
-// Account settings (auth-gated, noindex): profile fields, plan, visibility, appearance,
-// close friends, sign-in (passkeys, Google and Apple), signed-in devices, data export, and
-// account deletion. Every write shows a visible pending + role=alert error, never a silent no-op.
-import { readCapped } from "@dustinedwards/site-runtime/body";
+// Account settings (auth-gated, noindex): Foxing's own profile, username, plan, visibility,
+// notifications, appearance, close friends, data export and admin link, and between them the
+// network's account parts (capsomer/react/sign-in-settings): the email address, passkeys, Google
+// and Apple, signed-in devices, recent security activity and deleting the account.
+//
+// The account parts' posts (change email, sign out a device, delete) come to this route's action,
+// site-runtime's accountFormAction, so they work without script and pass its checks (a recent
+// sign-in, a disposable or unconfirmed address, the ticked box). Like the sign-in link's confirm
+// page, these are Better Auth operations driven from the route, not /api/v1 Hono writes (rule 5);
+// Foxing's own writes on this page stay /api/v1.
+import { readForm } from "@dustinedwards/site-runtime/body";
 import {
   accountSessions,
-  needsSecondPasskey,
   passkeyLastUsed,
   passkeyRows,
-  revokeSessionById,
   securityHistory,
-  type SecurityHistoryEntry,
+  sessionIsFresh,
   signInMethods,
 } from "@dustinedwards/site-runtime/sign-in";
-import { createDb, views } from "@foxing/core";
+import { accountFormAction } from "@dustinedwards/site-runtime/sign-in-form";
+import {
+  type ClubSuccessors,
+  DomainError,
+  clubsToHandOver,
+  createDb,
+  eraseAccountData,
+  views,
+} from "@foxing/core";
+import {
+  DeleteAccount,
+  DeviceSettings,
+  EmailSettings,
+  PasskeySettings,
+  ProviderSettings,
+  SecurityHistory,
+} from "capsomer/react/sign-in-settings";
 import { useState } from "react";
-import { redirect } from "react-router";
+import { Form, data, redirect, useNavigation, useRevalidator } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
 import { cloudflareContext } from "~/context";
+import { authClient } from "~/lib/auth-client";
 import { getAuth } from "~/lib/auth.server";
 import { requireProfile } from "~/lib/profile.server";
+import { signInHref } from "~/lib/sign-in-path";
 import { Container, PageHeader } from "~/components/ui";
 import type { Route } from "./+types/settings";
 import {
   AdminSection,
-  DangerSection,
+  ClubHandoverFields,
   DataSection,
-  EmailSection,
   ProfileSection,
-  SecurityHistorySection,
-  SessionsSection,
-  SignInSection,
   UsernameSection,
+  successorField,
 } from "../components/settings/account-sections";
 import {
   AppearanceSection,
@@ -41,20 +61,26 @@ import {
   VisibilitySection,
 } from "../components/settings/preference-sections";
 
+/** The fresh sign-in this page asks for: /login, flagged, coming back here. */
+const SIGN_IN_AGAIN = signInHref("/settings", { reauth: true });
+
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const { user, profile } = await requireProfile(env, request);
+  const { user, profile, session } = await requireProfile(env, request);
   const isPlus = profile.subscriptionTier === "plus";
   const auth = await getAuth(env);
-  const [people, passkeys, lastUsed, accounts, sessions, history] = await Promise.all([
-    views.people(createDb(env.DB), user.id),
+  const db = createDb(env.DB);
+  const [people, passkeys, lastUsed, accounts, devices, history, clubs] = await Promise.all([
+    views.people(db, user.id),
     auth.api.listPasskeys({ headers: request.headers }),
     passkeyLastUsed(env.DB, user.id),
     auth.api.listUserAccounts({ headers: request.headers }),
-    // Listing sessions needs a sign-in from the last 10 minutes; past that it is null and the
-    // section asks for one. Any other failure fails the page.
+    // Listing devices needs a sign-in from the last 10 minutes; past that it is null and the
+    // part asks for one. Any other failure fails the page.
     accountSessions(auth, request),
     securityHistory(env.DB, user.id, 10),
+    // The clubs the reader created, each handed to a member they pick if they delete the account.
+    clubsToHandOver(db, user.id),
   ]);
   const methods = signInMethods(env, { social: true });
   // The joined account's own id, which Disconnect names.
@@ -79,112 +105,76 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       categories: notificationPrefs.categories ?? {},
       quietHours: notificationPrefs.quietHours ?? null,
     },
-    signIn: {
-      email: user.email,
-      displayName: profile.displayName ?? "",
-      // site-runtime's accountPasskeys rows (name, provider, created, last used), kept with each
-      // passkey's credential id so a removed one can be signaled to the password manager.
-      passkeys: passkeyRows(passkeys, lastUsed).map((p) => ({
-        id: p.id,
-        credentialId: passkeys.find((raw) => raw.id === p.id)?.credentialID ?? "",
-        name: p.name,
-        provider: p.provider,
-        created: p.createdAt ? dateLabel.format(p.createdAt) : null,
-        lastUsed: p.lastUsedAt ? dateLabel.format(p.lastUsedAt) : null,
-      })),
-      secondPasskey: needsSecondPasskey(passkeys),
-      providers: [
-        ...(methods.google
-          ? [{ id: "google" as const, label: "Google", accountId: linked.get("google") ?? null }]
-          : []),
-        ...(methods.apple
-          ? [{ id: "apple" as const, label: "Apple", accountId: linked.get("apple") ?? null }]
-          : []),
-      ],
+    // The account parts' rows, as site-runtime reads them.
+    account: {
+      // The address and name the password manager shows beside the passkeys (the Signal API).
+      signalAs: { name: user.email, displayName: profile.displayName || undefined },
+      passkeys: passkeyRows(passkeys, lastUsed),
+      providers: (["google", "apple"] as const)
+        .filter((id) => methods[id])
+        .map((id) => ({ id, accountId: linked.get(id) ?? null })),
+      devices,
+      history,
+      fresh: sessionIsFresh(session),
+      clubs,
     },
-    activity: history.map((h) => ({
-      what: activityLabel(h),
-      when: `${dateTimeLabel.format(h.at)} UTC`,
-      device: h.device,
-      location: h.location,
-    })),
-    // This device first, then the most recently active.
-    sessions: sessions
-      ? sessions.map((row) => ({
-          id: row.id,
-          device: row.device ?? "Unknown device",
-          location: row.location,
-          current: row.current,
-          signedIn: dateLabel.format(row.signedInAt),
-          lastActive: dateLabel.format(row.lastActiveAt),
-        }))
-      : null,
   };
 }
 
-// Signs another device out by its session id, so no session token reaches the page (site-runtime
-// ./sign-in). A Better Auth write, like the sign-in link's confirm page, not a /api/v1 one.
+/** The account page's posts: an email address, a session id, or the box and the club picks. */
+const FORM_LIMIT = 16 * 1024;
+
 export async function action({ context, request }: Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
   await requireProfile(env, request);
-  // The form is one session id, read to a ceiling (site-runtime ./body), never the platform's uncapped formData().
-  const form = await readCapped(request, 4 * 1024);
-  if (form === null)
-    throw new Response("Payload Too Large", {
-      status: 413,
-      headers: { "Cache-Control": "no-store" },
-    });
-  const id = new URLSearchParams(form).get("session") ?? "";
-  try {
-    return { revoked: await revokeSessionById(await getAuth(env), request, id) };
-  } catch (err) {
-    if ((err as { body?: { code?: string } }).body?.code !== "SESSION_NOT_FRESH") throw err;
-    throw redirect("/login?next=%2Fsettings");
-  }
+  const db = createDb(env.DB);
+  const result = await accountFormAction(
+    await getAuth(env),
+    request,
+    await readForm(request, FORM_LIMIT),
+    {
+      deletedLanding: "/",
+      // Foxing's part of a deletion, before Better Auth's: each club the reader created goes to
+      // the member they picked (or is deleted with the account), then every row of theirs, in
+      // one D1 batch, so a refused pick leaves nothing half-done (core eraseAccountData).
+      beforeDelete: async (user, form) => {
+        const successors: ClubSuccessors = {};
+        for (const club of await clubsToHandOver(db, user.id)) {
+          const picked = form.get(successorField(club.clubId));
+          if (club.candidates.length === 0 || typeof picked !== "string") continue;
+          successors[club.clubId] = picked === "" ? null : picked;
+        }
+        try {
+          await eraseAccountData(db, user.id, successors);
+          return null;
+        } catch (err) {
+          if (err instanceof DomainError) return err.message;
+          throw err;
+        }
+      },
+    },
+  );
+  // Every post on this page is one of the account parts'.
+  if (result === null) throw new Response("Bad Request", { status: 400 });
+  if ("location" in result) throw redirect(result.location, { headers: result.headers });
+  return data(result.state, { status: result.status });
 }
 
 const dateLabel = new Intl.DateTimeFormat("en-US", { dateStyle: "long" });
-const dateTimeLabel = new Intl.DateTimeFormat("en-US", {
-  dateStyle: "medium",
-  timeStyle: "short",
-  timeZone: "UTC",
-});
-
-const WAY_IN: Record<string, string> = {
-  link: "an email link",
-  code: "an email code",
-  passkey: "a passkey",
-  google: "Google",
-  apple: "Apple",
-};
-
-/** One line of the security history, in plain words. */
-function activityLabel({ kind, via }: SecurityHistoryEntry): string {
-  const way = via ? (WAY_IN[via] ?? via) : null;
-  switch (kind) {
-    case "sign-in":
-      return way ? `Signed in with ${way}` : "Signed in";
-    case "passkey-added":
-      return "Passkey added";
-    case "passkey-removed":
-      return "Passkey removed";
-    case "sign-in-linked":
-      return way ? `${way} connected` : "Sign-in method connected";
-    case "sign-in-unlinked":
-      return way ? `${way} disconnected` : "Sign-in method disconnected";
-    case "email-changed":
-      return "Email changed";
-    case "recovery":
-      return "Signed in by email with no passkey left; other devices signed out";
-  }
-}
 
 export function meta() {
   return [{ title: "Settings | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
-export default function Settings({ loaderData }: Route.ComponentProps) {
+export default function Settings({ loaderData, actionData }: Route.ComponentProps) {
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const { account } = loaderData;
+  const state = actionData ?? null;
+  const navigation = useNavigation();
+  const revalidator = useRevalidator();
+  const posting = navigation.formMethod === "POST" ? navigation.formData : undefined;
+  const intent = posting?.get("intent");
+  const shared = { signInAgainHref: SIGN_IN_AGAIN, revalidate: () => revalidator.revalidate() };
   return (
     <PageShell>
       <Container>
@@ -192,7 +182,13 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
         <div className="stack-8">
           <ProfileSection initial={loaderData} />
           <UsernameSection initial={loaderData.username} />
-          <EmailSection initial={loaderData.email} />
+          <EmailSettings
+            email={loaderData.email}
+            state={state}
+            pending={intent === "change-email"}
+            signInAgainHref={SIGN_IN_AGAIN}
+            Form={Form}
+          />
           <BillingSection
             tier={loaderData.tier}
             status={loaderData.subscriptionStatus}
@@ -203,13 +199,40 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <NotificationsSection initial={loaderData.notifications} />
           <AppearanceSection />
           <CloseFriendsSection people={loaderData.people} />
-          <SignInSection initial={loaderData.signIn} />
-          <SessionsSection sessions={loaderData.sessions} />
-          <SecurityHistorySection activity={loaderData.activity} />
-          <DataSection fresh={loaderData.sessions !== null} />
+          <PasskeySettings
+            {...shared}
+            client={authClient}
+            passkeys={account.passkeys}
+            signalAs={account.signalAs}
+          />
+          <ProviderSettings
+            {...shared}
+            client={authClient}
+            providers={account.providers}
+            callbackURL="/settings"
+          />
+          <DeviceSettings
+            {...shared}
+            client={authClient}
+            devices={account.devices}
+            state={state}
+            pendingSession={
+              intent === "sign-out-device" ? String(posting?.get("session") ?? "") : null
+            }
+            Form={Form}
+          />
+          <SecurityHistory history={account.history} />
+          <DataSection fresh={account.fresh} signInAgainHref={SIGN_IN_AGAIN} />
           {loaderData.isAdmin ? <AdminSection /> : null}
-          {/* No session list means no sign-in in the last 10 minutes. */}
-          <DangerSection fresh={loaderData.sessions !== null} />
+          <DeleteAccount
+            fresh={account.fresh}
+            consequence="This removes your account and all of your data for good: your profile, library, reading history, highlights, notes and goals."
+            fields={<ClubHandoverFields clubs={account.clubs} />}
+            state={state}
+            pending={intent === "delete-account"}
+            signInAgainHref={SIGN_IN_AGAIN}
+            Form={Form}
+          />
         </div>
       </Container>
       <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />

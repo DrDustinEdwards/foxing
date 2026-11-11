@@ -4,6 +4,7 @@
 // and refuse a link that is not https.
 
 import { sendEmail } from "@dustinedwards/site-runtime/email";
+import type { SendEmailChange } from "@dustinedwards/site-runtime/sign-in-form";
 import { type NoticeDetail, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import {
   type Brand,
@@ -66,38 +67,22 @@ export function sendSignInCodeEmail(env: Env, to: string, code: string): Promise
   return send(env, to, renderEmail(signInCode, { brand, to, code }), [code]);
 }
 
-// The email change sends two mails, both Capsomer's emailChange template: the current address
-// approves, then the new address confirms. Each link opens /email/confirm, whose button does the
-// step (auth.server.ts, emailConfirmURL). Better Auth's links are stateless JWTs good for an hour
-// (better-auth 1.7.12 dist/api/routes/email-verification.mjs), which the mail says.
-const EMAIL_CHANGE_EXPIRES_IN = "1 hour";
-
-export function sendChangeEmailConfirmation(
+/** The email change's two mails (site-runtime accountOptions' sendEmailChange), both Capsomer's
+ *  emailChange template: the current address approves (`step` "current"), then the new address
+ *  confirms ("new"). Each link opens /email/confirm, whose button does the step. */
+export function sendEmailChangeEmail(
   env: Env,
-  to: string,
-  newEmail: string,
-  url: string,
+  mail: Parameters<SendEmailChange>[0],
 ): Promise<void> {
-  const mail = renderEmail(emailChange, {
+  const rendered = renderEmail(emailChange, {
     brand,
-    to,
-    step: "current",
-    newEmail,
-    url,
-    expiresIn: EMAIL_CHANGE_EXPIRES_IN,
+    to: mail.to,
+    step: mail.step,
+    newEmail: mail.newEmail,
+    url: mail.link,
+    expiresIn: mail.expiresIn,
   });
-  return send(env, to, mail, [url]);
-}
-
-export function sendVerificationEmail(env: Env, to: string, url: string): Promise<void> {
-  const mail = renderEmail(emailChange, {
-    brand,
-    to,
-    step: "new",
-    url,
-    expiresIn: EMAIL_CHANGE_EXPIRES_IN,
-  });
-  return send(env, to, mail, [url]);
+  return send(env, mail.to, rendered, [mail.link, mail.token]);
 }
 
 /** A change to how the reader signs in (site-runtime ./sign-in `sendSecurityNotice`) on

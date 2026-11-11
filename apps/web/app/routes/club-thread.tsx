@@ -12,11 +12,12 @@ import { cloudflareContext } from "~/context";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
+import { signInFrom } from "~/lib/sign-in-path";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect(`/login?redirect=/clubs/${params.slug}`);
+  if (!session?.user) throw redirect(signInFrom(request));
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   const page = await views.threadPage(
     createDb(env.DB),

@@ -7,6 +7,7 @@ import { CoverImage } from "~/components/cover-image";
 import { cloudflareContext } from "~/context";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import type { Route } from "./+types/onboarding";
+import { signInFrom } from "~/lib/sign-in-path";
 
 export function meta() {
   return [{ title: "Welcome to Foxing" }];
@@ -15,7 +16,7 @@ export function meta() {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login");
+  if (!session?.user) throw redirect(signInFrom(request));
   const db = createDb(env.DB);
   const existing = await profilesRepo.getProfileById(db, session.user.id);
   if (existing) throw redirect("/me");

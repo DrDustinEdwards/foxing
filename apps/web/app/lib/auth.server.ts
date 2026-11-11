@@ -8,25 +8,26 @@ import { expo } from "@better-auth/expo";
 import { AsyncLocalStorage } from "node:async_hooks";
 import { type ClubSuccessors, createDb, eraseAccountData, schema } from "@foxing/core";
 import {
+  EMAIL_CONFIRM_PATH,
   SessionNotFresh,
-  emailConfirmURL,
   requireFreshSession,
   sessionLookup,
   signInOptions,
 } from "@dustinedwards/site-runtime/sign-in";
+import { accountOptions } from "@dustinedwards/site-runtime/sign-in-form";
 import { betterAuth } from "better-auth";
 import { waitUntil } from "cloudflare:workers";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import {
-  sendChangeEmailConfirmation,
+  sendEmailChangeEmail,
   sendMagicLinkEmail,
   sendSecurityNoticeEmail,
   sendSignInCodeEmail,
-  sendVerificationEmail,
 } from "./email.server";
 import { PREVIEW_ORIGIN, SITE_ORIGIN } from "./origins";
 
-/** The club hand-over of the deletion running now, for beforeDelete (deleteUserAccount). */
+/** The club hand-over of the app's deletion running now (DELETE /api/v1/account, deleteUserAccount),
+ *  for Better Auth's beforeDelete. */
 const leaving = new AsyncLocalStorage<ClubSuccessors>();
 
 /** The app's scheme (apps/mobile app.json), where a sign-in started in the app returns. */
@@ -60,8 +61,25 @@ async function buildAuth(env: Env) {
     },
   });
 
+  // The email change (two links, each opening /email/confirm, whose button does the step) and the
+  // deletion, the same on every site (site-runtime ./sign-in-form accountOptions). Better Auth's
+  // /delete-user is off: the settings page's action (accountFormAction, which hands the clubs over
+  // and erases first) and the app's DELETE /api/v1/account (deleteUserAccount) call deleteUser after
+  // their fresh sign-in check. beforeDelete erases Foxing's own data (core eraseAccountData, with the
+  // app's hand-over); on the settings page's deletion that is done already, so it finds nothing
+  // left. Better Auth then removes the sessions, the Google and Apple links and the user (passkeys
+  // go with it).
+  const account = accountOptions({
+    confirmPath: EMAIL_CONFIRM_PATH,
+    sendEmailChange: (mail) => sendEmailChangeEmail(env, mail),
+    beforeDelete: async (user) => {
+      await eraseAccountData(db, user.id, leaving.getStore() ?? {});
+    },
+  });
+
   return betterAuth({
     ...signIn,
+    ...account,
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
     // The live domain, the workers.dev preview and the app are all trusted; baseURL covers one.
@@ -73,56 +91,10 @@ async function buildAuth(env: Env) {
       transaction: false,
     }),
     plugins: [...signIn.plugins, expo()],
-    // Only the /api/v1 route deletes an account (its club hand-over comes in its body), and
-    // the verification mail is only the email change's second step, never sent on request.
-    disabledPaths: [
-      ...signIn.disabledPaths,
-      "/delete-user",
-      "/delete-user/callback",
-      "/send-verification-email",
-    ],
+    disabledPaths: [...signIn.disabledPaths, ...account.disabledPaths],
     // The instance outlives a request, so the request's waitUntil comes from cloudflare:workers:
     // the answer does not wait for a security notice's mail.
     advanced: { ...signIn.advanced, backgroundTasks: { handler: waitUntil } },
-    // Only the change-email flow sends this now, to the new address, once the current one has
-    // approved the change. The link is good for an hour (Better Auth's default). Better Auth's own
-    // link acts on a GET, so a mail scanner could confirm it; the mail carries /email/confirm
-    // instead, where only the button's POST does (site-runtime emailConfirmURL).
-    emailVerification: {
-      sendVerificationEmail: async ({ user, url }: { user: { email: string }; url: string }) => {
-        await sendVerificationEmail(env, user.email, emailConfirmURL(url));
-      },
-    },
-    user: {
-      // Changing the email takes two links (better-auth 1.7.12 update-user.mjs, changeEmail):
-      // the current address approves first, then the new address confirms itself, and only
-      // then does the email change. A person with only a stolen session cannot move the account
-      // to an address of their own. site-runtime ./sign-in tells both addresses after.
-      changeEmail: {
-        enabled: true,
-        sendChangeEmailConfirmation: async ({
-          user,
-          newEmail,
-          url,
-        }: {
-          user: { email: string };
-          newEmail: string;
-          url: string;
-        }) => {
-          await sendChangeEmailConfirmation(env, user.email, newEmail, emailConfirmURL(url));
-        },
-      },
-      // Deleting the account is Better Auth's /delete-user, called only from DELETE
-      // /api/v1/account (deleteUserAccount), with a sign-in from the last 10 minutes.
-      // beforeDelete erases Foxing's own data and hands over the clubs first; Better Auth then
-      // removes the sessions, the Google and Apple links and the user (passkeys go with it).
-      deleteUser: {
-        enabled: true,
-        beforeDelete: async (user: { id: string }) => {
-          await eraseAccountData(db, user.id, leaving.getStore() ?? {});
-        },
-      },
-    },
   });
 }
 

@@ -11,11 +11,12 @@ import { cloudflareContext } from "~/context";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
+import { signInFrom } from "~/lib/sign-in-path";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?redirect=/clubs");
+  if (!session?.user) throw redirect(signInFrom(request));
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   return views.clubsIndex(createDb(env.DB), session.user.id);
 }

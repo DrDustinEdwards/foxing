@@ -8,6 +8,7 @@ import type { SignedInProfile } from "@foxing/core";
 import { createDb, isAdminAccount, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { getAuth, sessionLookup } from "./auth.server";
+import { signInFrom } from "./sign-in-path";
 
 export interface SessionUser {
   id: string;
@@ -29,9 +30,14 @@ export async function requireProfileForUser(env: Env, user: SessionUser): Promis
   return { user, profile };
 }
 
-// Full gate for a loader: unauthenticated to /login, onboarded-less to /onboarding.
-export async function requireProfile(env: Env, request: Request): Promise<ProfileContext> {
+// Full gate for a loader: unauthenticated to /login (returning here after), onboarded-less to /onboarding.
+// The session comes back too, for a page that asks how recent the sign-in is (Settings).
+export async function requireProfile(
+  env: Env,
+  request: Request,
+): Promise<ProfileContext & { session: { createdAt: Date } }> {
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login");
-  return requireProfileForUser(env, { id: session.user.id, email: session.user.email });
+  if (!session?.user) throw redirect(signInFrom(request));
+  const ctx = await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
+  return { ...ctx, session: session.session };
 }

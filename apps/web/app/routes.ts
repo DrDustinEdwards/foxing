@@ -6,6 +6,8 @@ export default [
   route("home", "routes/home.tsx"),
   route("signup", "routes/signup.tsx"),
   route("login", "routes/login.tsx"),
+  // Google or Apple, started by the sign-in screen's form post (POST /auth/google, /auth/apple).
+  route("auth/:provider", "routes/auth-start.ts"),
   route("sign-in/confirm", "routes/sign-in-confirm.tsx"),
   route("email/confirm", "routes/email-confirm.tsx"),
   route("onboarding", "routes/onboarding.tsx"),

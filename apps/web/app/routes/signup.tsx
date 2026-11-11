@@ -1,43 +1,53 @@
-import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
-import {
-  AuthDivider,
-  AuthLink,
-  AuthShell,
-  MagicLinkForm,
-  SocialButtons,
-} from "~/components/auth-shell";
+// Making an account: the same sign-in screen as /login (capsomer/react/sign-in) with its own
+// title. A new account starts from Google, Apple or an emailed link, which makes the account on
+// its first use and lands on onboarding by way of the passkey offer.
+import { SignIn } from "capsomer/react/sign-in";
+import { Link } from "capsomer/react/link";
+import { Form, useNavigation } from "react-router";
+import { AuthPage, authBrand } from "~/components/auth-brand";
 import { cloudflareContext } from "~/context";
+import { authClient } from "~/lib/auth-client";
+import { signInPageAction, signInPageData } from "~/lib/sign-in-page.server";
+import { DEFAULT_NEXT } from "~/lib/sign-in-path";
 import type { Route } from "./+types/signup";
 
 export function meta() {
   return [{ title: "Create your Foxing account" }, { name: "robots", content: "noindex" }];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
-  const { env } = context.get(cloudflareContext);
-  return { methods: signInMethods(env, { social: true }) };
+export function loader({ context, request }: Route.LoaderArgs) {
+  return signInPageData(context.get(cloudflareContext).env, request);
 }
 
-// A new account starts from Google, Apple or an email link (which creates the account on its
-// first use); a passkey is offered once the person is in, since there is none to sign in with yet.
-export default function Signup({ loaderData }: Route.ComponentProps) {
-  const { methods } = loaderData;
+export function action({ context, request }: Route.ActionArgs) {
+  return signInPageAction(context.get(cloudflareContext).env, request);
+}
+
+export default function Signup({ loaderData, actionData }: Route.ComponentProps) {
+  const { methods, next, error } = loaderData;
+  const pending = useNavigation().state !== "idle";
   return (
-    <AuthShell
-      title="Create your account"
-      subtitle="Track what you read and join the conversation."
-      footer={
-        <>
-          Already have an account? <AuthLink to="/login">Sign in</AuthLink>
-        </>
-      }
-    >
-      <div className="stack">
-        <SocialButtons methods={methods} />
-        {methods.google || methods.apple ? <AuthDivider /> : null}
-        <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} />
-      </div>
-    </AuthShell>
+    <AuthPage>
+      <SignIn
+        layout="screen"
+        brand={authBrand}
+        title="Create your account"
+        lede="Track what you read and join the conversation."
+        footer={
+          <p>
+            Already have an account? <Link to="/login">Sign in</Link>
+          </p>
+        }
+        client={authClient}
+        methods={methods}
+        state={actionData ?? null}
+        error={error}
+        passkeyLanding={next ?? DEFAULT_NEXT}
+        next={next ?? undefined}
+        pending={pending}
+        Form={Form}
+      />
+    </AuthPage>
   );
 }
 

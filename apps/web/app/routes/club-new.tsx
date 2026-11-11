@@ -8,11 +8,12 @@ import { Container } from "~/components/ui";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
+import { signInFrom } from "~/lib/sign-in-path";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?redirect=/clubs/new");
+  if (!session?.user) throw redirect(signInFrom(request));
   return null;
 }
 

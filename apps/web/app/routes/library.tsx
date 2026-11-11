@@ -29,6 +29,7 @@ import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
+import { signInFrom } from "~/lib/sign-in-path";
 
 const STATUS_TABS: { value: ShelfStatus; label: string }[] = [
   { value: "reading", label: "Reading" },
@@ -49,7 +50,7 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?redirect=/library");
+  if (!session?.user) throw redirect(signInFrom(request));
   // Signed-in but not onboarded -> /onboarding (never render with a null profile).
   await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
   return loadLibraryData(env, session.user.id);

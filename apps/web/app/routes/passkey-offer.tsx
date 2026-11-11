@@ -3,13 +3,14 @@
 // that cannot make one goes straight on (site-runtime shouldOfferPasskey, canOfferPasskey). `next`
 // is where they were headed (/me, or /onboarding for a new reader), a path on this site only.
 import { dismissPasskeyOffer, shouldOfferPasskey } from "@dustinedwards/site-runtime/sign-in";
-import { canOfferPasskey } from "@dustinedwards/site-runtime/sign-in-client";
-import { useEffect, useState } from "react";
+import { safeNextPath } from "@dustinedwards/site-runtime/sign-in-form";
+import { PasskeyOffer } from "capsomer/react/sign-in-settings";
 import { Form, redirect } from "react-router";
-import { AuthShell } from "~/components/auth-shell";
+import { AuthPage, authBrand } from "~/components/auth-brand";
 import { cloudflareContext } from "~/context";
-import { authClient, safeNextPath, signInAgainIfStale } from "~/lib/auth-client";
+import { authClient } from "~/lib/auth-client";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { DEFAULT_NEXT, SIGN_IN_PATH } from "~/lib/sign-in-path";
 import type { Route } from "./+types/passkey-offer";
 
 export function meta() {
@@ -19,10 +20,12 @@ export function meta() {
 /** The signed-in reader, their auth and where they were headed; no session goes to /login. */
 async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArgs) {
   const { env } = context.get(cloudflareContext);
-  const next = safeNextPath(new URL(request.url).searchParams.get("next"));
+  const next = safeNextPath(new URL(request.url).searchParams.get("next"), {
+    fallback: DEFAULT_NEXT,
+  });
   const auth = await getAuth(env);
   const session = await auth.api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login");
+  if (!session?.user) throw redirect(SIGN_IN_PATH);
   return { env, auth, next, userId: session.user.id };
 }
 
@@ -40,58 +43,18 @@ export async function action(args: Route.ActionArgs) {
   throw redirect(next);
 }
 
-export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
-  const { next } = loaderData;
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  // A device with no built-in way to make a passkey skips the offer.
-  useEffect(() => {
-    void canOfferPasskey().then((can) => {
-      if (!can) window.location.replace(next);
-    });
-  }, [next]);
-
-  const createPasskey = async () => {
-    setPending(true);
-    setError(null);
-    const res = await authClient.passkey.addPasskey();
-    if (signInAgainIfStale(res?.error)) return;
-    setPending(false);
-    if (res?.error) {
-      setError("The passkey was not saved. Try again, or skip it for now.");
-      return;
-    }
-    window.location.assign(next);
-  };
-
+export default function PasskeyOfferPage({ loaderData }: Route.ComponentProps) {
   return (
-    <AuthShell
-      title="You're signed in"
-      subtitle="Next time, skip the email. A passkey signs you in with your face, fingerprint or device PIN, and only works on Foxing, so it cannot be phished."
-    >
-      <div className="stack">
-        {error ? (
-          <p role="alert" className="error">
-            {error}
-          </p>
-        ) : null}
-        <button
-          type="button"
-          disabled={pending}
-          className="cap-btn full"
-          data-variant="primary"
-          data-size="lg"
-          onClick={() => void createPasskey()}
-        >
-          {pending ? "Waiting for your device..." : "Create a passkey"}
-        </button>
-        <Form method="post" className="text-center fx-auth-shell-box-2">
-          <button type="submit" className="cap-btn" data-variant="ghost" disabled={pending}>
-            Not now
-          </button>
-        </Form>
-      </div>
-    </AuthShell>
+    <AuthPage>
+      <PasskeyOffer
+        layout="screen"
+        brand={authBrand}
+        client={authClient}
+        next={loaderData.next}
+        siteName="Foxing"
+        Form={Form}
+      />
+    </AuthPage>
   );
 }
 

@@ -32,6 +32,10 @@
 @import "capsomer/meter.css";
 @import "capsomer/table.css";
 @import "capsomer/chart-frame.css";
+@import "capsomer/panel.css";
+@import "capsomer/time.css";
+@import "capsomer/sign-in.css";
+@import "capsomer/sign-in-settings.css";
 /* The whole chart stylesheet: Enarratio's base, the token mapping, gridlines and series inks. */
 @import "capsomer/enarratio.css";
 @import "./styles/reset.css" layer(reset);

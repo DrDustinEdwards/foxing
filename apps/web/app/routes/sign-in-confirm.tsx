@@ -2,16 +2,13 @@
 // only shows this page, so a mail scanner that opens every link spends nothing; the button's POST
 // signs in through confirmSignInLink. A refused link comes back here with ?error= and the time it
 // was mailed, so the page can tell a used link from an expired one (signInLinkProblem).
-import {
-  SIGN_IN_LINK_WORDS,
-  confirmSignInLink,
-  signInLinkProblem,
-} from "@dustinedwards/site-runtime/sign-in";
-import { Link } from "capsomer/react/link";
-import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
+import { confirmSignInLink, signInLinkProblem } from "@dustinedwards/site-runtime/sign-in";
+import { SignInConfirm } from "capsomer/react/sign-in";
+import { AuthPage, authBrand } from "~/components/auth-brand";
 import { cloudflareContext } from "~/context";
 import { getAuth, sessionLookup } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
+import { DEFAULT_NEXT, SIGN_IN_PATH } from "~/lib/sign-in-path";
 import type { Route } from "./+types/sign-in-confirm";
 
 export function meta() {
@@ -36,30 +33,19 @@ export async function action({ context, request }: Route.ActionArgs) {
   return redirectOrLimited(await confirmSignInLink(await getAuth(env), request));
 }
 
-export default function SignInConfirm({ loaderData, actionData }: Route.ComponentProps) {
-  const { problem } = loaderData;
-
-  if (problem) {
-    const { title, text } = SIGN_IN_LINK_WORDS[problem];
-    return (
-      <AuthShell title={title} subtitle={text}>
-        {problem === "signed-in" ? (
-          <Link to="/me" className="cap-btn full" data-variant="primary" data-size="lg">
-            Go to Foxing
-          </Link>
-        ) : (
-          <Link to="/login" className="cap-btn full" data-variant="primary" data-size="lg">
-            Get a new link
-          </Link>
-        )}
-      </AuthShell>
-    );
-  }
-
+export default function SignInConfirmPage({ loaderData, actionData }: Route.ComponentProps) {
   return (
-    <AuthShell title="Sign in to Foxing">
-      <ConfirmButtonForm label="Sign in" limited={actionData?.limited} />
-    </AuthShell>
+    <AuthPage>
+      <SignInConfirm
+        layout="screen"
+        brand={authBrand}
+        siteName="Foxing"
+        problem={loaderData.problem}
+        limited={actionData?.limited}
+        signInPath={SIGN_IN_PATH}
+        continuePath={DEFAULT_NEXT}
+      />
+    </AuthPage>
   );
 }
 

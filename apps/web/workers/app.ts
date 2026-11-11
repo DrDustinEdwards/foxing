@@ -27,7 +27,6 @@ import {
   privateRender,
   purgeAfterWrite,
   settleCacheHeaders,
-  UNCACHED,
   withPurgePages,
 } from "@dustinedwards/site-runtime/edge-cache";
 import { originalKey } from "@dustinedwards/site-runtime/image";
@@ -43,6 +42,7 @@ import {
 import { preloads, rootStylesheets, withPreloadHeader } from "@dustinedwards/site-runtime/preload";
 import { timedRender } from "@dustinedwards/site-runtime/server-timing";
 import { pruneAuthEvents } from "@dustinedwards/site-runtime/sign-in";
+import { authHandler } from "@dustinedwards/site-runtime/sign-in-form";
 import { canonicalRedirect } from "@dustinedwards/site-runtime/url";
 import { createApi } from "@foxing/api";
 import {
@@ -239,13 +239,7 @@ mountCarrel(app, (request, context) => reactRouterHandler(request, context));
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
 // minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and
 // passkey challenges, so no browser or proxy keeps one (checklist D10).
-app.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  const answer = await (await getAuth(c.env)).handler(c.req.raw);
-  // A copy, since a redirect's headers are immutable.
-  const res = new Response(answer.body, answer);
-  if (!res.headers.has("Cache-Control")) res.headers.set("Cache-Control", UNCACHED);
-  return res;
-});
+app.on(["GET", "POST"], "/api/auth/*", async (c) => authHandler(await getAuth(c.env), c.req.raw));
 
 // Every write is an /api/v1 route (the admin API included), none reached through React Router's
 // own Origin check, so a browser write from another origin is refused here. An absent Origin

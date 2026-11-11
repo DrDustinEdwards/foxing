@@ -9,6 +9,7 @@ import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
 import { ReaderView } from "~/components/reader/reader-view";
 import type { Route } from "./+types/read";
+import { signInHref } from "~/lib/sign-in-path";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
@@ -34,7 +35,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     // root-relative manifest URL leaves internal images broken.
     manifestUrl: `${origin}/reader-assets/${book.slug}/manifest.json`,
     signedIn: !!userId,
-    loginHref: `/login?redirect=${encodeURIComponent(`/read/${book.slug}`)}`,
+    loginHref: signInHref(`/read/${book.slug}`),
     layers: resolved,
     shareableClubs: page.shareableClubs,
     initialLocator: page.initialLocator as Locator | null,
