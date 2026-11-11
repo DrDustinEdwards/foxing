@@ -1,7 +1,8 @@
 // The provider both apps mount once at the root: a QueryClient with Foxing's
 // defaults and the ApiClient the hooks call. Written with createElement so the
 // package needs no JSX setup of its own.
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
+import { createQueryClient } from "capsomer/react/data";
 import { createContext, createElement, type ReactNode, useContext } from "react";
 import { ApiError, type ApiClient } from "./http";
 
@@ -17,15 +18,10 @@ export function useApi(): ApiClient {
  *  4xx answers are not retried, and writes are never retried (the reader sees the
  *  error and decides). */
 export function createFoxingQueryClient(): QueryClient {
-  return new QueryClient({
-    defaultOptions: {
-      queries: {
-        staleTime: 30_000,
-        retry: (count, error) =>
-          !(error instanceof ApiError && error.status >= 400 && error.status < 500) && count < 2,
-      },
-      mutations: { retry: false },
-    },
+  return createQueryClient({
+    staleTime: 30_000,
+    retries: 2,
+    final: (e) => e instanceof ApiError && e.status >= 400 && e.status < 500,
   });
 }
 

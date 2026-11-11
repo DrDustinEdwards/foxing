@@ -5,7 +5,8 @@
 import { type ClubLiveMessage, PING_FRAME } from "@foxing/types";
 import type * as W from "@foxing/types";
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useState } from "react";
+import { useLiveRoom } from "capsomer/react/data";
+import { useState } from "react";
 import { keys } from "./keys";
 import { useApi } from "./provider";
 import { patch, patchAll, useSeededQuery, useWrite } from "./query";
@@ -288,64 +289,49 @@ export function useClubLive(clubId: string | null) {
   const api = useApi();
   const qc = useQueryClient();
   const [presence, setPresence] = useState<string[]>([]);
-  const [connected, setConnected] = useState(false);
-  const deps = useRef({ api, qc });
-  useEffect(() => {
-    deps.current = { api, qc };
-  });
 
-  useEffect(() => {
-    if (!clubId) return;
-    const { api, qc } = deps.current;
-    const ws = api.socket(`/clubs/${clubId}/live`);
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => setConnected(false);
-    ws.onmessage = (event) => {
-      let msg: ClubLiveMessage;
-      try {
-        msg = JSON.parse(String(event.data)) as ClubLiveMessage;
-      } catch {
-        return;
-      }
-      switch (msg.t) {
-        case "presence":
-          setPresence(msg.users);
-          break;
-        case "post":
-          void qc.invalidateQueries({ queryKey: keys.thread(msg.post.threadId) });
-          break;
-        case "thread":
-        case "notice":
-          void qc.invalidateQueries({ queryKey: keys.clubPages });
-          break;
-        case "tally":
-          qc.setQueriesData<W.ClubPage>({ queryKey: keys.clubPages }, (page) =>
-            page && page.club.id === clubId
-              ? {
-                  ...page,
-                  polls: page.polls.map((p) =>
-                    p.id === msg.poll_id
-                      ? { ...p, tallies: msg.tallies, isClosed: p.isClosed || !!msg.closed }
-                      : p,
-                  ),
-                }
-              : page,
-          );
-          break;
-      }
-    };
-    // Keepalive so idle sockets are not reaped; the runtime answers with a pong
-    // through the ClubRoom's auto-response, without waking the object.
-    const ping = setInterval(() => {
-      if (ws.readyState === WebSocket.OPEN) ws.send(PING_FRAME);
-    }, 30_000);
-    return () => {
-      clearInterval(ping);
-      ws.close();
-      setPresence([]);
-      setConnected(false);
-    };
-  }, [clubId]);
+  // A reconnecting room: Capsomer reopens the socket with backoff after a drop and sends
+  // the keepalive so idle sockets are not reaped (the ClubRoom answers with a pong
+  // through its auto-response, without waking the object).
+  const onMessage = (data: string) => {
+    let msg: ClubLiveMessage;
+    try {
+      msg = JSON.parse(data) as ClubLiveMessage;
+    } catch {
+      return;
+    }
+    switch (msg.t) {
+      case "presence":
+        setPresence(msg.users);
+        break;
+      case "post":
+        void qc.invalidateQueries({ queryKey: keys.thread(msg.post.threadId) });
+        break;
+      case "thread":
+      case "notice":
+        void qc.invalidateQueries({ queryKey: keys.clubPages });
+        break;
+      case "tally":
+        qc.setQueriesData<W.ClubPage>({ queryKey: keys.clubPages }, (page) =>
+          page && page.club.id === clubId
+            ? {
+                ...page,
+                polls: page.polls.map((p) =>
+                  p.id === msg.poll_id
+                    ? { ...p, tallies: msg.tallies, isClosed: p.isClosed || !!msg.closed }
+                    : p,
+                ),
+              }
+            : page,
+        );
+        break;
+    }
+  };
+  const { connected } = useLiveRoom(clubId, (id) => api.socket(`/clubs/${id}/live`), {
+    onMessage,
+    onDrop: () => setPresence([]),
+    ping: PING_FRAME,
+  });
 
   return { presence, connected };
 }
