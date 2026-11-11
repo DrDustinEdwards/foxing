@@ -3,6 +3,7 @@
 // rev 3). Readability is derived (catalog AND epub_url present), never a column.
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import { chunked, type Db } from "../../db";
 import { bookAwards, books, userBooks } from "../../schema";
 import { resolveEra, resolveLength } from "./facets";
@@ -154,10 +155,11 @@ export async function getBookById(db: Db, id: string): Promise<Book | null> {
 /** Books by ids, returned in the order the ids were given (for FTS result ordering). */
 export async function getBooksByIds(db: Db, ids: string[]): Promise<BookCard[]> {
   if (ids.length === 0) return [];
+  // A reading list can hold more books than one D1 statement may bind, so the ids go as one JSON parameter.
   const rows = await db
     .select(CARD_COLUMNS)
     .from(books)
-    .where(and(inArray(books.id, ids), eq(books.sourceType, "catalog")));
+    .where(and(inList(books.id, ids), eq(books.sourceType, "catalog")));
   const byId = new Map(rows.map((r) => [r.id, toCard(r)]));
   return ids.map((id) => byId.get(id)).filter((b): b is BookCard => !!b);
 }

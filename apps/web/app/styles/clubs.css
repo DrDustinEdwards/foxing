@@ -355,11 +355,11 @@
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1rem;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
   transition-property: box-shadow;
   transition-duration: 150ms;
   &:hover {
-    box-shadow: var(--fx-shadow-md);
+    box-shadow: var(--shadow-m);
   }
 }
 .fx-pick-club-link {

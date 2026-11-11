@@ -5,10 +5,12 @@
 // or that trips a high prose finding (a refusal, a cutoff note, a blank, chatbot markup, a
 // blurb tell) is never written: the generation throws and the queue retries it.
 import { checkProse, OUT_OF_PLACE } from "@dustinedwards/site-runtime/prose";
+import type { Usage } from "@dustinedwards/site-runtime/anthropic";
 import type { Db } from "../db";
 import * as catalogBooksRepo from "../repositories/catalog/books";
 import * as companionRepo from "../repositories/companion";
 import type { CompanionCaller } from "./client";
+import { emptyUsage } from "./models";
 import { estimateCostCents, MAX_OUTPUT_TOKENS, resolveModel } from "./models";
 import {
   CACHED_ACTION_NAMES,
@@ -29,18 +31,14 @@ export type CacheGenerationResult = {
 async function collectText(
   caller: CompanionCaller,
   args: Parameters<CompanionCaller>[0],
-): Promise<{ text: string; inputTokens: number; outputTokens: number }> {
+): Promise<{ text: string; usage: Usage }> {
   let text = "";
-  let inputTokens = 0;
-  let outputTokens = 0;
+  let usage = emptyUsage();
   for await (const event of caller(args)) {
     if (event.type === "text") text += event.delta;
-    else {
-      inputTokens = event.inputTokens;
-      outputTokens = event.outputTokens;
-    }
+    else usage = event.usage;
   }
-  return { text, inputTokens, outputTokens };
+  return { text, usage };
 }
 
 /** Generate (or regenerate) the given cached actions for one book, writing each row. */
@@ -58,7 +56,7 @@ export async function generateCachedActionsForBook(
 
     const ctx: CompanionContext = { action: name, book, history: [] };
     const model = resolveModel(def.role);
-    const { text, inputTokens, outputTokens } = await collectText(caller, {
+    const { text, usage } = await collectText(caller, {
       model,
       system: def.systemPrompt(ctx),
       messages: [{ role: "user", content: def.buildContext(ctx).userContent }],
@@ -84,9 +82,9 @@ export async function generateCachedActionsForBook(
       bookId: book.id,
       action: name,
       outputChars: text.length,
-      inputTokens,
-      outputTokens,
-      costCents: estimateCostCents(def.role, inputTokens, outputTokens),
+      inputTokens: usage.input + usage.cacheRead + usage.cacheWrite + usage.cacheWrite1h,
+      outputTokens: usage.output,
+      costCents: estimateCostCents(def.role, usage),
     });
   }
 

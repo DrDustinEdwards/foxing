@@ -6,7 +6,7 @@ import {
   getCompanionAction,
   PLUS_ACTION_NAMES,
 } from "../src/companion/registry";
-import { MODELS } from "../src/companion/models";
+import { estimateCostCents, MODELS } from "../src/companion/models";
 
 const FIXTURE_BOOK = {
   id: "book-1",
@@ -91,5 +91,27 @@ describe("model-role resolution", () => {
     for (const model of Object.values(MODELS)) {
       expect(model).not.toMatch(/^(sonnet|opus|haiku)$/);
     }
+  });
+});
+
+describe("call cost", () => {
+  it("prices cache reads and writes, which a cached companion turn is mostly made of", () => {
+    const uncached = estimateCostCents("standard", {
+      input: 100,
+      output: 0,
+      cacheRead: 0,
+      cacheWrite: 0,
+      cacheWrite1h: 0,
+    });
+    const cached = estimateCostCents("standard", {
+      input: 100,
+      output: 0,
+      cacheRead: 200_000,
+      cacheWrite: 50_000,
+      cacheWrite1h: 0,
+    });
+    // Sonnet 5: 100 x $2 + 200,000 reads x $0.20 + 50,000 writes x $2.50 per million = $0.1652, rounded up.
+    expect(uncached).toBe(1);
+    expect(cached).toBe(17);
   });
 });

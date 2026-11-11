@@ -14,7 +14,8 @@ import { testApi } from "./test-api";
 function stubCaller(text = "Hello, reader."): companion.CompanionCaller {
   return async function* stub() {
     yield { type: "text", delta: text };
-    yield { type: "done", inputTokens: 42, outputTokens: 7 };
+    const none = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
+    yield { type: "done", usage: { ...none, input: 42, output: 7, long: { ...none } } };
   };
 }
 

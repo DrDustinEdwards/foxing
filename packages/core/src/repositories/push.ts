@@ -1,7 +1,8 @@
 // Push token + delivery-context data access. Tokens are registered per device
 // after sign-in and pruned when Expo reports DeviceNotRegistered. loadDeliveryContext
 // gives the Queue consumer everything the push gate needs for one notification.
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
+import { inList } from "@dustinedwards/site-runtime/d1";
 import type { Db } from "../db";
 import type { NotificationPrefs } from "../domain/push";
 import { notifications, profiles, pushTokens } from "../schema";
@@ -37,7 +38,8 @@ export async function listTokens(db: Db, userId: string): Promise<PushToken[]> {
  *  value alone -- a dead token is dead for whichever user owned it. */
 export async function pruneTokens(db: Db, tokens: string[]): Promise<void> {
   if (tokens.length === 0) return;
-  await db.delete(pushTokens).where(inArray(pushTokens.token, tokens));
+  // One statement, the list bound as one JSON parameter: no ceiling, and the prune stays atomic.
+  await db.delete(pushTokens).where(inList(pushTokens.token, tokens));
 }
 
 export type DeliveryContext = {

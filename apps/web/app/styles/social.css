@@ -355,7 +355,7 @@
   border: 1px solid var(--line);
   background-color: var(--sunken);
   object-fit: cover;
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
 }
 
 .fx-me-stack {

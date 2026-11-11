@@ -3,7 +3,7 @@
 // authorization and no event emission (those live in domain/social.ts). Reads run
 // in-process from web/mobile loaders; writes are called by the API after the domain
 // layer authorized them.
-import { olderThan } from "@dustinedwards/site-runtime/d1";
+import { inList, olderThan } from "@dustinedwards/site-runtime/d1";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
 import { uniqueSlug } from "../domain/slug";
@@ -260,7 +260,7 @@ export async function listActivityByAuthors(
 ): Promise<ActivityEvent[]> {
   if (authorIds.length === 0) return [];
   const limit = Math.min(opts.limit ?? 40, 100);
-  const conds = [inArray(activityEvents.userId, authorIds)];
+  const conds = [inList(activityEvents.userId, authorIds)];
   if (opts.cursor)
     conds.push(
       olderThan(

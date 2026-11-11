@@ -12,13 +12,9 @@
   /* The paywall's dark band keeps its charcoal and cream in both themes. */
   --fx-charcoal: #16100b;
   --fx-on-dark: #f5edde;
-  --fx-shadow-sm: 0 1px 3px rgba(22, 16, 11, 0.07), 0 1px 2px rgba(22, 16, 11, 0.05);
-  --fx-shadow-lg: 0 16px 32px rgba(22, 16, 11, 0.11), 0 4px 8px rgba(22, 16, 11, 0.07);
 }
 :root[data-theme="dark"] {
   --fx-scrim: rgba(0, 0, 0, 0.72);
-  --fx-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --fx-shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.6), 0 4px 8px rgba(0, 0, 0, 0.5);
 }
 /* Rule 05: a checked box, a chosen radio and an on switch are sky blue (--on), never the accent. */
 :root {
@@ -525,7 +521,7 @@
 }
 .card-hero {
   border-radius: var(--fx-radius-hero);
-  box-shadow: var(--fx-shadow-sm);
+  box-shadow: var(--shadow-s);
 }
 
 /* A list with a rule between items. */
