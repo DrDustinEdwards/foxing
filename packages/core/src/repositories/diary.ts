@@ -2,8 +2,8 @@
 // and reviews (Letterboxd model: one entry per read-through, re-reads free). Book and
 // profile ratings derive from the LATEST entry per (user, book). Pure DB access; event
 // emission + authorization live in domain/diary.ts.
-import { and, desc, eq, isNotNull } from "drizzle-orm";
-import type { Db } from "../db";
+import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
+import { type Db, inList } from "../db";
 import { uniqueSlug } from "../domain/slug";
 import { books, diaryEntries } from "../schema";
 
@@ -84,10 +84,14 @@ export async function listEntriesForUser(
   const rows = await db
     .select()
     .from(diaryEntries)
-    .where(eq(diaryEntries.userId, userId))
-    .orderBy(desc(diaryEntries.logDate))
+    .where(
+      and(eq(diaryEntries.userId, userId), inArray(diaryEntries.visibility, allowedVisibilities)),
+    )
+    .orderBy(desc(diaryEntries.logDate), desc(diaryEntries.id))
     .limit(Math.min(opts.limit ?? 50, 100));
-  return rows.filter((r) => allowedVisibilities.includes(r.visibility));
+  // The visibility filter is in the query, so a stranger gets a full page of public entries rather than the
+  // public ones among the newest 50.
+  return rows;
 }
 
 /** A book's newest public reviews (entries with review text), for the book page. */
@@ -149,6 +153,24 @@ export async function latestEntryForBook(
   return row ?? null;
 }
 
+/** The user's latest rating (rating_half, or null) for each of `bookIds`, in one query: the same "latest" as
+ *  latestEntryForBook, newest log date then newest edit. A book with no entry is absent from the map. */
+export async function latestRatingsForBooks(
+  db: Db,
+  userId: string,
+  bookIds: readonly string[],
+): Promise<Map<string, number | null>> {
+  const latest = new Map<string, number | null>();
+  if (bookIds.length === 0) return latest;
+  const rows = await db
+    .select({ bookId: diaryEntries.bookId, ratingHalf: diaryEntries.ratingHalf })
+    .from(diaryEntries)
+    .where(and(eq(diaryEntries.userId, userId), inList(diaryEntries.bookId, bookIds)))
+    .orderBy(desc(diaryEntries.logDate), desc(diaryEntries.updatedAt));
+  for (const r of rows) if (!latest.has(r.bookId)) latest.set(r.bookId, r.ratingHalf ?? null);
+  return latest;
+}
+
 // -- Book rating aggregate --------------------------------------------------
 // Recomputed in core after every diary write (spec-cf-schema: "rating aggregates
 // recomputed from diary_entries by core, not triggers"). The aggregate takes each
@@ -168,12 +190,16 @@ export async function recomputeBookRating(db: Db, bookId: string): Promise<void>
     .from(diaryEntries)
     .where(and(eq(diaryEntries.bookId, bookId), isNotNull(diaryEntries.ratingHalf)));
 
-  const latestByUser = new Map<string, { ratingHalf: number; ts: number }>();
+  // Latest = the newest log date, then the newest edit. Compared as a pair: folding both into one number
+  // (logDate * 1e6 + updatedAt) passed 2^53 and lost the tie-break.
+  const latestByUser = new Map<string, { ratingHalf: number; logged: number; edited: number }>();
   for (const r of rated) {
     if (r.ratingHalf == null) continue;
-    const ts = (r.logDate?.getTime() ?? 0) * 1e6 + (r.updatedAt?.getTime() ?? 0);
+    const logged = r.logDate?.getTime() ?? 0;
+    const edited = r.updatedAt?.getTime() ?? 0;
     const prev = latestByUser.get(r.userId);
-    if (!prev || ts > prev.ts) latestByUser.set(r.userId, { ratingHalf: r.ratingHalf, ts });
+    if (!prev || logged > prev.logged || (logged === prev.logged && edited > prev.edited))
+      latestByUser.set(r.userId, { ratingHalf: r.ratingHalf, logged, edited });
   }
 
   const count = latestByUser.size;
