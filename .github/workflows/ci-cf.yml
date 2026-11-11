@@ -135,7 +135,9 @@ jobs:
       health-url: https://foxing.app/health
       verify-command: node "$DEVKIT_DIR/bin/verify-deploy.mjs" https://foxing.app
       working-directory: apps/web
-      install: "npm ci"
+      # The whole workspace, from the root: an npm ci run in apps/web installs only what web needs, and drops the root
+      # copy of site-runtime that site-api (a peer) resolves when web's own copy is nested, so the build failed (2026-11-11).
+      install: "cd ../.. && npm ci"
       pre-deploy: >-
         sed -e "s|<D1_DATABASE_ID>|${{ vars.D1_DATABASE_ID }}|"
         -e "s|<KV_NAMESPACE_ID>|${{ vars.KV_NAMESPACE_ID }}|"
