@@ -18,7 +18,10 @@ export function resolveModel(role: CompanionRole): string {
  * Estimated cost of one call, in whole cents, rounded up so quota math never undercounts. Priced by site-runtime's
  * PRICES (the network's one table), cache reads and writes included: the companion caches its prompt.
  */
-export function estimateCostCents(role: CompanionRole, usage: TokenCounts & { long?: TokenCounts }): number {
+export function estimateCostCents(
+  role: CompanionRole,
+  usage: TokenCounts & { long?: TokenCounts },
+): number {
   const micros = costMicros(MODELS[role], usage);
   if (micros === null) throw new Error(`no listed price for ${MODELS[role]}`);
   return Math.ceil(micros / 10_000);

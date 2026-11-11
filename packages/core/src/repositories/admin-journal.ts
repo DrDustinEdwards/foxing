@@ -69,8 +69,7 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
     );
   if (query.publishedAfter) where.push(gte(journalPosts.publishedAt, query.publishedAfter));
   if (query.publishedBefore) where.push(lt(journalPosts.publishedAt, query.publishedBefore));
-  if (query.slugs)
-    where.push(query.slugs.length ? inList(journalPosts.slug, query.slugs) : sql`0`);
+  if (query.slugs) where.push(query.slugs.length ? inList(journalPosts.slug, query.slugs) : sql`0`);
   if (query.exceptSlugs?.length) where.push(notInList(journalPosts.slug, query.exceptSlugs));
   return and(...where);
 }
