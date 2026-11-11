@@ -16,7 +16,7 @@ import { finishedSpread } from "./library";
 import { bookRefs, ms } from "./wire";
 
 /** The viewer's activity feed, with actor identity and book cards. */
-export async function feed(db: Db, viewerId: string, cursor: number | null): Promise<W.FeedPage> {
+export async function feed(db: Db, viewerId: string, cursor: string | null): Promise<W.FeedPage> {
   const page = await socialDomain.getFeed(db, viewerId, { cursor });
   const actorIds: string[] = [];
   const bookIds: string[] = [];
@@ -311,7 +311,7 @@ export async function recap(
   }
   const [recap, spread] = await Promise.all([
     recapDomain.getRecap(db, p.id, year),
-    finishedSpread(db, p.id, year),
+    finishedSpread(db, p.id, year, p.timezone ?? null),
   ]);
   return { recap, displayName: p.displayName ?? p.username, username: p.username, ...spread };
 }

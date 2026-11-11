@@ -1,3 +1,4 @@
+import { likeContains } from "@dustinedwards/site-runtime/d1";
 import type { Db } from "../db";
 import {
   and,
@@ -8,7 +9,6 @@ import {
   inArray,
   isNotNull,
   isNull,
-  like,
   lt,
   notInArray,
   or,
@@ -56,11 +56,11 @@ function journalAdminWhere(query: JournalAdminQuery): SQL | undefined {
         : eq(journalPosts.authorId, query.authorId),
     );
   if (query.q) {
-    const pattern = `%${query.q.toLowerCase()}%`;
+    // SQLite's LIKE already ignores ASCII case; likeContains makes a typed % or _ match itself.
     const match = or(
-      like(sql`lower(${journalPosts.title})`, pattern),
-      like(sql`lower(${journalPosts.content})`, pattern),
-      like(journalPosts.slug, pattern),
+      likeContains(journalPosts.title, query.q),
+      likeContains(journalPosts.content, query.q),
+      likeContains(journalPosts.slug, query.q),
     );
     if (match) where.push(match);
   }

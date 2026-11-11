@@ -225,6 +225,8 @@ export interface NotificationItem {
 export interface NotificationsPage {
   notifications: NotificationItem[];
   unread: number;
+  /** `<ms>.<id>` of the last row, for `?cursor=`, or null on the last page. */
+  nextCursor: string | null;
 }
 
 // --- Clubs ------------------------------------------------------------------
@@ -380,7 +382,8 @@ export type FeedRow =
 
 export interface FeedPage {
   rows: FeedRow[];
-  nextCursor: number | null;
+  /** `<ms>.<id>` of the last row (site-runtime ./d1 encodeCursor), or null on the last page. */
+  nextCursor: string | null;
 }
 
 /** A book on a profile strip (favorites, finished, currently reading). */
