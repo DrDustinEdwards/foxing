@@ -7,6 +7,7 @@ import { pageSecurity } from "@dustinedwards/site-runtime/page-headers";
 import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 import { securityHeaders } from "./header-set";
+import { TRUSTED_TYPES_NAMES } from "@dustinedwards/site-runtime/trusted-types";
 
 /**
  * What Foxing loads beyond its own origin, read from the code (2026-10-20):
@@ -77,7 +78,7 @@ const page = pageSecurity({
   // The reader's policy is for the document /read/:slug renders; a response with no nonce is not that document.
   policy: ({ nonce, url }) =>
     nonce !== undefined && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce),
-  staged: { trustedTypes: true, denyUnlisted: true },
+  staged: { trustedTypes: TRUSTED_TYPES_NAMES, denyUnlisted: true },
   corp: true,
   renew: true,
 });
