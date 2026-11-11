@@ -83,37 +83,18 @@
   color: var(--muted);
 }
 
-.fx-paywall-row {
-  position: fixed;
-  inset: 0;
-  z-index: 50;
-  display: flex;
-  align-items: center;
-  background-color: color-mix(in srgb, #000 70%, transparent);
-  padding: 1rem;
-}
-.fx-paywall-card {
-  width: 100%;
+/* Capsomer's Dialog in the paywall's own charcoal card. */
+.cap-dialog.fx-paywall-card {
   max-width: 28rem;
-  overflow: hidden;
+  overflow: auto;
   border-radius: var(--fx-radius-hero);
   background-color: var(--fx-charcoal);
   padding: 2rem;
   color: var(--fx-on-dark);
   box-shadow: var(--fx-shadow-md);
 }
-.fx-paywall-btn {
-  position: absolute;
-  right: 1rem;
-  top: 1rem;
-  display: grid;
-  height: 2.25rem;
-  width: 2.25rem;
-  place-items: center;
-  border-radius: 9999px;
+.fx-paywall-card .cap-dialog-close {
   color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
-  transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
   &:hover {
     background-color: color-mix(in srgb, #fff 10%, transparent);
     color: var(--fx-on-dark);

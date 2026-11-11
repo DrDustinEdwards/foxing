@@ -1,5 +1,14 @@
 import type { HighlightColor } from "@foxing/core";
+import {
+  Dialog,
+  DialogClose,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "capsomer/react/dialog";
 import { Link } from "capsomer/react/link";
+import "capsomer/dialog.css";
 import type { TocEntry } from "~/lib/reader/engine.client";
 import { type Locator, tintFor } from "~/lib/reader/locator";
 import {
@@ -99,31 +108,6 @@ export function SidePanel({
         </div>
         <div className="fx-reader-panels-box">{children}</div>
       </aside>
-    </>
-  );
-}
-
-function Modal({
-  title,
-  children,
-  onClose,
-}: {
-  title: string;
-  children: React.ReactNode;
-  onClose: () => void;
-}) {
-  return (
-    <>
-      <button
-        type="button"
-        aria-label="Close"
-        className="fx-reader-panels-btn-3"
-        onClick={onClose}
-      />
-      <div role="dialog" aria-modal aria-label={title} className="fx-reader-panels-card">
-        <h2 className="mb-2 fx-reader-panels-title-2">{title}</h2>
-        {children}
-      </div>
     </>
   );
 }
@@ -370,20 +354,30 @@ export function ContentsList({
 }
 
 export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClose: () => void }) {
+  // Capsomer's Dialog: a native modal, so focus stays inside, the reader behind is
+  // inert, and Esc, the backdrop and Keep reading close it.
   return (
-    <Modal onClose={onClose} title="Sign in to save">
-      <p className="small muted">
-        Reading is free. Sign in to keep highlights, notes, bookmarks, and your place.
-      </p>
-      <div className="mt-4 fx-reader-panels-row-2">
-        <Link to={loginHref} className="py-2 fx-reader-panels-link">
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      size="sm"
+      closeButton={false}
+    >
+      <DialogHeader>
+        <DialogTitle>Sign in to save</DialogTitle>
+        <DialogDescription>
+          Reading is free. Sign in to keep highlights, notes, bookmarks, and your place.
+        </DialogDescription>
+      </DialogHeader>
+      <DialogFooter>
+        <DialogClose part="cancel">Keep reading</DialogClose>
+        <Link to={loginHref} className="cap-btn" data-variant="primary">
           Sign in
         </Link>
-        <button type="button" className="py-2 fx-reader-panels-btn-9" onClick={onClose}>
-          Keep reading
-        </button>
-      </div>
-    </Modal>
+      </DialogFooter>
+    </Dialog>
   );
 }
 

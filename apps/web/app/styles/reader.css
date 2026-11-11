@@ -44,30 +44,6 @@
   overflow: auto;
   padding: 0.75rem;
 }
-.fx-reader-panels-btn-3 {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  background-color: var(--fx-scrim);
-}
-.fx-reader-panels-card {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  z-index: 40;
-  width: min(26rem, 90vw);
-  translate: 0 -50%;
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
-  box-shadow: var(--fx-shadow-lg);
-}
-.fx-reader-panels-title-2 {
-  font-family: var(--display);
-  font-size: 1.25rem;
-  line-height: 1.75rem;
-}
 .fx-reader-panels-label-2 {
   font-size: 0.875rem;
   line-height: 1.25rem;
@@ -179,27 +155,6 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-}
-.fx-reader-panels-row-2 {
-  display: flex;
-  gap: 0.5rem;
-}
-.fx-reader-panels-link {
-  border-radius: 0.375rem;
-  background-color: var(--primary);
-  padding-inline: 1rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--primary-fg);
-}
-.fx-reader-panels-btn-9 {
-  border-radius: 0.375rem;
-  padding-inline: 1rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  &:hover {
-    background-color: var(--fx-hover);
-  }
 }
 .fx-reader-panels-text {
   position: fixed;
