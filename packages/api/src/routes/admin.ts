@@ -143,7 +143,10 @@ adminRoutes.get("/admin/pick-clubs", async (c) => {
 // listPicksAdmin returns the newest 200; filter by club_id to see one club's history.
 adminRoutes.get("/admin/picks", async (c) => {
   requireAdmin(c);
-  const { club_id } = parseRequestQuery(c, z.object({ club_id: z.string().min(1).max(100).optional() }));
+  const { club_id } = parseRequestQuery(
+    c,
+    z.object({ club_id: z.string().min(1).max(100).optional() }),
+  );
   return c.json({ items: await adminRepo.listPicksAdmin(c.get("db"), club_id) });
 });
 
