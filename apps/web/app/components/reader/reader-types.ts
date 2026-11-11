@@ -63,7 +63,7 @@ export interface ReaderPopular {
 // by default, the social layers off (opt-in), so the reader opens as a private surface.
 export type LayerState = { mine: boolean; clubs: boolean; everyone: boolean };
 
-export const DEFAULT_LAYERS: LayerState = { mine: true, clubs: false, everyone: false };
+const DEFAULT_LAYERS: LayerState = { mine: true, clubs: false, everyone: false };
 
 export const LAYERS_KEY = "foxing.reader.layers";
 
