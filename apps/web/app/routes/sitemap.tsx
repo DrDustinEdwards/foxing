@@ -1,7 +1,9 @@
 import { kvPageRecord } from "@drdustinedwards/site-helpers/lastmod";
 import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
 import { catalogRepo, views } from "@foxing/core";
-import { hashUrls, pingIndexNow } from "~/lib/indexnow";
+import { submitIndexNowIfChanged } from "@drdustinedwards/site-helpers/indexnow";
+import { INDEXNOW_KEY } from "~/lib/indexnow";
+import { SITE_ORIGIN } from "~/lib/origins";
 import { PAGE_DATES_KEY } from "~/lib/page-dates";
 import { absoluteUrl, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
@@ -66,23 +68,21 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     ...tags.map((t) => ({ loc: journalTagPath(t.tag), lastmod: t.updatedAt, priority: 0.4 })),
   ];
 
-  // IndexNow: ping only when the URL set actually changed since the last sitemap
-  // request (tracked in KV; no cron infra exists to run this on a schedule). Never
+  // IndexNow: ping only when the URL set changed since the last sitemap request
+  // (Prelum keeps its hash in KV, written once the ping went). Never
   // blocks the response. Journal posts are left out: a Carrel publish submits its post
   // at once (site-api's indexNowHook, lib/carrel/site-api.server.ts).
   const postLocs = new Set(posts.map((p) => `/journal/${p.slug}`));
   const pingUrls = urls.filter((u) => !postLocs.has(u.loc));
   ctx.waitUntil(
-    (async () => {
-      const currentHash = await hashUrls(pingUrls.map((u) => u.loc));
-      const previousHash = await env.APP_KV.get(SITEMAP_HASH_KEY);
-      if (currentHash === previousHash) return;
-      await env.APP_KV.put(SITEMAP_HASH_KEY, currentHash);
-      await pingIndexNow(
-        request.url,
-        pingUrls.map((u) => absoluteUrl(u.loc)),
-      );
-    })(),
+    submitIndexNowIfChanged({
+      kv: env.APP_KV,
+      hashKey: SITEMAP_HASH_KEY,
+      origin: SITE_ORIGIN,
+      key: INDEXNOW_KEY,
+      urls: pingUrls.map((u) => absoluteUrl(u.loc)),
+      from: request.url,
+    }),
   );
 
   // Expanded: the compact layout writes no <priority>.
