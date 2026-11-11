@@ -19,6 +19,7 @@ import {
   getCompanionAction,
 } from "./registry";
 
+import { errorMessage } from "@dustinedwards/site-runtime/log";
 export type CacheGenerationResult = {
   bookId: string;
   action: string;
@@ -118,7 +119,7 @@ export async function runCacheBatch(
     try {
       results.push(...(await generateCachedActionsForBook(db, caller, ctx)));
     } catch (err) {
-      failures.push({ bookId: book.id, error: err instanceof Error ? err.message : String(err) });
+      failures.push({ bookId: book.id, error: errorMessage(err) });
     }
   }
   if (failures.length && failures.length === books.length) {
