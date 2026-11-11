@@ -219,7 +219,12 @@ describe("what each tool sends", () => {
     assert.deepEqual(out.structuredContent, {
       notice: OUTSIDE_DATA_NOTICE,
       clubs: [{ id: "c1" }],
-      picks: { items: [{ id: "p1" }], total: 2, has_more: true, next_cursor: encodeOffsetCursor(1) },
+      picks: {
+        items: [{ id: "p1" }],
+        total: 2,
+        has_more: true,
+        next_cursor: encodeOffsetCursor(1),
+      },
     });
   });
 
