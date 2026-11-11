@@ -1,5 +1,5 @@
 // Route helpers: session guard, the capped body read and step-5 zod validation at the boundary.
-import { readCapped, requireJson } from "@dustinedwards/site-runtime/body";
+import { readCapped, readJsonWith, requireJson } from "@dustinedwards/site-runtime/body";
 import type { Context } from "hono";
 import type { z } from "zod";
 import { errors } from "./error";
@@ -37,30 +37,19 @@ export async function readBody(
   return text;
 }
 
-export async function parseJson<S extends z.ZodTypeAny>(
+/** The JSON body checked by `schema` (site-runtime readJsonWith): 413, 415 or 422 as problem details. */
+export function parseJson<S extends z.ZodTypeAny>(
   c: Context<Env>,
   schema: S,
   max = BODY_MAX_BYTES,
 ): Promise<z.infer<S>> {
-  return validate(schema, await readBody(c, max));
+  return readJsonWith(c.req.raw, schema, { max });
 }
 
 /** parseJson for a body that may be left out: an empty one is validated as `{}`. */
-export async function parseOptionalJson<S extends z.ZodTypeAny>(
+export function parseOptionalJson<S extends z.ZodTypeAny>(
   c: Context<Env>,
   schema: S,
 ): Promise<z.infer<S>> {
-  return validate(schema, (await readBody(c)) || "{}");
-}
-
-function validate<S extends z.ZodTypeAny>(schema: S, text: string): z.infer<S> {
-  let body: unknown;
-  try {
-    body = JSON.parse(text);
-  } catch {
-    throw errors.validation({ body: "expected a JSON body" });
-  }
-  const result = schema.safeParse(body);
-  if (!result.success) throw errors.validation(result.error.flatten());
-  return result.data;
+  return readJsonWith(c.req.raw, schema, { max: BODY_MAX_BYTES, empty: {} });
 }

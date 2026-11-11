@@ -39,7 +39,7 @@ test.describe("reading goals (signed in)", () => {
         ? route.fulfill({
             status: 500,
             contentType: "application/json",
-            body: JSON.stringify({ error: { code: "server_error", message: "boom" } }),
+            body: JSON.stringify({ status: 500, code: "server_error", detail: "boom" }),
           })
         : route.continue(),
     );

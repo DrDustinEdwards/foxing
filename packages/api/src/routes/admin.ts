@@ -60,7 +60,7 @@ const pageQuery = z.object({
 
 function parseQuery<S extends z.ZodTypeAny>(c: Context<Env>, schema: S): z.infer<S> {
   const result = schema.safeParse(c.req.query());
-  if (!result.success) throw errors.validation(result.error.flatten());
+  if (!result.success) throw result.error;
   return result.data;
 }
 
@@ -236,7 +236,7 @@ async function previewOrPerform(
 
   if (!confirm) {
     if (from === spec.to) throw errors.conflict(`@${state.username} already has that.`);
-    const { token, expiresAt } = await mintConfirmation(c.env.APP_KV, {
+    const { token, expiresAt } = await mintConfirmation(c.env.BETTER_AUTH_SECRET, {
       actor: actor.id,
       target: id,
       kind: spec.kind,
@@ -255,7 +255,7 @@ async function previewOrPerform(
     });
   }
 
-  const pending = await redeemConfirmation(c.env.APP_KV, confirm, {
+  const pending = await redeemConfirmation(c.env.BETTER_AUTH_SECRET, c.env.APP_KV, confirm, {
     actor: actor.id,
     target: id,
     kind: spec.kind,
@@ -330,7 +330,11 @@ adminRoutes.post("/admin/users/:id/notify", rateLimit("write"), async (c) => {
 adminRoutes.delete("/admin/users/:id", rateLimit("write"), async (c) => {
   const admin = requireAdmin(c);
   const id = c.req.param("id");
-  if (id === admin.id) throw errors.validation({ id: "Delete your own account from settings." });
+  if (id === admin.id)
+    throw errors.validation(
+      [{ path: "id", message: "Delete your own account from settings." }],
+      "Delete your own account from settings.",
+    );
   await deleteAccount(c.get("db"), id);
   await audit(c, "user.delete", { id });
   return c.json({ ok: true });

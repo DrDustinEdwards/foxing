@@ -863,7 +863,10 @@ export const TOOLS: ToolDefinition[] = [
         suspended: z.boolean().describe("true suspends the reader, false lifts the suspension."),
         confirm: z
           .string()
-          .regex(/^[0-9a-f]{64}$/, "Pass the confirm token from the preview, unchanged.")
+          .regex(
+            /^[A-Za-z0-9_-]{1,2048}\.[A-Za-z0-9_-]{43}$/,
+            "Pass the confirm token from the preview, unchanged.",
+          )
           .optional()
           .describe(
             "Leave out on the first call: it changes nothing and returns a preview and a confirm " +

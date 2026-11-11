@@ -137,8 +137,8 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
       message: "hi",
     });
     expect(res.status).toBe(403);
-    const body = (await res.json()) as { error: { code: string } };
-    expect(body.error.code).toBe("plus_required");
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe("plus_required");
   });
 
   it("streams a response for a plus-tier user under quota", async () => {
@@ -189,10 +189,11 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
     );
     expect(results.map((r) => r.status).sort()).toEqual([200, 429, 429, 429, 429]);
     const refused = (await results.find((r) => r.status === 429)?.json()) as {
-      error: { code: string; details?: { resets_at?: string } };
+      code: string;
+      resets_at?: string;
     };
-    expect(refused.error.code).toBe("quota");
-    expect(refused.error.details?.resets_at).toBeTruthy();
+    expect(refused.code).toBe("quota");
+    expect(refused.resets_at).toBeTruthy();
     await Promise.all(results.map((r) => r.text().catch(() => "")));
     expect((await usage()).requests).toBe(2);
   });

@@ -61,17 +61,8 @@ export function createApiClient(opts: ApiClientOptions = {}) {
       throw new ApiError(0, "network", OFFLINE_MESSAGE);
     }
 
-    const data = (await res.json().catch(() => null)) as
-      | (T & { error?: { code?: string; message?: string; details?: unknown } })
-      | null;
-    if (!res.ok) {
-      throw new ApiError(
-        res.status,
-        data?.error?.code ?? "http_error",
-        data?.error?.message ?? `Request failed (${res.status}). Try again.`,
-        data?.error?.details,
-      );
-    }
+    const data = (await res.json().catch(() => null)) as T | null;
+    if (!res.ok) throw problemError(res.status, data);
     // A body-less success (204) is still a success: callers test the result for truth.
     return (data ?? {}) as T;
   }
@@ -102,15 +93,7 @@ export function createApiClient(opts: ApiClientOptions = {}) {
       throw new ApiError(0, "network", OFFLINE_MESSAGE);
     }
     if (!res.ok || !res.body) {
-      const data = (await res.json().catch(() => null)) as {
-        error?: { code?: string; message?: string; details?: unknown };
-      } | null;
-      throw new ApiError(
-        res.status,
-        data?.error?.code ?? "http_error",
-        data?.error?.message ?? `Request failed (${res.status}). Try again.`,
-        data?.error?.details,
-      );
+      throw problemError(res.status, await res.json().catch(() => null));
     }
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -175,4 +158,30 @@ export function failedRequestMessage(error: unknown): string | null {
   if (!error) return null;
   if (error instanceof ApiError) return error.message;
   return OFFLINE_MESSAGE;
+}
+
+/**
+ * The API's refusal as an ApiError. The API answers errors as RFC 9457 problem details (site-runtime
+ * ./http-errors): `code` to branch on, `detail` to show, and any extension members (a validation's `errors`,
+ * a quota's `resets_at`) as `details`. This package carries no site-runtime dependency, so it reads them here.
+ */
+function problemError(status: number, body: unknown): ApiError {
+  const fallback = `Request failed (${status}). Try again.`;
+  if (!body || typeof body !== "object" || Array.isArray(body))
+    return new ApiError(status, "http_error", fallback);
+  const {
+    type: _t,
+    title: _ti,
+    status: _s,
+    instance: _i,
+    code,
+    detail,
+    ...extensions
+  } = body as Record<string, unknown>;
+  return new ApiError(
+    status,
+    typeof code === "string" && code ? code : "http_error",
+    typeof detail === "string" && detail ? detail : fallback,
+    Object.keys(extensions).length ? extensions : undefined,
+  );
 }

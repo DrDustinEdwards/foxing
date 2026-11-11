@@ -36,8 +36,8 @@ describe("profiles API (web -> api -> core -> D1)", () => {
   it("returns 401 for GET /me without a session", async () => {
     const res = await call("/me");
     expect(res.status).toBe(401);
-    const body = (await res.json()) as { error: { code: string } };
-    expect(body.error.code).toBe("unauthorized");
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe("unauthorized");
   });
 
   it("round-trips a profile through core to D1", async () => {

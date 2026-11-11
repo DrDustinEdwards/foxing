@@ -47,7 +47,7 @@ export default defineConfig(async () => {
             CO_OWNER_EMAILS: "admin2@example.com",
             // site-runtime's admin idle key (withAdminIdle requires one); a fake test value.
             ADMIN_IDLE_SECRET: "sample-admin-idle-secret-for-tests-only",
-            // Better Auth's settings, fake: the shared Worker's Renderer (reached as ctx.exports.Renderer) renders
+            // Better Auth's settings, fake (the admin confirmation key is derived from the secret): the shared Worker's Renderer (reached as ctx.exports.Renderer) renders
             // with these bindings, not a suite's own env.
             BETTER_AUTH_URL: "https://foxing.test",
             BETTER_AUTH_SECRET: "test-secret-value-for-the-renderer-only",

@@ -28,7 +28,7 @@ companionOpsRoutes.post("/ops/companion-cache-batch", async (c) => {
     try {
       body = JSON.parse(text) as { limit?: unknown };
     } catch {
-      throw errors.validation({ body: "not JSON" });
+      throw errors.validation([{ path: "", message: "Expected a JSON body." }]);
     }
   }
   const limit = Math.min(MAX_BATCH, Math.max(1, Number(body?.limit) || 5));

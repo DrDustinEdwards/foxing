@@ -1,82 +1,65 @@
-// Single-use confirmation tokens for admin role and permission changes (change tier,
-// suspend or unsuspend). A preview mints a token bound to the actor,
-// the target, the kind of change, the new value and the value the preview saw, and keeps
-// it in APP_KV for CONFIRM_TTL_SECONDS. A perform redeems it once. The route's setter
-// then writes only while the row still holds the previewed value, so a token that is
-// unknown, spent, expired, stale, or minted for another actor, target or change cannot
-// perform anything.
-import { toHex } from "@dustinedwards/site-runtime/encoding";
-import { errors } from "./error";
+// Confirmation tokens for admin role and permission changes (change tier, suspend or unsuspend), on
+// site-runtime ./confirm-token. A preview mints a token whose signed claims are the actor, the target, the
+// kind of change, the new value and the value the preview saw, good for CONFIRM_TTL_SECONDS. A perform
+// redeems it once (its one-time id is spent in APP_KV). The route's setter then writes only while the row
+// still holds the previewed value, so a token that is forged, spent, expired, stale, or minted for another
+// actor, target or change cannot perform anything.
+import { mintConfirm, redeemConfirm } from "@dustinedwards/site-runtime/confirm-token";
+import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
+import { AppError } from "./error";
 
 export type RoleChangeKind = "tier" | "suspend";
 export type RoleValue = boolean | string;
 
-export type PendingRoleChange = {
+export type RoleChange = {
   actor: string;
   target: string;
   kind: RoleChangeKind;
   from: RoleValue;
   to: RoleValue;
-  expiresAt: number;
 };
 
-/** How long a preview stays performable. KV's own expiry floor is 60 seconds. */
+/** How long a preview stays performable. */
 const CONFIRM_TTL_SECONDS = 120;
 
-/** 32 random bytes, hex. The perform body schema checks this shape. */
-export const CONFIRM_TOKEN_PATTERN = /^[0-9a-f]{64}$/;
+/** The shape mintConfirm signs (./signed-token): base64url payload, a dot, base64url signature. */
+export const CONFIRM_TOKEN_PATTERN = /^[A-Za-z0-9_-]{1,2048}\.[A-Za-z0-9_-]{43}$/;
 
-const KEY_PREFIX = "admin-confirm:";
-
-function newToken(): string {
-  return toHex(crypto.getRandomValues(new Uint8Array(32)));
+/** The signing key: its own derivation from BETTER_AUTH_SECRET, so it signs nothing else. */
+async function confirmKeys(secret: string | undefined): Promise<string[]> {
+  if (!secret)
+    throw new Error("BETTER_AUTH_SECRET is unset, so no confirmation can be signed or checked");
+  return [await sha256Hex(`foxing-admin-confirm v2\n${secret}`)];
 }
 
 export async function mintConfirmation(
-  kv: KVNamespace,
-  change: Omit<PendingRoleChange, "expiresAt">,
+  secret: string | undefined,
+  change: RoleChange,
 ): Promise<{ token: string; expiresAt: string }> {
-  const token = newToken();
-  const expiresAt = Date.now() + CONFIRM_TTL_SECONDS * 1000;
-  const pending: PendingRoleChange = { ...change, expiresAt };
-  await kv.put(KEY_PREFIX + token, JSON.stringify(pending), {
-    expirationTtl: CONFIRM_TTL_SECONDS,
+  return mintConfirm({
+    keys: await confirmKeys(secret),
+    claims: change,
+    ttlSeconds: CONFIRM_TTL_SECONDS,
   });
-  return { token, expiresAt: new Date(expiresAt).toISOString() };
 }
 
 /**
- * Spends a token and returns the change it was minted for. Refuses (409) a token that
- * is unknown, already spent or expired, and one minted for a different actor, target,
- * kind of change or new value. A token that matches is deleted before the caller
- * writes, so it cannot be used twice even if the write then fails.
+ * Spends a token and returns the change it was minted for. Refuses one that is forged or minted for a
+ * different actor, target, kind of change or new value (403), already used (409) or expired (410).
  */
 export async function redeemConfirmation(
+  secret: string | undefined,
   kv: KVNamespace,
   token: string,
-  expected: Pick<PendingRoleChange, "actor" | "target" | "kind" | "to">,
-): Promise<PendingRoleChange> {
-  const key = KEY_PREFIX + token;
-  const raw = await kv.get(key);
-  if (!raw) {
-    throw errors.conflict(
-      "This confirmation has expired or was already used. Preview the change again.",
-    );
-  }
-  const pending = JSON.parse(raw) as PendingRoleChange;
-  if (
-    pending.actor !== expected.actor ||
-    pending.target !== expected.target ||
-    pending.kind !== expected.kind ||
-    pending.to !== expected.to
-  ) {
-    throw errors.conflict(
-      "This confirmation was issued for a different change. Preview the change again.",
-    );
-  }
-  await kv.delete(key);
-  if (pending.expiresAt <= Date.now()) {
-    throw errors.conflict("This confirmation has expired. Preview the change again.");
-  }
-  return pending;
+  expected: Pick<RoleChange, "actor" | "target" | "kind" | "to">,
+): Promise<RoleChange> {
+  const redeemed = await redeemConfirm({
+    keys: await confirmKeys(secret),
+    token,
+    expect: expected,
+    kv,
+    prefix: "admin-confirm:",
+  });
+  if (!redeemed.ok) throw new AppError(redeemed.status, "confirm_refused", redeemed.reason);
+  return redeemed.claims as RoleChange;
 }

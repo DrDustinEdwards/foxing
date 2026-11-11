@@ -58,6 +58,7 @@ import { operatorTools } from "../app/lib/operator.server";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { PAGE_DATES_KEY, TRACKED_PAGES } from "../app/lib/page-dates";
+import { problemResponse } from "@dustinedwards/site-runtime/http-errors";
 import { clubRoomHub } from "./club-room";
 import { withSecurityHeaders } from "./security-headers";
 
@@ -552,15 +553,11 @@ async function withAdminIdleSignOut(request: Request, env: Env, handle: () => Pr
   const { pathname } = new URL(request.url);
   if (res.status !== 302 || res.headers.get("Location") !== ACCESS_LOGOUT_PATH) return res;
   if (!ADMIN_APIS.some((prefix) => under(pathname, prefix))) return res;
-  const idle = Response.json(
-    {
-      error: {
-        code: "admin_idle",
-        message: "You were signed out after an hour without activity. Reload the page to sign in.",
-      },
-    },
-    { status: 401, headers: { "Cache-Control": "no-store" } },
-  );
+  const idle = problemResponse({
+    status: 401,
+    code: "admin_idle",
+    detail: "You were signed out after an hour without activity. Reload the page to sign in.",
+  });
   const cleared = res.headers.get("Set-Cookie");
   if (cleared) idle.headers.append("Set-Cookie", cleared);
   return withSecurityHeaders(idle, request);

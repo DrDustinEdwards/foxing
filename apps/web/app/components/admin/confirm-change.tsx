@@ -29,8 +29,8 @@ type Open = {
 };
 
 function failureMessage(body: unknown, status: number, fallback: string): string {
-  const b = body as { error?: { message?: string } } | null;
-  return b?.error?.message ?? `${fallback} (${status}).`;
+  const b = body as { detail?: string } | null;
+  return b?.detail ?? `${fallback} (${status}).`;
 }
 
 const VALUE_LABELS: Record<RolePreview["kind"], (v: RoleValue) => string> = {

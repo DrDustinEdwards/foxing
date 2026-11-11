@@ -1,6 +1,6 @@
 // Domain-level errors thrown by core write paths (Phase 5 clubs and later). Carry an
 // HTTP status + stable code so the API error handler can map them to the standard
-// { error: { code, message } } envelope without the routes each re-checking. Keeping
+// problem details answer (site-runtime ./http-errors) without the routes each re-checking. Keeping
 // authorization in core (not the routes) is what lets mobile reuse the same rules.
 export class DomainError extends Error {
   constructor(
