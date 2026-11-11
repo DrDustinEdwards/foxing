@@ -20,7 +20,9 @@
       "\\w+[cC]ancelled\\w*|[cC]ancelled[A-Z_]\\w*|CANCELLED",
       "\\w*[fF]avourite_\\w*|\\w+Favourite\\w*"
     ],
-    "skip": ["packages/core/migrations/**"]
+    "skip": [
+      "packages/core/migrations/**"
+    ]
   },
   "tokens": {
     "--text": "the Discord activity is its own embedded app, styled for Discord's client, not a family page",
@@ -28,6 +30,7 @@
   },
   "copies": {
     "apps/mobile/lib/epub-content.ts": "htmlToText here keeps a line break after each block, which the reader's text-to-speech splits sentences on; Prelum's htmlToText flattens all white space to one space, and web work never touches apps/mobile (CLAUDE.md, hard rule 2)",
-    "apps/web/public/_headers": "not by hand: the web build's site-runtime-headers writes it from Foxing's registry entry, the same entry workers/header-set.ts gives buildSecurityHeaders; committed so the /assets/* and /islands/* cache rules can be read"
+    "apps/web/public/_headers": "not by hand: the web build's site-runtime-headers writes it from Foxing's registry entry, the same entry workers/header-set.ts gives buildSecurityHeaders; committed so the /assets/* and /islands/* cache rules can be read",
+    "packages/client/src/http.ts": "errorMessage here is the reader's message for a failed query (an ApiError's message, else the offline line), not ./log's error-to-string; it is the client package's API, which apps/mobile imports, and web work never touches apps/mobile (CLAUDE.md, hard rule 2)"
   }
 }
