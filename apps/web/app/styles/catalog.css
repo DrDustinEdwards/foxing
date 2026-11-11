@@ -77,7 +77,7 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--dim);
 }
 
-/* The search field and its suggestions. */
+/* The search box: a taller field (Capsomer search suggestions draws the list). */
 .fx-search-field {
   --control: 3rem;
 }
@@ -89,18 +89,6 @@ a:hover > .fx-book > :is(h2, h3) {
   block-size: 1.25rem;
   color: var(--dim);
 }
-.fx-suggest {
-  position: absolute;
-  z-index: 30;
-  inset-inline: 0;
-  margin-block-start: 0.5rem;
-  border: 1px solid var(--line);
-  border-radius: var(--fx-radius-card);
-  background: var(--raised);
-  box-shadow: var(--shadow-l);
-  text-align: start;
-}
-
 /* The search filters. */
 .fx-filter-btn {
   border-radius: var(--radius-full);
