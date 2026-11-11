@@ -133,10 +133,7 @@ jobs:
       # site-runtime withAdminIdle's key, minted once by the deploy and never shown (devkit "generated-secrets").
       generated-secrets: ADMIN_IDLE_SECRET
       health-url: https://foxing.app/health
-      verify-command: >-
-        code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 https://foxing.app/ || true);
-        echo "home page answered $code";
-        if [ "$code" = 200 ]; then exit 0; elif [ "$code" = 000 ]; then exit 3; else exit 1; fi
+      verify-command: node "$DEVKIT_DIR/bin/verify-deploy.mjs" https://foxing.app
       working-directory: apps/web
       install: "npm ci"
       pre-deploy: >-
