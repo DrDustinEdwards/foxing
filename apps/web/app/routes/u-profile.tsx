@@ -123,7 +123,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="stack-10">
+      <Container className="cap-stack" data-gap="8">
         <header className="items-start fx-u-profile-stack">
           <div className="items-start fx-u-profile-row">
             <Avatar src={profile.avatarUrl} name={name} size="lg" />
@@ -167,14 +167,14 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         </header>
 
         {favorites.length > 0 ? (
-          <section className="stack">
+          <section className="cap-stack">
             <h2 className="display-2">Favorite books</h2>
             <ProfileCovers books={favorites} />
           </section>
         ) : null}
 
         {currentlyReading.length > 0 ? (
-          <section className="stack">
+          <section className="cap-stack">
             <h2 className="display-2">Currently reading</h2>
             <ul className="fx-u-profile-row-3">
               {currentlyReading.map((b) => (
@@ -206,8 +206,8 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         ) : null}
 
         {finishedBooks.length > 0 ? (
-          <section className="stack">
-            <div className="row spread">
+          <section className="cap-stack">
+            <div className="cap-spread" data-gap="4" data-align="center">
               <h2 className="display-2">Library</h2>
               {isOwner ? (
                 <Link to="/library" className="link sans small">
@@ -220,8 +220,8 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         ) : null}
 
         {publicHighlights.length > 0 ? (
-          <section className="stack">
-            <div className="row spread">
+          <section className="cap-stack">
+            <div className="cap-spread" data-gap="4" data-align="center">
               <h2 className="display-2">Highlights</h2>
               {isOwner ? (
                 <Link to="/highlights" className="link sans small">
@@ -229,7 +229,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                 </Link>
               ) : null}
             </div>
-            <ul className="stack-3">
+            <ul className="cap-stack" data-gap="4">
               {publicHighlights.map((h) => (
                 <li key={h.id} className="card">
                   {h.selectedText ? (
@@ -253,7 +253,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         ) : null}
 
         {publicShelves.length > 0 ? (
-          <section className="stack">
+          <section className="cap-stack">
             <h2 className="display-2">Shelves</h2>
             <ul className="fx-u-profile-grid">
               {publicShelves.map((s) => (
@@ -269,8 +269,8 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         ) : null}
 
         <section className="fx-u-profile-grid-2">
-          <div className="stack-6">
-            <div className="row spread">
+          <div className="cap-stack" data-gap="6">
+            <div className="cap-spread" data-gap="4" data-align="center">
               <h2 className="display-2">Diary</h2>
               {isOwner ? (
                 <Link to="/diary/new" className="link sans small">
@@ -281,7 +281,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             {diary.length === 0 ? (
               <EmptyState title="No entries yet" body="Reviews and ratings will appear here." />
             ) : (
-              <ul className="stack">
+              <ul className="cap-stack">
                 {diary.map((d) => (
                   <li key={d.id} className="card">
                     <div className="fx-u-profile-row-4">
@@ -313,9 +313,9 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             )}
           </div>
 
-          <div className="stack-8">
-            <div className="stack">
-              <div className="row spread">
+          <div className="cap-stack" data-gap="7">
+            <div className="cap-stack">
+              <div className="cap-spread" data-gap="4" data-align="center">
                 <h2 className="display-2">Lists</h2>
                 {isOwner ? (
                   <Link to="/lists/new" className="link sans small">
@@ -326,7 +326,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
               {lists.length === 0 ? (
                 <p className="meta">No lists yet.</p>
               ) : (
-                <ul className="stack-2">
+                <ul className="cap-stack" data-gap="3">
                   {lists.map((l) => (
                     <li key={l.id}>
                       <Link to={`/lists/${l.id}`} className="fx-profile-row">
@@ -339,7 +339,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
               )}
             </div>
 
-            <div className="stack">
+            <div className="cap-stack">
               <h2 className="display-2">Activity</h2>
               {activity.length === 0 ? (
                 <p className="meta">Nothing recent.</p>

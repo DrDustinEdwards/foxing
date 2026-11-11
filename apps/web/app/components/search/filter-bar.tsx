@@ -78,7 +78,7 @@ export function FilterBar({
           aria-label="Filters"
           className="fx-filter-panel"
         >
-          <div className="stack">
+          <div className="cap-stack">
             <fieldset className="cap-chips">
               <legend className="group-label full">Genre</legend>
               {genres.map((g) => {
@@ -143,7 +143,7 @@ export function FilterBar({
       </Popover>
 
       {chips.length ? (
-        <ul className="row-2 wrap mt-3">
+        <ul className="cap-cluster mt-3" data-gap="3">
           {chips.map((c) => (
             <li key={c.key}>
               <button type="button" onClick={() => apply(c.key, null)} className="cap-chip">

@@ -2,47 +2,17 @@
   margin-left: 0.25rem;
   font-variant-numeric: tabular-nums;
 }
-.fx-reader-panels-btn {
-  position: fixed;
-  inset: 0;
-  z-index: 20;
-  background-color: var(--fx-scrim);
-}
-.fx-reader-panels-aside {
-  position: fixed;
-  right: 0;
-  top: 0;
-  z-index: 30;
-  display: flex;
-  height: 100%;
-  width: min(22rem, 90vw);
-  flex-direction: column;
-  border-inline-start: 1px solid var(--line);
-}
-.fx-reader-panels-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-block-end: 1px solid var(--line);
-  padding-inline: 1rem;
+/* The reader's side sheet (reader-panels.tsx SidePanel) on Capsomer's dialog, which places it: the
+   reading canvas's colors, set per theme on the element. */
+.fx-reader-sheet {
+  background: var(--fx-canvas-bg, var(--surface));
+  color: var(--fx-canvas-text, var(--text));
 }
 .fx-reader-panels-title {
   font-family: var(--display);
   font-size: 1.125rem;
   line-height: 1.75rem;
   color: inherit;
-}
-.fx-reader-panels-btn-2 {
-  border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  &:hover {
-    background-color: var(--fx-hover);
-  }
-}
-.fx-reader-panels-box {
-  flex: 1 1 0%;
-  overflow: auto;
-  padding: 0.75rem;
 }
 /* The reader's small modal (reader-panels.tsx Modal) on Capsomer's dialog, which places it. */
 .fx-reader-panels-card {

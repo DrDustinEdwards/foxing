@@ -41,7 +41,7 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
         <h1 className="display-3">Book of the Month</h1>
       </div>
 
-      <div className="stack-6">
+      <div className="cap-stack" data-gap="6">
         <CreateBotm onDone={() => void reload()} />
         <AdminCard title="Scheduled picks">
           {rows.length === 0 ? (
@@ -103,7 +103,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
 
   return (
     <AdminCard title="New pick">
-      <div className="stack">
+      <div className="cap-stack">
         <div className="fx-admin-botm-grid">
           <label className="block">
             <span className="fx-label">Month</span>
@@ -129,13 +129,11 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
             />
           </label>
         </div>
-        <div>
-          <span className="fx-label">Book</span>
-          <BookPicker
-            selected={book}
-            onPick={(b) => setBook(b ? { id: b.id, title: b.title, author: b.author } : null)}
-          />
-        </div>
+        <BookPicker
+          label="Book"
+          selected={book}
+          onPick={(b) => setBook(b ? { id: b.id, title: b.title, author: b.author } : null)}
+        />
         <label className="block">
           <span className="fx-label">Category (optional)</span>
           <input
@@ -173,7 +171,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
             className={adminInputClass}
           />
         </label>
-        <label className="row-2 ui">
+        <label className="cap-cluster ui" data-gap="3">
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish immediately
         </label>
@@ -197,7 +195,7 @@ function BotmRow({
 
   return (
     <li className="py-3">
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <div className="min-0">
           <p className="sans small strong">
             {MONTH_NAMES[row.month - 1]} {row.year}
@@ -211,7 +209,7 @@ function BotmRow({
             {row.bookTitle ? `${row.bookTitle} by ${row.bookAuthor}` : "No book attached"}
           </p>
         </div>
-        <div className="row-2 shrink-0">
+        <div className="cap-cluster shrink-0" data-gap="3">
           <AdminButton
             pending={pending}
             onClick={() =>

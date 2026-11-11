@@ -58,8 +58,8 @@ export function AnnotationFilters({
   children?: ReactNode;
 }) {
   return (
-    <div className="mb-6 stack-3">
-      <div className="row wrap">
+    <div className="mb-6 cap-stack" data-gap="4">
+      <div className="cap-cluster" data-gap="4">
         <input
           type="search"
           value={query}
@@ -127,9 +127,9 @@ export function BookGroups<T extends BookFields>({
 
   if (groups.length === 0) return <p className="meta">{empty}</p>;
   return (
-    <div className="stack-8">
+    <div className="cap-stack" data-gap="7">
       {groups.map((g) => (
-        <section key={g.key} className="stack-3">
+        <section key={g.key} className="cap-stack" data-gap="4">
           <h2 className="display-0">
             {g.slug ? (
               <Link to={`/books/${g.slug}`} className="hover-accent">
@@ -140,7 +140,7 @@ export function BookGroups<T extends BookFields>({
             )}
             {g.author ? <span className="dim"> by {g.author}</span> : null}
           </h2>
-          <ul className="stack-3">
+          <ul className="cap-stack" data-gap="4">
             {g.items.map((e) => (
               <li key={e.id} className="card card-5">
                 {renderItem(e)}

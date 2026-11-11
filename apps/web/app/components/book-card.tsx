@@ -1,5 +1,4 @@
 import { Link } from "capsomer/react/link";
-import { cn } from "~/lib/cn";
 import { CoverImage } from "./cover-image";
 
 export type BookCardData = {
@@ -15,8 +14,10 @@ export type BookCardData = {
 const GRID_FIRST_ROW = 10;
 
 /**
- * Content-card variant (design-system Rule 15): the edge strengthens on hover and the
- * title takes the accent text. The whole card is the link target.
+ * Capsomer's card (capsomer/card.css), one destination: the link wraps the <article>, whose cover,
+ * title and byline are its own children. The cover is the card's media, a 2:3 book cover.
+ * Foxing's look (design-system Rule 15: the edge strengthens on hover, the title takes the
+ * accent text) is catalog.css .fx-book.
  */
 export function BookCard({
   book,
@@ -32,12 +33,11 @@ export function BookCard({
   headingLevel?: 2 | 3;
 }) {
   const Title = headingLevel === 2 ? "h2" : "h3";
-  // One destination, so one link wraps the card's <article>; the regions (cover, title, byline)
-  // are the article's own children, with no body wrapper (Modern Web Guidance "card").
   return (
-    <Link to={`/books/${book.slug}`} className={cn("fx-book-card-link", className)}>
-      <article className="fx-book-card">
+    <Link to={`/books/${book.slug}`} className={className}>
+      <article className="cap-card fx-book" data-ratio="2/3">
         <CoverImage
+          className="cap-card-media"
           src={book.coverUrl}
           alt={`${book.title} by ${book.author}`}
           fallbackLabel={book.title}
@@ -45,7 +45,7 @@ export function BookCard({
           eager={position !== undefined && position < GRID_FIRST_ROW}
           sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
         />
-        <Title className="fx-book-card-title">{book.title}</Title>
+        <Title>{book.title}</Title>
         <p className="meta">
           {book.author}
           {book.publicationYear ? (

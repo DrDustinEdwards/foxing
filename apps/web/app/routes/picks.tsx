@@ -46,8 +46,8 @@ export default function Picks({ loaderData }: Route.ComponentProps) {
           {clubs.map((c) => (
             <EntityCard key={c.slug} to={`/picks/${c.slug}`}>
               <h2 className="fx-picks-title">{c.name}</h2>
-              {c.curator ? <p className="mt-1 ui">{c.curator}</p> : null}
-              <p className="mt-3 fx-picks-caps">
+              {c.curator ? <p className="ui">{c.curator}</p> : null}
+              <p className="fx-picks-caps">
                 {c.pickCount} {c.pickCount === 1 ? "pick" : "picks"}
                 {c.focus ? ` · ${c.focus}` : ""}
               </p>

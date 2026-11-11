@@ -132,12 +132,12 @@
   flex: none;
   color: var(--dim);
 }
+/* Capsomer's icons at the menu's 16px. */
+.fx-acct {
+  --icon-size: 1rem;
+}
 .fx-acct-row .fx-acct-icon {
   margin-block-start: 0.125rem;
-}
-.fx-acct-icon svg {
-  inline-size: 1rem;
-  block-size: 1rem;
 }
 .fx-acct-link:hover .fx-acct-icon {
   color: var(--accent-text);
@@ -183,10 +183,6 @@
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-}
-.fx-acct-foot svg {
-  inline-size: 1rem;
-  block-size: 1rem;
 }
 .fx-acct-foot:hover,
 .fx-acct-foot:focus-visible {

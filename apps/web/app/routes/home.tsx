@@ -1,7 +1,7 @@
 // Signed-in dashboard at /home. Reads run in-process via core (loadLibraryData);
 // the shell (nav, secondary bar) comes from the root loader. Anonymous visitors are
 // sent to /login and signed-in-without-profile users to /onboarding by requireProfile.
-import { useSyncExternalStore } from "react";
+import { useNow } from "capsomer/react/hooks";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
 import { CoverImage } from "~/components/cover-image";
@@ -56,22 +56,17 @@ export function meta() {
   return [{ title: "Home | Foxing" }, { name: "robots", content: "noindex" }];
 }
 
-// The local hour is read once on the client; nothing pushes a change to it.
-const noSubscription = () => () => {};
-
 export default function Home({ loaderData }: Route.ComponentProps) {
   const { firstName, reading, streak, hasTimezone } = loaderData;
-  // Server greeting uses the saved timezone. Without one it is a UTC guess, so
-  // correct to the visitor's actual local hour after hydration.
-  const greeting = useSyncExternalStore(
-    noSubscription,
-    () => (hasTimezone ? loaderData.greeting : timeOfDay(new Date().getHours())),
-    () => loaderData.greeting,
-  );
+  // Server greeting uses the saved timezone. Without one it is a UTC guess, so correct to the
+  // visitor's actual local hour once the page is live (Capsomer's clock is 0 until then).
+  const now = useNow(60_000);
+  const greeting =
+    hasTimezone || now === 0 ? loaderData.greeting : timeOfDay(new Date(now).getHours());
 
   return (
     <PageShell>
-      <Container className="stack-8">
+      <Container className="cap-stack" data-gap="7">
         <h1 className="fx-home-title">
           Good {greeting}, {firstName}.
         </h1>

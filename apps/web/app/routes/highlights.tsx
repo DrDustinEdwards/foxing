@@ -110,7 +110,7 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
               total={highlights.length}
             >
               {colors.length > 1 ? (
-                <div className="row-2 wrap">
+                <div className="cap-cluster" data-gap="3">
                   <ColorChip active={color === "all"} onClick={() => setColor("all")} color={null}>
                     All colors
                   </ColorChip>

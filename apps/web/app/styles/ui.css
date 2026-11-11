@@ -28,23 +28,22 @@ a.fx-tag:hover {
   color: var(--muted);
 }
 
-/* design-system Rule 15: shadow-sm to shadow-md on hover, the border stays quiet. */
+/* Entity cards (EntityCard, the Journal row on the home page): Capsomer's card in Foxing's look,
+   design-system Rule 15: shadow-sm to shadow-md on hover, the border stays quiet, the title turns
+   accent. */
 .fx-entity {
-  display: block;
-  border: 1px solid var(--line);
+  --pad-card: 1.25rem;
+  --card-shadow: var(--fx-shadow-sm);
   border-radius: var(--fx-radius-card);
-  background: var(--surface);
-  padding: 1.25rem;
-  box-shadow: var(--fx-shadow-sm);
   @media (prefers-reduced-motion: no-preference) {
     transition: box-shadow var(--dur-base) var(--ease-out);
   }
 }
-.fx-entity:hover {
+a:hover > .fx-entity {
   box-shadow: var(--fx-shadow-md);
-}
-.fx-entity:hover .fx-entity-title {
-  color: var(--accent-text);
+  & > :is(h2, h3) {
+    color: var(--accent-text);
+  }
 }
 
 .fx-empty {
@@ -93,21 +92,6 @@ a.fx-tag:hover {
   .fx-page-title {
     font-size: 3rem;
   }
-}
-
-/* A result row in the admin and diary book pickers. */
-.fx-pick-option {
-  display: block;
-  inline-size: 100%;
-  border-radius: var(--fx-radius-cover);
-  padding: 0.5rem 0.75rem;
-  text-align: start;
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--text);
-}
-.fx-pick-option:hover {
-  background: var(--fx-hover);
 }
 
 /* Foxing's ghost button: Capsomer's quiet button in the accent text, the soft accent on hover. */

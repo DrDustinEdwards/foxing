@@ -66,7 +66,7 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
                 {filter === "mastered" ? "No mastered words yet." : "Nothing left to master."}
               </p>
             ) : (
-              <ul className="stack-3">
+              <ul className="cap-stack" data-gap="4">
                 {shown.map((w) => (
                   <WordItem key={w.id} word={w} />
                 ))}

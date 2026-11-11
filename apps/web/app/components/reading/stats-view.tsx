@@ -68,7 +68,7 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
           {goals.length === 0 ? (
             <p className="meta">No goals set.</p>
           ) : (
-            <ul className="stack-2">
+            <ul className="cap-stack" data-gap="3">
               {goals.map((g) => {
                 const label = `${formatNumber(g.target)} ${g.type} per ${g.periodType}`;
                 return g.type === "books" && g.periodType === "year" && booksYearGoalTarget ? (

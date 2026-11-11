@@ -1,44 +1,26 @@
 /* The catalog: book cards and their grid, covers, the search field and its suggestions, the
    search filters and results, the book page. */
 
-/* Content card (design-system Rule 15): the edge strengthens on hover, the title turns accent. */
-.fx-book-card-link,
-.fx-book-card-link:hover {
-  display: block;
-  color: inherit;
-}
-.fx-book-card {
-  display: flex;
-  flex-direction: column;
-  block-size: 100%;
-  border: 1px solid var(--line);
+/* Book cards: Capsomer's card (capsomer/card.css, book-card.tsx) in Foxing's look (design-system
+   Rule 15): a tight inset, the cover across the top, the title in the display face, which turns
+   accent under the pointer. The cover keeps its own 2:3 box (.cover-img), its top corners the card's. */
+.fx-book {
+  --pad-card: 0.625rem;
+  --fs-card-title: 1rem;
   border-radius: var(--fx-radius-card);
-  background: var(--surface);
-  padding: 0.625rem;
-  @media (prefers-reduced-motion: no-preference) {
-    transition: border-color var(--dur-base) var(--ease-out);
-  }
-  & > :is(h2, h3, p) {
-    padding-inline: 0.125rem;
+  & > .cover-img {
+    border-radius: inherit;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
+    box-shadow: none;
   }
   & > :is(h2, h3) {
-    margin-block-start: 0.75rem;
-  }
-  & > p {
-    margin-block-start: 0.25rem;
-    padding-block-end: 0.25rem;
+    font-family: var(--display);
+    line-height: 1.35;
+    color: var(--text);
   }
 }
-.fx-book-card-link:hover .fx-book-card {
-  border-color: var(--line-strong);
-}
-.fx-book-card-title {
-  font-family: var(--display);
-  font-size: 1rem;
-  line-height: 1.35;
-  color: var(--text);
-}
-.fx-book-card-link:hover .fx-book-card-title {
+a:hover > .fx-book > :is(h2, h3) {
   color: var(--accent-text);
 }
 .fx-book-grid {
@@ -72,9 +54,6 @@
   box-shadow:
     var(--fx-shadow-sm),
     0 0 0 1px var(--line);
-}
-.cover-img > picture {
-  display: contents;
 }
 .cover-img-photo {
   inline-size: 100%;

@@ -1,4 +1,6 @@
 import { useSuggest } from "@foxing/client";
+import { isImeEnter } from "capsomer/behavior/shortcuts";
+import { Icon } from "capsomer/react/icons";
 import { useId, useState } from "react";
 import { Form, useNavigate } from "react-router";
 
@@ -40,7 +42,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActive((a) => Math.max(a - 1, -1));
-    } else if (e.key === "Enter" && active >= 0) {
+    } else if (e.key === "Enter" && !isImeEnter(e.nativeEvent) && active >= 0) {
       e.preventDefault();
       void navigate(`/books/${items[active].slug}`);
       setOpen(false);
@@ -57,15 +59,7 @@ export function SearchBox({ initialQuery = "" }: { initialQuery?: string }) {
         </label>
         <div className="cap-input-group fx-search-field">
           <div className="cap-input-addon" data-align="inline-start">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.7" />
-              <path
-                d="m20 20-3.2-3.2"
-                stroke="currentColor"
-                strokeWidth="1.7"
-                strokeLinecap="round"
-              />
-            </svg>
+            <Icon name="search" />
           </div>
           <input
             id="q"

@@ -1,5 +1,6 @@
 import type { HighlightColor } from "@foxing/core";
-import { Dialog, DialogTitle } from "capsomer/react/dialog";
+import { Dialog, DialogBody, DialogHeader, DialogTitle } from "capsomer/react/dialog";
+import { useCallback } from "react";
 import { Link } from "capsomer/react/link";
 import type { TocEntry } from "~/lib/reader/engine.client";
 import { type Locator, tintFor } from "~/lib/reader/locator";
@@ -58,6 +59,8 @@ function LayerChip({
   );
 }
 
+// A side sheet: Capsomer's dialog on the right edge (native <dialog>), so focus, Esc, the backdrop,
+// the drag to close and the page behind behave as every other sheet on the network.
 export function SidePanel({
   title,
   children,
@@ -69,38 +72,32 @@ export function SidePanel({
   onClose: () => void;
   canvas: { bg: string; text: string };
 }) {
+  // Themed with the reading canvas (not site tokens): the reader root sets a text color per
+  // reading theme, so a site-surface panel would show light text on a light panel in dark theme.
+  // The dialog takes no style prop, so the canvas is set on the element (CSSOM, not markup).
+  const paint = useCallback(
+    (el: HTMLDialogElement | null) => {
+      el?.style.setProperty("--fx-canvas-bg", canvas.bg);
+      el?.style.setProperty("--fx-canvas-text", canvas.text);
+    },
+    [canvas.bg, canvas.text],
+  );
   return (
-    <>
-      <button
-        type="button"
-        aria-label="Close panel"
-        className="fx-reader-panels-btn"
-        onClick={onClose}
-      />
-      <aside
-        // Themed with the reading canvas (not site tokens): the reader root sets an
-        // inline text color per reading theme, so a site-surface panel would show
-        // light text on a light panel in dark theme.
-        className="fx-reader-panels-aside"
-        style={{ background: canvas.bg, color: canvas.text }}
-        aria-label={title}
-      >
-        <div className="py-3 fx-reader-panels-row">
-          {/* text-inherit so the reading-canvas color wins over the global h2 rule
-              (var(--text-primary)), which would be near-black on a dark panel. */}
-          <h2 className="fx-reader-panels-title">{title}</h2>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close"
-            className="fx-reader-panels-btn-2"
-          >
-            ✕
-          </button>
-        </div>
-        <div className="fx-reader-panels-box">{children}</div>
-      </aside>
-    </>
+    <Dialog
+      open
+      onOpenChange={(next) => {
+        if (!next) onClose();
+      }}
+      placement="right"
+      size="sm"
+      className="fx-reader-sheet"
+      ref={paint}
+    >
+      <DialogHeader divider>
+        <DialogTitle className="fx-reader-panels-title">{title}</DialogTitle>
+      </DialogHeader>
+      <DialogBody>{children}</DialogBody>
+    </Dialog>
   );
 }
 
@@ -148,9 +145,9 @@ function Stepper({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="row spread">
+    <div className="cap-spread" data-gap="4" data-align="center">
       <span className="fx-reader-panels-label-2">{label}</span>
-      <div className="row-2">
+      <div className="cap-cluster" data-gap="3">
         <button
           type="button"
           aria-label={`Decrease ${label}`}
@@ -184,10 +181,10 @@ export function TypographyControls({
 }) {
   const themes: ReaderTheme[] = ["light", "sepia", "dark"];
   return (
-    <div className="stack">
+    <div className="cap-stack">
       <div>
         <span className="mb-2 block fx-reader-panels-label-4">Theme</span>
-        <div className="row-2">
+        <div className="cap-cluster" data-gap="3">
           {themes.map((t) => (
             <button
               key={t}
@@ -231,7 +228,7 @@ export function TypographyControls({
         onChange={(v) => onChange({ margin: v })}
       />
 
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <span className="fx-reader-panels-label-2">Scroll</span>
         <label className="cap-switch">
           <input
@@ -246,9 +243,9 @@ export function TypographyControls({
       </div>
 
       {!settings.scroll ? (
-        <div className="row spread">
+        <div className="cap-spread" data-gap="4" data-align="center">
           <span className="fx-reader-panels-label-2">Columns</span>
-          <div className="row-2">
+          <div className="cap-cluster" data-gap="3">
             {[1, 2].map((n) => (
               <button
                 key={n}
@@ -310,7 +307,7 @@ export function ContentsList({
           <h3 className="mb-2 fx-reader-panels-label-4">Bookmarks</h3>
           <ul className="fx-reader-panels-stack">
             {bookmarks.map((b) => (
-              <li key={b.id} className="row-2">
+              <li key={b.id} className="cap-cluster" data-gap="3">
                 <button
                   type="button"
                   className="fx-reader-panels-btn-6"
@@ -335,7 +332,7 @@ export function ContentsList({
       {marks.length > 0 ? (
         <div className="mt-6">
           <h3 className="mb-2 fx-reader-panels-label-4">Highlights & notes</h3>
-          <ul className="stack-1">
+          <ul className="cap-stack" data-gap="2">
             {marks.map((a) => (
               <li key={a.id}>
                 <button

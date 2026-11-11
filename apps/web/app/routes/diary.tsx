@@ -130,7 +130,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
           />
         ) : (
           <>
-            <div className="mb-6 row-4 wrap">
+            <div className="mb-6 cap-cluster" data-gap="5">
               <label className="ui">
                 <span className="fx-diary-caps-2">Rating</span>
                 <select
@@ -177,11 +177,11 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                 body="Try widening the filters."
               />
             ) : (
-              <div className="stack-8">
+              <div className="cap-stack" data-gap="7">
                 {groups.map((g) => (
-                  <section key={g.label ?? "all"} className="stack">
+                  <section key={g.label ?? "all"} className="cap-stack">
                     {g.label ? <h2 className="fx-diary-caps-3">{g.label}</h2> : null}
-                    <ul className="stack">
+                    <ul className="cap-stack">
                       {g.items.map((e) => (
                         <EntryCard key={e.id} entry={e} reread={rereadIds.has(e.bookId)} />
                       ))}
@@ -218,9 +218,9 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
         ) : null}
       </div>
       <div className="fx-diary-box-2">
-        <div className="row spread top">
+        <div className="cap-spread" data-gap="4" data-align="start">
           <div className="min-0">
-            <div className="row-2 wrap">
+            <div className="cap-cluster" data-gap="3">
               {e.book ? (
                 <Link to={`/books/${e.book.slug}`} className="fx-diary-link">
                   {e.book.title}
@@ -230,7 +230,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
               )}
               {reread ? <RereadBadge /> : null}
             </div>
-            <div className="mt-1 row">
+            <div className="mt-1 cap-cluster" data-gap="4">
               <Stars ratingHalf={e.ratingHalf} />
               {e.logDate ? <span className="mono fine">{fmtDate.format(e.logDate)}</span> : null}
             </div>

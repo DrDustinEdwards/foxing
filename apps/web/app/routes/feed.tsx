@@ -42,7 +42,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
             body="Follow other readers to see their reviews, finishes, and lists here."
           />
         ) : (
-          <ul className="stack-3">
+          <ul className="cap-stack" data-gap="4">
             {rows.map((row) =>
               row.kind === "follower" ? (
                 <li key={`f-${row.id}`} className="py-3 fx-feed-card">

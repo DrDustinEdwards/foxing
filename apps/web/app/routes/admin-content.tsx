@@ -45,7 +45,7 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
         <h1 className="display-3">Content</h1>
       </div>
 
-      <div className="stack-6">
+      <div className="cap-stack" data-gap="6">
         <CreateAnnouncement onDone={() => void reload()} />
         <AdminCard title="Announcements">
           {announcements.length === 0 ? (
@@ -104,7 +104,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
 
   return (
     <AdminCard title="New announcement">
-      <div className="stack">
+      <div className="cap-stack">
         <label className="block">
           <span className="fx-label">Title</span>
           <input
@@ -154,7 +154,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
             />
           </label>
         </div>
-        <label className="row-2 ui">
+        <label className="cap-cluster ui" data-gap="3">
           <input
             type="checkbox"
             checked={isActive}
@@ -183,7 +183,7 @@ function AnnouncementRow({
 
   return (
     <li className="py-3">
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <div className="min-0">
           <p className="sans small strong">
             {row.title}
@@ -197,7 +197,7 @@ function AnnouncementRow({
             {row.placement} · {fmt.format(row.createdAt)}
           </p>
         </div>
-        <div className="row-2 shrink-0">
+        <div className="cap-cluster shrink-0" data-gap="3">
           <AdminButton
             pending={pending}
             onClick={() =>

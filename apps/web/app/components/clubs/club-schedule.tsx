@@ -49,7 +49,7 @@ export function PollsSection({
 
   return (
     <section>
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="display-2">Polls</h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "New poll"}
@@ -76,7 +76,7 @@ export function PollsSection({
               className="cap-input"
             />
           ))}
-          <div className="row">
+          <div className="cap-cluster" data-gap="4">
             {optionCount < 6 ? (
               <button
                 type="button"
@@ -108,7 +108,7 @@ export function PollsSection({
             const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
               <div key={poll.id} className="card">
-                <div className="row spread">
+                <div className="cap-spread" data-gap="4" data-align="center">
                   <p className="strong sans">{poll.title}</p>
                   {poll.isClosed ? (
                     <span className="fx-club-schedule-caps">Closed</span>
@@ -190,7 +190,7 @@ export function MeetingsSection({
 
   return (
     <section>
-      <div className="row spread">
+      <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="display-1">Meetings</h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "Add"}

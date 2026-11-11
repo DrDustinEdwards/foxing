@@ -1,13 +1,13 @@
+import { Icon } from "capsomer/react/icons";
 import {
   type HeaderExtra,
   type HeaderSection,
-  type LinkProps,
   SiteHeader,
   SiteTabs,
 } from "capsomer/react/site-header";
 import { useState } from "react";
 import { useLocation, useRouteLoaderData } from "react-router";
-import { Link } from "capsomer/react/link";
+import { Link, routerRenderLink } from "capsomer/react/link";
 import { SEARCH_BUTTON_LABEL } from "~/lib/search-commands";
 import { THEME_PREF_KEY } from "~/lib/theme";
 import type { loader as RootLoader } from "~/root";
@@ -30,28 +30,9 @@ const YOUR_FOXING = [
 const isCurrent = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
-/** Capsomer's links as React Router's. */
-function renderLink({ href, children, ...rest }: LinkProps) {
-  return (
-    <Link to={href} {...rest}>
-      {children}
-    </Link>
-  );
-}
-
-const SEARCH_ICON = (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <circle cx="11" cy="11" r="7" />
-    <path d="m20 20-3.2-3.2" />
-  </svg>
-);
+const SEARCH_ICON = <Icon name="search" />;
 // No count on the bell: there is no unread-count source yet, and a fake badge is worse than none.
-const BELL_ICON = (
-  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-    <path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6" />
-    <path d="M10 20a2 2 0 0 0 4 0" />
-  </svg>
-);
+const BELL_ICON = <Icon name="bell" />;
 
 function YourFoxingBar({ pathname }: { pathname: string }) {
   return (
@@ -151,7 +132,7 @@ function SiteNav() {
         account={user ? headerAccount(user, signingOut, () => void signOut()) : undefined}
         signIn={user ? undefined : { href: "/login" }}
         skipTo="#main"
-        renderLink={renderLink}
+        renderLink={routerRenderLink}
       />
       {user ? <YourFoxingBar pathname={pathname} /> : null}
       <CommandPalette />
@@ -240,7 +221,7 @@ function FooterCol({
   return (
     <div>
       <p className="group-label">{title}</p>
-      <ul className="stack-2 mt-3">
+      <ul className="cap-stack mt-3" data-gap="3">
         {links.map((l) => (
           <li key={l.to}>
             <Link to={l.to} className="fx-footer-link">
@@ -269,7 +250,7 @@ export function PageShell({ children }: { children: React.ReactNode }) {
       {signedIn ? (
         <SiteTabs
           label="Your Foxing"
-          renderLink={renderLink}
+          renderLink={routerRenderLink}
           tabs={YOUR_FOXING.map((t) => ({ ...t, current: isCurrent(pathname, t.href) }))}
         />
       ) : null}

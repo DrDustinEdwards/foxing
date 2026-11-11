@@ -43,7 +43,7 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <div className="row-4 wrap spread">
+        <div className="cap-spread" data-gap="5" data-align="center">
           <h1 className="display-4">Book clubs</h1>
           <Link to="/clubs/new" className="cap-btn" data-variant="primary">
             New club

@@ -13,7 +13,7 @@ export function Pagination({
 }) {
   if (pageCount <= 1) return null;
   return (
-    <nav aria-label="Pagination" className="mt-12 justify-center row-4">
+    <nav aria-label="Pagination" className="mt-12 cap-cluster" data-gap="5" data-justify="center">
       {page > 1 ? (
         <Link to={hrefFor(page - 1)} rel="prev" className="cap-btn">
           Previous

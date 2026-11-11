@@ -66,7 +66,7 @@ export default function AdminNotifications() {
       </div>
 
       <AdminCard title="Broadcast">
-        <div className="stack">
+        <div className="cap-stack">
           <p className="fx-admin-notifications-text">
             This sends one in-app notification to every active reader. It cannot be recalled.
             Confirm the text below before you send.

@@ -3,6 +3,8 @@
 // suggestions the React SearchBox shows, as it shows them: asked 180 ms after the last key once two letters are
 // typed, the field a WAI-ARIA combobox whose focus stays put while the arrows move through a listbox of books.
 
+import { isImeEnter } from "capsomer/behavior/shortcuts";
+
 type SuggestedBook = { slug: string; title: string; author: string };
 
 const SUGGEST_DELAY_MS = 180;
@@ -112,7 +114,7 @@ export default function start(el: HTMLElement): void {
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActive(Math.max(active - 1, -1));
-    } else if (e.key === "Enter" && active >= 0) {
+    } else if (e.key === "Enter" && !isImeEnter(e) && active >= 0) {
       e.preventDefault();
       const book = items[active];
       close();

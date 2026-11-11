@@ -113,65 +113,8 @@
   text-align: center;
 }
 
-/* Stacks (a column with a gap) and rows (a line of items, centered, with a gap). */
-.stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.stack-1 {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-.stack-2 {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-.stack-3 {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-.stack-6 {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-.stack-8 {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-.stack-10 {
-  display: flex;
-  flex-direction: column;
-  gap: 2.5rem;
-}
-.row {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-.row-1 {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-.row-2 {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.row-4 {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-.wrap {
-  flex-wrap: wrap;
-}
+/* Layout (stacks, clusters, spreads and grids) is Capsomer's: .cap-stack, .cap-cluster, .cap-spread and
+   .cap-grid with data-gap, data-align and data-justify (capsomer/utilities.css, through base.css). */
 .justify-center {
   justify-content: center;
 }
@@ -222,15 +165,6 @@
 }
 .clamp-3 {
   -webkit-line-clamp: 3;
-}
-.spread {
-  justify-content: space-between;
-}
-.top {
-  align-items: flex-start;
-}
-.base {
-  align-items: baseline;
 }
 .grow {
   flex: 1 1 0%;
@@ -311,24 +245,6 @@
 }
 .mb-10 {
   margin-block-end: 2.5rem;
-}
-
-/* Grids that fold to one column on a phone. */
-.grid-2,
-.grid-3 {
-  display: grid;
-  gap: 1rem;
-}
-@media (min-width: 40rem) {
-  .grid-2,
-  .grid-3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (min-width: 64rem) {
-  .grid-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 /* Text roles. UI chrome is DM Sans; metadata is the dim ink; Rule 07's small-caps labels are

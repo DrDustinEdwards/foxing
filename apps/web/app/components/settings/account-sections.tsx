@@ -53,7 +53,7 @@ export function ProfileSection({
 
   return (
     <Card title="Profile">
-      <form onSubmit={(e) => void save(e)} className="stack">
+      <form onSubmit={(e) => void save(e)} className="cap-stack">
         <label className="block">
           <span className="fx-label">Display name</span>
           <input
@@ -132,10 +132,10 @@ export function UsernameSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Username">
-      <form onSubmit={(e) => void save(e)} className="stack-3">
+      <form onSubmit={(e) => void save(e)} className="cap-stack" data-gap="4">
         <label className="block">
           <span className="fx-label">Username</span>
-          <div className="row-2">
+          <div className="cap-cluster" data-gap="3">
             <span className="fx-account-sections-label-2">@</span>
             <input
               value={value}
@@ -316,18 +316,19 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
 
   return (
     <Card title="Sign-in">
-      <div className="stack">
+      <div className="cap-stack">
         <p className="ui">
           A passkey signs you in with your face, fingerprint or device PIN. It only works on Foxing,
           so it cannot be phished. You can always sign in with an email link too.
         </p>
         {initial.passkeys.length > 0 ? (
-          <ul className="stack-3">
+          <ul className="cap-stack" data-gap="4">
             {initial.passkeys.map((p) =>
               renaming === p.id ? (
                 <li key={p.id}>
                   <form
-                    className="row"
+                    className="cap-cluster"
+                    data-gap="4"
                     onSubmit={(event) => {
                       event.preventDefault();
                       const name = String(
@@ -368,7 +369,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                   </form>
                 </li>
               ) : (
-                <li key={p.id} className="row">
+                <li key={p.id} className="cap-cluster" data-gap="4">
                   <span className="ui grow">
                     <span className="strong">{p.name}</span>
                     <span className="block small dim">
@@ -439,7 +440,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
           </button>
         </div>
         {initial.providers.map((provider) => (
-          <div key={provider.id} className="row">
+          <div key={provider.id} className="cap-cluster" data-gap="4">
             <span className="ui grow">
               {provider.label}: {provider.accountId ? "connected" : "not connected"}
             </span>
@@ -521,10 +522,10 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
   const others = sessions.filter((s) => !s.current).length;
   return (
     <Card title="Signed-in devices">
-      <div className="stack">
-        <ul className="stack-3">
+      <div className="cap-stack">
+        <ul className="cap-stack" data-gap="4">
           {sessions.map((s) => (
-            <li key={s.id} className="row">
+            <li key={s.id} className="cap-cluster" data-gap="4">
               <span className="ui grow">
                 <span className="strong">{s.device}</span>
                 {s.current ? " (this device)" : null}
@@ -592,7 +593,7 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
       {activity.length === 0 ? (
         <p className="ui">Nothing yet. Sign-ins and changes to how you sign in will show here.</p>
       ) : (
-        <ul className="stack-3">
+        <ul className="cap-stack" data-gap="4">
           {activity.map((a, i) => (
             // An index key: a fixed, newest-first list that never reorders on screen
             <li key={i} className="ui">

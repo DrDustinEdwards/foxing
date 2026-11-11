@@ -189,7 +189,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <PageHeader eyebrow="Account" title="Settings" />
-        <div className="stack-8">
+        <div className="cap-stack" data-gap="7">
           <ProfileSection initial={loaderData} />
           <UsernameSection initial={loaderData.username} />
           <EmailSection initial={loaderData.email} />

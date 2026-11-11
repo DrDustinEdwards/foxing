@@ -69,7 +69,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
       title="You're signed in"
       subtitle="Next time, skip the email. A passkey signs you in with your face, fingerprint or device PIN, and only works on Foxing, so it cannot be phished."
     >
-      <div className="stack">
+      <div className="cap-stack">
         {error ? (
           <p role="alert" className="error">
             {error}

@@ -59,7 +59,7 @@ export interface ReaderPopular {
   locator: Locator | null;
 }
 
-// Which social layers the reader shows. Persisted per user in localStorage; mine is on
+// Which social layers the reader shows. Kept in this browser (Capsomer's useRemembered); mine is on
 // by default, the social layers off (opt-in), so the reader opens as a private surface.
 export type LayerState = { mine: boolean; clubs: boolean; everyone: boolean };
 
@@ -78,10 +78,9 @@ export function layerShown(layer: ReaderOther["layer"], state: LayerState): bool
   return state.clubs; // club | friend
 }
 
-export function loadLayers(): LayerState {
-  if (typeof localStorage === "undefined") return DEFAULT_LAYERS;
+/** The layers in a stored value (useRemembered(LAYERS_KEY)), over the defaults. */
+export function parseLayers(raw: string | null): LayerState {
   try {
-    const raw = localStorage.getItem(LAYERS_KEY);
     return raw ? { ...DEFAULT_LAYERS, ...JSON.parse(raw) } : DEFAULT_LAYERS;
   } catch {
     return DEFAULT_LAYERS;
@@ -115,10 +114,9 @@ export function visibleFrame(container: HTMLElement | null): HTMLIFrameElement |
   );
 }
 
-export function loadSettings(): ReaderSettings {
-  if (typeof localStorage === "undefined") return DEFAULT_SETTINGS;
+/** The reading settings in a stored value (useRemembered(SETTINGS_KEY)), over the defaults. */
+export function parseSettings(raw: string | null): ReaderSettings {
   try {
-    const raw = localStorage.getItem(SETTINGS_KEY);
     return raw ? { ...DEFAULT_SETTINGS, ...JSON.parse(raw) } : DEFAULT_SETTINGS;
   } catch {
     return DEFAULT_SETTINGS;
