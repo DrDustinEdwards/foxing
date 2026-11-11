@@ -24,7 +24,7 @@ import { r2ObjectResponse } from "@dustinedwards/site-runtime/r2-object";
 import { logEvent } from "@dustinedwards/site-runtime/log";
 import { pruneNotFound } from "@dustinedwards/site-runtime/not-found";
 import { refuseCrossSite } from "@dustinedwards/site-runtime/origin";
-import { pruneAuthEvents } from "@dustinedwards/site-runtime/sign-in";
+import { pruneAuthEvents, pruneExpiredAuth } from "@dustinedwards/site-runtime/sign-in";
 import {
   defineSite,
   siteRenderer,
@@ -38,7 +38,6 @@ import {
   catalogRepo,
   companion,
   createDb,
-  deleteExpiredAuthRows,
   push,
 } from "@foxing/core";
 import { Hono } from "hono";
@@ -419,7 +418,7 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "push-sweep": runPushSweep,
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,
-  "prune-expired-auth": (env) => deleteExpiredAuthRows(createDb(env.DB), new Date()),
+  "prune-expired-auth": (env) => pruneExpiredAuth(env.DB),
   "page-dates": runPageDates,
 };
 
