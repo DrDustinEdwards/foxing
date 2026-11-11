@@ -104,7 +104,7 @@ function FacetGroup({ label, children }: { label: string; children: React.ReactN
 
 export default function Books({ loaderData }: Route.ComponentProps) {
   const { filters, result, genres } = loaderData;
-  const hasFilters = !!(filters.subject || filters.era || filters.length);
+  const isFiltered = !!(filters.subject || filters.era || filters.length);
 
   return (
     <PageShell>
@@ -175,7 +175,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
                 </FacetLink>
               ))}
             </div>
-            {hasFilters ? (
+            {isFiltered ? (
               <Link to="/books" className="link sans small">
                 Clear filters
               </Link>
