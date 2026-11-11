@@ -4,6 +4,7 @@
 // page's GET only shows a button, and its POST runs the step through confirmEmailLink, which comes
 // back here with ?done= or ?error= (emailLinkResult).
 import { confirmEmailLink, emailLinkResult } from "@dustinedwards/site-runtime/sign-in";
+import { createDb, profilesRepo } from "@foxing/core";
 import { EmailConfirm } from "capsomer/react/sign-in";
 import { AuthPage, authBrand } from "~/components/auth-brand";
 import { cloudflareContext } from "~/context";
@@ -20,11 +21,14 @@ export const headers = linkPageHeaders;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const result = emailLinkResult(request.url);
-  if (result.done !== "changed") return { ...result, email: null };
-  // The change is made, and this browser is signed in to the account: name its new address.
+  if (result.done !== "changed") return { ...result, email: null, displayName: null };
+  // The change is made, and this browser is signed in to the account: name its new address, with
+  // the reader's display name for the password manager.
   const { env } = context.get(cloudflareContext);
   const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  return { ...result, email: session?.user?.email ?? null };
+  if (!session?.user) return { ...result, email: null, displayName: null };
+  const profile = await profilesRepo.getProfileById(createDb(env.DB), session.user.id);
+  return { ...result, email: session.user.email, displayName: profile?.displayName ?? null };
 }
 
 export async function action({ context, request }: Route.ActionArgs) {
@@ -34,7 +38,7 @@ export async function action({ context, request }: Route.ActionArgs) {
 }
 
 export default function EmailConfirmPage({ loaderData, actionData }: Route.ComponentProps) {
-  const { done, problem, email } = loaderData;
+  const { done, problem, email, displayName } = loaderData;
   // With the new address, EmailConfirm names it and tells the password manager it is the
   // account's name now (the Signal API).
   return (
@@ -48,6 +52,7 @@ export default function EmailConfirmPage({ loaderData, actionData }: Route.Compo
         done={done}
         problem={problem}
         email={email}
+        displayName={displayName}
         limited={actionData?.limited}
       />
     </AuthPage>
