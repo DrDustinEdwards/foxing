@@ -1,6 +1,7 @@
 // Request/response schemas for the profiles resource. Exported from core and
 // shared by both clients (typed end to end).
 import { z } from "zod";
+import { webUrl } from "./web-url";
 
 export const username = z
   .string()
@@ -22,8 +23,8 @@ export const updateMeInput = z
   .object({
     displayName: z.string().trim().max(80).nullable(),
     bio: z.string().max(500).nullable(),
-    avatarUrl: z.url({ protocol: /^https?$/ }).nullable(),
-    backdropUrl: z.url({ protocol: /^https?$/ }).nullable(),
+    avatarUrl: webUrl().nullable(),
+    backdropUrl: webUrl().nullable(),
     customUrl: z.string().max(120).nullable(),
     favoriteGenres: z.array(z.string().max(40)).max(20).nullable(),
     languagePreference: z.string().max(10).nullable(),

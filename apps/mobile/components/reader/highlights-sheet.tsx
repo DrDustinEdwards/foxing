@@ -1,4 +1,4 @@
-import { errorMessage, useBookAnnotations } from "@foxing/client";
+import { failedRequestMessage, useBookAnnotations } from "@foxing/client";
 import { useState, useCallback, useMemo } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Share } from "react-native";
 import { X as XIcon, Export } from "phosphor-react-native";
@@ -45,7 +45,7 @@ export function HighlightsSheet({
   const colors = useColors();
   const layers = useBookAnnotations(bookId);
   const loading = layers.isPending;
-  const error = errorMessage(layers.error);
+  const error = failedRequestMessage(layers.error);
   const mine = layers.data?.mine;
   const rows = useMemo<HighlightRow[]>(
     () =>

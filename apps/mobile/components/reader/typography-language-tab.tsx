@@ -1,3 +1,4 @@
+import { toCsv } from "@dustinedwards/site-runtime/csv";
 import { useVocabulary } from "@foxing/client";
 import type { ReaderPrefs } from "@/lib/reader-settings";
 import { useColors } from "@/constants/colors";
@@ -38,16 +39,13 @@ export function LanguageTab({
       setTimeout(() => setToast(null), 2000);
       return;
     }
-    const csv = [
-      "Front,Back",
-      ...items.map((r) => {
-        const front = escapeCsv(r.word);
-        const back = escapeCsv(
-          `${r.definition}${r.contextSentence ? `\n\n${r.contextSentence}` : ""}`,
-        );
-        return `${front},${back}`;
-      }),
-    ].join("\n");
+    const csv = toCsv(
+      ["Front", "Back"],
+      items.map((r) => [
+        r.word,
+        `${r.definition}${r.contextSentence ? `\n\n${r.contextSentence}` : ""}`,
+      ]),
+    );
     await Share.share({ message: csv }).catch(() => {});
   }, [bookId, vocabulary.data]);
 
@@ -116,9 +114,4 @@ export function LanguageTab({
       ) : null}
     </View>
   );
-}
-
-function escapeCsv(s: string): string {
-  const text = (s ?? "").replace(/"/g, '""');
-  return /[",\n]/.test(text) ? `"${text}"` : text;
 }

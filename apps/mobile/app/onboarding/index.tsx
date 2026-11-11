@@ -10,7 +10,13 @@ import {
 } from "react-native";
 import { Screen } from "@/components/ui/screen";
 import { Check, CaretLeft, CaretRight, BookOpen, X as XIcon } from "phosphor-react-native";
-import { errorMessage, keys, useApi, useOnboarding, useUsernameAvailable } from "@foxing/client";
+import {
+  failedRequestMessage,
+  keys,
+  useApi,
+  useOnboarding,
+  useUsernameAvailable,
+} from "@foxing/client";
 import type { BookCard } from "@foxing/types";
 import { useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@/lib/api";
@@ -73,7 +79,7 @@ export default function OnboardingScreen() {
         ]);
         await qc.invalidateQueries({ queryKey: keys.me });
       } catch (e) {
-        setError(errorMessage(e));
+        setError(failedRequestMessage(e));
         setSubmitting(false);
       }
     },
