@@ -9,6 +9,7 @@ import { ipKey, limit } from "@dustinedwards/site-runtime/rate-limit";
 import { TURNSTILE_ORIGIN } from "@dustinedwards/site-runtime/turnstile";
 import { COVER_ORIGIN } from "../app/lib/origins";
 import { securityHeaders } from "./header-set";
+import { TRUSTED_TYPES_NAMES } from "@dustinedwards/site-runtime/trusted-types";
 
 /** Where browsers send violation reports: the family's path and group (site-runtime's CSP_REPORT_PATH, /csp-report, and CSP_REPORT_GROUP), the builder's defaults. */
 export { CSP_REPORT_PATH };
@@ -82,7 +83,7 @@ const page = pageSecurity({
   // The reader's policy is for the document /read/:slug renders; a response with no nonce is not that document.
   policy: ({ nonce, url }) =>
     nonce !== undefined && isReaderPath(url.pathname) ? readerPolicy(nonce) : sitePolicy(nonce),
-  staged: { trustedTypes: true, denyUnlisted: true },
+  staged: { trustedTypes: TRUSTED_TYPES_NAMES, denyUnlisted: true },
   corp: true,
   renew: true,
 });

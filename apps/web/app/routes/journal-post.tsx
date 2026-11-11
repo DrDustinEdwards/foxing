@@ -10,6 +10,7 @@ import { journalArticleImages, journalCovers } from "~/lib/journal-images.server
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, ldJson } from "~/lib/seo";
 import type { Route } from "./+types/journal-post";
+import { markup } from "capsomer/behavior/trusted-html";
 
 function fmtDate(d: Date | null): string | null {
   if (!d) return null;
@@ -184,7 +185,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
           ) : null}
 
           {/* Raw HTML: trusted CMS markdown. */}
-          <div className="article-prose e-content" dangerouslySetInnerHTML={{ __html: html }} />
+          <div className="article-prose e-content" dangerouslySetInnerHTML={markup(html)} />
         </article>
       </Container>
     </PageShell>
