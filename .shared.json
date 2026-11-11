@@ -20,9 +20,7 @@
       "\\w+[cC]ancelled\\w*|[cC]ancelled[A-Z_]\\w*|CANCELLED",
       "\\w*[fF]avourite_\\w*|\\w+Favourite\\w*"
     ],
-    "skip": [
-      "packages/core/migrations/**"
-    ]
+    "skip": ["packages/core/migrations/**"]
   },
   "tokens": {
     "--text": "the Discord activity is its own embedded app, styled for Discord's client, not a family page",
