@@ -1,6 +1,7 @@
 // Goodreads and StoryGraph CSV imports, and the catalog matcher the barcode scanner shares. Each row is matched against the Foxing catalog
 // through /search and lands as an offline user_book write (status, finish date, the
 // reader's review as private notes), so a long import survives a dropped connection.
+import { parseCsv } from "@dustinedwards/site-runtime/csv";
 import type * as W from "@foxing/types";
 import { api, syncNow } from "@/lib/api";
 import { enqueue } from "@/lib/sync-queue";
@@ -18,40 +19,6 @@ interface ImportRow {
   status: W.ShelfStatus;
   finishedAt: number | null;
   notes: string;
-}
-
-// Tolerant RFC 4180 parser: quoted fields with embedded commas, line breaks and "".
-// Review columns routinely hold all three, so a naive split breaks.
-function parseCsv(text: string): string[][] {
-  const out: string[][] = [];
-  let row: string[] = [];
-  let field = "";
-  let inQuotes = false;
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (inQuotes) {
-      if (ch === '"' && text[i + 1] === '"') {
-        field += '"';
-        i++;
-      } else if (ch === '"') inQuotes = false;
-      else field += ch;
-    } else if (ch === '"') inQuotes = true;
-    else if (ch === ",") {
-      row.push(field);
-      field = "";
-    } else if (ch === "\n" || ch === "\r") {
-      row.push(field);
-      out.push(row);
-      row = [];
-      field = "";
-      if (ch === "\r" && text[i + 1] === "\n") i++;
-    } else field += ch;
-  }
-  if (field || row.length) {
-    row.push(field);
-    out.push(row);
-  }
-  return out;
 }
 
 // "Last, First & Other" to "First Last": the catalog stores one display author.
