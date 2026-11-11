@@ -1,14 +1,5 @@
 import type { HighlightColor } from "@foxing/core";
-import {
-  Dialog,
-  DialogClose,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "capsomer/react/dialog";
 import { Link } from "capsomer/react/link";
-import "capsomer/dialog.css";
 import type { TocEntry } from "~/lib/reader/engine.client";
 import { type Locator, tintFor } from "~/lib/reader/locator";
 import {
@@ -350,34 +341,6 @@ export function ContentsList({
         </div>
       ) : null}
     </>
-  );
-}
-
-export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClose: () => void }) {
-  // Capsomer's Dialog: a native modal, so focus stays inside, the reader behind is
-  // inert, and Esc, the backdrop and Keep reading close it.
-  return (
-    <Dialog
-      open
-      onOpenChange={(next) => {
-        if (!next) onClose();
-      }}
-      size="sm"
-      closeButton={false}
-    >
-      <DialogHeader>
-        <DialogTitle>Sign in to save</DialogTitle>
-        <DialogDescription>
-          Reading is free. Sign in to keep highlights, notes, bookmarks, and your place.
-        </DialogDescription>
-      </DialogHeader>
-      <DialogFooter>
-        <DialogClose part="cancel">Keep reading</DialogClose>
-        <Link to={loginHref} className="cap-btn" data-variant="primary">
-          Sign in
-        </Link>
-      </DialogFooter>
-    </Dialog>
   );
 }
 

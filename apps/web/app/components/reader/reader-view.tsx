@@ -15,7 +15,7 @@ import {
   useUpdateAnnotation,
 } from "@foxing/client";
 import type { ReaderAnnotations } from "@foxing/types";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { HighlightColor } from "@foxing/core";
 import type {
   CreateEngineOptions,
@@ -52,10 +52,14 @@ import {
   ContentsList,
   ReaderTopBar,
   SidePanel,
-  SignInPrompt,
   TypographyControls,
   WriteStatus,
 } from "./reader-panels";
+import "capsomer/dialog.css";
+
+// Loaded on first open, so the dialog code is not on every /read page. Its CSS
+// stays static: a lazy chunk's CSS reaches the manifest with a "#" suffix.
+const SignInPrompt = lazy(() => import("./sign-in-prompt"));
 
 interface ReaderViewProps {
   book: { id: string; slug: string; title: string; author: string };
@@ -712,7 +716,9 @@ export function ReaderView(props: ReaderViewProps) {
       ) : null}
 
       {signInPrompt ? (
-        <SignInPrompt loginHref={loginHref} onClose={() => setSignInPrompt(false)} />
+        <Suspense fallback={null}>
+          <SignInPrompt loginHref={loginHref} onClose={() => setSignInPrompt(false)} />
+        </Suspense>
       ) : null}
 
       <WriteStatus saving={saving} writeError={writeError} onDismiss={dismissWriteError} />
