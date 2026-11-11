@@ -58,7 +58,7 @@ const pageQuery = z.object({
   offset: z.coerce.number().int().min(0).default(0),
 });
 
-function parseQuery<S extends z.ZodTypeAny>(c: Context<Env>, schema: S): z.infer<S> {
+function validatedQuery<S extends z.ZodTypeAny>(c: Context<Env>, schema: S): z.infer<S> {
   const result = schema.safeParse(c.req.query());
   if (!result.success) throw result.error;
   return result.data;
@@ -85,7 +85,7 @@ adminRoutes.get("/admin/stats", async (c) => {
 
 adminRoutes.get("/admin/users", async (c) => {
   requireAdmin(c);
-  const query = parseQuery(c, pageQuery);
+  const query = validatedQuery(c, pageQuery);
   return c.json(
     await page(query, (limit, offset) =>
       adminRepo.listUsers(c.get("db"), { q: query.q, limit, offset, admins: c.env }),
@@ -104,7 +104,7 @@ adminRoutes.get("/admin/users/:id", async (c) => {
 
 adminRoutes.get("/admin/books", async (c) => {
   requireAdmin(c);
-  const query = parseQuery(c, pageQuery);
+  const query = validatedQuery(c, pageQuery);
   return c.json(
     await page(query, (limit, offset) =>
       adminRepo.listBooksAdmin(c.get("db"), { q: query.q, limit, offset }),
@@ -114,7 +114,7 @@ adminRoutes.get("/admin/books", async (c) => {
 
 adminRoutes.get("/admin/clubs", async (c) => {
   requireAdmin(c);
-  const query = parseQuery(c, pageQuery);
+  const query = validatedQuery(c, pageQuery);
   return c.json(
     await page(query, (limit, offset) =>
       adminRepo.listClubsAdmin(c.get("db"), { q: query.q, limit, offset }),
@@ -143,13 +143,16 @@ adminRoutes.get("/admin/pick-clubs", async (c) => {
 // listPicksAdmin returns the newest 200; filter by club_id to see one club's history.
 adminRoutes.get("/admin/picks", async (c) => {
   requireAdmin(c);
-  const { club_id } = parseQuery(c, z.object({ club_id: z.string().min(1).max(100).optional() }));
+  const { club_id } = validatedQuery(
+    c,
+    z.object({ club_id: z.string().min(1).max(100).optional() }),
+  );
   return c.json({ items: await adminRepo.listPicksAdmin(c.get("db"), club_id) });
 });
 
 adminRoutes.get("/admin/audit-log", async (c) => {
   requireAdmin(c);
-  const query = parseQuery(c, pageQuery.omit({ q: true }));
+  const query = validatedQuery(c, pageQuery.omit({ q: true }));
   return c.json(
     await page(query, (limit, offset) => adminRepo.listAuditLog(c.get("db"), limit, offset)),
   );
@@ -159,7 +162,7 @@ adminRoutes.get("/admin/audit-log", async (c) => {
 // prune-404 job), site-runtime's report: most-hit first, scanner probes left out unless asked for.
 adminRoutes.get("/admin/not-found", async (c) => {
   requireAdmin(c);
-  const query = parseQuery(
+  const query = validatedQuery(
     c,
     z.object({
       days: z.coerce.number().int().min(1).max(90).default(30),
@@ -182,7 +185,7 @@ const COVER_ORIGIN = "https://covers.foxing.app";
 
 adminRoutes.get("/admin/catalog-health", async (c) => {
   requireAdmin(c);
-  const query = parseQuery(
+  const query = validatedQuery(
     c,
     pageQuery.omit({ q: true }).extend({ check: z.enum(CATALOG_CHECK_NAMES).optional() }),
   );
