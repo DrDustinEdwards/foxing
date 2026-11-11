@@ -24,3 +24,5 @@ export * from "./sync";
 
 export * as pushValidators from "./push";
 export * from "./push";
+
+export * from "./web-url";
