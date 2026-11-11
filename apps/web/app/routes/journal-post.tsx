@@ -10,7 +10,8 @@ import { journalArticleImages, journalCovers } from "~/lib/journal-images.server
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { articleLd, buildMeta, journalSeriesPath, ldJson } from "~/lib/seo";
 import { SeriesNav } from "capsomer/react/series-nav";
-import "~/styles/journal-series.css";
+// The series nav and the signs it uses load only on a post in a series (React 19 hoists the link).
+import seriesCss from "~/styles/journal-series.css?url";
 import type { Route } from "./+types/journal-post";
 import { markup } from "capsomer/behavior/trusted-html";
 
@@ -194,7 +195,12 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             />
           ) : null}
 
-          {series ? <SeriesNav {...series} /> : null}
+          {series ? (
+            <>
+              <link rel="stylesheet" href={seriesCss} precedence="default" />
+              <SeriesNav {...series} />
+            </>
+          ) : null}
 
           {/* Raw HTML: trusted CMS markdown. */}
           <div className="article-prose e-content" dangerouslySetInnerHTML={markup(html)} />
