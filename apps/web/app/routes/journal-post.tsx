@@ -4,7 +4,7 @@ import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "~/components/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
-import { focusStyle } from "~/lib/focus";
+import { focalPosition } from "@dustinedwards/site-runtime/image";
 import { renderJournalBody } from "~/lib/journal-body.server";
 import { journalArticleImages, journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
@@ -180,7 +180,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
               alt={post.coverImageAlt ?? ""}
               className="mb-10 fx-journal-post-img"
               priority
-              style={focusStyle(post.coverFocus)}
+              style={{ objectPosition: focalPosition(post.coverFocus) }}
             />
           ) : null}
 

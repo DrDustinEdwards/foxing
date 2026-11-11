@@ -17,6 +17,7 @@
  */
 
 import { ApiLegError, callApi } from "@dustinedwards/site-runtime/mcp-server";
+import { readProblem } from "@dustinedwards/site-runtime/http-errors";
 
 export interface ApiEnv {
   /** Service binding to the `foxing` Worker. The only route to the app. */
@@ -85,17 +86,13 @@ export async function callAdmin(
   );
   if (ok) return { status, ok: true, data: body };
 
-  // The API's error envelope: { error: { code, message, details? } } (packages/api/src/error.ts).
-  const envelope = (body as { error?: { code?: unknown; message?: unknown; details?: unknown } })
-    ?.error;
+  // The API answers errors as RFC 9457 problem details (site-runtime ./http-errors): code, detail, extensions.
+  const problem = readProblem(body, `The Foxing admin API refused with status ${status}.`);
   return {
     status,
     ok: false,
-    error:
-      typeof envelope?.message === "string"
-        ? envelope.message
-        : `The Foxing admin API refused with status ${status}.`,
-    code: typeof envelope?.code === "string" ? envelope.code : undefined,
-    details: envelope?.details,
+    error: problem.detail,
+    code: problem.code === "http_error" ? undefined : problem.code,
+    details: Object.keys(problem.extensions).length ? problem.extensions : undefined,
   };
 }

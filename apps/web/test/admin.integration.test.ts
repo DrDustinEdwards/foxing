@@ -268,7 +268,7 @@ describe("admin role changes: preview then perform", () => {
     expect(body.preview.from).toBe("free");
     expect(body.preview.to).toBe("plus");
     expect(body.preview.summary).toContain("@reader moves to Plus");
-    expect(body.confirm.token).toMatch(/^[0-9a-f]{64}$/);
+    expect(body.confirm.token).toMatch(/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{43}$/);
   });
 
   it("performs with the confirmation token and records the actor", async () => {
@@ -301,7 +301,7 @@ describe("admin role changes: preview then perform", () => {
     vi.useFakeTimers({ now: Date.now() + 121_000, toFake: ["Date"] });
     const res = await performPlus("reader", token);
     vi.useRealTimers();
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(410);
     expect(await tierOf("reader")).toBe("free");
     expect(await auditRows("user.tier")).toHaveLength(0);
   });
@@ -320,7 +320,7 @@ describe("admin role changes: preview then perform", () => {
 
   it("a token minted for one user cannot change another", async () => {
     const token = await previewPlus("reader");
-    expect((await performPlus("other", token)).status).toBe(409);
+    expect((await performPlus("other", token)).status).toBe(403);
     expect(await tierOf("other")).toBe("free");
     expect(await tierOf("reader")).toBe("free");
     expect(await auditRows("user.tier")).toHaveLength(0);
@@ -328,12 +328,12 @@ describe("admin role changes: preview then perform", () => {
 
   it("a token is bound to the admin who previewed it and to the change it previewed", async () => {
     const token = await previewPlus("reader");
-    expect((await performPlus("reader", token, "admin2")).status).toBe(409);
+    expect((await performPlus("reader", token, "admin2")).status).toBe(403);
 
     const suspendPreview = (await (
       await post("/admin/users/reader/suspend", "admin", { suspended: true })
     ).json()) as Preview;
-    expect((await performPlus("reader", suspendPreview.confirm.token)).status).toBe(409);
+    expect((await performPlus("reader", suspendPreview.confirm.token)).status).toBe(403);
 
     const reader = await profileOf("reader");
     expect(reader.subscriptionTier).toBe("free");
@@ -544,7 +544,7 @@ describe("admin idle sign-out", () => {
     );
     await waitOnExecutionContext(ctx);
     expect(res.status).toBe(401);
-    const body = (await res.json()) as { error: { code: string } };
-    expect(body.error.code).toBe("admin_idle");
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe("admin_idle");
   });
 });

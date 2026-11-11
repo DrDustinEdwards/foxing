@@ -29,6 +29,8 @@ export type Bindings = {
   // Operator bearer for /admin/* (the admin MCP Worker). A Worker secret; when unset,
   // every bearer request to /admin/* is refused (operator.ts).
   ADMIN_OPERATOR_TOKEN?: string;
+  // Better Auth's secret; the admin confirmation key is derived from it (admin-confirm.ts).
+  BETTER_AUTH_SECRET?: string;
   // Who is an admin (core isAdminAccount): the main admin and the comma-separated co-owners.
   // ADMIN_EMAIL unset: nobody.
   ADMIN_EMAIL?: string;

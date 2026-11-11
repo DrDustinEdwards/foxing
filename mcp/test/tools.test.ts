@@ -46,7 +46,7 @@ describe("every request", () => {
   });
 
   test("the token appears in no tool output", async () => {
-    foxing.reply({ status: 403, body: { error: { code: "forbidden", message: "Admin only." } } });
+    foxing.reply({ status: 403, body: { code: "forbidden", detail: "Admin only." } });
     const outputs = [
       await call("foxing_get_health"),
       await call("foxing_find_user", { query: "a" }),
@@ -69,18 +69,19 @@ describe("refusals", () => {
     foxing.reply({
       status: 422,
       body: {
-        error: {
-          code: "validation",
-          message: "Invalid request.",
-          details: { fieldErrors: { limit: ["bad"] } },
-        },
+        type: "about:blank",
+        title: "Unprocessable Content",
+        status: 422,
+        code: "validation",
+        detail: "Invalid request.",
+        errors: [{ path: "limit", message: "bad" }],
       },
     });
     const out = await call("foxing_find_user", { limit: 50 });
     assert.equal(out.isError, true);
     assert.equal(
       out.content[0].text,
-      'Invalid request.\ncode: validation\ndetails: {"fieldErrors":{"limit":["bad"]}}',
+      'Invalid request.\ncode: validation\ndetails: {"errors":[{"path":"limit","message":"bad"}]}',
     );
     assert.equal(out.structuredContent?.status, 422);
   });
@@ -141,7 +142,7 @@ describe("what each tool sends", () => {
   test("foxing_edit_book says which half landed when the staff pick is refused", async () => {
     foxing.reply(
       { body: { ok: true } },
-      { status: 404, body: { error: { code: "not_found", message: "Not found." } } },
+      { status: 404, body: { code: "not_found", detail: "Not found." } },
     );
     const out = await confirmCall("foxing_edit_book", {
       book_id: "b1",
@@ -273,10 +274,7 @@ describe("health, moderation and catalog health", () => {
       ],
     });
 
-    foxing.reply(
-      { body: stats },
-      { status: 500, body: { error: { code: "internal", message: "boom" } } },
-    );
+    foxing.reply({ body: stats }, { status: 500, body: { code: "internal", detail: "boom" } });
     const degraded = await call("foxing_get_health");
     assert.notEqual(degraded.isError, true);
     assert.match(
@@ -289,7 +287,7 @@ describe("health, moderation and catalog health", () => {
   });
 
   test("foxing_moderate_user passes the API's two steps through: preview, then perform with its token", async () => {
-    const token = "a".repeat(64);
+    const token = `${"a".repeat(40)}.${"a".repeat(43)}`;
     foxing.reply(
       {
         body: {
@@ -319,13 +317,14 @@ describe("health, moderation and catalog health", () => {
     foxing.reply({
       status: 409,
       body: {
-        error: { code: "conflict", message: "This confirmation has expired or was already used." },
+        code: "conflict",
+        detail: "This confirmation has expired or was already used.",
       },
     });
     const out = await call("foxing_moderate_user", {
       user_id: "u1",
       suspended: false,
-      confirm: "b".repeat(64),
+      confirm: `${"b".repeat(40)}.${"b".repeat(43)}`,
     });
     assert.equal(out.isError, true);
     assert.match(out.content[0].text, /^This confirmation has expired/);

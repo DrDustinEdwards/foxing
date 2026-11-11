@@ -171,10 +171,8 @@ function CacheBatch() {
         body: JSON.stringify({ limit }),
       });
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          error?: { message?: string };
-        } | null;
-        setError(body?.error?.message ?? `Request failed (${res.status}).`);
+        const body = (await res.json().catch(() => null)) as { detail?: string } | null;
+        setError(body?.detail ?? `Request failed (${res.status}).`);
         return;
       }
       setResult(await res.json());

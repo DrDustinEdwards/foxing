@@ -1,34 +1,26 @@
-// Rate limiting on site-runtime's RateLimiter Durable Object (exact fixed windows), not the
-// Workers ratelimit binding, which foxhound saw letting requests past the limit in production.
-// write and companion key on the user id (60/min, 20/min, spec-cf-api), or the IP when signed
-// out. Sign-in is limited by Better Auth itself (site-runtime ./sign-in, in the database).
-// A missing or failing counter lets the request through, as the optional bindings did, so
-// local and miniflare runs work without the binding; limit() logs each such pass.
-import { OWASP_EVENTS, logEvent, requestFields } from "@dustinedwards/site-runtime/log";
-import { limit, mustStop } from "@dustinedwards/site-runtime/rate-limit";
+// Rate limiting on site-runtime's RateLimiter Durable Object (exact fixed windows, site-runtime ./hono
+// honoRateLimit), not the Workers ratelimit binding, which foxhound saw letting requests past the limit in
+// production. write and companion key on the user id (60/min, 20/min, spec-cf-api), or the edge address when signed
+// out. Sign-in is limited by Better Auth itself (site-runtime ./sign-in, in the database). A missing or failing
+// counter lets the request through, so local and miniflare runs work without the binding; limit() logs each such pass.
+import { honoRateLimit } from "@dustinedwards/site-runtime/hono";
+import type { Context } from "hono";
 import { createMiddleware } from "hono/factory";
-import { errors } from "../error";
 import type { Env } from "../types";
 
 type RlClass = "write" | "companion";
 
 const PER_MINUTE: Record<RlClass, number> = { write: 60, companion: 20 };
 
-export const rateLimit = (cls: RlClass) =>
-  createMiddleware<Env>(async (c, next) => {
-    const ip = c.req.raw.headers.get("cf-connecting-ip") ?? "anon";
-    const who = c.get("session")?.id ?? ip;
-    const rules = [{ limit: PER_MINUTE[cls], windowSeconds: 60 }];
-    const verdict = await limit(c.env.RATE_LIMITER, `${cls}:${who}`, rules, {
-      onUnavailable: "allow",
-    });
-    if (mustStop(verdict, "allow")) {
-      logEvent(
-        OWASP_EVENTS.rateLimitExceeded,
-        { ...requestFields(c.req.raw), bucket: cls },
-        { level: "warn" },
-      );
-      throw errors.rateLimited();
-    }
-    await next();
+export const rateLimit = (cls: RlClass) => {
+  const counted = honoRateLimit<Context<Env>>({
+    limiter: (c) => c.env.RATE_LIMITER,
+    bucket: cls,
+    rules: [{ limit: PER_MINUTE[cls], windowSeconds: 60 }],
+    who: (c) => c.get("session")?.id,
+    onUnavailable: "allow",
   });
+  return createMiddleware<Env>(async (c, next) => {
+    await counted(c, next);
+  });
+};
