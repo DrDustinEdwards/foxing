@@ -28,6 +28,7 @@ import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "./lib/nonce";
 import { SITE_NAME } from "./lib/seo";
+import { markup } from "capsomer/behavior/trusted-html";
 
 // Resolve the signed-in nav identity plus the public mega-menu data once per request;
 // the shell reads both via useRouteLoaderData("root"). navUser is null for anonymous
@@ -79,9 +80,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="text-scale" content="scale" />
         <meta name="theme-color" content="#faf6ee" />
         {/* Raw HTML: static no-flash theme script. */}
-        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: NO_FLASH }} />
+        <script nonce={nonce} dangerouslySetInnerHTML={markup(NO_FLASH)} />
         <Meta />
         <Links nonce={nonce} />
         {/* Same-origin, so script-src 'self' allows it; the nonce is renewed per reader like every other. Not on a

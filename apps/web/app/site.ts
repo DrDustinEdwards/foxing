@@ -3,6 +3,7 @@
 // React's <Scripts/> out there, so React and an island never wire the same markup twice. It starts every [data-island]
 // element on the page, importing that island's content-hashed module from /islands/: the header (every page) and the
 // search-as-you-type field (the home page).
+import { startPage } from "@dustinedwards/site-runtime/page-client";
 import { startIslands } from "@dustinedwards/devkit/islands";
 
 // Covers (components/cover-image.tsx) fade in over their blur-up placeholder once the image has loaded, which React's
@@ -19,5 +20,6 @@ function startCovers() {
   }
 }
 
+startPage();
 startCovers();
 startIslands();
