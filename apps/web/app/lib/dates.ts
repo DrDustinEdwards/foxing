@@ -1,10 +1,10 @@
 // The en-US date formats the routes share, built once. Intl.DateTimeFormat is costly to construct.
 
 /** "Jan 5, 2026". */
-export const dateFormat = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
+export const mediumDate = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
 /** "Jan 5, 2026, 3:04 PM". */
-export const dateTimeFormat = new Intl.DateTimeFormat("en-US", {
+export const mediumDateTime = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
   timeStyle: "short",
 });

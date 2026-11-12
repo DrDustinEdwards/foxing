@@ -1,7 +1,7 @@
 // Admin: Analytics. Read-only. At-a-glance platform counts plus the full recent operator
 // audit log. Gated on ADMIN_EMAIL and CO_OWNER_EMAILS; adminRepo reads run in-process.
 import { adminRepo, createDb } from "@foxing/core";
-import { dateTimeFormat } from "~/lib/dates";
+import { mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -70,7 +70,7 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
                       <td className="py-2 fx-admin-analytics-td">{a.action}</td>
                       <td className="py-2 fx-admin-analytics-td-2">{a.actor ?? "System"}</td>
                       <td className="py-2 fx-admin-analytics-td-3">
-                        {dateTimeFormat.format(a.performedAt)}
+                        {mediumDateTime.format(a.performedAt)}
                       </td>
                     </tr>
                   ))}

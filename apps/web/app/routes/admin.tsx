@@ -3,7 +3,7 @@
 // page follows: requireAdmin in the loader, adminRepo reads in-process, AdminShell chrome.
 import { adminRepo, createDb } from "@foxing/core";
 import { Link } from "capsomer/react/link";
-import { dateTimeFormat } from "~/lib/dates";
+import { mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -64,7 +64,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
                     @{u.username}
                   </Link>
                   <span className="mono fine">
-                    {u.tier === "plus" ? "Plus" : "Free"} · {dateTimeFormat.format(u.createdAt)}
+                    {u.tier === "plus" ? "Plus" : "Free"} · {mediumDateTime.format(u.createdAt)}
                   </span>
                 </li>
               ))}
@@ -80,7 +80,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
               {audit.map((a) => (
                 <li key={a.id} className="py-2 cap-spread" data-gap="4" data-align="center">
                   <span className="fx-admin-label">{a.action}</span>
-                  <span className="mono fine">{dateTimeFormat.format(a.performedAt)}</span>
+                  <span className="mono fine">{mediumDateTime.format(a.performedAt)}</span>
                 </li>
               ))}
             </ul>

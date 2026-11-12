@@ -4,7 +4,7 @@
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
-import { dateTimeFormat } from "~/lib/dates";
+import { mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
@@ -193,7 +193,7 @@ function AnnouncementRow({
             )}
           </p>
           <p className="truncate fx-admin-content-text">
-            {row.placement} · {dateTimeFormat.format(row.createdAt)}
+            {row.placement} · {mediumDateTime.format(row.createdAt)}
           </p>
         </div>
         <div className="cap-cluster shrink-0" data-gap="3">

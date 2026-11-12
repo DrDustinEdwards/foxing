@@ -7,7 +7,7 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
-import { dateFormat, dateTimeFormat } from "~/lib/dates";
+import { mediumDate, mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
@@ -100,12 +100,12 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
           <Field label="Genres">{genres}</Field>
           <Field label="Timezone">{user.timezone ?? "Not set"}</Field>
           <Field label="Onboarded">
-            {user.onboardedAt ? dateTimeFormat.format(user.onboardedAt) : "Not onboarded"}
+            {user.onboardedAt ? mediumDateTime.format(user.onboardedAt) : "Not onboarded"}
           </Field>
           <Field label="Last active">
-            {user.lastActiveAt ? dateTimeFormat.format(user.lastActiveAt) : "Never"}
+            {user.lastActiveAt ? mediumDateTime.format(user.lastActiveAt) : "Never"}
           </Field>
-          <Field label="Joined">{dateFormat.format(user.createdAt)}</Field>
+          <Field label="Joined">{mediumDate.format(user.createdAt)}</Field>
         </div>
         <AdminError error={suspend.error} />
         {suspend.dialog}
