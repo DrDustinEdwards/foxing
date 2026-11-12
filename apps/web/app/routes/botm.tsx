@@ -47,7 +47,7 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
         {!current?.book ? (
           <EmptyState title="No pick yet" body="The next Book of the Month lands soon." />
         ) : (
-          <article className="fx-botm-card">
+          <article className="cap-card fx-botm-card">
             <div className="fx-botm-box">
               <Link to={`/books/${current.book.slug}`}>
                 <CoverImage

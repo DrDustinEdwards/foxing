@@ -72,21 +72,19 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
         ) : (
           <div className="fx-journal-tag-grid">
             {result.posts.map((post) => (
-              <Link
-                key={post.slug}
-                to={`/journal/${post.slug}`}
-                className="group fx-journal-tag-card"
-              >
-                {post.tags?.[0] ? (
-                  <span className="mb-2 fx-journal-tag-caps">
-                    {post.tags[0].replace(/-/g, " ")}
-                  </span>
-                ) : null}
-                <h3 className="fx-journal-tag-title">{post.title}</h3>
-                {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
-                {post.readingTimeMinutes ? (
-                  <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
-                ) : null}
+              <Link key={post.slug} to={`/journal/${post.slug}`}>
+                <article className="cap-card fx-journal-tag-card">
+                  {post.tags?.[0] ? (
+                    <span className="mb-2 fx-journal-tag-caps">
+                      {post.tags[0].replace(/-/g, " ")}
+                    </span>
+                  ) : null}
+                  <h3 className="fx-journal-tag-title">{post.title}</h3>
+                  {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
+                  {post.readingTimeMinutes ? (
+                    <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
+                  ) : null}
+                </article>
               </Link>
             ))}
           </div>

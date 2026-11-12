@@ -57,7 +57,7 @@ export function PollsSection({
       </div>
 
       {open ? (
-        <form onSubmit={(e) => void create(e)} className="mt-3 fx-club-schedule-card">
+        <form onSubmit={(e) => void create(e)} className="mt-3 cap-card fx-club-schedule-card">
           <input
             name="title"
             required
@@ -197,7 +197,7 @@ export function MeetingsSection({
         </button>
       </div>
       {open ? (
-        <form onSubmit={(e) => void create(e)} className="mt-3 fx-club-schedule-card-2">
+        <form onSubmit={(e) => void create(e)} className="mt-3 cap-card fx-club-schedule-card-2">
           <input
             name="title"
             required
@@ -228,7 +228,7 @@ export function MeetingsSection({
       ) : (
         <ul className="mt-3 fx-club-schedule-list-2">
           {meetings.map((m) => (
-            <li key={m.id} className="fx-club-schedule-card-3">
+            <li key={m.id} className="cap-card fx-club-schedule-card-3">
               <p className="fx-club-schedule-text-3">{m.title}</p>
               {/* The viewer's zone, named, with UTC beside it, so members in other zones read the same
                   moment; Capsomer's Time hydrates cleanly from the server's UTC. */}

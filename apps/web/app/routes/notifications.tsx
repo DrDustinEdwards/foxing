@@ -58,7 +58,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
         ) : (
           <ul className="cap-stack" data-gap="3">
             {notifications.map((n) => (
-              <li key={n.id} className="items-start fx-notifications-card">
+              <li key={n.id} className="items-start cap-card fx-notifications-card">
                 <span aria-hidden="true" className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"} />
                 <div className="min-0">
                   <p className="sans small strong">{n.title}</p>

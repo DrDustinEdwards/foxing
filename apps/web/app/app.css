@@ -9,6 +9,7 @@
 @import "capsomer/fallback-fonts.css";
 @import "capsomer/base.css";
 @import "capsomer/site-header.css";
+@import "capsomer/admin-shell.css";
 @import "capsomer/dialog.css";
 @import "capsomer/confirm-dialog.css";
 @import "capsomer/popover.css";

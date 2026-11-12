@@ -121,10 +121,7 @@
 .fx-diary-card {
   display: flex;
   gap: 1rem;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
+  --pad-card: 1rem;
 }
 .fx-diary-box {
   width: 4rem;
@@ -167,10 +164,7 @@
 .fx-feed-card-2 {
   display: flex;
   gap: 0.75rem;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
+  --pad-card: 1rem;
 }
 .fx-feed-box {
   min-width: 0;
@@ -255,10 +249,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
+  --pad-card: 1rem;
 }
 .fx-list-detail-row {
   display: flex;
@@ -352,10 +343,8 @@
   color: var(--muted);
 }
 .fx-me-card {
-  border-radius: var(--fx-radius-hero);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.5rem;
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 1.5rem;
 }
 .fx-me-grid {
   display: grid;
@@ -384,10 +373,7 @@
 .fx-notifications-card {
   display: flex;
   gap: 0.75rem;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
+  --pad-card: 1rem;
 }
 .fx-notifications-text-2 {
   margin-top: 0.125rem;
@@ -471,16 +457,6 @@
   gap: 0.5rem;
 }
 .fx-u-profile-link,
-.fx-library-link {
-  display: inline-block;
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--accent-text);
-  &:hover {
-    text-decoration-line: underline;
-  }
-}
 .fx-u-profile-stack-2 {
   display: flex;
   flex-direction: column;
@@ -546,10 +522,8 @@
   }
 }
 .fx-u-profile-card {
-  border-radius: var(--fx-radius-cover);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding-inline: 1rem;
+  --radius-l: var(--fx-radius-cover);
+  --pad-card: 1rem;
 }
 .fx-u-profile-text-4 {
   margin-top: 0.125rem;

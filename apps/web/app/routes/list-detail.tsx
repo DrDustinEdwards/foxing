@@ -94,7 +94,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
         ) : (
           <ol className="cap-stack" data-gap="4">
             {books.map((entry, i) => (
-              <li key={entry.bookId} className="fx-list-detail-card">
+              <li key={entry.bookId} className="cap-card fx-list-detail-card">
                 <div className="fx-list-detail-row">
                   <span className="fx-list-detail-label">{i + 1}</span>
                   <div className="min-0">

@@ -82,12 +82,8 @@
   }
 }
 .fx-home-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--fx-radius-hero);
-  border: 1px dashed var(--line);
-  background-color: var(--surface);
-  padding: 2rem;
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 2rem;
 }
 .fx-home-text {
   margin-inline: auto;
@@ -95,17 +91,14 @@
   color: var(--muted);
 }
 .fx-home-card-2 {
-  display: grid;
   gap: 1.5rem;
-  border-radius: var(--fx-radius-hero);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-s);
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 1.5rem;
+  --card-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
     grid-template-columns: minmax(0, 132px) minmax(0, 1fr);
     align-items: center;
-    padding: 2rem;
+    --pad-card: 2rem;
   }
 }
 .fx-home-box {
@@ -123,13 +116,9 @@
   color: var(--muted);
 }
 .fx-home-card-3 {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--fx-radius-hero);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-s);
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 1.5rem;
+  --card-shadow: var(--shadow-s);
 }
 .fx-home-title-3 {
   font-family: var(--display);
@@ -165,12 +154,6 @@
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 1fr) 320px;
   }
-}
-.fx-library-card {
-  border-radius: var(--radius-l);
-  border: 1px dashed var(--line);
-  background-color: var(--surface);
-  padding: 2.5rem;
 }
 .fx-library-grid-2 {
   display: grid;
@@ -351,10 +334,7 @@
 }
 
 .fx-goal {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-l);
-  background: var(--surface);
-  padding: 1rem;
+  --pad-card: 1rem;
 }
 .fx-goal.fx-goal-done {
   border-color: var(--ok);

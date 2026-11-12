@@ -6,7 +6,7 @@ import { useClubLive, useClubPage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
-import { Container } from "~/components/ui";
+import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
@@ -80,9 +80,10 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
             </aside>
           </div>
         ) : (
-          <div className="mt-10 text-center fx-club-detail-card">
-            <p className="meta">Join this club to read its discussions, polls, and meetings.</p>
-          </div>
+          <EmptyState
+            className="mt-10"
+            title="Join this club to read its discussions, polls, and meetings."
+          />
         )}
       </Container>
     </PageShell>

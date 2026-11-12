@@ -258,7 +258,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             <h2 className="display-2">Shelves</h2>
             <ul className="fx-u-profile-grid">
               {publicShelves.map((s) => (
-                <li key={s.id} className="py-3 fx-u-profile-card">
+                <li key={s.id} className="py-3 cap-card fx-u-profile-card">
                   <p className="sans small strong">{s.name}</p>
                   <p className="fx-u-profile-text-4">
                     {s.bookCount} {s.bookCount === 1 ? "book" : "books"}

@@ -118,7 +118,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
         />
 
         {/* Filters: plain links, no client JS, fully cacheable. */}
-        <div className="mb-10 fx-books-card">
+        <div className="mb-10 cap-card fx-books-card">
           <FacetGroup label="Genre">
             {genres.map((g) => (
               <FacetLink

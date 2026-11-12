@@ -23,7 +23,7 @@ import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
-import { Container, Eyebrow } from "~/components/ui";
+import { Container, EmptyState, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { loadLibraryData } from "~/lib/library.server";
@@ -102,16 +102,15 @@ export default function Library({ loaderData }: Route.ComponentProps) {
               tabIndex={0}
             >
               {shown.length === 0 ? (
-                <div className="mt-10 text-center fx-library-card">
-                  <p className="meta">{EMPTY_COPY[tab]}</p>
-                  <Link to="/books" className="mt-2 fx-library-link">
+                <EmptyState className="mt-10" title={EMPTY_COPY[tab]}>
+                  <Link to="/books" className="cap-btn">
                     Find a book
                   </Link>
-                </div>
+                </EmptyState>
               ) : (
                 <div className="mt-6 fx-library-grid-2">
                   {shown.map((e) => (
-                    <div key={e.bookId} className="fx-library-card-2">
+                    <div key={e.bookId} className="cap-card fx-library-card-2">
                       <Link to={`/books/${e.slug}`} className="relative block">
                         <CoverImage
                           src={e.coverUrl}

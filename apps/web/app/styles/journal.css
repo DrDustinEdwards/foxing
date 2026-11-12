@@ -122,18 +122,8 @@
   display: grid;
 }
 .fx-journal-tag-card {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-s);
-  transition-property: box-shadow;
-  transition-duration: 150ms;
-  &:hover {
-    box-shadow: var(--shadow-m);
-  }
+  --pad-card: 1.25rem;
+  --card-shadow: var(--shadow-s);
 }
 .fx-journal-tag-caps {
   font-family: var(--mono);
@@ -179,20 +169,12 @@
   }
 }
 .fx-journal-card {
-  display: grid;
   gap: 1.5rem;
-  border-radius: var(--fx-radius-hero);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
-  box-shadow: var(--shadow-s);
-  transition-property: box-shadow;
-  transition-duration: 150ms;
-  &:hover {
-    box-shadow: var(--shadow-m);
-  }
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 1.25rem;
+  --card-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
-    padding: 2rem;
+    --pad-card: 2rem;
   }
   @media (min-width: 48rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -233,18 +215,8 @@
   color: var(--muted);
 }
 .fx-journal-card-2 {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
-  box-shadow: var(--shadow-s);
-  transition-property: box-shadow;
-  transition-duration: 150ms;
-  &:hover {
-    box-shadow: var(--shadow-m);
-  }
+  --pad-card: 1rem;
+  --card-shadow: var(--shadow-s);
 }
 .fx-journal-img-2 {
   aspect-ratio: 16 / 10;

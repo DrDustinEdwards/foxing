@@ -166,7 +166,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
   }
 
   return (
-    <li className={complete ? "fx-goal fx-goal-done" : "fx-goal"}>
+    <li className={complete ? "cap-card fx-goal fx-goal-done" : "cap-card fx-goal"}>
       <div className="fx-goals-row">
         <span className="fx-goals-label">
           <span>

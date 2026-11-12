@@ -39,7 +39,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Dashboard</h1>
+        <h1 className="display-3">Overview</h1>
       </div>
 
       <div className="fx-admin-grid">

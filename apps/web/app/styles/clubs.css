@@ -22,13 +22,7 @@
   color: var(--dim);
 }
 .fx-club-schedule-card-2 {
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 0.75rem;
-  & > * + * {
-    margin-top: 0.5rem;
-  }
+  --pad-card: 0.75rem;
 }
 .fx-club-schedule-text-2 {
   font-family: var(--ui);
@@ -42,10 +36,7 @@
   }
 }
 .fx-club-schedule-card-3 {
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 0.75rem;
+  --pad-card: 0.75rem;
 }
 .fx-club-schedule-text-3,
 .fx-u-profile-label-6 {
@@ -123,32 +114,15 @@
   text-decoration-line: underline;
 }
 .fx-club-sections-card-2 {
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
-  & > * + * {
-    margin-top: 0.5rem;
-  }
+  --pad-card: 1rem;
 }
 .fx-club-sections-list {
   & > * + * {
     margin-top: 0.5rem;
   }
 }
-.fx-club-sections-card-3 {
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
-  transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
-  &:hover {
-    border-color: var(--line-strong);
-  }
-}
 .fx-club-sections-caps {
-  margin-right: 0.5rem;
+  justify-self: start;
   border-radius: 9999px;
   background-color: var(--accent-soft);
   padding: 0.125rem 0.5rem;
@@ -188,12 +162,6 @@
   & > * + * {
     margin-top: 2.5rem;
   }
-}
-.fx-club-detail-card {
-  border-radius: var(--radius-l);
-  border: 1px dashed var(--line);
-  background-color: var(--surface);
-  padding: 2.5rem;
 }
 
 .fx-club-new-form {
@@ -279,17 +247,6 @@
   color: var(--crit);
 }
 
-.fx-clubs-card {
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
-  transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
-  &:hover {
-    border-color: var(--line-strong);
-  }
-}
 .fx-clubs-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -299,12 +256,6 @@
   font-size: 0.875rem;
   line-height: 1.25rem;
   color: var(--muted);
-}
-.fx-clubs-card-2 {
-  border-radius: var(--radius-l);
-  border: 1px dashed var(--line);
-  background-color: var(--surface);
-  padding: 2rem;
 }
 .fx-clubs-grid {
   display: grid;
@@ -351,16 +302,8 @@
 .fx-pick-club-card {
   display: flex;
   gap: 1rem;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
-  box-shadow: var(--shadow-s);
-  transition-property: box-shadow;
-  transition-duration: 150ms;
-  &:hover {
-    box-shadow: var(--shadow-m);
-  }
+  --pad-card: 1rem;
+  --card-shadow: var(--shadow-s);
 }
 .fx-pick-club-link {
   width: 5rem;
@@ -411,13 +354,7 @@
 }
 
 .fx-club-schedule-card {
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
-  & > * + * {
-    margin-top: 0.5rem;
-  }
+  --pad-card: 1rem;
 }
 .fx-club-schedule-box {
   & > * + * {

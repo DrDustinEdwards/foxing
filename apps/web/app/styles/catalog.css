@@ -293,13 +293,8 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--dim);
 }
 .fx-books-card {
-  display: flex;
-  flex-direction: column;
   gap: 1.5rem;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
+  --pad-card: 1.25rem;
 }
 .fx-books-row {
   display: flex;
@@ -312,15 +307,12 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 
 .fx-botm-card {
-  display: grid;
   gap: 2rem;
-  border-radius: var(--fx-radius-hero);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-m);
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 1.5rem;
+  --card-shadow: var(--shadow-m);
   @media (min-width: 40rem) {
-    padding: 2.5rem;
+    --pad-card: 2.5rem;
   }
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
@@ -420,12 +412,7 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 .fx-find-next-book-card-2,
 .fx-library-card-2 {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 0.625rem;
+  --pad-card: 0.625rem;
 }
 .fx-find-next-book-stack {
   display: flex;
