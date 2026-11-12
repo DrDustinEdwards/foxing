@@ -54,7 +54,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       }}
       prefKey="foxing-admin-rail"
     >
-      {children}
+      <div className="cap-admin-page">{children}</div>
     </CapsomerAdminShell>
   );
 }
