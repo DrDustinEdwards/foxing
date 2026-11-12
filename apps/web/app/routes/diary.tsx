@@ -202,7 +202,7 @@ function RereadBadge() {
 
 function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean }) {
   return (
-    <li className="fx-diary-card">
+    <li className="cap-card fx-diary-card">
       <div className="shrink-0 fx-diary-box">
         {e.book ? (
           <Link to={`/books/${e.book.slug}`} className="block">

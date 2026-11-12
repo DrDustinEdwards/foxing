@@ -56,13 +56,15 @@ export default function JournalSeries({ loaderData }: Route.ComponentProps) {
         <ol className="fx-journal-tag-grid">
           {parts.map((post, i) => (
             <li key={post.slug}>
-              <Link to={`/journal/${post.slug}`} className="group fx-journal-tag-card">
-                <span className="mb-2 fx-journal-tag-caps">Part {i + 1}</span>
-                <h2 className="fx-journal-tag-title">{post.title}</h2>
-                {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
-                {post.readingTimeMinutes ? (
-                  <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
-                ) : null}
+              <Link to={`/journal/${post.slug}`}>
+                <article className="cap-card fx-journal-tag-card">
+                  <span className="mb-2 fx-journal-tag-caps">Part {i + 1}</span>
+                  <h2 className="fx-journal-tag-title">{post.title}</h2>
+                  {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
+                  {post.readingTimeMinutes ? (
+                    <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
+                  ) : null}
+                </article>
               </Link>
             </li>
           ))}

@@ -142,8 +142,8 @@ export function getAuth(env: Env): Promise<Auth> {
 }
 
 /**
- * The signed-in user behind an /api/v1 request, from the Better Auth session cookie; null when
- * there is none. The Worker's createApi resolveSession, and the Carrel key isolation tests.
+ * The signed-in user behind a request, from the Better Auth session cookie; null when there is
+ * none. The Worker's createApi resolveSession, the page loaders and the Carrel key isolation tests.
  */
 export async function sessionUserFromRequest(
   req: Request,

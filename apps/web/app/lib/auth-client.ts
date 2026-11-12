@@ -19,3 +19,9 @@ export function signInAgainIfStale(error: unknown): boolean {
   window.location.assign(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
   return true;
 }
+
+/** Ends the session and loads the marketing page in full, so the root loader re-runs anonymous. */
+export async function signOutToHome(): Promise<void> {
+  await authClient.signOut();
+  window.location.assign("/");
+}

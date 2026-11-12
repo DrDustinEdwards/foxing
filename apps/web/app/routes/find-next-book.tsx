@@ -86,7 +86,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
 
 function RecCard({ rec }: { rec: Recommendation }) {
   return (
-    <div className="fx-find-next-book-card-2">
+    <div className="cap-card fx-find-next-book-card-2">
       <Link to={`/books/${rec.slug}`} className="block">
         <CoverImage
           src={rec.coverUrl}

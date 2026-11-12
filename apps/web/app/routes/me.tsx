@@ -75,7 +75,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
         {profile.bio ? <p className="fx-me-text-2">{profile.bio}</p> : null}
 
-        <section className="fx-me-card">
+        <section className="cap-card fx-me-card">
           <Eyebrow className="mb-4">Your reading</Eyebrow>
           <dl className="text-center fx-me-grid">
             {statTiles.map((tile) => (

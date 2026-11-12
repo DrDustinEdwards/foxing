@@ -17,7 +17,7 @@
 /* The reader's small modal (reader-panels.tsx Modal) on Capsomer's dialog, which places it. */
 .fx-reader-panels-card {
   --cap-dialog-w: 26rem;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.25rem;
@@ -413,7 +413,7 @@
   z-index: 20;
   width: min(28rem, 90vw);
   translate: -50% 0;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px solid var(--line);
   padding: 0.75rem;
   box-shadow: var(--shadow-l);
@@ -644,7 +644,7 @@
   z-index: 30;
   inline-size: min(30rem, 92vw);
   border: 1px solid var(--line);
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   padding: 0.75rem;
   box-shadow: var(--shadow-l);
 }

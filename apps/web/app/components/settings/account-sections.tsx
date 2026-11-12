@@ -8,7 +8,7 @@ import {
 import type { ClubHandover } from "@foxing/types";
 import { useEffect, useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
-import { authClient, signInAgainIfStale } from "~/lib/auth-client";
+import { authClient, signInAgainIfStale, signOutToHome } from "~/lib/auth-client";
 import {
   signalCurrentUserDetails,
   signalPasskeys,
@@ -711,8 +711,7 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
     // The account and its data are gone; end the session and return to the marketing
     // page with a full navigation so the root loader re-runs anonymous.
     setLeaving(true);
-    await authClient.signOut();
-    window.location.assign("/");
+    await signOutToHome();
   }
 
   if (!fresh)

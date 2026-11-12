@@ -65,10 +65,7 @@ function SiteNav() {
   async function signOut() {
     setSigningOut(true);
     // Loaded only for a sign-out, so the Better Auth client is not in every page's bundle.
-    const { authClient } = await import("~/lib/auth-client");
-    await authClient.signOut();
-    // Full navigation so the root loader re-runs anonymous and the shell resets.
-    window.location.assign("/");
+    await (await import("~/lib/auth-client")).signOutToHome();
   }
 
   const sections: HeaderSection[] = [

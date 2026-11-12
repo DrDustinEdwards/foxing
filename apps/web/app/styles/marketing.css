@@ -32,16 +32,21 @@
 .fx-values > div > span {
   color: var(--accent);
 }
+/* The pick and the call to action are Capsomer cards at the hero radius (Rule 06: rounded-xl), lifted. */
+.fx-pick,
+.fx-cta {
+  --radius-l: var(--fx-radius-hero);
+  --card-shadow: var(--shadow-s);
+}
 .fx-pick {
-  display: grid;
+  --pad-card: 1.5rem;
   gap: 1.5rem;
-  padding: 1.5rem;
 }
 @media (min-width: 40rem) {
   .fx-pick {
+    --pad-card: 2rem;
     grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
     align-items: center;
-    padding: 2rem;
   }
 }
 .fx-pick-cover {
@@ -50,12 +55,12 @@
   margin-inline: auto;
 }
 .fx-cta {
-  padding: 2rem;
+  --pad-card: 2rem;
   text-align: center;
 }
 @media (min-width: 40rem) {
   .fx-cta {
-    padding: 3rem;
+    --pad-card: 3rem;
   }
 }
 .fx-cta-title {

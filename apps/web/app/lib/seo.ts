@@ -7,7 +7,6 @@
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
 import {
   article,
-  itemList,
   organization,
   pageImage,
   thing,
@@ -170,17 +169,6 @@ export function articleLd(post: {
       : { "@type": "Organization", name: SITE_NAME },
     publisher: { "@type": "Organization", name: SITE_NAME },
   });
-}
-
-export function itemListLd(
-  name: string,
-  items: Array<{ title: string; path: string }>,
-): Record<string, unknown> {
-  return itemList(
-    SITE_ORIGIN,
-    name,
-    items.map((it) => ({ name: it.title, path: it.path })),
-  );
 }
 
 /** Paths no crawler needs, in /robots.txt and /ai.txt alike. */

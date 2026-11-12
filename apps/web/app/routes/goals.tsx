@@ -166,7 +166,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
   }
 
   return (
-    <li className={complete ? "fx-goal fx-goal-done" : "fx-goal"}>
+    <li className={complete ? "cap-card fx-goal fx-goal-done" : "cap-card fx-goal"}>
       <div className="fx-goals-row">
         <span className="fx-goals-label">
           <span>
@@ -243,8 +243,8 @@ function CreateGoal() {
   const { target, setTarget, period, setPeriod, pending, error, add } = useGoalDraft();
 
   return (
-    <section className="card">
-      <p className="mb-3 fx-goals-text">Set a new goal</p>
+    <section className="cap-card">
+      <p className="fx-goals-text">Set a new goal</p>
       <div className="cap-cluster" data-gap="3">
         <label className="sans small">
           <span className="cap-sr-only">Number of books</span>

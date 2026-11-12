@@ -88,9 +88,9 @@ function RunAction({
   }, [companionRun.planRequired, onPlusRequired]);
 
   return (
-    <section className="fx-companion-test-card">
+    <section className="cap-card">
       <h2 className="display-1">Run an action</h2>
-      <form onSubmit={(e) => void run(e)} className="mt-4 fx-companion-test-form">
+      <form onSubmit={(e) => void run(e)} className="fx-companion-test-form">
         <label className="block">
           <span className="fx-label">Action</span>
           <select
@@ -184,7 +184,7 @@ function CacheBatch() {
   }
 
   return (
-    <section className="mt-8 fx-companion-test-card">
+    <section className="mt-8 cap-card">
       <h2 className="display-1">Cache batch (admin)</h2>
       <p className="mt-2 ui">
         Generate the 4 free-cached actions for up to a handful of catalog books missing them. Runs

@@ -83,7 +83,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 function ContinueReadingCard({ reading }: { reading: Entry | null }) {
   if (!reading) {
     return (
-      <section className="justify-center text-center fx-home-card">
+      <section className="justify-center text-center cap-card fx-home-card">
         <Eyebrow className="mb-2">Continue reading</Eyebrow>
         <p className="display-1">Nothing in progress</p>
         <p className="mt-2 fx-home-text">Start a book and it shows up here with your progress.</p>
@@ -96,7 +96,7 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
 
   const progress = Math.max(0, Math.min(100, Math.round(reading.progressPct)));
   return (
-    <section className="fx-home-card-2">
+    <section className="cap-card fx-home-card-2">
       <div className="fx-home-box">
         <Link to={`/books/${reading.slug}`}>
           <CoverImage
@@ -138,7 +138,7 @@ function StreakCard({ streak: s }: { streak: Streak }) {
     s.currentStreak === 0 ? "Open a book to start a streak." : "Read today to keep it going.";
 
   return (
-    <aside className="fx-home-card-3">
+    <aside className="cap-card fx-home-card-3">
       <Eyebrow className="mb-3">Reading streak</Eyebrow>
       <p className="fx-home-title-3">
         {s.currentStreak}

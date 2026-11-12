@@ -34,7 +34,7 @@ a.fx-tag:hover {
 .fx-entity {
   --pad-card: 1.25rem;
   --card-shadow: var(--shadow-s);
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   @media (prefers-reduced-motion: no-preference) {
     transition: box-shadow var(--dur-base) var(--ease-out);
   }
@@ -48,7 +48,7 @@ a:hover > .fx-entity {
 
 .fx-empty {
   border: 1px solid var(--line);
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   background: var(--surface);
   padding: 4rem 1.5rem;
 }
