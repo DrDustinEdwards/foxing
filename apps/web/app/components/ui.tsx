@@ -124,7 +124,7 @@ export function Button({
 }
 
 /**
- * Capsomer's card (capsomer/card.css), one destination: the link wraps the <article>, whose
+ * Capsomer's card (capsomer/card.css), one destination: the link wraps the card's <div> (an <article> there leaves the link with no name), whose
  * heading and text are its own children. Foxing's entity look (design-system Rule 15: shadow-sm to
  * shadow-md on hover, the border stays quiet) is ui.css .fx-entity. Awards, clubs, lists.
  */
@@ -139,7 +139,7 @@ export function EntityCard({
 }) {
   return (
     <Link to={to} className={className}>
-      <article className="cap-card fx-entity">{children}</article>
+      <div className="cap-card fx-entity">{children}</div>
     </Link>
   );
 }
