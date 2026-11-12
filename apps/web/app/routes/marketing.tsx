@@ -1,3 +1,4 @@
+import { formatCount } from "@drdustinedwards/site-helpers/text";
 import { faqPage } from "@drdustinedwards/site-helpers/schema";
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
@@ -85,8 +86,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           <Eyebrow className="mb-4">A reading home for the classics</Eyebrow>
           <h1 className="fx-hero-title">Read the classics. Keep the record.</h1>
           <p className="lead measure-xl center mt-5">
-            {total.toLocaleString()} books, free to read. Track what you finish, mark the passages
-            that stay with you, and follow the picks worth reading.
+            {formatCount(total)} books, free to read. Track what you finish, mark the passages that
+            stay with you, and follow the picks worth reading.
           </p>
           <div className="measure-xl center mt-8">
             <SearchBox />
