@@ -1,3 +1,4 @@
+import { capitalize, formatCount } from "@drdustinedwards/site-helpers/text";
 import { catalogRepo, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
@@ -58,12 +59,12 @@ export const headers = () => publicPageHeaders({ freshSeconds: 1800, staleSecond
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Books | Foxing" }];
   const label = data.filters.subject
-    ? `${data.filters.subject[0].toUpperCase()}${data.filters.subject.slice(1)} books`
+    ? `${capitalize(data.filters.subject)} books`
     : "Browse the library";
   return [
     ...buildMeta({
       title: label,
-      description: `Browse ${data.result.total.toLocaleString()} readable classics on Foxing. Filter by genre, era, and length.`,
+      description: `Browse ${formatCount(data.result.total)} readable classics on Foxing. Filter by genre, era, and length.`,
       pathname: location.pathname,
       pageType: "CollectionPage",
     }),
@@ -114,7 +115,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
         <PageHeader
           eyebrow="The library"
           title="Browse the books"
-          lede={`${result.total.toLocaleString()} readable classics, free to read in Foxing.`}
+          lede={`${formatCount(result.total)} readable classics, free to read in Foxing.`}
         />
 
         {/* Filters: plain links, no client JS, fully cacheable. */}

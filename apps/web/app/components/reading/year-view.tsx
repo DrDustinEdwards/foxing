@@ -1,6 +1,7 @@
 // The Year in Reading page's body (app/routes/year.tsx), drawn the same for a reader's own year and
 // for the sample year of /demos/year: the year picker, the year's numbers, the months and genres
 // charts (Enarratio, in Capsomer's frame), the first and latest finish and the top books.
+import { formatCount } from "@drdustinedwards/site-helpers/text";
 import type { RecapBook, RecapPage } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Link } from "capsomer/react/link";
@@ -107,7 +108,7 @@ export function YearView({
 export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
   const stats = [
     { label: "books finished", value: recap.booksFinished },
-    { label: "words read", value: recap.totalWords ? recap.totalWords.toLocaleString() : "0" },
+    { label: "words read", value: formatCount(recap.totalWords) },
     { label: "distinct authors", value: recap.distinctAuthors },
     {
       label: "average rating",

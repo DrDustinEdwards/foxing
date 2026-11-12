@@ -1,6 +1,7 @@
 // The goals page's reading activity (app/routes/goals.tsx), drawn the same for a reader's own weeks
 // and for the sample weeks of /demos/goals: books finished per week over the last year (Enarratio's
 // heat strip, in Capsomer's frame) and the streak cards.
+import { formatCount } from "@drdustinedwards/site-helpers/text";
 import type { Streak } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { weeksChart } from "~/lib/reading-charts";
@@ -40,7 +41,7 @@ export function ReadingActivity({
 function StreakCard({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
     <div className="cap-card">
-      <p className="display-2">{value.toLocaleString()}</p>
+      <p className="display-2">{formatCount(value)}</p>
       <p className="fx-goals-caps">{label}</p>
       <p className="fx-goals-text-4">{hint}</p>
     </div>
