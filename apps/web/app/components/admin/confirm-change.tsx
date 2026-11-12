@@ -6,6 +6,7 @@
 // runs, a failure stays inside it, and focus returns to the button that opened it.
 import { useState } from "react";
 import { ConfirmDialog } from "capsomer/react/confirm-dialog";
+import confirmDialogCss from "capsomer/confirm-dialog.css?url";
 import { OFFLINE_MESSAGE } from "@foxing/client";
 import { adminFetch, messageFrom } from "./admin-form";
 
@@ -103,16 +104,19 @@ function RoleChangeDialog({
   }
 
   return (
-    <ConfirmDialog
-      open
-      title={`${change.label}?`}
-      lead={`${preview.summary} Nothing has changed yet. This confirmation works once, until ${fmtTime.format(
-        new Date(change.expiresAt),
-      )}. The change is recorded in the audit log under your account.`}
-      body={[`Who: ${who}`, `Now: ${label(preview.from)}`, `After: ${label(preview.to)}`]}
-      action={change.label}
-      perform={perform}
-      onClose={(performed) => (performed ? onDone() : onCancel())}
-    />
+    <>
+      <link rel="stylesheet" href={confirmDialogCss} precedence="default" />
+      <ConfirmDialog
+        open
+        title={`${change.label}?`}
+        lead={`${preview.summary} Nothing has changed yet. This confirmation works once, until ${fmtTime.format(
+          new Date(change.expiresAt),
+        )}. The change is recorded in the audit log under your account.`}
+        body={[`Who: ${who}`, `Now: ${label(preview.from)}`, `After: ${label(preview.to)}`]}
+        action={change.label}
+        perform={perform}
+        onClose={(performed) => (performed ? onDone() : onCancel())}
+      />
+    </>
   );
 }

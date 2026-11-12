@@ -11,6 +11,8 @@ import { routerRenderLink } from "capsomer/react/link";
 import { useLocation, useRouteLoaderData } from "react-router";
 import { avatarInitials } from "~/components/ui";
 import { THEME_PREF_KEY } from "~/lib/theme";
+// The shell's styles load only in the admin (React 19 hoists the link).
+import adminShellCss from "capsomer/admin-shell.css?url";
 import type { loader as RootLoader } from "~/root";
 
 const entry = (href: string, label: string, icon: IconName, group: string): AdminEntry => ({
@@ -54,6 +56,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       }}
       prefKey="foxing-admin-rail"
     >
+      <link rel="stylesheet" href={adminShellCss} precedence="default" />
       <div className="cap-admin-page">{children}</div>
     </CapsomerAdminShell>
   );
