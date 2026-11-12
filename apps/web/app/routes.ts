@@ -1,5 +1,4 @@
 import { type RouteConfig, index, prefix, route } from "@react-router/dev/routes";
-import { INDEXNOW_KEY } from "./lib/indexnow";
 
 export default [
   index("routes/marketing.tsx"),
@@ -108,12 +107,7 @@ export default [
   route("og/book/:slug", "routes/og-book.tsx"),
   route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
-  route("robots.txt", "routes/robots.tsx"),
-  route("site.webmanifest", "routes/site-webmanifest.tsx"),
-  route("ai.txt", "routes/ai-txt.tsx"),
   route("llms.txt", "routes/llms.tsx"),
-  route(`${INDEXNOW_KEY}.txt`, "routes/indexnow-key.tsx"),
-  route(".well-known/security.txt", "routes/security-txt.tsx"),
 
   // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).
   route("health", "routes/health.ts"),
