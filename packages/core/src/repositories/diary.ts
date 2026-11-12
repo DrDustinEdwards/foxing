@@ -4,7 +4,7 @@
 // emission + authorization live in domain/diary.ts.
 import { and, desc, eq, inArray, isNotNull } from "drizzle-orm";
 import { type Db, inList } from "../db";
-import { uniqueSlug } from "../domain/slug";
+import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
 import { books, diaryEntries } from "../schema";
 
 export type DiaryEntry = typeof diaryEntries.$inferSelect;
@@ -32,7 +32,7 @@ export async function createEntry(
       review: input.review ?? null,
       containsSpoilers: input.containsSpoilers ?? false,
       visibility: input.visibility ?? "private",
-      slug: uniqueSlug(input.bookTitle, "entry"),
+      slug: await uniqueSlug(input.bookTitle, { fallback: "entry" }),
     })
     .returning();
   return row;

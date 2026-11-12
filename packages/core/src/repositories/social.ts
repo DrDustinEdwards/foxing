@@ -6,7 +6,7 @@
 import { inList, olderThan } from "@dustinedwards/site-runtime/d1";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import type { Db } from "../db";
-import { uniqueSlug } from "../domain/slug";
+import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
 import {
   activityEvents,
   books,
@@ -133,7 +133,7 @@ export async function createList(
     .values({
       userId,
       title: input.title,
-      slug: uniqueSlug(input.title, "list"),
+      slug: await uniqueSlug(input.title, { fallback: "list" }),
       description: input.description ?? null,
       coverUrl: input.coverUrl ?? null,
       isPublic: input.isPublic ?? false,
