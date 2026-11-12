@@ -94,7 +94,7 @@ type Post = Route.ComponentProps["loaderData"]["result"]["posts"][number];
 function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
     <Link to={`/journal/${post.slug}`}>
-      <article className="cap-card fx-journal-card">
+      <div className="cap-card fx-journal-card">
         {cover ? (
           <div className="fx-journal-box">
             <Picture
@@ -117,7 +117,7 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
           {post.excerpt ? <p className="mt-3 fx-journal-text-2">{post.excerpt}</p> : null}
           <PostMeta post={post} />
         </div>
-      </article>
+      </div>
     </Link>
   );
 }
@@ -125,7 +125,7 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
 function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
     <Link to={`/journal/${post.slug}`}>
-      <article className="cap-card fx-journal-card-2">
+      <div className="cap-card fx-journal-card-2">
         {cover ? (
           <Picture
             picture={pictureProps(
@@ -141,7 +141,7 @@ function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
         <h3 className="fx-journal-title-2">{post.title}</h3>
         {post.excerpt ? <p className="mt-2 fx-journal-text-3">{post.excerpt}</p> : null}
         <PostMeta post={post} />
-      </article>
+      </div>
     </Link>
   );
 }
