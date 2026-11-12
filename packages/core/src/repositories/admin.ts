@@ -11,7 +11,7 @@ import { and, desc, eq, or, sql, type SQL } from "drizzle-orm";
 import { likeContains } from "@dustinedwards/site-runtime/d1";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
 import type { Db } from "../db";
-import { type AdminSettings, isAdminAccount } from "../domain/admins";
+import { type AdminSettings, isAdminEmail } from "@dustinedwards/site-runtime/access";
 import {
   adminAuditLog,
   annotations,
@@ -131,7 +131,7 @@ export type AdminUserRow = {
   createdAt: Date;
 };
 
-/** `isAdmin` is the admin list's answer (isAdminAccount: the email on ADMIN_EMAIL and CO_OWNER_EMAILS in `admins`). */
+/** `isAdmin` is the admin list's answer (isAdminEmail: the email on ADMIN_EMAIL and CO_OWNER_EMAILS in `admins`). */
 export async function listUsers(
   db: Db,
   opts: { q?: string; limit?: number; offset?: number; admins: AdminSettings },
@@ -158,7 +158,7 @@ export async function listUsers(
     .offset(opts.offset ?? 0);
   return rows.map(({ email, ...row }) => ({
     ...row,
-    isAdmin: isAdminAccount(opts.admins, email ?? ""),
+    isAdmin: isAdminEmail(opts.admins, email ?? ""),
   }));
 }
 
@@ -197,7 +197,7 @@ export async function getUserDetail(db: Db, id: string, admins: AdminSettings) {
   return {
     ...row,
     email,
-    isAdmin: isAdminAccount(admins, email ?? ""),
+    isAdmin: isAdminEmail(admins, email ?? ""),
     lastActiveAt: lastSession?.createdAt ?? null,
   };
 }

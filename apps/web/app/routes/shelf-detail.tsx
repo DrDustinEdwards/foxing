@@ -6,7 +6,8 @@ import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/shelf-detail";
 

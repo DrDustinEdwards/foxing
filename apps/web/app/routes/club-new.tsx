@@ -5,7 +5,8 @@ import { useCreateClub } from "@foxing/client";
 import { redirect, useNavigate } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
 

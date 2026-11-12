@@ -9,6 +9,7 @@
 // trigrams to surface the intended book.
 import { sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
+import { clampPageSize } from "./page-size";
 import type { Db } from "../../db";
 import { type BookCard, getBooksByIds } from "./books";
 import { resolveEra, resolveLength } from "./facets";
@@ -128,7 +129,7 @@ export async function searchCatalog(
   opts: { page?: number; pageSize?: number } & SearchFilters = {},
 ): Promise<SearchResult> {
   const page = Math.max(1, opts.page ?? 1);
-  const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 24));
+  const pageSize = clampPageSize(opts.pageSize, 48, 24);
   const empty: SearchResult = { books: [], total: 0, fuzzy: false, page, pageSize, pageCount: 1 };
 
   const q = sanitize(rawQuery);

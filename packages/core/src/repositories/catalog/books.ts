@@ -5,6 +5,7 @@ import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { pageEnvelope } from "capsomer/behavior/pagination";
 import { inList } from "@dustinedwards/site-runtime/d1";
+import { clampPageSize } from "./page-size";
 import { chunked, type Db } from "../../db";
 import { bookAwards, books, userBooks } from "../../schema";
 import { resolveEra, resolveLength } from "./facets";
@@ -103,7 +104,7 @@ function browseConditions(params: BrowseParams) {
 
 /** Browse with filters + offset pagination (page numbers are crawlable for SEO). */
 export async function listBooks(db: Db, params: BrowseParams = {}): Promise<BrowseResult> {
-  const pageSize = Math.min(60, Math.max(1, params.pageSize ?? 24));
+  const pageSize = clampPageSize(params.pageSize, 60, 24);
   const where = browseConditions(params);
 
   const order =

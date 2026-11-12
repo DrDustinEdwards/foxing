@@ -81,9 +81,6 @@ export function buildMeta({ pathname, ...page }: MetaInput): MetaDescriptor[] {
   return head({ ...page, path: pathname });
 }
 
-/** Wrap a JSON-LD object as a meta descriptor React Router serializes into the head. */
-export { jsonLd as ldJson } from "@drdustinedwards/site-helpers/schema";
-
 const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 
 /** Foxing itself, on the home page, where Google reads an Organization's name and logo

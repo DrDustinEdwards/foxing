@@ -5,20 +5,17 @@ import { PageShell } from "~/components/page-shell";
 import { Picture } from "capsomer/react/picture";
 import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
 import { pictureProps } from "@dustinedwards/site-runtime/image";
+import { formatLongDate } from "~/lib/dates";
 import { renderJournalBody } from "~/lib/journal-body.server";
 import { journalArticleImages, journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { articleLd, buildMeta, journalSeriesPath, ldJson } from "~/lib/seo";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { articleLd, buildMeta, journalSeriesPath } from "~/lib/seo";
 import { SeriesNav } from "capsomer/react/series-nav";
 // The series nav and the signs it uses load only on a post in a series (React 19 hoists the link).
 import seriesCss from "~/styles/journal-series.css?url";
 import type { Route } from "./+types/journal-post";
 import { markup } from "capsomer/behavior/trusted-html";
-
-function fmtDate(d: Date | null): string | null {
-  if (!d) return null;
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-}
 
 // The series nav's parts: the live posts of the series in reading order. A Carrel preview of a part
 // not yet live joins at its part number, so the preview shows the nav the post will have.
@@ -129,7 +126,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
           { name: "robots", content: "noindex" },
         ]
       : meta),
-    ldJson(
+    jsonLd(
       articleLd({
         slug: post.slug,
         title: post.title,
@@ -146,7 +143,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
 
 export default function JournalPost({ loaderData }: Route.ComponentProps) {
   const { post, html, cover, author, series } = loaderData;
-  const published = fmtDate(post.publishedAt);
+  const published = formatLongDate(post.publishedAt);
 
   return (
     <PageShell>

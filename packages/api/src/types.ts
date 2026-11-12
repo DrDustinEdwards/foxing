@@ -31,7 +31,7 @@ export type Bindings = {
   ADMIN_OPERATOR_TOKEN?: string;
   // Better Auth's secret; the admin confirmation key is derived from it (admin-confirm.ts).
   BETTER_AUTH_SECRET?: string;
-  // Who is an admin (core isAdminAccount): the main admin and the comma-separated co-owners.
+  // Who is an admin (site-runtime isAdminEmail): the main admin and the comma-separated co-owners.
   // ADMIN_EMAIL unset: nobody.
   ADMIN_EMAIL?: string;
   CO_OWNER_EMAILS?: string;

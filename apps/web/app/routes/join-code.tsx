@@ -7,7 +7,8 @@ import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { clubsRepo, createDb } from "@foxing/core";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {

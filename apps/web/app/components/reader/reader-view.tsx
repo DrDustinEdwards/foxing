@@ -18,7 +18,7 @@ import type { ReaderAnnotations } from "@foxing/types";
 import { readStored } from "capsomer/behavior/hooks";
 import { useRemembered } from "capsomer/react/hooks";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import type { HighlightColor } from "@foxing/core";
+import { annotationPct, type HighlightColor } from "@foxing/core";
 import type {
   CreateEngineOptions,
   DecorationRect,
@@ -26,7 +26,7 @@ import type {
   SelectionPayload,
   TocEntry,
 } from "~/lib/reader/engine.client";
-import { enrichSelectionLocator, progressPctFromLocator, type Locator } from "~/lib/reader/locator";
+import { enrichSelectionLocator, type Locator } from "~/lib/reader/locator";
 import { READING_CANVAS, type ReaderSettings, type ReaderTheme } from "~/lib/reader/settings";
 import {
   LAYERS_KEY,
@@ -98,7 +98,7 @@ export function ReaderView(props: ReaderViewProps) {
   const [attribution, setAttribution] = useState<ReaderOther | null>(null);
   const [attributionAnchor, setAttributionAnchor] = useState<DecorationRect | null>(null);
   const [toc, setToc] = useState<TocEntry[]>([]);
-  const [pct, setPct] = useState(progressPctFromLocator(initialLocator));
+  const [pct, setPct] = useState(annotationPct(initialLocator) ?? 0);
   const [chapter, setChapter] = useState("");
   const [panel, setPanel] = useState<"toc" | "type" | null>(null);
   const [selection, setSelection] = useState<SelectionPayload | null>(null);
@@ -207,7 +207,7 @@ export function ReaderView(props: ReaderViewProps) {
         saveFire({
           bookId: book.id,
           locator: loc,
-          progressPct: progressPctFromLocator(loc),
+          progressPct: annotationPct(loc) ?? 0,
         });
       }, PROGRESS_DEBOUNCE);
     },
@@ -242,7 +242,7 @@ export function ReaderView(props: ReaderViewProps) {
                 "data-position",
                 `${loc.href}@${String(loc.locations?.progression ?? 0)}`,
               );
-              setPct(progressPctFromLocator(loc));
+              setPct(annotationPct(loc) ?? 0);
               if (typeof loc.title === "string") setChapter(loc.title);
               setSelection(null);
               // Turning the page moves away from the anchored passage, so close its

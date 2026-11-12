@@ -10,7 +10,8 @@ import {
 import { Link } from "capsomer/react/link";
 import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/sign-in-confirm";
 

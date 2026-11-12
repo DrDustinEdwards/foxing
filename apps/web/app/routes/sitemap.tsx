@@ -1,5 +1,5 @@
 import { kvPageRecord } from "@drdustinedwards/site-helpers/lastmod";
-import { type SitemapEntry, sitemapDocument } from "@drdustinedwards/site-helpers/sitemap";
+import { type SitemapEntry, sitemapResponse } from "@drdustinedwards/site-helpers/sitemap";
 import { catalogRepo, views } from "@foxing/core";
 import { submitIndexNowIfChanged } from "@drdustinedwards/site-helpers/indexnow";
 import { INDEXNOW_KEY } from "~/lib/indexnow";
@@ -51,7 +51,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     return urls.length > 0 ? { images: urls } : {};
   };
 
-  // Paths here; Prelum's sitemapDocument takes absolute URLs, made below.
+  // Paths here; Prelum's sitemapResponse takes absolute URLs, made below.
   const urls: SitemapEntry[] = [
     { loc: "/", ...hub("/"), priority: 1, ...covers([homePick?.book, ...homeBooks.books]) },
     { loc: "/books", ...hub("/books"), priority: 0.9, ...covers(browse.books) },
@@ -103,15 +103,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   );
 
   // Expanded: the compact layout writes no <priority>.
-  const body = sitemapDocument(
+  return sitemapResponse(
     urls.map((u) => ({ ...u, loc: absoluteUrl(u.loc) })),
-    { layout: "expanded" },
+    { layout: "expanded", headers: catalogPageHeaders() },
   );
-
-  return new Response(body, {
-    headers: {
-      "Content-Type": "application/xml; charset=utf-8",
-      ...catalogPageHeaders(),
-    },
-  });
 }

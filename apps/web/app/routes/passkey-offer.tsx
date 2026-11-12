@@ -10,7 +10,8 @@ import { Form, redirect } from "react-router";
 import { AuthShell } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import { authClient, signInAgainIfStale } from "~/lib/auth-client";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
 
 export function meta() {

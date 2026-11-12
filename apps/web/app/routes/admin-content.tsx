@@ -4,6 +4,7 @@
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
+import { dateTimeFormat } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
@@ -27,8 +28,6 @@ export function meta() {
 }
 
 const PLACEMENTS = ["banner", "home", "journal"] as const;
-
-const fmt = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 // It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
@@ -194,7 +193,7 @@ function AnnouncementRow({
             )}
           </p>
           <p className="truncate fx-admin-content-text">
-            {row.placement} · {fmt.format(row.createdAt)}
+            {row.placement} · {dateTimeFormat.format(row.createdAt)}
           </p>
         </div>
         <div className="cap-cluster shrink-0" data-gap="3">

@@ -5,7 +5,8 @@ import { Link } from "capsomer/react/link";
 import { createDb, profilesRepo, views } from "@foxing/core";
 import { CoverImage } from "~/components/cover-image";
 import { cloudflareContext } from "~/context";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/onboarding";
 
 export function meta() {
