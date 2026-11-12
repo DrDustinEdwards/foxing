@@ -61,10 +61,9 @@ function carrelSiteApi(env: Env, sourceIp: string | null, kit?: StepKit): SiteAp
 }
 
 /** The gateway step for /api/carrel/v1 and the preview links; an accepted write purges the stored pages. */
-export const carrelStep: GatewayStep<Env> = (request, env, ctx, kit) =>
-  siteApiStep<Env>((e, stepKit) =>
-    carrelSiteApi(e, request.headers.get("cf-connecting-ip"), stepKit),
-  )(request, env, ctx, kit);
+export const carrelStep: GatewayStep<Env> = siteApiStep<Env>((env, kit, request) =>
+  carrelSiteApi(env, request.headers.get("cf-connecting-ip"), kit),
+);
 
 /**
  * The per-minute cron's job (workers/app.ts): every scheduled post and update whose time has come goes live, with the
