@@ -12,14 +12,16 @@ import { runConformance } from "@dustinedwards/site-api/conformance";
 import { d1SiteApiStore } from "@dustinedwards/site-api/store";
 import { adminRepo, catalogRepo, createDb, schema } from "@foxing/core";
 import { Hono } from "hono";
-import { createRequestHandler, type ServerBuild } from "react-router";
+import { createRequestHandler, RouterContextProvider, type ServerBuild } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sessionUserFromRequest } from "../app/lib/auth.server";
 import { journalSiteAdapter } from "../app/lib/carrel/journal-adapter.server";
-import { mountCarrel } from "../app/lib/carrel/site-api.server";
+import { carrelKeyOffPrefix, carrelStep } from "../app/lib/carrel/site-api.server";
+import { cloudflareContext, cspNonceContext } from "../app/context";
 import { testApi } from "./test-api";
 
-// Carrel's site API on the Worker, composed as workers/app.ts composes it: mountCarrel first, with
+// Carrel's site API on the Worker, composed as workers/app.ts composes it: the off-prefix refusal and the site API's
+// step first, with
 // site-api's D1 store (so the conformance suite's replay checks run), then /api/v1 with the real
 // Better Auth session resolver, then a stand-in for the React Router catch-all. The planted tests
 // (PLANT:) each send a request a guard must refuse and check that nothing in D1 changed.
@@ -51,9 +53,8 @@ const renderDocument = createRequestHandler(
   "test",
 );
 
-function worker(): Hono<{ Bindings: Env }> {
+function worker() {
   const app = new Hono<{ Bindings: Env }>();
-  mountCarrel(app, (request, context) => renderDocument(request, context));
   app.route(
     "/api/v1",
     testApi({
@@ -61,7 +62,30 @@ function worker(): Hono<{ Bindings: Env }> {
     }),
   );
   app.all("*", (c) => c.text("page", 200));
-  return app;
+  // The gateway's kit as site-runtime ./worker hands it to a step: its render sets the request context as the shared
+  // one does, then the step's own keys.
+  return {
+    async fetch(request: Request, e: Env, ctx: ExecutionContext): Promise<Response> {
+      const kit = {
+        url: new URL(request.url),
+        render: (r: Request, extra?: { set?: (context: RouterContextProvider) => void }) => {
+          const context = new RouterContextProvider();
+          context.set(cloudflareContext, { env: e, ctx });
+          context.set(cspNonceContext, null);
+          extra?.set?.(context);
+          return renderDocument(r, context);
+        },
+        stylesheets: async () => [],
+        purgeAfterWrite() {},
+        secure: (response: Response) => response,
+      };
+      for (const step of [carrelKeyOffPrefix, carrelStep]) {
+        const answer = await step(request, e, ctx, kit);
+        if (answer) return answer;
+      }
+      return app.fetch(request, e, ctx);
+    },
+  };
 }
 
 const app = worker();

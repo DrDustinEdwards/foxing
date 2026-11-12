@@ -1,5 +1,7 @@
-// The Worker is site-runtime's shared one (./worker). Foxing's Hono app is its one step, and answers:
-//   /api/carrel/v1/* -> Carrel's site API over the Journal (app/lib/carrel), and its /preview/<token> links
+// The Worker is site-runtime's shared one (./worker). Its steps, in order:
+//   any path but /api/carrel/v1 presenting the Carrel key -> refused (app/lib/carrel/site-api.server.ts)
+//   /api/carrel/v1/* -> Carrel's site API over the Journal (site-api's siteApiStep), and its /preview/<token> links
+// then Foxing's Hono app, which answers:
 //   /api/auth/*  -> Better Auth
 //   /api/v1/*    -> mounted @foxing/api (thin routes -> core -> D1)
 //   /reader-assets/*, /media/* -> the reader's book files and every picture
@@ -9,6 +11,7 @@ import { WorkerEntrypoint } from "cloudflare:workers";
 import { kvPageRecord, trackPageDates } from "@drdustinedwards/site-helpers/lastmod";
 import { markdownPath } from "@drdustinedwards/site-helpers/llms";
 import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
+import { standardFiles } from "@drdustinedwards/site-helpers/files";
 import { d1SiteApiStore, tombstoned } from "@dustinedwards/site-api/store";
 import {
   ACCESS_LOGOUT_PATH,
@@ -35,18 +38,24 @@ import {
 import { createApi } from "@foxing/api";
 import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
-import { type ServerBuild, createRequestHandler } from "react-router";
+import type { ServerBuild } from "react-router";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { images } from "../app/lib/images";
-import { SITE_ORIGIN } from "../app/lib/origins";
+import { HELLO_EMAIL, SITE_ORIGIN } from "../app/lib/origins";
 import {
   deleteUserAccount,
   getAuth,
   isFreshSession,
   sessionUserFromRequest,
 } from "../app/lib/auth.server";
-import { mountCarrel, runCarrelSchedules } from "../app/lib/carrel/site-api.server";
+import {
+  carrelKeyOffPrefix,
+  carrelStep,
+  runCarrelSchedules,
+} from "../app/lib/carrel/site-api.server";
+import { INDEXNOW_KEY } from "../app/lib/indexnow";
+import { ROBOTS_DISALLOW, SITE_NAME } from "../app/lib/seo";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { operatorTools } from "../app/lib/operator.server";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
@@ -62,7 +71,6 @@ import { withSecurityHeaders } from "./security-headers";
 const PUBLIC_EXACT = new Set([
   "/",
   "/sitemap.xml",
-  "/robots.txt",
   "/privacy",
   "/terms",
   "/accessibility",
@@ -133,9 +141,6 @@ function suggestKeyFor(url: URL): Request {
 }
 
 const serverBuild = () => import("virtual:react-router/server-build") as Promise<ServerBuild>;
-// A Carrel preview draws the journal route in-process with its own context (app/lib/carrel/site-api.server.ts),
-// never through the Renderer, whose answers the edge stores.
-const reactRouterHandler = createRequestHandler(serverBuild, import.meta.env.MODE);
 
 const api = createApi({
   resolveSession: (req, env) => sessionUserFromRequest(req, env as unknown as Env),
@@ -193,10 +198,6 @@ const PASS = "x-foxing-pass";
 app.notFound(() => new Response(null, { status: 404, headers: { [PASS]: "1" } }));
 const plainNotFound = () => new Response("Not found", { status: 404 });
 
-// Carrel's site API at /api/carrel/v1, mounted first: its off-prefix refusal must run before
-// every other route, so the Carrel key is refused on auth, /api/v1 and page routes alike.
-mountCarrel(app, (request, context) => reactRouterHandler(request, context));
-
 // Better Auth: sign-in, sessions, passkeys. Its own limiter holds sign-in to a few tries a
 // minute per address, counted in D1 (site-runtime ./sign-in). Its answers carry sessions and
 // passkey challenges, so no browser or proxy keeps one (checklist D10): site-runtime authHandler.
@@ -206,7 +207,7 @@ app.on(["GET", "POST"], "/api/auth/*", async (c) => authHandler(await getAuth(c.
 // own Origin check, so a browser write from another origin is refused here. An absent Origin
 // passes: the mobile app's fetch, the admin MCP's bearer calls and Stripe's webhook send none.
 // Better Auth (/api/auth) checks origins against its trustedOrigins itself, and Carrel's site
-// API is a bearer-key server call, so neither comes through this.
+// API is a bearer-key server call (its own step, before this app), so neither comes through this.
 app.use("/api/v1/*", async (c, next) => refuseCrossSite(c.req.raw) ?? next());
 
 // Search-as-you-type answers do not depend on the viewer (public books, profiles and
@@ -329,10 +330,10 @@ app.get("/media/*", (c) =>
   }),
 );
 
-// The writes that can change a stored page: Carrel's (the Journal and its pictures) and the admin API's (catalog,
+// The writes that can change a stored page beside Carrel's (siteApiStep purges after those): the admin API's (catalog,
 // picks, awards, book of the month), the admin MCP's included. Each accepted one purges every stored page; a failed
 // purge is a log line and a page stale until it expires.
-const PAGE_WRITERS = ["/api/carrel/v1", "/api/v1/admin"];
+const PAGE_WRITERS = ["/api/v1/admin"];
 
 /** The Hono app as the Worker's step: its answer, or undefined for a path it has no route for. */
 const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {
@@ -574,10 +575,11 @@ async function adminList(request: Request, env: Env): Promise<Response> {
 }
 
 /**
- * The site's Worker (site-runtime ./worker). What is Foxing's own: the Hono app as its one step (the APIs, Carrel, the
- * reader's files and the pictures), the public catalog paths the Renderer stores, its prefetch exclusions, Carrel's
- * tombstones on a page 404, the Markdown copies, the admin list and the API-aware idle sign-out (inside `wrap`, so it
- * runs before the copies, as before), and the cron's job lists.
+ * The site's Worker (site-runtime ./worker). What is Foxing's own: its machine files, the Carrel key's off-prefix
+ * refusal, Carrel's site API and the Hono app as its steps (the APIs, the reader's files and the pictures), the public
+ * catalog paths the Renderer stores, its prefetch exclusions, Carrel's tombstones on a page 404, the Markdown copies,
+ * the admin list and the API-aware idle sign-out (inside `wrap`, so it runs before the copies, as before), and the
+ * cron's job lists.
  */
 const site = defineSite<Env>({
   name: "Foxing",
@@ -586,9 +588,18 @@ const site = defineSite<Env>({
   withSecurityHeaders,
   // One hop to the canonical address: https, the bare host, no trailing slash (/books/ to /books).
   canonical: { host: "foxing.app" },
+  // Prelum's standardFiles: robots.txt and ai.txt (the family's bot and AI usage policies; a workers.dev preview is told
+  // `Disallow: /`), site.webmanifest and the IndexNow key file. /.well-known/security.txt is the gateway's own.
+  files: standardFiles({
+    origin: SITE_ORIGIN,
+    disallow: ROBOTS_DISALLOW,
+    indexNowKey: INDEXNOW_KEY,
+    ai: { name: "Foxing", contact: HELLO_EMAIL },
+    manifest: { name: SITE_NAME, themeColor: "#B04A1C", backgroundColor: "#FAF6EE" },
+  }),
   speculationExclude: PREFETCH_EXCLUDE,
   operator: (env) => operatorTools(env, () => cronJobs(env)),
-  steps: [hono],
+  steps: [carrelKeyOffPrefix, carrelStep, hono],
   cacheable: (_request, url) => isPublicPath(url.pathname),
   preloads: [...FONT_PRELOADS],
   // A Journal post Carrel deleted or trashed answers 410, not 404 (site-api tombstones, gone_paths); an API's 404 is

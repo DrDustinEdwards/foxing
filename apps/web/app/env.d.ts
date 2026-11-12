@@ -1,13 +1,12 @@
 // Secrets are set via `wrangler secret put`; they are not in wrangler.jsonc, so
 // `wrangler types` does not include them. Augment the generated global Env.
-interface Env {
-  // "1" or "true" puts the site in maintenance: every path but /health answers the 503 page (site-runtime
-  // ./maintenance). A dashboard var.
-  MAINTENANCE?: string;
+// The secrets every site shares are site-runtime's SiteSecrets (./worker): MAINTENANCE, the admin list (ADMIN_EMAIL,
+// CO_OWNER_EMAILS), Cloudflare Access (ACCESS_TEAM_DOMAIN, ACCESS_AUD, ACCESS_DEV_BYPASS), ADMIN_IDLE_SECRET,
+// OPERATOR_TOKEN, CARREL_SITE_KEY, ANTHROPIC_API_KEY and Turnstile's two keys. Below are only Foxing's own.
+type SiteSecrets = import("@dustinedwards/site-runtime/worker").SiteSecrets;
+
+interface Env extends SiteSecrets {
   BETTER_AUTH_SECRET: string;
-  // Turnstile on the email link (site-runtime ./sign-in): on only when both are set.
-  TURNSTILE_SITE_KEY?: string;
-  TURNSTILE_SECRET_KEY?: string;
   // Google and Apple sign-in (site-runtime ./sign-in). Each button shows only when its
   // settings are all set. APPLE_CLIENT_ID is the Services ID; APPLE_PRIVATE_KEY the .p8 text.
   GOOGLE_CLIENT_ID?: string;
@@ -16,38 +15,15 @@ interface Env {
   APPLE_TEAM_ID?: string;
   APPLE_KEY_ID?: string;
   APPLE_PRIVATE_KEY?: string;
-  // Not yet set (Phase 4a precheck, 2026-07-10): companion routes fall back to a
-  // caller that errors cleanly until `wrangler secret put ANTHROPIC_API_KEY` runs.
-  ANTHROPIC_API_KEY?: string;
   // Not yet set (Phase 4b gate): billing routes use the not-configured stub (503) until
   // all four are set as Worker secrets.
   STRIPE_SECRET_KEY?: string;
   STRIPE_WEBHOOK_SECRET?: string;
   STRIPE_PRICE_MONTHLY?: string;
   STRIPE_PRICE_ANNUAL?: string;
-  // Carrel's site API key (app/lib/carrel/site-api.server.ts). Unset or under 32 characters,
-  // /api/carrel/v1 refuses every request with 503 not-configured.
-  CARREL_SITE_KEY?: string;
-  // Keys site-runtime's admin idle cookie (withAdminIdle `secret`). Minted by the deploy (devkit worker-deploy `generated-secrets`), never shown; unset, the admin paths fail (site-runtime 0.82 requires it).
-  ADMIN_IDLE_SECRET: string;
-  // Capsid's bearer for /api/operator (site-runtime ./operator): its backups. Unset or short: the route answers 503.
-  OPERATOR_TOKEN?: string;
   // Operator bearer for /api/v1/admin/* (the admin MCP Worker). Unset: every bearer
   // request to the admin API is refused.
   ADMIN_OPERATOR_TOKEN?: string;
-  // Who is an admin (site-runtime isAdminEmail), checked in code as
-  // well as by Access: ADMIN_EMAIL is the main admin, CO_OWNER_EMAILS the co-owners (comma-separated,
-  // compared lower case). Secrets. ADMIN_EMAIL unset: nobody is an admin.
-  ADMIN_EMAIL?: string;
-  CO_OWNER_EMAILS?: string;
-  // Cloudflare Access in front of the admin pages and API (site-runtime ./access accessAdmin): the
-  // team domain (https://<team>.cloudflareaccess.com) and the Access application's AUD tag.
-  // Either unset: no browser reaches them (fails closed).
-  ACCESS_TEAM_DOMAIN?: string;
-  ACCESS_AUD?: string;
-  // "1" in .dev.vars only: lets localhost into the admin pages, since no Access sits in
-  // front of `npm run dev:web`. Ignored on any other host.
-  ACCESS_DEV_BYPASS?: string;
 }
 
 // The React Router vite plugin supplies this virtual module at build time.
