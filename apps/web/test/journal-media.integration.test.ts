@@ -119,8 +119,8 @@ const db = () => createDb(env.DB);
 const enc = encodeURIComponent;
 
 beforeEach(async () => {
-  await db().delete(schema.journalMedia);
-  await db().delete(schema.journalMediaRevisions);
+  await db().delete(schema.media);
+  await db().delete(schema.mediaRevisions);
   await db().delete(schema.journalPosts);
   await db().delete(schema.adminAuditLog);
 });
@@ -202,7 +202,7 @@ describe("Journal media: upload, serve, use and delete", () => {
     const res = await carrel("POST", `/media?${query}`, png("twice"));
     expect(res.status).toBe(200);
     expect(await read(res)).toMatchObject({ id: item.id, duplicateOf: item.id });
-    expect(await db().select().from(schema.journalMedia)).toHaveLength(1);
+    expect(await db().select().from(schema.media)).toHaveLength(1);
   });
 });
 

@@ -76,8 +76,8 @@ export const BACKUP_REQUIRED_TABLES = [
   "journal_posts",
   "journal_post_versions",
   "journal_slug_redirects",
-  "journal_media",
-  "journal_media_revisions",
+  "media",
+  "media_revisions",
   "announcements",
   "billing_events",
   "admin_audit_log",
@@ -96,6 +96,6 @@ export const BACKUP_COUNTED_TABLES = [
   "external_book_club_picks",
   "journal_posts",
   "journal_slug_redirects",
-  "journal_media",
+  "media",
   "announcements",
 ] as const;
