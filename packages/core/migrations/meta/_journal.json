@@ -162,6 +162,13 @@
       "when": 1794022427980,
       "tag": "0022_companion_usage",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1794456935373,
+      "tag": "0023_shared_media_store",
+      "breakpoints": true
     }
   ]
 }
