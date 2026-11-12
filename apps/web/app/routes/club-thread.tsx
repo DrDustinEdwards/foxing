@@ -10,24 +10,18 @@ import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect(`/login?next=/clubs/${params.slug}`);
-  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  const page = await views.threadPage(
-    createDb(env.DB),
-    params.threadId,
-    session.user.id,
-    params.slug,
-  );
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect(`/login?next=/clubs/${params.slug}`);
+  await requireProfileForUser(env, user);
+  const page = await views.threadPage(createDb(env.DB), params.threadId, user.id, params.slug);
   if (!page) throw new Response("Not found", { status: 404 });
-  return { page, viewerId: session.user.id };
+  return { page, viewerId: user.id };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -65,9 +59,9 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
             <li className="meta">No posts yet. Start the conversation.</li>
           ) : (
             posts.map((p) => (
-              <li key={p.id} className="card">
+              <li key={p.id} className="cap-card">
                 <p className="fx-club-thread-text">{p.content}</p>
-                <p className="mt-2 fx-club-thread-caps">
+                <p className="fx-club-thread-caps">
                   {p.author?.id === viewerId ? "You" : "Member"} ·{" "}
                   <Time at={p.createdAt} format="exact" />
                 </p>

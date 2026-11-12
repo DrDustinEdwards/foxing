@@ -50,7 +50,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="text-center fx-admin-user-detail-card">
+    <div className="text-center cap-card fx-admin-user-detail-card">
       <p className="display-2">{value}</p>
       <p className="fx-admin-user-detail-caps-2">{label}</p>
     </div>

@@ -7,6 +7,7 @@
 // at the app layer (deferred-items.md): on zero strict matches we re-query with the
 // term's trigrams OR'd and rank by bm25, so a wrong letter still overlaps enough
 // trigrams to surface the intended book.
+import { ftsLiteral } from "@drdustinedwards/site-helpers/search";
 import { sql } from "drizzle-orm";
 import type { SQL } from "drizzle-orm";
 import { clampPageSize } from "./page-size";
@@ -65,11 +66,11 @@ function tokens(q: string): string[] {
   return q.split(" ").filter(Boolean);
 }
 
-/** Strict MATCH: quoted tokens (>=3 chars) ANDed. Quoting neutralizes FTS keywords. */
+/** Strict MATCH: tokens (>=3 chars) as FTS literals, ANDed. Quoting neutralizes FTS keywords. */
 export function strictExpr(q: string): string | null {
   const usable = tokens(q).filter((t) => t.length >= 3);
   if (usable.length === 0) return null;
-  return usable.map((t) => `"${t}"`).join(" AND ");
+  return usable.map(ftsLiteral).join(" AND ");
 }
 
 /** Overlapping trigrams of every usable token, OR'd. Powers the typo fallback. */
@@ -79,7 +80,7 @@ export function fuzzyExpr(q: string): string | null {
     for (let i = 0; i + 3 <= t.length; i++) grams.add(t.slice(i, i + 3));
   }
   if (grams.size === 0) return null;
-  return [...grams].map((g) => `"${g}"`).join(" OR ");
+  return [...grams].map(ftsLiteral).join(" OR ");
 }
 
 async function runMatch(

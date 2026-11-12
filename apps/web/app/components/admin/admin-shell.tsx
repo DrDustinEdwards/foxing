@@ -1,49 +1,64 @@
-// Admin chrome: the site PageShell plus an operator sidebar. Every admin page renders
-// inside <AdminShell current="...">. Sections match the launch-critical set; cut legacy
-// sections (author-claims, giveaways, bookstores, 404s, mcp) are intentionally absent.
-import { NavLink } from "capsomer/react/link";
-import { PageShell } from "~/components/page-shell";
-import { Container } from "~/components/ui";
+// Admin chrome: Capsomer's admin shell (header, app strip, section menu, top bar) with Foxing's
+// sections; every admin page renders inside <AdminShell>. Cut legacy sections (author-claims,
+// giveaways, bookstores, 404s, mcp) are intentionally absent.
+import {
+  AdminShell as CapsomerAdminShell,
+  FIRST_PAGE,
+  type AdminEntry,
+} from "capsomer/react/admin-shell";
+import { Icon, type IconName } from "capsomer/react/icons";
+import { routerRenderLink } from "capsomer/react/link";
+import { useLocation, useRouteLoaderData } from "react-router";
+import { avatarInitials } from "~/components/ui";
+import { THEME_PREF_KEY } from "~/lib/theme";
+// The shell's styles load only in the admin (React 19 hoists the link).
+import adminShellCss from "capsomer/admin-shell.css?url";
+import type { loader as RootLoader } from "~/root";
 
-const ADMIN_SECTIONS = [
-  { to: "/admin", label: "Dashboard", end: true },
-  { to: "/admin/book-of-month", label: "Book of the Month" },
-  { to: "/admin/celebrity-picks", label: "Celebrity Picks" },
-  { to: "/admin/books", label: "Books" },
-  { to: "/admin/clubs", label: "Clubs" },
-  { to: "/admin/users", label: "Users" },
-  { to: "/admin/notifications", label: "Notifications" },
-  { to: "/admin/content", label: "Content" },
-  { to: "/admin/analytics", label: "Analytics" },
-] as const;
+const entry = (href: string, label: string, icon: IconName, group: string): AdminEntry => ({
+  id: href,
+  label,
+  href,
+  group,
+  icon: <Icon name={icon} className="cap-admin-icon" />,
+});
 
-function AdminSidebar() {
-  return (
-    <nav aria-label="Admin sections" className="fx-admin-shell-nav">
-      <p className="mb-2 group-label">Admin</p>
-      <ul className="fx-admin-shell-row">
-        {ADMIN_SECTIONS.map((s) => (
-          <li key={s.to}>
-            <NavLink to={s.to} end={"end" in s ? s.end : false} className="fx-admin-nav-link">
-              {s.label}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
+const ADMIN_SECTIONS: AdminEntry[] = [
+  entry("/admin", FIRST_PAGE, "overview", "Watch"),
+  entry("/admin/analytics", "Analytics", "stats", "Watch"),
+  entry("/admin/book-of-month", "Book of the Month", "star", "Catalog"),
+  entry("/admin/celebrity-picks", "Celebrity Picks", "award", "Catalog"),
+  entry("/admin/books", "Books", "book", "Catalog"),
+  entry("/admin/content", "Content", "document", "Catalog"),
+  entry("/admin/users", "Users", "people", "Readers"),
+  entry("/admin/clubs", "Clubs", "roles", "Readers"),
+  entry("/admin/notifications", "Notifications", "bell", "Readers"),
+];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
+  const user = useRouteLoaderData<typeof RootLoader>("root")?.navUser ?? null;
+  const { pathname } = useLocation();
   return (
-    <PageShell>
-      <Container>
-        <div className="fx-admin-shell-grid">
-          <AdminSidebar />
-          <div className="min-0">{children}</div>
-        </div>
-      </Container>
-    </PageShell>
+    <CapsomerAdminShell
+      app="foxing"
+      nav={ADMIN_SECTIONS}
+      pathname={pathname}
+      documentTitle={false}
+      renderLink={routerRenderLink}
+      themePrefKey={THEME_PREF_KEY}
+      viewSite="/home"
+      account={{
+        name: user?.displayName ?? "Admin",
+        initials: avatarInitials(user?.displayName ?? "Admin"),
+        avatar: user?.avatarUrl ?? undefined,
+        role: "Admin",
+        onSignOut: () => void import("~/lib/auth-client").then((m) => m.signOutToHome()),
+      }}
+      prefKey="foxing-admin-rail"
+    >
+      <link rel="stylesheet" href={adminShellCss} precedence="default" />
+      <div className="cap-admin-page">{children}</div>
+    </CapsomerAdminShell>
   );
 }
 
@@ -58,9 +73,9 @@ export function AdminCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="fx-admin-shell-card">
+    <section className="cap-card">
       {title || action ? (
-        <div className="mb-4 cap-spread" data-gap="5" data-align="center">
+        <div className="cap-spread" data-gap="5" data-align="center">
           {title ? <h2 className="display-1">{title}</h2> : <span />}
           {action}
         </div>

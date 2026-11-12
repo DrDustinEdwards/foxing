@@ -39,15 +39,15 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Dashboard</h1>
+        <h1 className="display-3">Overview</h1>
       </div>
 
       <div className="fx-admin-grid">
         {tiles.map((t) => (
-          <div key={t.label} className="card">
+          <div key={t.label} className="cap-card">
             <p className="display-3">{t.value}</p>
-            <p className="mt-1 fx-admin-caps">{t.label}</p>
-            {t.sub ? <p className="mt-1 fx-admin-text">{t.sub}</p> : null}
+            <p className="fx-admin-caps">{t.label}</p>
+            {t.sub ? <p className="fx-admin-text">{t.sub}</p> : null}
           </div>
         ))}
       </div>

@@ -93,51 +93,55 @@ type Post = Route.ComponentProps["loaderData"]["result"]["posts"][number];
 
 function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
-    <Link to={`/journal/${post.slug}`} className="group fx-journal-card">
-      {cover ? (
-        <div className="fx-journal-box">
-          <Picture
-            picture={pictureProps(cover, {
-              alt: post.coverImageAlt ?? "",
-              priority: true,
-              className: "fx-journal-img",
-              focus: post.coverFocus,
-            })}
-          />
+    <Link to={`/journal/${post.slug}`}>
+      <article className="cap-card fx-journal-card">
+        {cover ? (
+          <div className="fx-journal-box">
+            <Picture
+              picture={pictureProps(cover, {
+                alt: post.coverImageAlt ?? "",
+                priority: true,
+                className: "fx-journal-img",
+                focus: post.coverFocus,
+              })}
+            />
+          </div>
+        ) : (
+          <div className="fx-journal-box-2" aria-hidden="true" />
+        )}
+        <div>
+          <Eyebrow>
+            {post.featured ? "Featured" : (formatLongDate(post.publishedAt) ?? "Essay")}
+          </Eyebrow>
+          <h2 className="mt-2 fx-journal-title">{post.title}</h2>
+          {post.excerpt ? <p className="mt-3 fx-journal-text-2">{post.excerpt}</p> : null}
+          <PostMeta post={post} />
         </div>
-      ) : (
-        <div className="fx-journal-box-2" aria-hidden="true" />
-      )}
-      <div>
-        <Eyebrow>
-          {post.featured ? "Featured" : (formatLongDate(post.publishedAt) ?? "Essay")}
-        </Eyebrow>
-        <h2 className="mt-2 fx-journal-title">{post.title}</h2>
-        {post.excerpt ? <p className="mt-3 fx-journal-text-2">{post.excerpt}</p> : null}
-        <PostMeta post={post} />
-      </div>
+      </article>
     </Link>
   );
 }
 
 function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
-    <Link to={`/journal/${post.slug}`} className="group fx-journal-card-2">
-      {cover ? (
-        <Picture
-          picture={pictureProps(
-            { ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" },
-            {
-              alt: post.coverImageAlt ?? "",
-              className: "mb-4 fx-journal-img-2",
-              focus: post.coverFocus,
-            },
-          )}
-        />
-      ) : null}
-      <h3 className="fx-journal-title-2">{post.title}</h3>
-      {post.excerpt ? <p className="mt-2 fx-journal-text-3">{post.excerpt}</p> : null}
-      <PostMeta post={post} />
+    <Link to={`/journal/${post.slug}`}>
+      <article className="cap-card fx-journal-card-2">
+        {cover ? (
+          <Picture
+            picture={pictureProps(
+              { ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" },
+              {
+                alt: post.coverImageAlt ?? "",
+                className: "mb-4 fx-journal-img-2",
+                focus: post.coverFocus,
+              },
+            )}
+          />
+        ) : null}
+        <h3 className="fx-journal-title-2">{post.title}</h3>
+        {post.excerpt ? <p className="mt-2 fx-journal-text-3">{post.excerpt}</p> : null}
+        <PostMeta post={post} />
+      </article>
     </Link>
   );
 }

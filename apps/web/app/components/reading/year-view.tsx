@@ -1,6 +1,7 @@
 // The Year in Reading page's body (app/routes/year.tsx), drawn the same for a reader's own year and
 // for the sample year of /demos/year: the year picker, the year's numbers, the months and genres
 // charts (Enarratio, in Capsomer's frame), the first and latest finish and the top books.
+import { formatCount } from "@drdustinedwards/site-helpers/text";
 import type { RecapBook, RecapPage } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Link } from "capsomer/react/link";
@@ -63,7 +64,7 @@ export function YearView({
             {monthly.some((n) => n > 0) ? (
               <section className="cap-stack">
                 <h2 className="display-2">Your reading months</h2>
-                <div className="card card-5">
+                <div className="cap-card">
                   <ChartFrame draw={monthsChart(monthly, year)} />
                 </div>
               </section>
@@ -72,7 +73,7 @@ export function YearView({
             {genres.length > 0 ? (
               <section className="cap-stack">
                 <h2 className="display-2">Genre spread</h2>
-                <div className="card card-5">
+                <div className="cap-card">
                   <ChartFrame draw={genresChart(genres, year)} />
                 </div>
               </section>
@@ -107,7 +108,7 @@ export function YearView({
 export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
   const stats = [
     { label: "books finished", value: recap.booksFinished },
-    { label: "words read", value: recap.totalWords ? recap.totalWords.toLocaleString() : "0" },
+    { label: "words read", value: formatCount(recap.totalWords) },
     { label: "distinct authors", value: recap.distinctAuthors },
     {
       label: "average rating",
@@ -117,9 +118,9 @@ export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
   return (
     <section className="fx-year-grid">
       {stats.map((s) => (
-        <div key={s.label} className="text-center fx-year-card">
+        <div key={s.label} className="text-center cap-card">
           <p className="display-3">{s.value}</p>
-          <p className="mt-1 fx-year-caps">{s.label}</p>
+          <p className="fx-year-caps">{s.label}</p>
         </div>
       ))}
     </section>
@@ -151,9 +152,9 @@ export function TopBooks({ books }: { books: RecapPage["recap"]["topBooks"] }) {
 // The first and latest finish of the year, a small celebratory pair of bookends.
 function Bookend({ label, book }: { label: string; book: RecapBook }) {
   return (
-    <div className="card">
+    <div className="cap-card">
       <p className="fx-year-caps">{label}</p>
-      <Link to={`/books/${book.slug}`} className="mt-1 block fx-year-link">
+      <Link to={`/books/${book.slug}`} className="block fx-year-link">
         {book.title}
       </Link>
       <p className="fx-year-text-2">{book.author}</p>

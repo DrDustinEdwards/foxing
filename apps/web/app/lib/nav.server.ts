@@ -5,8 +5,7 @@
 // rule: loaders never self-fetch the Worker's own /api/v1).
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
 import { catalogRepo, createDb, libraryRepo, profilesRepo } from "@foxing/core";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "./auth.server";
+import { sessionUserFromRequest } from "./auth.server";
 
 export interface NavUser {
   username: string;
@@ -26,18 +25,18 @@ export interface NavUser {
  *  A signed-in user with no profile row still sees the signed-out nav here; the
  *  profile-gated page loaders are what route them to /onboarding. */
 export async function getNavUser(env: Env, request: Request): Promise<NavUser | null> {
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) return null;
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) return null;
 
   const db = createDb(env.DB);
-  const profile = await profilesRepo.getProfileById(db, session.user.id);
+  const profile = await profilesRepo.getProfileById(db, user.id);
   if (!profile) return null;
 
   const year = new Date().getUTCFullYear();
   const [streak, booksThisYear, vocabularyToMaster] = await Promise.all([
-    libraryRepo.getStreak(db, session.user.id),
-    libraryRepo.countFinishedInPeriod(db, session.user.id, { periodType: "year", year }),
-    libraryRepo.countVocabularyToMaster(db, session.user.id),
+    libraryRepo.getStreak(db, user.id),
+    libraryRepo.countFinishedInPeriod(db, user.id, { periodType: "year", year }),
+    libraryRepo.countVocabularyToMaster(db, user.id),
   ]);
 
   return {
@@ -45,7 +44,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
     displayName: profile.displayName ?? profile.username,
     avatarUrl: profile.avatarUrl,
     subscriptionTier: profile.subscriptionTier === "plus" ? "plus" : "free",
-    isAdmin: isAdminEmail(env, session.user.email),
+    isAdmin: isAdminEmail(env, user.email),
     stats: {
       booksThisYear,
       dayStreak: streak?.currentStreak ?? 0,

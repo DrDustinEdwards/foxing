@@ -5,21 +5,19 @@
 // weeks heat strip nothing, since a primitive keeps its own height. The figure carries the title, the
 // finding, the drawing and, hidden, the numbers. The stats page and /year share the
 // months and genres charts.
+import { formatCount, plural } from "@drdustinedwards/site-helpers/text";
 import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
 import { barChart } from "enarratio/lite/bar";
 import type { ChartFit } from "capsomer/react/chart-frame";
 
 const SOURCE = "Your Foxing library";
-const count = (n: number, one: string, many = `${one}s`) =>
-  `${n.toLocaleString("en-US")} ${n === 1 ? one : many}`;
-const whole = (n: number) => n.toLocaleString("en-US");
 
 /** Books finished in each month of a year, as bars. */
 export function monthsChart(monthly: number[], year: number) {
   const total = monthly.reduce((a, b) => a + b, 0);
   const top = monthly.indexOf(Math.max(...monthly));
-  const alt = `${count(total, "book")} finished in ${year}, the most in ${MONTH_NAMES[top]} (${monthly[top]}).`;
+  const alt = `${plural(total, "book", undefined, { grouped: true })} finished in ${year}, the most in ${MONTH_NAMES[top]} (${monthly[top]}).`;
   const data = monthly.map((books, i) => ({ month: MONTH_ABBR[i], books }));
   return (width: number, fit: ChartFit = {}) =>
     barChart({
@@ -37,7 +35,7 @@ export function monthsChart(monthly: number[], year: number) {
       xLabel: "Month",
       yLabel: "Finished",
       yUnit: "books",
-      formatValue: whole,
+      formatValue: formatCount,
       source: SOURCE,
     });
 }
@@ -45,7 +43,7 @@ export function monthsChart(monthly: number[], year: number) {
 /** The year's most-read subjects, as horizontal bars. */
 export function genresChart(genres: Array<{ name: string; value: number }>, year: number) {
   const [top] = genres;
-  const alt = `${top.name} led ${year} with ${count(top.value, "book")}, of the ${genres.length} most-read genres.`;
+  const alt = `${top.name} led ${year} with ${plural(top.value, "book", undefined, { grouped: true })}, of the ${genres.length} most-read genres.`;
   const data = genres.map((g) => ({ genre: g.name, books: g.value }));
   return (width: number, fit: ChartFit = {}) =>
     barChart({
@@ -64,7 +62,7 @@ export function genresChart(genres: Array<{ name: string; value: number }>, year
       xLabel: "Genre",
       yLabel: "Finished",
       yUnit: "books",
-      formatValue: whole,
+      formatValue: formatCount,
       notes: "A book counts once for each of its subjects.",
       source: SOURCE,
     });
@@ -78,7 +76,7 @@ export function weeksChart(weeks: Array<{ start: number; books: number }>) {
   };
   const total = weeks.reduce((a, w) => a + w.books, 0);
   const active = weeks.filter((w) => w.books > 0).length;
-  const alt = `${count(total, "book")} finished over the last ${weeks.length} weeks, in ${count(active, "week")}.`;
+  const alt = `${plural(total, "book", undefined, { grouped: true })} finished over the last ${weeks.length} weeks, in ${plural(active, "week", undefined, { grouped: true })}.`;
   return (width: number, fit: ChartFit = {}) =>
     heatStrip({
       values: weeks.map((w) => w.books),
@@ -91,7 +89,7 @@ export function weeksChart(weeks: Array<{ start: number; books: number }>) {
       title: "Books finished per week, the last year",
       label: "Books finished per week",
       alt,
-      formatValue: (n) => count(n, "book"),
+      formatValue: (n) => plural(n, "book", undefined, { grouped: true }),
       source: SOURCE,
     });
 }
@@ -108,8 +106,8 @@ export function pollChart(
   const tied = leaders.length > 1;
   const verb = closed ? (tied ? "tied" : "won") : tied ? "tie" : "leads";
   const alt = tied
-    ? `${leaders.join(" and ")} ${verb} with ${count(most, "vote")} each, of ${count(total, "vote")}.`
-    : `${leaders[0]} ${verb} with ${most} of ${count(total, "vote")}.`;
+    ? `${leaders.join(" and ")} ${verb} with ${plural(most, "vote", undefined, { grouped: true })} each, of ${plural(total, "vote", undefined, { grouped: true })}.`
+    : `${leaders[0]} ${verb} with ${most} of ${plural(total, "vote", undefined, { grouped: true })}.`;
   const data = options.map((o) => ({ option: o.label, votes: o.votes }));
   return (width: number, fit: ChartFit = {}) =>
     barChart({
@@ -128,7 +126,7 @@ export function pollChart(
       xLabel: "Option",
       yLabel: "Votes",
       yUnit: "votes",
-      formatValue: whole,
+      formatValue: formatCount,
       source: "Club members' votes",
     });
 }

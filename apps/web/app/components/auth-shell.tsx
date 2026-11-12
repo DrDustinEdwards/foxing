@@ -39,7 +39,7 @@ export function AuthShell({
           <span aria-hidden="true">🦊</span>
           <span>Foxing</span>
         </Link>
-        <div className="fx-auth-shell-card">
+        <div className="cap-card fx-auth-shell-card">
           <h1 className="display-2">{title}</h1>
           {subtitle ? <p className="fx-auth-shell-text">{subtitle}</p> : null}
           <div className="mt-6">{children}</div>

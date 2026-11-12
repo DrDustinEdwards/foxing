@@ -19,10 +19,10 @@ export function BookShelvesPicker({
   const members = new Set(memberOf);
 
   return (
-    <div className="card">
+    <div className="cap-card">
       <p className="sans small strong">Add to shelves</p>
       {shelves.length === 0 ? (
-        <p className="mt-2 meta">
+        <p className="meta">
           You have no shelves yet.{" "}
           <Link to="/library" className="link">
             Create one
@@ -30,7 +30,7 @@ export function BookShelvesPicker({
           .
         </p>
       ) : (
-        <div className="mt-3 fx-book-shelves-picker-row">
+        <div className="fx-book-shelves-picker-row">
           {shelves.map((shelf) => {
             const on = members.has(shelf.id);
             return (

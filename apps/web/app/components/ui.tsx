@@ -168,19 +168,33 @@ export function Breadcrumbs({ trail }: { trail: Array<{ label: string; to?: stri
 }
 
 /** Plain empty state. Illustration zones are not extended here (design decision). */
-export function EmptyState({ title, body }: { title: string; body?: string }) {
+export function EmptyState({
+  title,
+  body,
+  className,
+  children,
+}: {
+  title: string;
+  body?: string;
+  className?: string;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="cap-empty fx-empty" data-kind="nothing-yet">
+    <div
+      className={className ? `cap-empty fx-empty ${className}` : "cap-empty fx-empty"}
+      data-kind="nothing-yet"
+    >
       <div className="cap-empty-header">
         <p className="cap-empty-title">{title}</p>
         {body && <p className="cap-empty-text">{body}</p>}
       </div>
+      {children ? <div className="cap-empty-content">{children}</div> : null}
     </div>
   );
 }
 
 /** Two-letter initials from a display name, mirroring the legacy avatar fallback. */
-function avatarInitials(name: string): string {
+export function avatarInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();

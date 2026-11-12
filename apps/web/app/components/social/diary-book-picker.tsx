@@ -7,7 +7,7 @@ import { BookCombobox } from "../book-combobox";
 export function DiaryBookPicker() {
   const navigate = useNavigate();
   return (
-    <div className="card">
+    <div className="cap-card">
       <BookCombobox
         label="Find the book to log"
         placeholder="Search the catalog"

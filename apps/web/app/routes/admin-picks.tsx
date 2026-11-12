@@ -50,28 +50,25 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
 
       <div className="cap-stack" data-gap="6">
         <AdminCard title="Curator">
-          <ul className="fx-admin-picks-row">
-            <li>
-              <Link
-                to="/admin/celebrity-picks"
-                className="fx-admin-nav-link"
-                aria-current={!clubId ? "page" : undefined}
-              >
-                All
-              </Link>
-            </li>
+          <nav className="cap-tabs-list" data-variant="line" data-size="sm" aria-label="Curator">
+            <Link
+              to="/admin/celebrity-picks"
+              className="cap-tab"
+              aria-current={!clubId ? "page" : undefined}
+            >
+              All
+            </Link>
             {clubs.map((c) => (
-              <li key={c.id}>
-                <Link
-                  to={`/admin/celebrity-picks?club=${c.id}`}
-                  className="fx-admin-nav-link"
-                  aria-current={clubId === c.id ? "page" : undefined}
-                >
-                  {c.shortName || c.name}
-                </Link>
-              </li>
+              <Link
+                key={c.id}
+                to={`/admin/celebrity-picks?club=${c.id}`}
+                className="cap-tab"
+                aria-current={clubId === c.id ? "page" : undefined}
+              >
+                {c.shortName || c.name}
+              </Link>
             ))}
-          </ul>
+          </nav>
         </AdminCard>
 
         <AdminCard title="Picks">

@@ -9,8 +9,7 @@ import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { coverAttributes } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
@@ -53,8 +52,8 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
   // Personalized shelf status + shelves. Anonymous requests are edge-cached (this
   // loader does not run), so this only fires for signed-in readers (cache bypassed).
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  const userId = session?.user?.id ?? null;
+  const user = await sessionUserFromRequest(request, env);
+  const userId = user?.id ?? null;
   const [myBook, shelves] = userId
     ? await Promise.all([views.myBook(db, userId, book.id), views.shelves(db, userId)])
     : [undefined, []];
@@ -219,8 +218,8 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             </div>
 
             {awards.length > 0 ? (
-              <div className="mt-6 fx-book-detail-card">
-                <Eyebrow className="fx-book-detail-eyebrow">Recognition</Eyebrow>
+              <div className="mt-6 cap-card">
+                <Eyebrow>Recognition</Eyebrow>
                 <ul className="fx-book-detail-stack-2">
                   {awards.map((a) => (
                     <li key={`${a.awardSlug}-${a.year}`} className="sans small">

@@ -1,6 +1,7 @@
 // Federated search results grouped by entity (Books, Authors). Each group is a
 // labeled section with its own heading + count; a polite live region announces the
 // totals so a screen-reader user hears the result set change (an AA gap in legacy).
+import { formatCount, plural } from "@drdustinedwards/site-helpers/text";
 import type { SearchPage } from "@foxing/types";
 import { Link } from "capsomer/react/link";
 import { BookCard, type BookCardData, BookGrid } from "~/components/book-card";
@@ -35,7 +36,7 @@ export function GroupedResults({
           <span className="cap-sr-only">No results for {q}.</span>
         ) : (
           <>
-            {bookTotal.toLocaleString()} {bookTotal === 1 ? "book" : "books"}
+            {plural(bookTotal, "book", undefined, { grouped: true })}
             {authors.length
               ? ` and ${authors.length} ${authors.length === 1 ? "author" : "authors"}`
               : ""}{" "}
@@ -74,7 +75,7 @@ export function GroupedResults({
       {books.length > 0 ? (
         <section aria-labelledby="results-books">
           <h2 id="results-books" className="mb-4 fx-grouped-results-caps">
-            Books · {bookTotal.toLocaleString()}
+            Books · {formatCount(bookTotal)}
           </h2>
           <BookGrid>
             {books.map((b) => (

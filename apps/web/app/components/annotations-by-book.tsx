@@ -142,7 +142,7 @@ export function BookGroups<T extends BookFields>({
           </h2>
           <ul className="cap-stack" data-gap="4">
             {g.items.map((e) => (
-              <li key={e.id} className="card card-5">
+              <li key={e.id} className="cap-card">
                 {renderItem(e)}
               </li>
             ))}

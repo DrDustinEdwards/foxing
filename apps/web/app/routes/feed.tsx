@@ -49,7 +49,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
                   {row.actorLabel}
                 </li>
               ) : (
-                <li key={`a-${row.id}`} className="items-start fx-feed-card-2">
+                <li key={`a-${row.id}`} className="items-start cap-card fx-feed-card-2">
                   <Avatar
                     src={row.actor?.avatarUrl ?? null}
                     name={row.actor?.displayName ?? row.actor?.username ?? "Reader"}
