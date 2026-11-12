@@ -4,18 +4,12 @@
 // /api/v1/search/suggest. No React and relative imports only: the islands are bundled on their own.
 import type { Command } from "capsomer/behavior/command-menu";
 import { readStored, writeStored } from "capsomer/behavior/hooks";
+import { fetchSuggest } from "./book-suggest";
 
 /** The header's search button: its name, and how /site.js finds it on a page that does not hydrate. */
 export const SEARCH_BUTTON_LABEL = "Search the catalog";
 export const PALETTE_LABEL = "Search Foxing";
 export const PALETTE_PLACEHOLDER = "Search books, people, clubs...";
-
-type Suggest = {
-  books?: { slug: string; title: string; author: string }[];
-  authors?: { slug: string; name: string; bookCount: number }[];
-  people?: { username: string; displayName: string }[];
-  clubs?: { slug: string; name: string }[];
-};
 
 /** Where recent searches are kept in this browser (Capsomer's stored values: localStorage, or the page alone). */
 export const RECENT_KEY = "foxing:recent-searches";
@@ -90,8 +84,7 @@ export async function liveCommands(q: string, signal: AbortSignal, go: Go): Prom
     run: runSearch(go, q),
   };
   if (q.length < 2) return [all];
-  const res = await fetch(`/api/v1/search/suggest?q=${encodeURIComponent(q)}`, { signal });
-  const data = (await res.json()) as Suggest;
+  const data = await fetchSuggest(q, signal);
   return [
     all,
     ...(data.books ?? []).map((b) => ({

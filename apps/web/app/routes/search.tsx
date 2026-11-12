@@ -7,7 +7,8 @@ import { FilterBar } from "~/components/search/filter-bar";
 import { GroupedResults } from "~/components/search/grouped-results";
 import { Pager } from "~/components/pager";
 import { Container, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
+import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
+import { loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/search";
 
@@ -34,7 +35,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
 export function headers(): HeadersInit {
   // Query pages: cache briefly at the edge but keep them out of the index (meta).
-  return publicCacheHeaders(120, 600);
+  return publicPageHeaders({ freshSeconds: 120, staleSeconds: 600 });
 }
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {

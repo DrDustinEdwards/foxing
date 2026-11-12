@@ -85,12 +85,7 @@ export async function createClub(
     .values({
       id,
       name: input.name,
-      slug: await uniqueSlug(input.name, {
-        fallback: "club",
-        taken: async (slug) =>
-          (await db.select({ id: clubs.id }).from(clubs).where(eq(clubs.slug, slug)).limit(1))
-            .length > 0,
-      }),
+      slug: await uniqueSlug(input.name, { fallback: "club" }),
       description: input.description ?? null,
       coverUrl: input.coverUrl ?? null,
       creatorId,

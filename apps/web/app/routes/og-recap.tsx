@@ -3,7 +3,8 @@ import { cardText } from "@dustinedwards/site-runtime/share-card";
 // pipeline as og-book (lib/og.server). Only public profiles render; others 404
 // (crawlers get nothing to leak).
 import { cloudflareContext } from "~/context";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { ogCard } from "~/lib/og.server";
 import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/og-recap";

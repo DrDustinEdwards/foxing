@@ -10,7 +10,8 @@ import { LikeButton } from "~/components/social/like-button";
 import { RemoveBookButton } from "~/components/social/remove-book-button";
 import { Avatar, Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/list-detail";
 

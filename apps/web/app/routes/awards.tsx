@@ -2,7 +2,8 @@ import { catalogRepo } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { Container, EntityCard, PageHeader } from "~/components/ui";
 import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
-import { buildMeta, itemListLd, ldJson } from "~/lib/seo";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildMeta, itemListLd } from "~/lib/seo";
 import type { Route } from "./+types/awards";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -23,7 +24,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       pathname: location.pathname,
       pageType: "CollectionPage",
     }),
-    ldJson(
+    jsonLd(
       itemListLd(
         "Literary awards",
         data.awards.map((a) => ({ title: a.name, path: `/awards/${a.slug}` })),

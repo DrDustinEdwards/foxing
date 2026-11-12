@@ -7,15 +7,12 @@ import { Pager } from "~/components/pager";
 import { Picture } from "capsomer/react/picture";
 import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
 import { pictureProps } from "@dustinedwards/site-runtime/image";
+import { formatLongDate } from "~/lib/dates";
 import { journalCovers } from "~/lib/journal-images.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
-import { buildMeta, journalLd, ldJson } from "~/lib/seo";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildMeta, journalLd } from "~/lib/seo";
 import type { Route } from "./+types/journal";
-
-function fmtDate(d: Date | null): string | null {
-  if (!d) return null;
-  return d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
-}
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);
@@ -41,7 +38,7 @@ export function meta({ location }: Route.MetaArgs) {
       pathname: location.pathname,
       pageType: "CollectionPage",
     }),
-    ldJson(journalLd(JOURNAL_DESCRIPTION)),
+    jsonLd(journalLd(JOURNAL_DESCRIPTION)),
     { tagName: "link", rel: "alternate", type: "application/rss+xml", href: "/journal/rss.xml" },
   ];
 }
@@ -112,7 +109,9 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
         <div className="fx-journal-box-2" aria-hidden="true" />
       )}
       <div>
-        <Eyebrow>{post.featured ? "Featured" : (fmtDate(post.publishedAt) ?? "Essay")}</Eyebrow>
+        <Eyebrow>
+          {post.featured ? "Featured" : (formatLongDate(post.publishedAt) ?? "Essay")}
+        </Eyebrow>
         <h2 className="mt-2 fx-journal-title">{post.title}</h2>
         {post.excerpt ? <p className="mt-3 fx-journal-text-2">{post.excerpt}</p> : null}
         <PostMeta post={post} />
@@ -144,7 +143,7 @@ function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
 }
 
 function PostMeta({ post }: { post: Post }) {
-  const date = fmtDate(post.publishedAt);
+  const date = formatLongDate(post.publishedAt);
   return (
     <div className="mt-4 fx-journal-row-2">
       {date ? <span>{date}</span> : null}

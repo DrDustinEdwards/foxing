@@ -4,7 +4,7 @@
 import { googleFont, shareCardResponse } from "@dustinedwards/site-runtime/share-card";
 import { ImageResponse } from "workers-og";
 import { edgeCache } from "~/lib/cache.server";
-import { publicCacheHeaders } from "~/lib/loader.server";
+import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
 import { FONT_CACHE_ORIGIN } from "~/lib/origins";
 
 /** What a card's HTML needs to know about the fonts: the family its title can use. */
@@ -48,7 +48,9 @@ export async function ogCard(
   // The card at its /og address is a public page too (workers/app.ts): stored a week, purged with the
   // pages. Set after the card is kept under its own key above, which needs the zone cache's s-maxage.
   const headers = new Headers(card.headers);
-  for (const [name, value] of Object.entries(publicCacheHeaders(604800, 0)))
+  for (const [name, value] of Object.entries(
+    publicPageHeaders({ freshSeconds: 604800, staleSeconds: 0 }),
+  ))
     headers.set(name, value);
   return new Response(card.body, { status: card.status, headers });
 }

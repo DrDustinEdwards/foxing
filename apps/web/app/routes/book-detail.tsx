@@ -9,10 +9,12 @@ import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { coverAttributes } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
-import { bookLd, buildMeta, ldJson } from "~/lib/seo";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { bookLd, buildMeta } from "~/lib/seo";
 import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
 
@@ -111,7 +113,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       type: "book",
       noindex: community,
     }),
-    ldJson(bookLd(book)),
+    jsonLd(bookLd(book)),
   ];
 }
 

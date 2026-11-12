@@ -56,6 +56,5 @@ export {
   computePollResult,
   firstPreferenceTallies,
 } from "./poll-result";
-export * from "./admins";
 export * as catalogHealthDomain from "./catalog-health";
 export { CATALOG_CHECK_NAMES } from "./catalog-health";

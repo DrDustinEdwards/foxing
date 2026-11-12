@@ -141,9 +141,6 @@ export function getAuth(env: Env): Promise<Auth> {
   return auth;
 }
 
-/** What a server-side getSession reads: site-runtime sessionLookup (always `asResponse: false`; the request too on a GET). */
-export { sessionLookup };
-
 /**
  * The signed-in user behind an /api/v1 request, from the Better Auth session cookie; null when
  * there is none. The Worker's createApi resolveSession, and the Carrel key isolation tests.

@@ -7,6 +7,7 @@ import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
 import { Link } from "capsomer/react/link";
+import { mediumDate } from "~/lib/dates";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
@@ -23,8 +24,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { user } = await requireProfile(env, request);
   return { entries: await views.diary(createDb(env.DB), user.id) };
 }
-
-const fmtDate = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
 
 function Stars({ ratingHalf }: { ratingHalf: number | null }) {
   if (ratingHalf == null) return null;
@@ -232,7 +231,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
             </div>
             <div className="mt-1 cap-cluster" data-gap="4">
               <Stars ratingHalf={e.ratingHalf} />
-              {e.logDate ? <span className="mono fine">{fmtDate.format(e.logDate)}</span> : null}
+              {e.logDate ? <span className="mono fine">{mediumDate.format(e.logDate)}</span> : null}
             </div>
           </div>
           <VisibilityBadge visibility={e.visibility} />

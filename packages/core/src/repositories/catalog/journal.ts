@@ -3,6 +3,7 @@
 import { toDate } from "@dustinedwards/site-runtime/time";
 import { pageEnvelope } from "capsomer/behavior/pagination";
 import { and, asc, desc, eq, getTableColumns, isNotNull, lte, sql } from "drizzle-orm";
+import { clampPageSize } from "./page-size";
 import type { Db } from "../../db";
 import { journalPosts, journalSlugRedirects, profiles } from "../../schema";
 
@@ -54,7 +55,7 @@ export async function listPublishedPosts(
   db: Db,
   opts: { page?: number; pageSize?: number } = {},
 ): Promise<JournalListResult> {
-  const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 12));
+  const pageSize = clampPageSize(opts.pageSize, 48, 12);
   const where = eq(journalPosts.isPublished, true);
 
   const [counted] = await db
@@ -244,7 +245,7 @@ export async function listPostsByTag(
   tag: string,
   opts: { page?: number; pageSize?: number } = {},
 ): Promise<JournalListResult> {
-  const pageSize = Math.min(48, Math.max(1, opts.pageSize ?? 24));
+  const pageSize = clampPageSize(opts.pageSize, 48, 24);
   const where = sql`journal_posts.is_published = 1
     AND EXISTS (SELECT 1 FROM json_each(journal_posts.tags) je WHERE je.value = ${tag})`;
 

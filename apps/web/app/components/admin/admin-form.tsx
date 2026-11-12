@@ -2,6 +2,7 @@
 // write surface from the browser (standing rule: writes are API calls, not loader
 // subrequests) and surfaces a visible pending state + role=alert error on failure. No
 // admin write may fail silently.
+import { OFFLINE_MESSAGE } from "@foxing/client";
 import { useState } from "react";
 
 type Result = { ok: boolean; status: number; body: unknown };
@@ -20,7 +21,8 @@ export async function adminFetch(
   return { ok: res.ok, status: res.status, body };
 }
 
-function messageFrom(result: Result, fallback: string): string {
+/** The server's problem detail, else "<fallback> (<status>)." */
+export function messageFrom(result: Result, fallback: string): string {
   const b = result.body as { detail?: string } | null;
   return b?.detail ?? `${fallback} (${result.status}).`;
 }
@@ -47,7 +49,7 @@ export function useAdminAction(opts?: { onDone?: () => void }) {
       opts?.onDone?.();
       return result;
     } catch {
-      setError("Could not reach the server. Check your connection and try again.");
+      setError(OFFLINE_MESSAGE);
       return null;
     } finally {
       setPending(false);
