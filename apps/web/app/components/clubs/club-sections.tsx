@@ -148,12 +148,12 @@ export function ThreadsSection({
           {threads.map((t) => (
             <li key={t.id}>
               <Link to={`/clubs/${slug}/t/${t.id}`}>
-                <article className="cap-card">
+                <div className="cap-card">
                   {t.type === "announcement" ? (
                     <p className="fx-club-sections-caps">Announcement</p>
                   ) : null}
                   <p className="ink sans">{t.title}</p>
-                </article>
+                </div>
               </Link>
             </li>
           ))}

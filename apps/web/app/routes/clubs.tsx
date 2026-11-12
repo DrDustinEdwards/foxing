@@ -31,10 +31,10 @@ function ClubRow({
 }) {
   return (
     <Link to={`/clubs/${club.slug}`}>
-      <article className="cap-card">
+      <div className="cap-card">
         <h3 className="display-0">{club.name}</h3>
         {club.description ? <p className="fx-clubs-text">{club.description}</p> : null}
-      </article>
+      </div>
     </Link>
   );
 }

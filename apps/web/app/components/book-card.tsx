@@ -14,7 +14,7 @@ export type BookCardData = {
 const GRID_FIRST_ROW = 10;
 
 /**
- * Capsomer's card (capsomer/card.css), one destination: the link wraps the <article>, whose cover,
+ * Capsomer's card (capsomer/card.css), one destination: the link wraps the card's <div> (an <article> there leaves the link with no name), whose cover,
  * title and byline are its own children. The cover is the card's media, a 2:3 book cover.
  * Foxing's look (design-system Rule 15: the edge strengthens on hover, the title takes the
  * accent text) is catalog.css .fx-book.
@@ -35,7 +35,7 @@ export function BookCard({
   const Title = headingLevel === 2 ? "h2" : "h3";
   return (
     <Link to={`/books/${book.slug}`} className={className}>
-      <article className="cap-card fx-book" data-ratio="2/3">
+      <div className="cap-card fx-book" data-ratio="2/3">
         <CoverImage
           className="cap-card-media"
           src={book.coverUrl}
@@ -52,7 +52,7 @@ export function BookCard({
             <span className="dim"> &middot; {book.publicationYear}</span>
           ) : null}
         </p>
-      </article>
+      </div>
     </Link>
   );
 }
