@@ -24,7 +24,8 @@
   },
   "tokens": {
     "--text": "the Discord activity is its own embedded app, styled for Discord's client, not a family page",
-    "--dim": "Foxing keeps its own look on its own domain (Dustin 2026-10-26)"
+    "--dim": "Foxing keeps its own look on its own domain (Dustin 2026-10-26)",
+    "--radius-l": "Foxing's cards and panels are rounded-lg (design-system.md Rule 06, 0.75rem) against Capsomer's 10px, and Foxing keeps its own look on its own domain (Dustin 2026-10-26); Capsomer's generated foxing site layer sets no radii yet"
   },
   "copies": {
     "apps/mobile/lib/epub-content.ts": "htmlToText here keeps a line break after each block, which the reader's text-to-speech splits sentences on; Prelum's htmlToText flattens all white space to one space, and web work never touches apps/mobile (CLAUDE.md, hard rule 2)",
