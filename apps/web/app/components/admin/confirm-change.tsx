@@ -2,11 +2,12 @@
 // unsuspend). The first request to a role route changes
 // nothing: the server answers with who gains or loses what and a single-use token. This
 // dialog shows that preview and sends the token only when the operator confirms. It is
-// a native modal <dialog>: focus moves into it, Tab stays inside, Escape cancels, and
-// focus returns to the button that opened it.
-import { useEffect, useId, useRef, useState } from "react";
+// Capsomer's ConfirmDialog: focus starts on Cancel, Escape cancels except while the change
+// runs, a failure stays inside it, and focus returns to the button that opened it.
+import { useState } from "react";
+import { ConfirmDialog } from "capsomer/react/confirm-dialog";
 import { OFFLINE_MESSAGE } from "@foxing/client";
-import { AdminButton, adminFetch, messageFrom } from "./admin-form";
+import { adminFetch, messageFrom } from "./admin-form";
 
 type RoleValue = boolean | string;
 
@@ -88,95 +89,30 @@ function RoleChangeDialog({
   onCancel: () => void;
   onDone: () => void;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-  const titleId = useId();
-  const summaryId = useId();
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { preview } = change;
   const label = VALUE_LABELS[preview.kind];
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    dialog.showModal();
-    return () => dialog.close();
-  }, []);
-
-  // Close while the element is still in the document, so the browser hands focus back
-  // to the button that opened the dialog before React removes it.
-  function closeThen(next: () => void) {
-    ref.current?.close();
-    next();
-  }
+  const who = `@${preview.target.username}${preview.target.displayName ? ` (${preview.target.displayName})` : ""}`;
 
   async function perform() {
-    setPending(true);
-    setError(null);
-    try {
-      const result = await adminFetch(change.path, {
-        body: { ...change.body, confirm: change.token },
-      });
-      if (!result.ok) {
-        setError(messageFrom(result, "Could not apply the change"));
-        return;
-      }
-      closeThen(onDone);
-    } catch {
-      setError(OFFLINE_MESSAGE);
-    } finally {
-      setPending(false);
-    }
+    const result = await adminFetch(change.path, {
+      body: { ...change.body, confirm: change.token },
+    }).catch(() => {
+      throw new Error(OFFLINE_MESSAGE);
+    });
+    if (!result.ok) throw new Error(messageFrom(result, "Could not apply the change"));
   }
 
   return (
-    <dialog
-      ref={ref}
-      aria-labelledby={titleId}
-      aria-describedby={summaryId}
-      onCancel={(e) => {
-        e.preventDefault();
-        if (!pending) closeThen(onCancel);
-      }}
-      className="fx-confirm-dialog"
-    >
-      <h2 id={titleId} className="display-1">
-        {change.label}?
-      </h2>
-      <p id={summaryId} className="mt-2 ui">
-        {preview.summary}
-      </p>
-      <dl className="mt-4 fx-confirm-change-grid">
-        <dt className="muted">Who</dt>
-        <dd className="fx-confirm-change-value">
-          @{preview.target.username}
-          {preview.target.displayName ? ` (${preview.target.displayName})` : ""}
-        </dd>
-        <dt className="muted">Now</dt>
-        <dd className="fx-confirm-change-value">{label(preview.from)}</dd>
-        <dt className="muted">After</dt>
-        <dd className="strong">{label(preview.to)}</dd>
-      </dl>
-      <p className="mt-4 fx-confirm-change-text">
-        Nothing has changed yet. This confirmation works once, until{" "}
-        {fmtTime.format(new Date(change.expiresAt))}. The change is recorded in the audit log under
-        your account.
-      </p>
-      {error ? (
-        <p className="mt-3 error" role="alert">
-          {error}
-        </p>
-      ) : null}
-      <div className="mt-5 justify-end fx-confirm-change-row">
-        {/* Cancel is the first control, so showModal focuses it and Enter on open
-            never performs the change. */}
-        <AdminButton disabled={pending} onClick={() => closeThen(onCancel)}>
-          Cancel
-        </AdminButton>
-        <AdminButton variant="danger" pending={pending} onClick={() => void perform()}>
-          {change.label}
-        </AdminButton>
-      </div>
-    </dialog>
+    <ConfirmDialog
+      open
+      title={`${change.label}?`}
+      lead={`${preview.summary} Nothing has changed yet. This confirmation works once, until ${fmtTime.format(
+        new Date(change.expiresAt),
+      )}. The change is recorded in the audit log under your account.`}
+      body={[`Who: ${who}`, `Now: ${label(preview.from)}`, `After: ${label(preview.to)}`]}
+      action={change.label}
+      perform={perform}
+      onClose={(performed) => (performed ? onDone() : onCancel())}
+    />
   );
 }

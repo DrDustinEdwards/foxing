@@ -58,9 +58,9 @@ export function AdminCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="fx-admin-shell-card">
+    <section className="cap-card">
       {title || action ? (
-        <div className="mb-4 cap-spread" data-gap="5" data-align="center">
+        <div className="cap-spread" data-gap="5" data-align="center">
           {title ? <h2 className="display-1">{title}</h2> : <span />}
           {action}
         </div>

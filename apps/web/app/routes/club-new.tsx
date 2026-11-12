@@ -5,15 +5,14 @@ import { useCreateClub } from "@foxing/client";
 import { redirect, useNavigate } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?next=/clubs/new");
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect("/login?next=/clubs/new");
   return null;
 }
 

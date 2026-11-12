@@ -10,6 +10,7 @@
 @import "capsomer/base.css";
 @import "capsomer/site-header.css";
 @import "capsomer/dialog.css";
+@import "capsomer/confirm-dialog.css";
 @import "capsomer/popover.css";
 @import "capsomer/tooltip.css";
 @import "capsomer/theme-switch.css";

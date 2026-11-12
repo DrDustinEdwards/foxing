@@ -103,7 +103,7 @@
 .fx-journal-post-img {
   aspect-ratio: 16 / 9;
   width: 100%;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   object-fit: cover;
 }
 
@@ -124,7 +124,7 @@
 .fx-journal-tag-card {
   display: flex;
   flex-direction: column;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1.25rem;
@@ -201,7 +201,7 @@
 }
 .fx-journal-box {
   overflow: hidden;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
 }
 .fx-journal-img {
   aspect-ratio: 16 / 10;
@@ -210,7 +210,7 @@
 }
 .fx-journal-box-2 {
   aspect-ratio: 16 / 10;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   background-color: var(--sunken);
 }
 .fx-journal-title {
@@ -235,7 +235,7 @@
 .fx-journal-card-2 {
   display: flex;
   flex-direction: column;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding: 1rem;

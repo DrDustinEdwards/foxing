@@ -13,16 +13,15 @@ import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 import { FollowButton } from "~/components/social/follow-button";
 import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { absoluteUrl, buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/u-profile";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  const viewerId = session?.user?.id ?? null;
+  const user = await sessionUserFromRequest(request, env);
+  const viewerId = user?.id ?? null;
   const page = await views.profilePage(createDb(env.DB), params.username, viewerId);
   if (!page) throw new Response("Not found", { status: 404 });
   return { page, signedIn: !!viewerId };
@@ -233,12 +232,12 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             </div>
             <ul className="cap-stack" data-gap="4">
               {publicHighlights.map((h) => (
-                <li key={h.id} className="card">
+                <li key={h.id} className="cap-card">
                   {h.selectedText ? (
                     <blockquote className="fx-u-profile-quote">"{h.selectedText}"</blockquote>
                   ) : null}
                   {h.bookTitle ? (
-                    <p className="mt-2 fx-u-profile-text-3">
+                    <p className="fx-u-profile-text-3">
                       {h.bookSlug ? (
                         <Link to={`/books/${h.bookSlug}`} className="hover-accent">
                           {h.bookTitle}
@@ -285,7 +284,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             ) : (
               <ul className="cap-stack">
                 {diary.map((d) => (
-                  <li key={d.id} className="card">
+                  <li key={d.id} className="cap-card">
                     <div className="fx-u-profile-row-4">
                       <p className="display-0">
                         {d.book ? (
@@ -299,13 +298,13 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                       <Stars ratingHalf={d.ratingHalf} />
                     </div>
                     {d.review ? (
-                      <p className="mt-2 fx-u-profile-quote">
+                      <p className="fx-u-profile-quote">
                         {d.containsSpoilers ? <em>Contains spoilers. </em> : null}
                         {d.review}
                       </p>
                     ) : null}
                     {d.visibility !== "public" ? (
-                      <p className="mt-2 fx-u-profile-caps">
+                      <p className="fx-u-profile-caps">
                         {d.visibility === "friends" ? "Close friends" : "Private"}
                       </p>
                     ) : null}

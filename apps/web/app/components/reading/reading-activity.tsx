@@ -15,7 +15,7 @@ export function ReadingActivity({
   return (
     <section className="cap-stack">
       <h2 className="display-2">Reading activity</h2>
-      <div className="card card-5">
+      <div className="cap-card">
         {weeks.some((w) => w.books > 0) ? (
           <ChartFrame draw={weeksChart(weeks)} />
         ) : (
@@ -39,9 +39,9 @@ export function ReadingActivity({
 
 function StreakCard({ label, value, hint }: { label: string; value: number; hint: string }) {
   return (
-    <div className="card">
+    <div className="cap-card">
       <p className="display-2">{value.toLocaleString()}</p>
-      <p className="mt-1 fx-goals-caps">{label}</p>
+      <p className="fx-goals-caps">{label}</p>
       <p className="fx-goals-text-4">{hint}</p>
     </div>
   );

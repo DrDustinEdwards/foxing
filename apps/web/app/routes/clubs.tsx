@@ -8,17 +8,16 @@ import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?next=/clubs");
-  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  return views.clubsIndex(createDb(env.DB), session.user.id);
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect("/login?next=/clubs");
+  await requireProfileForUser(env, user);
+  return views.clubsIndex(createDb(env.DB), user.id);
 }
 
 export function meta() {

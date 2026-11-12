@@ -41,23 +41,6 @@
     color: var(--crit);
   }
 }
-.fx-confirm-change-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  column-gap: 1rem;
-  row-gap: 0.25rem;
-}
-.fx-confirm-change-value {
-  color: var(--text);
-}
-.fx-confirm-change-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
 
 .fx-admin-analytics-box {
   overflow-x: auto;
@@ -314,26 +297,6 @@
   color: var(--accent-text);
 }
 
-.fx-confirm-dialog {
-  inline-size: calc(100% - 2rem);
-  max-inline-size: 28rem;
-  border: 1px solid var(--line);
-  border-radius: var(--fx-radius-card);
-  background: var(--surface);
-  color: var(--text);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-m);
-}
-.fx-confirm-dialog::backdrop {
-  background: var(--fx-scrim);
-}
-
-.fx-confirm-change-text {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: var(--muted);
-}
 .fx-admin-analytics-text {
   font-family: var(--ui);
   font-size: 0.75rem;

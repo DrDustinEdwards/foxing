@@ -25,8 +25,7 @@ import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
@@ -49,11 +48,11 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?next=/library");
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect("/login?next=/library");
   // Signed-in but not onboarded -> /onboarding (never render with a null profile).
-  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  return loadLibraryData(env, session.user.id);
+  await requireProfileForUser(env, user);
+  return loadLibraryData(env, user.id);
 }
 
 export function meta() {
@@ -183,8 +182,8 @@ export default function Library({ loaderData }: Route.ComponentProps) {
 
 function StreakCard({ streak: s }: { streak: Streak }) {
   return (
-    <section className="card">
-      <Eyebrow className="mb-3">Reading streak</Eyebrow>
+    <section className="cap-card">
+      <Eyebrow>Reading streak</Eyebrow>
       <dl className="text-center fx-library-grid-3">
         {[
           { k: "Current", v: s.currentStreak },
@@ -207,8 +206,8 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
   const error = draft.error ?? remove.error;
 
   return (
-    <section className="card">
-      <Eyebrow className="mb-3">Reading goals</Eyebrow>
+    <section className="cap-card">
+      <Eyebrow>Reading goals</Eyebrow>
       {goals.length === 0 ? (
         <p className="meta">No goals set.</p>
       ) : (
@@ -286,8 +285,8 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
   }
 
   return (
-    <section className="card">
-      <Eyebrow className="mb-3">Shelves</Eyebrow>
+    <section className="cap-card">
+      <Eyebrow>Shelves</Eyebrow>
       {shelves.length === 0 ? (
         <p className="meta">No shelves yet.</p>
       ) : (

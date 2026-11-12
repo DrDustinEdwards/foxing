@@ -107,7 +107,7 @@ export function PollsSection({
           {polls.map((poll) => {
             const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
-              <div key={poll.id} className="card">
+              <div key={poll.id} className="cap-card">
                 <div className="cap-spread" data-gap="4" data-align="center">
                   <p className="strong sans">{poll.title}</p>
                   {poll.isClosed ? (
@@ -123,7 +123,7 @@ export function PollsSection({
                     </button>
                   ) : null}
                 </div>
-                <ul className="mt-3 fx-club-schedule-list">
+                <ul className="fx-club-schedule-list">
                   {poll.options.map((opt) => {
                     const count = poll.tallies[opt.id] ?? 0;
                     const mine = poll.myVote?.includes(opt.id);
@@ -292,7 +292,7 @@ export function ScheduleSection({
       {schedule.length === 0 ? (
         <p className="mt-3 fx-club-schedule-text-2">No schedule set.</p>
       ) : (
-        <ul className="mt-3 fx-club-schedule-list">
+        <ul className="fx-club-schedule-list">
           {schedule.map((s) => {
             const unlocked = s.unlockDate <= now;
             return (

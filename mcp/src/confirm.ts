@@ -12,12 +12,8 @@
  * produced for these arguments; the tool's text asks the model to show it to the administrator and wait for a yes.
  */
 
-import {
-  canonicalJson,
-  mintConfirm,
-  redeemConfirm,
-} from "@dustinedwards/site-runtime/confirm-token";
-import { sha256Hex } from "@dustinedwards/site-runtime/encoding";
+import { mintConfirm, redeemConfirm } from "@dustinedwards/site-runtime/confirm-token";
+import { canonicalJson, sha256Hex } from "@dustinedwards/site-runtime/encoding";
 
 const TTL_SECONDS = 10 * 60;
 const LABEL = "foxing-admin-mcp confirm v2";

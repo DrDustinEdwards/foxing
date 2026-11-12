@@ -167,7 +167,7 @@
   }
 }
 .fx-library-card {
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px dashed var(--line);
   background-color: var(--surface);
   padding: 2.5rem;
@@ -315,12 +315,6 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-.fx-year-card {
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
-}
 .fx-year-grid-2 {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -334,7 +328,7 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.75rem;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px solid var(--line);
   background-color: var(--surface);
   padding-inline: 1rem;
@@ -358,7 +352,7 @@
 
 .fx-goal {
   border: 1px solid var(--line);
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   background: var(--surface);
   padding: 1rem;
 }

@@ -5,8 +5,9 @@ import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
 import { loaderBase } from "~/lib/loader.server";
-import { jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { buildMeta, itemListLd } from "~/lib/seo";
+import { itemList, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { SITE_ORIGIN } from "~/lib/origins";
+import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/books";
 
 type Filters = {
@@ -67,9 +68,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       pageType: "CollectionPage",
     }),
     jsonLd(
-      itemListLd(
+      itemList(
+        SITE_ORIGIN,
         label,
-        data.result.books.map((b) => ({ title: b.title, path: `/books/${b.slug}` })),
+        data.result.books.map((b) => ({ name: b.title, path: `/books/${b.slug}` })),
       ),
     ),
   ];

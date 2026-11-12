@@ -7,8 +7,7 @@ import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
 import { Button, Container, EntityCard, Eyebrow } from "~/components/ui";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { buildMeta, organizationLd, websiteLd } from "~/lib/seo";
@@ -49,8 +48,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { db, env } = loaderBase(context, request);
   // Signed-in visitors get their dashboard; "/" stays the marketing page for
   // anonymous visitors (whose response is the one that gets edge-cached).
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (session?.user) throw redirect("/home");
+  const user = await sessionUserFromRequest(request, env);
+  if (user) throw redirect("/home");
   const [pick, browse, journal] = await Promise.all([
     catalogRepo.getTodaysPick(db),
     catalogRepo.listBooks(db, { sort: "title", pageSize: 10 }),
@@ -106,7 +105,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* Today's Pick: a published Book of the Month, or a staff pick. */}
       {pick ? (
         <Container className="mt-16">
-          <article className="card card-hero fx-pick">
+          <article className="cap-card fx-pick">
             <div className="fx-pick-cover">
               <Link to={`/books/${pick.book.slug}`}>
                 <CoverImage
@@ -176,8 +175,8 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           web rather than linking dead store pages. Swap in store badges when mobile
           ships. */}
       <Container className="mt-16">
-        <section className="card card-hero fx-cta">
-          <Eyebrow className="mb-3">Start reading</Eyebrow>
+        <section className="cap-card fx-cta">
+          <Eyebrow>Start reading</Eyebrow>
           <h2 className="fx-cta-title">Read the classics. Finally understand them.</h2>
           <p className="measure-xl center mt-4 muted">
             Read free on the web today. The iOS and Android apps are on the way, with your library,

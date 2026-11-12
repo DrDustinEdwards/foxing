@@ -8,8 +8,7 @@ import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/club-detail";
 import { MembershipControls, ThreadsSection } from "../components/clubs/club-sections";
@@ -17,12 +16,12 @@ import { MeetingsSection, PollsSection, ScheduleSection } from "../components/cl
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect(`/login?next=/clubs/${params.slug}`);
-  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  const page = await views.clubPage(createDb(env.DB), params.slug, session.user.id);
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect(`/login?next=/clubs/${params.slug}`);
+  await requireProfileForUser(env, user);
+  const page = await views.clubPage(createDb(env.DB), params.slug, user.id);
   if (!page) throw new Response("Not found", { status: 404 });
-  return { page, viewerId: session.user.id };
+  return { page, viewerId: user.id };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {

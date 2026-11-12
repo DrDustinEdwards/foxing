@@ -42,10 +42,10 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
 
       <div className="fx-admin-analytics-grid">
         {tiles.map((t) => (
-          <div key={t.label} className="card">
+          <div key={t.label} className="cap-card">
             <p className="display-3">{t.value}</p>
-            <p className="mt-1 fx-admin-analytics-caps">{t.label}</p>
-            {t.sub ? <p className="mt-1 fx-admin-analytics-text">{t.sub}</p> : null}
+            <p className="fx-admin-analytics-caps">{t.label}</p>
+            {t.sub ? <p className="fx-admin-analytics-text">{t.sub}</p> : null}
           </div>
         ))}
       </div>
