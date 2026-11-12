@@ -105,23 +105,7 @@ export const passkey = sqliteTable(
   ],
 );
 
-// One row per sign-in event (site-runtime ./sign-in `eventsDb`), exactly site-runtime's
-// AUTH_EVENTS_SQL: no address, token or code. Settings' security history, /health's spike check
-// and the new-device and recovery notices read it; the daily cron prunes it (pruneAuthEvents).
-// No foreign key: rows outlive a deleted user until the prune.
-export const authEvents = sqliteTable(
-  "auth_events",
-  {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    at: integer("at").notNull(),
-    event: text("event").notNull(),
-    change: text("change"),
-    via: text("via"),
-    userId: text("user_id"),
-    device: text("device"),
-    location: text("location"),
-    // The sign-in's device id (AUTH_EVENTS_DEVICE_SQL), for the new-device notice.
-    deviceId: text("device_id"),
-  },
-  (t) => [index("auth_events_user").on(t.userId, t.at), index("auth_events_at").on(t.at, t.event)],
-);
+// The sign-in event log (site-runtime ./sign-in `eventsDb`), site-runtime's own Drizzle mirror of
+// AUTH_EVENTS_SQL. Settings' security history, /health's spike check and the new-device and
+// recovery notices read it; the daily cron prunes it (pruneAuthEvents).
+export { authEvents } from "@dustinedwards/site-runtime/drizzle";

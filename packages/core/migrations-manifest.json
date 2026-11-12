@@ -25,6 +25,7 @@
     "0020_hot_query_indexes.sql": "4bd1ea6133cbb86e322f124e460068e2f0e7cd32ba8fcd342c7d43c0f5dd227a",
     "0021_book_subjects.sql": "3fede7847ea881363ede7f620988411dec51550f3f8ccc0697af0bb42b20f96b",
     "0022_companion_usage.sql": "00cc577e4032e27010692f0d44037825cdbc35070b7461d0f06343b41ca230f3",
-    "0023_shared_media_store.sql": "fd27cd74cff0567ca5237111b67f2683e47ccd58b60224a43c3891a73c61e21c"
+    "0023_shared_media_store.sql": "fd27cd74cff0567ca5237111b67f2683e47ccd58b60224a43c3891a73c61e21c",
+    "0024_drop_journal_media.sql": "6e40cb01e6e46d6622466ed9c3b5130e5592651271cccc58b30b27231a8944c3"
   }
 }
