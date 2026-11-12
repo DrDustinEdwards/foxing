@@ -8,7 +8,7 @@ import { likeContains } from "@dustinedwards/site-runtime/d1";
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { customAlphabet, nanoid } from "nanoid";
 import { chunked, type Db } from "../db";
-import { uniqueSlug } from "../domain/slug";
+import { uniqueSlug } from "@drdustinedwards/site-helpers/slug";
 import type { ClubMemberRole, ClubMemberStatus } from "../enums";
 import {
   clubBooks,
@@ -85,7 +85,7 @@ export async function createClub(
     .values({
       id,
       name: input.name,
-      slug: uniqueSlug(input.name, "club"),
+      slug: await uniqueSlug(input.name, { fallback: "club", max: 67 }),
       description: input.description ?? null,
       coverUrl: input.coverUrl ?? null,
       creatorId,
