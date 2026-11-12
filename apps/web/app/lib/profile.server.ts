@@ -5,9 +5,11 @@
 // self-fetch the Worker's own /api/v1 (that loopback returns a 404 HTML page, not
 // JSON, unconditionally, which is what crashed /me before this gate existed).
 import type { SignedInProfile } from "@foxing/core";
-import { createDb, isAdminAccount, profilesRepo } from "@foxing/core";
+import { isAdminEmail } from "@dustinedwards/site-runtime/access";
+import { createDb, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
-import { getAuth, sessionLookup } from "./auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "./auth.server";
 
 export interface SessionUser {
   id: string;
@@ -24,8 +26,8 @@ export interface ProfileContext {
 export async function requireProfileForUser(env: Env, user: SessionUser): Promise<ProfileContext> {
   const row = await profilesRepo.getProfileById(createDb(env.DB), user.id);
   if (!row) throw redirect("/onboarding");
-  // Admin is the ADMIN_EMAIL and CO_OWNER_EMAILS setting (core isAdminAccount), never the stored row.
-  const profile = { ...row, isAdmin: isAdminAccount(env, user.email) };
+  // Admin is the ADMIN_EMAIL and CO_OWNER_EMAILS setting (site-runtime isAdminEmail), never the stored row.
+  const profile = { ...row, isAdmin: isAdminEmail(env, user.email) };
   return { user, profile };
 }
 

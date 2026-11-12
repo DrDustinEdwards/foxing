@@ -1,5 +1,5 @@
-// Pure Locator helpers for the reader: highlight tints (design-system --hl-*),
-// R1/R2 selection-Locator enrichment, and progress math. No DOM, no ts-toolkit
+// Pure Locator helpers for the reader: highlight tints (design-system --hl-*) and R1/R2
+// selection-Locator enrichment. No DOM, no ts-toolkit
 // imports, so this is unit-testable (the R1 multi-occurrence guarantee is proven
 // by an e2e reload test; the merge shape is proven here).
 import type { HighlightColor } from "@foxing/core";
@@ -102,11 +102,4 @@ export function enrichSelectionLocator(
     ...(ctx.cssSelector ? { cssSelector: ctx.cssSelector } : {}),
   };
   return { ...base, text, locations };
-}
-
-/** Whole-book percentage (0..100) from a Locator's totalProgression. */
-export function progressPctFromLocator(locator: Locator | null | undefined): number {
-  const tp = locator?.locations?.totalProgression;
-  const n = typeof tp === "number" ? tp : 0;
-  return Math.round(Math.min(1, Math.max(0, n)) * 1000) / 10;
 }

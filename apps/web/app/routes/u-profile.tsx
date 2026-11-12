@@ -13,8 +13,10 @@ import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 import { FollowButton } from "~/components/social/follow-button";
 import { Avatar, Container, EmptyState, TagPill } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
-import { absoluteUrl, buildMeta, ldJson } from "~/lib/seo";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { absoluteUrl, buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/u-profile";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -44,7 +46,7 @@ export function meta({ loaderData, location }: Route.MetaArgs) {
     ...(data.isPrivate
       ? []
       : [
-          ldJson(
+          jsonLd(
             thing("Person", {
               name,
               alternateName: `@${username}`,

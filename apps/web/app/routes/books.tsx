@@ -3,8 +3,10 @@ import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
-import { loaderBase, publicCacheHeaders } from "~/lib/loader.server";
-import { buildMeta, itemListLd, ldJson } from "~/lib/seo";
+import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
+import { loaderBase } from "~/lib/loader.server";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { buildMeta, itemListLd } from "~/lib/seo";
 import type { Route } from "./+types/books";
 
 type Filters = {
@@ -50,7 +52,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { filters, result, genres };
 }
 
-export const headers = () => publicCacheHeaders(1800, 86400);
+export const headers = () => publicPageHeaders({ freshSeconds: 1800, staleSeconds: 86400 });
 
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Books | Foxing" }];
@@ -64,7 +66,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       pathname: location.pathname,
       pageType: "CollectionPage",
     }),
-    ldJson(
+    jsonLd(
       itemListLd(
         label,
         data.result.books.map((b) => ({ title: b.title, path: `/books/${b.slug}` })),

@@ -410,20 +410,23 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "page-dates": runPageDates,
 };
 
+/** A job from app/lib/cron-jobs.ts with its work. */
+const withRun =
+  (env: Env) =>
+  (job: (typeof CRON_TRIGGERS)[keyof typeof CRON_TRIGGERS][number]): CronJob => ({
+    ...job,
+    run: () => CRON_RUNS[job.name](env),
+  });
+
 /** Every job on every trigger with its work: what the operator API's run_job runs now. */
 function cronJobs(env: Env): CronJob[] {
-  return Object.values(CRON_TRIGGERS)
-    .flat()
-    .map((job) => ({ ...job, run: () => CRON_RUNS[job.name](env) }));
+  return Object.values(CRON_TRIGGERS).flat().map(withRun(env));
 }
 
 /** Each trigger's job list (app/lib/cron-jobs.ts) with its work, for the shared Worker's cron. */
 function cronLists(env: Env): Record<string, CronJob[]> {
   return Object.fromEntries(
-    Object.entries(CRON_TRIGGERS).map(([cron, jobs]) => [
-      cron,
-      jobs.map((job) => ({ ...job, run: () => CRON_RUNS[job.name](env) })),
-    ]),
+    Object.entries(CRON_TRIGGERS).map(([cron, jobs]) => [cron, jobs.map(withRun(env))]),
   );
 }
 

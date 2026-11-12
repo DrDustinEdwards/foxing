@@ -3,8 +3,10 @@
 // better-auth cookie is present (workers/app.ts), so a signed-in response is never
 // written into the anonymous cache. Reads run in-process via core (the standing
 // rule: loaders never self-fetch the Worker's own /api/v1).
-import { catalogRepo, createDb, isAdminAccount, libraryRepo, profilesRepo } from "@foxing/core";
-import { getAuth, sessionLookup } from "./auth.server";
+import { isAdminEmail } from "@dustinedwards/site-runtime/access";
+import { catalogRepo, createDb, libraryRepo, profilesRepo } from "@foxing/core";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "./auth.server";
 
 export interface NavUser {
   username: string;
@@ -43,7 +45,7 @@ export async function getNavUser(env: Env, request: Request): Promise<NavUser | 
     displayName: profile.displayName ?? profile.username,
     avatarUrl: profile.avatarUrl,
     subscriptionTier: profile.subscriptionTier === "plus" ? "plus" : "free",
-    isAdmin: isAdminAccount(env, session.user.email),
+    isAdmin: isAdminEmail(env, session.user.email),
     stats: {
       booksThisYear,
       dayStreak: streak?.currentStreak ?? 0,

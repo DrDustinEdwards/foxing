@@ -23,18 +23,16 @@ export function affiliateConfig(env: Env): AffiliateConfig {
   };
 }
 
-/**
- * A public page stored at the edge (site-runtime ./edge-cache): `fresh` seconds, then served stale
- * up to `stale` more while it re-renders, tagged "pages" so Carrel's and the admin API's writes
- * purge it (workers/app.ts). Never kept in a browser.
- */
-export function publicCacheHeaders(fresh: number, stale: number) {
-  return publicPageHeaders({ freshSeconds: fresh, staleSeconds: stale });
-}
+// The presets are site-runtime ./edge-cache publicPageHeaders: a page stored at the edge for
+// `freshSeconds`, then served stale up to `staleSeconds` more while it re-renders, tagged "pages" so
+// Carrel's and the admin API's writes purge it (workers/app.ts). Never kept in a browser.
 
 /** Catalog pages (books, authors, book of the month): an hour at the edge, a day stale. */
-export const catalogPageHeaders = () => publicCacheHeaders(3600, 86400);
+export const catalogPageHeaders = () =>
+  publicPageHeaders({ freshSeconds: 3600, staleSeconds: 86400 });
 /** Pages that change rarely (about, terms, guides, awards, picks): an hour, a week stale. */
-export const staticPageHeaders = () => publicCacheHeaders(3600, 604800);
+export const staticPageHeaders = () =>
+  publicPageHeaders({ freshSeconds: 3600, staleSeconds: 604800 });
 /** The journal and the marketing home: ten minutes at the edge, a day stale. */
-export const listingPageHeaders = () => publicCacheHeaders(600, 86400);
+export const listingPageHeaders = () =>
+  publicPageHeaders({ freshSeconds: 600, staleSeconds: 86400 });

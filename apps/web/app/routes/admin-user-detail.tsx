@@ -7,6 +7,7 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useNavigate, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
+import { mediumDate, mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
@@ -37,9 +38,6 @@ export function meta({ loaderData }: Route.MetaArgs) {
     { name: "robots", content: "noindex" },
   ];
 }
-
-const fmtDate = new Intl.DateTimeFormat("en-US", { dateStyle: "medium" });
-const fmtDateTime = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -102,12 +100,12 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
           <Field label="Genres">{genres}</Field>
           <Field label="Timezone">{user.timezone ?? "Not set"}</Field>
           <Field label="Onboarded">
-            {user.onboardedAt ? fmtDateTime.format(user.onboardedAt) : "Not onboarded"}
+            {user.onboardedAt ? mediumDateTime.format(user.onboardedAt) : "Not onboarded"}
           </Field>
           <Field label="Last active">
-            {user.lastActiveAt ? fmtDateTime.format(user.lastActiveAt) : "Never"}
+            {user.lastActiveAt ? mediumDateTime.format(user.lastActiveAt) : "Never"}
           </Field>
-          <Field label="Joined">{fmtDate.format(user.createdAt)}</Field>
+          <Field label="Joined">{mediumDate.format(user.createdAt)}</Field>
         </div>
         <AdminError error={suspend.error} />
         {suspend.dialog}

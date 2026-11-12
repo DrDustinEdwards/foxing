@@ -4,7 +4,8 @@ import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
-import { SITE_NAME, absoluteUrl, buildMeta, ldJson } from "~/lib/seo";
+import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { SITE_NAME, absoluteUrl, buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/author";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -38,7 +39,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
         { name: author.name, path: `/authors/${author.slug}` },
       ],
     }),
-    ldJson(
+    jsonLd(
       thing("Person", {
         name: author.name,
         url: absoluteUrl(`/authors/${author.slug}`),

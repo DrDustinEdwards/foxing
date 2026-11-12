@@ -5,7 +5,8 @@
 // a native modal <dialog>: focus moves into it, Tab stays inside, Escape cancels, and
 // focus returns to the button that opened it.
 import { useEffect, useId, useRef, useState } from "react";
-import { AdminButton, adminFetch } from "./admin-form";
+import { OFFLINE_MESSAGE } from "@foxing/client";
+import { AdminButton, adminFetch, messageFrom } from "./admin-form";
 
 type RoleValue = boolean | string;
 
@@ -27,11 +28,6 @@ type Open = {
   token: string;
   expiresAt: string;
 };
-
-function failureMessage(body: unknown, status: number, fallback: string): string {
-  const b = body as { detail?: string } | null;
-  return b?.detail ?? `${fallback} (${status}).`;
-}
 
 const VALUE_LABELS: Record<RolePreview["kind"], (v: RoleValue) => string> = {
   tier: (v) => (v === "plus" ? "Plus" : "Free"),
@@ -57,13 +53,13 @@ export function useRoleChange(opts: { onDone: () => void }) {
     try {
       const result = await adminFetch(path, { body });
       if (!result.ok) {
-        setError(failureMessage(result.body, result.status, "Could not preview the change"));
+        setError(messageFrom(result, "Could not preview the change"));
         return;
       }
       const { preview, confirm } = result.body as PreviewResponse;
       setOpen({ path, body, label, preview, token: confirm.token, expiresAt: confirm.expiresAt });
     } catch {
-      setError("Could not reach the server. Check your connection and try again.");
+      setError(OFFLINE_MESSAGE);
     } finally {
       setPending(false);
     }
@@ -122,12 +118,12 @@ function RoleChangeDialog({
         body: { ...change.body, confirm: change.token },
       });
       if (!result.ok) {
-        setError(failureMessage(result.body, result.status, "Could not apply the change"));
+        setError(messageFrom(result, "Could not apply the change"));
         return;
       }
       closeThen(onDone);
     } catch {
-      setError("Could not reach the server. Check your connection and try again.");
+      setError(OFFLINE_MESSAGE);
     } finally {
       setPending(false);
     }

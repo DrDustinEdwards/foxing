@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  enrichSelectionLocator,
-  progressPctFromLocator,
-  tintFor,
-  type Locator,
-} from "../app/lib/reader/locator";
+import { enrichSelectionLocator, tintFor, type Locator } from "../app/lib/reader/locator";
 import { toEpubPreferences, DEFAULT_SETTINGS } from "../app/lib/reader/settings";
 
 describe("enrichSelectionLocator (R1/R2)", () => {
@@ -50,19 +45,6 @@ describe("enrichSelectionLocator (R1/R2)", () => {
     const out = enrichSelectionLocator(base, {}, undefined);
     expect(out.text?.highlight).toBe("the sea");
     expect(out.text?.before).toBeUndefined();
-  });
-});
-
-describe("progressPctFromLocator", () => {
-  it("derives a 0..100 percentage from totalProgression", () => {
-    expect(
-      progressPctFromLocator({ href: "a", type: "t", locations: { totalProgression: 0.276 } }),
-    ).toBe(27.6);
-    expect(progressPctFromLocator({ href: "a", type: "t", locations: {} })).toBe(0);
-    expect(progressPctFromLocator(null)).toBe(0);
-    expect(
-      progressPctFromLocator({ href: "a", type: "t", locations: { totalProgression: 1 } }),
-    ).toBe(100);
   });
 });
 

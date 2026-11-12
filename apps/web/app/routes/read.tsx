@@ -4,7 +4,8 @@
 // so the route renders a shell and the ReaderView lazy-loads the engine. Anonymous
 // readers can read fully; annotating/bookmarking/progress prompt sign-in.
 import { loadReaderAnnotations, views } from "@foxing/core";
-import { getAuth, sessionLookup } from "~/lib/auth.server";
+import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
+import { getAuth } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
 import { ReaderView } from "~/components/reader/reader-view";
