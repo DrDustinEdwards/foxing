@@ -1,3 +1,4 @@
+import { toDate } from "@dustinedwards/site-runtime/time";
 import type { Db } from "../db";
 import type { ClubPost, ClubThread } from "./clubs";
 import { clubPosts, clubThreads } from "../schema";
@@ -30,7 +31,7 @@ export async function createThread(
       chapter: input.chapter ?? null,
       hasSpoilers: input.hasSpoilers ?? false,
       isAiStarter: input.isAiStarter ?? false,
-      expiresAt: input.expiresAt != null ? new Date(input.expiresAt) : null,
+      expiresAt: toDate(input.expiresAt),
     })
     .returning();
   return row;

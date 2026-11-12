@@ -1,5 +1,6 @@
 // The Journal (editorial posts): /journal, /journal/:slug, /journal/rss.xml.
 // Public reads are published-only.
+import { toDate } from "@dustinedwards/site-runtime/time";
 import { pageEnvelope } from "capsomer/behavior/pagination";
 import { and, asc, desc, eq, getTableColumns, isNotNull, lte, sql } from "drizzle-orm";
 import type { Db } from "../../db";
@@ -286,7 +287,7 @@ export async function listPostsByTag(
       coverFocus: r.cover_focus,
       tags: JSON.parse(r.tags) as string[],
       featured: !!r.featured,
-      publishedAt: r.published_at ? new Date(r.published_at) : null,
+      publishedAt: toDate(r.published_at),
       readingTimeMinutes: r.reading_time_minutes,
     })),
     total,

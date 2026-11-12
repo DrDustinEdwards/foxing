@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@better-auth/expo": "~1.7.17",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.137.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.138.0",
     "@epubjs-react-native/core": "^1.4.7",
     "@expo-google-fonts/dm-mono": "^0.4.2",
     "@expo-google-fonts/dm-sans": "^0.4.2",
