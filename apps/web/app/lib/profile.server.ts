@@ -8,8 +8,7 @@ import type { SignedInProfile } from "@foxing/core";
 import { isAdminEmail } from "@dustinedwards/site-runtime/access";
 import { createDb, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "./auth.server";
+import { sessionUserFromRequest } from "./auth.server";
 
 export interface SessionUser {
   id: string;
@@ -33,7 +32,7 @@ export async function requireProfileForUser(env: Env, user: SessionUser): Promis
 
 // Full gate for a loader: unauthenticated to /login, onboarded-less to /onboarding.
 export async function requireProfile(env: Env, request: Request): Promise<ProfileContext> {
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login");
-  return requireProfileForUser(env, { id: session.user.id, email: session.user.email });
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect("/login");
+  return requireProfileForUser(env, user);
 }

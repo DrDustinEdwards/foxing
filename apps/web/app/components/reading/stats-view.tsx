@@ -44,21 +44,21 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
 
         <dl className="fx-stats-grid">
           {tiles.map((tile) => (
-            <div key={tile.label} className="card card-5">
+            <div key={tile.label} className="cap-card">
               <dd className="display-3">{formatNumber(tile.value)}</dd>
-              <dt className="mt-1 fx-stats-caps">{tile.label}</dt>
+              <dt className="fx-stats-caps">{tile.label}</dt>
             </div>
           ))}
         </dl>
 
         {finishedThisYear > 0 ? (
-          <section className="mt-10 card card-5">
+          <section className="mt-10 cap-card">
             <ChartFrame draw={monthsChart(monthly, year)} />
           </section>
         ) : null}
 
         {genres.length > 0 ? (
-          <section className="mt-10 card card-5">
+          <section className="mt-10 cap-card">
             <ChartFrame draw={genresChart(genres, year)} />
           </section>
         ) : null}

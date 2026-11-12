@@ -7,7 +7,7 @@
 .fx-book {
   --pad-card: 0.625rem;
   --fs-card-title: 1rem;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   & > .cover-img {
     border-radius: inherit;
     border-end-start-radius: 0;
@@ -165,7 +165,7 @@ a:hover > .fx-book > :is(h2, h3) {
   justify-content: space-between;
   gap: 0.75rem;
   border: 1px solid var(--line);
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   background: var(--surface);
   padding: 0.75rem 1rem;
   box-shadow: var(--shadow-s);
@@ -260,15 +260,6 @@ a:hover > .fx-book > :is(h2, h3) {
   flex-wrap: wrap;
   gap: 0.5rem;
 }
-.fx-book-detail-card {
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1rem;
-}
-.fx-book-detail-eyebrow {
-  margin-bottom: 0.625rem;
-}
 .fx-book-detail-stack-2 {
   display: flex;
   flex-direction: column;
@@ -302,13 +293,8 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--dim);
 }
 .fx-books-card {
-  display: flex;
-  flex-direction: column;
   gap: 1.5rem;
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.25rem;
+  --pad-card: 1.25rem;
 }
 .fx-books-row {
   display: flex;
@@ -321,15 +307,12 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 
 .fx-botm-card {
-  display: grid;
   gap: 2rem;
-  border-radius: var(--fx-radius-hero);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 1.5rem;
-  box-shadow: var(--shadow-m);
+  --radius-l: var(--fx-radius-hero);
+  --pad-card: 1.5rem;
+  --card-shadow: var(--shadow-m);
   @media (min-width: 40rem) {
-    padding: 2.5rem;
+    --pad-card: 2.5rem;
   }
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
@@ -398,7 +381,7 @@ a:hover > .fx-book > :is(h2, h3) {
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  border-radius: var(--fx-radius-card);
+  border-radius: var(--radius-l);
   border: 1px solid var(--line);
   background-color: var(--sunken);
   padding-inline: 1rem;
@@ -429,12 +412,7 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 .fx-find-next-book-card-2,
 .fx-library-card-2 {
-  display: flex;
-  flex-direction: column;
-  border-radius: var(--fx-radius-card);
-  border: 1px solid var(--line);
-  background-color: var(--surface);
-  padding: 0.625rem;
+  --pad-card: 0.625rem;
 }
 .fx-find-next-book-stack {
   display: flex;

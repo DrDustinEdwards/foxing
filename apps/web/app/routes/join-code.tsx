@@ -7,20 +7,19 @@ import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { clubsRepo, createDb } from "@foxing/core";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect(`/login?next=/join/${params.code}`);
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect(`/login?next=/join/${params.code}`);
 
   const db = createDb(env.DB);
   const club = await clubsRepo.getClubByJoinCode(db, params.code);
   if (!club) throw new Response("Invite not found", { status: 404 });
   const memberCount = await clubsRepo.countActiveMembers(db, club.id);
-  const membership = await clubsRepo.getMembership(db, club.id, session.user.id);
+  const membership = await clubsRepo.getMembership(db, club.id, user.id);
 
   return {
     code: params.code,

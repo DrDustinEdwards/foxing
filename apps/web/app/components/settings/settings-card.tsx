@@ -32,9 +32,9 @@ export function ToggleRow({
 
 export function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="fx-settings-card-card-2">
+    <section className="cap-card">
       <h2 className="display-1">{title}</h2>
-      <div className="mt-4">{children}</div>
+      <div>{children}</div>
     </section>
   );
 }

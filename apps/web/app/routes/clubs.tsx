@@ -6,19 +6,18 @@ import { createDb, views } from "@foxing/core";
 import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
-import { Container } from "~/components/ui";
+import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { sessionUserFromRequest } from "~/lib/auth.server";
 import { requireProfileForUser } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login?next=/clubs");
-  await requireProfileForUser(env, { id: session.user.id, email: session.user.email });
-  return views.clubsIndex(createDb(env.DB), session.user.id);
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) throw redirect("/login?next=/clubs");
+  await requireProfileForUser(env, user);
+  return views.clubsIndex(createDb(env.DB), user.id);
 }
 
 export function meta() {
@@ -31,9 +30,11 @@ function ClubRow({
   club: { slug: string | null; name: string; description: string | null };
 }) {
   return (
-    <Link to={`/clubs/${club.slug}`} className="block fx-clubs-card">
-      <p className="display-0">{club.name}</p>
-      {club.description ? <p className="mt-1 fx-clubs-text">{club.description}</p> : null}
+    <Link to={`/clubs/${club.slug}`}>
+      <article className="cap-card">
+        <h3 className="display-0">{club.name}</h3>
+        {club.description ? <p className="fx-clubs-text">{club.description}</p> : null}
+      </article>
     </Link>
   );
 }
@@ -54,11 +55,11 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
         <section className="mt-10">
           <h2 className="fx-clubs-caps">Your clubs</h2>
           {mine.length === 0 ? (
-            <div className="mt-4 text-center fx-clubs-card-2">
-              <p className="meta">
-                You have not joined a club yet. Join one below, or start your own.
-              </p>
-            </div>
+            <EmptyState
+              className="mt-4"
+              title="You have not joined a club yet."
+              body="Join one below, or start your own."
+            />
           ) : (
             <div className="mt-4 fx-clubs-grid">
               {mine.map((club) => (

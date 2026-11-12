@@ -14,8 +14,7 @@ import { Link } from "capsomer/react/link";
 import { useEffect } from "react";
 import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
-import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
-import { getAuth } from "~/lib/auth.server";
+import { getAuth, sessionUserFromRequest } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/email-confirm";
 
@@ -31,10 +30,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   if (result.done !== "changed") return { ...result, email: null, displayName: null };
   // The change is made, and this browser is signed in to the account: name its new address.
   const { env } = context.get(cloudflareContext);
-  const session = await (await getAuth(env)).api.getSession(sessionLookup(request));
-  if (!session?.user) return { ...result, email: null, displayName: null };
-  const profile = await profilesRepo.getProfileById(createDb(env.DB), session.user.id);
-  return { ...result, email: session.user.email, displayName: profile?.displayName ?? null };
+  const user = await sessionUserFromRequest(request, env);
+  if (!user) return { ...result, email: null, displayName: null };
+  const profile = await profilesRepo.getProfileById(createDb(env.DB), user.id);
+  return { ...result, email: user.email, displayName: profile?.displayName ?? null };
 }
 
 export async function action({ context, request }: Route.ActionArgs) {

@@ -83,7 +83,7 @@ function WordItem({ word }: { word: VocabularyWord }) {
   const setMastered = useSetMastered();
 
   return (
-    <li className="card">
+    <li className="cap-card">
       <div className="fx-vocabulary-row-2">
         <h2 className="fx-vocabulary-title">{word.word}</h2>
         <div className="shrink-0 fx-vocabulary-row-3">
@@ -97,12 +97,12 @@ function WordItem({ word }: { word: VocabularyWord }) {
           </button>
         </div>
       </div>
-      <p className="mt-1 ui">{word.definition}</p>
+      <p className="ui">{word.definition}</p>
       {word.contextSentence ? (
-        <p className="mt-2 italic fx-vocabulary-text">{word.contextSentence}</p>
+        <p className="italic fx-vocabulary-text">{word.contextSentence}</p>
       ) : null}
       {setMastered.error ? (
-        <p className="mt-2 error xsmall" role="alert">
+        <p className="error xsmall" role="alert">
           {setMastered.error}
         </p>
       ) : null}

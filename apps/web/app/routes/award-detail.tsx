@@ -3,8 +3,9 @@ import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
-import { jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { buildMeta, itemListLd } from "~/lib/seo";
+import { itemList, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { SITE_ORIGIN } from "~/lib/origins";
+import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/award-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
@@ -27,9 +28,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       pageType: "CollectionPage",
     }),
     jsonLd(
-      itemListLd(
+      itemList(
+        SITE_ORIGIN,
         award.name,
-        award.entries.map((e) => ({ title: e.book.title, path: `/books/${e.book.slug}` })),
+        award.entries.map((e) => ({ name: e.book.title, path: `/books/${e.book.slug}` })),
       ),
     ),
   ];

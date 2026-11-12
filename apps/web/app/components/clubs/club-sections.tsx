@@ -113,7 +113,7 @@ export function ThreadsSection({
       </div>
 
       {open ? (
-        <form onSubmit={(e) => void create(e)} className="mt-3 fx-club-sections-card-2">
+        <form onSubmit={(e) => void create(e)} className="mt-3 cap-card fx-club-sections-card-2">
           <input
             name="title"
             required
@@ -147,11 +147,13 @@ export function ThreadsSection({
         <ul className="mt-4 fx-club-sections-list">
           {threads.map((t) => (
             <li key={t.id}>
-              <Link to={`/clubs/${slug}/t/${t.id}`} className="block fx-club-sections-card-3">
-                {t.type === "announcement" ? (
-                  <span className="fx-club-sections-caps">Announcement</span>
-                ) : null}
-                <span className="ink sans">{t.title}</span>
+              <Link to={`/clubs/${slug}/t/${t.id}`}>
+                <article className="cap-card">
+                  {t.type === "announcement" ? (
+                    <p className="fx-club-sections-caps">Announcement</p>
+                  ) : null}
+                  <p className="ink sans">{t.title}</p>
+                </article>
               </Link>
             </li>
           ))}

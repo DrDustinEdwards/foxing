@@ -2,8 +2,9 @@ import { catalogRepo } from "@foxing/core";
 import { PageShell } from "~/components/page-shell";
 import { Container, EntityCard, PageHeader } from "~/components/ui";
 import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
-import { jsonLd } from "@drdustinedwards/site-helpers/schema";
-import { buildMeta, itemListLd } from "~/lib/seo";
+import { itemList, jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { SITE_ORIGIN } from "~/lib/origins";
+import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/picks";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -25,9 +26,10 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
       pageType: "CollectionPage",
     }),
     jsonLd(
-      itemListLd(
+      itemList(
+        SITE_ORIGIN,
         "Book club picks",
-        data.clubs.map((c) => ({ title: c.name, path: `/picks/${c.slug}` })),
+        data.clubs.map((c) => ({ name: c.name, path: `/picks/${c.slug}` })),
       ),
     ),
   ];
