@@ -4,6 +4,7 @@
 // emits notifications/activity (via emit), and returns any `live` message for the API
 // to relay to the club's ClubRoom AFTER this returns. That ordering is the invariant:
 // D1 first, then notify. The DO never writes D1.
+import { toDate } from "@dustinedwards/site-runtime/time";
 import { eq } from "drizzle-orm";
 import type { Db } from "../db";
 import type { ClubMemberRole } from "../enums";
@@ -283,7 +284,7 @@ export async function muteMember(
     db,
     clubId,
     targetUserId,
-    until ? new Date(until) : null,
+    toDate(until),
     actor.userId,
   );
   return member as clubsRepo.ClubMember;

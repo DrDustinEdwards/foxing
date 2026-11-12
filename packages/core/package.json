@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.48.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.137.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.138.0",
     "@foxing/types": "*",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.104.0",
     "drizzle-orm": "^0.45.2",

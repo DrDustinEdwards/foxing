@@ -4,9 +4,7 @@ import { inArray } from "drizzle-orm";
 import { chunked, type Db } from "../db";
 import { books } from "../schema";
 
-export function ms(d: Date | null | undefined): number | null {
-  return d ? d.getTime() : null;
-}
+export { toMs as ms } from "@dustinedwards/site-runtime/time";
 
 /** Book references for any books (catalog or community), keyed by id. */
 export async function bookRefs(db: Db, ids: (string | null)[]): Promise<Map<string, W.BookRef>> {

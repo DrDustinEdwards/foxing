@@ -1,3 +1,4 @@
+import { toDate } from "@dustinedwards/site-runtime/time";
 import type { Db } from "../db";
 import type {
   ClubMeeting,
@@ -32,7 +33,7 @@ export async function createPoll(
       description: input.description ?? null,
       pollType: input.pollType ?? "single",
       options: input.options,
-      closesAt: input.closesAt != null ? new Date(input.closesAt) : null,
+      closesAt: toDate(input.closesAt),
     })
     .returning();
   return row;
@@ -109,7 +110,7 @@ export async function createMeeting(
       description: input.description ?? null,
       bookId: input.bookId ?? null,
       meetingDate: new Date(input.meetingDate),
-      endDate: input.endDate != null ? new Date(input.endDate) : null,
+      endDate: toDate(input.endDate),
       meetingType: input.meetingType ?? "virtual",
       locationName: input.locationName ?? null,
       locationAddress: input.locationAddress ?? null,
