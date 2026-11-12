@@ -169,6 +169,13 @@
       "when": 1794456935373,
       "tag": "0023_shared_media_store",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1794456995373,
+      "tag": "0024_drop_journal_media",
+      "breakpoints": true
     }
   ]
 }
