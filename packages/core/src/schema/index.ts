@@ -10,4 +10,4 @@ export * from "./social";
 export * from "./platform";
 export * from "./companion";
 export * from "./billing";
-export * from "./journal-media";
+export * from "./media";

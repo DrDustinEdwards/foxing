@@ -15,7 +15,7 @@ export type JournalPost = typeof journalPosts.$inferSelect;
  */
 const coverFocus = sql<
   string | null
->`(SELECT m.focus FROM journal_media m WHERE substr(${journalPosts.coverImageUrl}, -length('/media/' || m.key)) = '/media/' || m.key)`;
+>`(SELECT m.focus FROM media m WHERE substr(${journalPosts.coverImageUrl}, -length('/media/' || m.key)) = '/media/' || m.key)`;
 
 export type JournalCard = {
   slug: string;
