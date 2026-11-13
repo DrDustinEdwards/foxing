@@ -16,6 +16,7 @@ import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { bookLd, buildMeta } from "~/lib/seo";
 import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
+import { signInHref } from "~/lib/sign-in-path";
 
 /**
  * The LCP cover's preload for the Link header, so Early Hints starts it before the HTML arrives
@@ -69,7 +70,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       myBook,
       shelves,
       bookId: book.id,
-      loginHref: `/login?next=/books/${book.slug}`,
+      loginHref: signInHref(`/books/${book.slug}`),
       buys: page.buys,
       book: {
         slug: book.slug,

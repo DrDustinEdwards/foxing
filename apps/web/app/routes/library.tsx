@@ -15,7 +15,6 @@ import {
 } from "@foxing/client";
 import type { GoalWithProgress, Shelf, ShelfStatus, Streak } from "@foxing/types";
 import { useState } from "react";
-import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
 import { Tabs, TabsList, TabsTrigger } from "capsomer/react/tabs";
@@ -25,9 +24,8 @@ import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionUserFromRequest } from "~/lib/auth.server";
 import { loadLibraryData } from "~/lib/library.server";
-import { requireProfileForUser } from "~/lib/profile.server";
+import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
 
 const STATUS_TABS: { value: ShelfStatus; label: string }[] = [
@@ -48,10 +46,7 @@ const EMPTY_COPY: Record<ShelfStatus, string> = {
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect("/login?next=/library");
-  // Signed-in but not onboarded -> /onboarding (never render with a null profile).
-  await requireProfileForUser(env, user);
+  const { user } = await requireProfile(env, request);
   return loadLibraryData(env, user.id);
 }
 

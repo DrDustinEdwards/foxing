@@ -9,6 +9,7 @@ import { isAdminEmail } from "@dustinedwards/site-runtime/access";
 import { createDb, profilesRepo } from "@foxing/core";
 import { redirect } from "react-router";
 import { sessionUserFromRequest } from "./auth.server";
+import { signInFrom } from "./sign-in-path";
 
 export interface SessionUser {
   id: string;
@@ -33,6 +34,6 @@ export async function requireProfileForUser(env: Env, user: SessionUser): Promis
 // Full gate for a loader: unauthenticated to /login, onboarded-less to /onboarding.
 export async function requireProfile(env: Env, request: Request): Promise<ProfileContext> {
   const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect("/login");
+  if (!user) throw redirect(signInFrom(request));
   return requireProfileForUser(env, user);
 }

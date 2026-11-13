@@ -2,6 +2,7 @@
 // link and passkeys). baseURL defaults to the current origin.
 import { signInClientPlugins } from "@dustinedwards/site-runtime/sign-in-client";
 import { createAuthClient } from "better-auth/react";
+import { signInHref } from "./sign-in-path";
 
 export const authClient = createAuthClient({
   plugins: signInClientPlugins(),
@@ -16,7 +17,7 @@ export const { signIn } = authClient;
  */
 export function signInAgainIfStale(error: unknown): boolean {
   if ((error as { code?: string } | null)?.code !== "SESSION_NOT_FRESH") return false;
-  window.location.assign(`/login?next=${encodeURIComponent(location.pathname + location.search)}`);
+  window.location.assign(signInHref(location.pathname + location.search));
   return true;
 }
 
