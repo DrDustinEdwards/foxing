@@ -2,7 +2,7 @@
 // account deletion. Every write refetches "me" and the reader's public profile.
 import type * as W from "@foxing/types";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useDebounced } from "capsomer/react/form-hooks";
 import { qs } from "./http";
 import { keys } from "./keys";
 import { useApi } from "./provider";
@@ -59,11 +59,7 @@ export function useOnboard() {
 /** Debounced availability of a username the reader is typing; null until it settles. */
 export function useUsernameAvailable(name: string, enabled: boolean, delayMs = 400) {
   const api = useApi();
-  const [term, setTerm] = useState(name);
-  useEffect(() => {
-    const t = setTimeout(() => setTerm(name), delayMs);
-    return () => clearTimeout(t);
-  }, [name, delayMs]);
+  const term = useDebounced(name, delayMs);
   const settled = enabled && term === name;
   const { data } = useQuery({
     queryKey: keys.usernameAvailable(term),
