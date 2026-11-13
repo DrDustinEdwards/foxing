@@ -1,6 +1,6 @@
 /* A journal post in a series: Capsomer's series nav, and the manual's signs it uses for the parts
    either side. Linked by the post route only on a post in a series, so no other page carries them. */
 /* app.css's layer order, first, so this file cannot reorder the layers whichever stylesheet the browser reads first. */
-@layer reset, cap;
+@layer cap.reset, cap.tokens, cap.base, cap.components, cap.utilities;
 @import "capsomer/manual.css";
 @import "capsomer/series-nav.css";
