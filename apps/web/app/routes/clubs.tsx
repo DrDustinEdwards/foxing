@@ -3,20 +3,16 @@
 // "New club" button routes to /clubs/new; joining happens on the club detail page.
 import { useClubsIndex } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionUserFromRequest } from "~/lib/auth.server";
-import { requireProfileForUser } from "~/lib/profile.server";
+import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect("/login?next=/clubs");
-  await requireProfileForUser(env, user);
+  const { user } = await requireProfile(env, request);
   return views.clubsIndex(createDb(env.DB), user.id);
 }
 

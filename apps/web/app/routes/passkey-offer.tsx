@@ -13,6 +13,7 @@ import { authClient, signInAgainIfStale } from "~/lib/auth-client";
 import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
+import { signInFrom } from "~/lib/sign-in-path";
 
 export function meta() {
   return [{ title: "Create a passkey | Foxing" }, { name: "robots", content: "noindex" }];
@@ -24,7 +25,7 @@ async function signedIn({ context, request }: Route.LoaderArgs | Route.ActionArg
   const next = safeNextPath(new URL(request.url).searchParams.get("next"), { fallback: "/me" });
   const auth = await getAuth(env);
   const session = await auth.api.getSession(sessionLookup(request));
-  if (!session?.user) throw redirect("/login");
+  if (!session?.user) throw redirect(signInFrom(request));
   return { env, auth, next, userId: session.user.id };
 }
 
