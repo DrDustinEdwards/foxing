@@ -4,6 +4,7 @@
 import { useNow } from "capsomer/react/hooks";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
+import "capsomer/meter.css";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Button, Container, Eyebrow } from "~/components/ui";

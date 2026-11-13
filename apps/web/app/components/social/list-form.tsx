@@ -4,6 +4,7 @@
 import { useCreateList, useUpdateList } from "@foxing/client";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useHydrated } from "capsomer/react/hooks";
 
 export function ListForm({
   mode,
@@ -17,6 +18,7 @@ export function ListForm({
   initial?: { title: string; description: string | null; isPublic: boolean };
 }) {
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const create = useCreateList();
   const update = useUpdateList();
   const { error, pending } = mode === "create" ? create : update;
@@ -83,7 +85,7 @@ export function ListForm({
       <div className="cap-cluster" data-gap="4">
         <button
           type="submit"
-          disabled={pending || title.trim() === ""}
+          disabled={pending || !hydrated || title.trim() === ""}
           className="cap-btn"
           data-variant="primary"
         >

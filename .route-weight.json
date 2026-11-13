@@ -1,6 +1,6 @@
 {
   "enforce": true,
-  "budget_bytes": 272100,
+  "budget_bytes": 271400,
   "linked_css": true,
   "baseline": {
     "measured_at": "1900468",

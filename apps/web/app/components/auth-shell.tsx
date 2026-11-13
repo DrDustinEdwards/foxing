@@ -12,6 +12,7 @@ import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
 import { Link } from "capsomer/react/link";
 import { authClient, signIn } from "~/lib/auth-client";
 import { signInWithPasskey, signalPasskeys } from "@dustinedwards/site-runtime/sign-in-client";
+import { useHydrated } from "capsomer/react/hooks";
 
 /** Which ways in the page offers: the loader's signInMethods(env, { social: true }). */
 export type SignInMethods = { google: boolean; apple: boolean; turnstileSiteKey: string | null };
@@ -317,6 +318,7 @@ export function MagicLinkForm({
   next?: string;
 }) {
   const [pending, setPending] = useState(false);
+  const hydrated = useHydrated();
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [refusal, setRefusal] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -386,7 +388,12 @@ export function MagicLinkForm({
           {refusal}
         </p>
       ) : null}
-      <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
+      <button
+        type="submit"
+        disabled={pending || !hydrated}
+        className={authSecondaryButtonClass}
+        data-size="lg"
+      >
         {pending ? "Sending..." : "Email me a sign-in link"}
       </button>
     </form>
