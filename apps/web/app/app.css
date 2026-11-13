@@ -38,6 +38,10 @@
 @import "capsomer/icons.css";
 @import "capsomer/picture.css";
 @import "capsomer/time.css";
+@import "capsomer/rating.css";
+@import "capsomer/legal-doc.css";
+@import "capsomer/hero.css";
+@import "capsomer/cta-band.css";
 @import "capsomer/chart-frame.css";
 /* The whole chart stylesheet: Enarratio's base, the token mapping, gridlines and series inks. */
 @import "capsomer/enarratio.css";

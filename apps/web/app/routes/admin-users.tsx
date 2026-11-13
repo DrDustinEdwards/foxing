@@ -4,7 +4,7 @@
 // with a visible error on failure.
 import { adminRepo, createDb } from "@foxing/core";
 import { useRevalidator } from "react-router";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { AdminButton, AdminError, adminInputClass } from "~/components/admin/admin-form";
 import { useRoleChange } from "~/components/admin/confirm-change";
@@ -106,9 +106,7 @@ function UserRow({
           >
             {user.isSuspended ? "Unsuspend" : "Suspend"}
           </AdminButton>
-          <Link to={`/admin/users/${user.id}`} className="cap-btn">
-            View
-          </Link>
+          <ButtonLink to={`/admin/users/${user.id}`}>View</ButtonLink>
         </div>
       </div>
       <AdminError error={suspend.error} />

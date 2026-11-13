@@ -3,7 +3,7 @@
 // any signed-in viewer can like the list (reactions, target_type='reading_list').
 import { useListPage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { AddBookToList } from "~/components/social/add-book-to-list";
 import { LikeButton } from "~/components/social/like-button";
@@ -74,11 +74,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                 count={likeCount}
                 signedIn={signedIn}
               />
-              {isOwner ? (
-                <Link to={`/lists/${list.id}/edit`} className="cap-btn">
-                  Edit
-                </Link>
-              ) : null}
+              {isOwner ? <ButtonLink to={`/lists/${list.id}/edit`}>Edit</ButtonLink> : null}
             </div>
           </div>
           {list.description ? <p className="fx-list-detail-text">{list.description}</p> : null}

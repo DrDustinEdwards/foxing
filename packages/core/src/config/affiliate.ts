@@ -3,7 +3,7 @@
 // into stored URLs. When a book has no canonical URL (most Gutenberg classics), we fall
 // back to a title+author search so every book page still shows where to buy or borrow.
 // Bookshop.org always ranks before Amazon (house rule 4); the library link is last.
-// The rel="sponsored noopener noreferrer" attribute is applied by the render layer for
+// The rel="external sponsored noopener noreferrer" attribute is applied by Capsomer's ButtonLink for
 // affiliate links (sponsored=true); the library link is not sponsored.
 
 export type AffiliateConfig = {

@@ -3,7 +3,7 @@
 // access. Each list links to its detail page; "New list" links to the create route.
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/components/ui";
@@ -38,9 +38,9 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-10 items-end fx-lists-row">
           <PageHeader eyebrow="Reading" title="Your lists" className="mb-0" />
-          <Link to="/lists/new" className="cap-btn shrink-0" data-variant="primary">
+          <ButtonLink to="/lists/new" className="shrink-0" variant="primary">
             New list
-          </Link>
+          </ButtonLink>
         </div>
         {lists.length === 0 ? (
           <EmptyState

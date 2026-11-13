@@ -2,7 +2,7 @@ import { preloads } from "@dustinedwards/site-runtime/preload";
 import { renameRedirect } from "@dustinedwards/site-runtime/url";
 import { useMyBook, useShelves } from "@foxing/client";
 import { views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { BookShelvesPicker } from "~/components/book-shelves-picker";
 import { BookStatusControl } from "~/components/book-status-control";
@@ -182,15 +182,17 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 />
               ) : null}
               {buys.map((b) => (
-                <Button
+                <ButtonLink
                   key={b.retailer}
                   href={b.url}
-                  variant={b.retailer === "bookshop" ? "secondary" : "ghost"}
-                  rel={b.sponsored ? "sponsored noopener noreferrer" : "noopener noreferrer"}
-                  target="_blank"
+                  variant={b.retailer === "bookshop" ? "secondary" : "quiet"}
+                  className={b.retailer === "bookshop" ? undefined : "fx-btn-ghost"}
+                  away
+                  newTab
+                  sponsored={b.sponsored}
                 >
                   {b.retailer === "library" ? b.label : `Buy at ${b.label}`}
-                </Button>
+                </ButtonLink>
               ))}
             </div>
           </div>
