@@ -421,6 +421,8 @@
   --text: var(--fx-on-dark);
   --muted: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
   --radius-m: var(--radius-l);
+  /* The band is dark in both themes, so the radios draw dark rather than white. */
+  color-scheme: dark;
 }
 
 .fx-join-code-text-3 {

@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@foxing/types": "*",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.134.0"
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.142.0"
   },
   "devDependencies": {
     "@tanstack/react-query": "^5.104.5",
