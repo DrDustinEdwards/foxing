@@ -104,9 +104,7 @@ function ClubRow({
       }
       actions={
         <>
-          {club.slug ? (
-            <ButtonLink to={`/clubs/${club.slug}`}>View</ButtonLink>
-          ) : null}
+          {club.slug ? <ButtonLink to={`/clubs/${club.slug}`}>View</ButtonLink> : null}
           <AdminButton
             pending={pending}
             onClick={() =>
