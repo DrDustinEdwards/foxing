@@ -69,7 +69,7 @@ export function AnnotationFilters({
           className={`cap-input ${inputClassName}`}
         />
         {books.length > 1 ? (
-          <label className="ui">
+          <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
             <span className="cap-sr-only">Filter by book</span>
             <select value={book} onChange={(e) => onBook(e.target.value)} className="cap-select">
               <option value="all">All books</option>
@@ -83,7 +83,7 @@ export function AnnotationFilters({
         ) : null}
       </div>
       {children}
-      <span className="fine">
+      <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
         {shown} of {total}
       </span>
     </div>
@@ -125,12 +125,17 @@ export function BookGroups<T extends BookFields>({
     groups[i].items.push(e);
   }
 
-  if (groups.length === 0) return <p className="meta">{empty}</p>;
+  if (groups.length === 0)
+    return (
+      <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+        {empty}
+      </p>
+    );
   return (
     <div className="cap-stack" data-gap="7">
       {groups.map((g) => (
         <section key={g.key} className="cap-stack" data-gap="4">
-          <h2 className="display-0">
+          <h2 className="cap-title" data-size="5">
             {g.slug ? (
               <Link to={`/books/${g.slug}`} className="hover-accent">
                 {g.label}
@@ -138,7 +143,12 @@ export function BookGroups<T extends BookFields>({
             ) : (
               g.label
             )}
-            {g.author ? <span className="dim"> by {g.author}</span> : null}
+            {g.author ? (
+              <span className="cap-text" data-tone="dim">
+                {" "}
+                by {g.author}
+              </span>
+            ) : null}
           </h2>
           <ul className="cap-stack" data-gap="4">
             {g.items.map((e) => (

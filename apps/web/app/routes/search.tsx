@@ -83,7 +83,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
             />
           </>
         ) : (
-          <p className="mt-8 muted sans">
+          <p className="cap-text mt-8" data-tone="muted" data-face="ui">
             Start typing to search, or{" "}
             <Link to="/books" className="link">
               browse the whole library

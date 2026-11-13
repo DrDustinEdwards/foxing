@@ -20,9 +20,11 @@ export function BookShelvesPicker({
 
   return (
     <div className="cap-card">
-      <p className="sans small strong">Add to shelves</p>
+      <p className="cap-text" data-size="small" data-tone="ink" data-weight="strong" data-face="ui">
+        Add to shelves
+      </p>
       {shelves.length === 0 ? (
-        <p className="meta">
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
           You have no shelves yet.{" "}
           <Link to="/library" className="link">
             Create one
@@ -48,7 +50,7 @@ export function BookShelvesPicker({
         </div>
       )}
       {toggle.error ? (
-        <p className="mt-2 error xsmall" role="alert">
+        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {toggle.error}
         </p>
       ) : null}

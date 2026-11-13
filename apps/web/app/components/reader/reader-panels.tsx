@@ -139,7 +139,9 @@ function Stepper({
         >
           −
         </button>
-        <span className="text-center fx-reader-panels-label-3">{display}</span>
+        <span className="cap-text fx-reader-panels-label-3" data-align="center">
+          {display}
+        </span>
         <button
           type="button"
           aria-label={`Increase ${label}`}
@@ -444,7 +446,11 @@ export function ReaderTopBar({
         >
           ‹ Back
         </Link>
-        <div className="truncate text-center fx-reader-panels-box-2">
+        <div
+          className="cap-text cap-clamp fx-reader-panels-box-2"
+          data-align="center"
+          data-lines="1"
+        >
           <span className="fx-reader-panels-title-3">{book.title}</span>
           {chapter ? (
             <span className="fx-reader-panels-label-11">

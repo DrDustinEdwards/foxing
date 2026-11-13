@@ -45,7 +45,9 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
         <dl className="fx-stats-grid">
           {tiles.map((tile) => (
             <div key={tile.label} className="cap-card">
-              <dd className="display-3">{formatNumber(tile.value)}</dd>
+              <dd className="cap-title" data-size="2">
+                {formatNumber(tile.value)}
+              </dd>
               <dt className="fx-stats-caps">{tile.label}</dt>
             </div>
           ))}
@@ -66,7 +68,9 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
         <section className="mt-10">
           <Eyebrow className="mb-4">Goals</Eyebrow>
           {goals.length === 0 ? (
-            <p className="meta">No goals set.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No goals set.
+            </p>
           ) : (
             <ul className="cap-stack" data-gap="3">
               {goals.map((g) => {

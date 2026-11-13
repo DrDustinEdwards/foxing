@@ -179,7 +179,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
               ))}
             </div>
             {anyFilterSet ? (
-              <Link to="/books" className="link sans small">
+              <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
                 Clear filters
               </Link>
             ) : null}
@@ -228,7 +228,7 @@ function Pagination({
       ) : (
         <span className="py-2 fx-books-label">Previous</span>
       )}
-      <span className="ui">
+      <span className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         Page {result.page} of {result.pageCount}
       </span>
       {next ? (

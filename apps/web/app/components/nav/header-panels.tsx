@@ -91,9 +91,15 @@ export function PicksPanel({
     <div className="fx-panel fx-panel-picks">
       {botm ? (
         <Link to="/book-of-the-month" className="fx-panel-pick">
-          <span className="group-label accent">Foxing pick</span>
-          <span className="display-s">{botm.title}</span>
-          <span className="fine">{botm.author}</span>
+          <span className="cap-text group-label" data-tone="accent">
+            Foxing pick
+          </span>
+          <span className="cap-title" data-size="6">
+            {botm.title}
+          </span>
+          <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
+            {botm.author}
+          </span>
         </Link>
       ) : null}
       {featuredClubs.length > 0 ? (

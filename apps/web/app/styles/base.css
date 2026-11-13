@@ -1,5 +1,5 @@
 /* Foxing's own tokens, its element defaults and the small vocabulary every page uses: the page
-   column, stacks and rows and the text roles of design-system.md. Colors, the card radius, the
+   column, the spacing helpers and the labels of design-system.md. Colors, the card radius, the
    display face and the on state of Rule 05 are Capsomer's tokens (the fox family under Capsomer's
    foxing site layer); Foxing adds only what Capsomer has no token for: the reading canvas. */
 :root {
@@ -100,9 +100,6 @@
 .center {
   margin-inline: auto;
 }
-.text-center {
-  text-align: center;
-}
 
 /* Layout (stacks, clusters, spreads and grids) is Capsomer's: .cap-stack, .cap-cluster, .cap-spread and
    .cap-grid with data-gap, data-align and data-justify (capsomer/utilities.css, through base.css). */
@@ -139,24 +136,6 @@
 .ml-2 {
   margin-inline-start: 0.5rem;
 }
-.hidden {
-  display: none;
-}
-.accent-ui {
-  color: var(--accent);
-}
-.clamp-2,
-.clamp-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.clamp-2 {
-  -webkit-line-clamp: 2;
-}
-.clamp-3 {
-  -webkit-line-clamp: 3;
-}
 .grow {
   flex: 1 1 0%;
   min-inline-size: 0;
@@ -169,11 +148,6 @@
 }
 .relative {
   position: relative;
-}
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .block {
   display: block;
@@ -238,73 +212,11 @@
   margin-block-end: 2.5rem;
 }
 
-/* Text roles. UI chrome is DM Sans; metadata is the dim ink; Rule 07's small-caps labels are
-   DM Mono. */
-.ui {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-.meta {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--dim);
-}
-.fine {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  color: var(--dim);
-}
-.ink {
-  color: var(--text);
-}
-.muted {
-  color: var(--muted);
-}
-.dim {
-  color: var(--dim);
-}
-.accent {
-  color: var(--accent-text);
-}
-.strong {
-  font-weight: 500;
-  color: var(--text);
-}
+/* Text roles are Capsomer's (.cap-text, .cap-title, .cap-clamp in capsomer/utilities.css), at
+   Foxing's sizes and weights from its site entry: UI chrome is DM Sans (data-face="ui"), metadata
+   the dim ink. Rule 07's small-caps labels are DM Mono and stay here. */
 .italic {
   font-style: italic;
-}
-.mono {
-  font-family: var(--mono);
-}
-.num {
-  font-variant-numeric: tabular-nums;
-}
-.sans {
-  font-family: var(--ui);
-}
-.lead {
-  font-size: 1.125rem;
-  color: var(--muted);
-}
-.small {
-  font-size: 0.875rem;
-}
-.xsmall {
-  font-size: 0.75rem;
-}
-.error {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--crit);
-}
-.crit {
-  color: var(--crit);
-}
-.ok {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--ok);
 }
 .fx-label {
   display: block;
@@ -357,52 +269,10 @@
   color: var(--ok);
 }
 
-/* Display headings by size. */
-
-.display-4 {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 2.25rem;
-  line-height: 1.15;
-  color: var(--text);
-}
-.display-3 {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.875rem;
-  line-height: 1.2;
-  color: var(--text);
-}
-.display-2 {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.5rem;
-  line-height: 1.25;
-  color: var(--text);
-}
-.display-1 {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.25rem;
-  line-height: 1.3;
-  color: var(--text);
-}
-.display-0 {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1.125rem;
-  line-height: 1.35;
-  color: var(--text);
-}
-.display-s {
-  font-family: var(--display);
-  font-weight: 600;
-  font-size: 1rem;
-  line-height: 1.35;
-  color: var(--text);
-}
-.display {
-  font-family: var(--display);
+/* A decorative mark (a bullet, a plus, a feature glyph; aria-hidden) in the accent fill: not
+   text, so the fill color, not --accent-text. */
+.fx-mark {
+  color: var(--accent);
 }
 
 /* Links in running text and the quiet links of lists: semibold as well as the link color, so a link in a sentence is

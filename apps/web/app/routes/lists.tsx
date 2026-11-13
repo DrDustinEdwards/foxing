@@ -68,7 +68,9 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                       {l.covers.length > 0 ? <CoverStack covers={l.covers} /> : null}
                       <div className="fx-lists-box">
                         <div className="fx-lists-row-4">
-                          <h2 className="display-0">{l.title}</h2>
+                          <h2 className="cap-title" data-size="5">
+                            {l.title}
+                          </h2>
                           {!l.isPublic ? (
                             <span className="shrink-0 fx-lists-caps">Private</span>
                           ) : null}

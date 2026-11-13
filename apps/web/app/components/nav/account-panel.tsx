@@ -1,8 +1,8 @@
 // The account panel of Capsomer's site header for a signed-in reader: identity and tier badge,
 // real stats (from the root loader's navUser), grouped links and a compact icon footer bar,
 // matching the legacy dropdown (no scroll). Capsomer draws the button and the panel around it,
-// and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons);
-// the four the shared set lacks pass their own path on its grid.
+// and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons),
+// each imported by itself; the four the shared set lacks pass their own path on its grid.
 import type { HeaderAccount } from "capsomer/react/site-header";
 import {
   Icon,
@@ -17,7 +17,7 @@ import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 
-// Each menu icon is a path: one of Capsomer's, or Foxing's own drawing on the same 24-unit grid.
+// Foxing's own drawings, on the set's 24-unit grid, for the four the shared set lacks.
 const OWN = {
   findnext:
     "M11 4l1.5 4L16.5 9.5 12.5 11 11 15l-1.5-4L5.5 9.5 9.5 8zM17.5 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z",
@@ -26,12 +26,6 @@ const OWN = {
   signout:
     "M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2M10 12h10M17 9l3 3-3 3",
 };
-type MenuIcon = string;
-
-function MenuIconSvg({ d }: { d: MenuIcon }) {
-  return <Icon d={d} />;
-}
-
 // Reading surfaces. The secondary bar holds the primary four (Home, Library, Feed,
 // People); notifications have the header bell. Collections is one compact row whose
 // sublinks reach the real routes (buddy reads + saved are cut).
@@ -56,12 +50,12 @@ function MenuLink({
   to: string;
   label: string;
   sublabel?: string;
-  icon: MenuIcon;
+  icon: string;
 }) {
   return (
     <Link to={to} className="fx-acct-link">
       <span className="fx-acct-icon">
-        <MenuIconSvg d={icon} />
+        <Icon d={icon} />
       </span>
       <span className="min-0 fx-account-panel-label">
         <span className="fx-acct-label">{label}</span>
@@ -102,7 +96,7 @@ function FooterAction({
   danger,
   disabled,
 }: {
-  icon: MenuIcon;
+  icon: string;
   label: string;
   to?: string;
   onClick?: () => void;
@@ -111,7 +105,7 @@ function FooterAction({
 }) {
   const inner = (
     <>
-      <MenuIconSvg d={icon} />
+      <Icon d={icon} />
       <span>{label}</span>
     </>
   );
@@ -203,18 +197,37 @@ function AccountPanel({
       <div className="fx-acct-who">
         <Avatar src={user.avatarUrl} name={user.displayName} size="md" />
         <div className="min-0">
-          <p className="cap-cluster strong sans small" data-gap="2">
-            <span className="truncate">{user.displayName}</span>
+          <p
+            className="cap-text cap-cluster"
+            data-size="small"
+            data-tone="ink"
+            data-weight="strong"
+            data-face="ui"
+            data-gap="2"
+          >
+            <span className="cap-clamp" data-lines="1">
+              {user.displayName}
+            </span>
             <TierBadge tier={user.subscriptionTier} />
           </p>
-          <p className="truncate mono fine">@{user.username}</p>
+          <p
+            className="cap-text cap-clamp"
+            data-size="tiny"
+            data-tone="dim"
+            data-face="mono"
+            data-lines="1"
+          >
+            @{user.username}
+          </p>
         </div>
       </div>
 
       <dl className="fx-acct-stats">
         {stats.map((stat) => (
           <div key={stat.label}>
-            <dd className="display-1">{stat.value}</dd>
+            <dd className="cap-title" data-size="4">
+              {stat.value}
+            </dd>
             <dt>{stat.label}</dt>
           </div>
         ))}

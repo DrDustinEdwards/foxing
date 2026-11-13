@@ -40,11 +40,17 @@ export function AuthShell({
           <span>Foxing</span>
         </Link>
         <div className="cap-card fx-auth-shell-card">
-          <h1 className="display-2">{title}</h1>
+          <h1 className="cap-title" data-size="3">
+            {title}
+          </h1>
           {subtitle ? <p className="fx-auth-shell-text">{subtitle}</p> : null}
           <div className="mt-6">{children}</div>
         </div>
-        {footer ? <div className="mt-5 text-center fx-auth-shell-box-2">{footer}</div> : null}
+        {footer ? (
+          <div className="cap-text mt-5 fx-auth-shell-box-2" data-align="center">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </main>
   );
@@ -56,7 +62,7 @@ export function ConfirmButtonForm({ label, limited }: { label: string; limited?:
   return (
     <form method="post" className="cap-stack" data-gap="4">
       {limited ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           Too many tries. Wait a minute, then try again.
         </p>
       ) : null}
@@ -255,7 +261,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         Sign in with a passkey
       </button>
       {error ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           {error}
         </p>
       ) : null}
@@ -375,7 +381,7 @@ export function MagicLinkForm({
       />
       {turnstileSiteKey ? <div ref={widget} /> : null}
       {refusal ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           {refusal}
         </p>
       ) : null}
@@ -461,7 +467,7 @@ function SignInCodeForm({
         maxLength={6}
       />
       {failure ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           {failure}
         </p>
       ) : null}

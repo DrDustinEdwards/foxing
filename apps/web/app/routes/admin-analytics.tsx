@@ -38,13 +38,17 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Analytics</h1>
+        <h1 className="cap-title" data-size="2">
+          Analytics
+        </h1>
       </div>
 
       <div className="fx-admin-analytics-grid">
         {tiles.map((t) => (
           <div key={t.label} className="cap-card">
-            <p className="display-3">{t.value}</p>
+            <p className="cap-title" data-size="2">
+              {t.value}
+            </p>
             <p className="fx-admin-analytics-caps">{t.label}</p>
             {t.sub ? <p className="fx-admin-analytics-text">{t.sub}</p> : null}
           </div>
@@ -54,7 +58,9 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
       <div className="mt-8">
         <AdminCard title="Audit log">
           {audit.length === 0 ? (
-            <p className="meta">No admin actions logged yet.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No admin actions logged yet.
+            </p>
           ) : (
             <Table caption="Recent admin actions" captionHidden>
               <thead>

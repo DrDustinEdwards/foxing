@@ -42,7 +42,7 @@ export function GoalPeriodSelect({
   onChange: (p: Period) => void;
 }) {
   return (
-    <label className="sans small">
+    <label className="cap-text" data-size="small" data-face="ui">
       <span className="cap-sr-only">Goal period</span>
       <select
         value={value}

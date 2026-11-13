@@ -222,7 +222,11 @@ export function PageHeader({
     <header className={cn("fx-page-head", className)}>
       {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
       <h1 className="fx-page-title">{title}</h1>
-      {lede && <p className="lead measure mt-4">{lede}</p>}
+      {lede && (
+        <p className="cap-text measure mt-4" data-size="lead" data-tone="muted">
+          {lede}
+        </p>
+      )}
     </header>
   );
 }

@@ -54,8 +54,11 @@ export function DiaryForm({
 
   return (
     <form onSubmit={(e) => void submit(e)} className="cap-stack" data-gap="6">
-      <p className="ui">
-        Logging <span className="strong">{bookTitle}</span>
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+        Logging{" "}
+        <span className="cap-text" data-tone="ink" data-weight="strong">
+          {bookTitle}
+        </span>
       </p>
 
       <RatingInput
@@ -76,7 +79,13 @@ export function DiaryForm({
         />
       </label>
 
-      <label className="cap-cluster ui" data-gap="3">
+      <label
+        className="cap-text cap-cluster"
+        data-size="small"
+        data-tone="muted"
+        data-face="ui"
+        data-gap="3"
+      >
         <input type="checkbox" checked={spoilers} onChange={(e) => setSpoilers(e.target.checked)} />
         This review contains spoilers
       </label>
