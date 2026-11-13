@@ -5,6 +5,8 @@ import { redirect } from "react-router";
 import { CtaBand } from "capsomer/react/cta-band";
 import { Hero } from "capsomer/react/hero";
 import { Link } from "capsomer/react/link";
+import "capsomer/hero.css";
+import "capsomer/cta-band.css";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";

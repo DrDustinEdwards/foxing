@@ -4,6 +4,7 @@
 // available. Catalog sourcing and governing law carry over unchanged.
 import { PageShell } from "~/components/page-shell";
 import { LegalDoc, type LegalSection } from "capsomer/react/legal-doc";
+import "capsomer/legal-doc.css";
 import { Container } from "~/components/ui";
 import { staticPageHeaders } from "~/lib/loader.server";
 import { LEGAL_EMAIL } from "~/lib/origins";
