@@ -194,10 +194,11 @@ function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
  * accepts (the Signal API). The names it shows are sent from Settings, where the display name is
  * known. Best effort, and never holds up the sign-in.
  */
-async function signalAfterPasskeySignIn() {
+async function signalAfterPasskeySignIn(userId: string | null) {
   try {
     const { data } = await authClient.passkey.listUserPasskeys();
-    if (data) await signalPasskeys({ credentialIds: data.map((p) => p.credentialID) });
+    if (data)
+      await signalPasskeys({ user: userId, credentialIds: data.map((p) => p.credentialID) });
   } catch {
     // The sign-in stands; the browser simply hears nothing this time.
   }
@@ -217,7 +218,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
   async function tryPasskey(autoFill: boolean) {
     const res = await signInWithPasskey(authClient, { autoFill });
     if (!res?.error) {
-      await signalAfterPasskeySignIn();
+      await signalAfterPasskeySignIn(res.data?.user?.id ?? null);
       window.location.assign(redirectTo);
       return;
     }
