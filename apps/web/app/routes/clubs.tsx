@@ -3,7 +3,7 @@
 // "New club" button routes to /clubs/new; joining happens on the club detail page.
 import { useClubsIndex } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -47,9 +47,9 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
           <h1 className="cap-title" data-size="1">
             Book clubs
           </h1>
-          <Link to="/clubs/new" className="cap-btn" data-variant="primary">
+          <ButtonLink to="/clubs/new" variant="primary">
             New club
-          </Link>
+          </ButtonLink>
         </div>
 
         <section className="mt-10">

@@ -6,7 +6,8 @@ import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
+import { Rating } from "capsomer/react/rating";
 import { mediumDate } from "~/lib/dates";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -23,16 +24,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
   return { entries: await views.diary(createDb(env.DB), user.id) };
-}
-
-function Stars({ ratingHalf }: { ratingHalf: number | null }) {
-  if (ratingHalf == null) return null;
-  return (
-    <span role="img" aria-label={`${ratingHalf / 2} stars`} className="fx-diary-label">
-      {"★".repeat(Math.floor(ratingHalf / 2))}
-      {ratingHalf % 2 === 1 ? "½" : ""}
-    </span>
-  );
 }
 
 const VIS_LABEL: Record<string, string> = {
@@ -117,9 +108,9 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-8 items-end fx-diary-row">
           <PageHeader eyebrow="Reading" title="Your diary" className="mb-0" />
-          <Link to="/diary/new" className="cap-btn cap-keep" data-variant="primary">
+          <ButtonLink to="/diary/new" className="cap-keep" variant="primary">
             New entry
-          </Link>
+          </ButtonLink>
         </div>
 
         {entries.length === 0 ? (
@@ -232,7 +223,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
               {reread ? <RereadBadge /> : null}
             </div>
             <div className="mt-1 cap-cluster" data-gap="4">
-              <Stars ratingHalf={e.ratingHalf} />
+              {e.ratingHalf == null ? null : <Rating value={e.ratingHalf / 2} size="sm" />}
               {e.logDate ? (
                 <span className="cap-text" data-size="tiny" data-tone="dim" data-face="mono">
                   {mediumDate.format(e.logDate)}

@@ -6,7 +6,7 @@ import { createDb, views } from "@foxing/core";
 import { LikeButton } from "capsomer/react/like-button";
 // The like button's styles load only on a list's page (React 19 hoists the link).
 import likeButtonCss from "capsomer/like-button.css?url";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { AddBookToList } from "~/components/social/add-book-to-list";
 import { RemoveBookButton } from "~/components/social/remove-book-button";
@@ -83,11 +83,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                 disabled={!signedIn}
                 error={like.error}
               />
-              {isOwner ? (
-                <Link to={`/lists/${list.id}/edit`} className="cap-btn">
-                  Edit
-                </Link>
-              ) : null}
+              {isOwner ? <ButtonLink to={`/lists/${list.id}/edit`}>Edit</ButtonLink> : null}
             </div>
           </div>
           {list.description ? <p className="fx-list-detail-text">{list.description}</p> : null}

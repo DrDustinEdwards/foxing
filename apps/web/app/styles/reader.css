@@ -509,49 +509,6 @@
   accent-color: var(--primary);
 }
 
-.fx-companion-test-box {
-  border-radius: 0.375rem;
-  border-width: 1px;
-  border-style: solid;
-  padding-inline: 1rem;
-  border-color: color-mix(in srgb, var(--warn) 30%, var(--surface));
-  background-color: var(--warn-soft);
-}
-.fx-companion-test-text {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--warn);
-}
-.fx-companion-test-form {
-  & > * + * {
-    margin-top: 1rem;
-  }
-}
-.fx-companion-test-select {
-  width: 100%;
-}
-.fx-companion-test-card-2 {
-  white-space: pre-wrap;
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
-  background-color: var(--ground);
-  padding: 1rem;
-  font-family: var(--fx-body);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--text);
-}
-.fx-companion-test-input {
-  width: 5rem;
-}
-.fx-companion-test-text-2 {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--muted);
-}
-
 /* Reader engine frame sizing. @readium/navigator tags its content iframes with
    .readium-navigator-iframe but ships no CSS and never sets their size, so without this they fall
    back to the intrinsic 300x150 and ReadiumCSS lays the book out in that 300px viewport. Fill the
