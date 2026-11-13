@@ -15,6 +15,7 @@ import { Time } from "capsomer/react/time";
 import { useState } from "react";
 import { pollChart } from "~/lib/reading-charts";
 import { ErrorText } from "./club-sections";
+import { useHydrated } from "capsomer/react/hooks";
 
 export function PollsSection({
   clubId,
@@ -274,6 +275,7 @@ export function ScheduleSection({
   canModerate: boolean;
 }) {
   const { run, error, pending } = useAddSchedule();
+  const hydrated = useHydrated();
   // The time the list was first drawn, which splits upcoming from past.
   const [now] = useState(() => Date.now());
 
@@ -331,7 +333,7 @@ export function ScheduleSection({
           />
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !hydrated}
             className="cap-btn"
             data-variant="primary"
             data-size="sm"

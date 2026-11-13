@@ -1,3 +1,5 @@
+import { useHydrated } from "capsomer/react/hooks";
+
 export function ToggleRow({
   checked,
   onChange,
@@ -54,7 +56,8 @@ export function Card({ title, children }: { title: string; children: React.React
 /** Capsomer's input, on the page's ground where a form sits on a card. */
 export const inputClass = "cap-input fx-input-ground";
 
-/** A settings form's submit button, its done note and its error. */
+/** A settings form's submit button, its done note and its error. The button waits for the page to
+ *  hydrate: the form saves through script, and a press before that sends it as a plain GET instead. */
 export function SubmitRow({
   disabled,
   pending,
@@ -70,10 +73,11 @@ export function SubmitRow({
   done: string | null;
   error: string | null;
 }) {
+  const hydrated = useHydrated();
   return (
     <>
       <div className="cap-cluster" data-gap="4">
-        <button type="submit" disabled={disabled} className="cap-btn">
+        <button type="submit" disabled={disabled || !hydrated} className="cap-btn">
           {pending ? pendingLabel : label}
         </button>
         {done ? (

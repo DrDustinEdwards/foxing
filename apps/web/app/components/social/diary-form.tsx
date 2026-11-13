@@ -8,6 +8,7 @@ import { RatingInput } from "capsomer/react/rating";
 import "capsomer/rating.css";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useHydrated } from "capsomer/react/hooks";
 
 export function DiaryForm({
   mode,
@@ -30,6 +31,7 @@ export function DiaryForm({
   };
 }) {
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const create = useCreateDiaryEntry();
   const update = useUpdateDiaryEntry();
   const { error, pending } = mode === "create" ? create : update;
@@ -111,7 +113,12 @@ export function DiaryForm({
       ) : null}
 
       <div className="cap-cluster" data-gap="4">
-        <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
+        <button
+          type="submit"
+          disabled={pending || !hydrated}
+          className="cap-btn"
+          data-variant="primary"
+        >
           {pending ? "Saving..." : mode === "create" ? "Save entry" : "Save changes"}
         </button>
         <button

@@ -9,6 +9,7 @@ import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/onboarding";
 import { signInFrom } from "~/lib/sign-in-path";
+import { useHydrated } from "capsomer/react/hooks";
 
 export function meta() {
   return [{ title: "Welcome to Foxing" }];
@@ -48,6 +49,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
   const [step, setStep] = useState<1 | 2>(1);
   const [chosen, setChosen] = useState<string[]>([]);
   const onboard = useOnboard();
+  const hydrated = useHydrated();
   const setStatus = useSetBookStatus();
   const [savingId, setSavingId] = useState<string | null>(null);
   const error = onboard.error ?? setStatus.error;
@@ -146,7 +148,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
 
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !hydrated}
             className="cap-btn justify-center fx-onboarding-btn"
             data-variant="primary"
           >

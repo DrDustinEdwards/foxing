@@ -11,6 +11,7 @@ import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
+import { useHydrated } from "capsomer/react/hooks";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -31,6 +32,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
   const { viewerId } = loaderData;
   const { club, thread, posts, isMember } = useThreadPage(params.threadId, loaderData.page).data;
   const { run, error, pending } = useCreatePost();
+  const hydrated = useHydrated();
 
   useClubLive(isMember ? club.id : null);
 
@@ -87,7 +89,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
             ) : null}
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || !hydrated}
               className="cap-btn mt-2"
               data-variant="primary"
             >
