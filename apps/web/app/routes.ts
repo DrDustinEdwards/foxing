@@ -1,50 +1,16 @@
-import { type RouteConfig, index, prefix, route } from "@react-router/dev/routes";
+import { type RouteConfig, index, layout, prefix, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/marketing.tsx"),
-  route("home", "routes/home.tsx"),
   route("signup", "routes/signup.tsx"),
   route("login", "routes/login.tsx"),
   route("sign-in/confirm", "routes/sign-in-confirm.tsx"),
   route("email/confirm", "routes/email-confirm.tsx"),
-  route("onboarding", "routes/onboarding.tsx"),
-  route("passkey", "routes/passkey-offer.tsx"),
-  route("me", "routes/me.tsx"),
-  route("settings", "routes/settings.tsx"),
-  route("library", "routes/library.tsx"),
-  route("shelves/:id", "routes/shelf-detail.tsx"),
 
-  // Clubs. List + create (Plus-gated) + detail with the live layer + threads.
-  route("clubs", "routes/clubs.tsx"),
-  route("clubs/new", "routes/club-new.tsx"),
-  route("clubs/:slug", "routes/club-detail.tsx"),
-  route("clubs/:slug/t/:threadId", "routes/club-thread.tsx"),
-  route("join/:code", "routes/join-code.tsx"),
-
-  // Social. Feed, people/close-friends, public profiles, diary, lists, recap.
-  route("feed", "routes/feed.tsx"),
-  route("people", "routes/people.tsx"),
+  // Social, public: profiles, recaps and a shared list.
   route("u/:username", "routes/u-profile.tsx"),
   route("u/:username/recap/:year", "routes/recap.tsx"),
-  route("diary/new", "routes/diary-new.tsx"),
-  route("diary/:id/edit", "routes/diary-edit.tsx"),
-  route("lists/new", "routes/list-new.tsx"),
   route("lists/:id", "routes/list-detail.tsx"),
-  route("lists/:id/edit", "routes/list-edit.tsx"),
-
-  // Personal app surfaces (signed-in). Notifications, vocabulary, commonplace/highlights
-  // aggregates, lists index, stats, diary index, goals, own year-in-reading. Gated
-  // in-loader by requireProfile.
-  route("notifications", "routes/notifications.tsx"),
-  route("vocabulary", "routes/vocabulary.tsx"),
-  route("commonplace", "routes/commonplace.tsx"),
-  route("highlights", "routes/highlights.tsx"),
-  route("lists", "routes/lists.tsx"),
-  route("stats", "routes/stats.tsx"),
-  route("diary", "routes/diary.tsx"),
-  route("goals", "routes/goals.tsx"),
-  route("year/:year?", "routes/year.tsx"),
-  route("find-next-book", "routes/find-next-book.tsx"),
 
   // Chart demos: the signed-in pages' charts with sample numbers, no sign-in, noindex. They read
   // nothing from D1, so a live check sees the same charts a reader does (devkit live/areas.json, area 10).
@@ -54,25 +20,9 @@ export default [
     route("goals", "routes/demos/goals.tsx"),
   ]),
 
-  // Admin (operator-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS in every loader). Reads run
-  // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
-  route("admin", "routes/admin.tsx"),
-  route("admin/book-of-month", "routes/admin-botm.tsx"),
-  route("admin/celebrity-picks", "routes/admin-picks.tsx"),
-  route("admin/books", "routes/admin-books.tsx"),
-  route("admin/clubs", "routes/admin-clubs.tsx"),
-  route("admin/users", "routes/admin-users.tsx"),
-  route("admin/users/:id", "routes/admin-user-detail.tsx"),
-  route("admin/notifications", "routes/admin-notifications.tsx"),
-  route("admin/content", "routes/admin-content.tsx"),
-  route("admin/analytics", "routes/admin-analytics.tsx"),
-
   // Content pages (static, edge-cached).
   route("guide", "routes/guide.tsx"),
   route("app-guide", "routes/app-guide.tsx"),
-
-  // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
-  route("companion-test", "routes/companion-test.tsx"),
 
   // Public catalog (stored at the edge, workers/app.ts). Slugs for SEO (mobile uses ids).
   route("books", "routes/books.tsx"),
@@ -108,6 +58,57 @@ export default [
   route("og/recap/:username/:year", "routes/og-recap.tsx"),
   route("sitemap.xml", "routes/sitemap.tsx"),
   route("llms.txt", "routes/llms.tsx"),
+
+  // The private pages, signed in or admin. The layout's headers keep Cloudflare's Web Analytics beacon off them
+  // (site-runtime PRIVATE_PAGE_HEADERS), so only public pages are counted.
+  layout("routes/private.tsx", [
+    route("home", "routes/home.tsx"),
+    route("onboarding", "routes/onboarding.tsx"),
+    route("passkey", "routes/passkey-offer.tsx"),
+    route("me", "routes/me.tsx"),
+    route("settings", "routes/settings.tsx"),
+    route("library", "routes/library.tsx"),
+    route("shelves/:id", "routes/shelf-detail.tsx"),
+    // Clubs. List + create (Plus-gated) + detail with the live layer + threads.
+    route("clubs", "routes/clubs.tsx"),
+    route("clubs/new", "routes/club-new.tsx"),
+    route("clubs/:slug", "routes/club-detail.tsx"),
+    route("clubs/:slug/t/:threadId", "routes/club-thread.tsx"),
+    route("join/:code", "routes/join-code.tsx"),
+    // Social. Feed, people/close-friends, diary, lists.
+    route("feed", "routes/feed.tsx"),
+    route("people", "routes/people.tsx"),
+    route("diary/new", "routes/diary-new.tsx"),
+    route("diary/:id/edit", "routes/diary-edit.tsx"),
+    route("lists/new", "routes/list-new.tsx"),
+    route("lists/:id/edit", "routes/list-edit.tsx"),
+    // Personal app surfaces. Notifications, vocabulary, commonplace/highlights aggregates, lists index, stats,
+    // diary index, goals, own year-in-reading. Gated in-loader by requireProfile.
+    route("notifications", "routes/notifications.tsx"),
+    route("vocabulary", "routes/vocabulary.tsx"),
+    route("commonplace", "routes/commonplace.tsx"),
+    route("highlights", "routes/highlights.tsx"),
+    route("lists", "routes/lists.tsx"),
+    route("stats", "routes/stats.tsx"),
+    route("diary", "routes/diary.tsx"),
+    route("goals", "routes/goals.tsx"),
+    route("year/:year?", "routes/year.tsx"),
+    route("find-next-book", "routes/find-next-book.tsx"),
+    // Admin (operator-only, gated on ADMIN_EMAIL and CO_OWNER_EMAILS in every loader). Reads run
+    // in-process via adminRepo; writes go to /api/v1/admin/* with an audit-log entry.
+    route("admin", "routes/admin.tsx"),
+    route("admin/book-of-month", "routes/admin-botm.tsx"),
+    route("admin/celebrity-picks", "routes/admin-picks.tsx"),
+    route("admin/books", "routes/admin-books.tsx"),
+    route("admin/clubs", "routes/admin-clubs.tsx"),
+    route("admin/users", "routes/admin-users.tsx"),
+    route("admin/users/:id", "routes/admin-user-detail.tsx"),
+    route("admin/notifications", "routes/admin-notifications.tsx"),
+    route("admin/content", "routes/admin-content.tsx"),
+    route("admin/analytics", "routes/admin-analytics.tsx"),
+    // Phase 4a TEMPORARY test surface. Remove once the reader hosts the companion.
+    route("companion-test", "routes/companion-test.tsx"),
+  ]),
 
   // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).
   route("health", "routes/health.ts"),
