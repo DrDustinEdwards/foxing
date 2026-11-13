@@ -75,4 +75,18 @@ test.describe("app shell", () => {
     );
     expect(serious, JSON.stringify(serious.map((v) => v.id))).toEqual([]);
   });
+
+  test("a chart's toolbar shows its inline icons and responds to hover", async ({ page }) => {
+    await page.goto("/demos/stats", { waitUntil: "networkidle" });
+    const toolbar = page.getByRole("toolbar", { name: "Chart controls" }).first();
+    await expect(toolbar).toBeVisible();
+    // Enarratio 0.12.2: icons are inline SVG, not CSS masks that a page's img-src blocks.
+    const icon = toolbar.locator("svg.enarratio-icon").first();
+    await expect(icon).toBeVisible();
+    const button = toolbar.getByRole("button").first();
+    const background = () => button.evaluate((el) => getComputedStyle(el).backgroundColor);
+    const rest = await background();
+    await button.hover();
+    await expect.poll(background).not.toBe(rest);
+  });
 });
