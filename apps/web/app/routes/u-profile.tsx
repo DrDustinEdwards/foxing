@@ -8,6 +8,7 @@ import { useProfilePage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { Rating } from "capsomer/react/rating";
+import "capsomer/rating.css";
 import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
