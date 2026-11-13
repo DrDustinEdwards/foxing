@@ -8,10 +8,14 @@ import {
 } from "@foxing/client";
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
+import { Poll } from "capsomer/react/poll";
+// The poll's styles load only on a club's page (React 19 hoists the link).
+import pollCss from "capsomer/poll.css?url";
 import { Time } from "capsomer/react/time";
 import { useState } from "react";
 import { pollChart } from "~/lib/reading-charts";
 import { ErrorText } from "./club-sections";
+import { useHydrated } from "capsomer/react/hooks";
 
 export function PollsSection({
   clubId,
@@ -108,6 +112,7 @@ export function PollsSection({
         </p>
       ) : (
         <div className="mt-4 fx-club-schedule-box">
+          <link rel="stylesheet" href={pollCss} precedence="default" />
           {polls.map((poll) => {
             const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
@@ -129,28 +134,18 @@ export function PollsSection({
                     </button>
                   ) : null}
                 </div>
-                <ul className="fx-club-schedule-list">
-                  {poll.options.map((opt) => {
-                    const count = poll.tallies[opt.id] ?? 0;
-                    const mine = poll.myVote?.includes(opt.id);
-                    return (
-                      <li key={opt.id}>
-                        <button
-                          type="button"
-                          disabled={poll.isClosed || pending}
-                          onClick={() => vote.fire({ clubId, pollId: poll.id, ranks: [opt.id] })}
-                          aria-pressed={mine}
-                          className="fx-poll-option"
-                        >
-                          <span>{opt.label}</span>
-                          <span className="fx-club-schedule-label-3" aria-live="polite">
-                            {count}
-                          </span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
+                <Poll
+                  label={poll.title}
+                  options={poll.options.map((opt) => ({
+                    id: opt.id,
+                    label: opt.label,
+                    votes: poll.tallies[opt.id] ?? 0,
+                  }))}
+                  mine={poll.myVote ?? []}
+                  closed={poll.isClosed}
+                  pending={pending}
+                  onVote={(id) => vote.fire({ clubId, pollId: poll.id, ranks: [id] })}
+                />
                 {total > 0 ? (
                   <ChartFrame
                     className="mt-4"
@@ -280,6 +275,7 @@ export function ScheduleSection({
   canModerate: boolean;
 }) {
   const { run, error, pending } = useAddSchedule();
+  const hydrated = useHydrated();
   // The time the list was first drawn, which splits upcoming from past.
   const [now] = useState(() => Date.now());
 
@@ -337,7 +333,7 @@ export function ScheduleSection({
           />
           <button
             type="submit"
-            disabled={pending}
+            disabled={pending || !hydrated}
             className="cap-btn"
             data-variant="primary"
             data-size="sm"

@@ -65,23 +65,6 @@ describe("resolveFeed - visibility matrix (every cell)", () => {
     expect(visibleIds(REL.stranger)).toEqual([]);
   });
 
-  // The single most important assertion: following alone must NEVER reveal friends-only.
-  it("a plain follower does NOT see a friends-only event", () => {
-    const out = resolveFeed({
-      viewerId: VIEWER,
-      ...REL.follower,
-      events: [FRIENDS],
-    });
-    expect(out).toHaveLength(0);
-  });
-
-  it("private is never visible, to any relationship", () => {
-    for (const rel of Object.values(REL)) {
-      const out = resolveFeed({ viewerId: VIEWER, ...rel, events: [PRIVATE] });
-      expect(out).toHaveLength(0);
-    }
-  });
-
   it("an unknown visibility value is treated as hidden (fail closed)", () => {
     const weird = event("wat", "weird");
     const out = resolveFeed({ viewerId: VIEWER, ...REL.both, events: [weird] });

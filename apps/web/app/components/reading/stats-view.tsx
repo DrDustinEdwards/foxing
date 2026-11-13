@@ -5,6 +5,7 @@
 import type { ReadingStats } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Meter } from "capsomer/react/meter";
+import "capsomer/meter.css";
 import { numberFormat } from "enarratio";
 import type { ReactNode } from "react";
 import { PageShell } from "~/components/page-shell";

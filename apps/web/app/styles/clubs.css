@@ -16,10 +16,6 @@
     margin-top: var(--space-2-5);
   }
 }
-.fx-club-schedule-label-3 {
-  font-variant-numeric: tabular-nums;
-  color: var(--dim);
-}
 .fx-club-schedule-card-2 {
   --pad-card: var(--space-4);
 }
@@ -165,8 +161,7 @@
   font-weight: var(--weight-medium);
   color: var(--text);
 }
-.fx-club-new-input-2,
-.fx-like-button-icon {
+.fx-club-new-input-2 {
   height: 1rem;
   width: 1rem;
 }
@@ -263,28 +258,6 @@
   }
 }
 
-/* A poll option: the vote share fills it from the start, a chosen option takes the strong edge. */
-.fx-poll-option {
-  position: relative;
-  display: flex;
-  inline-size: 100%;
-  align-items: center;
-  justify-content: space-between;
-  overflow: hidden;
-  border: var(--line-w) solid var(--line);
-  border-radius: var(--radius-l);
-  padding: var(--space-3) var(--space-4);
-  text-align: start;
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-}
-.fx-poll-option[aria-pressed="true"] {
-  border-color: var(--line-strong);
-}
-.fx-poll-option:disabled {
-  cursor: default;
-}
-
 .fx-club-schedule-card {
   --pad-card: var(--space-5);
 }
@@ -301,4 +274,17 @@
 .fx-club-new-text {
   font-family: var(--fx-body);
   color: var(--muted);
+}
+
+.fx-club-new-text-2 {
+  border-radius: var(--radius-m);
+  border-width: var(--line-w);
+  border-style: solid;
+  padding-inline: var(--space-4);
+  font-family: var(--ui);
+  font-size: var(--fs-body);
+  line-height: 1.25rem;
+  border-color: color-mix(in srgb, var(--crit) 50%, transparent);
+  background-color: var(--crit-soft);
+  color: var(--crit);
 }

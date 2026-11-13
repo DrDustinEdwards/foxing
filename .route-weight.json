@@ -1,6 +1,6 @@
 {
   "enforce": true,
-  "budget_bytes": 274000,
+  "budget_bytes": 271400,
   "linked_css": true,
   "baseline": {
     "measured_at": "1900468",
@@ -20,7 +20,6 @@
       "routes/admin-user-detail": 225151,
       "routes/find-next-book": 224522,
       "routes/admin-users": 224138,
-      "routes/companion-test": 224030,
       "routes/club-thread": 223869,
       "routes/home": 223655,
       "routes/admin-content": 223571,

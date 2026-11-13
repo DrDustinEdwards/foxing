@@ -4,8 +4,11 @@
 // emits no event). Failed writes surface a visible error.
 import { useCreateDiaryEntry, useUpdateDiaryEntry } from "@foxing/client";
 import type { Visibility } from "@foxing/types";
+import { RatingInput } from "capsomer/react/rating";
+import "capsomer/rating.css";
 import { useState } from "react";
 import { useNavigate } from "react-router";
+import { useHydrated } from "capsomer/react/hooks";
 
 export function DiaryForm({
   mode,
@@ -28,6 +31,7 @@ export function DiaryForm({
   };
 }) {
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const create = useCreateDiaryEntry();
   const update = useUpdateDiaryEntry();
   const { error, pending } = mode === "create" ? create : update;
@@ -60,23 +64,12 @@ export function DiaryForm({
         </span>
       </p>
 
-      <fieldset className="cap-stack" data-gap="3">
-        <legend className="group-label">Rating</legend>
-        <div className="cap-cluster" data-gap="3">
-          <select
-            value={ratingHalf ?? ""}
-            onChange={(e) => setRatingHalf(e.target.value === "" ? null : Number(e.target.value))}
-            className="cap-select py-2"
-          >
-            <option value="">No rating</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((h) => (
-              <option key={h} value={h}>
-                {(h / 2).toFixed(1)} stars
-              </option>
-            ))}
-          </select>
-        </div>
-      </fieldset>
+      <RatingInput
+        name="ratingHalf"
+        label="Rating"
+        value={(ratingHalf ?? 0) / 2}
+        onChange={(v) => setRatingHalf(v === 0 ? null : Math.round(v * 2))}
+      />
 
       <label className="cap-stack" data-gap="3">
         <span className="group-label">Review</span>
@@ -120,7 +113,12 @@ export function DiaryForm({
       ) : null}
 
       <div className="cap-cluster" data-gap="4">
-        <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
+        <button
+          type="submit"
+          disabled={pending || !hydrated}
+          className="cap-btn"
+          data-variant="primary"
+        >
           {pending ? "Saving..." : mode === "create" ? "Save entry" : "Save changes"}
         </button>
         <button

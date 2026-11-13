@@ -1,19 +1,18 @@
 /* The landing page, the features and guide pages, about, privacy and terms. */
-.fx-hero {
-  max-inline-size: 48rem;
-  margin-inline: auto;
-  text-align: center;
-}
-.fx-hero-title {
-  font-family: var(--display);
-  font-size: 3rem;
-  font-weight: var(--weight-semibold);
-  line-height: 1.05;
+/* Foxing's hero look is Capsomer's hero with Foxing's tokens; the search field takes its own row. */
+.cap-hero {
+  --hero-title: 3rem;
+  --hero-face: var(--display);
 }
 @media (min-width: 40rem) {
-  .fx-hero-title {
-    font-size: 3.75rem;
+  .cap-hero {
+    --hero-title: 3.75rem;
   }
+}
+.fx-hero-search {
+  flex-basis: 100%;
+  max-inline-size: 36rem;
+  margin-inline: auto;
 }
 .fx-values {
   display: grid;
@@ -32,9 +31,8 @@
 .fx-values > div > span {
   color: var(--accent);
 }
-/* The pick and the call to action are Capsomer cards at the hero radius (Rule 06: rounded-xl), lifted. */
-.fx-pick,
-.fx-cta {
+/* The pick is a Capsomer card at the hero radius (Rule 06: rounded-xl), lifted. */
+.fx-pick {
   --radius-l: var(--fx-radius-hero);
   --card-shadow: var(--shadow-s);
 }
@@ -53,28 +51,6 @@
   inline-size: 100%;
   max-inline-size: 10rem;
   margin-inline: auto;
-}
-.fx-cta {
-  --pad-card: var(--space-7);
-  text-align: center;
-}
-@media (min-width: 40rem) {
-  .fx-cta {
-    --pad-card: var(--space-8);
-  }
-}
-.fx-cta-title {
-  max-inline-size: 42rem;
-  margin-inline: auto;
-  font-family: var(--display);
-  font-size: var(--title-2);
-  font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
-}
-@media (min-width: 40rem) {
-  .fx-cta-title {
-    font-size: var(--title-1);
-  }
 }
 
 .fx-guide-row {
@@ -118,17 +94,6 @@
   font-size: var(--title-6);
   line-height: 1.5rem;
   color: var(--muted);
-}
-
-.fx-privacy-box,
-.fx-terms-box {
-  font-family: var(--ui);
-  font-size: var(--title-6);
-  line-height: 1.625;
-  color: var(--muted);
-  & > * + * {
-    margin-top: var(--space-7);
-  }
 }
 
 /* The accessibility statement: Prelum's markup (h2, p, ul, a) in the legal pages' type. */

@@ -5,7 +5,7 @@
 import { useSetBookStatus } from "@foxing/client";
 import type { BookRef, ShelfStatus } from "@foxing/types";
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 
 const STATUSES = [
   { value: "want", label: "Want to read" },
@@ -38,11 +38,7 @@ export function BookStatusControl({
   }
 
   if (!signedIn) {
-    return (
-      <Link to={loginHref} className="cap-btn fx-book-status-control-link">
-        Sign in to track
-      </Link>
-    );
+    return <ButtonLink to={loginHref}>Sign in to track</ButtonLink>;
   }
 
   async function apply(next: ShelfStatus | null) {

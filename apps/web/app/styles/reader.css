@@ -1,4 +1,5 @@
-.fx-reader-panels-label {
+.fx-reader-panels-label,
+.fx-reader-popovers-label-5 {
   margin-left: var(--space-2);
   font-variant-numeric: tabular-nums;
 }
@@ -285,10 +286,6 @@
     color: var(--accent-text);
   }
 }
-.fx-reader-popovers-label-5 {
-  margin-left: var(--space-2);
-  font-variant-numeric: tabular-nums;
-}
 .fx-reader-popovers-stack {
   display: flex;
   max-height: 10rem;
@@ -512,47 +509,6 @@
   flex: 1 1 0%;
   cursor: pointer;
   accent-color: var(--primary);
-}
-
-.fx-companion-test-box {
-  border-radius: var(--radius-m);
-  border-width: var(--line-w);
-  border-style: solid;
-  padding-inline: var(--space-5);
-  border-color: color-mix(in srgb, var(--warn) 30%, var(--surface));
-  background-color: var(--warn-soft);
-}
-.fx-companion-test-text {
-  color: var(--warn);
-}
-.fx-companion-test-form {
-  & > * + * {
-    margin-top: var(--space-5);
-  }
-}
-.fx-companion-test-select {
-  width: 100%;
-}
-.fx-companion-test-card-2 {
-  white-space: pre-wrap;
-  border-radius: var(--radius-m);
-  border: var(--line-w) solid var(--line);
-  background-color: var(--ground);
-  padding: var(--space-5);
-  font-family: var(--fx-body);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--text);
-}
-.fx-companion-test-input {
-  width: 5rem;
-}
-.fx-companion-test-text-2,
-.fx-commonplace-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
 }
 
 /* Reader engine frame sizing. @readium/navigator tags its content iframes with

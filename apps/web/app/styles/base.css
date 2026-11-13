@@ -5,7 +5,6 @@
 :root {
   --fx-body: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
   --fx-radius-hero: 1rem;
-  --fx-radius-cover: 0.375rem;
   --fx-hover: color-mix(in srgb, var(--sunken), var(--line) 50%);
   /* The paywall's dark band keeps its charcoal and cream in both themes. */
   --fx-charcoal: #16100b;
@@ -287,9 +286,7 @@
 
 /* Fields: Capsomer's input, with Foxing's ground fill where a form sits on a card. */
 .cap-input[data-fill="ground"],
-.cap-select[data-fill="ground"] {
-  background: var(--ground);
-}
+.cap-select[data-fill="ground"],
 .fx-input-ground {
   background: var(--ground);
 }

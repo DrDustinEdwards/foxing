@@ -1,13 +1,11 @@
-.fx-follow-button-text,
-.fx-like-button-text {
+.fx-follow-button-text {
   font-family: var(--ui);
   font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--crit);
 }
 
-.fx-list-form-text,
-.fx-club-new-text-2 {
+.fx-list-form-text {
   border-radius: var(--radius-m);
   border-width: var(--line-w);
   border-style: solid;
@@ -114,7 +112,8 @@
 .fx-diary-box {
   width: 4rem;
 }
-.fx-diary-box-2 {
+.fx-diary-box-2,
+.fx-lists-box {
   flex-grow: 1;
 }
 .fx-diary-text {
@@ -263,9 +262,6 @@
   display: flex;
   gap: var(--space-5);
 }
-.fx-lists-box {
-  flex-grow: 1;
-}
 .fx-lists-row-4,
 .fx-goals-row {
   display: flex;
@@ -382,7 +378,6 @@
   gap: var(--space-4);
 }
 
-.fx-u-profile-label,
 .fx-year-label {
   font-family: var(--mono);
   font-size: var(--fs-body);
@@ -438,7 +433,7 @@
 }
 .fx-u-profile-label-2 {
   overflow: hidden;
-  border-radius: var(--fx-radius-cover);
+  border-radius: var(--radius-m);
   border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
 }
@@ -488,7 +483,7 @@
   }
 }
 .fx-u-profile-card {
-  --radius-l: var(--fx-radius-cover);
+  --radius-l: var(--radius-m);
   --pad-card: var(--space-5);
 }
 .fx-u-profile-text-4 {
@@ -521,8 +516,11 @@
   color: var(--dim);
 }
 .fx-profile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   border: var(--line-w) solid var(--line);
-  border-radius: var(--fx-radius-cover);
+  border-radius: var(--radius-m);
   background: var(--surface);
   padding: var(--space-4) var(--space-5);
   &:hover {
@@ -631,7 +629,8 @@
 }
 .fx-diary-row,
 .fx-lists-row,
-.fx-notifications-row {
+.fx-notifications-row,
+.fx-lists-row {
   display: flex;
   justify-content: space-between;
   gap: var(--space-5);
@@ -647,9 +646,15 @@
   }
 }
 
-.fx-diary-label {
-  font-family: var(--mono);
+.fx-close-friend-toggle-label {
+  display: inline-flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fx-commonplace-text {
+  font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
-  color: var(--accent-text);
+  color: var(--muted);
 }

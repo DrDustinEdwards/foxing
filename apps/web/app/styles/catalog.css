@@ -38,7 +38,7 @@ a:hover > .fx-book > :is(h2, h3) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
-@media (min-width: 80rem) {
+@media (min-width: 72rem) {
   .fx-book-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -49,7 +49,7 @@ a:hover > .fx-book > :is(h2, h3) {
   position: relative;
   aspect-ratio: 2 / 3;
   overflow: hidden;
-  border-radius: var(--fx-radius-cover);
+  border-radius: var(--radius-m);
   background-color: var(--sunken);
   box-shadow:
     var(--shadow-s),
@@ -114,9 +114,6 @@ a:hover > .fx-book > :is(h2, h3) {
   inline-size: min(22rem, 90vw);
 }
 
-.fx-book-status-control-link {
-  display: inline-flex;
-}
 .fx-book-status-control-box {
   width: 100%;
 }
@@ -421,7 +418,7 @@ a:hover > .fx-book > :is(h2, h3) {
   @media (min-width: 64rem) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
-  @media (min-width: 80rem) {
+  @media (min-width: 72rem) {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 }

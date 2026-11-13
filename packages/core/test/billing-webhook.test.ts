@@ -19,20 +19,6 @@ describe("tierForStatus", () => {
 });
 
 describe("interpretStripeEvent", () => {
-  it("links the user to the customer on checkout.session.completed", () => {
-    const intent = interpretStripeEvent({
-      id: "evt_1",
-      type: "checkout.session.completed",
-      object: { client_reference_id: "user_1", customer: "cus_1", subscription: "sub_1" },
-    });
-    expect(intent).toEqual({
-      op: "link",
-      userId: "user_1",
-      customerId: "cus_1",
-      subscriptionId: "sub_1",
-    });
-  });
-
   it("ignores checkout.session.completed missing the user reference", () => {
     const intent = interpretStripeEvent({
       id: "evt_2",

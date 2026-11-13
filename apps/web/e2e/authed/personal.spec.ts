@@ -48,19 +48,3 @@ test.describe("reading goals (signed in)", () => {
     await expect(page.getByRole("alert")).toContainText(/could not save/i);
   });
 });
-
-test.describe("diary + year (signed in)", () => {
-  test("the diary index renders with its new-entry action and filters", async ({ page }) => {
-    await page.goto("/diary", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /your diary/i })).toBeVisible();
-    await expect(page.getByRole("link", { name: /new entry/i })).toBeVisible();
-  });
-
-  test("the year page renders the current year and its picker", async ({ page }) => {
-    await page.goto("/year", { waitUntil: "networkidle" });
-    await expect(page.getByRole("heading", { name: /your reading year/i })).toBeVisible();
-    // The year picker links to at least one older year.
-    const thisYear = new Date().getUTCFullYear();
-    await expect(page.getByRole("link", { name: `${thisYear - 1}` })).toBeVisible();
-  });
-});

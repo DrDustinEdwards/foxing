@@ -29,16 +29,3 @@ test.describe("header nav (signed in)", () => {
     }
   });
 });
-
-test.describe("command palette (signed in)", () => {
-  test("opens with the GO TO section and the keyboard-hint footer", async ({ page }) => {
-    await page.goto("/home", { waitUntil: "networkidle" });
-    await page.keyboard.press("Control+k");
-    const input = page.getByPlaceholder("Search books, people, clubs...");
-    await expect(input).toBeVisible();
-    await expect(page.getByText("Go to", { exact: false })).toBeVisible();
-    await expect(page.getByText(/esc/i).first()).toBeVisible();
-    await page.keyboard.press("Escape");
-    await expect(input).toBeHidden();
-  });
-});

@@ -9,6 +9,7 @@ import { sessionUserFromRequest } from "~/lib/auth.server";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
 import { signInFrom } from "~/lib/sign-in-path";
+import { useHydrated } from "capsomer/react/hooks";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -23,6 +24,7 @@ export function meta() {
 
 export default function ClubNew() {
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const { run, pending, error } = useCreateClub();
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -101,7 +103,12 @@ export default function ClubNew() {
             </p>
           ) : null}
 
-          <button type="submit" disabled={pending} className="cap-btn" data-variant="primary">
+          <button
+            type="submit"
+            disabled={pending || !hydrated}
+            className="cap-btn"
+            data-variant="primary"
+          >
             {pending ? "Creating..." : "Create club"}
           </button>
         </form>

@@ -125,30 +125,8 @@
   line-height: 1.25rem;
   color: color-mix(in srgb, var(--fx-on-dark) 90%, transparent);
 }
-.fx-paywall-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-.fx-paywall-label {
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
-  color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
-}
-.fx-paywall-label-2 {
-  font-weight: var(--weight-medium);
-}
-.fx-paywall-label-3 {
-  margin-top: var(--space-1);
-  display: inline-block;
-  border-radius: var(--radius-full);
-  background-color: var(--primary);
-  padding: var(--space-1) var(--space-2-5);
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  color: var(--primary-fg);
-}
-.fx-paywall-btn-2 {
+.fx-paywall-btn-2,
+.fx-onboarding-input {
   width: 100%;
 }
 .fx-paywall-text-2 {
@@ -170,7 +148,9 @@
   }
 }
 
-.fx-account-sections-label {
+.fx-account-sections-label,
+.fx-account-sections-text,
+.fx-guide-text {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -189,8 +169,10 @@
     margin-top: var(--space-4);
   }
 }
-.fx-account-sections-link {
-  display: inline-flex;
+.fx-account-sections-field {
+  font-family: var(--ui);
+  font-size: var(--fs-body);
+  line-height: 1.25rem;
 }
 .fx-account-sections-card {
   border-radius: var(--radius-l);
@@ -204,13 +186,6 @@
   line-height: 1.75rem;
   color: var(--crit);
 }
-.fx-account-sections-text,
-.fx-guide-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
 
 .fx-preference-sections-label,
 .fx-journal-tag-text-2,
@@ -220,7 +195,8 @@
   line-height: 1rem;
   color: var(--dim);
 }
-.fx-preference-sections-stack {
+.fx-preference-sections-stack,
+.fx-settings-card-stack {
   display: flex;
   flex-direction: column;
 }
@@ -263,10 +239,6 @@
   border: var(--line-w) solid var(--line);
   background-color: var(--ground);
   padding: var(--space-4);
-}
-.fx-settings-card-stack {
-  display: flex;
-  flex-direction: column;
 }
 
 .fx-onboarding-box {
@@ -311,9 +283,6 @@
   line-height: 1.25rem;
   font-weight: var(--weight-medium);
   color: var(--text);
-}
-.fx-onboarding-input {
-  width: 100%;
 }
 .fx-onboarding-label-3 {
   font-weight: var(--weight-regular);
@@ -361,22 +330,16 @@
   }
 }
 
-/* The plan choices on the paywall's dark band. */
-.fx-paywall-plan {
-  border: var(--line-w) solid rgb(255 255 255 / 0.2);
-  border-radius: var(--radius-l);
-  padding: var(--space-3) var(--space-4);
-  text-align: start;
-  @media (prefers-reduced-motion: no-preference) {
-    transition: border-color var(--dur-base) var(--ease-out);
-  }
-}
-.fx-paywall-plan:hover {
-  border-color: rgb(255 255 255 / 0.4);
-}
-.fx-paywall-plan[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: rgb(255 255 255 / 0.1);
+/* Capsomer's plan choice on the paywall's dark band: its tokens, set for the band. */
+.fx-paywall-plans {
+  --surface: transparent;
+  --line: rgb(255 255 255 / 0.2);
+  --line-strong: rgb(255 255 255 / 0.4);
+  --text: var(--fx-on-dark);
+  --muted: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
+  --radius-m: var(--radius-l);
+  /* The band is dark in both themes, so the radios draw dark rather than white. */
+  color-scheme: dark;
 }
 
 .fx-diary-form-text {

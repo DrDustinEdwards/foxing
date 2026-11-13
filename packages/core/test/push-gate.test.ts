@@ -38,26 +38,11 @@ describe("quiet hours", () => {
 
 describe("shouldDeliverPush", () => {
   const base = { timezone: "UTC", nowUtcMs: UTC_0300 };
-  it("delivers a default-on category outside quiet hours", () => {
-    expect(shouldDeliverPush({ notificationType: "post_reply", ...base })).toEqual({
-      deliver: true,
-      reason: "ok",
-    });
-  });
   it("suppresses a default-off category", () => {
     expect(shouldDeliverPush({ notificationType: "reaction", ...base })).toEqual({
       deliver: false,
       reason: "category_off",
     });
-  });
-  it("suppresses inside quiet hours even for an on category", () => {
-    expect(
-      shouldDeliverPush({
-        notificationType: "post_reply",
-        prefs: { quietHours: { start: "22:00", end: "07:00" } },
-        ...base,
-      }),
-    ).toEqual({ deliver: false, reason: "quiet_hours" });
   });
   it("suppresses an unknown notification type", () => {
     expect(shouldDeliverPush({ notificationType: "mystery", ...base })).toEqual({

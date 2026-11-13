@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { enrichSelectionLocator, tintFor, type Locator } from "../app/lib/reader/locator";
+import { enrichSelectionLocator, type Locator } from "../app/lib/reader/locator";
 import { toEpubPreferences, DEFAULT_SETTINGS } from "../app/lib/reader/settings";
 
 describe("enrichSelectionLocator (R1/R2)", () => {
@@ -45,14 +45,6 @@ describe("enrichSelectionLocator (R1/R2)", () => {
     const out = enrichSelectionLocator(base, {}, undefined);
     expect(out.text?.highlight).toBe("the sea");
     expect(out.text?.before).toBeUndefined();
-  });
-});
-
-describe("tintFor", () => {
-  it("returns dark-mode tints in dark theme, light tints otherwise", () => {
-    expect(tintFor("amber", "light")).toBe("#FEF0C0");
-    expect(tintFor("amber", "sepia")).toBe("#FEF0C0");
-    expect(tintFor("amber", "dark")).toBe("#2E2008");
   });
 });
 

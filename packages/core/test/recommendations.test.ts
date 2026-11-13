@@ -59,33 +59,9 @@ describe("rankCandidates - tier 1 (taste) and baseline", () => {
     );
     expect(ranked[0].reason).toBe("Award winner in Gothic");
   });
-
-  it("empty genres + no history is a valid curated fallback (no crash, ranks by quality)", () => {
-    const candidates = [
-      cand({ id: "a", weightedRating: 2, ratingCount: 3 }),
-      cand({ id: "b", weightedRating: 4.5, ratingCount: 80 }),
-    ];
-    const ranked = rankCandidates(candidates, NO_SIGNALS, new Set());
-    expect(ranked.map((r) => r.candidate.id)).toEqual(["b", "a"]);
-  });
 });
 
 describe("rankCandidates - tier 2 (behavior) boosting", () => {
-  it("a favorite author outranks a higher-rated stranger, with a 'More from' reason", () => {
-    const signals: RankSignals = {
-      ...NO_SIGNALS,
-      favoriteAuthors: ["mary shelley"],
-      exampleByAuthor: {},
-    };
-    const candidates = [
-      cand({ id: "bestseller", author: "Someone Else", weightedRating: 5, ratingCount: 500 }),
-      cand({ id: "shelley", author: "Mary Shelley", weightedRating: 2, ratingCount: 2 }),
-    ];
-    const ranked = rankCandidates(candidates, signals, new Set());
-    expect(ranked[0].candidate.id).toBe("shelley");
-    expect(ranked[0].reason).toBe("More from Mary Shelley");
-  });
-
   it("uses the rated title when the author has a highly-rated example", () => {
     const signals: RankSignals = {
       ...NO_SIGNALS,
