@@ -56,13 +56,15 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
                     size="sm"
                   />
                   <div className="fx-feed-box">
-                    <p className="muted">
+                    <p className="cap-text" data-tone="muted">
                       {row.actor ? (
                         <Link to={`/u/${row.actor.username}`} className="fx-feed-link">
                           {row.actor.displayName ?? row.actor.username}
                         </Link>
                       ) : (
-                        <span className="strong">Someone</span>
+                        <span className="cap-text" data-tone="ink" data-weight="strong">
+                          Someone
+                        </span>
                       )}{" "}
                       {activityText(row)}
                     </p>
@@ -79,8 +81,13 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
         )}
 
         {nextCursor ? (
-          <div className="mt-6 text-center">
-            <Link to={`/feed?cursor=${encodeURIComponent(nextCursor)}`} className="link sans small">
+          <div className="cap-text mt-6" data-align="center">
+            <Link
+              to={`/feed?cursor=${encodeURIComponent(nextCursor)}`}
+              className="cap-text link"
+              data-size="small"
+              data-face="ui"
+            >
               Older activity
             </Link>
           </div>

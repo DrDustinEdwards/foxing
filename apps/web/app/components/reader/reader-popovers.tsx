@@ -146,7 +146,9 @@ export function AttributionPopover({
         >
           {authorName(other.author).charAt(0).toUpperCase()}
         </span>
-        <span className="truncate fx-reader-popovers-label-2">{authorName(other.author)}</span>
+        <span className="cap-clamp fx-reader-popovers-label-2" data-lines="1">
+          {authorName(other.author)}
+        </span>
         {other.isPinned ? <span className="fx-reader-popovers-label-3">Pinned</span> : null}
         <button
           type="button"
@@ -188,7 +190,7 @@ export function AttributionPopover({
             <span className="fx-reader-popovers-label-5">{other.likeCount}</span>
           ) : null}
         </button>
-        <span className="num">
+        <span className="cap-num">
           {replies.length} {replies.length === 1 ? "reply" : "replies"}
         </span>
       </div>

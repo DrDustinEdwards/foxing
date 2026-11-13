@@ -91,7 +91,9 @@ export default function Terms() {
 function Section({ heading, children }: { heading: string; children: React.ReactNode }) {
   return (
     <section>
-      <h2 className="display-1">{heading}</h2>
+      <h2 className="cap-title" data-size="4">
+        {heading}
+      </h2>
       <p className="mt-2">{children}</p>
     </section>
   );

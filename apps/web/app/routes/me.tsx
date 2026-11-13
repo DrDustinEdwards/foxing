@@ -55,7 +55,11 @@ export default function Me({ loaderData }: Route.ComponentProps) {
           <div className="min-0">
             <h1 className="fx-me-title">{name}</h1>
             <p className="mt-1 fx-me-text">@{profile.username}</p>
-            {joined ? <p className="mt-2 ui">Reading on Foxing since {joined}</p> : null}
+            {joined ? (
+              <p className="cap-text mt-2" data-size="small" data-tone="muted" data-face="ui">
+                Reading on Foxing since {joined}
+              </p>
+            ) : null}
           </div>
         </header>
 
@@ -77,16 +81,18 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
         <section className="cap-card fx-me-card">
           <Eyebrow className="mb-4">Your reading</Eyebrow>
-          <dl className="text-center fx-me-grid">
+          <dl className="cap-text fx-me-grid" data-align="center">
             {statTiles.map((tile) => (
               <div key={tile.label}>
-                <dd className="display-2">{tile.value}</dd>
+                <dd className="cap-title" data-size="3">
+                  {tile.value}
+                </dd>
                 <dt className="fx-me-caps">{tile.label}</dt>
               </div>
             ))}
           </dl>
           <div className="mt-5 fx-me-box">
-            <Link to="/library" className="link sans small">
+            <Link to="/library" className="cap-text link" data-size="small" data-face="ui">
               Go to your library
             </Link>
           </div>
@@ -103,7 +109,9 @@ export default function Me({ loaderData }: Route.ComponentProps) {
           </section>
         ) : null}
 
-        <p className="meta">Signed in as {email}</p>
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+          Signed in as {email}
+        </p>
       </Container>
     </PageShell>
   );

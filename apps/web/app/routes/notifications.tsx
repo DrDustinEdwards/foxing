@@ -61,7 +61,15 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
               <li key={n.id} className="items-start cap-card fx-notifications-card">
                 <span aria-hidden="true" className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"} />
                 <div className="min-0">
-                  <p className="sans small strong">{n.title}</p>
+                  <p
+                    className="cap-text"
+                    data-size="small"
+                    data-tone="ink"
+                    data-weight="strong"
+                    data-face="ui"
+                  >
+                    {n.title}
+                  </p>
                   {n.body ? <p className="fx-notifications-text-2">{n.body}</p> : null}
                   <p className="mt-1 fx-notifications-text-3">
                     {formatDate(new Date(n.createdAt))}

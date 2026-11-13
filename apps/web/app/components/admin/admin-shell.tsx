@@ -6,7 +6,18 @@ import {
   FIRST_PAGE,
   type AdminEntry,
 } from "capsomer/react/admin-shell";
-import { Icon, type IconName } from "capsomer/react/icons";
+import {
+  Icon,
+  iconAward,
+  iconBell,
+  iconBook,
+  iconDocument,
+  iconOverview,
+  iconPeople,
+  iconRoles,
+  iconStar,
+  iconStats,
+} from "capsomer/react/icons";
 import { routerRenderLink } from "capsomer/react/link";
 import { useLocation, useRouteLoaderData } from "react-router";
 import { avatarInitials } from "~/components/ui";
@@ -15,24 +26,24 @@ import { THEME_PREF_KEY } from "~/lib/theme";
 import adminShellCss from "capsomer/admin-shell.css?url";
 import type { loader as RootLoader } from "~/root";
 
-const entry = (href: string, label: string, icon: IconName, group: string): AdminEntry => ({
+const entry = (href: string, label: string, icon: string, group: string): AdminEntry => ({
   id: href,
   label,
   href,
   group,
-  icon: <Icon name={icon} className="cap-admin-icon" />,
+  icon: <Icon d={icon} className="cap-admin-icon" />,
 });
 
 const ADMIN_SECTIONS: AdminEntry[] = [
-  entry("/admin", FIRST_PAGE, "overview", "Watch"),
-  entry("/admin/analytics", "Analytics", "stats", "Watch"),
-  entry("/admin/book-of-month", "Book of the Month", "star", "Catalog"),
-  entry("/admin/celebrity-picks", "Celebrity Picks", "award", "Catalog"),
-  entry("/admin/books", "Books", "book", "Catalog"),
-  entry("/admin/content", "Content", "document", "Catalog"),
-  entry("/admin/users", "Users", "people", "Readers"),
-  entry("/admin/clubs", "Clubs", "roles", "Readers"),
-  entry("/admin/notifications", "Notifications", "bell", "Readers"),
+  entry("/admin", FIRST_PAGE, iconOverview, "Watch"),
+  entry("/admin/analytics", "Analytics", iconStats, "Watch"),
+  entry("/admin/book-of-month", "Book of the Month", iconStar, "Catalog"),
+  entry("/admin/celebrity-picks", "Celebrity Picks", iconAward, "Catalog"),
+  entry("/admin/books", "Books", iconBook, "Catalog"),
+  entry("/admin/content", "Content", iconDocument, "Catalog"),
+  entry("/admin/users", "Users", iconPeople, "Readers"),
+  entry("/admin/clubs", "Clubs", iconRoles, "Readers"),
+  entry("/admin/notifications", "Notifications", iconBell, "Readers"),
 ];
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
@@ -76,7 +87,13 @@ export function AdminCard({
     <section className="cap-card">
       {title || action ? (
         <div className="cap-spread" data-gap="5" data-align="center">
-          {title ? <h2 className="display-1">{title}</h2> : <span />}
+          {title ? (
+            <h2 className="cap-title" data-size="4">
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
           {action}
         </div>
       ) : null}
