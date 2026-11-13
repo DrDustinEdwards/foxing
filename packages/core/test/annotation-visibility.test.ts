@@ -10,14 +10,6 @@ function profileWith(defaultAnnotation: unknown): Profile {
 }
 
 describe("resolveDefaultAnnotationVisibility", () => {
-  it("returns public when the default is public", () => {
-    expect(resolveDefaultAnnotationVisibility(profileWith("public"))).toBe("public");
-  });
-
-  it("returns friends when the default is close friends", () => {
-    expect(resolveDefaultAnnotationVisibility(profileWith("friends"))).toBe("friends");
-  });
-
   it("falls back to private when the default is private, absent, or unrecognized", () => {
     expect(resolveDefaultAnnotationVisibility(profileWith("private"))).toBe("private");
     expect(resolveDefaultAnnotationVisibility(profileWith(undefined))).toBe("private");

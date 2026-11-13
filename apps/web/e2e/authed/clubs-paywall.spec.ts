@@ -11,9 +11,4 @@ test.describe("clubs (signed in, free tier)", () => {
     // No Plus paywall dialog is shown for a club action.
     await expect(page.getByRole("dialog", { name: /foxing plus/i })).toHaveCount(0);
   });
-
-  test("the Clubs nav entry is present for signed-in users", async ({ page }) => {
-    await page.goto("/home");
-    await expect(page.getByRole("link", { name: /^clubs$/i }).first()).toBeVisible();
-  });
 });

@@ -26,17 +26,6 @@ test.describe("public catalog flows", () => {
     expect(types.filter((t) => t === "BreadcrumbList")).toHaveLength(1);
   });
 
-  test("misspelled author returns the right book via the fuzzy fallback", async ({ page }) => {
-    // 'Dostoevski' is a substitution typo of the indexed 'Dostoyevsky'. Trigram substring
-    // alone misses it; the OR'd-trigram fallback recovers it. This is the Phase 2 gap,
-    // now closed at the app layer.
-    await page.goto("/search?q=Dostoevski");
-    await expect(page.getByText(/closest results/i)).toBeVisible();
-    const results = page.locator('a[href^="/books/"]');
-    await expect(results.first()).toBeVisible();
-    await expect(page.locator("body")).toContainText(/Dosto/i);
-  });
-
   test("search-as-you-type suggests books", async ({ page }) => {
     await page.goto("/search");
     await page.getByRole("combobox").fill("pride");

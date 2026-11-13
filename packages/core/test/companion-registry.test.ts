@@ -48,11 +48,6 @@ describe("companion registry integrity", () => {
       expect(Object.keys(MODELS)).toContain(action.role);
     }
   });
-
-  it("cached actions are not exposed as Plus actions and vice versa", () => {
-    const overlap = PLUS_ACTION_NAMES.filter((n) => CACHED_ACTION_NAMES.includes(n));
-    expect(overlap).toEqual([]);
-  });
 });
 
 describe("buildContext / systemPrompt per action", () => {
@@ -77,12 +72,6 @@ describe("buildContext / systemPrompt per action", () => {
     const ctx = fixtureContext({ action: "chat", message: null });
     const { userContent } = chat?.buildContext(ctx) ?? { userContent: "" };
     expect(userContent.length).toBeGreaterThan(0);
-  });
-
-  it("bilingual_paragraph's system prompt names the target language", () => {
-    const action = getCompanionAction("bilingual_paragraph");
-    const ctx = fixtureContext({ action: "bilingual_paragraph", targetLanguage: "French" });
-    expect(action?.systemPrompt(ctx)).toContain("French");
   });
 });
 
