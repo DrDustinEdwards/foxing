@@ -1,4 +1,4 @@
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconBell, iconSearch } from "capsomer/react/icons";
 import {
   type HeaderExtra,
   type HeaderSection,
@@ -30,9 +30,9 @@ const YOUR_FOXING = [
 const isCurrent = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
-const SEARCH_ICON = <Icon name="search" />;
+const SEARCH_ICON = <Icon d={iconSearch} />;
 // No count on the bell: there is no unread-count source yet, and a fake badge is worse than none.
-const BELL_ICON = <Icon name="bell" />;
+const BELL_ICON = <Icon d={iconBell} />;
 
 function YourFoxingBar({ pathname }: { pathname: string }) {
   return (

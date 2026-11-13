@@ -4,12 +4,12 @@
 // and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons);
 // the four the shared set lacks pass their own path on its grid.
 import type { HeaderAccount } from "capsomer/react/site-header";
-import { Icon, type IconName } from "capsomer/react/icons";
+import { Icon, iconAward, iconBook, iconFolder, iconGoals, iconSettings, iconStats } from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 
-// Each menu icon: a name in Capsomer's set, or Foxing's own drawing on the same 24-unit grid.
+// Each menu icon is a path: one of Capsomer's, or Foxing's own drawing on the same 24-unit grid.
 const OWN = {
   findnext:
     "M11 4l1.5 4L16.5 9.5 12.5 11 11 15l-1.5-4L5.5 9.5 9.5 8zM17.5 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z",
@@ -18,23 +18,19 @@ const OWN = {
   signout:
     "M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2M10 12h10M17 9l3 3-3 3",
 };
-type MenuIcon = IconName | keyof typeof OWN;
+type MenuIcon = string;
 
-function MenuIconSvg({ name }: { name: MenuIcon }) {
-  return name in OWN ? (
-    <Icon d={OWN[name as keyof typeof OWN]} />
-  ) : (
-    <Icon name={name as IconName} />
-  );
+function MenuIconSvg({ d }: { d: MenuIcon }) {
+  return <Icon d={d} />;
 }
 
 // Reading surfaces. The secondary bar holds the primary four (Home, Library, Feed,
 // People); notifications have the header bell. Collections is one compact row whose
 // sublinks reach the real routes (buddy reads + saved are cut).
 const READING_LINKS = [
-  { to: "/stats", label: "Stats", icon: "stats" as const },
-  { to: "/goals", label: "Goals", icon: "goals" as const },
-  { to: "/year", label: "Year in reading", icon: "award" as const },
+  { to: "/stats", label: "Stats", icon: iconStats },
+  { to: "/goals", label: "Goals", icon: iconGoals },
+  { to: "/year", label: "Year in reading", icon: iconAward },
 ];
 const COLLECTION_LINKS = [
   { to: "/lists", label: "Lists" },
@@ -57,7 +53,7 @@ function MenuLink({
   return (
     <Link to={to} className="fx-acct-link">
       <span className="fx-acct-icon">
-        <MenuIconSvg name={icon} />
+        <MenuIconSvg d={icon} />
       </span>
       <span className="min-0 fx-account-panel-label">
         <span className="fx-acct-label">{label}</span>
@@ -72,7 +68,7 @@ function CollectionsRow() {
   return (
     <div className="fx-acct-row">
       <span className="fx-acct-icon">
-        <Icon name="folder" />
+        <Icon d={iconFolder} />
       </span>
       <div className="min-0">
         <span className="fx-acct-label">Collections</span>
@@ -107,7 +103,7 @@ function FooterAction({
 }) {
   const inner = (
     <>
-      <MenuIconSvg name={icon} />
+      <MenuIconSvg d={icon} />
       <span>{label}</span>
     </>
   );
@@ -220,7 +216,7 @@ function AccountPanel({
         {READING_LINKS.map((l) => (
           <MenuLink key={l.to} to={l.to} label={l.label} icon={l.icon} />
         ))}
-        <MenuLink to="/vocabulary" label="Vocabulary" sublabel={vocab} icon="book" />
+        <MenuLink to="/vocabulary" label="Vocabulary" sublabel={vocab} icon={iconBook} />
       </div>
 
       <div className="fx-acct-group">
@@ -232,16 +228,16 @@ function AccountPanel({
           to="/find-next-book"
           label="Find next book"
           sublabel="AI recommendations for you"
-          icon="findnext"
+          icon={OWN.findnext}
         />
-        {user.isAdmin ? <MenuLink to="/admin" label="Admin dashboard" icon="admin" /> : null}
+        {user.isAdmin ? <MenuLink to="/admin" label="Admin dashboard" icon={OWN.admin} /> : null}
       </div>
 
       <div className="fx-acct-foots">
-        <FooterAction icon="profile" label="Profile" to={`/u/${user.username}`} />
-        <FooterAction icon="settings" label="Settings" to="/settings" />
+        <FooterAction icon={OWN.profile} label="Profile" to={`/u/${user.username}`} />
+        <FooterAction icon={iconSettings} label="Settings" to="/settings" />
         <FooterAction
-          icon="signout"
+          icon={OWN.signout}
           label={signingOut ? "..." : "Sign out"}
           onClick={onSignOut}
           danger
