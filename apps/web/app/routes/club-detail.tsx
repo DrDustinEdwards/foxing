@@ -40,7 +40,7 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
             {club.description ? (
               <p className="mt-2 fx-club-detail-text">{club.description}</p>
             ) : null}
-            <p className="mt-2 meta">
+            <p className="mt-2 cap-meta sans">
               {club.memberCount} {club.memberCount === 1 ? "member" : "members"}
               {isMember && connected ? (
                 <span className="fx-club-detail-label">

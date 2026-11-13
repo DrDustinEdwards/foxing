@@ -73,7 +73,7 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Picks">
           {picks.length === 0 ? (
-            <p className="meta">No picks for this curator yet.</p>
+            <p className="cap-meta sans">No picks for this curator yet.</p>
           ) : (
             <ul className="divided">
               {picks.map((p) => (
@@ -109,7 +109,7 @@ function PickRow({
               <span className="badge badge-quiet ml-2">Draft</span>
             )}
           </p>
-          <p className="truncate meta">
+          <p className="truncate cap-meta sans">
             {pick.bookTitle ?? "No book"}
             {pick.pickYear
               ? ` · ${pick.pickMonth ? `${pick.pickMonth}/` : ""}${pick.pickYear}`

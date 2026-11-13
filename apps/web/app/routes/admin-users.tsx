@@ -54,7 +54,9 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Readers">
           {users.length === 0 ? (
-            <p className="meta">{q ? "No readers match that search." : "No readers yet."}</p>
+            <p className="cap-meta sans">
+              {q ? "No readers match that search." : "No readers yet."}
+            </p>
           ) : (
             <ul className="divided">
               {users.map((u) => (
@@ -90,7 +92,7 @@ function UserRow({
               <span className="badge ml-2">Active</span>
             )}
           </p>
-          <p className="truncate meta">{user.displayName ?? "No name set"}</p>
+          <p className="truncate cap-meta sans">{user.displayName ?? "No name set"}</p>
         </div>
         <div className="cap-cluster shrink-0" data-gap="3">
           <AdminButton

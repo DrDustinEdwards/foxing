@@ -142,7 +142,7 @@ export function ThreadsSection({
       ) : null}
 
       {threads.length === 0 ? (
-        <p className="mt-4 meta">No discussions yet.</p>
+        <p className="mt-4 cap-meta sans">No discussions yet.</p>
       ) : (
         <ul className="mt-4 fx-club-sections-list">
           {threads.map((t) => (

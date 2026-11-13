@@ -78,7 +78,7 @@ export default function People({ loaderData }: Route.ComponentProps) {
         <section className="cap-stack">
           <h2 className="display-2">Followers</h2>
           {followers.length === 0 ? (
-            <p className="meta">No followers yet.</p>
+            <p className="cap-meta sans">No followers yet.</p>
           ) : (
             <ul className="cap-stack" data-gap="3">
               {followers.map((p) => (
@@ -96,7 +96,9 @@ export default function People({ loaderData }: Route.ComponentProps) {
             Close friends see your friends-only reviews, activity, and shared annotations.
           </p>
           {closeFriends.length === 0 ? (
-            <p className="meta">No close friends yet. Add someone from your Following list.</p>
+            <p className="cap-meta sans">
+              No close friends yet. Add someone from your Following list.
+            </p>
           ) : (
             <ul className="cap-stack" data-gap="3">
               {closeFriends.map((p) => (

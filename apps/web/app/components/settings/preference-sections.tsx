@@ -253,7 +253,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
         Close friends see your friends-only reviews, activity, and shared annotations.
       </p>
       {friends.length === 0 ? (
-        <p className="mt-4 meta">
+        <p className="mt-4 cap-meta sans">
           No close friends yet. Add readers you follow from{" "}
           <Link to="/people" className="fx-preference-sections-link">
             People
@@ -280,7 +280,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
           ))}
         </ul>
       )}
-      <p className="mt-4 meta">
+      <p className="mt-4 cap-meta sans">
         Add close friends from{" "}
         <Link to="/people" className="fx-preference-sections-link">
           People

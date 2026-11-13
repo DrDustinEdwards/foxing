@@ -45,7 +45,7 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
         <CreateBotm onDone={() => void reload()} />
         <AdminCard title="Scheduled picks">
           {rows.length === 0 ? (
-            <p className="meta">No picks yet. Create one above.</p>
+            <p className="cap-meta sans">No picks yet. Create one above.</p>
           ) : (
             <ul className="divided">
               {rows.map((r) => (
@@ -205,7 +205,7 @@ function BotmRow({
               <span className="badge badge-quiet ml-2">Draft</span>
             )}
           </p>
-          <p className="truncate meta">
+          <p className="truncate cap-meta sans">
             {row.bookTitle ? `${row.bookTitle} by ${row.bookAuthor}` : "No book attached"}
           </p>
         </div>

@@ -91,7 +91,7 @@ export function YearView({
         )}
 
         {share ? (
-          <p className="meta">
+          <p className="cap-meta sans">
             Want to share this?{" "}
             <Link to={`/u/${username}/recap/${year}`} className="link">
               View the public version

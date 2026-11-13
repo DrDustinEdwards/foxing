@@ -125,7 +125,7 @@ export function BookGroups<T extends BookFields>({
     groups[i].items.push(e);
   }
 
-  if (groups.length === 0) return <p className="meta">{empty}</p>;
+  if (groups.length === 0) return <p className="cap-meta sans">{empty}</p>;
   return (
     <div className="cap-stack" data-gap="7">
       {groups.map((g) => (

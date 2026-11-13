@@ -103,7 +103,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
           </section>
         ) : null}
 
-        <p className="meta">Signed in as {email}</p>
+        <p className="cap-meta sans">Signed in as {email}</p>
       </Container>
     </PageShell>
   );

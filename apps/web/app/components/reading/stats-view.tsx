@@ -66,7 +66,7 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
         <section className="mt-10">
           <Eyebrow className="mb-4">Goals</Eyebrow>
           {goals.length === 0 ? (
-            <p className="meta">No goals set.</p>
+            <p className="cap-meta sans">No goals set.</p>
           ) : (
             <ul className="cap-stack" data-gap="3">
               {goals.map((g) => {

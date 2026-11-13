@@ -22,7 +22,7 @@ export function BookShelvesPicker({
     <div className="cap-card">
       <p className="sans small strong">Add to shelves</p>
       {shelves.length === 0 ? (
-        <p className="meta">
+        <p className="cap-meta sans">
           You have no shelves yet.{" "}
           <Link to="/library" className="link">
             Create one

@@ -325,7 +325,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                 ) : null}
               </div>
               {lists.length === 0 ? (
-                <p className="meta">No lists yet.</p>
+                <p className="cap-meta sans">No lists yet.</p>
               ) : (
                 <ul className="cap-stack" data-gap="3">
                   {lists.map((l) => (
@@ -343,7 +343,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             <div className="cap-stack">
               <h2 className="display-2">Activity</h2>
               {activity.length === 0 ? (
-                <p className="meta">Nothing recent.</p>
+                <p className="cap-meta sans">Nothing recent.</p>
               ) : (
                 <ul className="fx-u-profile-stack-3">
                   {activity.map((a) => (

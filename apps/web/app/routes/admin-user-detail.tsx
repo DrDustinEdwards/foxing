@@ -218,7 +218,7 @@ function OperatorControls({
               Send to @{username}
             </AdminButton>
             {notifySent ? (
-              <span className="meta" role="status">
+              <span className="cap-meta sans" role="status">
                 Sent.
               </span>
             ) : null}

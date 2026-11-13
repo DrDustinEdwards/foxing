@@ -56,7 +56,7 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Clubs">
           {clubs.length === 0 ? (
-            <p className="meta">No clubs match this search.</p>
+            <p className="cap-meta sans">No clubs match this search.</p>
           ) : (
             <ul className="divided">
               {clubs.map((c) => (
@@ -92,7 +92,7 @@ function ClubRow({
               <span className="badge badge-quiet ml-2">Unverified</span>
             )}
           </p>
-          <p className="truncate meta">
+          <p className="truncate cap-meta sans">
             {club.slug ? `/${club.slug}` : "No slug"} · {club.visibility}
           </p>
         </div>

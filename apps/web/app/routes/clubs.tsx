@@ -68,7 +68,7 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
         <section className="mt-12">
           <h2 className="fx-clubs-caps">Discover</h2>
           {discover.length === 0 ? (
-            <p className="mt-4 meta">No public clubs yet.</p>
+            <p className="mt-4 cap-meta sans">No public clubs yet.</p>
           ) : (
             <div className="mt-4 fx-clubs-grid">
               {discover.map((club) => (

@@ -52,7 +52,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
 
         <ul className="mt-8 fx-club-thread-list" data-testid="post-list">
           {posts.length === 0 ? (
-            <li className="meta">No posts yet. Start the conversation.</li>
+            <li className="cap-meta sans">No posts yet. Start the conversation.</li>
           ) : (
             posts.map((p) => (
               <li key={p.id} className="cap-card">

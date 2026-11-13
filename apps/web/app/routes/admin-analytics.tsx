@@ -53,7 +53,7 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
       <div className="mt-8">
         <AdminCard title="Audit log">
           {audit.length === 0 ? (
-            <p className="meta">No admin actions logged yet.</p>
+            <p className="cap-meta sans">No admin actions logged yet.</p>
           ) : (
             <div className="fx-admin-analytics-box">
               <table className="fx-admin-analytics-table">

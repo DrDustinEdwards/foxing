@@ -55,7 +55,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
       <div className="mt-8 fx-admin-grid-2">
         <AdminCard title="Recent signups">
           {stats.recentSignups.length === 0 ? (
-            <p className="meta">No readers yet.</p>
+            <p className="cap-meta sans">No readers yet.</p>
           ) : (
             <ul className="divided">
               {stats.recentSignups.map((u) => (
@@ -74,7 +74,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Recent admin actions">
           {audit.length === 0 ? (
-            <p className="meta">No admin actions logged yet.</p>
+            <p className="cap-meta sans">No admin actions logged yet.</p>
           ) : (
             <ul className="divided">
               {audit.map((a) => (

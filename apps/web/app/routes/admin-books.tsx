@@ -60,7 +60,7 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Catalog">
           {books.length === 0 ? (
-            <p className="meta">No books match this search.</p>
+            <p className="cap-meta sans">No books match this search.</p>
           ) : (
             <ul className="divided">
               {books.map((b) => (
@@ -92,7 +92,7 @@ function BookRow({
             {book.title}
             {book.isStaffPick ? <span className="badge ml-2">Featured</span> : null}
           </p>
-          <p className="truncate meta">
+          <p className="truncate cap-meta sans">
             {book.author}
             {book.publicationYear ? ` · ${book.publicationYear}` : ""} · {book.sourceType}
           </p>

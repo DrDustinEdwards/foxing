@@ -62,7 +62,7 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
             </nav>
 
             {shown.length === 0 ? (
-              <p className="meta">
+              <p className="cap-meta sans">
                 {filter === "mastered" ? "No mastered words yet." : "Nothing left to master."}
               </p>
             ) : (

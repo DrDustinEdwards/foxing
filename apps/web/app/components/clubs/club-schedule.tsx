@@ -101,7 +101,7 @@ export function PollsSection({
       ) : null}
 
       {polls.length === 0 ? (
-        <p className="mt-4 meta">No polls yet.</p>
+        <p className="mt-4 cap-meta sans">No polls yet.</p>
       ) : (
         <div className="mt-4 fx-club-schedule-box">
           {polls.map((poll) => {

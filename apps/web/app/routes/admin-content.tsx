@@ -48,7 +48,7 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
         <CreateAnnouncement onDone={() => void reload()} />
         <AdminCard title="Announcements">
           {announcements.length === 0 ? (
-            <p className="meta">No announcements yet. Create one above.</p>
+            <p className="cap-meta sans">No announcements yet. Create one above.</p>
           ) : (
             <ul className="divided">
               {announcements.map((a) => (

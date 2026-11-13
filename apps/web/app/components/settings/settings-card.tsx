@@ -65,7 +65,7 @@ export function SubmitRow({
           {pending ? pendingLabel : label}
         </button>
         {done ? (
-          <span className="meta" role="status">
+          <span className="cap-meta sans" role="status">
             {done}
           </span>
         ) : null}
