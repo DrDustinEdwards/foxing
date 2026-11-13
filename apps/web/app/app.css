@@ -40,6 +40,7 @@
 @import "capsomer/icons.css";
 @import "capsomer/picture.css";
 @import "capsomer/time.css";
+@import "capsomer/rating.css";
 @import "capsomer/chart-frame.css";
 /* The whole chart stylesheet: Enarratio's base, the token mapping, gridlines and series inks. */
 @import "capsomer/enarratio.css";

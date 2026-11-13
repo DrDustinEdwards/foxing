@@ -216,9 +216,6 @@
     margin-top: 0.75rem;
   }
 }
-.fx-account-sections-link {
-  display: inline-flex;
-}
 .fx-account-sections-field {
   font-family: var(--ui);
   font-size: 0.875rem;

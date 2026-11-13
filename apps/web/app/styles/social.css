@@ -405,7 +405,6 @@
   color: var(--dim);
 }
 
-.fx-u-profile-label,
 .fx-year-label {
   font-family: var(--mono);
   font-size: 0.875rem;
@@ -731,12 +730,6 @@
   display: inline-flex;
   flex-direction: column;
   gap: 0.25rem;
-}
-.fx-diary-label {
-  font-family: var(--mono);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--accent-text);
 }
 .fx-lists-row {
   display: flex;

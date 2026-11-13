@@ -2,7 +2,7 @@
 // in-process via core; requireProfile sends anonymous visitors to /login and
 // signed-in-without-profile users to /onboarding (never renders a null profile).
 import { createDb, libraryRepo } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Avatar, Chip, Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -71,9 +71,9 @@ export default function Me({ loaderData }: Route.ComponentProps) {
             { to: "/people", label: "People" },
             { to: "/year", label: "Year in reading" },
           ].map((l) => (
-            <Link key={l.to} to={l.to} className="cap-btn" data-size="sm">
+            <ButtonLink key={l.to} to={l.to} size="sm">
               {l.label}
-            </Link>
+            </ButtonLink>
           ))}
         </nav>
 
