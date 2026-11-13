@@ -55,7 +55,7 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
                   alt={`${current.book.title} by ${current.book.author}`}
                   fallbackLabel={current.book.title}
                   priority
-                  sizes="(min-width: 1024px) 240px, 60vw"
+                  sizes="(min-width: 64rem) 240px, 60vw"
                 />
               </Link>
             </div>

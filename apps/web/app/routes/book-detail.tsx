@@ -153,7 +153,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 alt={`Cover of ${book.title} by ${book.author}`}
                 fallbackLabel={book.title}
                 priority
-                sizes="(min-width: 1024px) 260px, 60vw"
+                sizes="(min-width: 64rem) 260px, 60vw"
               />
             </div>
             <div className="mt-5 fx-book-detail-stack">

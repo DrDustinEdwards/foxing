@@ -197,19 +197,20 @@
   opacity: 0.5;
 }
 
-/* The signed-in reader's tabs under the header, on a desktop; a phone has Capsomer's bottom bar. */
+/* The signed-in reader's tabs under the header, from a tablet up; a phone has Capsomer's bottom bar. */
 .fx-your-bar {
+  display: none;
   border-block-end: 1px solid var(--line);
   background: var(--sunken);
+}
+@media (min-width: 48rem) {
+  .fx-your-bar {
+    display: block;
+  }
 }
 .fx-your-bar .cap-tabs-list {
   overflow-x: auto;
   border-block-end: 0;
-}
-@media (max-width: 767.98px) {
-  .fx-your-bar {
-    display: none;
-  }
 }
 
 .fx-main {

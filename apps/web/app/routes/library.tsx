@@ -113,7 +113,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                           src={e.coverUrl}
                           alt={`Cover of ${e.title}`}
                           fallbackLabel={e.title}
-                          sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+                          sizes="(min-width: 64rem) 200px, (min-width: 40rem) 30vw, 45vw"
                         />
                         {e.status === "paused" || e.status === "abandoned" ? (
                           <span className="fx-library-label-2">

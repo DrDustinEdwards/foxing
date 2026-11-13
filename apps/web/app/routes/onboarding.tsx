@@ -179,7 +179,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
                   src={book.coverUrl}
                   alt={`${book.title} by ${book.author}`}
                   fallbackLabel={book.title}
-                  sizes="(min-width: 640px) 200px, 45vw"
+                  sizes="(min-width: 40rem) 200px, 45vw"
                 />
                 <h2 className="mt-3 fx-onboarding-title-2">{book.title}</h2>
               </Link>
