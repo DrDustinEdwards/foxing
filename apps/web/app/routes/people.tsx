@@ -35,9 +35,13 @@ function Row({
     <li className="py-3 fx-people-card">
       <Link to={`/u/${p.username}`} className="fx-people-link">
         <Avatar src={p.avatarUrl} name={name} size="sm" />
-        <span className="min-0">
-          <span className="block truncate fx-people-label">{name}</span>
-          <span className="block truncate fx-people-label-2">@{p.username}</span>
+        <span className="cap-shrink">
+          <span className="cap-clamp block fx-people-label" data-lines="1">
+            {name}
+          </span>
+          <span className="cap-clamp block fx-people-label-2" data-lines="1">
+            @{p.username}
+          </span>
         </span>
       </Link>
       {children}
@@ -58,7 +62,9 @@ export default function People({ loaderData }: Route.ComponentProps) {
         />
 
         <section className="cap-stack">
-          <h2 className="display-2">Following</h2>
+          <h2 className="cap-title" data-size="3">
+            Following
+          </h2>
           {following.length === 0 ? (
             <EmptyState
               title="Not following anyone yet"
@@ -76,9 +82,13 @@ export default function People({ loaderData }: Route.ComponentProps) {
         </section>
 
         <section className="cap-stack">
-          <h2 className="display-2">Followers</h2>
+          <h2 className="cap-title" data-size="3">
+            Followers
+          </h2>
           {followers.length === 0 ? (
-            <p className="cap-meta sans">No followers yet.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No followers yet.
+            </p>
           ) : (
             <ul className="cap-stack" data-gap="3">
               {followers.map((p) => (
@@ -91,12 +101,14 @@ export default function People({ loaderData }: Route.ComponentProps) {
         </section>
 
         <section className="cap-stack">
-          <h2 className="display-2">Close friends</h2>
-          <p className="ui">
+          <h2 className="cap-title" data-size="3">
+            Close friends
+          </h2>
+          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
             Close friends see your friends-only reviews, activity, and shared annotations.
           </p>
           {closeFriends.length === 0 ? (
-            <p className="cap-meta sans">
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No close friends yet. Add someone from your Following list.
             </p>
           ) : (

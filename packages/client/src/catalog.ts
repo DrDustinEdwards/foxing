@@ -6,7 +6,8 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { qs } from "./http";
 import { type CatalogQuery, keys } from "./keys";
 import { useApi } from "./provider";
-import { useSeededQuery, useWrite } from "./query";
+import { useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 export function useDiscover() {
   const api = useApi();

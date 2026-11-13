@@ -139,7 +139,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           ) : null}
 
           {error ? (
-            <p role="alert" className="error">
+            <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
               {error}
             </p>
           ) : null}
@@ -183,7 +183,9 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
                 />
                 <h2 className="mt-3 fx-onboarding-title-2">{book.title}</h2>
               </Link>
-              <p className="mt-1 cap-meta sans">{book.author}</p>
+              <p className="cap-text mt-1" data-size="small" data-tone="dim" data-face="ui">
+                {book.author}
+              </p>
               <button
                 type="button"
                 onClick={() => void startReading(book)}

@@ -2,7 +2,11 @@ import { formatCount } from "@drdustinedwards/site-helpers/text";
 import { faqPage } from "@drdustinedwards/site-helpers/schema";
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
+import { CtaBand } from "capsomer/react/cta-band";
+import { Hero } from "capsomer/react/hero";
 import { Link } from "capsomer/react/link";
+import "capsomer/hero.css";
+import "capsomer/cta-band.css";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -82,23 +86,23 @@ export default function Home({ loaderData }: Route.ComponentProps) {
     <PageShell>
       {/* Hero */}
       <Container className="py-6">
-        <div className="fx-hero">
-          <Eyebrow className="mb-4">A reading home for the classics</Eyebrow>
-          <h1 className="fx-hero-title">Read the classics. Keep the record.</h1>
-          <p className="lead measure-xl center mt-5">
-            {formatCount(total)} books, free to read. Track what you finish, mark the passages that
-            stay with you, and follow the picks worth reading.
-          </p>
-          <div className="measure-xl center mt-8">
-            <SearchBox />
-          </div>
-          <div className="cap-cluster mt-5" data-gap="4" data-justify="center">
-            <Button to="/books">Browse the library</Button>
-            <Button to="/awards" variant="secondary">
-              Award winners
-            </Button>
-          </div>
-        </div>
+        <Hero
+          align="center"
+          eyebrow="A reading home for the classics"
+          title="Read the classics. Keep the record."
+          lead={`${formatCount(total)} books, free to read. Track what you finish, mark the passages that stay with you, and follow the picks worth reading.`}
+          actions={
+            <>
+              <div className="fx-hero-search">
+                <SearchBox />
+              </div>
+              <Button to="/books">Browse the library</Button>
+              <Button to="/awards" variant="secondary">
+                Award winners
+              </Button>
+            </>
+          }
+        />
       </Container>
 
       <ValueProps />
@@ -119,15 +123,26 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </div>
             <div>
               <Eyebrow>{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</Eyebrow>
-              <h2 className="display-2 mt-2">
+              <h2 className="cap-title mt-2" data-size="3">
                 <Link to={`/books/${pick.book.slug}`} className="hover-accent">
                   {pick.book.title}
                 </Link>
               </h2>
-              <p className="mt-1 sans muted">{pick.book.author}</p>
-              {pick.note ? <p className="mt-3 clamp-2 muted">{pick.note}</p> : null}
+              <p className="cap-text mt-1" data-tone="muted" data-face="ui">
+                {pick.book.author}
+              </p>
+              {pick.note ? (
+                <p className="cap-text cap-clamp mt-3" data-tone="muted">
+                  {pick.note}
+                </p>
+              ) : null}
               {pick.source === "botm" ? (
-                <Link to="/book-of-the-month" className="link sans small mt-3 block">
+                <Link
+                  to="/book-of-the-month"
+                  className="cap-text link mt-3 block"
+                  data-size="small"
+                  data-face="ui"
+                >
                   Why this book
                 </Link>
               ) : null}
@@ -139,8 +154,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* From the shelves */}
       <Container className="mt-16">
         <div className="cap-spread mb-6" data-gap="4" data-align="end">
-          <h2 className="display-2">From the shelves</h2>
-          <Link to="/books" className="link sans small">
+          <h2 className="cap-title" data-size="3">
+            From the shelves
+          </h2>
+          <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
             See all
           </Link>
         </div>
@@ -156,16 +173,24 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {posts.length > 0 ? (
         <Container className="mt-16">
           <div className="cap-spread mb-6" data-gap="4" data-align="end">
-            <h2 className="display-2">From the Journal</h2>
-            <Link to="/journal" className="link sans small">
+            <h2 className="cap-title" data-size="3">
+              From the Journal
+            </h2>
+            <Link to="/journal" className="cap-text link" data-size="small" data-face="ui">
               All essays
             </Link>
           </div>
           <div className="cap-grid" data-cols="3" data-gap="5">
             {posts.map((p) => (
               <EntityCard key={p.slug} to={`/journal/${p.slug}`}>
-                <h3 className="display-0">{p.title}</h3>
-                {p.excerpt ? <p className="clamp-3 muted">{p.excerpt}</p> : null}
+                <h3 className="cap-title" data-size="5">
+                  {p.title}
+                </h3>
+                {p.excerpt ? (
+                  <p className="cap-text cap-clamp" data-tone="muted" data-lines="3">
+                    {p.excerpt}
+                  </p>
+                ) : null}
               </EntityCard>
             ))}
           </div>
@@ -176,21 +201,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           web rather than linking dead store pages. Swap in store badges when mobile
           ships. */}
       <Container className="mt-16">
-        <section className="cap-card fx-cta">
-          <Eyebrow>Start reading</Eyebrow>
-          <h2 className="fx-cta-title">Read the classics. Finally understand them.</h2>
-          <p className="measure-xl center mt-4 muted">
-            Read free on the web today. The iOS and Android apps are on the way, with your library,
-            highlights, and streak carried across.
-          </p>
-          <div className="cap-cluster mt-6" data-gap="4" data-justify="center">
-            <Button to="/signup">Join free on web</Button>
-            <Button to="/books" variant="secondary">
-              Browse the library
-            </Button>
-          </div>
-          <p className="mt-4 card-label">iOS and Android apps coming soon</p>
-        </section>
+        <CtaBand
+          eyebrow="Start reading"
+          title="Read the classics. Finally understand them."
+          note="iOS and Android apps coming soon"
+          actions={
+            <>
+              <Button to="/signup">Join free on web</Button>
+              <Button to="/books" variant="secondary">
+                Browse the library
+              </Button>
+            </>
+          }
+        >
+          Read free on the web today. The iOS and Android apps are on the way, with your library,
+          highlights, and streak carried across.
+        </CtaBand>
       </Container>
     </PageShell>
   );
@@ -269,9 +295,13 @@ function ValueColumn({
 }) {
   return (
     <div className="cap-stack" data-gap="4">
-      <span className="accent-ui">{icon}</span>
-      <h2 className="display-0">{heading}</h2>
-      <p className="muted">{children}</p>
+      <span className="fx-mark">{icon}</span>
+      <h2 className="cap-title" data-size="5">
+        {heading}
+      </h2>
+      <p className="cap-text" data-tone="muted">
+        {children}
+      </p>
     </div>
   );
 }

@@ -3,7 +3,7 @@
 // any signed-in viewer can like the list (reactions, target_type='reading_list').
 import { useListPage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { AddBookToList } from "~/components/social/add-book-to-list";
 import { LikeButton } from "~/components/social/like-button";
@@ -54,7 +54,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
         <header className="cap-stack">
           <div className="cap-spread" data-gap="5" data-align="start">
             <div>
-              <h1 className="display-4">{list.title}</h1>
+              <h1 className="cap-title" data-size="1">
+                {list.title}
+              </h1>
               {owner ? (
                 <Link to={`/u/${owner.username}`} className="mt-2 fx-list-detail-link">
                   <Avatar
@@ -74,11 +76,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                 count={likeCount}
                 signedIn={signedIn}
               />
-              {isOwner ? (
-                <Link to={`/lists/${list.id}/edit`} className="cap-btn">
-                  Edit
-                </Link>
-              ) : null}
+              {isOwner ? <ButtonLink to={`/lists/${list.id}/edit`}>Edit</ButtonLink> : null}
             </div>
           </div>
           {list.description ? <p className="fx-list-detail-text">{list.description}</p> : null}
@@ -97,7 +95,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
               <li key={entry.bookId} className="cap-card fx-list-detail-card">
                 <div className="fx-list-detail-row">
                   <span className="fx-list-detail-label">{i + 1}</span>
-                  <div className="min-0">
+                  <div className="cap-shrink">
                     {entry.book ? (
                       <Link to={`/books/${entry.book.slug}`} className="fx-list-detail-link-2">
                         {entry.book.title}
@@ -105,7 +103,11 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                     ) : (
                       <span className="fx-list-detail-title">Unavailable book</span>
                     )}
-                    {entry.book ? <p className="ui">{entry.book.author}</p> : null}
+                    {entry.book ? (
+                      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+                        {entry.book.author}
+                      </p>
+                    ) : null}
                     {entry.note ? <p className="mt-1 fx-list-detail-text-2">{entry.note}</p> : null}
                   </div>
                 </div>

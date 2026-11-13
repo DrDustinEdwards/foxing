@@ -3,7 +3,7 @@
 // access. Each list links to its detail page; "New list" links to the create route.
 import { createDb, views } from "@foxing/core";
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { CoverPicture } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/components/ui";
@@ -38,9 +38,9 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-10 items-end fx-lists-row">
           <PageHeader eyebrow="Reading" title="Your lists" className="mb-0" />
-          <Link to="/lists/new" className="cap-btn shrink-0" data-variant="primary">
+          <ButtonLink to="/lists/new" className="cap-keep" variant="primary">
             New list
-          </Link>
+          </ButtonLink>
         </div>
         {lists.length === 0 ? (
           <EmptyState
@@ -68,9 +68,11 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                       {l.covers.length > 0 ? <CoverStack covers={l.covers} /> : null}
                       <div className="fx-lists-box">
                         <div className="fx-lists-row-4">
-                          <h2 className="display-0">{l.title}</h2>
+                          <h2 className="cap-title" data-size="5">
+                            {l.title}
+                          </h2>
                           {!l.isPublic ? (
-                            <span className="shrink-0 fx-lists-caps">Private</span>
+                            <span className="cap-keep fx-lists-caps">Private</span>
                           ) : null}
                         </div>
                         {l.description ? (
@@ -98,7 +100,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
 // title carries the link's meaning), so the images are alt-empty.
 function CoverStack({ covers }: { covers: string[] }) {
   return (
-    <div className="shrink-0 fx-lists-row-5">
+    <div className="cap-keep fx-lists-row-5">
       {covers.map((src) => (
         <CoverPicture
           key={src}

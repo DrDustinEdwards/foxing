@@ -29,8 +29,11 @@ export function GroupedResults({
       <p role="status" aria-live="polite" className="mb-6 fx-grouped-results-text">
         {fuzzy ? (
           <>
-            No exact match for <span className="muted">&ldquo;{q}&rdquo;</span>. Showing the closest
-            results.
+            No exact match for{" "}
+            <span className="cap-text" data-tone="muted">
+              &ldquo;{q}&rdquo;
+            </span>
+            . Showing the closest results.
           </>
         ) : nothing ? (
           <span className="cap-sr-only">No results for {q}.</span>
@@ -40,7 +43,11 @@ export function GroupedResults({
             {authors.length
               ? ` and ${authors.length} ${authors.length === 1 ? "author" : "authors"}`
               : ""}{" "}
-            for <span className="muted">&ldquo;{q}&rdquo;</span>.
+            for{" "}
+            <span className="cap-text" data-tone="muted">
+              &ldquo;{q}&rdquo;
+            </span>
+            .
           </>
         )}
       </p>
@@ -61,8 +68,10 @@ export function GroupedResults({
             {authors.map((a) => (
               <li key={a.slug}>
                 <Link to={`/authors/${a.slug}`} className="fx-result-row">
-                  <span className="truncate fx-grouped-results-title">{a.name}</span>
-                  <span className="shrink-0 fx-grouped-results-label">
+                  <span className="cap-clamp fx-grouped-results-title" data-lines="1">
+                    {a.name}
+                  </span>
+                  <span className="cap-keep fx-grouped-results-label">
                     {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
                   </span>
                 </Link>

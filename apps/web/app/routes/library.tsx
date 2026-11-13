@@ -70,7 +70,9 @@ export default function Library({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <h1 className="display-4">Your library</h1>
+        <h1 className="cap-title" data-size="1">
+          Your library
+        </h1>
 
         <div className="mt-8 fx-library-grid">
           <div>
@@ -139,7 +141,14 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                         <Link to={`/books/${e.slug}`} className="fx-library-link-2">
                           {e.title}
                         </Link>
-                        <p className="mt-1 cap-meta sans">{e.author}</p>
+                        <p
+                          className="cap-text mt-1"
+                          data-size="small"
+                          data-tone="dim"
+                          data-face="ui"
+                        >
+                          {e.author}
+                        </p>
                       </div>
                       <div className="mt-2 fx-library-box">
                         <BookStatusControl
@@ -178,15 +187,19 @@ function StreakCard({ streak: s }: { streak: Streak }) {
   return (
     <section className="cap-card">
       <Eyebrow>Reading streak</Eyebrow>
-      <dl className="text-center fx-library-grid-3">
+      <dl className="cap-text fx-library-grid-3" data-align="center">
         {[
           { k: "Current", v: s.currentStreak },
           { k: "Longest", v: s.longestStreak },
           { k: "Finished", v: s.totalBooksFinished },
         ].map((x) => (
           <div key={x.k}>
-            <dd className="display-2">{x.v}</dd>
-            <dt className="fine">{x.k}</dt>
+            <dd className="cap-title" data-size="3">
+              {x.v}
+            </dd>
+            <dt className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
+              {x.k}
+            </dt>
           </div>
         ))}
       </dl>
@@ -203,7 +216,9 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
     <section className="cap-card">
       <Eyebrow>Reading goals</Eyebrow>
       {goals.length === 0 ? (
-        <p className="cap-meta sans">No goals set.</p>
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+          No goals set.
+        </p>
       ) : (
         <ul className="cap-stack" data-gap="4">
           {goals.map(({ goal, progress }) => (
@@ -232,7 +247,7 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
         </ul>
       )}
       <div className="mt-3 fx-library-row-2">
-        <label className="sans small">
+        <label className="cap-text" data-size="small" data-face="ui">
           <span className="cap-sr-only">Books</span>
           <input
             type="number"
@@ -259,7 +274,7 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 error xsmall" role="alert">
+        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}
@@ -282,7 +297,9 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
     <section className="cap-card">
       <Eyebrow>Shelves</Eyebrow>
       {shelves.length === 0 ? (
-        <p className="cap-meta sans">No shelves yet.</p>
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+          No shelves yet.
+        </p>
       ) : (
         <ul className="fx-library-stack">
           {shelves.map((s) => (
@@ -324,7 +341,7 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 error xsmall" role="alert">
+        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}

@@ -39,13 +39,17 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Overview</h1>
+        <h1 className="cap-title" data-size="2">
+          Overview
+        </h1>
       </div>
 
       <div className="fx-admin-grid">
         {tiles.map((t) => (
           <div key={t.label} className="cap-card">
-            <p className="display-3">{t.value}</p>
+            <p className="cap-title" data-size="2">
+              {t.value}
+            </p>
             <p className="fx-admin-caps">{t.label}</p>
             {t.sub ? <p className="fx-admin-text">{t.sub}</p> : null}
           </div>
@@ -55,7 +59,9 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
       <div className="mt-8 fx-admin-grid-2">
         <AdminCard title="Recent signups">
           {stats.recentSignups.length === 0 ? (
-            <p className="cap-meta sans">No readers yet.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No readers yet.
+            </p>
           ) : (
             <ul className="divided">
               {stats.recentSignups.map((u) => (
@@ -63,7 +69,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
                   <Link to={`/admin/users/${u.id}`} className="fx-admin-link">
                     @{u.username}
                   </Link>
-                  <span className="mono fine">
+                  <span className="cap-text" data-size="tiny" data-tone="dim" data-face="mono">
                     {u.tier === "plus" ? "Plus" : "Free"} · {mediumDateTime.format(u.createdAt)}
                   </span>
                 </li>
@@ -74,13 +80,17 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Recent admin actions">
           {audit.length === 0 ? (
-            <p className="cap-meta sans">No admin actions logged yet.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No admin actions logged yet.
+            </p>
           ) : (
             <ul className="divided">
               {audit.map((a) => (
                 <li key={a.id} className="py-2 cap-spread" data-gap="4" data-align="center">
                   <span className="fx-admin-label">{a.action}</span>
-                  <span className="mono fine">{mediumDateTime.format(a.performedAt)}</span>
+                  <span className="cap-text" data-size="tiny" data-tone="dim" data-face="mono">
+                    {mediumDateTime.format(a.performedAt)}
+                  </span>
                 </li>
               ))}
             </ul>

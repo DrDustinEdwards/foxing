@@ -4,7 +4,8 @@
 import type * as W from "@foxing/types";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, useSeededQuery, useWrite } from "./query";
+import { patch, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 // --- Shelf status -----------------------------------------------------------
 

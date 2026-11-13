@@ -4,7 +4,7 @@
 // get data-driven picks with a subtle upgrade affordance; Plus readers get AI-personalised
 // reasons. Refresh busts the AI cache (rate-limited in core).
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -48,18 +48,20 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             }
             className="mb-0"
           />
-          <Link to="/find-next-book?refresh=1" className="cap-btn shrink-0">
+          <ButtonLink to="/find-next-book?refresh=1" className="cap-keep">
             Refresh
-          </Link>
+          </ButtonLink>
         </div>
 
         {!isPlus ? (
           <div className="mb-8 py-3 fx-find-next-book-card">
-            <p className="ui">Plus tunes these to you with AI-personalized reasons.</p>
+            <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+              Plus tunes these to you with AI-personalized reasons.
+            </p>
             <button
               type="button"
               onClick={() => setPaywallOpen(true)}
-              className="shrink-0 fx-find-next-book-btn"
+              className="cap-keep fx-find-next-book-btn"
             >
               Upgrade for AI-personalized picks
             </button>
@@ -99,7 +101,7 @@ function RecCard({ rec }: { rec: Recommendation }) {
         <Link to={`/books/${rec.slug}`} className="group">
           <h3 className="fx-find-next-book-title">{rec.title}</h3>
         </Link>
-        <p className="mt-1 cap-meta sans">
+        <p className="cap-text mt-1" data-size="small" data-tone="dim" data-face="ui">
           {rec.author}
           {rec.publicationYear ? <span> &middot; {rec.publicationYear}</span> : null}
         </p>

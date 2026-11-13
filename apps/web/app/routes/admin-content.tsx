@@ -11,6 +11,7 @@ import {
   AdminError,
   adminInputClass,
   useAdminAction,
+  AdminRow,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -41,14 +42,18 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Content</h1>
+        <h1 className="cap-title" data-size="2">
+          Content
+        </h1>
       </div>
 
       <div className="cap-stack" data-gap="6">
         <CreateAnnouncement onDone={() => void reload()} />
         <AdminCard title="Announcements">
           {announcements.length === 0 ? (
-            <p className="cap-meta sans">No announcements yet. Create one above.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No announcements yet. Create one above.
+            </p>
           ) : (
             <ul className="divided">
               {announcements.map((a) => (
@@ -153,7 +158,13 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
             />
           </label>
         </div>
-        <label className="cap-cluster ui" data-gap="3">
+        <label
+          className="cap-text cap-cluster"
+          data-size="small"
+          data-tone="muted"
+          data-face="ui"
+          data-gap="3"
+        >
           <input
             type="checkbox"
             checked={isActive}
@@ -181,22 +192,25 @@ function AnnouncementRow({
   const { pending, error, run } = useAdminAction({ onDone });
 
   return (
-    <li className="py-3">
-      <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
-          <p className="sans small strong">
-            {row.title}
-            {row.isActive ? (
-              <span className="badge ml-2">Active</span>
-            ) : (
-              <span className="badge badge-quiet ml-2">Inactive</span>
-            )}
-          </p>
-          <p className="truncate fx-admin-content-text">
-            {row.placement} · {mediumDateTime.format(row.createdAt)}
-          </p>
-        </div>
-        <div className="cap-cluster shrink-0" data-gap="3">
+    <AdminRow
+      title={
+        <>
+          {row.title}
+          {row.isActive ? (
+            <span className="badge ml-2">Active</span>
+          ) : (
+            <span className="badge badge-quiet ml-2">Inactive</span>
+          )}
+        </>
+      }
+      meta={
+        <>
+          {row.placement} · {mediumDateTime.format(row.createdAt)}
+        </>
+      }
+      metaSize="tiny"
+      actions={
+        <>
           <AdminButton
             pending={pending}
             onClick={() =>
@@ -224,9 +238,10 @@ function AnnouncementRow({
               Delete
             </AdminButton>
           )}
-        </div>
-      </div>
+        </>
+      }
+    >
       <AdminError error={error} />
-    </li>
+    </AdminRow>
   );
 }

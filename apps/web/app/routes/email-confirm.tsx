@@ -10,7 +10,7 @@ import {
 } from "@dustinedwards/site-runtime/sign-in";
 import { signalCurrentUserDetails } from "@dustinedwards/site-runtime/sign-in-client";
 import { createDb, profilesRepo } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { useEffect } from "react";
 import { AuthShell, ConfirmButtonForm } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
@@ -27,13 +27,18 @@ export const headers = linkPageHeaders;
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const result = emailLinkResult(request.url);
-  if (result.done !== "changed") return { ...result, email: null, displayName: null };
+  if (result.done !== "changed") return { ...result, userId: null, email: null, displayName: null };
   // The change is made, and this browser is signed in to the account: name its new address.
   const { env } = context.get(cloudflareContext);
   const user = await sessionUserFromRequest(request, env);
-  if (!user) return { ...result, email: null, displayName: null };
+  if (!user) return { ...result, userId: null, email: null, displayName: null };
   const profile = await profilesRepo.getProfileById(createDb(env.DB), user.id);
-  return { ...result, email: user.email, displayName: profile?.displayName ?? null };
+  return {
+    ...result,
+    userId: user.id,
+    email: user.email,
+    displayName: profile?.displayName ?? null,
+  };
 }
 
 export async function action({ context, request }: Route.ActionArgs) {
@@ -72,20 +77,24 @@ const PROBLEM: Record<EmailLinkProblem, { title: string; text: string }> = {
 
 function SettingsLink() {
   return (
-    <Link to="/settings" className="cap-btn full" data-variant="primary" data-size="lg">
+    <ButtonLink to="/settings" block variant="primary" size="lg">
       Go to Settings
-    </Link>
+    </ButtonLink>
   );
 }
 
 export default function EmailConfirm({ loaderData, actionData }: Route.ComponentProps) {
-  const { done, problem, email, displayName } = loaderData;
+  const { done, problem, userId, email, displayName } = loaderData;
 
   // The new address is the account's name now, so the password manager shows it on the passkeys.
   useEffect(() => {
     if (done === "changed" && email)
-      void signalCurrentUserDetails({ name: email, displayName: displayName || undefined });
-  }, [done, email, displayName]);
+      void signalCurrentUserDetails({
+        user: userId,
+        name: email,
+        displayName: displayName || undefined,
+      });
+  }, [done, userId, email, displayName]);
 
   if (problem) {
     const { title, text } = PROBLEM[problem];

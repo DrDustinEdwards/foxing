@@ -1,5 +1,6 @@
-import { newId, useBookAnnotations, useMe, usePassageComment } from "@foxing/client";
+import { useBookAnnotations, useMe, usePassageComment } from "@foxing/client";
 import type * as W from "@foxing/types";
+import { newId } from "capsomer/behavior/state-hooks";
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";

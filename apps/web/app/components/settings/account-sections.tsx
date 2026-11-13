@@ -15,7 +15,7 @@ import {
   signalUnknownCredential,
 } from "@dustinedwards/site-runtime/sign-in-client";
 import { useFetcher, useRevalidator } from "react-router";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { signInHref } from "~/lib/sign-in-path";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
@@ -24,7 +24,13 @@ const BIO_MAX = 200;
 export function ProfileSection({
   initial,
 }: {
-  initial: { email: string; displayName: string; bio: string; favoriteGenres: string };
+  initial: {
+    userId: string;
+    email: string;
+    displayName: string;
+    bio: string;
+    favoriteGenres: string;
+  };
 }) {
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [bio, setBio] = useState(initial.bio);
@@ -47,6 +53,7 @@ export function ProfileSection({
     setStatus("saved");
     // The password manager shows the new name beside this account's passkeys (the Signal API).
     void signalCurrentUserDetails({
+      user: initial.userId,
       name: initial.email,
       displayName: displayName.trim() || undefined,
     });
@@ -67,7 +74,12 @@ export function ProfileSection({
         <label className="block">
           <span className="mb-1 fx-account-sections-label">
             Bio
-            <span className={bio.length > BIO_MAX ? "mono xsmall crit" : "mono xsmall dim"}>
+            <span
+              className="cap-text"
+              data-size="tiny"
+              data-face="mono"
+              data-tone={bio.length > BIO_MAX ? "crit" : "dim"}
+            >
               {bio.length} / {BIO_MAX}
             </span>
           </span>
@@ -148,13 +160,23 @@ export function UsernameSection({ initial }: { initial: string }) {
             />
           </div>
           <span className="mt-1 block fx-account-sections-label-3" aria-live="polite">
-            {avail === "checking" ? <span className="dim">Checking...</span> : null}
+            {avail === "checking" ? (
+              <span className="cap-text" data-tone="dim">
+                Checking...
+              </span>
+            ) : null}
             {avail === "available" ? (
               <span className="fx-account-sections-label-4">Available.</span>
             ) : null}
-            {avail === "taken" ? <span className="error">That username is taken.</span> : null}
+            {avail === "taken" ? (
+              <span className="cap-text" data-size="small" data-tone="crit" data-face="ui">
+                That username is taken.
+              </span>
+            ) : null}
             {avail === "invalid" ? (
-              <span className="error">3 to 30 letters, numbers, or underscores.</span>
+              <span className="cap-text" data-size="small" data-tone="crit" data-face="ui">
+                3 to 30 letters, numbers, or underscores.
+              </span>
             ) : null}
           </span>
         </label>
@@ -201,10 +223,13 @@ export function EmailSection({ initial }: { initial: string }) {
 
   return (
     <Card title="Email">
-      <p className="ui">
-        Your account email is <span className="strong">{initial}</span>. To change it, approve the
-        change from a link sent to this address, then confirm the new address from a link sent
-        there.
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+        Your account email is{" "}
+        <span className="cap-text" data-tone="ink" data-weight="strong">
+          {initial}
+        </span>
+        . To change it, approve the change from a link sent to this address, then confirm the new
+        address from a link sent there.
       </p>
       <form onSubmit={(e) => void change(e)} className="mt-4 fx-account-sections-form">
         <label className="block">
@@ -234,16 +259,19 @@ export function EmailSection({ initial }: { initial: string }) {
 export function AdminSection() {
   return (
     <Card title="Admin">
-      <p className="ui">You have operator access to the Foxing admin tools.</p>
-      <Link to="/admin" className="cap-btn mt-4 fx-account-sections-link">
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+        You have operator access to the Foxing admin tools.
+      </p>
+      <ButtonLink to="/admin" className="mt-4 fx-account-sections-link">
         Open admin dashboard
-      </Link>
+      </ButtonLink>
     </Card>
   );
 }
 
 export type SignInSettings = {
-  /** The account's address and display name, as the password manager shows them. */
+  /** The account's id, address and display name, as the password manager shows them. */
+  userId: string;
   email: string;
   displayName: string;
   passkeys: {
@@ -309,6 +337,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
     // A passkey left out would be dropped from the password manager, so a gap sends nothing.
     if (credentialIds.some((id) => !id)) return;
     void signalPasskeys({
+      user: initial.userId,
       credentialIds,
       name: initial.email,
       displayName: initial.displayName || undefined,
@@ -318,7 +347,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
   return (
     <Card title="Sign-in">
       <div className="cap-stack">
-        <p className="ui">
+        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
           A passkey signs you in with your face, fingerprint or device PIN. It only works on Foxing,
           so it cannot be phished. You can always sign in with an email link too.
         </p>
@@ -344,7 +373,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                       );
                     }}
                   >
-                    <label className="grow">
+                    <label className="cap-grow">
                       <span className="cap-sr-only">Passkey name</span>
                       <input
                         name="name"
@@ -371,9 +400,16 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
                 </li>
               ) : (
                 <li key={p.id} className="cap-cluster" data-gap="4">
-                  <span className="ui grow">
-                    <span className="strong">{p.name}</span>
-                    <span className="block small dim">
+                  <span
+                    className="cap-text cap-grow"
+                    data-size="small"
+                    data-tone="muted"
+                    data-face="ui"
+                  >
+                    <span className="cap-text" data-tone="ink" data-weight="strong">
+                      {p.name}
+                    </span>
+                    <span className="cap-text block" data-size="small" data-tone="dim">
                       {p.provider !== p.name ? `${p.provider}. ` : ""}
                       {p.created ? `Added ${p.created}. ` : ""}
                       {p.lastUsed ? `Last used ${p.lastUsed}.` : "Not used to sign in yet."}
@@ -418,7 +454,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
           </ul>
         ) : null}
         {initial.secondPasskey ? (
-          <p className="ui small">
+          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
             Add a passkey on a second device too, so you can still use a passkey if you lose this
             one.
           </p>
@@ -442,7 +478,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
         </div>
         {initial.providers.map((provider) => (
           <div key={provider.id} className="cap-cluster" data-gap="4">
-            <span className="ui grow">
+            <span className="cap-text cap-grow" data-size="small" data-tone="muted" data-face="ui">
               {provider.label}: {provider.accountId ? "connected" : "not connected"}
             </span>
             {provider.accountId ? (
@@ -482,7 +518,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
           </div>
         ))}
         {error ? (
-          <p role="alert" className="error">
+          <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
             {error}
           </p>
         ) : null}
@@ -513,10 +549,12 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
   if (!sessions)
     return (
       <Card title="Signed-in devices">
-        <p className="ui">To see where you are signed in, sign in again.</p>
-        <Link to={signInHref("/settings")} className="cap-btn mt-4 fx-account-sections-link">
+        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+          To see where you are signed in, sign in again.
+        </p>
+        <ButtonLink to={signInHref("/settings")} className="mt-4 fx-account-sections-link">
           Sign in again
-        </Link>
+        </ButtonLink>
       </Card>
     );
 
@@ -527,10 +565,17 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
         <ul className="cap-stack" data-gap="4">
           {sessions.map((s) => (
             <li key={s.id} className="cap-cluster" data-gap="4">
-              <span className="ui grow">
-                <span className="strong">{s.device}</span>
+              <span
+                className="cap-text cap-grow"
+                data-size="small"
+                data-tone="muted"
+                data-face="ui"
+              >
+                <span className="cap-text" data-tone="ink" data-weight="strong">
+                  {s.device}
+                </span>
                 {s.current ? " (this device)" : null}
-                <span className="block small dim">
+                <span className="cap-text block" data-size="small" data-tone="dim">
                   {s.location ? `${s.location}. ` : ""}Signed in {s.signedIn}, last active{" "}
                   {s.lastActive}.
                 </span>
@@ -570,7 +615,7 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
           </div>
         ) : null}
         {error || failed ? (
-          <p role="alert" className="error">
+          <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
             {error ?? failed}
           </p>
         ) : null}
@@ -592,21 +637,25 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
   return (
     <Card title="Recent security activity">
       {activity.length === 0 ? (
-        <p className="ui">Nothing yet. Sign-ins and changes to how you sign in will show here.</p>
+        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+          Nothing yet. Sign-ins and changes to how you sign in will show here.
+        </p>
       ) : (
         <ul className="cap-stack" data-gap="4">
           {activity.map((a, i) => (
             // An index key: a fixed, newest-first list that never reorders on screen
-            <li key={i} className="ui">
-              <span className="strong">{a.what}</span>
-              <span className="block small dim">
+            <li key={i} className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+              <span className="cap-text" data-tone="ink" data-weight="strong">
+                {a.what}
+              </span>
+              <span className="cap-text block" data-size="small" data-tone="dim">
                 {[a.when, a.device, a.location].filter(Boolean).join(". ")}.
               </span>
             </li>
           ))}
         </ul>
       )}
-      <p className="mt-4 small dim">
+      <p className="cap-text mt-4" data-size="small" data-tone="dim">
         Something you do not recognize? Sign out the other devices above and remove any passkey you
         did not add.
       </p>
@@ -619,19 +668,19 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
 export function DataSection({ fresh }: { fresh: boolean }) {
   return (
     <Card title="Your data">
-      <p className="ui">
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         Download a JSON archive of everything tied to your account: your profile, library, reading
         history, highlights, notes, and goals.
         {fresh ? null : " It holds everything, so sign in again first."}
       </p>
       {fresh ? (
-        <a href="/api/v1/account/export" className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink href="/api/v1/account/export" className="mt-4">
           Download your data
-        </a>
+        </ButtonLink>
       ) : (
-        <Link to={signInHref("/settings")} className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink to={signInHref("/settings")} className="mt-4">
           Sign in again
-        </Link>
+        </ButtonLink>
       )}
     </Card>
   );
@@ -654,19 +703,29 @@ function ClubHandoverFields({
   if (clubs.length === 0) return null;
   return (
     <fieldset className="mt-4 fx-account-sections-form">
-      <legend className="ui">
+      <legend className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         You created {clubs.length === 1 ? "a club" : `${clubs.length} clubs`}. Choose who takes each
         one over, so its members keep their discussions.
       </legend>
       {clubs.map((club) =>
         club.candidates.length === 0 ? (
-          <p key={club.clubId} className="ui">
-            <span className="strong">{club.name}</span> has no other members, so it will be deleted
-            with your account.
+          <p
+            key={club.clubId}
+            className="cap-text"
+            data-size="small"
+            data-tone="muted"
+            data-face="ui"
+          >
+            <span className="cap-text" data-tone="ink" data-weight="strong">
+              {club.name}
+            </span>{" "}
+            has no other members, so it will be deleted with your account.
           </p>
         ) : (
           <label key={club.clubId} className="block fx-account-sections-field">
-            <span className="strong">{club.name}</span>
+            <span className="cap-text" data-tone="ink" data-weight="strong">
+              {club.name}
+            </span>
             <select
               value={choice[club.clubId] ?? club.suggested ?? DELETE_CLUB}
               onChange={(e) => onChoose(club.clubId, e.target.value)}
@@ -723,9 +782,9 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
           This permanently removes your account and all of your data. To keep someone else from
           doing it on a device you left signed in, sign in again first.
         </p>
-        <Link to={signInHref("/settings")} className="cap-btn mt-4 fx-account-sections-link">
+        <ButtonLink to={signInHref("/settings")} className="mt-4">
           Sign in again
-        </Link>
+        </ButtonLink>
       </section>
     );
 
@@ -734,7 +793,10 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
       <h2 className="fx-account-sections-title">Delete account</h2>
       <p className="mt-4 fx-account-sections-text">
         This permanently removes your account and all of your data. It cannot be undone. Type
-        <span className="strong"> {CONFIRM_PHRASE} </span>
+        <span className="cap-text" data-tone="ink" data-weight="strong">
+          {" "}
+          {CONFIRM_PHRASE}{" "}
+        </span>
         to confirm.
       </p>
       <ClubHandoverFields
@@ -761,7 +823,7 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
         </button>
       </div>
       {error ? (
-        <p className="mt-3 error" role="alert">
+        <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}

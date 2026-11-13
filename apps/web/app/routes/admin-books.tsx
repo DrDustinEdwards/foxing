@@ -10,6 +10,7 @@ import {
   AdminError,
   adminInputClass,
   useAdminAction,
+  AdminRow,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -40,7 +41,9 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Books</h1>
+        <h1 className="cap-title" data-size="2">
+          Books
+        </h1>
       </div>
 
       <div className="cap-stack" data-gap="6">
@@ -60,7 +63,9 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Catalog">
           {books.length === 0 ? (
-            <p className="cap-meta sans">No books match this search.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No books match this search.
+            </p>
           ) : (
             <ul className="divided">
               {books.map((b) => (
@@ -85,19 +90,21 @@ function BookRow({
   const { pending, error, run } = useAdminAction({ onDone });
 
   return (
-    <li className="py-3">
-      <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
-          <p className="sans small strong">
-            {book.title}
-            {book.isStaffPick ? <span className="badge ml-2">Featured</span> : null}
-          </p>
-          <p className="truncate cap-meta sans">
-            {book.author}
-            {book.publicationYear ? ` · ${book.publicationYear}` : ""} · {book.sourceType}
-          </p>
-        </div>
-        <div className="cap-cluster shrink-0" data-gap="3">
+    <AdminRow
+      title={
+        <>
+          {book.title}
+          {book.isStaffPick ? <span className="badge ml-2">Featured</span> : null}
+        </>
+      }
+      meta={
+        <>
+          {book.author}
+          {book.publicationYear ? ` · ${book.publicationYear}` : ""} · {book.sourceType}
+        </>
+      }
+      actions={
+        <>
           <AdminButton pending={pending} onClick={() => setEditing((v) => !v)}>
             {editing ? "Close" : "Edit metadata"}
           </AdminButton>
@@ -113,11 +120,12 @@ function BookRow({
           >
             {book.isStaffPick ? "Unfeature" : "Feature"}
           </AdminButton>
-        </div>
-      </div>
+        </>
+      }
+    >
       {editing ? <BookEdit book={book} onDone={onDone} /> : null}
       <AdminError error={error} />
-    </li>
+    </AdminRow>
   );
 }
 

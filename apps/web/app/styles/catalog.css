@@ -114,9 +114,6 @@ a:hover > .fx-book > :is(h2, h3) {
   inline-size: min(22rem, 90vw);
 }
 
-.fx-book-status-control-link {
-  display: inline-flex;
-}
 .fx-book-status-control-box {
   width: 100%;
 }

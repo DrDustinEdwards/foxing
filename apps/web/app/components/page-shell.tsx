@@ -1,4 +1,4 @@
-import { Icon } from "capsomer/react/icons";
+import { Icon, iconBell, iconSearch } from "capsomer/react/icons";
 import {
   type HeaderExtra,
   type HeaderSection,
@@ -30,9 +30,9 @@ const YOUR_FOXING = [
 const isCurrent = (pathname: string, href: string) =>
   pathname === href || pathname.startsWith(`${href}/`);
 
-const SEARCH_ICON = <Icon name="search" />;
+const SEARCH_ICON = <Icon d={iconSearch} />;
 // No count on the bell: there is no unread-count source yet, and a fake badge is worse than none.
-const BELL_ICON = <Icon name="bell" />;
+const BELL_ICON = <Icon d={iconBell} />;
 
 function YourFoxingBar({ pathname }: { pathname: string }) {
   return (
@@ -151,7 +151,7 @@ function SiteFooter() {
             <span>Foxing</span>
           </Link>
           <p className="fx-footer-motto">reading, together.</p>
-          <p className="mt-3 measure-xs small dim">
+          <p className="cap-text mt-3 measure-xs" data-size="small" data-tone="dim">
             A reading home for the classics and the conversations around them.
           </p>
           <Link to="/about" className="fx-footer-link mt-3 block">

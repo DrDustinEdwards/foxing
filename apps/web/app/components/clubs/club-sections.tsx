@@ -48,7 +48,7 @@ export function MembershipControls({
           {joinCode ? (
             <div className="py-2 fx-club-sections-card">
               <p className="group-label">Invite link</p>
-              <p className="sans small">
+              <p className="cap-text" data-size="small" data-face="ui">
                 <Link to={`/join/${joinCode}`} className="fx-club-sections-link">
                   /join/{joinCode}
                 </Link>
@@ -106,7 +106,9 @@ export function ThreadsSection({
   return (
     <section>
       <div className="cap-spread" data-gap="4" data-align="center">
-        <h2 className="display-2">Discussions</h2>
+        <h2 className="cap-title" data-size="3">
+          Discussions
+        </h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-sections-btn-2">
           {open ? "Cancel" : "New thread"}
         </button>
@@ -142,7 +144,9 @@ export function ThreadsSection({
       ) : null}
 
       {threads.length === 0 ? (
-        <p className="mt-4 cap-meta sans">No discussions yet.</p>
+        <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+          No discussions yet.
+        </p>
       ) : (
         <ul className="mt-4 fx-club-sections-list">
           {threads.map((t) => (
@@ -152,7 +156,9 @@ export function ThreadsSection({
                   {t.type === "announcement" ? (
                     <p className="fx-club-sections-caps">Announcement</p>
                   ) : null}
-                  <p className="ink sans">{t.title}</p>
+                  <p className="cap-text" data-tone="ink" data-face="ui">
+                    {t.title}
+                  </p>
                 </div>
               </Link>
             </li>

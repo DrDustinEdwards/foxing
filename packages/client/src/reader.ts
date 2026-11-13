@@ -6,14 +6,8 @@ import type * as W from "@foxing/types";
 import { useQuery } from "@tanstack/react-query";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, patchAll, useSeededQuery, useWrite } from "./query";
-
-/** An id the server accepts as the annotation's own (createAnnotationInput.id). */
-export function newId(): string {
-  const c = globalThis.crypto as Crypto | undefined;
-  if (c?.randomUUID) return c.randomUUID();
-  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
-}
+import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 export function useBookAnnotations<S extends W.ReaderAnnotations | undefined = undefined>(
   bookId: string,

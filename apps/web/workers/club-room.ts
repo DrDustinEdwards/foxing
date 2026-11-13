@@ -17,6 +17,7 @@
 // is local and the write->commit->notify contract is unchanged: shard that club's
 // sockets across N child objects (idFromName(`${clubId}:${shard}`)) and have the API
 // notify each shard. Nothing about D1-as-truth changes.
+import { logEvent } from "@dustinedwards/site-runtime/log";
 import { DurableObject } from "cloudflare:workers";
 import type { ClubLiveHub } from "@foxing/api";
 import type { LiveMessage } from "@foxing/core";
@@ -62,8 +63,9 @@ export class ClubRoom extends DurableObject {
     try {
       const parsed = JSON.parse(message) as { t?: string };
       if (parsed.t === "ping") this.send(ws, { t: "pong" });
-    } catch {
-      // Ignore malformed frames; the client contract is {t:'ping'} only.
+    } catch (error) {
+      // The client contract is {t:'ping'} only, so a frame that is not JSON is a client fault: log it, answer nothing.
+      logEvent("club_room_bad_frame", { error }, { level: "warn" });
     }
   }
 

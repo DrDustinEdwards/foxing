@@ -5,7 +5,6 @@
 // to /api/v1 (annotations + progress) from the browser and surface every failure;
 // anonymous readers can read fully and are prompted to sign in for personal features.
 import {
-  newId,
   useBookAnnotations,
   useCreateAnnotation,
   useDeleteAnnotation,
@@ -16,6 +15,7 @@ import {
 } from "@foxing/client";
 import type { ReaderAnnotations } from "@foxing/types";
 import { readStored } from "capsomer/behavior/hooks";
+import { newId } from "capsomer/behavior/state-hooks";
 import { useRemembered } from "capsomer/react/hooks";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { annotationPct, type HighlightColor } from "@foxing/core";
@@ -582,7 +582,7 @@ export function ReaderView(props: ReaderViewProps) {
       {/* Bottom progress scrubber */}
       <footer className="py-2 fx-reader-view-foot" style={{ background: canvas.bg }}>
         <label className="fx-reader-view-row">
-          <span className="num" aria-hidden>
+          <span className="cap-num" aria-hidden>
             {pct.toFixed(0)}%
           </span>
           <input

@@ -1,6 +1,6 @@
 import { capitalize, formatCount } from "@drdustinedwards/site-helpers/text";
 import { catalogRepo, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
@@ -179,7 +179,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
               ))}
             </div>
             {anyFilterSet ? (
-              <Link to="/books" className="link sans small">
+              <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
                 Clear filters
               </Link>
             ) : null}
@@ -222,19 +222,19 @@ function Pagination({
   return (
     <nav aria-label="Pagination" className="mt-12 justify-center fx-books-row-2">
       {prev ? (
-        <Link to={prev} rel="prev" className="cap-btn">
+        <ButtonLink to={prev} rel="prev">
           Previous
-        </Link>
+        </ButtonLink>
       ) : (
         <span className="py-2 fx-books-label">Previous</span>
       )}
-      <span className="ui">
+      <span className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         Page {result.page} of {result.pageCount}
       </span>
       {next ? (
-        <Link to={next} rel="next" className="cap-btn">
+        <ButtonLink to={next} rel="next">
           Next
-        </Link>
+        </ButtonLink>
       ) : (
         <span className="py-2 fx-books-label">Next</span>
       )}

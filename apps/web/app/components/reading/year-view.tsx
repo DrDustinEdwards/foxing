@@ -63,7 +63,9 @@ export function YearView({
 
             {monthly.some((n) => n > 0) ? (
               <section className="cap-stack">
-                <h2 className="display-2">Your reading months</h2>
+                <h2 className="cap-title" data-size="3">
+                  Your reading months
+                </h2>
                 <div className="cap-card">
                   <ChartFrame draw={monthsChart(monthly, year)} />
                 </div>
@@ -72,7 +74,9 @@ export function YearView({
 
             {genres.length > 0 ? (
               <section className="cap-stack">
-                <h2 className="display-2">Genre spread</h2>
+                <h2 className="cap-title" data-size="3">
+                  Genre spread
+                </h2>
                 <div className="cap-card">
                   <ChartFrame draw={genresChart(genres, year)} />
                 </div>
@@ -91,7 +95,7 @@ export function YearView({
         )}
 
         {share ? (
-          <p className="cap-meta sans">
+          <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
             Want to share this?{" "}
             <Link to={`/u/${username}/recap/${year}`} className="link">
               View the public version
@@ -118,8 +122,10 @@ export function YearNumbers({ recap }: { recap: RecapPage["recap"] }) {
   return (
     <section className="fx-year-grid">
       {stats.map((s) => (
-        <div key={s.label} className="text-center cap-card">
-          <p className="display-3">{s.value}</p>
+        <div key={s.label} className="cap-text cap-card" data-align="center">
+          <p className="cap-title" data-size="2">
+            {s.value}
+          </p>
           <p className="fx-year-caps">{s.label}</p>
         </div>
       ))}
@@ -132,7 +138,9 @@ export function TopBooks({ books }: { books: RecapPage["recap"]["topBooks"] }) {
   if (books.length === 0) return null;
   return (
     <section className="cap-stack">
-      <h2 className="display-2">Top books</h2>
+      <h2 className="cap-title" data-size="3">
+        Top books
+      </h2>
       <ol className="cap-stack" data-gap="3">
         {books.map((b) => (
           <li key={b.bookId} className="py-3 fx-year-card-2">

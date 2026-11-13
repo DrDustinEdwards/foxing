@@ -44,8 +44,11 @@ export function BillingSection({
     <Card title="Plan">
       {isPlus ? (
         <div className="cap-stack" data-gap="4">
-          <p className="ui">
-            You are on <span className="strong">Foxing Plus</span>
+          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+            You are on{" "}
+            <span className="cap-text" data-tone="ink" data-weight="strong">
+              Foxing Plus
+            </span>
             {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
           </p>
           <button
@@ -59,9 +62,12 @@ export function BillingSection({
         </div>
       ) : (
         <div className="cap-stack" data-gap="4">
-          <p className="ui">
-            You are on the <span className="strong">Free</span> plan. Clubs and the whole social
-            layer are free. Plus adds the AI reading companion.
+          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+            You are on the{" "}
+            <span className="cap-text" data-tone="ink" data-weight="strong">
+              Free
+            </span>{" "}
+            plan. Clubs and the whole social layer are free. Plus adds the AI reading companion.
           </p>
           <button
             type="button"
@@ -74,7 +80,7 @@ export function BillingSection({
         </div>
       )}
       {error ? (
-        <p className="mt-3 error" role="alert">
+        <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}
@@ -172,7 +178,7 @@ export function NotificationsSection({
   return (
     <Card title="Notifications">
       <form onSubmit={(e) => void save(e)} className="cap-stack">
-        <p className="ui">
+        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
           Choose which push notifications the mobile app sends you. Quiet hours pause them overnight
           in your timezone.
         </p>
@@ -195,7 +201,7 @@ export function NotificationsSection({
         />
         {quietOn ? (
           <div className="cap-cluster" data-gap="4">
-            <label className="ui">
+            <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
               From
               <input
                 type="time"
@@ -204,7 +210,7 @@ export function NotificationsSection({
                 className={`${inputClass} mt-1`}
               />
             </label>
-            <label className="ui">
+            <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
               To
               <input
                 type="time"
@@ -233,8 +239,16 @@ export function AppearanceSection() {
     <Card title="Appearance">
       <div className="cap-spread" data-gap="5" data-align="center">
         <div className="fx-preference-sections-stack">
-          <span className="sans small strong">Theme</span>
-          <span className="fine">
+          <span
+            className="cap-text"
+            data-size="small"
+            data-tone="ink"
+            data-weight="strong"
+            data-face="ui"
+          >
+            Theme
+          </span>
+          <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
             Switch between light and dark. Your choice is remembered on this device.
           </span>
         </div>
@@ -249,11 +263,11 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
   const friends = usePeople(people).data.closeFriends;
   return (
     <Card title="Close friends">
-      <p className="ui">
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         Close friends see your friends-only reviews, activity, and shared annotations.
       </p>
       {friends.length === 0 ? (
-        <p className="mt-4 cap-meta sans">
+        <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
           No close friends yet. Add readers you follow from{" "}
           <Link to="/people" className="fx-preference-sections-link">
             People
@@ -266,11 +280,11 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
             <li key={f.id} className="py-2 fx-preference-sections-card">
               <Link to={`/u/${f.username}`} className="fx-preference-sections-link-2">
                 <Avatar src={f.avatarUrl} name={f.displayName ?? f.username} size="sm" />
-                <span className="min-0">
-                  <span className="block truncate fx-preference-sections-label-2">
+                <span className="cap-shrink">
+                  <span className="cap-clamp block fx-preference-sections-label-2" data-lines="1">
                     {f.displayName ?? f.username}
                   </span>
-                  <span className="block truncate fx-preference-sections-label-3">
+                  <span className="cap-clamp block fx-preference-sections-label-3" data-lines="1">
                     @{f.username}
                   </span>
                 </span>
@@ -280,7 +294,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
           ))}
         </ul>
       )}
-      <p className="mt-4 cap-meta sans">
+      <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
         Add close friends from{" "}
         <Link to="/people" className="fx-preference-sections-link">
           People

@@ -36,11 +36,13 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
       <Container>
         <div className="items-start fx-club-detail-row">
           <div>
-            <h1 className="display-4">{club.name}</h1>
+            <h1 className="cap-title" data-size="1">
+              {club.name}
+            </h1>
             {club.description ? (
               <p className="mt-2 fx-club-detail-text">{club.description}</p>
             ) : null}
-            <p className="mt-2 cap-meta sans">
+            <p className="cap-text mt-2" data-size="small" data-tone="dim" data-face="ui">
               {club.memberCount} {club.memberCount === 1 ? "member" : "members"}
               {isMember && connected ? (
                 <span className="fx-club-detail-label">

@@ -83,9 +83,11 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 function ContinueReadingCard({ reading }: { reading: Entry | null }) {
   if (!reading) {
     return (
-      <section className="justify-center text-center cap-card fx-home-card">
+      <section className="cap-text justify-center cap-card fx-home-card" data-align="center">
         <Eyebrow className="mb-2">Continue reading</Eyebrow>
-        <p className="display-1">Nothing in progress</p>
+        <p className="cap-title" data-size="4">
+          Nothing in progress
+        </p>
         <p className="mt-2 fx-home-text">Start a book and it shows up here with your progress.</p>
         <div className="mt-5">
           <Button to="/books">Browse the library</Button>
@@ -144,14 +146,20 @@ function StreakCard({ streak: s }: { streak: Streak }) {
         {s.currentStreak}
         <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>
       </p>
-      <p className="mt-2 ui">{subtext}</p>
-      <dl className="mt-5 text-center fx-home-grid-2">
+      <p className="cap-text mt-2" data-size="small" data-tone="muted" data-face="ui">
+        {subtext}
+      </p>
+      <dl className="cap-text mt-5 fx-home-grid-2" data-align="center">
         <div>
-          <dd className="display-1">{s.longestStreak}</dd>
+          <dd className="cap-title" data-size="4">
+            {s.longestStreak}
+          </dd>
           <dt className="fx-home-caps">longest</dt>
         </div>
         <div>
-          <dd className="display-1">{s.totalBooksFinished}</dd>
+          <dd className="cap-title" data-size="4">
+            {s.totalBooksFinished}
+          </dd>
           <dt className="fx-home-caps">finished</dt>
         </div>
       </dl>

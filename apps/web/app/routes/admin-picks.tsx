@@ -12,6 +12,7 @@ import {
   AdminError,
   adminInputClass,
   useAdminAction,
+  AdminRow,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -45,7 +46,9 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Celebrity Picks</h1>
+        <h1 className="cap-title" data-size="2">
+          Celebrity Picks
+        </h1>
       </div>
 
       <div className="cap-stack" data-gap="6">
@@ -73,7 +76,9 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Picks">
           {picks.length === 0 ? (
-            <p className="cap-meta sans">No picks for this curator yet.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No picks for this curator yet.
+            </p>
           ) : (
             <ul className="divided">
               {picks.map((p) => (
@@ -98,26 +103,26 @@ function PickRow({
   const { pending, error, run } = useAdminAction({ onDone });
 
   return (
-    <li className="py-3">
-      <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
-          <p className="sans small strong">
-            {pick.clubName}
-            {pick.isPublished ? (
-              <span className="badge ml-2">Live</span>
-            ) : (
-              <span className="badge badge-quiet ml-2">Draft</span>
-            )}
-          </p>
-          <p className="truncate cap-meta sans">
-            {pick.bookTitle ?? "No book"}
-            {pick.pickYear
-              ? ` · ${pick.pickMonth ? `${pick.pickMonth}/` : ""}${pick.pickYear}`
-              : ""}
-            {pick.category ? ` · ${pick.category}` : ""}
-          </p>
-        </div>
-        <div className="cap-cluster shrink-0" data-gap="3">
+    <AdminRow
+      title={
+        <>
+          {pick.clubName}
+          {pick.isPublished ? (
+            <span className="badge ml-2">Live</span>
+          ) : (
+            <span className="badge badge-quiet ml-2">Draft</span>
+          )}
+        </>
+      }
+      meta={
+        <>
+          {pick.bookTitle ?? "No book"}
+          {pick.pickYear ? ` · ${pick.pickMonth ? `${pick.pickMonth}/` : ""}${pick.pickYear}` : ""}
+          {pick.category ? ` · ${pick.category}` : ""}
+        </>
+      }
+      actions={
+        <>
           <AdminButton pending={pending} onClick={() => setEditing((v) => !v)}>
             {editing ? "Close" : "Edit"}
           </AdminButton>
@@ -133,11 +138,12 @@ function PickRow({
           >
             {pick.isPublished ? "Unpublish" : "Publish"}
           </AdminButton>
-        </div>
-      </div>
+        </>
+      }
+    >
       {editing ? <PickEdit pick={pick} onDone={onDone} /> : null}
       <AdminError error={error} />
-    </li>
+    </AdminRow>
   );
 }
 

@@ -4,6 +4,7 @@
 // emits no event). Failed writes surface a visible error.
 import { useCreateDiaryEntry, useUpdateDiaryEntry } from "@foxing/client";
 import type { Visibility } from "@foxing/types";
+import { RatingInput } from "capsomer/react/rating";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 
@@ -53,27 +54,19 @@ export function DiaryForm({
 
   return (
     <form onSubmit={(e) => void submit(e)} className="cap-stack" data-gap="6">
-      <p className="ui">
-        Logging <span className="strong">{bookTitle}</span>
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+        Logging{" "}
+        <span className="cap-text" data-tone="ink" data-weight="strong">
+          {bookTitle}
+        </span>
       </p>
 
-      <fieldset className="cap-stack" data-gap="3">
-        <legend className="group-label">Rating</legend>
-        <div className="cap-cluster" data-gap="3">
-          <select
-            value={ratingHalf ?? ""}
-            onChange={(e) => setRatingHalf(e.target.value === "" ? null : Number(e.target.value))}
-            className="cap-select py-2"
-          >
-            <option value="">No rating</option>
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((h) => (
-              <option key={h} value={h}>
-                {(h / 2).toFixed(1)} stars
-              </option>
-            ))}
-          </select>
-        </div>
-      </fieldset>
+      <RatingInput
+        name="ratingHalf"
+        label="Rating"
+        value={(ratingHalf ?? 0) / 2}
+        onChange={(v) => setRatingHalf(v === 0 ? null : Math.round(v * 2))}
+      />
 
       <label className="cap-stack" data-gap="3">
         <span className="group-label">Review</span>
@@ -86,7 +79,13 @@ export function DiaryForm({
         />
       </label>
 
-      <label className="cap-cluster ui" data-gap="3">
+      <label
+        className="cap-text cap-cluster"
+        data-size="small"
+        data-tone="muted"
+        data-face="ui"
+        data-gap="3"
+      >
         <input type="checkbox" checked={spoilers} onChange={(e) => setSpoilers(e.target.checked)} />
         This review contains spoilers
       </label>

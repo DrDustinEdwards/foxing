@@ -62,9 +62,56 @@ export function useAdminAction(opts?: { onDone?: () => void }) {
 export function AdminError({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p className="mt-3 error" role="alert">
+    <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
       {error}
     </p>
+  );
+}
+
+// One row of an admin list: the item's name with its badges, one line of detail under it, and
+// its actions at the end; an editor or a confirmation the row opens goes in children.
+export function AdminRow({
+  title,
+  meta,
+  metaSize = "small",
+  actions,
+  children,
+}: {
+  title: React.ReactNode;
+  meta: React.ReactNode;
+  metaSize?: "small" | "tiny";
+  actions: React.ReactNode;
+  children?: React.ReactNode;
+}) {
+  return (
+    <li className="py-3">
+      <div className="cap-spread" data-gap="4" data-align="center">
+        <div className="cap-shrink">
+          <p
+            className="cap-text"
+            data-size="small"
+            data-tone="ink"
+            data-weight="strong"
+            data-face="ui"
+          >
+            {title}
+          </p>
+          <p
+            className="cap-text cap-clamp"
+            data-size={metaSize}
+            data-tone="dim"
+            data-face="ui"
+            data-lines="1"
+          >
+            {meta}
+          </p>
+        </div>
+        <div className="cap-cluster cap-keep" data-gap="3">
+          {actions}
+        </div>
+      </div>
+      {children}
+    </li>
   );
 }
 

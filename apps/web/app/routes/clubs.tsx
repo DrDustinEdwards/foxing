@@ -3,7 +3,7 @@
 // "New club" button routes to /clubs/new; joining happens on the club detail page.
 import { useClubsIndex } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
@@ -28,7 +28,9 @@ function ClubRow({
   return (
     <Link to={`/clubs/${club.slug}`}>
       <div className="cap-card">
-        <h3 className="display-0">{club.name}</h3>
+        <h3 className="cap-title" data-size="5">
+          {club.name}
+        </h3>
         {club.description ? <p className="fx-clubs-text">{club.description}</p> : null}
       </div>
     </Link>
@@ -42,10 +44,12 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <div className="cap-spread" data-gap="5" data-align="center">
-          <h1 className="display-4">Book clubs</h1>
-          <Link to="/clubs/new" className="cap-btn" data-variant="primary">
+          <h1 className="cap-title" data-size="1">
+            Book clubs
+          </h1>
+          <ButtonLink to="/clubs/new" variant="primary">
             New club
-          </Link>
+          </ButtonLink>
         </div>
 
         <section className="mt-10">
@@ -68,7 +72,9 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
         <section className="mt-12">
           <h2 className="fx-clubs-caps">Discover</h2>
           {discover.length === 0 ? (
-            <p className="mt-4 cap-meta sans">No public clubs yet.</p>
+            <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+              No public clubs yet.
+            </p>
           ) : (
             <div className="mt-4 fx-clubs-grid">
               {discover.map((club) => (

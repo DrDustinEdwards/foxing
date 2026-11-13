@@ -6,7 +6,8 @@ import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
-import { Link } from "capsomer/react/link";
+import { ButtonLink, Link } from "capsomer/react/link";
+import { Rating } from "capsomer/react/rating";
 import { mediumDate } from "~/lib/dates";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
@@ -25,16 +26,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { entries: await views.diary(createDb(env.DB), user.id) };
 }
 
-function Stars({ ratingHalf }: { ratingHalf: number | null }) {
-  if (ratingHalf == null) return null;
-  return (
-    <span role="img" aria-label={`${ratingHalf / 2} stars`} className="fx-diary-label">
-      {"★".repeat(Math.floor(ratingHalf / 2))}
-      {ratingHalf % 2 === 1 ? "½" : ""}
-    </span>
-  );
-}
-
 const VIS_LABEL: Record<string, string> = {
   private: "Private",
   friends: "Friends",
@@ -42,7 +33,7 @@ const VIS_LABEL: Record<string, string> = {
 };
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
-  return <span className="shrink-0 fx-diary-caps">{VIS_LABEL[visibility] ?? visibility}</span>;
+  return <span className="cap-keep fx-diary-caps">{VIS_LABEL[visibility] ?? visibility}</span>;
 }
 
 type RatingFilter = "all" | "rated" | "unrated";
@@ -117,9 +108,9 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-8 items-end fx-diary-row">
           <PageHeader eyebrow="Reading" title="Your diary" className="mb-0" />
-          <Link to="/diary/new" className="cap-btn shrink-0" data-variant="primary">
+          <ButtonLink to="/diary/new" className="cap-keep" variant="primary">
             New entry
-          </Link>
+          </ButtonLink>
         </div>
 
         {entries.length === 0 ? (
@@ -130,7 +121,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
         ) : (
           <>
             <div className="mb-6 cap-cluster" data-gap="5">
-              <label className="ui">
+              <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Rating</span>
                 <select
                   value={rating}
@@ -142,7 +133,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                   <option value="unrated">Unrated</option>
                 </select>
               </label>
-              <label className="ui">
+              <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Review</span>
                 <select
                   value={review}
@@ -153,7 +144,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                   <option value="reviewed">With a review</option>
                 </select>
               </label>
-              <label className="ui">
+              <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Sort</span>
                 <select
                   value={sort}
@@ -165,7 +156,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                   <option value="rating">Highest rated</option>
                 </select>
               </label>
-              <span className="fine">
+              <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
                 {shown.length} of {entries.length}
               </span>
             </div>
@@ -197,13 +188,13 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
 }
 
 function RereadBadge() {
-  return <span className="shrink-0 fx-diary-caps-4">Re-read</span>;
+  return <span className="cap-keep fx-diary-caps-4">Re-read</span>;
 }
 
 function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean }) {
   return (
     <li className="cap-card fx-diary-card">
-      <div className="shrink-0 fx-diary-box">
+      <div className="cap-keep fx-diary-box">
         {e.book ? (
           <Link to={`/books/${e.book.slug}`} className="block">
             <CoverImage
@@ -218,20 +209,26 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
       </div>
       <div className="fx-diary-box-2">
         <div className="cap-spread" data-gap="4" data-align="start">
-          <div className="min-0">
+          <div className="cap-shrink">
             <div className="cap-cluster" data-gap="3">
               {e.book ? (
                 <Link to={`/books/${e.book.slug}`} className="fx-diary-link">
                   {e.book.title}
                 </Link>
               ) : (
-                <span className="display-0">Unknown book</span>
+                <span className="cap-title" data-size="5">
+                  Unknown book
+                </span>
               )}
               {reread ? <RereadBadge /> : null}
             </div>
             <div className="mt-1 cap-cluster" data-gap="4">
-              <Stars ratingHalf={e.ratingHalf} />
-              {e.logDate ? <span className="mono fine">{mediumDate.format(e.logDate)}</span> : null}
+              {e.ratingHalf == null ? null : <Rating value={e.ratingHalf / 2} size="sm" />}
+              {e.logDate ? (
+                <span className="cap-text" data-size="tiny" data-tone="dim" data-face="mono">
+                  {mediumDate.format(e.logDate)}
+                </span>
+              ) : null}
             </div>
           </div>
           <VisibilityBadge visibility={e.visibility} />

@@ -1,6 +1,7 @@
 // Admin: Analytics. Read-only. At-a-glance platform counts plus the full recent operator
 // audit log. Gated on ADMIN_EMAIL and CO_OWNER_EMAILS; adminRepo reads run in-process.
 import { adminRepo, createDb } from "@foxing/core";
+import { Table } from "capsomer/react/table";
 import { mediumDateTime } from "~/lib/dates";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { cloudflareContext } from "~/context";
@@ -37,13 +38,17 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Analytics</h1>
+        <h1 className="cap-title" data-size="2">
+          Analytics
+        </h1>
       </div>
 
       <div className="fx-admin-analytics-grid">
         {tiles.map((t) => (
           <div key={t.label} className="cap-card">
-            <p className="display-3">{t.value}</p>
+            <p className="cap-title" data-size="2">
+              {t.value}
+            </p>
             <p className="fx-admin-analytics-caps">{t.label}</p>
             {t.sub ? <p className="fx-admin-analytics-text">{t.sub}</p> : null}
           </div>
@@ -53,30 +58,28 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
       <div className="mt-8">
         <AdminCard title="Audit log">
           {audit.length === 0 ? (
-            <p className="cap-meta sans">No admin actions logged yet.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No admin actions logged yet.
+            </p>
           ) : (
-            <div className="fx-admin-analytics-box">
-              <table className="fx-admin-analytics-table">
-                <thead>
-                  <tr className="fx-admin-analytics-tr">
-                    <th className="fx-admin-analytics-caps-2">Action</th>
-                    <th className="fx-admin-analytics-caps-2">Actor</th>
-                    <th className="fx-admin-analytics-caps-2">When</th>
+            <Table caption="Recent admin actions" captionHidden>
+              <thead>
+                <tr>
+                  <th scope="col">Action</th>
+                  <th scope="col">Actor</th>
+                  <th scope="col">When</th>
+                </tr>
+              </thead>
+              <tbody>
+                {audit.map((a) => (
+                  <tr key={a.id}>
+                    <td>{a.action}</td>
+                    <td>{a.actor ?? "System"}</td>
+                    <td>{mediumDateTime.format(a.performedAt)}</td>
                   </tr>
-                </thead>
-                <tbody className="divided">
-                  {audit.map((a) => (
-                    <tr key={a.id}>
-                      <td className="py-2 fx-admin-analytics-td">{a.action}</td>
-                      <td className="py-2 fx-admin-analytics-td-2">{a.actor ?? "System"}</td>
-                      <td className="py-2 fx-admin-analytics-td-3">
-                        {mediumDateTime.format(a.performedAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </Table>
           )}
         </AdminCard>
       </div>

@@ -4,13 +4,14 @@
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
-import { Link } from "capsomer/react/link";
+import { ButtonLink } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
   AdminError,
   adminInputClass,
   useAdminAction,
+  AdminRow,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -41,7 +42,9 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Clubs</h1>
+        <h1 className="cap-title" data-size="2">
+          Clubs
+        </h1>
       </div>
 
       <div className="cap-stack" data-gap="6">
@@ -56,7 +59,9 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Clubs">
           {clubs.length === 0 ? (
-            <p className="cap-meta sans">No clubs match this search.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No clubs match this search.
+            </p>
           ) : (
             <ul className="divided">
               {clubs.map((c) => (
@@ -81,27 +86,25 @@ function ClubRow({
   const { pending, error, run } = useAdminAction({ onDone });
 
   return (
-    <li className="py-3">
-      <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
-          <p className="sans small strong">
-            {club.name}
-            {club.isVerified ? (
-              <span className="badge ml-2">Verified</span>
-            ) : (
-              <span className="badge badge-quiet ml-2">Unverified</span>
-            )}
-          </p>
-          <p className="truncate cap-meta sans">
-            {club.slug ? `/${club.slug}` : "No slug"} · {club.visibility}
-          </p>
-        </div>
-        <div className="shrink-0 cap-cluster" data-gap="3">
-          {club.slug ? (
-            <Link to={`/clubs/${club.slug}`} className="cap-btn">
-              View
-            </Link>
-          ) : null}
+    <AdminRow
+      title={
+        <>
+          {club.name}
+          {club.isVerified ? (
+            <span className="badge ml-2">Verified</span>
+          ) : (
+            <span className="badge badge-quiet ml-2">Unverified</span>
+          )}
+        </>
+      }
+      meta={
+        <>
+          {club.slug ? `/${club.slug}` : "No slug"} · {club.visibility}
+        </>
+      }
+      actions={
+        <>
+          {club.slug ? <ButtonLink to={`/clubs/${club.slug}`}>View</ButtonLink> : null}
           <AdminButton
             pending={pending}
             onClick={() =>
@@ -134,9 +137,10 @@ function ClubRow({
               Delete
             </AdminButton>
           )}
-        </div>
-      </div>
+        </>
+      }
+    >
       <AdminError error={error} />
-    </li>
+    </AdminRow>
   );
 }
