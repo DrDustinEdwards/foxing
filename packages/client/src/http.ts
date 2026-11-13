@@ -3,6 +3,7 @@
 // cookie from secure storage. Every failure becomes an ApiError whose message is
 // fit to show the reader as-is (role="alert" on web, an inline error on mobile):
 // nothing is swallowed.
+import { readSse } from "capsomer/behavior/sse";
 
 export class ApiError extends Error {
   readonly status: number;
@@ -95,26 +96,9 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     if (!res.ok || !res.body) {
       throw problemError(res.status, await res.json().catch(() => null));
     }
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = "";
-    for (;;) {
-      const { done, value } = await reader.read();
-      if (value) buffer += decoder.decode(value, { stream: !done });
-      const events = buffer.split("\n\n");
-      buffer = done ? "" : (events.pop() ?? "");
-      for (const raw of events) {
-        let event = "message";
-        const data: string[] = [];
-        for (const line of raw.split("\n")) {
-          if (line.startsWith("event:")) event = line.slice(6).trim();
-          // A multi-line payload arrives as several data lines; one leading space is framing.
-          else if (line.startsWith("data:")) data.push(line.slice(5).replace(/^ /, ""));
-        }
-        if (data.length > 0) onEvent(event, data.join("\n"));
-      }
-      if (done) return;
-    }
+    await readSse(res.body, (e) => onEvent(e.event, e.data), signal);
+    // readSse stops quietly on an abort; the callers count an aborted stream as a rejection.
+    signal?.throwIfAborted();
   }
 
   return {

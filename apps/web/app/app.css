@@ -10,16 +10,16 @@
 /* Size-matched local fallbacks for the stack site-foxing names second, so the swap to each webfont does not move text. */
 @import "capsomer/fallback-fonts.css";
 @import "capsomer/base.css";
+@import "capsomer/layout.css";
+@import "capsomer/text.css";
 @import "capsomer/site-header.css";
 @import "capsomer/dialog.css";
 @import "capsomer/popover.css";
-@import "capsomer/tooltip.css";
 @import "capsomer/theme-switch.css";
 @import "capsomer/button.css";
 @import "capsomer/field.css";
 @import "capsomer/select.css";
 @import "capsomer/switch.css";
-@import "capsomer/segmented.css";
 @import "capsomer/tabs.css";
 @import "capsomer/chips.css";
 @import "capsomer/listbox.css";
@@ -33,14 +33,11 @@
 @import "capsomer/error-page.css";
 @import "capsomer/banner.css";
 @import "capsomer/status.css";
-@import "capsomer/skeleton.css";
 @import "capsomer/meter.css";
-@import "capsomer/table.css";
 @import "capsomer/card.css";
 @import "capsomer/icons.css";
 @import "capsomer/picture.css";
 @import "capsomer/time.css";
-@import "capsomer/rating.css";
 @import "capsomer/chart-frame.css";
 /* The whole chart stylesheet: Enarratio's base, the token mapping, gridlines and series inks. */
 @import "capsomer/enarratio.css";

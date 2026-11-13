@@ -8,6 +8,9 @@ import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-analytics";
 
+// The audit table is the only Capsomer table on the site, so its styles load with this page alone.
+import "capsomer/table.css";
+
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   await requireAdmin(env, request);

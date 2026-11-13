@@ -5,6 +5,7 @@
 import { useCreateDiaryEntry, useUpdateDiaryEntry } from "@foxing/client";
 import type { Visibility } from "@foxing/types";
 import { RatingInput } from "capsomer/react/rating";
+import "capsomer/rating.css";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 

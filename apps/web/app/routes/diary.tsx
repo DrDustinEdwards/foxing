@@ -8,6 +8,7 @@ import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { Rating } from "capsomer/react/rating";
+import "capsomer/rating.css";
 import { mediumDate } from "~/lib/dates";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
