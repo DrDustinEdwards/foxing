@@ -98,10 +98,15 @@
 .fx-reader-panels-label-6 {
   flex-grow: 1;
 }
-.fx-reader-panels-label-7 {
+.fx-reader-panels-label-7,
+.fx-reader-panels-label-10,
+.fx-lists-text,
+.fx-clubs-text {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+.fx-reader-panels-label-7 {
   overflow: hidden;
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -121,9 +126,6 @@
   font-weight: var(--weight-medium);
 }
 .fx-reader-panels-label-10 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
 }
 .fx-reader-panels-text {
@@ -166,10 +168,16 @@
   text-decoration-line: underline;
   text-underline-offset: 2px;
 }
-.fx-reader-panels-row-3 {
+.fx-reader-panels-row-3,
+.fx-reader-panels-row-4,
+.fx-auth-shell-link,
+.fx-paywall-title,
+.fx-onboarding-link {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+.fx-reader-panels-row-3 {
   border-block-end: var(--line-w) solid var(--line);
   padding-inline: var(--space-4);
 }
@@ -195,9 +203,6 @@
   color: color-mix(in srgb, currentColor 60%, transparent);
 }
 .fx-reader-panels-row-4 {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
   border-block-end: var(--line-w) solid var(--line);
   padding: var(--space-2-5) var(--space-4);
   font-size: var(--fs-small);
@@ -518,9 +523,6 @@
   background-color: var(--warn-soft);
 }
 .fx-companion-test-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
   color: var(--warn);
 }
 .fx-companion-test-form {
@@ -545,7 +547,8 @@
 .fx-companion-test-input {
   width: 5rem;
 }
-.fx-companion-test-text-2 {
+.fx-companion-test-text-2,
+.fx-commonplace-text {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;

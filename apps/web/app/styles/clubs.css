@@ -1,4 +1,6 @@
-.fx-club-schedule-btn {
+.fx-club-schedule-btn,
+.fx-club-sections-btn-2,
+.fx-club-thread-link {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -6,9 +8,6 @@
   text-decoration-line: underline;
 }
 .fx-club-schedule-btn-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
   color: var(--dim);
   text-decoration-line: underline;
 }
@@ -24,7 +23,8 @@
 .fx-club-schedule-card-2 {
   --pad-card: var(--space-4);
 }
-.fx-club-schedule-text-2 {
+.fx-club-schedule-text-2,
+.fx-join-code-text-2 {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -50,9 +50,6 @@
   gap: var(--space-3);
 }
 .fx-club-schedule-card-4 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   border-radius: var(--radius-l);
   border: var(--line-w) solid var(--line);
   background-color: var(--surface);
@@ -70,7 +67,8 @@
   }
 }
 
-.fx-club-sections-text {
+.fx-club-sections-text,
+.fx-club-thread-text-2 {
   border-radius: var(--radius-m);
   border-width: var(--line-w);
   border-style: solid;
@@ -96,7 +94,8 @@
   color: var(--accent-text);
   text-decoration-line: underline;
 }
-.fx-club-sections-btn {
+.fx-club-sections-btn,
+.fx-club-schedule-btn-3 {
   font-family: var(--ui);
   font-size: var(--fs-small);
   line-height: 1rem;
@@ -105,13 +104,6 @@
   &:hover {
     color: var(--text);
   }
-}
-.fx-club-sections-btn-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--accent-text);
-  text-decoration-line: underline;
 }
 .fx-club-sections-card-2 {
   --pad-card: var(--space-5);
@@ -133,11 +125,6 @@
   color: var(--accent-text);
 }
 
-.fx-club-detail-text {
-  max-width: 42rem;
-  font-family: var(--fx-body);
-  color: var(--muted);
-}
 .fx-club-detail-label {
   margin-left: var(--space-4);
   display: inline-flex;
@@ -169,7 +156,9 @@
     margin-top: 1.25rem;
   }
 }
-.fx-club-new-field {
+.fx-club-new-field,
+.fx-club-thread-field,
+.fx-onboarding-legend {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -181,26 +170,7 @@
   height: 1rem;
   width: 1rem;
 }
-.fx-club-new-text-2 {
-  border-radius: var(--radius-m);
-  border-width: var(--line-w);
-  border-style: solid;
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  border-color: color-mix(in srgb, var(--crit) 50%, transparent);
-  background-color: var(--crit-soft);
-  color: var(--crit);
-}
 
-.fx-club-thread-link {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--accent-text);
-  text-decoration-line: underline;
-}
 .fx-club-thread-title {
   font-family: var(--display);
   font-size: var(--title-2);
@@ -216,41 +186,20 @@
   font-family: var(--fx-body);
   color: var(--text);
 }
-.fx-club-thread-caps {
+.fx-club-thread-caps,
+.fx-club-schedule-caps {
   font-family: var(--mono);
   font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.025em;
   color: var(--dim);
 }
-.fx-club-thread-field {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  font-weight: var(--weight-medium);
-  color: var(--text);
-}
 .fx-club-thread-input {
   margin-top: var(--space-2-5);
   width: 100%;
 }
-.fx-club-thread-text-2 {
-  border-radius: var(--radius-m);
-  border-width: var(--line-w);
-  border-style: solid;
-  padding: var(--space-2-5) var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  border-color: color-mix(in srgb, var(--crit) 50%, transparent);
-  background-color: var(--crit-soft);
-  color: var(--crit);
-}
 
 .fx-clubs-text {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
   font-family: var(--fx-body);
   font-size: var(--fs-body);
@@ -265,7 +214,8 @@
   }
 }
 
-.fx-join-code-caps {
+.fx-join-code-caps,
+.fx-clubs-caps {
   font-family: var(--mono);
   font-size: var(--fs-small);
   line-height: 1rem;
@@ -273,7 +223,8 @@
   letter-spacing: 0.14em;
   color: var(--dim);
 }
-.fx-join-code-title {
+.fx-join-code-title,
+.fx-shelf-detail-title {
   font-family: var(--display);
   font-size: var(--title-1);
   line-height: 2.5rem;
@@ -281,12 +232,6 @@
 .fx-join-code-text {
   font-family: var(--fx-body);
   color: var(--muted);
-}
-.fx-join-code-text-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--dim);
 }
 
 .fx-pick-club-grid {
@@ -308,13 +253,6 @@
 .fx-pick-club-link {
   width: 5rem;
 }
-.fx-pick-club-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--dim);
-}
 .fx-pick-club-title {
   font-family: var(--display);
   font-size: var(--title-6);
@@ -323,12 +261,6 @@
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
-}
-.fx-pick-club-text {
-  font-family: var(--fx-body);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
 }
 
 /* A poll option: the vote share fills it from the start, a chosen option takes the strong edge. */
@@ -361,34 +293,9 @@
     margin-top: var(--space-5);
   }
 }
-.fx-club-schedule-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-  color: var(--dim);
-}
-.fx-club-schedule-btn-3 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
-  text-decoration-line: underline;
-  &:hover {
-    color: var(--text);
-  }
-}
 .fx-club-new-input {
   margin-top: var(--space-2-5);
   width: 100%;
-}
-.fx-clubs-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--dim);
 }
 
 .fx-club-new-text {

@@ -91,9 +91,6 @@
 }
 
 .fx-journal-post-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
@@ -125,13 +122,6 @@
   --pad-card: 1.25rem;
   --card-shadow: var(--shadow-s);
 }
-.fx-journal-tag-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--dim);
-}
 .fx-journal-tag-title {
   font-family: var(--display);
   font-size: var(--fs-h3);
@@ -141,7 +131,8 @@
     color: var(--accent-text);
   }
 }
-.fx-journal-tag-text {
+.fx-journal-tag-text,
+.fx-journal-text-3 {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -233,18 +224,7 @@
     color: var(--accent-text);
   }
 }
-.fx-journal-text-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  font-family: var(--fx-body);
-  color: var(--muted);
-}
 .fx-journal-row-2 {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-small);

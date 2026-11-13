@@ -4,14 +4,14 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "b44324b6",
+    "measured_at": "92360e8",
     "knip": {
       "files": 2
     },
     "jscpd": {
-      "clones": 260,
-      "lines": 2842,
-      "percentage": 3.27,
+      "clones": 255,
+      "lines": 2741,
+      "percentage": 3.17,
       "unread": 0
     },
     "shared copies": {

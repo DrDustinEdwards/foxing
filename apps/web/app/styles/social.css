@@ -1,10 +1,4 @@
-.fx-follow-button-text {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--crit);
-}
-
+.fx-follow-button-text,
 .fx-like-button-text {
   font-family: var(--ui);
   font-size: var(--fs-small);
@@ -12,7 +6,8 @@
   color: var(--crit);
 }
 
-.fx-list-form-text {
+.fx-list-form-text,
+.fx-club-new-text-2 {
   border-radius: var(--radius-m);
   border-width: var(--line-w);
   border-style: solid;
@@ -25,24 +20,20 @@
   color: var(--crit);
 }
 .fx-list-form-btn {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
   color: var(--muted);
   &:hover {
     color: var(--text);
   }
 }
 
-.fx-remove-book-button-label {
+.fx-remove-book-button-label,
+.fx-close-friend-toggle-label,
+.fx-like-button-box {
   display: inline-flex;
   flex-direction: column;
   gap: var(--space-2);
 }
 .fx-remove-book-button-btn {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
   color: var(--dim);
   transition-property: color, background-color, border-color, opacity, box-shadow, transform;
   transition-duration: 150ms;
@@ -53,7 +44,8 @@
     color: var(--crit);
   }
 }
-.fx-remove-book-button-label-2 {
+.fx-remove-book-button-label-2,
+.fx-close-friend-toggle-label-2 {
   font-family: var(--ui);
   font-size: 0.65rem;
   color: var(--crit);
@@ -69,14 +61,10 @@
   line-height: 1.5rem;
   color: var(--text);
 }
-.fx-commonplace-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
 
-.fx-diary-new-text {
+.fx-diary-new-text,
+.fx-account-sections-field,
+.fx-join-code-text-3 {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -161,7 +149,8 @@
   line-height: 1.25rem;
   color: var(--muted);
 }
-.fx-feed-card-2 {
+.fx-feed-card-2,
+.fx-notifications-card {
   display: flex;
   gap: var(--space-4);
   --pad-card: var(--space-5);
@@ -239,15 +228,13 @@
     color: var(--accent-text);
   }
 }
-.fx-list-detail-text {
+.fx-list-detail-text,
+.fx-club-detail-text {
   max-width: 42rem;
   font-family: var(--fx-body);
   color: var(--muted);
 }
 .fx-list-detail-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: var(--space-5);
   --pad-card: var(--space-5);
 }
@@ -264,7 +251,8 @@
   line-height: 1.75rem;
   color: var(--dim);
 }
-.fx-list-detail-text-2 {
+.fx-list-detail-text-2,
+.fx-pick-club-text {
   font-family: var(--fx-body);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -293,9 +281,6 @@
   color: var(--dim);
 }
 .fx-lists-text {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
   overflow: hidden;
   font-family: var(--ui);
   font-size: var(--fs-body);
@@ -326,7 +311,9 @@
     align-items: center;
   }
 }
-.fx-me-title {
+.fx-me-title,
+.fx-u-profile-title,
+.fx-home-title {
   font-family: var(--display);
   font-size: var(--title-2);
   line-height: 2.25rem;
@@ -364,18 +351,16 @@
   padding-top: var(--space-5);
 }
 
-.fx-notifications-text {
+.fx-notifications-text,
+.fx-login-text-2,
+.fx-onboarding-text-2 {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--crit);
 }
-.fx-notifications-card {
-  display: flex;
-  gap: var(--space-4);
-  --pad-card: var(--space-5);
-}
-.fx-notifications-text-2 {
+.fx-notifications-text-2,
+.fx-year-text-2 {
   margin-top: var(--space-1);
   font-family: var(--ui);
   font-size: var(--fs-body);
@@ -383,26 +368,18 @@
   color: var(--muted);
 }
 .fx-people-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   gap: var(--space-4);
   border-radius: var(--radius-l);
   border: var(--line-w) solid var(--line);
   background-color: var(--surface);
   padding-inline: var(--space-5);
 }
-.fx-people-link {
+.fx-people-link,
+.fx-preference-sections-link-2 {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: var(--space-4);
-}
-.fx-people-label-2 {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
 }
 
 .fx-u-profile-label,
@@ -426,16 +403,10 @@
   display: flex;
   gap: 1.25rem;
 }
-.fx-u-profile-title {
-  font-family: var(--display);
-  font-size: var(--title-2);
-  line-height: 2.25rem;
-  @media (min-width: 40rem) {
-    font-size: var(--title-1);
-    line-height: 2.5rem;
-  }
-}
-.fx-u-profile-text {
+.fx-u-profile-text,
+.fx-list-detail-label,
+.fx-me-text,
+.fx-account-sections-label-2 {
   font-family: var(--mono);
   font-size: var(--fs-body);
   line-height: 1.25rem;
@@ -450,11 +421,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-6);
-}
-.fx-u-profile-row-2 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
 }
 .fx-u-profile-link,
 .fx-u-profile-stack-2 {
@@ -539,7 +505,8 @@
     grid-template-columns: 1.4fr 1fr;
   }
 }
-.fx-u-profile-row-4 {
+.fx-u-profile-row-4,
+.fx-vocabulary-row-2 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -554,9 +521,6 @@
   color: var(--dim);
 }
 .fx-profile-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   border: var(--line-w) solid var(--line);
   border-radius: var(--fx-radius-cover);
   background: var(--surface);
@@ -590,7 +554,8 @@
   line-height: var(--leading-none);
   color: var(--text);
 }
-.fx-u-profile-caps-3 {
+.fx-u-profile-caps-3,
+.fx-goals-caps {
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
@@ -608,12 +573,6 @@
   padding-block: var(--space-9);
 }
 
-.fx-vocabulary-row-2 {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-4);
-}
 .fx-vocabulary-title {
   font-family: var(--display);
   font-size: var(--fs-h3);
@@ -637,9 +596,6 @@
   color: var(--accent-text);
 }
 .fx-vocabulary-btn {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
   color: var(--dim);
   &:hover {
     color: var(--accent-text);
@@ -669,21 +625,19 @@
   background: var(--accent);
 }
 
-.fx-close-friend-toggle-label-2 {
-  font-family: var(--ui);
-  font-size: 0.65rem;
-  color: var(--crit);
-}
 .fx-commonplace-input {
   min-width: 12rem;
   flex: 1 1 0%;
 }
-.fx-diary-row {
+.fx-diary-row,
+.fx-lists-row,
+.fx-notifications-row {
   display: flex;
   justify-content: space-between;
   gap: var(--space-5);
 }
-.fx-diary-link {
+.fx-diary-link,
+.fx-year-link {
   font-family: var(--display);
   font-size: var(--fs-h3);
   line-height: 1.75rem;
@@ -692,54 +646,10 @@
     color: var(--accent-text);
   }
 }
-.fx-list-detail-label {
-  font-family: var(--mono);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--dim);
-}
-.fx-me-text {
-  font-family: var(--mono);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--dim);
-}
-.fx-lists-row-2 {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-.fx-lists-text-2 {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
-}
-.fx-notifications-text-3 {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
-}
 
-.fx-close-friend-toggle-label {
-  display: inline-flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-.fx-like-button-box {
-  display: inline-flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
 .fx-diary-label {
   font-family: var(--mono);
   font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--accent-text);
-}
-.fx-lists-row {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-5);
 }

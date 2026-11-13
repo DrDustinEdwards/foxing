@@ -10,9 +10,6 @@
   max-width: 24rem;
 }
 .fx-auth-shell-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
   font-family: var(--display);
   font-size: var(--title-3);
   line-height: 2rem;
@@ -62,9 +59,6 @@
   background-color: var(--line);
 }
 .fx-auth-shell-label-3 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
   color: var(--dim);
@@ -107,9 +101,6 @@
   }
 }
 .fx-paywall-title {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
   font-family: var(--display);
   font-size: var(--title-3);
   line-height: 2rem;
@@ -140,17 +131,11 @@
   gap: var(--space-3);
 }
 .fx-paywall-label {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
   color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
 }
 .fx-paywall-label-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
   font-weight: var(--weight-medium);
 }
 .fx-paywall-label-3 {
@@ -167,9 +152,6 @@
   width: 100%;
 }
 .fx-paywall-text-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
   color: color-mix(in srgb, var(--fx-on-dark) 60%, transparent);
 }
 .fx-paywall-text-3 {
@@ -189,19 +171,10 @@
 }
 
 .fx-account-sections-label {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
-}
-.fx-account-sections-label-2 {
-  font-family: var(--mono);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--dim);
 }
 .fx-account-sections-label-3 {
   font-family: var(--ui);
@@ -218,11 +191,6 @@
 }
 .fx-account-sections-link {
   display: inline-flex;
-}
-.fx-account-sections-field {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
 }
 .fx-account-sections-card {
   border-radius: var(--radius-l);
@@ -277,12 +245,6 @@
   background-color: var(--ground);
   padding-inline: var(--space-4);
 }
-.fx-preference-sections-link-2 {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: var(--space-4);
-}
 .fx-preference-sections-label-2,
 .fx-people-label,
 .fx-goals-text {
@@ -291,12 +253,6 @@
   line-height: 1.25rem;
   font-weight: var(--weight-medium);
   color: var(--text);
-}
-.fx-preference-sections-label-3 {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
 }
 
 .fx-settings-card-card {
@@ -313,13 +269,6 @@
   flex-direction: column;
 }
 
-.fx-login-text-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--crit);
-}
-
 .fx-onboarding-box {
   min-height: 100dvh;
   background-color: var(--ground);
@@ -333,20 +282,10 @@
   padding: 2.5rem 1.25rem;
 }
 .fx-onboarding-link {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
   font-family: var(--display);
   font-size: var(--title-4);
   line-height: 1.75rem;
   font-weight: var(--weight-semibold);
-}
-.fx-onboarding-caps {
-  font-family: var(--mono);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--dim);
 }
 .fx-onboarding-title {
   font-family: var(--display);
@@ -376,23 +315,9 @@
 .fx-onboarding-input {
   width: 100%;
 }
-.fx-onboarding-label-2 {
-  margin-top: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
-}
 .fx-onboarding-label-3 {
   font-weight: var(--weight-regular);
   color: var(--dim);
-}
-.fx-onboarding-legend {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  font-weight: var(--weight-medium);
-  color: var(--text);
 }
 .fx-onboarding-row {
   display: flex;
@@ -401,12 +326,6 @@
 }
 .fx-onboarding-btn {
   display: inline-flex;
-}
-.fx-onboarding-text-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--crit);
 }
 .fx-onboarding-grid {
   display: grid;
@@ -458,12 +377,6 @@
 .fx-paywall-plan[aria-pressed="true"] {
   border-color: var(--accent);
   background: rgb(255 255 255 / 0.1);
-}
-
-.fx-join-code-text-3 {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
 }
 
 .fx-diary-form-text {

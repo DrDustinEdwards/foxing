@@ -104,7 +104,8 @@
   line-height: 1.25;
   color: var(--text);
 }
-.fx-guide-text-2 {
+.fx-guide-text-2,
+.fx-about-text {
   font-family: var(--fx-body);
   font-size: var(--title-6);
   line-height: 1.5rem;
@@ -162,11 +163,4 @@
     text-decoration: underline;
     text-underline-offset: 2px;
   }
-}
-
-.fx-about-text {
-  font-family: var(--fx-body);
-  font-size: var(--title-6);
-  line-height: 1.5rem;
-  color: var(--muted);
 }
