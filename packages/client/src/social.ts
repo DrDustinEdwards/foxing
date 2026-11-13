@@ -7,7 +7,8 @@ import { useDebounced } from "capsomer/react/form-hooks";
 import { qs } from "./http";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, patchAll, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 // --- Reads ------------------------------------------------------------------
 

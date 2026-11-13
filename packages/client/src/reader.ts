@@ -6,7 +6,8 @@ import type * as W from "@foxing/types";
 import { useQuery } from "@tanstack/react-query";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, patchAll, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 export { newId } from "capsomer/behavior/state-hooks";
 

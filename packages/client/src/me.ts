@@ -6,7 +6,8 @@ import { useDebounced } from "capsomer/react/form-hooks";
 import { qs } from "./http";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, useSeededQuery, useWrite } from "./query";
+import { patch, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 export function useMe<S extends W.Me | undefined = undefined>(seed?: S, enabled = true) {
   const api = useApi();
