@@ -24,7 +24,13 @@ const BIO_MAX = 200;
 export function ProfileSection({
   initial,
 }: {
-  initial: { userId: string; email: string; displayName: string; bio: string; favoriteGenres: string };
+  initial: {
+    userId: string;
+    email: string;
+    displayName: string;
+    bio: string;
+    favoriteGenres: string;
+  };
 }) {
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [bio, setBio] = useState(initial.bio);
