@@ -17,6 +17,7 @@ import type { GoalWithProgress, Shelf, ShelfStatus, Streak } from "@foxing/types
 import { useState } from "react";
 import { Link } from "capsomer/react/link";
 import { Meter } from "capsomer/react/meter";
+import "capsomer/meter.css";
 import { Tabs, TabsList, TabsTrigger } from "capsomer/react/tabs";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";

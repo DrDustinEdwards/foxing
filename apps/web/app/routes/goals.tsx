@@ -16,6 +16,7 @@ import {
 import { createDb, libraryRepo, views } from "@foxing/core";
 import type { Goal, GoalWithProgress } from "@foxing/types";
 import { Meter } from "capsomer/react/meter";
+import "capsomer/meter.css";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
