@@ -5,20 +5,16 @@
 import { useClubLive, useCreatePost, useThreadPage } from "@foxing/client";
 import { Time } from "capsomer/react/time";
 import { createDb, views } from "@foxing/core";
-import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionUserFromRequest } from "~/lib/auth.server";
-import { requireProfileForUser } from "~/lib/profile.server";
+import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect(`/login?next=/clubs/${params.slug}`);
-  await requireProfileForUser(env, user);
+  const { user } = await requireProfile(env, request);
   const page = await views.threadPage(createDb(env.DB), params.threadId, user.id, params.slug);
   if (!page) throw new Response("Not found", { status: 404 });
   return { page, viewerId: user.id };
