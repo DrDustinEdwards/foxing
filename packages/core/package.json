@@ -22,7 +22,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.56.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.59.1",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.40.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.156.2",
     "@foxing/types": "*",

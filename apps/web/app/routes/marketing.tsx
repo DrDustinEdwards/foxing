@@ -7,6 +7,8 @@ import { Hero } from "capsomer/react/hero";
 import { Link } from "capsomer/react/link";
 import "capsomer/hero.css";
 import "capsomer/cta-band.css";
+// The hero and the CTA band draw their eyebrows with Capsomer's eyebrow (Capsomer 0.150).
+import "capsomer/eyebrow.css";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
