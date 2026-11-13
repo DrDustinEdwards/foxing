@@ -9,7 +9,8 @@ import { useLiveRoom } from "capsomer/react/data";
 import { useState } from "react";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, patchAll, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 // --- Reads ------------------------------------------------------------------
 
@@ -297,7 +298,8 @@ export function useClubLive(clubId: string | null) {
     let msg: ClubLiveMessage;
     try {
       msg = JSON.parse(data) as ClubLiveMessage;
-    } catch {
+    } catch (err) {
+      console.error("Dropped a malformed live frame", err);
       return;
     }
     switch (msg.t) {
