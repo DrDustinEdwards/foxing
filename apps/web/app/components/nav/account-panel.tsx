@@ -4,7 +4,15 @@
 // and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons);
 // the four the shared set lacks pass their own path on its grid.
 import type { HeaderAccount } from "capsomer/react/site-header";
-import { Icon, iconAward, iconBook, iconFolder, iconGoals, iconSettings, iconStats } from "capsomer/react/icons";
+import {
+  Icon,
+  iconAward,
+  iconBook,
+  iconFolder,
+  iconGoals,
+  iconSettings,
+  iconStats,
+} from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";

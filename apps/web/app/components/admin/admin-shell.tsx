@@ -6,7 +6,18 @@ import {
   FIRST_PAGE,
   type AdminEntry,
 } from "capsomer/react/admin-shell";
-import { Icon, iconAward, iconBell, iconBook, iconDocument, iconOverview, iconPeople, iconRoles, iconStar, iconStats } from "capsomer/react/icons";
+import {
+  Icon,
+  iconAward,
+  iconBell,
+  iconBook,
+  iconDocument,
+  iconOverview,
+  iconPeople,
+  iconRoles,
+  iconStar,
+  iconStats,
+} from "capsomer/react/icons";
 import { routerRenderLink } from "capsomer/react/link";
 import { useLocation, useRouteLoaderData } from "react-router";
 import { avatarInitials } from "~/components/ui";
