@@ -280,7 +280,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
             <li key={f.id} className="py-2 fx-preference-sections-card">
               <Link to={`/u/${f.username}`} className="fx-preference-sections-link-2">
                 <Avatar src={f.avatarUrl} name={f.displayName ?? f.username} size="sm" />
-                <span className="min-0">
+                <span className="cap-shrink">
                   <span className="cap-clamp block fx-preference-sections-label-2" data-lines="1">
                     {f.displayName ?? f.username}
                   </span>

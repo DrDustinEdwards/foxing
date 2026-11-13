@@ -59,7 +59,7 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
             const date = pickDate(p.pickYear, p.pickMonth);
             return (
               <li key={p.id} className="cap-card fx-pick-club-card">
-                <Link to={`/books/${b.slug}`} className="shrink-0 fx-pick-club-link">
+                <Link to={`/books/${b.slug}`} className="cap-keep fx-pick-club-link">
                   <CoverImage
                     src={b.coverUrl}
                     alt={`${b.title} by ${b.author}`}
@@ -68,7 +68,7 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                     sizes="80px"
                   />
                 </Link>
-                <div className="min-0">
+                <div className="cap-shrink">
                   {date ? (
                     <p className="fx-pick-club-caps">
                       {date}

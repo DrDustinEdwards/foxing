@@ -39,7 +39,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
               type="button"
               onClick={markAllRead}
               disabled={pending}
-              className="cap-btn shrink-0"
+              className="cap-btn cap-keep"
             >
               {pending ? "Marking..." : "Mark all read"}
             </button>
@@ -60,7 +60,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
             {notifications.map((n) => (
               <li key={n.id} className="items-start cap-card fx-notifications-card">
                 <span aria-hidden="true" className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"} />
-                <div className="min-0">
+                <div className="cap-shrink">
                   <p
                     className="cap-text"
                     data-size="small"

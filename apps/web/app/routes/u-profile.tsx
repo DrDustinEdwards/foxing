@@ -128,7 +128,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         <header className="items-start fx-u-profile-stack">
           <div className="items-start fx-u-profile-row">
             <Avatar src={profile.avatarUrl} name={name} size="lg" />
-            <div className="min-0">
+            <div className="cap-shrink">
               <h1 className="fx-u-profile-title">{name}</h1>
               <p className="mt-1 fx-u-profile-text">@{profile.username}</p>
               {profile.bio ? <p className="mt-3 fx-u-profile-text-2">{profile.bio}</p> : null}

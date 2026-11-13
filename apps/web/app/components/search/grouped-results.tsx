@@ -71,7 +71,7 @@ export function GroupedResults({
                   <span className="cap-clamp fx-grouped-results-title" data-lines="1">
                     {a.name}
                   </span>
-                  <span className="shrink-0 fx-grouped-results-label">
+                  <span className="cap-keep fx-grouped-results-label">
                     {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
                   </span>
                 </Link>

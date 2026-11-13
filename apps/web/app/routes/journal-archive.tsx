@@ -85,7 +85,7 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
                     ) : null}
                   </div>
                   {post.tags?.[0] ? (
-                    <span className="shrink-0 fx-journal-archive-label">
+                    <span className="cap-keep fx-journal-archive-label">
                       {post.tags[0].replace(/-/g, " ")}
                     </span>
                   ) : null}

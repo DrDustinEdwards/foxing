@@ -99,7 +99,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
               <li key={entry.bookId} className="cap-card fx-list-detail-card">
                 <div className="fx-list-detail-row">
                   <span className="fx-list-detail-label">{i + 1}</span>
-                  <div className="min-0">
+                  <div className="cap-shrink">
                     {entry.book ? (
                       <Link to={`/books/${entry.book.slug}`} className="fx-list-detail-link-2">
                         {entry.book.title}
