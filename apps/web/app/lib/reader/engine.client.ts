@@ -364,16 +364,19 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
     return typeof rh === "function" ? rh.call(nav).catch(() => {}) : Promise.resolve();
   };
 
+  // Once the fill width is painted (two frames), recompute geometry against it, then snap
+  // back to the saved locator. The relayout re-paginates the resource, which can shift the
+  // saved progression onto a neighboring page (it was landing a page early), so we
+  // re-navigate afterward to land on the exact saved page. Both finish before the reader
+  // reports ready: Readium refuses any navigation while another is in flight, so a Contents
+  // jump or page turn made during this snap was silently dropped (the social-reading e2e
+  // gate's reader landed back on its saved page whenever the machine was slow).
+  await new Promise<void>((done) =>
+    requestAnimationFrame(() => requestAnimationFrame(() => done())),
+  );
+  await forceRelayout();
+  if (initialLocator) await new Promise<void>((done) => nav.go(initial, false, () => done()));
   listeners.onReady();
-  // Recompute geometry against the real width, then snap back to the saved
-  // locator. The relayout re-paginates the resource, which can shift the saved
-  // progression onto a neighboring page (it was landing a page early), so we
-  // re-navigate afterward to land on the exact saved page.
-  const settle = async () => {
-    await forceRelayout();
-    if (initialLocator) nav.go(initial, false, () => {});
-  };
-  requestAnimationFrame(() => requestAnimationFrame(() => void settle()));
 
   const findByProgression = (fraction: number): ReadiumLocator => {
     const clamped = Math.max(0, Math.min(1, fraction));
