@@ -54,7 +54,9 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
         <header className="cap-stack">
           <div className="cap-spread" data-gap="5" data-align="start">
             <div>
-              <h1 className="display-4">{list.title}</h1>
+              <h1 className="cap-title" data-size="1">
+                {list.title}
+              </h1>
               {owner ? (
                 <Link to={`/u/${owner.username}`} className="mt-2 fx-list-detail-link">
                   <Avatar
@@ -105,7 +107,11 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
                     ) : (
                       <span className="fx-list-detail-title">Unavailable book</span>
                     )}
-                    {entry.book ? <p className="ui">{entry.book.author}</p> : null}
+                    {entry.book ? (
+                      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+                        {entry.book.author}
+                      </p>
+                    ) : null}
                     {entry.note ? <p className="mt-1 fx-list-detail-text-2">{entry.note}</p> : null}
                   </div>
                 </div>

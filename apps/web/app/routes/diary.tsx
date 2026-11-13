@@ -130,7 +130,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
         ) : (
           <>
             <div className="mb-6 cap-cluster" data-gap="5">
-              <label className="ui">
+              <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Rating</span>
                 <select
                   value={rating}
@@ -142,7 +142,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                   <option value="unrated">Unrated</option>
                 </select>
               </label>
-              <label className="ui">
+              <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Review</span>
                 <select
                   value={review}
@@ -153,7 +153,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                   <option value="reviewed">With a review</option>
                 </select>
               </label>
-              <label className="ui">
+              <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Sort</span>
                 <select
                   value={sort}
@@ -165,7 +165,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                   <option value="rating">Highest rated</option>
                 </select>
               </label>
-              <span className="fine">
+              <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
                 {shown.length} of {entries.length}
               </span>
             </div>
@@ -225,13 +225,19 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
                   {e.book.title}
                 </Link>
               ) : (
-                <span className="display-0">Unknown book</span>
+                <span className="cap-title" data-size="5">
+                  Unknown book
+                </span>
               )}
               {reread ? <RereadBadge /> : null}
             </div>
             <div className="mt-1 cap-cluster" data-gap="4">
               <Stars ratingHalf={e.ratingHalf} />
-              {e.logDate ? <span className="mono fine">{mediumDate.format(e.logDate)}</span> : null}
+              {e.logDate ? (
+                <span className="cap-text" data-size="tiny" data-tone="dim" data-face="mono">
+                  {mediumDate.format(e.logDate)}
+                </span>
+              ) : null}
             </div>
           </div>
           <VisibilityBadge visibility={e.visibility} />

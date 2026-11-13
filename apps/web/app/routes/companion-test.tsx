@@ -89,7 +89,9 @@ function RunAction({
 
   return (
     <section className="cap-card">
-      <h2 className="display-1">Run an action</h2>
+      <h2 className="cap-title" data-size="4">
+        Run an action
+      </h2>
       <form onSubmit={(e) => void run(e)} className="fx-companion-test-form">
         <label className="block">
           <span className="fx-label">Action</span>
@@ -142,7 +144,7 @@ function RunAction({
       </form>
       {output ? <div className="mt-4 fx-companion-test-card-2">{output}</div> : null}
       {error ? (
-        <p className="mt-3 error" role="alert">
+        <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}
@@ -185,14 +187,18 @@ function CacheBatch() {
 
   return (
     <section className="mt-8 cap-card">
-      <h2 className="display-1">Cache batch (admin)</h2>
-      <p className="mt-2 ui">
+      <h2 className="cap-title" data-size="4">
+        Cache batch (admin)
+      </h2>
+      <p className="cap-text mt-2" data-size="small" data-tone="muted" data-face="ui">
         Generate the 4 free-cached actions for up to a handful of catalog books missing them. Runs
         synchronously; keep this small.
       </p>
       <div className="mt-4 cap-cluster" data-gap="4">
         <label className="cap-cluster" data-gap="3">
-          <span className="ui">Books</span>
+          <span className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+            Books
+          </span>
           <input
             type="number"
             min={1}
@@ -213,7 +219,7 @@ function CacheBatch() {
         </p>
       ) : null}
       {error ? (
-        <p className="mt-3 error" role="alert">
+        <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}

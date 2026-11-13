@@ -19,7 +19,10 @@ export function BookPicker({
         <div className="py-2 fx-book-picker-card">
           <span className="fx-book-picker-label">
             <span className="fx-book-picker-label-2">{selected.title}</span>
-            <span className="dim"> by {selected.author}</span>
+            <span className="cap-text" data-tone="dim">
+              {" "}
+              by {selected.author}
+            </span>
           </span>
           <button
             type="button"

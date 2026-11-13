@@ -151,7 +151,7 @@ function SiteFooter() {
             <span>Foxing</span>
           </Link>
           <p className="fx-footer-motto">reading, together.</p>
-          <p className="mt-3 measure-xs small dim">
+          <p className="cap-text mt-3 measure-xs" data-size="small" data-tone="dim">
             A reading home for the classics and the conversations around them.
           </p>
           <Link to="/about" className="fx-footer-link mt-3 block">

@@ -44,7 +44,7 @@ export function FeatureList({ items }: { items: string[] }) {
     <ul className="cap-stack" data-gap="3">
       {items.map((item) => (
         <li key={item} className="fx-guide-row-2">
-          <span aria-hidden="true" className="accent-ui">
+          <span aria-hidden="true" className="fx-mark">
             &middot;
           </span>
           <span>{item}</span>

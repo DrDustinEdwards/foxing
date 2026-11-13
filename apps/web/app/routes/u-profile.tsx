@@ -169,14 +169,18 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
 
         {favorites.length > 0 ? (
           <section className="cap-stack">
-            <h2 className="display-2">Favorite books</h2>
+            <h2 className="cap-title" data-size="3">
+              Favorite books
+            </h2>
             <ProfileCovers books={favorites} />
           </section>
         ) : null}
 
         {currentlyReading.length > 0 ? (
           <section className="cap-stack">
-            <h2 className="display-2">Currently reading</h2>
+            <h2 className="cap-title" data-size="3">
+              Currently reading
+            </h2>
             <ul className="fx-u-profile-row-3">
               {currentlyReading.map((b) => (
                 <li key={b.bookId} className="fx-u-profile-item">
@@ -190,13 +194,18 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                           className="fx-u-profile-img"
                         />
                       ) : (
-                        <span className="justify-center text-center fx-u-profile-label-3">
+                        <span
+                          className="cap-text justify-center fx-u-profile-label-3"
+                          data-align="center"
+                        >
                           {b.title}
                         </span>
                       )}
                     </span>
-                    <span className="block truncate fx-u-profile-label-4">{b.title}</span>
-                    <span className="block truncate fx-u-profile-label-5">
+                    <span className="cap-clamp block fx-u-profile-label-4" data-lines="1">
+                      {b.title}
+                    </span>
+                    <span className="cap-clamp block fx-u-profile-label-5" data-lines="1">
                       {Math.round(b.progressPct)}% read
                     </span>
                   </Link>
@@ -209,9 +218,11 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         {finishedBooks.length > 0 ? (
           <section className="cap-stack">
             <div className="cap-spread" data-gap="4" data-align="center">
-              <h2 className="display-2">Library</h2>
+              <h2 className="cap-title" data-size="3">
+                Library
+              </h2>
               {isOwner ? (
-                <Link to="/library" className="link sans small">
+                <Link to="/library" className="cap-text link" data-size="small" data-face="ui">
                   Manage library
                 </Link>
               ) : null}
@@ -223,9 +234,11 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         {publicHighlights.length > 0 ? (
           <section className="cap-stack">
             <div className="cap-spread" data-gap="4" data-align="center">
-              <h2 className="display-2">Highlights</h2>
+              <h2 className="cap-title" data-size="3">
+                Highlights
+              </h2>
               {isOwner ? (
-                <Link to="/highlights" className="link sans small">
+                <Link to="/highlights" className="cap-text link" data-size="small" data-face="ui">
                   All highlights
                 </Link>
               ) : null}
@@ -255,11 +268,21 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
 
         {publicShelves.length > 0 ? (
           <section className="cap-stack">
-            <h2 className="display-2">Shelves</h2>
+            <h2 className="cap-title" data-size="3">
+              Shelves
+            </h2>
             <ul className="fx-u-profile-grid">
               {publicShelves.map((s) => (
                 <li key={s.id} className="py-3 cap-card fx-u-profile-card">
-                  <p className="sans small strong">{s.name}</p>
+                  <p
+                    className="cap-text"
+                    data-size="small"
+                    data-tone="ink"
+                    data-weight="strong"
+                    data-face="ui"
+                  >
+                    {s.name}
+                  </p>
                   <p className="fx-u-profile-text-4">
                     {s.bookCount} {s.bookCount === 1 ? "book" : "books"}
                   </p>
@@ -272,9 +295,11 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         <section className="fx-u-profile-grid-2">
           <div className="cap-stack" data-gap="6">
             <div className="cap-spread" data-gap="4" data-align="center">
-              <h2 className="display-2">Diary</h2>
+              <h2 className="cap-title" data-size="3">
+                Diary
+              </h2>
               {isOwner ? (
-                <Link to="/diary/new" className="link sans small">
+                <Link to="/diary/new" className="cap-text link" data-size="small" data-face="ui">
                   New entry
                 </Link>
               ) : null}
@@ -286,7 +311,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                 {diary.map((d) => (
                   <li key={d.id} className="cap-card">
                     <div className="fx-u-profile-row-4">
-                      <p className="display-0">
+                      <p className="cap-title" data-size="5">
                         {d.book ? (
                           <Link to={`/books/${d.book.slug}`} className="hover-accent">
                             {d.book.title}
@@ -317,15 +342,19 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
           <div className="cap-stack" data-gap="7">
             <div className="cap-stack">
               <div className="cap-spread" data-gap="4" data-align="center">
-                <h2 className="display-2">Lists</h2>
+                <h2 className="cap-title" data-size="3">
+                  Lists
+                </h2>
                 {isOwner ? (
-                  <Link to="/lists/new" className="link sans small">
+                  <Link to="/lists/new" className="cap-text link" data-size="small" data-face="ui">
                     New list
                   </Link>
                 ) : null}
               </div>
               {lists.length === 0 ? (
-                <p className="meta">No lists yet.</p>
+                <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+                  No lists yet.
+                </p>
               ) : (
                 <ul className="cap-stack" data-gap="3">
                   {lists.map((l) => (
@@ -341,9 +370,13 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             </div>
 
             <div className="cap-stack">
-              <h2 className="display-2">Activity</h2>
+              <h2 className="cap-title" data-size="3">
+                Activity
+              </h2>
               {activity.length === 0 ? (
-                <p className="meta">Nothing recent.</p>
+                <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+                  Nothing recent.
+                </p>
               ) : (
                 <ul className="fx-u-profile-stack-3">
                   {activity.map((a) => (
@@ -393,10 +426,14 @@ function ProfileCovers({ books }: { books: CoverBook[] }) {
                   className="fx-u-profile-img"
                 />
               ) : (
-                <span className="justify-center text-center fx-u-profile-label-3">{b.title}</span>
+                <span className="cap-text justify-center fx-u-profile-label-3" data-align="center">
+                  {b.title}
+                </span>
               )}
             </span>
-            <span className="block truncate fx-u-profile-label-4">{b.title}</span>
+            <span className="cap-clamp block fx-u-profile-label-4" data-lines="1">
+              {b.title}
+            </span>
           </Link>
         </li>
       ))}
@@ -414,10 +451,12 @@ function PrivateProfile({
   const name = profile.displayName ?? profile.username;
   return (
     <PageShell>
-      <Container className="text-center fx-u-profile-wrap">
+      <Container className="cap-text fx-u-profile-wrap" data-align="center">
         <Avatar src={profile.avatarUrl} name={name} size="lg" />
         <div>
-          <h1 className="display-3">{name}</h1>
+          <h1 className="cap-title" data-size="2">
+            {name}
+          </h1>
           <p className="mt-1 fx-u-profile-text">@{profile.username}</p>
         </div>
         <EmptyState

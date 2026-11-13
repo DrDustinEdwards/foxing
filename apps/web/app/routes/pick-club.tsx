@@ -77,7 +77,9 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                   ) : null}
                   <Link to={`/books/${b.slug}`} className="block">
                     <h2 className="mt-1 fx-pick-club-title">{b.title}</h2>
-                    <p className="meta">{b.author}</p>
+                    <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+                      {b.author}
+                    </p>
                   </Link>
                   {p.curatorQuote ? (
                     <p className="mt-2 italic fx-pick-club-text">&ldquo;{p.curatorQuote}&rdquo;</p>

@@ -74,7 +74,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
     >
       <div className="cap-stack">
         {error ? (
-          <p role="alert" className="error">
+          <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
             {error}
           </p>
         ) : null}
@@ -88,7 +88,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
         >
           {pending ? "Waiting for your device..." : "Create a passkey"}
         </button>
-        <Form method="post" className="text-center fx-auth-shell-box-2">
+        <Form method="post" className="cap-text fx-auth-shell-box-2" data-align="center">
           <button type="submit" className="cap-btn" data-variant="ghost" disabled={pending}>
             Not now
           </button>

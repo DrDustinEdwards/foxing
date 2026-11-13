@@ -50,8 +50,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="text-center cap-card fx-admin-user-detail-card">
-      <p className="display-2">{value}</p>
+    <div className="cap-text cap-card fx-admin-user-detail-card" data-align="center">
+      <p className="cap-title" data-size="3">
+        {value}
+      </p>
       <p className="fx-admin-user-detail-caps-2">{label}</p>
     </div>
   );
@@ -193,7 +195,15 @@ function OperatorControls({
         </div>
 
         <div className="fx-admin-user-detail-box">
-          <p className="sans small strong">Send a notification</p>
+          <p
+            className="cap-text"
+            data-size="small"
+            data-tone="ink"
+            data-weight="strong"
+            data-face="ui"
+          >
+            Send a notification
+          </p>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -218,7 +228,13 @@ function OperatorControls({
               Send to @{username}
             </AdminButton>
             {notifySent ? (
-              <span className="meta" role="status">
+              <span
+                className="cap-text"
+                data-size="small"
+                data-tone="dim"
+                data-face="ui"
+                role="status"
+              >
                 Sent.
               </span>
             ) : null}
@@ -227,9 +243,12 @@ function OperatorControls({
 
         <div className="fx-admin-user-detail-box-2">
           <p className="fx-admin-user-detail-text-2">Delete account</p>
-          <p className="sans xsmall muted">
+          <p className="cap-text" data-size="tiny" data-tone="muted" data-face="ui">
             Permanently erases this account and all of its data. Type{" "}
-            <span className="strong">{username}</span> to confirm.
+            <span className="cap-text" data-tone="ink" data-weight="strong">
+              {username}
+            </span>{" "}
+            to confirm.
           </p>
           <input
             value={confirmDelete}

@@ -46,10 +46,13 @@ export function BookCard({
           sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
         />
         <Title>{book.title}</Title>
-        <p className="meta">
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
           {book.author}
           {book.publicationYear ? (
-            <span className="dim"> &middot; {book.publicationYear}</span>
+            <span className="cap-text" data-tone="dim">
+              {" "}
+              &middot; {book.publicationYear}
+            </span>
           ) : null}
         </p>
       </div>
