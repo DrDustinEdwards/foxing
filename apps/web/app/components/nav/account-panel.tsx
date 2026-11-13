@@ -4,13 +4,26 @@
 // and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons);
 // the four the shared set lacks pass their own path on its grid.
 import type { HeaderAccount } from "capsomer/react/site-header";
-import { Icon, type IconName } from "capsomer/react/icons";
+import {
+  Icon,
+  iconAward,
+  iconBook,
+  iconFolder,
+  iconGoals,
+  iconSettings,
+  iconStats,
+} from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
 import { Avatar } from "../ui";
 
-// Each menu icon: a name in Capsomer's set, or Foxing's own drawing on the same 24-unit grid.
-const OWN = {
+// Each menu icon: a drawing from Capsomer's set, or Foxing's own on the same 24-unit grid.
+const MENU = {
+  stats: iconStats,
+  goals: iconGoals,
+  award: iconAward,
+  book: iconBook,
+  settings: iconSettings,
   findnext:
     "M11 4l1.5 4L16.5 9.5 12.5 11 11 15l-1.5-4L5.5 9.5 9.5 8zM17.5 14l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z",
   profile: "M12 5a3.5 3.5 0 1 0 0 7a3.5 3.5 0 1 0 0-7zM5.5 19.5a6.5 6.5 0 0 1 13 0",
@@ -18,14 +31,10 @@ const OWN = {
   signout:
     "M14 7V5a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2M10 12h10M17 9l3 3-3 3",
 };
-type MenuIcon = IconName | keyof typeof OWN;
+type MenuIcon = keyof typeof MENU;
 
 function MenuIconSvg({ name }: { name: MenuIcon }) {
-  return name in OWN ? (
-    <Icon d={OWN[name as keyof typeof OWN]} />
-  ) : (
-    <Icon name={name as IconName} />
-  );
+  return <Icon d={MENU[name]} />;
 }
 
 // Reading surfaces. The secondary bar holds the primary four (Home, Library, Feed,
@@ -72,7 +81,7 @@ function CollectionsRow() {
   return (
     <div className="fx-acct-row">
       <span className="fx-acct-icon">
-        <Icon name="folder" />
+        <Icon d={iconFolder} />
       </span>
       <div className="min-0">
         <span className="fx-acct-label">Collections</span>
