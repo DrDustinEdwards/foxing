@@ -43,10 +43,10 @@ export function BookCard({
           fallbackLabel={book.title}
           priority={position === 0}
           eager={position !== undefined && position < GRID_FIRST_ROW}
-          sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+          sizes="(min-width: 64rem) 200px, (min-width: 40rem) 30vw, 45vw"
         />
         <Title>{book.title}</Title>
-        <p className="meta">
+        <p className="cap-meta sans">
           {book.author}
           {book.publicationYear ? (
             <span className="dim"> &middot; {book.publicationYear}</span>

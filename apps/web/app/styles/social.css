@@ -472,7 +472,7 @@
 }
 .fx-u-profile-label-2 {
   overflow: hidden;
-  border-radius: var(--fx-radius-cover);
+  border-radius: var(--radius-m);
   border: 1px solid var(--line);
   background-color: var(--sunken);
 }
@@ -522,7 +522,7 @@
   }
 }
 .fx-u-profile-card {
-  --radius-l: var(--fx-radius-cover);
+  --radius-l: var(--radius-m);
   --pad-card: 1rem;
 }
 .fx-u-profile-text-4 {
@@ -558,7 +558,7 @@
   align-items: center;
   justify-content: space-between;
   border: 1px solid var(--line);
-  border-radius: var(--fx-radius-cover);
+  border-radius: var(--radius-m);
   background: var(--surface);
   padding: 0.75rem 1rem;
   &:hover {

@@ -111,7 +111,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                           src={e.coverUrl}
                           alt={`Cover of ${e.title}`}
                           fallbackLabel={e.title}
-                          sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+                          sizes="(min-width: 64rem) 200px, (min-width: 40rem) 30vw, 45vw"
                         />
                         {e.status === "paused" || e.status === "abandoned" ? (
                           <span className="fx-library-label-2">
@@ -139,7 +139,7 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                         <Link to={`/books/${e.slug}`} className="fx-library-link-2">
                           {e.title}
                         </Link>
-                        <p className="mt-1 meta">{e.author}</p>
+                        <p className="mt-1 cap-meta sans">{e.author}</p>
                       </div>
                       <div className="mt-2 fx-library-box">
                         <BookStatusControl
@@ -203,7 +203,7 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
     <section className="cap-card">
       <Eyebrow>Reading goals</Eyebrow>
       {goals.length === 0 ? (
-        <p className="meta">No goals set.</p>
+        <p className="cap-meta sans">No goals set.</p>
       ) : (
         <ul className="cap-stack" data-gap="4">
           {goals.map(({ goal, progress }) => (
@@ -282,7 +282,7 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
     <section className="cap-card">
       <Eyebrow>Shelves</Eyebrow>
       {shelves.length === 0 ? (
-        <p className="meta">No shelves yet.</p>
+        <p className="cap-meta sans">No shelves yet.</p>
       ) : (
         <ul className="fx-library-stack">
           {shelves.map((s) => (

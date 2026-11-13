@@ -92,14 +92,14 @@ function RecCard({ rec }: { rec: Recommendation }) {
           src={rec.coverUrl}
           alt={`${rec.title} by ${rec.author}`}
           fallbackLabel={rec.title}
-          sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+          sizes="(min-width: 64rem) 200px, (min-width: 40rem) 30vw, 45vw"
         />
       </Link>
       <div className="mt-3 fx-find-next-book-stack">
         <Link to={`/books/${rec.slug}`} className="group">
           <h3 className="fx-find-next-book-title">{rec.title}</h3>
         </Link>
-        <p className="mt-1 meta">
+        <p className="mt-1 cap-meta sans">
           {rec.author}
           {rec.publicationYear ? <span> &middot; {rec.publicationYear}</span> : null}
         </p>

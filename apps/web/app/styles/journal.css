@@ -53,9 +53,8 @@
 .fx-journal-archive-stack {
   display: flex;
   flex-direction: column;
-  --fx-divide: var(--line);
   & > * + * {
-    border-top: 1px solid var(--fx-divide, var(--line));
+    border-top: 1px solid var(--line);
   }
 }
 .fx-journal-archive-link-2 {
@@ -221,7 +220,7 @@
 .fx-journal-img-2 {
   aspect-ratio: 16 / 10;
   width: 100%;
-  border-radius: var(--fx-radius-cover);
+  border-radius: var(--radius-m);
   object-fit: cover;
 }
 .fx-journal-title-2 {

@@ -5,7 +5,6 @@
 :root {
   --fx-body: "Source Serif 4 Variable", "Source Serif 4", Georgia, serif;
   --fx-radius-hero: 1rem;
-  --fx-radius-cover: 0.375rem;
   --fx-hover: color-mix(in srgb, var(--sunken), var(--line) 50%);
   /* The paywall's dark band keeps its charcoal and cream in both themes. */
   --fx-charcoal: #16100b;
@@ -238,17 +237,12 @@
   margin-block-end: 2.5rem;
 }
 
-/* Text roles. UI chrome is DM Sans; metadata is the dim ink; Rule 07's small-caps labels are
-   DM Mono. */
+/* Text roles. UI chrome is DM Sans; metadata is Capsomer's .cap-meta, set in DM Sans with .sans; Rule 07's
+   small-caps labels are DM Mono. */
 .ui {
   font-family: var(--ui);
   font-size: 0.875rem;
   color: var(--muted);
-}
-.meta {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  color: var(--dim);
 }
 .fine {
   font-family: var(--ui);
