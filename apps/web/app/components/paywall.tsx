@@ -9,6 +9,7 @@ import { useCheckout } from "@foxing/client";
 import { useId, useState } from "react";
 import { Dialog, DialogClose } from "capsomer/react/dialog";
 import { Link } from "capsomer/react/link";
+import { PlanChoice } from "capsomer/react/price-card";
 
 type Plan = "monthly" | "annual";
 
@@ -72,29 +73,29 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
         ))}
       </ul>
 
-      <fieldset className="mt-6">
-        <legend className="cap-sr-only">Choose a Foxing Plus plan</legend>
-        <div className="fx-paywall-grid">
-          {(Object.keys(PLANS) as Plan[]).map((key) => {
-            const selected = plan === key;
-            return (
-              <button
-                key={key}
-                type="button"
-                aria-pressed={selected}
-                onClick={() => setPlan(key)}
-                className="fx-paywall-plan"
-              >
-                <span className="block fx-paywall-label">{PLANS[key].label}</span>
-                <span className="block fx-paywall-label-2">{PLANS[key].price}</span>
+      <div className="mt-6">
+        <PlanChoice
+          name="plan"
+          legend={<span className="cap-sr-only">Choose a Foxing Plus plan</span>}
+          value={plan}
+          onChange={(v) => setPlan(v as Plan)}
+          options={(Object.keys(PLANS) as Plan[]).map((key) => ({
+            value: key,
+            name: PLANS[key].label,
+            price: (
+              <>
+                {PLANS[key].price}
                 {PLANS[key].note ? (
-                  <span className="fx-paywall-label-3">{PLANS[key].note}</span>
+                  <>
+                    {" "}
+                    <span className="fx-paywall-label-3">{PLANS[key].note}</span>
+                  </>
                 ) : null}
-              </button>
-            );
-          })}
-        </div>
-      </fieldset>
+              </>
+            ),
+          }))}
+        />
+      </div>
 
       <button
         type="button"
@@ -125,7 +126,7 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
           Terms
         </Link>
       </p>
-      {/* Last in the order, as Capsomer's Close is, so opening focuses the first plan. */}
+      {/* Last in the order, as Capsomer's Close is, so opening focuses the chosen plan. */}
       <DialogClose label="Dismiss" className="fx-paywall-btn" />
     </Dialog>
   );

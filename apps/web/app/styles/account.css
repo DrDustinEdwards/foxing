@@ -134,25 +134,6 @@
   line-height: 1.25rem;
   color: color-mix(in srgb, var(--fx-on-dark) 90%, transparent);
 }
-.fx-paywall-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-.fx-paywall-label {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
-}
-.fx-paywall-label-2 {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 500;
-}
 .fx-paywall-label-3 {
   margin-top: 0.125rem;
   display: inline-block;
@@ -442,22 +423,14 @@
   }
 }
 
-/* The plan choices on the paywall's dark band. */
-.fx-paywall-plan {
-  border: 1px solid rgb(255 255 255 / 0.2);
-  border-radius: var(--radius-l);
-  padding: 0.5rem 0.75rem;
-  text-align: start;
-  @media (prefers-reduced-motion: no-preference) {
-    transition: border-color var(--dur-base) var(--ease-out);
-  }
-}
-.fx-paywall-plan:hover {
-  border-color: rgb(255 255 255 / 0.4);
-}
-.fx-paywall-plan[aria-pressed="true"] {
-  border-color: var(--accent);
-  background: rgb(255 255 255 / 0.1);
+/* Capsomer's plan choice on the paywall's dark band: its tokens, set for the band. */
+.fx-paywall-card .cap-plan-choice {
+  --surface: transparent;
+  --line: rgb(255 255 255 / 0.2);
+  --line-strong: rgb(255 255 255 / 0.4);
+  --text: var(--fx-on-dark);
+  --muted: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
+  --radius-m: var(--radius-l);
 }
 
 .fx-join-code-text-3 {

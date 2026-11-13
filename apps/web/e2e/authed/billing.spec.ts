@@ -18,14 +18,14 @@ test.describe("Plus paywall (signed in, free tier)", () => {
     await page.getByRole("button", { name: /upgrade to plus/i }).click();
     const dialog = page.getByRole("dialog", { name: /foxing plus/i });
 
-    const annual = dialog.getByRole("button", { name: /annual/i });
-    const monthly = dialog.getByRole("button", { name: /monthly/i });
-    await expect(annual).toHaveAttribute("aria-pressed", "true");
+    const annual = dialog.getByRole("radio", { name: /annual/i });
+    const monthly = dialog.getByRole("radio", { name: /monthly/i });
+    await expect(annual).toBeChecked();
     await expect(dialog.getByText(/save \$26/i)).toBeVisible();
 
-    await monthly.click();
-    await expect(monthly).toHaveAttribute("aria-pressed", "true");
-    await expect(annual).toHaveAttribute("aria-pressed", "false");
+    await monthly.check();
+    await expect(monthly).toBeChecked();
+    await expect(annual).not.toBeChecked();
   });
 
   test("the trial CTA attempts checkout and surfaces a visible state", async ({ page }) => {
