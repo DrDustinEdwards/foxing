@@ -1,3 +1,4 @@
+import { PRIVATE_PAGE_HEADERS } from "@dustinedwards/site-runtime/edge-cache";
 import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
 import { safeNextPath } from "@dustinedwards/site-runtime/sign-in-form";
 import { useSearchParams } from "react-router";
@@ -12,6 +13,9 @@ import {
 } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/login";
+
+// A sign-in page is a private page: no Web Analytics beacon (site-runtime PRIVATE_PAGE_HEADERS).
+export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export function meta() {
   return [{ title: "Sign in to Foxing" }, { name: "robots", content: "noindex" }];
