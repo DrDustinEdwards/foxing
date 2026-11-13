@@ -362,7 +362,7 @@ describe("admin role changes: preview then perform", () => {
 // The operator bearer (middleware/operator.ts): the admin MCP Worker sends the token and
 // names the acting admin. The token alone grants nothing; the named actor must be a
 // current, unsuspended admin, read from D1 on each request.
-const OPERATOR_TOKEN = "test-operator-token";
+const OPERATOR_TOKEN = "test-operator-token-at-least-32-characters";
 const operatorEnv = { ...env, ADMIN_OPERATOR_TOKEN: OPERATOR_TOKEN };
 
 const operatorCall = (
