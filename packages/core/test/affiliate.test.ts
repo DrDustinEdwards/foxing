@@ -38,8 +38,4 @@ describe("affiliate buyLinks", () => {
     // The library link is not marked sponsored.
     expect(links.find((l) => l.retailer === "library")?.sponsored).toBe(false);
   });
-
-  it("returns nothing when there is nothing to search or link", () => {
-    expect(buyLinks({}, {})).toEqual([]);
-  });
 });

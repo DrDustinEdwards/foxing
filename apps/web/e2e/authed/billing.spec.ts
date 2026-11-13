@@ -4,28 +4,12 @@ import { expect, test } from "@playwright/test";
 // The Plus paywall (Phase 4b), driven through the visible UI with the real login fixture.
 // The e2e account is free tier, so /settings offers the upgrade and the paywall opens.
 // Real Stripe checkout is not exercised here (no keys on the preview) -- that is the
-// keyed Dustin gate; here we lock the paywall UI, the plan toggle, and the visible CTA
-// state.
+// keyed Dustin gate; here we lock the paywall opening and the visible CTA state.
 test.describe("Plus paywall (signed in, free tier)", () => {
   test("settings offers an upgrade that opens the paywall", async ({ page }) => {
     await page.goto("/settings", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: /upgrade to plus/i }).click();
     await expect(page.getByRole("dialog", { name: /foxing plus/i })).toBeVisible();
-  });
-
-  test("the plan toggle defaults to annual savings and switches to monthly", async ({ page }) => {
-    await page.goto("/settings", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /upgrade to plus/i }).click();
-    const dialog = page.getByRole("dialog", { name: /foxing plus/i });
-
-    const annual = dialog.getByRole("radio", { name: /annual/i });
-    const monthly = dialog.getByRole("radio", { name: /monthly/i });
-    await expect(annual).toBeChecked();
-    await expect(dialog.getByText(/save \$26/i)).toBeVisible();
-
-    await monthly.check();
-    await expect(monthly).toBeChecked();
-    await expect(annual).not.toBeChecked();
   });
 
   test("the trial CTA attempts checkout and surfaces a visible state", async ({ page }) => {

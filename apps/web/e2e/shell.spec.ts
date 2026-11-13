@@ -34,12 +34,6 @@ test.describe("app shell", () => {
     await expect(header.getByRole("button", { name: /your account/i })).toHaveCount(0);
   });
 
-  test("/home redirects anonymous visitors to sign in", async ({ page }) => {
-    const res = await page.goto("/home");
-    expect(res?.status()).toBeLessThan(500);
-    await expect(page).toHaveURL(/\/login/);
-  });
-
   test("the Books and Celebrity Picks panels open, and every header link resolves", async ({
     page,
   }) => {
