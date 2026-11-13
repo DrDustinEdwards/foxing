@@ -9,8 +9,6 @@ import { useApi } from "./provider";
 import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
 import { useWrite } from "./query";
 
-export { newId } from "capsomer/behavior/state-hooks";
-
 export function useBookAnnotations<S extends W.ReaderAnnotations | undefined = undefined>(
   bookId: string,
   seed?: S,
