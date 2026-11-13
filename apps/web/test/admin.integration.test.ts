@@ -407,13 +407,13 @@ describe("admin operator bearer", () => {
     expect(res.status).toBe(401);
   });
 
-  it("refuses every bearer when the token is not configured", async () => {
+  it("closes the door with 503 when the token is not configured", async () => {
     const res = await operatorCall("/admin/users", {
       token: OPERATOR_TOKEN,
       actor: "admin",
       envOverride: env,
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(503);
   });
 
   it("refuses a valid token with no acting admin named", async () => {
