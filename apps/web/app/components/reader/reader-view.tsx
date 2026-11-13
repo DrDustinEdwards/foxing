@@ -582,7 +582,7 @@ export function ReaderView(props: ReaderViewProps) {
       {/* Bottom progress scrubber */}
       <footer className="py-2 fx-reader-view-foot" style={{ background: canvas.bg }}>
         <label className="fx-reader-view-row">
-          <span className="num" aria-hidden>
+          <span className="cap-num" aria-hidden>
             {pct.toFixed(0)}%
           </span>
           <input

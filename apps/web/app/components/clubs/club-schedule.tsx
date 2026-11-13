@@ -51,7 +51,9 @@ export function PollsSection({
   return (
     <section>
       <div className="cap-spread" data-gap="4" data-align="center">
-        <h2 className="display-2">Polls</h2>
+        <h2 className="cap-title" data-size="3">
+          Polls
+        </h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "New poll"}
         </button>
@@ -102,7 +104,9 @@ export function PollsSection({
       ) : null}
 
       {polls.length === 0 ? (
-        <p className="mt-4 meta">No polls yet.</p>
+        <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+          No polls yet.
+        </p>
       ) : (
         <div className="mt-4 fx-club-schedule-box">
           {polls.map((poll) => {
@@ -110,7 +114,9 @@ export function PollsSection({
             return (
               <div key={poll.id} className="cap-card">
                 <div className="cap-spread" data-gap="4" data-align="center">
-                  <p className="strong sans">{poll.title}</p>
+                  <p className="cap-text" data-tone="ink" data-weight="strong" data-face="ui">
+                    {poll.title}
+                  </p>
                   {poll.isClosed ? (
                     <span className="fx-club-schedule-caps">Closed</span>
                   ) : canModerate || poll.createdBy === viewerId ? (
@@ -182,7 +188,9 @@ export function MeetingsSection({
   return (
     <section>
       <div className="cap-spread" data-gap="4" data-align="center">
-        <h2 className="display-1">Meetings</h2>
+        <h2 className="cap-title" data-size="4">
+          Meetings
+        </h2>
         <button type="button" onClick={() => setOpen((v) => !v)} className="fx-club-schedule-btn">
           {open ? "Cancel" : "Add"}
         </button>
@@ -223,7 +231,7 @@ export function MeetingsSection({
               <p className="fx-club-schedule-text-3">{m.title}</p>
               {/* The viewer's zone, named, with UTC beside it, so members in other zones read the same
                   moment; Capsomer's Time hydrates cleanly from the server's UTC. */}
-              <p className="fine">
+              <p className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
                 <Time at={m.meetingDate} format="exact" />
               </p>
               {!m.isCancelled ? (
@@ -240,7 +248,9 @@ export function MeetingsSection({
                   ))}
                 </div>
               ) : (
-                <p className="mt-1 fine">Canceled</p>
+                <p className="cap-text mt-1" data-size="tiny" data-tone="dim" data-face="ui">
+                  Canceled
+                </p>
               )}
             </li>
           ))}
@@ -279,7 +289,9 @@ export function ScheduleSection({
 
   return (
     <section>
-      <h2 className="display-1">Reading schedule</h2>
+      <h2 className="cap-title" data-size="4">
+        Reading schedule
+      </h2>
       {schedule.length === 0 ? (
         <p className="mt-3 fx-club-schedule-text-2">No schedule set.</p>
       ) : (
@@ -288,7 +300,9 @@ export function ScheduleSection({
             const unlocked = s.unlockDate <= now;
             return (
               <li key={s.id} className="py-2 fx-club-schedule-card-4">
-                <span className={unlocked ? "ink" : "dim"}>{s.chapterName}</span>
+                <span className="cap-text" data-tone={unlocked ? "ink" : "dim"}>
+                  {s.chapterName}
+                </span>
                 <span className="fx-club-schedule-caps">
                   {unlocked ? "Unlocked" : new Date(s.unlockDate).toLocaleDateString()}
                 </span>

@@ -6,7 +6,7 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass } from "~/components/admin/admin-form";
+import { AdminButton, AdminError, adminInputClass, AdminRow } from "~/components/admin/admin-form";
 import { useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
@@ -33,7 +33,9 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Users</h1>
+        <h1 className="cap-title" data-size="2">
+          Users
+        </h1>
       </div>
 
       <div className="cap-stack" data-gap="6">
@@ -46,7 +48,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
               placeholder="Search by username or name"
               className={adminInputClass}
             />
-            <button type="submit" className="cap-btn shrink-0">
+            <button type="submit" className="cap-btn cap-keep">
               Search
             </button>
           </form>
@@ -54,7 +56,9 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
 
         <AdminCard title="Readers">
           {users.length === 0 ? (
-            <p className="meta">{q ? "No readers match that search." : "No readers yet."}</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              {q ? "No readers match that search." : "No readers yet."}
+            </p>
           ) : (
             <ul className="divided">
               {users.map((u) => (
@@ -78,21 +82,21 @@ function UserRow({
   const suspend = useRoleChange({ onDone });
 
   return (
-    <li className="py-3">
-      <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
-          <p className="sans small strong">
-            @{user.username}
-            <span className="badge badge-quiet ml-2">{user.tier === "plus" ? "Plus" : "Free"}</span>
-            {user.isSuspended ? (
-              <span className="ml-2 fx-admin-users-caps">Suspended</span>
-            ) : (
-              <span className="badge ml-2">Active</span>
-            )}
-          </p>
-          <p className="truncate meta">{user.displayName ?? "No name set"}</p>
-        </div>
-        <div className="cap-cluster shrink-0" data-gap="3">
+    <AdminRow
+      title={
+        <>
+          @{user.username}
+          <span className="badge badge-quiet ml-2">{user.tier === "plus" ? "Plus" : "Free"}</span>
+          {user.isSuspended ? (
+            <span className="ml-2 fx-admin-users-caps">Suspended</span>
+          ) : (
+            <span className="badge ml-2">Active</span>
+          )}
+        </>
+      }
+      meta={<>{user.displayName ?? "No name set"}</>}
+      actions={
+        <>
           <AdminButton
             variant={user.isSuspended ? "default" : "danger"}
             pending={suspend.pending}
@@ -109,11 +113,12 @@ function UserRow({
           <Link to={`/admin/users/${user.id}`} className="cap-btn">
             View
           </Link>
-        </div>
-      </div>
+        </>
+      }
+    >
       <AdminError error={suspend.error} />
       {suspend.dialog}
-    </li>
+    </AdminRow>
   );
 }
 

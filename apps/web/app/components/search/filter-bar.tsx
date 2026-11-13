@@ -80,7 +80,7 @@ export function FilterBar({
         >
           <div className="cap-stack">
             <fieldset className="cap-chips">
-              <legend className="group-label full">Genre</legend>
+              <legend className="group-label cap-full">Genre</legend>
               {genres.map((g) => {
                 const on = active.genre === g.subject;
                 return (

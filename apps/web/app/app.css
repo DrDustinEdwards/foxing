@@ -1,13 +1,17 @@
 /* Foxing on Capsomer: the fox family, Capsomer's foxing site layer (Foxing's cream and charcoal
    neutrals, its faces and its on state), Capsomer's header, controls and notices. Foxing's own classes are in ./styles, by area,
-   unlayered, so they win over Capsomer's where they meet; its reset sits under every layer. */
-@layer reset, cap;
+   unlayered, so they win over Capsomer's where they meet. Its reset is a sublayer of cap.reset, so it sits
+   under every Capsomer layer whichever stylesheet names the layers first (the admin's admin-shell.css
+   link can load before this file, and a top-level reset layer then ranked above all of Capsomer). */
+@layer cap;
 @import "capsomer/tokens.css";
 @import "capsomer/family-fox.css" layer(cap.tokens);
 @import "capsomer/site-foxing.css";
 /* Size-matched local fallbacks for the stack site-foxing names second, so the swap to each webfont does not move text. */
 @import "capsomer/fallback-fonts.css";
 @import "capsomer/base.css";
+@import "capsomer/layout.css";
+@import "capsomer/text.css";
 @import "capsomer/site-header.css";
 @import "capsomer/dialog.css";
 @import "capsomer/popover.css";
@@ -44,7 +48,7 @@
 @import "capsomer/price-card.css";
 /* The whole chart stylesheet: Enarratio's base, the token mapping, gridlines and series inks. */
 @import "capsomer/enarratio.css";
-@import "./styles/reset.css" layer(reset);
+@import "./styles/reset.css" layer(cap.reset.foxing);
 @import "./styles/base.css";
 @import "./styles/shell.css";
 @import "./styles/ui.css";

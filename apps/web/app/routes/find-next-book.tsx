@@ -48,18 +48,20 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             }
             className="mb-0"
           />
-          <Link to="/find-next-book?refresh=1" className="cap-btn shrink-0">
+          <Link to="/find-next-book?refresh=1" className="cap-btn cap-keep">
             Refresh
           </Link>
         </div>
 
         {!isPlus ? (
           <div className="mb-8 py-3 fx-find-next-book-card">
-            <p className="ui">Plus tunes these to you with AI-personalized reasons.</p>
+            <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+              Plus tunes these to you with AI-personalized reasons.
+            </p>
             <button
               type="button"
               onClick={() => setPaywallOpen(true)}
-              className="shrink-0 fx-find-next-book-btn"
+              className="cap-keep fx-find-next-book-btn"
             >
               Upgrade for AI-personalized picks
             </button>
@@ -99,7 +101,7 @@ function RecCard({ rec }: { rec: Recommendation }) {
         <Link to={`/books/${rec.slug}`} className="group">
           <h3 className="fx-find-next-book-title">{rec.title}</h3>
         </Link>
-        <p className="mt-1 meta">
+        <p className="cap-text mt-1" data-size="small" data-tone="dim" data-face="ui">
           {rec.author}
           {rec.publicationYear ? <span> &middot; {rec.publicationYear}</span> : null}
         </p>

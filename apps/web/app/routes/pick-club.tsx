@@ -59,7 +59,7 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
             const date = pickDate(p.pickYear, p.pickMonth);
             return (
               <li key={p.id} className="cap-card fx-pick-club-card">
-                <Link to={`/books/${b.slug}`} className="shrink-0 fx-pick-club-link">
+                <Link to={`/books/${b.slug}`} className="cap-keep fx-pick-club-link">
                   <CoverImage
                     src={b.coverUrl}
                     alt={`${b.title} by ${b.author}`}
@@ -68,7 +68,7 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                     sizes="80px"
                   />
                 </Link>
-                <div className="min-0">
+                <div className="cap-shrink">
                   {date ? (
                     <p className="fx-pick-club-caps">
                       {date}
@@ -77,7 +77,9 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                   ) : null}
                   <Link to={`/books/${b.slug}`} className="block">
                     <h2 className="mt-1 fx-pick-club-title">{b.title}</h2>
-                    <p className="meta">{b.author}</p>
+                    <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+                      {b.author}
+                    </p>
                   </Link>
                   {p.curatorQuote ? (
                     <p className="mt-2 italic fx-pick-club-text">&ldquo;{p.curatorQuote}&rdquo;</p>

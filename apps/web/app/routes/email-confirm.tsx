@@ -72,7 +72,7 @@ const PROBLEM: Record<EmailLinkProblem, { title: string; text: string }> = {
 
 function SettingsLink() {
   return (
-    <Link to="/settings" className="cap-btn full" data-variant="primary" data-size="lg">
+    <Link to="/settings" className="cap-btn cap-full" data-variant="primary" data-size="lg">
       Go to Settings
     </Link>
   );

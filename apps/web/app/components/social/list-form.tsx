@@ -63,7 +63,13 @@ export function ListForm({
         />
       </label>
 
-      <label className="cap-cluster ui" data-gap="3">
+      <label
+        className="cap-text cap-cluster"
+        data-size="small"
+        data-tone="muted"
+        data-face="ui"
+        data-gap="3"
+      >
         <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
         Make this list public
       </label>

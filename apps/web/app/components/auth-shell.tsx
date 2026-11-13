@@ -40,11 +40,17 @@ export function AuthShell({
           <span>Foxing</span>
         </Link>
         <div className="cap-card fx-auth-shell-card">
-          <h1 className="display-2">{title}</h1>
+          <h1 className="cap-title" data-size="3">
+            {title}
+          </h1>
           {subtitle ? <p className="fx-auth-shell-text">{subtitle}</p> : null}
           <div className="mt-6">{children}</div>
         </div>
-        {footer ? <div className="mt-5 text-center fx-auth-shell-box-2">{footer}</div> : null}
+        {footer ? (
+          <div className="cap-text mt-5 fx-auth-shell-box-2" data-align="center">
+            {footer}
+          </div>
+        ) : null}
       </div>
     </main>
   );
@@ -56,11 +62,11 @@ export function ConfirmButtonForm({ label, limited }: { label: string; limited?:
   return (
     <form method="post" className="cap-stack" data-gap="4">
       {limited ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           Too many tries. Wait a minute, then try again.
         </p>
       ) : null}
-      <button type="submit" className="cap-btn full" data-variant="primary" data-size="lg">
+      <button type="submit" className="cap-btn cap-full" data-variant="primary" data-size="lg">
         {label}
       </button>
     </form>
@@ -72,7 +78,7 @@ function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTML
   return (
     <label className="block">
       <span className="block fx-auth-shell-label">{label}</span>
-      <input className="cap-input fx-input-ground full" {...props} />
+      <input className="cap-input fx-input-ground cap-full" {...props} />
     </label>
   );
 }
@@ -87,7 +93,7 @@ export function AuthLink({ to, children }: { to: string; children: ReactNode }) 
 }
 
 /** Secondary full-width button, used for the provider and reveal actions. */
-const authSecondaryButtonClass = "cap-btn full";
+const authSecondaryButtonClass = "cap-btn cap-full";
 
 /** The four-color Google "G", inline per the no-icon-libraries rule. */
 function GoogleGlyph() {
@@ -247,7 +253,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
       <button
         type="button"
         disabled={pending}
-        className="cap-btn full"
+        className="cap-btn cap-full"
         data-variant="primary"
         data-size="lg"
         onClick={() => void startPasskey()}
@@ -255,7 +261,7 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
         Sign in with a passkey
       </button>
       {error ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           {error}
         </p>
       ) : null}
@@ -375,7 +381,7 @@ export function MagicLinkForm({
       />
       {turnstileSiteKey ? <div ref={widget} /> : null}
       {refusal ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           {refusal}
         </p>
       ) : null}
@@ -461,14 +467,14 @@ function SignInCodeForm({
         maxLength={6}
       />
       {failure ? (
-        <p role="alert" className="error">
+        <p role="alert" className="cap-text" data-size="small" data-tone="crit" data-face="ui">
           {failure}
         </p>
       ) : null}
       <button type="submit" disabled={pending} className={authSecondaryButtonClass} data-size="lg">
         {pending ? "Signing in..." : "Sign in with the code"}
       </button>
-      <button type="button" onClick={onRestart} className="cap-btn full" data-variant="ghost">
+      <button type="button" onClick={onRestart} className="cap-btn cap-full" data-variant="ghost">
         Send a new link and code
       </button>
     </form>

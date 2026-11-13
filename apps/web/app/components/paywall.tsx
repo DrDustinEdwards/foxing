@@ -65,7 +65,7 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
       <ul className="mt-5 fx-paywall-list">
         {FEATURES.map((f) => (
           <li key={f} className="fx-paywall-row-2">
-            <span aria-hidden="true" className="accent-ui">
+            <span aria-hidden="true" className="fx-mark">
               +
             </span>
             {f}
@@ -76,23 +76,16 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
       <div className="mt-6">
         <PlanChoice
           name="plan"
-          legend={<span className="cap-sr-only">Choose a Foxing Plus plan</span>}
+          className="fx-paywall-plans"
+          hideLegend
+          legend="Choose a Foxing Plus plan"
           value={plan}
           onChange={(v) => setPlan(v as Plan)}
           options={(Object.keys(PLANS) as Plan[]).map((key) => ({
             value: key,
             name: PLANS[key].label,
-            price: (
-              <>
-                {PLANS[key].price}
-                {PLANS[key].note ? (
-                  <>
-                    {" "}
-                    <span className="fx-paywall-label-3">{PLANS[key].note}</span>
-                  </>
-                ) : null}
-              </>
-            ),
+            price: PLANS[key].price,
+            note: PLANS[key].note,
           }))}
         />
       </div>
@@ -107,17 +100,17 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
       >
         {pending ? "Starting..." : "Start free 7-day trial"}
       </button>
-      <p className="mt-2 text-center fx-paywall-text-2">
+      <p className="cap-text mt-2 fx-paywall-text-2" data-align="center">
         No charge until trial ends. Cancel anytime.
       </p>
 
       {error ? (
-        <p className="mt-3 py-2 text-center fx-paywall-text-3" role="alert">
+        <p className="cap-text mt-3 py-2 fx-paywall-text-3" data-align="center" role="alert">
           {error}
         </p>
       ) : null}
 
-      <p className="mt-4 text-center fx-paywall-text-2">
+      <p className="cap-text mt-4 fx-paywall-text-2" data-align="center">
         <Link to="/privacy" className="fx-paywall-link">
           Privacy
         </Link>

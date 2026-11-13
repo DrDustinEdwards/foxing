@@ -134,16 +134,6 @@
   line-height: 1.25rem;
   color: color-mix(in srgb, var(--fx-on-dark) 90%, transparent);
 }
-.fx-paywall-label-3 {
-  margin-top: 0.125rem;
-  display: inline-block;
-  border-radius: 9999px;
-  background-color: var(--primary);
-  padding: 0.125rem 0.375rem;
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  color: var(--primary-fg);
-}
 .fx-paywall-btn-2 {
   width: 100%;
 }
@@ -424,7 +414,7 @@
 }
 
 /* Capsomer's plan choice on the paywall's dark band: its tokens, set for the band. */
-.fx-paywall-card .cap-plan-choice {
+.fx-paywall-plans {
   --surface: transparent;
   --line: rgb(255 255 255 / 0.2);
   --line-strong: rgb(255 255 255 / 0.4);
