@@ -556,7 +556,12 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
         <ul className="cap-stack" data-gap="4">
           {sessions.map((s) => (
             <li key={s.id} className="cap-cluster" data-gap="4">
-              <span className="cap-text cap-grow" data-size="small" data-tone="muted" data-face="ui">
+              <span
+                className="cap-text cap-grow"
+                data-size="small"
+                data-tone="muted"
+                data-face="ui"
+              >
                 <span className="cap-text" data-tone="ink" data-weight="strong">
                   {s.device}
                 </span>
