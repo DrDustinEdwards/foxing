@@ -27,7 +27,7 @@ export function BookPicker({
           <button
             type="button"
             onClick={() => onPick(null)}
-            className="shrink-0 fx-book-picker-btn"
+            className="cap-keep fx-book-picker-btn"
           >
             Change
           </button>

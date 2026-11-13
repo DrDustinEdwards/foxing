@@ -57,7 +57,7 @@ function MenuLink({
       <span className="fx-acct-icon">
         <Icon d={icon} />
       </span>
-      <span className="min-0 fx-account-panel-label">
+      <span className="cap-shrink fx-account-panel-label">
         <span className="fx-acct-label">{label}</span>
         {sublabel ? <span className="fx-acct-sub">{sublabel}</span> : null}
       </span>
@@ -72,7 +72,7 @@ function CollectionsRow() {
       <span className="fx-acct-icon">
         <Icon d={iconFolder} />
       </span>
-      <div className="min-0">
+      <div className="cap-shrink">
         <span className="fx-acct-label">Collections</span>
         <span className="fx-acct-sub fx-acct-inline">
           {COLLECTION_LINKS.map((l, i) => (
@@ -196,7 +196,7 @@ function AccountPanel({
     <div className="fx-acct">
       <div className="fx-acct-who">
         <Avatar src={user.avatarUrl} name={user.displayName} size="md" />
-        <div className="min-0">
+        <div className="cap-shrink">
           <p
             className="cap-text cap-cluster"
             data-size="small"

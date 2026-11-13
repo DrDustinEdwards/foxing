@@ -42,12 +42,12 @@ const SWATCH: Record<string, string> = {
 function ColorDot({ color }: { color: string | null }) {
   const hex = color ? SWATCH[color.toLowerCase()] : undefined;
   if (!hex) {
-    return <span aria-hidden="true" className="shrink-0 fx-highlights-label" />;
+    return <span aria-hidden="true" className="cap-keep fx-highlights-label" />;
   }
   return (
     <span
       aria-hidden="true"
-      className="shrink-0 fx-highlights-label-2"
+      className="cap-keep fx-highlights-label-2"
       style={{ backgroundColor: hex }}
     />
   );

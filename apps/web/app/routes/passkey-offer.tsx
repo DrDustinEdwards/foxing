@@ -81,7 +81,7 @@ export default function PasskeyOffer({ loaderData }: Route.ComponentProps) {
         <button
           type="button"
           disabled={pending}
-          className="cap-btn full"
+          className="cap-btn cap-full"
           data-variant="primary"
           data-size="lg"
           onClick={() => void createPasskey()}

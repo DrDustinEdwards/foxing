@@ -33,7 +33,7 @@ const VIS_LABEL: Record<string, string> = {
 };
 
 function VisibilityBadge({ visibility }: { visibility: string }) {
-  return <span className="shrink-0 fx-diary-caps">{VIS_LABEL[visibility] ?? visibility}</span>;
+  return <span className="cap-keep fx-diary-caps">{VIS_LABEL[visibility] ?? visibility}</span>;
 }
 
 type RatingFilter = "all" | "rated" | "unrated";
@@ -108,7 +108,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-8 items-end fx-diary-row">
           <PageHeader eyebrow="Reading" title="Your diary" className="mb-0" />
-          <ButtonLink to="/diary/new" className="shrink-0" variant="primary">
+          <ButtonLink to="/diary/new" className="cap-keep" variant="primary">
             New entry
           </ButtonLink>
         </div>
@@ -188,13 +188,13 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
 }
 
 function RereadBadge() {
-  return <span className="shrink-0 fx-diary-caps-4">Re-read</span>;
+  return <span className="cap-keep fx-diary-caps-4">Re-read</span>;
 }
 
 function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean }) {
   return (
     <li className="cap-card fx-diary-card">
-      <div className="shrink-0 fx-diary-box">
+      <div className="cap-keep fx-diary-box">
         {e.book ? (
           <Link to={`/books/${e.book.slug}`} className="block">
             <CoverImage
@@ -209,7 +209,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
       </div>
       <div className="fx-diary-box-2">
         <div className="cap-spread" data-gap="4" data-align="start">
-          <div className="min-0">
+          <div className="cap-shrink">
             <div className="cap-cluster" data-gap="3">
               {e.book ? (
                 <Link to={`/books/${e.book.slug}`} className="fx-diary-link">

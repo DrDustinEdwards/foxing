@@ -35,7 +35,7 @@ function Row({
     <li className="py-3 fx-people-card">
       <Link to={`/u/${p.username}`} className="fx-people-link">
         <Avatar src={p.avatarUrl} name={name} size="sm" />
-        <span className="min-0">
+        <span className="cap-shrink">
           <span className="cap-clamp block fx-people-label" data-lines="1">
             {name}
           </span>

@@ -3,11 +3,12 @@
 // shows them, so a toggle never reloads the page.
 import type * as W from "@foxing/types";
 import { keepPreviousData, useInfiniteQuery, useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useDebounced } from "capsomer/react/form-hooks";
 import { qs } from "./http";
 import { keys } from "./keys";
 import { useApi } from "./provider";
-import { patch, patchAll, useSeededQuery, useWrite } from "./query";
+import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
+import { useWrite } from "./query";
 
 // --- Reads ------------------------------------------------------------------
 
@@ -124,11 +125,7 @@ const NO_SUGGESTIONS: W.SearchSuggest = { books: [], authors: [], people: [], cl
 export function useSuggest(q: string, delayMs = 180): W.SearchSuggest {
   const api = useApi();
   const trimmed = q.trim();
-  const [term, setTerm] = useState(trimmed);
-  useEffect(() => {
-    const t = setTimeout(() => setTerm(trimmed), delayMs);
-    return () => clearTimeout(t);
-  }, [trimmed, delayMs]);
+  const term = useDebounced(trimmed, delayMs);
   const enabled = term.length >= 2 && trimmed.length >= 2;
   const { data } = useQuery({
     queryKey: keys.suggest(term),

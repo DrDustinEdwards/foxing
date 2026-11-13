@@ -52,7 +52,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
       <Container className="cap-stack" data-gap="7">
         <header className="items-start fx-me-stack">
           <Avatar src={profile.avatarUrl} name={name} size="lg" />
-          <div className="min-0">
+          <div className="cap-shrink">
             <h1 className="fx-me-title">{name}</h1>
             <p className="mt-1 fx-me-text">@{profile.username}</p>
             {joined ? (
