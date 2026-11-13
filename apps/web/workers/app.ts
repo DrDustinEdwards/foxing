@@ -125,7 +125,6 @@ const PREFETCH_EXCLUDE = [
   "/goals",
   "/year",
   "/find-next-book",
-  "/companion-test",
   "/read",
   "/og",
 ];

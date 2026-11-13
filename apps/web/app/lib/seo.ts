@@ -172,4 +172,4 @@ export function articleLd(post: {
 }
 
 /** Paths no crawler needs, in /robots.txt and /ai.txt alike. */
-export const ROBOTS_DISALLOW = ["/me", "/onboarding", "/search", "/companion-test"];
+export const ROBOTS_DISALLOW = ["/me", "/onboarding", "/search"];
