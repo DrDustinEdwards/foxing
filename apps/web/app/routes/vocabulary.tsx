@@ -62,7 +62,7 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
             </nav>
 
             {shown.length === 0 ? (
-              <p className="meta">
+              <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
                 {filter === "mastered" ? "No mastered words yet." : "Nothing left to master."}
               </p>
             ) : (
@@ -97,12 +97,14 @@ function WordItem({ word }: { word: VocabularyWord }) {
           </button>
         </div>
       </div>
-      <p className="ui">{word.definition}</p>
+      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+        {word.definition}
+      </p>
       {word.contextSentence ? (
         <p className="italic fx-vocabulary-text">{word.contextSentence}</p>
       ) : null}
       {setMastered.error ? (
-        <p className="error xsmall" role="alert">
+        <p className="cap-text" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {setMastered.error}
         </p>
       ) : null}

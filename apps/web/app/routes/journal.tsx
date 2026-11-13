@@ -56,7 +56,7 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
           lede="Essays on the books in the library, and the ideas inside them."
         />
         <p className="mb-10 fx-journal-text">
-          <Link to="/journal/archive" className="link sans small">
+          <Link to="/journal/archive" className="cap-text link" data-size="small" data-face="ui">
             All articles
           </Link>
         </p>

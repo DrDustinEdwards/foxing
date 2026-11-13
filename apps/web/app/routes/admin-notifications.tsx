@@ -62,7 +62,9 @@ export default function AdminNotifications() {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Notifications</h1>
+        <h1 className="cap-title" data-size="2">
+          Notifications
+        </h1>
       </div>
 
       <AdminCard title="Broadcast">

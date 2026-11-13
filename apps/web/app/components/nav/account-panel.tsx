@@ -199,18 +199,37 @@ function AccountPanel({
       <div className="fx-acct-who">
         <Avatar src={user.avatarUrl} name={user.displayName} size="md" />
         <div className="min-0">
-          <p className="cap-cluster strong sans small" data-gap="2">
-            <span className="truncate">{user.displayName}</span>
+          <p
+            className="cap-text cap-cluster"
+            data-size="small"
+            data-tone="ink"
+            data-weight="strong"
+            data-face="ui"
+            data-gap="2"
+          >
+            <span className="cap-clamp" data-lines="1">
+              {user.displayName}
+            </span>
             <TierBadge tier={user.subscriptionTier} />
           </p>
-          <p className="truncate mono fine">@{user.username}</p>
+          <p
+            className="cap-text cap-clamp"
+            data-size="tiny"
+            data-tone="dim"
+            data-face="mono"
+            data-lines="1"
+          >
+            @{user.username}
+          </p>
         </div>
       </div>
 
       <dl className="fx-acct-stats">
         {stats.map((stat) => (
           <div key={stat.label}>
-            <dd className="display-1">{stat.value}</dd>
+            <dd className="cap-title" data-size="4">
+              {stat.value}
+            </dd>
             <dt>{stat.label}</dt>
           </div>
         ))}

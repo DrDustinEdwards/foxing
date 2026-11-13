@@ -39,7 +39,9 @@ export default function ClubNew() {
   return (
     <PageShell>
       <Container>
-        <h1 className="display-4">Start a club</h1>
+        <h1 className="cap-title" data-size="1">
+          Start a club
+        </h1>
         <p className="mt-2 fx-club-new-text">Pick a book, set the pace, and read together.</p>
 
         <form onSubmit={(e) => void onSubmit(e)} className="mt-8 fx-club-new-form">
@@ -81,7 +83,13 @@ export default function ClubNew() {
               <option value="private">Private - members only, join by link</option>
             </select>
           </div>
-          <label className="cap-cluster ui" data-gap="3">
+          <label
+            className="cap-text cap-cluster"
+            data-size="small"
+            data-tone="muted"
+            data-face="ui"
+            data-gap="3"
+          >
             <input type="checkbox" name="memberApproval" className="fx-club-new-input-2" />
             Approve each member before they join
           </label>

@@ -47,7 +47,7 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="text-center">
+      <Container className="cap-text" data-align="center">
         <p className="fx-join-code-caps">You have been invited to</p>
         <h1 className="mt-2 fx-join-code-title">{club.name}</h1>
         {club.description ? <p className="mt-3 fx-join-code-text">{club.description}</p> : null}

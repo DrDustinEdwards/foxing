@@ -12,8 +12,18 @@ export function ToggleRow({
   return (
     <div className="items-start fx-settings-card-card">
       <div className="fx-settings-card-stack">
-        <span className="sans small strong">{label}</span>
-        <span className="fine">{subtext}</span>
+        <span
+          className="cap-text"
+          data-size="small"
+          data-tone="ink"
+          data-weight="strong"
+          data-face="ui"
+        >
+          {label}
+        </span>
+        <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
+          {subtext}
+        </span>
       </div>
       {/* Capsomer's switch, sky blue when on (Rule 05). */}
       <label className="cap-switch">
@@ -33,7 +43,9 @@ export function ToggleRow({
 export function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="cap-card">
-      <h2 className="display-1">{title}</h2>
+      <h2 className="cap-title" data-size="4">
+        {title}
+      </h2>
       <div>{children}</div>
     </section>
   );
@@ -65,13 +77,13 @@ export function SubmitRow({
           {pending ? pendingLabel : label}
         </button>
         {done ? (
-          <span className="meta" role="status">
+          <span className="cap-text" data-size="small" data-tone="dim" data-face="ui" role="status">
             {done}
           </span>
         ) : null}
       </div>
       {error ? (
-        <p className="error" role="alert">
+        <p className="cap-text" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}

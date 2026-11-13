@@ -76,7 +76,13 @@ export function AdminCard({
     <section className="cap-card">
       {title || action ? (
         <div className="cap-spread" data-gap="5" data-align="center">
-          {title ? <h2 className="display-1">{title}</h2> : <span />}
+          {title ? (
+            <h2 className="cap-title" data-size="4">
+              {title}
+            </h2>
+          ) : (
+            <span />
+          )}
           {action}
         </div>
       ) : null}

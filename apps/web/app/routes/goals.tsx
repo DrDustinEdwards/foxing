@@ -88,7 +88,9 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
         <CreateGoal />
 
         <section className="cap-stack">
-          <h2 className="display-2">Active</h2>
+          <h2 className="cap-title" data-size="3">
+            Active
+          </h2>
           {active.length === 0 ? (
             <EmptyState title="No active goals." body="Set a target above to start tracking." />
           ) : (
@@ -102,7 +104,9 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
 
         {past.length > 0 ? (
           <section className="cap-stack">
-            <h2 className="display-2">Past</h2>
+            <h2 className="cap-title" data-size="3">
+              Past
+            </h2>
             <ul className="cap-stack" data-gap="4">
               {past.map((g) => (
                 <GoalItem key={g.goal.id} row={g} active={false} now={now} />
@@ -203,7 +207,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
 
       {editing ? (
         <div className="mt-3 cap-cluster" data-gap="3">
-          <label className="sans small">
+          <label className="cap-text" data-size="small" data-face="ui">
             <span className="cap-sr-only">New target</span>
             <input
               type="number"
@@ -223,7 +227,13 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
             Save
           </button>
           {pending ? (
-            <span className="fine" role="status">
+            <span
+              className="cap-text"
+              data-size="tiny"
+              data-tone="dim"
+              data-face="ui"
+              role="status"
+            >
               Saving...
             </span>
           ) : null}
@@ -231,7 +241,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
       ) : null}
 
       {error ? (
-        <p className="mt-2 error xsmall" role="alert">
+        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}
@@ -246,7 +256,7 @@ function CreateGoal() {
     <section className="cap-card">
       <p className="fx-goals-text">Set a new goal</p>
       <div className="cap-cluster" data-gap="3">
-        <label className="sans small">
+        <label className="cap-text" data-size="small" data-face="ui">
           <span className="cap-sr-only">Number of books</span>
           <input
             type="number"
@@ -256,7 +266,9 @@ function CreateGoal() {
             className="cap-input fx-goals-input"
           />
         </label>
-        <span className="ui">books</span>
+        <span className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+          books
+        </span>
         <GoalPeriodSelect value={period} onChange={setPeriod} />
         <button
           type="button"
@@ -275,7 +287,7 @@ function CreateGoal() {
         </p>
       ) : null}
       {error ? (
-        <p className="mt-2 error xsmall" role="alert">
+        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
           {error}
         </p>
       ) : null}

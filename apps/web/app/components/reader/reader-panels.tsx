@@ -157,7 +157,9 @@ function Stepper({
         >
           −
         </button>
-        <span className="text-center fx-reader-panels-label-3">{display}</span>
+        <span className="cap-text fx-reader-panels-label-3" data-align="center">
+          {display}
+        </span>
         <button
           type="button"
           aria-label={`Increase ${label}`}
@@ -371,7 +373,7 @@ export function ContentsList({
 export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClose: () => void }) {
   return (
     <Modal onClose={onClose} title="Sign in to save">
-      <p className="small muted">
+      <p className="cap-text" data-size="small" data-tone="muted">
         Reading is free. Sign in to keep highlights, notes, bookmarks, and your place.
       </p>
       <div className="mt-4 fx-reader-panels-row-2">
@@ -452,7 +454,11 @@ export function ReaderTopBar({
         >
           ‹ Back
         </Link>
-        <div className="truncate text-center fx-reader-panels-box-2">
+        <div
+          className="cap-text cap-clamp fx-reader-panels-box-2"
+          data-align="center"
+          data-lines="1"
+        >
           <span className="fx-reader-panels-title-3">{book.title}</span>
           {chapter ? (
             <span className="fx-reader-panels-label-11">

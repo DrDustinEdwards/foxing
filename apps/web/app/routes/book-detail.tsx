@@ -222,11 +222,16 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 <Eyebrow>Recognition</Eyebrow>
                 <ul className="fx-book-detail-stack-2">
                   {awards.map((a) => (
-                    <li key={`${a.awardSlug}-${a.year}`} className="sans small">
+                    <li
+                      key={`${a.awardSlug}-${a.year}`}
+                      className="cap-text"
+                      data-size="small"
+                      data-face="ui"
+                    >
                       <Link to={`/awards/${a.awardSlug}`} className="link">
                         {a.awardName}
                       </Link>
-                      <span className="dim">
+                      <span className="cap-text" data-tone="dim">
                         {a.year ? `, ${a.year}` : ""} · {a.distinction}
                       </span>
                     </li>

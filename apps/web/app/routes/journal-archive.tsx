@@ -75,9 +75,13 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
                   className="group items-start py-4 fx-journal-archive-link-2"
                 >
                   <div className="fx-journal-archive-box">
-                    <p className="truncate fx-journal-archive-title">{post.title}</p>
+                    <p className="cap-clamp fx-journal-archive-title" data-lines="1">
+                      {post.title}
+                    </p>
                     {post.excerpt ? (
-                      <p className="truncate fx-journal-archive-text">{post.excerpt}</p>
+                      <p className="cap-clamp fx-journal-archive-text" data-lines="1">
+                        {post.excerpt}
+                      </p>
                     ) : null}
                   </div>
                   {post.tags?.[0] ? (

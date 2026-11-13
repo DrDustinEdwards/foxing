@@ -12,6 +12,7 @@ import {
   AdminError,
   adminInputClass,
   useAdminAction,
+  AdminRow,
 } from "~/components/admin/admin-form";
 import { BookPicker } from "~/components/admin/book-picker";
 import { cloudflareContext } from "~/context";
@@ -38,14 +39,18 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
     <AdminShell>
       <div className="mb-6">
         <p className="group-label">Admin</p>
-        <h1 className="display-3">Book of the Month</h1>
+        <h1 className="cap-title" data-size="2">
+          Book of the Month
+        </h1>
       </div>
 
       <div className="cap-stack" data-gap="6">
         <CreateBotm onDone={() => void reload()} />
         <AdminCard title="Scheduled picks">
           {rows.length === 0 ? (
-            <p className="meta">No picks yet. Create one above.</p>
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+              No picks yet. Create one above.
+            </p>
           ) : (
             <ul className="divided">
               {rows.map((r) => (
@@ -171,7 +176,13 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
             className={adminInputClass}
           />
         </label>
-        <label className="cap-cluster ui" data-gap="3">
+        <label
+          className="cap-text cap-cluster"
+          data-size="small"
+          data-tone="muted"
+          data-face="ui"
+          data-gap="3"
+        >
           <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
           Publish immediately
         </label>
@@ -194,22 +205,20 @@ function BotmRow({
   const { pending, error, run } = useAdminAction({ onDone });
 
   return (
-    <li className="py-3">
-      <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
-          <p className="sans small strong">
-            {MONTH_NAMES[row.month - 1]} {row.year}
-            {row.isPublished ? (
-              <span className="badge ml-2">Live</span>
-            ) : (
-              <span className="badge badge-quiet ml-2">Draft</span>
-            )}
-          </p>
-          <p className="truncate meta">
-            {row.bookTitle ? `${row.bookTitle} by ${row.bookAuthor}` : "No book attached"}
-          </p>
-        </div>
-        <div className="cap-cluster shrink-0" data-gap="3">
+    <AdminRow
+      title={
+        <>
+          {MONTH_NAMES[row.month - 1]} {row.year}
+          {row.isPublished ? (
+            <span className="badge ml-2">Live</span>
+          ) : (
+            <span className="badge badge-quiet ml-2">Draft</span>
+          )}
+        </>
+      }
+      meta={<>{row.bookTitle ? `${row.bookTitle} by ${row.bookAuthor}` : "No book attached"}</>}
+      actions={
+        <>
           <AdminButton
             pending={pending}
             onClick={() =>
@@ -229,10 +238,11 @@ function BotmRow({
           >
             Delete
           </AdminButton>
-        </div>
-      </div>
+        </>
+      }
+    >
       <AdminError error={error} />
-    </li>
+    </AdminRow>
   );
 }
 
