@@ -38,7 +38,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
       <Container>
         <div className="mb-10 items-end fx-lists-row">
           <PageHeader eyebrow="Reading" title="Your lists" className="mb-0" />
-          <Link to="/lists/new" className="cap-btn shrink-0" data-variant="primary">
+          <Link to="/lists/new" className="cap-btn cap-keep" data-variant="primary">
             New list
           </Link>
         </div>
@@ -72,7 +72,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                             {l.title}
                           </h2>
                           {!l.isPublic ? (
-                            <span className="shrink-0 fx-lists-caps">Private</span>
+                            <span className="cap-keep fx-lists-caps">Private</span>
                           ) : null}
                         </div>
                         {l.description ? (
@@ -100,7 +100,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
 // title carries the link's meaning), so the images are alt-empty.
 function CoverStack({ covers }: { covers: string[] }) {
   return (
-    <div className="shrink-0 fx-lists-row-5">
+    <div className="cap-keep fx-lists-row-5">
       {covers.map((src) => (
         <CoverPicture
           key={src}

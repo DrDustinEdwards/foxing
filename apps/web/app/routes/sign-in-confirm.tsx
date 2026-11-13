@@ -44,11 +44,11 @@ export default function SignInConfirm({ loaderData, actionData }: Route.Componen
     return (
       <AuthShell title={title} subtitle={text}>
         {problem === "signed-in" ? (
-          <Link to="/me" className="cap-btn full" data-variant="primary" data-size="lg">
+          <Link to="/me" className="cap-btn cap-full" data-variant="primary" data-size="lg">
             Go to Foxing
           </Link>
         ) : (
-          <Link to="/login" className="cap-btn full" data-variant="primary" data-size="lg">
+          <Link to="/login" className="cap-btn cap-full" data-variant="primary" data-size="lg">
             Get a new link
           </Link>
         )}

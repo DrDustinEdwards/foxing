@@ -136,24 +136,11 @@
 .ml-2 {
   margin-inline-start: 0.5rem;
 }
-.grow {
-  flex: 1 1 0%;
-  min-inline-size: 0;
-}
-.shrink-0 {
-  flex-shrink: 0;
-}
-.min-0 {
-  min-inline-size: 0;
-}
 .relative {
   position: relative;
 }
 .block {
   display: block;
-}
-.full {
-  inline-size: 100%;
 }
 
 /* Space above a block, for the places a stack does not fit. */

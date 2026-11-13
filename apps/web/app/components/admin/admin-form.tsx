@@ -86,7 +86,7 @@ export function AdminRow({
   return (
     <li className="py-3">
       <div className="cap-spread" data-gap="4" data-align="center">
-        <div className="min-0">
+        <div className="cap-shrink">
           <p
             className="cap-text"
             data-size="small"
@@ -106,7 +106,7 @@ export function AdminRow({
             {meta}
           </p>
         </div>
-        <div className="cap-cluster shrink-0" data-gap="3">
+        <div className="cap-cluster cap-keep" data-gap="3">
           {actions}
         </div>
       </div>

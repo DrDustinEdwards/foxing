@@ -186,7 +186,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
             <GoalBadge tone="neutral">Behind by {pacing.behind}</GoalBadge>
           ) : null}
         </span>
-        <div className="shrink-0 cap-cluster" data-gap="4">
+        <div className="cap-keep cap-cluster" data-gap="4">
           <button type="button" onClick={() => setEditing((v) => !v)} className="fx-goals-btn">
             {editing ? "Cancel" : "Edit"}
           </button>

@@ -48,7 +48,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
               placeholder="Search by username or name"
               className={adminInputClass}
             />
-            <button type="submit" className="cap-btn shrink-0">
+            <button type="submit" className="cap-btn cap-keep">
               Search
             </button>
           </form>

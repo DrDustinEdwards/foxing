@@ -48,7 +48,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             }
             className="mb-0"
           />
-          <Link to="/find-next-book?refresh=1" className="cap-btn shrink-0">
+          <Link to="/find-next-book?refresh=1" className="cap-btn cap-keep">
             Refresh
           </Link>
         </div>
@@ -61,7 +61,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
             <button
               type="button"
               onClick={() => setPaywallOpen(true)}
-              className="shrink-0 fx-find-next-book-btn"
+              className="cap-keep fx-find-next-book-btn"
             >
               Upgrade for AI-personalized picks
             </button>

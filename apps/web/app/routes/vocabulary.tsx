@@ -86,7 +86,7 @@ function WordItem({ word }: { word: VocabularyWord }) {
     <li className="cap-card">
       <div className="fx-vocabulary-row-2">
         <h2 className="fx-vocabulary-title">{word.word}</h2>
-        <div className="shrink-0 fx-vocabulary-row-3">
+        <div className="cap-keep fx-vocabulary-row-3">
           {word.mastered ? <span className="fx-vocabulary-caps">Mastered</span> : null}
           <button
             type="button"
