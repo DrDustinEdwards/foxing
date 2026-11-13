@@ -16,6 +16,7 @@ import {
 } from "@dustinedwards/site-runtime/sign-in-client";
 import { useFetcher, useRevalidator } from "react-router";
 import { Link } from "capsomer/react/link";
+import { signInHref } from "~/lib/sign-in-path";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;
@@ -542,7 +543,7 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
         <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
           To see where you are signed in, sign in again.
         </p>
-        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+        <Link to={signInHref("/settings")} className="cap-btn mt-4 fx-account-sections-link">
           Sign in again
         </Link>
       </Card>
@@ -663,7 +664,7 @@ export function DataSection({ fresh }: { fresh: boolean }) {
           Download your data
         </a>
       ) : (
-        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+        <Link to={signInHref("/settings")} className="cap-btn mt-4 fx-account-sections-link">
           Sign in again
         </Link>
       )}
@@ -767,7 +768,7 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
           This permanently removes your account and all of your data. To keep someone else from
           doing it on a device you left signed in, sign in again first.
         </p>
-        <Link to="/login?next=%2Fsettings" className="cap-btn mt-4 fx-account-sections-link">
+        <Link to={signInHref("/settings")} className="cap-btn mt-4 fx-account-sections-link">
           Sign in again
         </Link>
       </section>

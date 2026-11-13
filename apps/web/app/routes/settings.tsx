@@ -40,6 +40,7 @@ import {
   NotificationsSection,
   VisibilitySection,
 } from "../components/settings/preference-sections";
+import { signInHref } from "~/lib/sign-in-path";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -139,7 +140,7 @@ export async function action({ context, request }: Route.ActionArgs) {
     return { revoked: await revokeSessionById(await getAuth(env), request, id) };
   } catch (err) {
     if ((err as { body?: { code?: string } }).body?.code !== "SESSION_NOT_FRESH") throw err;
-    throw redirect("/login?next=%2Fsettings");
+    throw redirect(signInHref("/settings"));
   }
 }
 

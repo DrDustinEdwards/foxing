@@ -9,11 +9,12 @@ import { cloudflareContext } from "~/context";
 import { clubsRepo, createDb } from "@foxing/core";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
+import { signInFrom } from "~/lib/sign-in-path";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect(`/login?next=/join/${params.code}`);
+  if (!user) throw redirect(signInFrom(request));
 
   const db = createDb(env.DB);
   const club = await clubsRepo.getClubByJoinCode(db, params.code);

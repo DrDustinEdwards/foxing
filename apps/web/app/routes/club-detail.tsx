@@ -4,21 +4,17 @@
 // shows up over the club WebSocket without a reload.
 import { useClubLive, useClubPage } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
 import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionUserFromRequest } from "~/lib/auth.server";
-import { requireProfileForUser } from "~/lib/profile.server";
+import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/club-detail";
 import { MembershipControls, ThreadsSection } from "../components/clubs/club-sections";
 import { MeetingsSection, PollsSection, ScheduleSection } from "../components/clubs/club-schedule";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect(`/login?next=/clubs/${params.slug}`);
-  await requireProfileForUser(env, user);
+  const { user } = await requireProfile(env, request);
   const page = await views.clubPage(createDb(env.DB), params.slug, user.id);
   if (!page) throw new Response("Not found", { status: 404 });
   return { page, viewerId: user.id };

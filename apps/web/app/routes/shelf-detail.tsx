@@ -1,20 +1,16 @@
 import { useShelf } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
-import { redirect } from "react-router";
 import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
 import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import { sessionUserFromRequest } from "~/lib/auth.server";
-import { requireProfileForUser } from "~/lib/profile.server";
+import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/shelf-detail";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  const user = await sessionUserFromRequest(request, env);
-  if (!user) throw redirect(`/login?next=/shelves/${params.id}`);
-  await requireProfileForUser(env, user);
+  const { user } = await requireProfile(env, request);
   const detail = await views.shelfDetail(createDb(env.DB), user.id, params.id);
   if (!detail) throw new Response("Not found", { status: 404 });
   return detail;

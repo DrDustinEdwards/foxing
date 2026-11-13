@@ -14,6 +14,7 @@ import { clampPageSize } from "./page-size";
 import type { Db } from "../../db";
 import { type BookCard, getBooksByIds } from "./books";
 import { resolveEra, resolveLength } from "./facets";
+import { pageCountOf } from "capsomer/behavior/pagination";
 
 export type SearchResult = {
   books: BookCard[];
@@ -166,7 +167,7 @@ export async function searchCatalog(
     fuzzy,
     page,
     pageSize,
-    pageCount: Math.max(1, Math.ceil(total / pageSize)),
+    pageCount: pageCountOf(total, pageSize),
   };
 }
 
