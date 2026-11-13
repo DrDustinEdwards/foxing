@@ -4,6 +4,8 @@
 import { useListPage, useReaction } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import { LikeButton } from "capsomer/react/like-button";
+// The like button's styles load only on a list's page (React 19 hoists the link).
+import likeButtonCss from "capsomer/like-button.css?url";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
 import { AddBookToList } from "~/components/social/add-book-to-list";
@@ -71,6 +73,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
               ) : null}
             </div>
             <div className="cap-cluster" data-gap="4">
+              <link rel="stylesheet" href={likeButtonCss} precedence="default" />
               <LikeButton
                 liked={liked}
                 count={likeCount}

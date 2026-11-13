@@ -10,6 +10,8 @@ import { useId, useState } from "react";
 import { Dialog, DialogClose } from "capsomer/react/dialog";
 import { Link } from "capsomer/react/link";
 import { PlanChoice } from "capsomer/react/price-card";
+// The plan choice's styles load only where the paywall opens (React 19 hoists the link).
+import priceCardCss from "capsomer/price-card.css?url";
 
 type Plan = "monthly" | "annual";
 
@@ -57,6 +59,7 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
       aria-labelledby={titleId}
       className="fx-paywall-card"
     >
+      <link rel="stylesheet" href={priceCardCss} precedence="default" />
       <p id={titleId} className="fx-paywall-title">
         <span aria-hidden="true">🦊</span> Foxing Plus
       </p>

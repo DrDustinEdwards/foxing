@@ -9,6 +9,8 @@ import {
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
 import { Poll } from "capsomer/react/poll";
+// The poll's styles load only on a club's page (React 19 hoists the link).
+import pollCss from "capsomer/poll.css?url";
 import { Time } from "capsomer/react/time";
 import { useState } from "react";
 import { pollChart } from "~/lib/reading-charts";
@@ -109,6 +111,7 @@ export function PollsSection({
         </p>
       ) : (
         <div className="mt-4 fx-club-schedule-box">
+          <link rel="stylesheet" href={pollCss} precedence="default" />
           {polls.map((poll) => {
             const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
