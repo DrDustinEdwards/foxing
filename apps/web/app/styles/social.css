@@ -1,24 +1,24 @@
 .fx-follow-button-text {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--crit);
 }
 
 .fx-like-button-text {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--crit);
 }
 
 .fx-list-form-text {
-  border-radius: 0.375rem;
-  border-width: 1px;
+  border-radius: var(--radius-m);
+  border-width: var(--line-w);
   border-style: solid;
-  padding-inline: 0.75rem;
+  padding-inline: var(--space-4);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   border-color: color-mix(in srgb, var(--crit) 50%, transparent);
   background-color: var(--crit-soft);
@@ -26,7 +26,7 @@
 }
 .fx-list-form-btn {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
   &:hover {
@@ -37,17 +37,17 @@
 .fx-remove-book-button-label {
   display: inline-flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-2);
 }
 .fx-remove-book-button-btn {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   transition-property: color, background-color, border-color, opacity, box-shadow, transform;
   transition-duration: 150ms;
   &:disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-half);
   }
   &:hover {
     color: var(--crit);
@@ -60,68 +60,68 @@
 }
 
 .fx-commonplace-quote {
-  border-left-width: 2px;
+  border-left-width: var(--line-w-thick);
   border-left-style: solid;
   border-color: var(--line);
-  padding-left: 1rem;
+  padding-left: var(--space-5);
   font-family: var(--fx-body);
-  font-size: 1rem;
+  font-size: var(--title-6);
   line-height: 1.5rem;
   color: var(--text);
 }
 .fx-commonplace-text {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 
 .fx-diary-new-text {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 
 .fx-diary-caps {
-  border-radius: 9999px;
-  border: 1px solid var(--line);
-  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
+  padding: var(--space-1) var(--space-3);
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-diary-caps-2 {
-  margin-right: 0.5rem;
+  margin-right: var(--space-3);
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-diary-caps-3 {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--dim);
 }
 .fx-diary-caps-4 {
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   background-color: var(--accent-soft);
-  padding: 0.125rem 0.5rem;
+  padding: var(--space-1) var(--space-3);
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--accent-text);
 }
 .fx-diary-card {
   display: flex;
-  gap: 1rem;
-  --pad-card: 1rem;
+  gap: var(--space-5);
+  --pad-card: var(--space-5);
 }
 .fx-diary-box {
   width: 4rem;
@@ -135,14 +135,14 @@
   -webkit-line-clamp: 3;
   overflow: hidden;
   font-family: var(--fx-body);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 .fx-diary-link-2 {
   display: inline-block;
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   &:hover {
@@ -153,37 +153,37 @@
 
 .fx-feed-card {
   border-radius: var(--radius-l);
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   background-color: var(--surface);
-  padding-inline: 1rem;
+  padding-inline: var(--space-5);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 .fx-feed-card-2 {
   display: flex;
-  gap: 0.75rem;
-  --pad-card: 1rem;
+  gap: var(--space-4);
+  --pad-card: var(--space-5);
 }
 .fx-feed-box {
   min-width: 0;
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-feed-link {
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--text);
   &:hover {
     color: var(--accent-text);
   }
 }
 .fx-feed-link-2 {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   display: inline-block;
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   &:hover {
@@ -194,13 +194,13 @@
 .fx-highlights-label {
   height: 0.625rem;
   width: 0.625rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   background-color: var(--line-strong);
 }
 .fx-highlights-label-2 {
   height: 0.625rem;
   width: 0.625rem;
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
 }
 .fx-highlights-input {
   min-width: 12rem;
@@ -208,18 +208,18 @@
 }
 .fx-highlights-row {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-highlights-quote {
   font-family: var(--fx-body);
-  font-size: 1rem;
+  font-size: var(--title-6);
   line-height: 1.5rem;
   color: var(--text);
 }
 .fx-highlights-text {
   padding-left: 22px;
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
@@ -230,9 +230,9 @@
 .fx-list-detail-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
   &:hover {
@@ -248,32 +248,32 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  --pad-card: 1rem;
+  gap: var(--space-5);
+  --pad-card: var(--space-5);
 }
 .fx-list-detail-row {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-5);
 }
 .fx-list-detail-link-2,
 .fx-list-detail-title {
   font-family: var(--display);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
   color: var(--dim);
 }
 .fx-list-detail-text-2 {
   font-family: var(--fx-body);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 
 .fx-lists-row-3 {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-5);
 }
 .fx-lists-box {
   flex-grow: 1;
@@ -283,13 +283,13 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-lists-caps {
   font-family: var(--mono);
   font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-lists-text {
@@ -298,20 +298,20 @@
   -webkit-line-clamp: 2;
   overflow: hidden;
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 /* Gap, not margins: each cover's <picture> is display: contents (Capsomer's Picture). */
 .fx-lists-row-5 {
   display: flex;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-lists-img {
   height: 4rem;
   width: 2.75rem;
   border-radius: 0.25rem;
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
   object-fit: cover;
   box-shadow: var(--shadow-s);
@@ -328,57 +328,57 @@
 }
 .fx-me-title {
   font-family: var(--display);
-  font-size: 1.875rem;
+  font-size: var(--title-2);
   line-height: 2.25rem;
   @media (min-width: 40rem) {
-    font-size: 2.25rem;
+    font-size: var(--title-1);
     line-height: 2.5rem;
   }
 }
 .fx-me-text-2 {
   max-width: 42rem;
   font-family: var(--fx-body);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
   color: var(--muted);
 }
 .fx-me-card {
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 1.5rem;
+  --pad-card: var(--space-6);
 }
 .fx-me-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-5);
 }
 .fx-me-caps {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-me-box {
-  border-block-start: 1px solid var(--line);
-  padding-top: 1rem;
+  border-block-start: var(--line-w) solid var(--line);
+  padding-top: var(--space-5);
 }
 
 .fx-notifications-text {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--crit);
 }
 .fx-notifications-card {
   display: flex;
-  gap: 0.75rem;
-  --pad-card: 1rem;
+  gap: var(--space-4);
+  --pad-card: var(--space-5);
 }
 .fx-notifications-text-2 {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
@@ -386,21 +386,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4);
   border-radius: var(--radius-l);
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   background-color: var(--surface);
-  padding-inline: 1rem;
+  padding-inline: var(--space-5);
 }
 .fx-people-link {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-people-label-2 {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
@@ -408,7 +408,7 @@
 .fx-u-profile-label,
 .fx-year-label {
   font-family: var(--mono);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--accent-text);
 }
@@ -428,16 +428,16 @@
 }
 .fx-u-profile-title {
   font-family: var(--display);
-  font-size: 1.875rem;
+  font-size: var(--title-2);
   line-height: 2.25rem;
   @media (min-width: 40rem) {
-    font-size: 2.25rem;
+    font-size: var(--title-1);
     line-height: 2.5rem;
   }
 }
 .fx-u-profile-text {
   font-family: var(--mono);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--dim);
 }
@@ -449,23 +449,23 @@
 .fx-u-profile-stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: var(--space-6);
 }
 .fx-u-profile-row-2 {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
 .fx-u-profile-link,
 .fx-u-profile-stack-2 {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
 .fx-u-profile-row-3 {
   display: flex;
   flex-wrap: wrap;
-  gap: 1rem;
+  gap: var(--space-5);
 }
 .fx-u-profile-item {
   width: 8rem;
@@ -473,7 +473,7 @@
 .fx-u-profile-label-2 {
   overflow: hidden;
   border-radius: var(--fx-radius-cover);
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
 }
 .fx-u-profile-img {
@@ -486,16 +486,16 @@
   aspect-ratio: 2 / 3;
   width: 100%;
   align-items: center;
-  padding-inline: 0.5rem;
+  padding-inline: var(--space-3);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 .fx-u-profile-label-4 {
-  margin-top: 0.375rem;
+  margin-top: var(--space-2-5);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--text);
   a:is(:hover, :focus-visible) & {
@@ -513,7 +513,7 @@
 }
 .fx-u-profile-grid {
   display: grid;
-  gap: 0.75rem;
+  gap: var(--space-4);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -523,12 +523,12 @@
 }
 .fx-u-profile-card {
   --radius-l: var(--fx-radius-cover);
-  --pad-card: 1rem;
+  --pad-card: var(--space-5);
 }
 .fx-u-profile-text-4 {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
@@ -543,7 +543,7 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-u-profile-caps,
 .fx-year-caps {
@@ -557,10 +557,10 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   border-radius: var(--fx-radius-cover);
   background: var(--surface);
-  padding: 0.75rem 1rem;
+  padding: var(--space-4) var(--space-5);
   &:hover {
     border-color: var(--line-strong);
   }
@@ -574,27 +574,27 @@
 .fx-u-profile-stack-3 {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-3);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 .fx-u-profile-item-2 {
-  border-block-end: 1px solid var(--line);
-  padding-bottom: 0.5rem;
+  border-block-end: var(--line-w) solid var(--line);
+  padding-bottom: var(--space-3);
 }
 .fx-u-profile-title-2 {
   font-family: var(--display);
-  font-size: 1.5rem;
-  line-height: 1;
+  font-size: var(--title-3);
+  line-height: var(--leading-none);
   color: var(--text);
 }
 .fx-u-profile-caps-3 {
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-u-profile-item-3 {
@@ -605,40 +605,40 @@
   flex-direction: column;
   align-items: center;
   gap: 1.25rem;
-  padding-block: 4rem;
+  padding-block: var(--space-9);
 }
 
 .fx-vocabulary-row-2 {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-vocabulary-title {
   font-family: var(--display);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--text);
 }
 .fx-vocabulary-row-3 {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-vocabulary-caps {
-  border-radius: 9999px;
+  border-radius: var(--radius-full);
   background-color: var(--accent-soft);
-  padding: 0.125rem 0.625rem;
+  padding: var(--space-1) var(--space-3-5);
   font-family: var(--mono);
   font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--accent-text);
 }
 .fx-vocabulary-btn {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   &:hover {
@@ -646,12 +646,12 @@
     text-decoration-line: underline;
   }
   &:disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-half);
   }
 }
 .fx-vocabulary-text {
   font-family: var(--fx-body);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--dim);
 }
@@ -659,7 +659,7 @@
 /* A notification's read state: a quiet dot, the accent while unread. */
 .fx-dot {
   flex-shrink: 0;
-  margin-block-start: 0.375rem;
+  margin-block-start: var(--space-2-5);
   block-size: 0.5rem;
   inline-size: 0.5rem;
   border-radius: var(--radius-full);
@@ -681,11 +681,11 @@
 .fx-diary-row {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-5);
 }
 .fx-diary-link {
   font-family: var(--display);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
   color: var(--text);
   &:hover {
@@ -694,30 +694,30 @@
 }
 .fx-list-detail-label {
   font-family: var(--mono);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--dim);
 }
 .fx-me-text {
   font-family: var(--mono);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--dim);
 }
 .fx-lists-row-2 {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
 .fx-lists-text-2 {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 .fx-notifications-text-3 {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
@@ -725,21 +725,21 @@
 .fx-close-friend-toggle-label {
   display: inline-flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-2);
 }
 .fx-like-button-box {
   display: inline-flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-2);
 }
 .fx-diary-label {
   font-family: var(--mono);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--accent-text);
 }
 .fx-lists-row {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-5);
 }

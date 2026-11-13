@@ -10,6 +10,8 @@
 /* Size-matched local fallbacks for the stack site-foxing names second, so the swap to each webfont does not move text. */
 @import "capsomer/fallback-fonts.css";
 @import "capsomer/base.css";
+@import "capsomer/layout.css";
+@import "capsomer/text.css";
 @import "capsomer/site-header.css";
 @import "capsomer/dialog.css";
 @import "capsomer/popover.css";

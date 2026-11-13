@@ -13,7 +13,7 @@
 .article-prose :is(h2, h3) {
   font-family: var(--display);
   color: var(--text);
-  line-height: 1.2;
+  line-height: var(--leading-tight);
   margin-block-start: 1.8em;
 }
 .article-prose h2 {
@@ -29,10 +29,10 @@
 }
 .article-prose strong {
   color: var(--text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .article-prose blockquote {
-  border-inline-start: 3px solid var(--accent-line);
+  border-inline-start: var(--line-w-bar) solid var(--accent-line);
   padding-inline-start: 1.1rem;
   font-style: italic;
   color: var(--dim);
@@ -55,16 +55,16 @@
   flex-direction: column;
   --fx-divide: var(--line);
   & > * + * {
-    border-top: 1px solid var(--fx-divide, var(--line));
+    border-top: var(--line-w) solid var(--fx-divide, var(--line));
   }
 }
 .fx-journal-archive-link-2 {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
-  border-radius: 0.375rem;
-  padding-inline: 0.5rem;
-  margin-inline: -0.5rem;
+  gap: var(--space-5);
+  border-radius: var(--radius-m);
+  padding-inline: var(--space-3);
+  margin-inline: calc(-1 * var(--space-3));
   transition-property: color, background-color, border-color;
   transition-duration: 150ms;
   &:hover {
@@ -76,16 +76,16 @@
   min-width: 0;
 }
 .fx-journal-archive-text {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   font-family: var(--fx-body);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 .fx-journal-archive-label,
 .fx-u-profile-text-3 {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
@@ -94,9 +94,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--dim);
 }
@@ -109,7 +109,7 @@
 
 .fx-journal-tag-grid {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -127,14 +127,14 @@
 }
 .fx-journal-tag-caps {
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--dim);
 }
 .fx-journal-tag-title {
   font-family: var(--display);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.375;
   color: var(--text);
   a:is(:hover, :focus-visible) & {
@@ -151,16 +151,16 @@
 }
 
 .fx-journal-text {
-  margin-top: -1.5rem;
+  margin-top: calc(-1 * var(--space-6));
 }
 .fx-journal-stack {
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: var(--space-8);
 }
 .fx-journal-grid {
   display: grid;
-  gap: 2rem;
+  gap: var(--space-7);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -169,12 +169,12 @@
   }
 }
 .fx-journal-card {
-  gap: 1.5rem;
+  gap: var(--space-6);
   --radius-l: var(--fx-radius-hero);
   --pad-card: 1.25rem;
   --card-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
-    --pad-card: 2rem;
+    --pad-card: var(--space-7);
   }
   @media (min-width: 48rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -197,7 +197,7 @@
 }
 .fx-journal-title {
   font-family: var(--display);
-  font-size: 1.875rem;
+  font-size: var(--title-2);
   line-height: 1.25;
   color: var(--text);
   a:is(:hover, :focus-visible) & {
@@ -210,12 +210,12 @@
   -webkit-line-clamp: 3;
   overflow: hidden;
   font-family: var(--fx-body);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
   color: var(--muted);
 }
 .fx-journal-card-2 {
-  --pad-card: 1rem;
+  --pad-card: var(--space-5);
   --card-shadow: var(--shadow-s);
 }
 .fx-journal-img-2 {
@@ -226,7 +226,7 @@
 }
 .fx-journal-title-2 {
   font-family: var(--display);
-  font-size: 1.25rem;
+  font-size: var(--title-4);
   line-height: 1.375;
   color: var(--text);
   a:is(:hover, :focus-visible) & {
@@ -245,9 +245,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }

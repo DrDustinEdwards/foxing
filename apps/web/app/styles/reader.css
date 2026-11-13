@@ -1,5 +1,5 @@
 .fx-reader-panels-label {
-  margin-left: 0.25rem;
+  margin-left: var(--space-2);
   font-variant-numeric: tabular-nums;
 }
 /* The reader's side sheet (reader-panels.tsx SidePanel) on Capsomer's dialog, which places it: the
@@ -10,31 +10,31 @@
 }
 .fx-reader-panels-title {
   font-family: var(--display);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
   color: inherit;
 }
 .fx-reader-panels-label-2 {
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-reader-panels-btn-4 {
   height: 1.75rem;
   width: 1.75rem;
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  border: var(--line-w) solid var(--line);
   &:disabled {
     opacity: 0.4;
   }
 }
 .fx-reader-panels-label-3 {
   width: 3rem;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   font-variant-numeric: tabular-nums;
 }
 .fx-reader-panels-label-4 {
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -43,14 +43,14 @@
 .fx-reader-panels-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
+  gap: var(--space-1);
 }
 .fx-reader-panels-btn-5 {
   width: 100%;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-3);
   text-align: left;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     background-color: var(--fx-hover);
@@ -58,19 +58,19 @@
 }
 .fx-reader-panels-btn-6 {
   flex: 1 1 0%;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-3);
   text-align: left;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     background-color: var(--fx-hover);
   }
 }
 .fx-reader-panels-btn-7 {
-  border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.75rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   &:hover {
@@ -80,9 +80,9 @@
 .fx-reader-panels-btn-8 {
   display: flex;
   width: 100%;
-  gap: 0.5rem;
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.5rem;
+  gap: var(--space-3);
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-3);
   text-align: left;
   &:hover {
     background-color: var(--fx-hover);
@@ -92,8 +92,8 @@
   height: 0.75rem;
   width: 0.75rem;
   flex: none;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
 }
 .fx-reader-panels-label-6 {
   flex-grow: 1;
@@ -103,22 +103,22 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-reader-panels-label-8 {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   display: flex;
-  gap: 0.25rem;
-  font-size: 0.75rem;
+  gap: var(--space-2);
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 .fx-reader-panels-label-9 {
   border-radius: 0.25rem;
   background-color: var(--fx-hover);
-  padding-inline: 0.25rem;
-  font-weight: 500;
+  padding-inline: var(--space-2);
+  font-weight: var(--weight-medium);
 }
 .fx-reader-panels-label-10 {
   display: -webkit-box;
@@ -128,40 +128,40 @@
 }
 .fx-reader-panels-text {
   position: fixed;
-  bottom: 1rem;
+  bottom: var(--space-5);
   left: 50%;
   translate: -50% 0;
-  border-radius: 0.375rem;
+  border-radius: var(--radius-m);
   background-color: color-mix(in srgb, var(--surface) 95%, transparent);
-  padding: 0.375rem 0.75rem;
+  padding: var(--space-2-5) var(--space-4);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   box-shadow: var(--shadow-m);
 }
 .fx-reader-panels-card-2 {
   position: fixed;
-  bottom: 1rem;
+  bottom: var(--space-5);
   left: 50%;
   display: flex;
   translate: -50% 0;
   align-items: center;
-  gap: 0.75rem;
-  border-radius: 0.375rem;
-  border-width: 1px;
+  gap: var(--space-4);
+  border-radius: var(--radius-m);
+  border-width: var(--line-w);
   border-style: solid;
   background-color: var(--surface);
-  padding-inline: 0.75rem;
+  padding-inline: var(--space-4);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--crit);
   box-shadow: var(--shadow-m);
   border-color: color-mix(in srgb, var(--crit) 25%, var(--surface));
 }
 .fx-reader-panels-btn-10 {
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--dim);
   text-decoration-line: underline;
   text-underline-offset: 2px;
@@ -169,14 +169,14 @@
 .fx-reader-panels-row-3 {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  border-block-end: 1px solid var(--line);
-  padding-inline: 0.75rem;
+  gap: var(--space-3);
+  border-block-end: var(--line-w) solid var(--line);
+  padding-inline: var(--space-4);
 }
 .fx-reader-panels-link-2 {
-  border-radius: 0.375rem;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     text-decoration-line: underline;
@@ -185,7 +185,7 @@
 .fx-reader-panels-box-2 {
   min-width: 0;
   flex: 1 1 0%;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-reader-panels-title-3 {
@@ -197,10 +197,10 @@
 .fx-reader-panels-row-4 {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  border-block-end: 1px solid var(--line);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.75rem;
+  gap: var(--space-3);
+  border-block-end: var(--line-w) solid var(--line);
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--fs-small);
   line-height: 1rem;
 }
 .fx-reader-panels-label-12 {
@@ -213,32 +213,32 @@
   width: 1.5rem;
   flex: none;
   place-items: center;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
-  font-size: 0.75rem;
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
+  font-size: var(--fs-small);
   line-height: 1rem;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .fx-reader-popovers-label-2 {
   min-width: 0;
   flex: 1 1 0%;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .fx-reader-popovers-label-3 {
   border-radius: 0.25rem;
   background-color: var(--fx-hover);
-  padding-inline: 0.25rem;
-  font-size: 10px;
+  padding-inline: var(--space-2);
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.025em;
   color: var(--dim);
 }
 .fx-reader-popovers-btn {
-  border-radius: 0.375rem;
-  padding: 0.125rem 0.375rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-1) var(--space-2-5);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     background-color: var(--fx-hover);
@@ -247,7 +247,7 @@
 .fx-reader-popovers-text {
   max-height: 6rem;
   overflow: auto;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   opacity: 0.7;
 }
@@ -255,24 +255,24 @@
   width: 100%;
 }
 .fx-reader-popovers-label-4 {
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .fx-reader-popovers-text-2 {
   white-space: pre-wrap;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-reader-popovers-row-2 {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.75rem;
+  gap: var(--space-4);
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 .fx-reader-popovers-btn-3 {
-  border-radius: 9999px;
-  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  padding: var(--space-1) var(--space-3);
   &:hover {
     background-color: var(--fx-hover);
   }
@@ -281,87 +281,87 @@
   }
 }
 .fx-reader-popovers-label-5 {
-  margin-left: 0.25rem;
+  margin-left: var(--space-2);
   font-variant-numeric: tabular-nums;
 }
 .fx-reader-popovers-stack {
   display: flex;
   max-height: 10rem;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-2-5);
   overflow: auto;
 }
 .fx-reader-popovers-item {
-  border-radius: 0.375rem;
+  border-radius: var(--radius-m);
   background-color: var(--fx-hover);
-  padding: 0.375rem 0.5rem;
-  font-size: 0.875rem;
+  padding: var(--space-2-5) var(--space-3);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-reader-popovers-label-7 {
-  margin-right: 0.25rem;
-  font-weight: 500;
+  margin-right: var(--space-2);
+  font-weight: var(--weight-medium);
 }
 .fx-reader-popovers-stack-2,
 .fx-follow-button-stack,
 .fx-library-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-2-5);
 }
 .fx-reader-popovers-row-3 {
   display: flex;
 }
 .fx-reader-popovers-btn-4 {
-  border-radius: 0.375rem;
+  border-radius: var(--radius-m);
   background-color: var(--primary);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--primary-fg);
   &:disabled {
-    opacity: 0.5;
+    opacity: var(--opacity-half);
   }
 }
 .fx-reader-popovers-row-4 {
   position: fixed;
-  bottom: 4rem;
+  bottom: var(--space-9);
   left: 50%;
-  z-index: 20;
+  z-index: var(--z-sticky);
   display: flex;
   translate: -50% 0;
   align-items: center;
-  gap: 0.375rem;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
-  padding-inline: 0.75rem;
+  gap: var(--space-2-5);
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
+  padding-inline: var(--space-4);
   box-shadow: var(--shadow-m);
 }
 .fx-reader-popovers-btn-5 {
   height: 1.5rem;
   width: 1.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
 }
 .fx-reader-popovers-label-8 {
-  margin-inline: 0.25rem;
+  margin-inline: var(--space-2);
   height: 1.25rem;
   width: 1px;
   background-color: var(--line);
 }
 .fx-reader-popovers-btn-6 {
-  border-radius: 9999px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     background-color: var(--fx-hover);
   }
 }
 .fx-reader-popovers-btn-7 {
-  border-radius: 9999px;
-  padding: 0.25rem 0.5rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     background-color: var(--fx-hover);
@@ -373,58 +373,58 @@
 }
 .fx-reader-popovers-box {
   position: fixed;
-  bottom: 4rem;
+  bottom: var(--space-9);
   left: 50%;
-  z-index: 20;
+  z-index: var(--z-sticky);
   width: min(28rem, 90vw);
   translate: -50% 0;
   border-radius: var(--radius-l);
-  border: 1px solid var(--line);
-  padding: 0.75rem;
+  border: var(--line-w) solid var(--line);
+  padding: var(--space-4);
   box-shadow: var(--shadow-l);
 }
 .fx-reader-popovers-row-5 {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
+  gap: var(--space-2-5);
 }
 .fx-reader-popovers-row-7 {
   display: flex;
   align-items: center;
-  gap: 0.375rem;
-  font-size: 0.75rem;
+  gap: var(--space-2-5);
+  font-size: var(--fs-small);
   line-height: 1rem;
 }
 .fx-reader-popovers-btn-8 {
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   &:hover {
     background-color: var(--fx-hover);
   }
 }
 .fx-reader-popovers-btn-9 {
-  border-radius: 0.375rem;
+  border-radius: var(--radius-m);
   background-color: var(--primary);
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--primary-fg);
 }
 .fx-reader-popovers-btn-10 {
   height: 1.25rem;
   width: 1.25rem;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
   &[aria-pressed="true"] {
-    box-shadow: 0 0 0 1px var(--ring);
+    box-shadow: 0 0 0 var(--line-w) var(--ring);
   }
 }
 .fx-reader-popovers-text-3 {
   max-height: 5rem;
   overflow: auto;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   opacity: 0.7;
 }
@@ -434,9 +434,9 @@
   justify-content: space-between;
 }
 .fx-reader-popovers-btn-11 {
-  border-radius: 0.375rem;
-  padding: 0.375rem 0.75rem;
-  font-size: 0.875rem;
+  border-radius: var(--radius-m);
+  padding: var(--space-2-5) var(--space-4);
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--crit);
   &:hover {
@@ -458,10 +458,10 @@
 .fx-reader-view-grid {
   position: absolute;
   inset: 0;
-  z-index: 10;
+  z-index: var(--z-raise);
   display: grid;
   place-items: center;
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--dim);
 }
@@ -491,14 +491,14 @@
   width: 100%;
 }
 .fx-reader-view-foot {
-  border-block-start: 1px solid var(--line);
-  padding-inline: 1rem;
+  border-block-start: var(--line-w) solid var(--line);
+  padding-inline: var(--space-5);
 }
 .fx-reader-view-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 0.75rem;
+  gap: var(--space-4);
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: color-mix(in srgb, currentColor 60%, transparent);
 }
@@ -510,22 +510,22 @@
 }
 
 .fx-companion-test-box {
-  border-radius: 0.375rem;
-  border-width: 1px;
+  border-radius: var(--radius-m);
+  border-width: var(--line-w);
   border-style: solid;
-  padding-inline: 1rem;
+  padding-inline: var(--space-5);
   border-color: color-mix(in srgb, var(--warn) 30%, var(--surface));
   background-color: var(--warn-soft);
 }
 .fx-companion-test-text {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--warn);
 }
 .fx-companion-test-form {
   & > * + * {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
   }
 }
 .fx-companion-test-select {
@@ -533,12 +533,12 @@
 }
 .fx-companion-test-card-2 {
   white-space: pre-wrap;
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  border: var(--line-w) solid var(--line);
   background-color: var(--ground);
-  padding: 1rem;
+  padding: var(--space-5);
   font-family: var(--fx-body);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--text);
 }
@@ -547,7 +547,7 @@
 }
 .fx-companion-test-text-2 {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
@@ -566,22 +566,22 @@
 
 .fx-reader-theme {
   flex: 1;
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   border-radius: var(--radius-m);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--fs-body);
   text-transform: capitalize;
 }
 .fx-reader-theme[aria-pressed="true"] {
   border-color: var(--line-strong);
-  box-shadow: inset 0 0 0 1px var(--line-strong);
+  box-shadow: inset 0 0 0 var(--line-w) var(--line-strong);
 }
 .fx-reader-cols {
   block-size: 1.75rem;
   inline-size: 2.5rem;
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   border-radius: var(--radius-m);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
 }
 .fx-reader-cols[aria-pressed="true"] {
   border-color: var(--accent-line);
@@ -591,11 +591,11 @@
 .fx-reader-swatch {
   block-size: 1.25rem;
   inline-size: 1.25rem;
-  border: 1px solid var(--line-strong);
+  border: var(--line-w) solid var(--line-strong);
   border-radius: var(--radius-full);
 }
 .fx-reader-swatch[aria-pressed="true"] {
-  box-shadow: 0 0 0 2px var(--ring);
+  box-shadow: 0 0 0 var(--line-w-thick) var(--ring);
 }
 .fx-reader-note {
   block-size: 6rem;
@@ -606,18 +606,18 @@
 /* The annotation popovers: at the selection when anchored, otherwise docked above the bottom bar. */
 .fx-reader-pop {
   position: fixed;
-  z-index: 30;
+  z-index: var(--z-tabbar);
   inline-size: min(30rem, 92vw);
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   border-radius: var(--radius-l);
-  padding: 0.75rem;
+  padding: var(--space-4);
   box-shadow: var(--shadow-l);
 }
 .fx-reader-pop-narrow {
   inline-size: min(28rem, 90vw);
 }
 .fx-reader-pop-docked {
-  inset-block-end: 4rem;
+  inset-block-end: var(--space-9);
   inset-inline-start: 50%;
   translate: -50% 0;
 }
@@ -626,16 +626,16 @@
    color, so they read on every reading theme. */
 .fx-reader-toggle,
 .fx-reader-layer {
-  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
-  font-size: 0.875rem;
+  border: var(--line-w) solid color-mix(in srgb, currentColor 30%, transparent);
+  font-size: var(--fs-body);
 }
 .fx-reader-toggle {
   border-radius: var(--radius-m);
-  padding: 0.25rem 0.75rem;
+  padding: var(--space-2) var(--space-4);
 }
 .fx-reader-layer {
   border-radius: var(--radius-full);
-  padding: 0.125rem 0.5rem;
+  padding: var(--space-1) var(--space-3);
 }
 .fx-reader-toggle:hover,
 .fx-reader-layer:hover {
