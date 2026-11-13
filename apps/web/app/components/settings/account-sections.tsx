@@ -24,7 +24,7 @@ const BIO_MAX = 200;
 export function ProfileSection({
   initial,
 }: {
-  initial: { email: string; displayName: string; bio: string; favoriteGenres: string };
+  initial: { userId: string; email: string; displayName: string; bio: string; favoriteGenres: string };
 }) {
   const [displayName, setDisplayName] = useState(initial.displayName);
   const [bio, setBio] = useState(initial.bio);
@@ -47,6 +47,7 @@ export function ProfileSection({
     setStatus("saved");
     // The password manager shows the new name beside this account's passkeys (the Signal API).
     void signalCurrentUserDetails({
+      user: initial.userId,
       name: initial.email,
       displayName: displayName.trim() || undefined,
     });
@@ -263,7 +264,8 @@ export function AdminSection() {
 }
 
 export type SignInSettings = {
-  /** The account's address and display name, as the password manager shows them. */
+  /** The account's id, address and display name, as the password manager shows them. */
+  userId: string;
   email: string;
   displayName: string;
   passkeys: {
@@ -329,6 +331,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
     // A passkey left out would be dropped from the password manager, so a gap sends nothing.
     if (credentialIds.some((id) => !id)) return;
     void signalPasskeys({
+      user: initial.userId,
       credentialIds,
       name: initial.email,
       displayName: initial.displayName || undefined,

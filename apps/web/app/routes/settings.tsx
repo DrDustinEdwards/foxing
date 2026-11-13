@@ -64,6 +64,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { visibility, notificationPrefs } = views.myProfile(profile);
   return {
     username: profile.username,
+    userId: user.id,
     email: user.email,
     isAdmin: Boolean(profile.isAdmin),
     displayName: profile.displayName ?? "",
@@ -81,6 +82,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
       quietHours: notificationPrefs.quietHours ?? null,
     },
     signIn: {
+      userId: user.id,
       email: user.email,
       displayName: profile.displayName ?? "",
       // site-runtime's accountPasskeys rows (name, provider, created, last used), kept with each
