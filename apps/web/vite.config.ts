@@ -1,10 +1,12 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
+import { nativeBuiltins } from "@dustinedwards/devkit/vite/native-builtins";
 import { siteScript } from "@dustinedwards/devkit/vite/site-script";
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig, type Plugin } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-// Plugin order matters: cloudflare (runs server code in workerd), then reactRouter,
+// Plugin order matters: nativeBuiltins first (it swaps a polyfill for the platform function before
+// anything resolves it), then cloudflare (runs server code in workerd), then reactRouter,
 // then tsconfigPaths. siteScript builds /site.js and the islands it starts (app/site.ts,
 // app/islands/*.ts): the only script a public page runs. A page that hydrates
 // (`handle = { hydrate: true }`, or a signed-in reader; root.tsx) gets React instead.
@@ -36,6 +38,7 @@ export default defineConfig({
   // Source maps go up with the deploy (upload_source_maps) and are never served.
   environments: { ssr: { build: { minify: true, sourcemap: true } } },
   plugins: [
+    nativeBuiltins(),
     fontDisplayOptional(),
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     reactRouter(),
