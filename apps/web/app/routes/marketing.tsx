@@ -86,123 +86,126 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      {/* Hero */}
-      <Container className="py-6">
-        <Hero
-          align="center"
-          eyebrow="A reading home for the classics"
-          title="Read the classics. Keep the record."
-          lead={`${formatCount(total)} books, free to read. Track what you finish, mark the passages that stay with you, and follow the picks worth reading.`}
-          actions={
-            <>
-              <div className="fx-hero-search">
-                <SearchBox />
-              </div>
-              <Button to="/books">Browse the library</Button>
-              <Button to="/awards" variant="secondary">
-                Award winners
-              </Button>
-            </>
-          }
-        />
-      </Container>
-
-      <ValueProps />
-
-      {/* Today's Pick: a published Book of the Month, or a staff pick. */}
-      {pick ? (
-        <Container className="mt-16">
-          <article className="cap-card fx-pick">
-            <div className="fx-pick-cover">
-              <Link to={`/books/${pick.book.slug}`}>
-                <CoverImage
-                  src={pick.book.coverUrl}
-                  alt={`${pick.book.title} by ${pick.book.author}`}
-                  fallbackLabel={pick.book.title}
-                  sizes="160px"
-                />
-              </Link>
-            </div>
-            <div>
-              <Eyebrow>{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</Eyebrow>
-              <h2 className="cap-title mt-2" data-size="3">
-                <Link to={`/books/${pick.book.slug}`} className="hover-accent">
-                  {pick.book.title}
-                </Link>
-              </h2>
-              <p className="cap-text mt-1" data-tone="muted" data-face="ui">
-                {pick.book.author}
-              </p>
-              {pick.note ? (
-                <p className="cap-text cap-clamp mt-3" data-tone="muted">
-                  {pick.note}
-                </p>
-              ) : null}
-              {pick.source === "botm" ? (
-                <Link
-                  to="/book-of-the-month"
-                  className="cap-text link mt-3 block"
-                  data-size="small"
-                  data-face="ui"
-                >
-                  Why this book
-                </Link>
-              ) : null}
-            </div>
-          </article>
+      <div className="cap-stack" data-gap="9">
+        {/* Hero */}
+        <Container className="py-6">
+          <Hero
+            align="center"
+            eyebrow="A reading home for the classics"
+            title="Read the classics. Keep the record."
+            lead={`${formatCount(total)} books, free to read. Track what you finish, mark the passages that stay with you, and follow the picks worth reading.`}
+            actions={
+              <>
+                <div className="fx-hero-search">
+                  <SearchBox />
+                </div>
+                <Button to="/books">Browse the library</Button>
+                <Button to="/awards" variant="secondary">
+                  Award winners
+                </Button>
+              </>
+            }
+          />
         </Container>
-      ) : null}
 
-      {/* From the shelves */}
-      <Container className="mt-16">
-        <div className="cap-spread mb-6" data-gap="4" data-align="end">
-          <h2 className="cap-title" data-size="3">
-            From the shelves
-          </h2>
-          <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
-            See all
-          </Link>
-        </div>
-        <BookGrid>
-          {/* Below the fold at every width, so none of these covers is fetched first. */}
-          {books.slice(0, 10).map((b) => (
-            <BookCard key={b.slug} book={b} />
-          ))}
-        </BookGrid>
-      </Container>
+        <ValueProps />
 
-      {/* From the Journal */}
-      {posts.length > 0 ? (
-        <Container className="mt-16">
-          <div className="cap-spread mb-6" data-gap="4" data-align="end">
-            <h2 className="cap-title" data-size="3">
-              From the Journal
-            </h2>
-            <Link to="/journal" className="cap-text link" data-size="small" data-face="ui">
-              All essays
-            </Link>
-          </div>
-          <div className="cap-grid" data-cols="3" data-gap="5">
-            {posts.map((p) => (
-              <EntityCard key={p.slug} to={`/journal/${p.slug}`}>
-                <h3 className="cap-title" data-size="5">
-                  {p.title}
-                </h3>
-                {p.excerpt ? (
-                  <p className="cap-text cap-clamp" data-tone="muted" data-lines="3">
-                    {p.excerpt}
+        {/* Today's Pick: a published Book of the Month, or a staff pick. */}
+        {pick ? (
+          <Container>
+            <article className="cap-card fx-pick">
+              <div className="fx-pick-cover">
+                <Link to={`/books/${pick.book.slug}`}>
+                  <CoverImage
+                    src={pick.book.coverUrl}
+                    alt={`${pick.book.title} by ${pick.book.author}`}
+                    fallbackLabel={pick.book.title}
+                    sizes="160px"
+                  />
+                </Link>
+              </div>
+              <div className="cap-stack" data-gap="3">
+                <Eyebrow>{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</Eyebrow>
+                <h2 className="cap-title" data-size="3">
+                  <Link to={`/books/${pick.book.slug}`} className="hover-accent">
+                    {pick.book.title}
+                  </Link>
+                </h2>
+                <p className="cap-text" data-tone="muted" data-face="ui">
+                  {pick.book.author}
+                </p>
+                {pick.note ? (
+                  <p className="cap-text cap-clamp" data-tone="muted">
+                    {pick.note}
                   </p>
                 ) : null}
-              </EntityCard>
-            ))}
-          </div>
-        </Container>
-      ) : null}
+                {pick.source === "botm" ? (
+                  <Link
+                    to="/book-of-the-month"
+                    className="cap-text link"
+                    data-size="small"
+                    data-face="ui"
+                  >
+                    Why this book
+                  </Link>
+                ) : null}
+              </div>
+            </article>
+          </Container>
+        ) : null}
 
-      {/* App / get-started. The mobile apps are not shipping yet, so the CTA joins on
+        {/* From the shelves */}
+        <Container className="cap-stack" data-gap="6">
+          <div className="cap-spread" data-gap="4" data-align="end">
+            <h2 className="cap-title" data-size="3">
+              From the shelves
+            </h2>
+            <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
+              See all
+            </Link>
+          </div>
+          <BookGrid>
+            {/* Below the fold at every width, so none of these covers is fetched first. */}
+            {books.slice(0, 10).map((b) => (
+              <BookCard key={b.slug} book={b} />
+            ))}
+          </BookGrid>
+        </Container>
+
+        {/* From the Journal */}
+        {posts.length > 0 ? (
+          <Container className="cap-stack" data-gap="6">
+            <div className="cap-spread" data-gap="4" data-align="end">
+              <h2 className="cap-title" data-size="3">
+                From the Journal
+              </h2>
+              <Link to="/journal" className="cap-text link" data-size="small" data-face="ui">
+                All essays
+              </Link>
+            </div>
+            <div className="cap-grid" data-cols="3" data-gap="5">
+              {posts.map((p) => (
+                <EntityCard key={p.slug} to={`/journal/${p.slug}`}>
+                  <h3 className="cap-title" data-size="5">
+                    {p.title}
+                  </h3>
+                  {p.excerpt ? (
+                    <p className="cap-text cap-clamp" data-tone="muted" data-lines="3">
+                      {p.excerpt}
+                    </p>
+                  ) : null}
+                </EntityCard>
+              ))}
+            </div>
+          </Container>
+        ) : null}
+      </div>
+
+      {/* The band brings its own top margin (Capsomer cta-band), so it sits after the stack.
+          App / get-started. The mobile apps are not shipping yet, so the CTA joins on
           web rather than linking dead store pages. Swap in store badges when mobile
           ships. */}
-      <Container className="mt-16">
+      <Container>
         <CtaBand
           eyebrow="Start reading"
           title="Read the classics. Finally understand them."
@@ -267,7 +270,7 @@ function CompassIcon() {
 
 function ValueProps() {
   return (
-    <Container className="mt-16">
+    <Container>
       <div className="fx-values">
         <ValueColumn icon={<BookOpenIcon />} heading="1,400+ classic books, free.">
           Public domain literature, properly formatted for reading on the web. No subscription, no
