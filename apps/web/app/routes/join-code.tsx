@@ -10,6 +10,7 @@ import { clubsRepo, createDb } from "@foxing/core";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
 import { signInFrom } from "~/lib/sign-in-path";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -31,10 +32,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    { title: `Join ${loaderData?.club?.name ?? "a club"} | Foxing` },
-    { name: "robots", content: "noindex" },
-  ];
+  return noindexMeta(`Join ${loaderData?.club?.name ?? "a club"} | Foxing`);
 }
 
 export default function JoinCode({ loaderData }: Route.ComponentProps) {

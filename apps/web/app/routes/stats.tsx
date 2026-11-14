@@ -6,9 +6,10 @@ import { StatsView } from "~/components/reading/stats-view";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/stats";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Reading stats | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Reading stats | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

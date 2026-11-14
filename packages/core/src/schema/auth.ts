@@ -4,6 +4,7 @@
 // the app never writes these tables directly. Generated shape per better-auth
 // drizzle adapter (sqlite provider).
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { cascadeFk } from "./_helpers";
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
@@ -25,9 +26,7 @@ export const session = sqliteTable(
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
     ipAddress: text("ip_address"),
     userAgent: text("user_agent"),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     // site-runtime ./sign-in `sessionDetails` (SESSION_DETAILS_SQL): the coarse place, kept up
     // with use, and the random id of the browser's device cookie, never sent to a browser.
     location: text("location"),
@@ -42,9 +41,7 @@ export const account = sqliteTable(
     id: text("id").primaryKey(),
     accountId: text("account_id").notNull(),
     providerId: text("provider_id").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
@@ -88,9 +85,7 @@ export const passkey = sqliteTable(
     id: text("id").primaryKey(),
     name: text("name"),
     publicKey: text("public_key").notNull(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     credentialID: text("credential_id").notNull(),
     counter: integer("counter").notNull(),
     deviceType: text("device_type").notNull(),

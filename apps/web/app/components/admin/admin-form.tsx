@@ -4,6 +4,7 @@
 // admin write may fail silently.
 import { OFFLINE_MESSAGE } from "@foxing/client";
 import { useState } from "react";
+import { FormError } from "~/components/ui";
 
 type Result = { ok: boolean; status: number; body: unknown };
 
@@ -60,11 +61,37 @@ export function useAdminAction(opts?: { onDone?: () => void }) {
 }
 
 export function AdminError({ error }: { error: string | null }) {
-  if (!error) return null;
+  return <FormError error={error} className="mt-3" />;
+}
+
+// A labeled text field: a textarea when it has rows, else an input.
+export function AdminField({
+  label,
+  onChange,
+  rows,
+  ...props
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  rows?: number;
+  type?: string;
+  placeholder?: string;
+}) {
   return (
-    <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
-      {error}
-    </p>
+    <label className="block">
+      <span className="fx-label">{label}</span>
+      {rows ? (
+        <textarea
+          {...props}
+          rows={rows}
+          onChange={(e) => onChange(e.target.value)}
+          className={adminInputClass}
+        />
+      ) : (
+        <input {...props} onChange={(e) => onChange(e.target.value)} className={adminInputClass} />
+      )}
+    </label>
   );
 }
 

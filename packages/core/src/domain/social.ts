@@ -13,6 +13,7 @@ import { decodeCursor, encodeCursor } from "@dustinedwards/site-runtime/d1";
 import { eq } from "drizzle-orm";
 import type { Db } from "../db";
 import { emit, type EventActor } from "../events";
+import * as notificationsRepo from "../repositories/notifications";
 import * as socialRepo from "../repositories/social";
 import { books, user as authUser } from "../schema";
 import { domainErrors } from "./errors";
@@ -23,7 +24,7 @@ export type FeedItemKind = "activity" | "follower";
 
 export type FeedItem =
   | { kind: "activity"; event: socialRepo.ActivityEvent }
-  | { kind: "follower"; notification: socialRepo.FollowerNotification; createdAt: Date };
+  | { kind: "follower"; notification: notificationsRepo.Notification; createdAt: Date };
 
 export type FeedInputs = {
   viewerId: string;
@@ -199,7 +200,7 @@ export async function getFeed(
   // Over-fetch candidates because some will be filtered out by visibility.
   const [candidates, followerNotifs] = await Promise.all([
     socialRepo.listActivityByAuthors(db, authorIds, { cursor, limit: limit * 3 }),
-    socialRepo.listFollowerNotifications(db, viewerId, { cursor, limit }),
+    notificationsRepo.listForUser(db, viewerId, { cursor, limit, type: "new_follower" }),
   ]);
 
   const visible = resolveFeed({ viewerId, followingIds, closeFriendAuthorIds, events: candidates });

@@ -23,11 +23,12 @@ import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, Eyebrow } from "~/components/ui";
+import { Container, EmptyState, Eyebrow, FormError } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/library";
+import { noindexMeta } from "~/lib/seo";
 
 const STATUS_TABS: { value: ShelfStatus; label: string }[] = [
   { value: "reading", label: "Reading" },
@@ -52,7 +53,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Your library | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Your library | Foxing");
 }
 
 export default function Library({ loaderData }: Route.ComponentProps) {
@@ -274,11 +275,7 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
           Saving...
         </p>
       ) : null}
-      {error ? (
-        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} className="mt-2" />
     </section>
   );
 }
@@ -341,11 +338,7 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
           Saving...
         </p>
       ) : null}
-      {error ? (
-        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} className="mt-2" />
     </section>
   );
 }

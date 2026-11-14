@@ -9,6 +9,7 @@ import { Container, EmptyState } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/clubs";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -17,7 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Book clubs | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Book clubs | Foxing");
 }
 
 function ClubRow({

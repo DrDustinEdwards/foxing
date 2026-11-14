@@ -10,7 +10,7 @@ import {
   index,
   unique,
 } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
+import { bool, cascadeFk, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";
 
@@ -61,12 +61,8 @@ export const userBooks = sqliteTable(
   "user_books",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    bookId: cascadeFk("book_id", () => books.id),
     status: text("status").notNull(), // want | reading | finished | paused | abandoned
     progress: json<Locator>("progress"),
     progressPct: real("progress_pct").notNull().default(0),
@@ -92,12 +88,8 @@ export const diaryEntries = sqliteTable(
   "diary_entries",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    bookId: cascadeFk("book_id", () => books.id),
     logDate: ts("log_date").notNull(),
     ratingHalf: integer("rating_half"), // 1-10 halves
     review: text("review"),
@@ -118,12 +110,8 @@ export const readingSessions = sqliteTable(
   "reading_sessions",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    bookId: cascadeFk("book_id", () => books.id),
     startedAt: ts("started_at").notNull(),
     endedAt: ts("ended_at"),
     pagesRead: integer("pages_read").notNull().default(0),
@@ -153,9 +141,7 @@ export const readingGoals = sqliteTable(
   "reading_goals",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     type: text("type").notNull(), // books | pages | minutes
     target: integer("target").notNull(),
     periodType: text("period_type").notNull(), // year | month | week
@@ -171,9 +157,7 @@ export const vocabulary = sqliteTable(
   "vocabulary",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     bookId: text("book_id").references(() => books.id, { onDelete: "set null" }),
     word: text("word").notNull(),
     definition: text("definition").notNull(),
@@ -204,12 +188,8 @@ export const badges = sqliteTable("badges", {
 export const userBadges = sqliteTable(
   "user_badges",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    badgeId: text("badge_id")
-      .notNull()
-      .references(() => badges.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    badgeId: cascadeFk("badge_id", () => badges.id),
     earnedAt: ts("earned_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.badgeId] })],
@@ -219,9 +199,7 @@ export const customShelves = sqliteTable(
   "custom_shelves",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     name: text("name").notNull(),
     description: text("description"),
     isPublic: bool("is_public").notNull().default(false),
@@ -235,12 +213,8 @@ export const customShelves = sqliteTable(
 export const customShelfBooks = sqliteTable(
   "custom_shelf_books",
   {
-    shelfId: text("shelf_id")
-      .notNull()
-      .references(() => customShelves.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    shelfId: cascadeFk("shelf_id", () => customShelves.id),
+    bookId: cascadeFk("book_id", () => books.id),
     addedAt: ts("added_at").notNull(),
   },
   (t) => [primaryKey({ columns: [t.shelfId, t.bookId] })],
@@ -249,12 +223,8 @@ export const customShelfBooks = sqliteTable(
 export const userFavorites = sqliteTable(
   "user_favorites",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    bookId: cascadeFk("book_id", () => books.id),
     position: integer("position").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.bookId] })],
@@ -263,12 +233,8 @@ export const userFavorites = sqliteTable(
 export const userBookTags = sqliteTable(
   "user_book_tags",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    bookId: cascadeFk("book_id", () => books.id),
     tag: text("tag").notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.bookId, t.tag] })],

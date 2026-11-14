@@ -11,6 +11,7 @@ import { ReaderView } from "~/components/reader/reader-view";
 import "~/styles/reader.css";
 import type { Route } from "./+types/read";
 import { signInHref } from "~/lib/sign-in-path";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db, env, origin } = loaderBase(context, request);
@@ -59,7 +60,7 @@ export async function clientLoader({ request, serverLoader }: Route.ClientLoader
 export function meta({ loaderData }: Route.MetaArgs) {
   const title = loaderData ? `Reading ${loaderData.book.title}` : "Reader";
   // Reader is a private surface; keep it out of search indexes.
-  return [{ title: `${title} | Foxing` }, { name: "robots", content: "noindex" }];
+  return noindexMeta(`${title} | Foxing`);
 }
 
 export default function Read({ loaderData }: Route.ComponentProps) {

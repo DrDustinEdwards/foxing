@@ -13,12 +13,13 @@ import {
 } from "~/components/auth-shell";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/login";
+import { noindexMeta } from "~/lib/seo";
 
 // A sign-in page is a private page: no Web Analytics beacon (site-runtime PRIVATE_PAGE_HEADERS).
 export const headers = () => PRIVATE_PAGE_HEADERS;
 
 export function meta() {
-  return [{ title: "Sign in to Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Sign in to Foxing");
 }
 
 // `next` is where to return after signing in again (signInAgainIfStale), else /me.

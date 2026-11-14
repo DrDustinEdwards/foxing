@@ -8,9 +8,10 @@ import { Avatar, Chip, Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/me";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Your profile | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Your profile | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

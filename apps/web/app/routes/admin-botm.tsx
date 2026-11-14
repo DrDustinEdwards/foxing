@@ -13,11 +13,13 @@ import {
   adminInputClass,
   useAdminAction,
   AdminRow,
+  AdminField,
 } from "~/components/admin/admin-form";
 import { BookPicker } from "~/components/admin/book-picker";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-botm";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -27,7 +29,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Book of the Month | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Book of the Month | Foxing");
 }
 
 export default function AdminBotm({ loaderData }: Route.ComponentProps) {
@@ -36,14 +38,7 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
   const reload = () => revalidator.revalidate();
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Book of the Month
-        </h1>
-      </div>
-
+    <AdminShell title="Book of the Month">
       <div className="cap-stack" data-gap="6">
         <CreateBotm onDone={() => void reload()} />
         <AdminCard title="Scheduled picks">
@@ -139,43 +134,27 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
           selected={book}
           onPick={(b) => setBook(b ? { id: b.id, title: b.title, author: b.author } : null)}
         />
-        <label className="block">
-          <span className="fx-label">Category (optional)</span>
-          <input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Curator note (optional)</span>
-          <textarea
-            value={curatorNote}
-            onChange={(e) => setCuratorNote(e.target.value)}
-            rows={3}
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Bookshop.org link (optional)</span>
-          <input
-            type="url"
-            value={bookshopUrl}
-            onChange={(e) => setBookshopUrl(e.target.value)}
-            placeholder="https://bookshop.org/..."
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Amazon link (optional)</span>
-          <input
-            type="url"
-            value={amazonUrl}
-            onChange={(e) => setAmazonUrl(e.target.value)}
-            placeholder="https://www.amazon.com/..."
-            className={adminInputClass}
-          />
-        </label>
+        <AdminField label="Category (optional)" value={category} onChange={setCategory} />
+        <AdminField
+          label="Curator note (optional)"
+          value={curatorNote}
+          onChange={setCuratorNote}
+          rows={3}
+        />
+        <AdminField
+          label="Bookshop.org link (optional)"
+          value={bookshopUrl}
+          onChange={setBookshopUrl}
+          type="url"
+          placeholder="https://bookshop.org/..."
+        />
+        <AdminField
+          label="Amazon link (optional)"
+          value={amazonUrl}
+          onChange={setAmazonUrl}
+          type="url"
+          placeholder="https://www.amazon.com/..."
+        />
         <label
           className="cap-text cap-cluster"
           data-size="small"

@@ -8,6 +8,7 @@ import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -21,7 +22,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin | Foxing");
 }
 
 export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
@@ -36,14 +37,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
   ];
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Overview
-        </h1>
-      </div>
-
+    <AdminShell title="Overview">
       <div className="fx-admin-grid">
         {tiles.map((t) => (
           <div key={t.label} className="cap-card">

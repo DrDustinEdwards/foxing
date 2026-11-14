@@ -11,10 +11,11 @@ export type Notification = typeof notifications.$inferSelect;
 export async function listForUser(
   db: Db,
   userId: string,
-  opts: { cursor?: { at: number; id: string } | null; limit?: number } = {},
+  opts: { cursor?: { at: number; id: string } | null; limit?: number; type?: string } = {},
 ): Promise<Notification[]> {
   const limit = Math.min(opts.limit ?? 40, 100);
   const conds = [eq(notifications.userId, userId)];
+  if (opts.type) conds.push(eq(notifications.type, opts.type));
   if (opts.cursor)
     conds.push(
       olderThan(

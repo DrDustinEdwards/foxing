@@ -12,7 +12,6 @@ import {
   books,
   closeFriends,
   follows,
-  notifications,
   readingListBooks,
   readingLists,
 } from "../schema";
@@ -20,7 +19,6 @@ import {
 export type ReadingList = typeof readingLists.$inferSelect;
 export type ReadingListBook = typeof readingListBooks.$inferSelect;
 export type ActivityEvent = typeof activityEvents.$inferSelect;
-export type FollowerNotification = typeof notifications.$inferSelect;
 
 // -- Follows ----------------------------------------------------------------
 
@@ -275,32 +273,6 @@ export async function listActivityByAuthors(
     .from(activityEvents)
     .where(and(...conds))
     .orderBy(desc(activityEvents.createdAt), desc(activityEvents.id))
-    .limit(limit);
-}
-
-/** The viewer's own new_follower notifications, for the feed self-channel ("X followed
- *  you"). Time-ordered so the domain can merge them with activity by created_at. */
-export async function listFollowerNotifications(
-  db: Db,
-  viewerId: string,
-  opts: { cursor?: { at: number; id: string } | null; limit?: number } = {},
-): Promise<FollowerNotification[]> {
-  const limit = Math.min(opts.limit ?? 40, 100);
-  const conds = [eq(notifications.userId, viewerId), eq(notifications.type, "new_follower")];
-  if (opts.cursor)
-    conds.push(
-      olderThan(
-        notifications.createdAt,
-        notifications.id,
-        new Date(opts.cursor.at),
-        opts.cursor.id,
-      ),
-    );
-  return db
-    .select()
-    .from(notifications)
-    .where(and(...conds))
-    .orderBy(desc(notifications.createdAt), desc(notifications.id))
     .limit(limit);
 }
 

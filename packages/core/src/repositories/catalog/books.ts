@@ -187,7 +187,8 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
     const want = limit - found.length;
     if (want <= 0) return;
     const rows = await db.all<RelatedRow>(sql`
-      SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url, b.publication_year, b.epub_url
+      SELECT b.id, b.slug, b.title, b.author, b.author_slug AS authorSlug, b.cover_url AS coverUrl,
+             b.publication_year AS publicationYear, b.epub_url AS epubUrl
       FROM book_subjects bs
       JOIN books b ON b.id = bs.book_id
       WHERE bs.subject = ${subject}
@@ -203,30 +204,10 @@ export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<Bo
   await take(true, false);
   await take(false, true);
   await take(false, false);
-  return found.map((r) =>
-    toCard({
-      id: r.id,
-      slug: r.slug,
-      title: r.title,
-      author: r.author,
-      authorSlug: r.author_slug,
-      coverUrl: r.cover_url,
-      publicationYear: r.publication_year,
-      epubUrl: r.epub_url,
-    }),
-  );
+  return found.map(toCard);
 }
 
-type RelatedRow = {
-  id: string;
-  slug: string;
-  title: string;
-  author: string;
-  author_slug: string | null;
-  cover_url: string | null;
-  publication_year: number | null;
-  epub_url: string | null;
-};
+type RelatedRow = Parameters<typeof toCard>[0];
 
 /** The next catalog book in the same series, by series order; null when there is none. */
 export async function getNextInSeries(db: Db, book: Book): Promise<BookCard | null> {
@@ -287,18 +268,9 @@ export async function listTrending(db: Db, sinceMs: number, limit = 10): Promise
  * awarded, then title) so the handoff is stable across sessions.
  */
 export async function listStarterBooks(db: Db, limit = 6): Promise<BookCard[]> {
-  const rows = await db.all<{
-    id: string;
-    slug: string;
-    title: string;
-    author: string;
-    author_slug: string | null;
-    cover_url: string | null;
-    publication_year: number | null;
-    epub_url: string | null;
-  }>(sql`
-    SELECT b.id, b.slug, b.title, b.author, b.author_slug, b.cover_url,
-           b.publication_year, b.epub_url
+  const rows = await db.all<RelatedRow>(sql`
+    SELECT b.id, b.slug, b.title, b.author, b.author_slug AS authorSlug, b.cover_url AS coverUrl,
+           b.publication_year AS publicationYear, b.epub_url AS epubUrl
     FROM books b
     JOIN book_awards ba ON ba.book_id = b.id
     WHERE b.source_type = 'catalog' AND b.cover_url IS NOT NULL
@@ -306,18 +278,7 @@ export async function listStarterBooks(db: Db, limit = 6): Promise<BookCard[]> {
     ORDER BY (b.epub_url IS NOT NULL) DESC, COUNT(ba.id) DESC, b.title ASC
     LIMIT ${limit}
   `);
-  return rows.map((r) =>
-    toCard({
-      id: r.id,
-      slug: r.slug,
-      title: r.title,
-      author: r.author,
-      authorSlug: r.author_slug,
-      coverUrl: r.cover_url,
-      publicationYear: r.publication_year,
-      epubUrl: r.epub_url,
-    }),
-  );
+  return rows.map(toCard);
 }
 
 /**

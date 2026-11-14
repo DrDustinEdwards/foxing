@@ -15,7 +15,7 @@ import {
 } from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
-import { Avatar } from "../ui";
+import { Avatar, avatarInitials } from "../ui";
 
 // Foxing's own drawings, on the set's 24-unit grid, for the four the shared set lacks.
 const OWN = {
@@ -135,14 +135,6 @@ function TierBadge({ tier }: { tier: "free" | "plus" }) {
   return <span className={isPlus ? "badge" : "badge badge-quiet"}>{isPlus ? "Plus" : "Free"}</span>;
 }
 
-/** Two-letter initials for the header's account button. */
-function initials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 /** The header's account slot: the rich panel on a desktop, the same links in the phone's sheet. */
 export function headerAccount(
   user: NavUser,
@@ -151,7 +143,7 @@ export function headerAccount(
 ): HeaderAccount {
   return {
     name: user.displayName,
-    initials: initials(user.displayName),
+    initials: avatarInitials(user.displayName),
     avatar: user.avatarUrl ?? undefined,
     detail: `@${user.username}`,
     onSignOut,

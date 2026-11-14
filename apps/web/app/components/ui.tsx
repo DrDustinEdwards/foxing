@@ -230,3 +230,25 @@ export function PageHeader({
     </header>
   );
 }
+
+/** An action's failure message, announced to assistive tech; nothing when there is none. */
+export function FormError({
+  error,
+  className,
+}: {
+  error: string | null | undefined;
+  className?: string;
+}) {
+  if (!error) return null;
+  return (
+    <p
+      className={className ? `cap-text ${className}` : "cap-text"}
+      data-size="small"
+      data-tone="crit"
+      data-face="ui"
+      role="alert"
+    >
+      {error}
+    </p>
+  );
+}

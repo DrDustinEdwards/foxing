@@ -11,6 +11,12 @@ export function requireSession(c: Context<Env>): SessionUser {
   return session;
 }
 
+/** The signed-in session and the actor a domain call acts as (its user id and timezone). */
+export function actorOf(c: Context<Env>) {
+  const session = requireSession(c);
+  return { session, actor: { userId: session.id, timezone: c.get("profile")?.timezone } };
+}
+
 /** The ceiling for an /api/v1 JSON body: far past a journal post or a 20,000-character review. */
 const BODY_MAX_BYTES = 1024 * 1024;
 

@@ -1,4 +1,5 @@
 import { useHydrated } from "capsomer/react/hooks";
+import { FormError } from "~/components/ui";
 
 export function ToggleRow({
   checked,
@@ -86,11 +87,7 @@ export function SubmitRow({
           </span>
         ) : null}
       </div>
-      {error ? (
-        <p className="cap-text" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} />
     </>
   );
 }

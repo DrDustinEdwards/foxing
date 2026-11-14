@@ -9,10 +9,12 @@ import {
   AdminError,
   adminInputClass,
   useAdminAction,
+  AdminField,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-notifications";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -21,7 +23,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Notifications | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Notifications | Foxing");
 }
 
 const CONFIRM_WORD = "BROADCAST";
@@ -59,37 +61,15 @@ export default function AdminNotifications() {
   }
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Notifications
-        </h1>
-      </div>
-
+    <AdminShell title="Notifications">
       <AdminCard title="Broadcast">
         <div className="cap-stack">
           <p className="fx-admin-notifications-text">
             This sends one in-app notification to every active reader. It cannot be recalled.
             Confirm the text below before you send.
           </p>
-          <label className="block">
-            <span className="fx-label">Title</span>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className={adminInputClass}
-            />
-          </label>
-          <label className="block">
-            <span className="fx-label">Body (optional)</span>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
-              rows={3}
-              className={adminInputClass}
-            />
-          </label>
+          <AdminField label="Title" value={title} onChange={setTitle} />
+          <AdminField label="Body (optional)" value={body} onChange={setBody} rows={3} />
           <label className="block">
             <span className="fx-label">Type {CONFIRM_WORD} to confirm</span>
             <input

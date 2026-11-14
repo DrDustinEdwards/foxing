@@ -2,7 +2,7 @@
 // Community books are first-class here (tracking/diary/clubs/affiliate surface);
 // readability is derived (source_type='catalog' AND epub_url present), not a column.
 import { integer, primaryKey, real, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
+import { bool, cascadeFk, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 
 export const books = sqliteTable(
@@ -57,9 +57,7 @@ export const bookAwards = sqliteTable(
   "book_awards",
   {
     id: idPk(),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    bookId: cascadeFk("book_id", () => books.id),
     awardSlug: text("award_slug").notNull(),
     awardName: text("award_name").notNull(),
     year: integer("year"),
@@ -93,9 +91,7 @@ export const externalBookClubPicks = sqliteTable(
   "external_book_club_picks",
   {
     id: idPk(),
-    clubId: text("club_id")
-      .notNull()
-      .references(() => externalBookClubs.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => externalBookClubs.id),
     bookId: text("book_id").references(() => books.id, { onDelete: "set null" }),
     pickedAt: ts("picked_at"),
     pickMonth: integer("pick_month"),
@@ -203,9 +199,7 @@ export const journalPostVersions = sqliteTable(
   "journal_post_versions",
   {
     id: idPk(),
-    postId: text("post_id")
-      .notNull()
-      .references(() => journalPosts.id, { onDelete: "cascade" }),
+    postId: cascadeFk("post_id", () => journalPosts.id),
     title: text("title").notNull(),
     content: text("content").notNull(),
     excerpt: text("excerpt"),
@@ -224,9 +218,7 @@ export const journalPostVersions = sqliteTable(
 export const bookAiCache = sqliteTable(
   "book_ai_cache",
   {
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    bookId: cascadeFk("book_id", () => books.id),
     action: text("action").notNull(),
     content: text("content", { mode: "json" }).notNull(),
     model: text("model"),

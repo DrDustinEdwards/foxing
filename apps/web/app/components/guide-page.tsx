@@ -1,7 +1,8 @@
+import { Link } from "capsomer/react/link";
 import { Eyebrow } from "~/components/ui";
 
 // The parts the three guide pages share (routes/guide.tsx, app-guide.tsx, features.tsx): the jump
-// links under the header, a section, a paragraph and a dotted list.
+// links under the header, a section, a paragraph, a dotted list and the closing sign-up line.
 
 export function GuideNav({ anchors }: { anchors: { href: string; label: string }[] }) {
   return (
@@ -51,5 +52,21 @@ export function FeatureList({ items }: { items: string[] }) {
         </li>
       ))}
     </ul>
+  );
+}
+
+export function GuideFooter() {
+  return (
+    <p className="mt-16 fx-guide-text">
+      Free to join.{" "}
+      <Link to="/signup" className="link">
+        Create an account
+      </Link>{" "}
+      or{" "}
+      <Link to="/books" className="link">
+        browse the library
+      </Link>
+      .
+    </p>
   );
 }

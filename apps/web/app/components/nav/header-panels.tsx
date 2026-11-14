@@ -13,7 +13,8 @@ const BOOKS_BROWSE = [
   { href: "/books", label: "All books" },
   { href: "/awards", label: "Award winners" },
 ];
-const BOOKS_ERAS = [
+/** The era filters, as core's ERA_BUCKETS names them; the search filter bar reads this list too. */
+export const BOOKS_ERAS = [
   { slug: "pre-1800", label: "Before 1800" },
   { slug: "1800-1849", label: "1800 to 1849" },
   { slug: "1850-1899", label: "1850 to 1899" },

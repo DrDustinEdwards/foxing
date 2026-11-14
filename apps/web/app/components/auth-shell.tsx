@@ -137,27 +137,6 @@ async function startSocial(
   setPending(false);
 }
 
-/**
- * "Continue with Google": a full-width OAuth redirect. A new user (no profile row) lands
- * on /onboarding, an existing one on /me, each through the passkey offer; a failed handshake returns to /login with Better
- * Auth's ?error= code (SignInError reads it).
- */
-function GoogleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
-  const [pending, setPending] = useState(false);
-  return (
-    <button
-      type="button"
-      disabled={pending}
-      className={authSecondaryButtonClass}
-      data-size="lg"
-      onClick={() => void startSocial("google", redirectTo, setPending)}
-    >
-      <GoogleGlyph />
-      Continue with Google
-    </button>
-  );
-}
-
 /** Apple's logo, inline per the no-icon-libraries rule, in the text color (Apple's guidelines
  *  allow a monochrome logo beside "Continue with Apple" on a plain button). */
 function AppleGlyph() {
@@ -173,19 +152,30 @@ function AppleGlyph() {
   );
 }
 
-/** "Continue with Apple", the same redirect as Google's. */
-function AppleButton({ redirectTo = "/me" }: { redirectTo?: string }) {
+/**
+ * "Continue with Google" or "Continue with Apple": a full-width OAuth redirect. A new user (no profile row) lands
+ * on /onboarding, an existing one on /me, each through the passkey offer; a failed handshake returns to /login with Better
+ * Auth's ?error= code (SignInError reads it).
+ */
+function SocialButton({
+  provider,
+  redirectTo = "/me",
+}: {
+  provider: "google" | "apple";
+  redirectTo?: string;
+}) {
   const [pending, setPending] = useState(false);
+  const Glyph = provider === "google" ? GoogleGlyph : AppleGlyph;
   return (
     <button
       type="button"
       disabled={pending}
       className={authSecondaryButtonClass}
       data-size="lg"
-      onClick={() => void startSocial("apple", redirectTo, setPending)}
+      onClick={() => void startSocial(provider, redirectTo, setPending)}
     >
-      <AppleGlyph />
-      Continue with Apple
+      <Glyph />
+      {provider === "google" ? "Continue with Google" : "Continue with Apple"}
     </button>
   );
 }
@@ -275,8 +265,8 @@ export function PasskeyButton({ redirectTo = "/me" }: { redirectTo?: string }) {
 export function SocialButtons({ methods, next }: { methods: SignInMethods; next?: string }) {
   return (
     <>
-      {methods.google ? <GoogleButton redirectTo={next} /> : null}
-      {methods.apple ? <AppleButton redirectTo={next} /> : null}
+      {methods.google ? <SocialButton provider="google" redirectTo={next} /> : null}
+      {methods.apple ? <SocialButton provider="apple" redirectTo={next} /> : null}
     </>
   );
 }

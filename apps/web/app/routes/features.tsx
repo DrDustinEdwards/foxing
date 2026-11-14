@@ -2,9 +2,8 @@
 // unbuilt product: reader, AI companion, clubs, social, vocabulary, stats charts).
 // This page describes only what ships in this build today. It grows as slices land;
 // do not describe the reader, AI companion, or clubs as if they exist (deferred_items).
-import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
-import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
+import { FeatureList, GuideFooter, GuideNav, Prose, Section } from "~/components/guide-page";
 import { Container, PageHeader } from "~/components/ui";
 import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
@@ -92,17 +91,7 @@ export default function Features() {
           />
         </Section>
 
-        <p className="mt-16 fx-guide-text">
-          Free to join.{" "}
-          <Link to="/signup" className="link">
-            Create an account
-          </Link>{" "}
-          or{" "}
-          <Link to="/books" className="link">
-            browse the library
-          </Link>
-          .
-        </p>
+        <GuideFooter />
       </Container>
     </PageShell>
   );

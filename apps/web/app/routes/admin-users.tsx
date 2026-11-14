@@ -11,6 +11,7 @@ import { useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-users";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -21,7 +22,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Users | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Users | Foxing");
 }
 
 export default function AdminUsers({ loaderData }: Route.ComponentProps) {
@@ -30,14 +31,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
   const reload = () => revalidator.revalidate();
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Users
-        </h1>
-      </div>
-
+    <AdminShell title="Users">
       <div className="cap-stack" data-gap="6">
         <AdminCard>
           <form method="get" className="cap-cluster" data-gap="3">

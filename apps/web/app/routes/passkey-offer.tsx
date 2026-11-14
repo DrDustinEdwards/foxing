@@ -13,10 +13,11 @@ import { authClient, signInAgainIfStale } from "~/lib/auth-client";
 import { sessionLookup } from "@dustinedwards/site-runtime/sign-in";
 import { getAuth } from "~/lib/auth.server";
 import type { Route } from "./+types/passkey-offer";
+import { noindexMeta } from "~/lib/seo";
 import { signInFrom } from "~/lib/sign-in-path";
 
 export function meta() {
-  return [{ title: "Create a passkey | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Create a passkey | Foxing");
 }
 
 /** The signed-in reader, their auth and where they were headed; no session goes to /login. */

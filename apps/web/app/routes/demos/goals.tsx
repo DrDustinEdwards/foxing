@@ -7,9 +7,10 @@ import { ReadingActivity } from "~/components/reading/reading-activity";
 import { Container, PageHeader } from "~/components/ui";
 import { sampleActivity } from "~/lib/demo/reading-sample";
 import type { Route } from "./+types/goals";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Reading goals demo | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Reading goals demo | Foxing");
 }
 
 export function loader() {

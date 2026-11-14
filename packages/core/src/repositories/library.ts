@@ -18,6 +18,14 @@ import {
 import type { SaveProgressInput } from "../validators/annotation";
 import type { CreateGoalInput, CreateShelfInput, UpdateGoalInput } from "../validators/library";
 
+/** The book columns every library listing selects beside the user_books ones. */
+const bookRef = {
+  title: books.title,
+  author: books.author,
+  slug: books.slug,
+  coverUrl: books.coverUrl,
+};
+
 export type UserBook = typeof userBooks.$inferSelect;
 export type CustomShelf = typeof customShelves.$inferSelect;
 export type ReadingGoal = typeof readingGoals.$inferSelect;
@@ -160,10 +168,7 @@ export async function listLibrary(
       progressPct: userBooks.progressPct,
       updatedAt: userBooks.updatedAt,
       finishedAt: userBooks.finishedAt,
-      title: books.title,
-      author: books.author,
-      slug: books.slug,
-      coverUrl: books.coverUrl,
+      ...bookRef,
     })
     .from(userBooks)
     .innerJoin(books, eq(userBooks.bookId, books.id))
@@ -193,10 +198,7 @@ export async function listFavoriteBooks(db: Db, userId: string, limit = 5): Prom
   return db
     .select({
       bookId: userFavorites.bookId,
-      title: books.title,
-      author: books.author,
-      slug: books.slug,
-      coverUrl: books.coverUrl,
+      ...bookRef,
     })
     .from(userFavorites)
     .innerJoin(books, eq(userFavorites.bookId, books.id))
@@ -219,10 +221,7 @@ export async function listFinishedBooks(db: Db, userId: string, limit = 8): Prom
   return db
     .select({
       bookId: userBooks.bookId,
-      title: books.title,
-      author: books.author,
-      slug: books.slug,
-      coverUrl: books.coverUrl,
+      ...bookRef,
     })
     .from(userBooks)
     .innerJoin(books, eq(userBooks.bookId, books.id))
@@ -265,10 +264,7 @@ export async function listCurrentlyReading(
       status: userBooks.status,
       progressPct: userBooks.progressPct,
       updatedAt: userBooks.updatedAt,
-      title: books.title,
-      author: books.author,
-      slug: books.slug,
-      coverUrl: books.coverUrl,
+      ...bookRef,
     })
     .from(userBooks)
     .innerJoin(books, eq(userBooks.bookId, books.id))
@@ -458,10 +454,7 @@ export async function listShelfBooks(
       status: sql<string>`'shelf'`,
       progressPct: sql<number>`0`,
       updatedAt: customShelfBooks.addedAt,
-      title: books.title,
-      author: books.author,
-      slug: books.slug,
-      coverUrl: books.coverUrl,
+      ...bookRef,
     })
     .from(customShelfBooks)
     .innerJoin(books, eq(customShelfBooks.bookId, books.id))
