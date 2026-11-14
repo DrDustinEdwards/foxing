@@ -198,7 +198,7 @@
   margin-block-end: 2.5rem;
 }
 
-/* Text roles are Capsomer's (.cap-text, .cap-title, .cap-clamp in capsomer/utilities.css), at
+/* Text roles are Capsomer's (.cap-text, .cap-title, .cap-clamp in capsomer/text.css), at
    Foxing's sizes and weights from its site entry: UI chrome is DM Sans (data-face="ui"), metadata
    the dim ink. Rule 07's small-caps labels are DM Mono and stay here. */
 .italic {

@@ -337,11 +337,17 @@
   }
 }
 
-/* Capsomer's plan choice on the paywall's dark band: its tokens, set for the band. */
+/* Capsomer's plan choice on the paywall's dark band: its tokens, set for the band. Each plan is
+   the field's card choice (Capsomer 0.151), so the chosen card's edge, tint and radio are set too. */
 .fx-paywall-plans {
   --surface: transparent;
+  --raised: rgb(255 255 255 / 0.06);
+  --sel: transparent;
   --line: rgb(255 255 255 / 0.2);
   --line-strong: rgb(255 255 255 / 0.4);
+  --accent-line: var(--accent);
+  --on: var(--accent);
+  --primary-fg: var(--fx-on-dark);
   --text: var(--fx-on-dark);
   --muted: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
   --radius-m: var(--radius-l);
