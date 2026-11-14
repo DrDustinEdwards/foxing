@@ -26,7 +26,7 @@
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.40.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.156.2",
     "@foxing/types": "*",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.150.0",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.151.1",
     "drizzle-orm": "^0.45.2",
     "nanoid": "^5.1.0",
     "stripe": "23.1.0",

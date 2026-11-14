@@ -20,7 +20,7 @@ import {
 } from "capsomer/react/icons";
 import { routerRenderLink } from "capsomer/react/link";
 import { useLocation, useRouteLoaderData } from "react-router";
-import { avatarInitials } from "~/components/ui";
+import { initials } from "capsomer/behavior/avatar";
 import { THEME_PREF_KEY } from "~/lib/theme";
 // The shell's styles load only in the admin (React 19 hoists the link).
 import adminShellCss from "capsomer/admin-shell.css?url";
@@ -60,7 +60,7 @@ export function AdminShell({ title, children }: { title?: string; children: Reac
       viewSite="/home"
       account={{
         name: user?.displayName ?? "Admin",
-        initials: avatarInitials(user?.displayName ?? "Admin"),
+        initials: initials(user?.displayName ?? "Admin"),
         avatar: user?.avatarUrl ?? undefined,
         role: "Admin",
         onSignOut: () => void import("~/lib/auth-client").then((m) => m.signOutToHome()),

@@ -3,6 +3,7 @@
 // matching the legacy dropdown (no scroll). Capsomer draws the button and the panel around it,
 // and closes the panel when a link in it is followed. Icons are Capsomer's (capsomer/react/icons),
 // each imported by itself; the four the shared set lacks pass their own path on its grid.
+import { initials } from "capsomer/behavior/avatar";
 import type { HeaderAccount } from "capsomer/react/site-header";
 import {
   Icon,
@@ -15,7 +16,7 @@ import {
 } from "capsomer/react/icons";
 import { Link } from "capsomer/react/link";
 import type { NavUser } from "~/lib/nav.server";
-import { Avatar, avatarInitials } from "../ui";
+import { Avatar } from "../ui";
 
 // Foxing's own drawings, on the set's 24-unit grid, for the four the shared set lacks.
 const OWN = {
@@ -143,7 +144,7 @@ export function headerAccount(
 ): HeaderAccount {
   return {
     name: user.displayName,
-    initials: avatarInitials(user.displayName),
+    initials: initials(user.displayName),
     avatar: user.avatarUrl ?? undefined,
     detail: `@${user.username}`,
     onSignOut,

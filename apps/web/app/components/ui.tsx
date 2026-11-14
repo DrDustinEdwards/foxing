@@ -1,5 +1,6 @@
 import { ButtonLink, Link } from "capsomer/react/link";
 import { cn } from "capsomer/react/hooks";
+import { initials } from "capsomer/behavior/avatar";
 
 /** Page-width container. One measure for every catalog surface. */
 export function Container({
@@ -180,14 +181,6 @@ export function EmptyState({
   );
 }
 
-/** Two-letter initials from a display name, mirroring the legacy avatar fallback. */
-export function avatarInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-}
-
 /** Round avatar: the image when present, else initials on the soft accent. */
 export function Avatar({
   src,
@@ -200,7 +193,7 @@ export function Avatar({
 }) {
   return (
     <span className="cap-avatar fx-avatar" data-fx-size={size} aria-hidden="true">
-      <span className="cap-avatar-fallback">{avatarInitials(name)}</span>
+      <span className="cap-avatar-fallback">{initials(name)}</span>
       {src ? <img src={src} alt="" className="cap-avatar-image" /> : null}
     </span>
   );
