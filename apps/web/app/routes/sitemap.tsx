@@ -63,6 +63,10 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     { loc: "/about", ...hub("/about"), priority: 0.3 },
     { loc: "/accessibility", ...hub("/accessibility"), priority: 0.3 },
     { loc: "/features", ...hub("/features"), priority: 0.4 },
+    { loc: "/guide", ...hub("/guide"), priority: 0.4 },
+    { loc: "/app-guide", ...hub("/app-guide"), priority: 0.4 },
+    { loc: "/privacy", ...hub("/privacy"), priority: 0.2 },
+    { loc: "/terms", ...hub("/terms"), priority: 0.2 },
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,
       lastmod: b.updatedAt,
