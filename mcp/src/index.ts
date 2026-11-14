@@ -45,7 +45,5 @@ write Journal posts; Carrel owns writing.</p>
   serve: (request, env, ctx, caller) => handleMcp(request, env, ctx, caller),
   // The door is for machines: its robots.txt is Prelum's private-host response, Disallow: / for every crawler.
   routes: (request) =>
-    new URL(request.url).pathname === "/robots.txt"
-      ? privateRobotsResponse()
-      : null,
+    new URL(request.url).pathname === "/robots.txt" ? privateRobotsResponse() : null,
 });
