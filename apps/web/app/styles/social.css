@@ -1,3 +1,8 @@
+.fx-follow-button-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+}
 .fx-follow-button-text {
   font-family: var(--ui);
   font-size: var(--fs-small);
@@ -275,6 +280,13 @@
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
   color: var(--dim);
+}
+/* Two lines, then an ellipsis: the list and club descriptions on their cards. */
+.fx-lists-text,
+.fx-clubs-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 .fx-lists-text {
   overflow: hidden;
