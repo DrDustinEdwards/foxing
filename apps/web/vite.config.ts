@@ -1,4 +1,5 @@
 import { cloudflare } from "@cloudflare/vite-plugin";
+import { nativeBuiltins } from "@dustinedwards/devkit/vite/native-builtins";
 import { siteScript } from "@dustinedwards/devkit/vite/site-script";
 import { reactRouter } from "@react-router/dev/vite";
 import { defineConfig, type Plugin } from "vite";
@@ -36,6 +37,8 @@ export default defineConfig({
   // Source maps go up with the deploy (upload_source_maps) and are never served.
   environments: { ssr: { build: { minify: true, sourcemap: true } } },
   plugins: [
+    // First: mdast-util-to-hast's structuredClone polyfill becomes the global, which Workers have.
+    nativeBuiltins(),
     fontDisplayOptional(),
     cloudflare({ viteEnvironment: { name: "ssr" } }),
     reactRouter(),
