@@ -1,193 +1,138 @@
 .fx-book-picker-label {
   min-width: 0;
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--text);
 }
 .fx-book-picker-label-2 {
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .fx-book-picker-btn {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
   color: var(--muted);
   &:hover {
     color: var(--crit);
   }
 }
 
-.fx-admin-books-card {
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
+.fx-admin-books-card,
+.fx-admin-picks-card {
+  border-radius: var(--radius-m);
+  border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
-  padding: 1rem;
+  padding: var(--space-5);
   & > * + * {
-    margin-top: 0.75rem;
+    margin-top: var(--space-4);
   }
 }
-.fx-admin-books-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-
+.fx-admin-books-grid,
 .fx-admin-botm-grid,
 .fx-admin-content-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-}
-.fx-notifications-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 .fx-admin-notifications-text {
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
-  padding: 0.75rem;
+  padding: var(--space-4);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
 }
 .fx-admin-notifications-text-2 {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
   color: var(--accent-text);
 }
 
-.fx-admin-picks-card {
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
-  background-color: var(--sunken);
-  padding: 1rem;
-  & > * + * {
-    margin-top: 0.75rem;
-  }
-}
-
-.fx-admin-user-detail-caps {
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-}
 .fx-admin-user-detail-text {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--text);
 }
 .fx-admin-user-detail-card {
   --radius-l: 0.375rem;
   background-color: var(--ground);
-  --pad-card: 0.75rem;
-}
-.fx-admin-user-detail-caps-2 {
-  margin-top: 0.125rem;
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
+  --pad-card: var(--space-4);
 }
 .fx-admin-user-detail-title {
   font-family: var(--display);
-  font-size: 1.875rem;
+  font-size: var(--title-2);
   line-height: 2.25rem;
   color: var(--text);
 }
 .fx-admin-user-detail-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-5);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-.fx-admin-user-detail-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  @media (min-width: 40rem) {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 .fx-admin-user-detail-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: var(--space-4);
 }
 .fx-admin-user-detail-box {
-  border-block-start: 1px solid var(--line);
+  border-block-start: var(--line-w) solid var(--line);
   padding-top: 1.25rem;
   & > * + * {
-    margin-top: 0.5rem;
+    margin-top: var(--space-3);
   }
 }
 .fx-admin-user-detail-box-2 {
-  border-block-start: 1px solid color-mix(in srgb, var(--crit) 40%, transparent);
+  border-block-start: var(--line-w) solid color-mix(in srgb, var(--crit) 40%, transparent);
   padding-top: 1.25rem;
   & > * + * {
-    margin-top: 0.5rem;
+    margin-top: var(--space-3);
   }
 }
 .fx-admin-user-detail-text-2 {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--crit);
 }
 
 .fx-admin-users-caps {
-  border-radius: 9999px;
-  border: 1px solid var(--crit);
-  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--crit);
+  padding: var(--space-1) var(--space-3);
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
   color: var(--crit);
 }
 
-.fx-admin-grid {
+.fx-admin-grid,
+.fx-admin-analytics-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-5);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-.fx-admin-caps {
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-}
-.fx-admin-text {
+.fx-admin-text,
+.fx-admin-analytics-text {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--muted);
 }
 .fx-admin-grid-2 {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
   @media (min-width: 64rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.fx-admin-link {
+.fx-admin-link,
+.fx-admin-user-detail-link {
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--muted);
   &:hover {
@@ -196,40 +141,9 @@
 }
 .fx-admin-label {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--muted);
 }
 
 /* The admin side nav and the curator filter: one link style, the current one filled. */
-
-.fx-admin-analytics-text {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: var(--muted);
-}
-.fx-admin-analytics-caps {
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-}
-.fx-admin-user-detail-link {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--muted);
-  &:hover {
-    color: var(--accent-text);
-  }
-}
-.fx-admin-analytics-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  @media (min-width: 40rem) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}

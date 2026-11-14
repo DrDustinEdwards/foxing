@@ -34,13 +34,13 @@
   }
   body {
     min-block-size: 100dvh;
-    font: 400 1rem / 1.6 var(--fx-body);
+    font: var(--weight-regular) var(--title-6) / var(--leading-relaxed) var(--fx-body);
   }
   :where(h1, h2, h3, h4) {
     font-family: var(--display);
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    line-height: 1.2;
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-snug);
+    line-height: var(--leading-tight);
     color: var(--text);
   }
   :where(button, input, select, textarea, label, legend, table, nav, kbd) {
@@ -55,8 +55,8 @@
   }
   /* Rule 03: the focus ring is always visible, 3px in the focus color. */
   :focus-visible {
-    outline: 3px solid var(--ring);
-    outline-offset: 2px;
+    outline: var(--line-w-bar) solid var(--ring);
+    outline-offset: var(--focus-offset);
   }
   ::selection {
     background: var(--accent-soft);
@@ -65,7 +65,7 @@
   @media (forced-colors: active) {
     a,
     button {
-      border: 1px solid transparent;
+      border: var(--line-w) solid transparent;
     }
   }
 }
@@ -79,7 +79,7 @@
 }
 @media (min-width: 40rem) {
   .fx-wrap {
-    padding-inline: 2rem;
+    padding-inline: var(--space-7);
   }
 }
 
@@ -118,22 +118,22 @@
   align-self: flex-start;
 }
 .py-2 {
-  padding-block: 0.5rem;
+  padding-block: var(--space-3);
 }
 .py-3 {
-  padding-block: 0.75rem;
+  padding-block: var(--space-4);
 }
 .py-4 {
-  padding-block: 1rem;
+  padding-block: var(--space-5);
 }
 .py-6 {
-  padding-block: 1.5rem;
+  padding-block: var(--space-6);
 }
 .mb-0 {
   margin-block-end: 0;
 }
 .ml-2 {
-  margin-inline-start: 0.5rem;
+  margin-inline-start: var(--space-3);
 }
 .relative {
   position: relative;
@@ -144,55 +144,55 @@
 
 /* Space above a block, for the places a stack does not fit. */
 .mt-1 {
-  margin-block-start: 0.25rem;
+  margin-block-start: var(--space-2);
 }
 .mt-2 {
-  margin-block-start: 0.5rem;
+  margin-block-start: var(--space-3);
 }
 .mt-3 {
-  margin-block-start: 0.75rem;
+  margin-block-start: var(--space-4);
 }
 .mt-4 {
-  margin-block-start: 1rem;
+  margin-block-start: var(--space-5);
 }
 .mt-6 {
-  margin-block-start: 1.5rem;
+  margin-block-start: var(--space-6);
 }
 .mt-8 {
-  margin-block-start: 2rem;
+  margin-block-start: var(--space-7);
 }
 .mt-10 {
   margin-block-start: 2.5rem;
 }
 .mt-12 {
-  margin-block-start: 3rem;
+  margin-block-start: var(--space-8);
 }
 .mt-16 {
-  margin-block-start: 4rem;
+  margin-block-start: var(--space-9);
 }
 .mt-5 {
   margin-block-start: 1.25rem;
 }
 .mb-1 {
-  margin-block-end: 0.25rem;
+  margin-block-end: var(--space-2);
 }
 .mb-5 {
   margin-block-end: 1.25rem;
 }
 .mb-2 {
-  margin-block-end: 0.5rem;
+  margin-block-end: var(--space-3);
 }
 .mb-3 {
-  margin-block-end: 0.75rem;
+  margin-block-end: var(--space-4);
 }
 .mb-4 {
-  margin-block-end: 1rem;
+  margin-block-end: var(--space-5);
 }
 .mb-6 {
-  margin-block-end: 1.5rem;
+  margin-block-end: var(--space-6);
 }
 .mb-8 {
-  margin-block-end: 2rem;
+  margin-block-end: var(--space-7);
 }
 .mb-10 {
   margin-block-end: 2.5rem;
@@ -206,21 +206,24 @@
 }
 .fx-label {
   display: block;
-  margin-block-end: 0.25rem;
+  margin-block-end: var(--space-2);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   color: var(--muted);
 }
-.eyebrow {
+.eyebrow,
+.fx-grouped-results-caps,
+.fx-onboarding-caps {
   font-family: var(--mono);
   font-size: 0.6875rem;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--dim);
 }
-.group-label {
+.group-label,
+.fx-journal-tag-caps {
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--dim);
@@ -229,25 +232,25 @@
   font-family: var(--mono);
   font-size: 0.6875rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-widest);
   color: var(--dim);
 }
 .badge {
   display: inline-flex;
   align-items: center;
   border-radius: var(--radius-full);
-  padding: 0.125rem 0.5rem;
+  padding: var(--space-1) var(--space-3);
   background: var(--accent-soft);
   color: var(--accent-text);
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: var(--tracking-widest);
   white-space: nowrap;
 }
 .badge-quiet {
   background: transparent;
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   color: var(--dim);
 }
 .badge-ok {
@@ -265,7 +268,7 @@
    told from its words by more than color (WCAG 2.2 SC 1.4.1; F73 names bold as a passing cue). */
 .link {
   color: var(--accent-text);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .link:hover {
   color: var(--accent-text);
@@ -278,19 +281,17 @@
 
 /* A list with a rule between items. */
 .divided > * + * {
-  border-block-start: 1px solid var(--line);
+  border-block-start: var(--line-w) solid var(--line);
 }
 
 /* Fields: Capsomer's input, with Foxing's ground fill where a form sits on a card. */
 .cap-input[data-fill="ground"],
-.cap-select[data-fill="ground"] {
-  background: var(--ground);
-}
+.cap-select[data-fill="ground"],
 .fx-input-ground {
   background: var(--ground);
 }
 textarea.cap-input {
   min-block-size: 5rem;
-  padding-block: 0.5rem;
-  line-height: 1.5;
+  padding-block: var(--space-3);
+  line-height: var(--leading-normal);
 }

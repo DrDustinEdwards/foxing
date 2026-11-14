@@ -37,7 +37,7 @@
 }
 :where(hr) {
   border: 0;
-  border-block-start: 1px solid var(--line);
+  border-block-start: var(--line-w) solid var(--line);
 }
 :where(table) {
   border-collapse: collapse;

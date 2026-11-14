@@ -1,30 +1,25 @@
 .fx-goals-wrap {
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-7);
 }
-.fx-goals-grid {
+.fx-goals-grid,
+.fx-admin-user-detail-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--space-4);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 .fx-goals-label {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3);
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
   color: var(--text);
 }
 .fx-goals-btn {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
   color: var(--dim);
   &:hover {
     color: var(--accent-text);
@@ -32,9 +27,6 @@
   }
 }
 .fx-goals-btn-2 {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
   color: var(--dim);
   &:hover {
     color: var(--crit);
@@ -44,46 +36,32 @@
 .fx-goals-input {
   width: 4rem;
 }
-.fx-goals-text-2 {
+.fx-goals-text-2,
+.fx-library-text {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
-.fx-goals-caps {
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--dim);
-}
 .fx-goals-text-4 {
-  margin-top: 0.125rem;
+  margin-top: var(--space-1);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 
-.fx-home-title {
-  font-family: var(--display);
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-  @media (min-width: 40rem) {
-    font-size: 2.25rem;
-    line-height: 2.5rem;
-  }
-}
-.fx-home-grid {
+.fx-home-grid,
+.fx-library-grid {
   display: grid;
-  gap: 1.5rem;
+  gap: var(--space-6);
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 1fr) 320px;
   }
 }
 .fx-home-card {
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 2rem;
+  --pad-card: var(--space-7);
 }
 .fx-home-text {
   margin-inline: auto;
@@ -91,14 +69,14 @@
   color: var(--muted);
 }
 .fx-home-card-2 {
-  gap: 1.5rem;
+  gap: var(--space-6);
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 1.5rem;
+  --pad-card: var(--space-6);
   --card-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
     grid-template-columns: minmax(0, 132px) minmax(0, 1fr);
     align-items: center;
-    --pad-card: 2rem;
+    --pad-card: var(--space-7);
   }
 }
 .fx-home-box {
@@ -108,7 +86,7 @@
 }
 .fx-home-title-2 {
   font-family: var(--display);
-  font-size: 1.5rem;
+  font-size: var(--title-3);
   line-height: 1.25;
 }
 .fx-home-text-2 {
@@ -117,48 +95,39 @@
 }
 .fx-home-card-3 {
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 1.5rem;
+  --pad-card: var(--space-6);
   --card-shadow: var(--shadow-s);
 }
 .fx-home-title-3 {
   font-family: var(--display);
-  font-size: 1.875rem;
-  line-height: 1;
+  font-size: var(--title-2);
+  line-height: var(--leading-none);
 }
 .fx-home-label {
-  margin-left: 0.375rem;
+  margin-left: var(--space-2-5);
   font-family: var(--ui);
-  font-size: 1rem;
+  font-size: var(--title-6);
   line-height: 1.5rem;
   color: var(--muted);
 }
 .fx-home-grid-2 {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
-  border-block-start: 1px solid var(--line);
-  padding-top: 1rem;
+  gap: var(--space-4);
+  border-block-start: var(--line-w) solid var(--line);
+  padding-top: var(--space-5);
 }
-.fx-home-caps {
-  margin-top: 0.125rem;
+.fx-home-caps,
+.fx-admin-user-detail-caps-2 {
+  margin-top: var(--space-1);
   font-family: var(--mono);
   font-size: 0.6rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 
-.fx-library-grid {
-  display: grid;
-  gap: 1.5rem;
-  @media (min-width: 64rem) {
-    grid-template-columns: minmax(0, 1fr) 320px;
-  }
-}
 .fx-library-grid-2 {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
   @media (min-width: 40rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -168,14 +137,14 @@
 }
 .fx-library-label-2 {
   position: absolute;
-  right: 0.5rem;
-  top: 0.5rem;
-  border-radius: 9999px;
-  border: 1px solid var(--line);
+  right: var(--space-3);
+  top: var(--space-3);
+  border-radius: var(--radius-full);
+  border: var(--line-w) solid var(--line);
   background-color: color-mix(in srgb, var(--surface) 90%, transparent);
-  padding: 0.125rem 0.5rem;
+  padding: var(--space-1) var(--space-3);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--muted);
 }
@@ -192,11 +161,11 @@
   background-color: var(--accent);
 }
 .fx-library-box {
-  padding-inline: 0.125rem;
+  padding-inline: var(--space-1);
 }
 .fx-library-link-2 {
   font-family: var(--display);
-  font-size: 1rem;
+  font-size: var(--title-6);
   line-height: 1.375;
   color: var(--text);
   &:hover {
@@ -206,18 +175,15 @@
 .fx-library-grid-3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
 .fx-library-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   font-family: var(--ui);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25rem;
 }
 .fx-library-btn {
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
   &:hover {
@@ -227,16 +193,10 @@
 .fx-library-row-2 {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
 .fx-library-input {
   width: 3.5rem;
-}
-.fx-library-text {
-  font-family: var(--ui);
-  font-size: 0.75rem;
-  line-height: 1rem;
-  color: var(--dim);
 }
 .fx-library-input-2 {
   min-width: 0;
@@ -244,18 +204,10 @@
 }
 
 .fx-shelf-detail-link {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
   color: var(--dim);
   &:hover {
     color: var(--accent-text);
   }
-}
-.fx-shelf-detail-title {
-  font-family: var(--display);
-  font-size: 2.25rem;
-  line-height: 2.5rem;
 }
 .fx-shelf-detail-text {
   max-width: 65ch;
@@ -266,34 +218,31 @@
 .fx-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.75rem;
+  gap: var(--space-4);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-.fx-stats-caps {
+.fx-stats-caps,
+.fx-admin-user-detail-caps,
+.fx-admin-caps,
+.fx-admin-analytics-caps {
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-stats-card {
-  border-radius: 0.375rem;
-  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  border: var(--line-w) solid var(--line);
   background-color: var(--surface);
-  padding-inline: 1rem;
+  padding-inline: var(--space-5);
 }
 .fx-stats-label {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
   color: var(--text);
 }
 .fx-year-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
   @media (min-width: 40rem) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -301,7 +250,7 @@
 .fx-year-grid-2 {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-5);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -310,31 +259,15 @@
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4);
   border-radius: var(--radius-l);
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   background-color: var(--surface);
-  padding-inline: 1rem;
-}
-.fx-year-link {
-  font-family: var(--display);
-  font-size: 1.125rem;
-  line-height: 1.75rem;
-  color: var(--text);
-  &:hover {
-    color: var(--accent-text);
-  }
-}
-.fx-year-text-2 {
-  margin-top: 0.125rem;
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  color: var(--muted);
+  padding-inline: var(--space-5);
 }
 
 .fx-goal {
-  --pad-card: 1rem;
+  --pad-card: var(--space-5);
 }
 .fx-goal.fx-goal-done {
   border-color: var(--ok);

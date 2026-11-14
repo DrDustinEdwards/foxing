@@ -8,6 +8,7 @@ import { sessionUserFromRequest } from "~/lib/auth.server";
 import { loaderBase } from "~/lib/loader.server";
 import type { Locator } from "~/lib/reader/locator";
 import { ReaderView } from "~/components/reader/reader-view";
+import "~/styles/reader.css";
 import type { Route } from "./+types/read";
 import { signInHref } from "~/lib/sign-in-path";
 

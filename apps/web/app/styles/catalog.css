@@ -5,7 +5,7 @@
    Rule 15): a tight inset, the cover across the top, the title in the display face, which turns
    accent under the pointer. The cover keeps its own 2:3 box (.cover-img), its top corners the card's. */
 .fx-book {
-  --pad-card: 0.625rem;
+  --pad-card: var(--space-3-5);
   --fs-card-title: 1rem;
   border-radius: var(--radius-l);
   & > .cover-img {
@@ -26,7 +26,7 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-book-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-5);
 }
 @media (min-width: 40rem) {
   .fx-book-grid {
@@ -53,7 +53,7 @@ a:hover > .fx-book > :is(h2, h3) {
   background-color: var(--sunken);
   box-shadow:
     var(--shadow-s),
-    0 0 0 1px var(--line);
+    0 0 0 var(--line-w) var(--line);
 }
 .cover-img-photo {
   inline-size: 100%;
@@ -66,13 +66,13 @@ a:hover > .fx-book > :is(h2, h3) {
   justify-content: center;
   inline-size: 100%;
   block-size: 100%;
-  padding: 0.75rem;
+  padding: var(--space-4);
   text-align: center;
 }
 .cover-img-fallback > span {
   overflow-wrap: anywhere;
   font-family: var(--display);
-  font-size: 0.875rem;
+  font-size: var(--fs-body);
   line-height: 1.25;
   color: var(--dim);
 }
@@ -82,7 +82,7 @@ a:hover > .fx-book > :is(h2, h3) {
   --control: 3rem;
 }
 .fx-search-field .cap-input {
-  font-size: 1rem;
+  font-size: var(--title-6);
 }
 .fx-search-field .cap-input-addon svg {
   inline-size: 1.25rem;
@@ -103,12 +103,12 @@ a:hover > .fx-book > :is(h2, h3) {
   place-items: center;
   min-inline-size: 1.25rem;
   block-size: 1.25rem;
-  padding-inline: 0.25rem;
+  padding-inline: var(--space-2);
   border-radius: var(--radius-full);
   background: var(--primary);
   color: var(--primary-fg);
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
 }
 .fx-filter-panel {
   inline-size: min(22rem, 90vw);
@@ -121,19 +121,20 @@ a:hover > .fx-book > :is(h2, h3) {
   display: flex;
   width: 100%;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
-.fx-book-status-control-text {
-  margin-top: 0.375rem;
+.fx-book-status-control-text,
+.fx-onboarding-label-2 {
+  margin-top: var(--space-2-5);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 .fx-book-status-control-text-2 {
-  margin-top: 0.375rem;
+  margin-top: var(--space-2-5);
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--crit);
 }
@@ -142,29 +143,35 @@ a:hover > .fx-book > :is(h2, h3) {
   flex-grow: 1;
 }
 
-.fx-grouped-results-caps {
-  font-family: var(--mono);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--dim);
-}
 .fx-grouped-results-grid {
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-3);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-.fx-result-row {
+.fx-result-row,
+.fx-list-detail-card,
+.fx-people-card,
+.fx-profile-row,
+.fx-club-schedule-card-4,
+.fx-account-sections-label,
+.fx-library-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
-  border: 1px solid var(--line);
+}
+.fx-library-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+}
+.fx-result-row {
+  gap: var(--space-4);
+  border: var(--line-w) solid var(--line);
   border-radius: var(--radius-l);
   background: var(--surface);
-  padding: 0.75rem 1rem;
+  padding: var(--space-4) var(--space-5);
   box-shadow: var(--shadow-s);
   @media (prefers-reduced-motion: no-preference) {
     transition: box-shadow 150ms;
@@ -175,30 +182,35 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 .fx-grouped-results-title {
   font-family: var(--display);
-  font-size: 1rem;
+  font-size: var(--title-6);
   line-height: 1.5rem;
   color: var(--text);
 }
-.fx-grouped-results-label {
+.fx-grouped-results-label,
+.fx-people-label-2,
+.fx-lists-text-2,
+.fx-notifications-text-3,
+.fx-preference-sections-label-3 {
   font-family: var(--mono);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
   color: var(--dim);
 }
 
 .fx-award-detail-caps {
-  margin-top: 0.375rem;
-  padding-inline: 0.125rem;
+  margin-top: var(--space-2-5);
+  padding-inline: var(--space-1);
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--dim);
 }
 
-.fx-awards-title {
+.fx-awards-title,
+.fx-picks-title {
   font-family: var(--display);
-  font-size: 1.25rem;
+  font-size: var(--title-4);
   line-height: 1.75rem;
   color: var(--text);
   transition-property: color, background-color, border-color;
@@ -232,21 +244,22 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-book-detail-stack {
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: var(--space-3-5);
 }
 .fx-book-detail-title,
 .fx-journal-post-title {
   font-family: var(--display);
-  font-size: 2.25rem;
+  font-size: var(--title-1);
   line-height: 1.25;
   @media (min-width: 40rem) {
     font-size: 3rem;
-    line-height: 1;
+    line-height: var(--leading-none);
   }
 }
-.fx-book-detail-text {
+.fx-book-detail-text,
+.fx-botm-text {
   font-family: var(--ui);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.75rem;
   color: var(--muted);
 }
@@ -255,58 +268,65 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-vocabulary-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-3);
 }
 .fx-book-detail-stack-2 {
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: var(--space-2-5);
 }
 .fx-book-detail-box-3 {
   max-width: 65ch;
   font-family: var(--fx-body);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.625;
   color: var(--muted);
   & > p {
-    margin-top: 1rem;
+    margin-top: var(--space-5);
   }
 }
 .fx-book-detail-section {
   margin-top: 5rem;
 }
-.fx-book-detail-title-2 {
+.fx-book-detail-title-2,
+.fx-botm-title-2 {
   font-family: var(--display);
-  font-size: 1.5rem;
+  font-size: var(--title-3);
   line-height: 2rem;
 }
 
 .fx-books-caps {
-  margin-bottom: 0.625rem;
+  margin-bottom: var(--space-3-5);
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--dim);
 }
 .fx-books-card {
-  gap: 1.5rem;
+  gap: var(--space-6);
   --pad-card: 1.25rem;
 }
-.fx-books-row {
+.fx-books-row,
+.fx-find-next-book-card,
+.fx-goals-label,
+.fx-journal-post-row,
+.fx-journal-row-2 {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+}
+.fx-books-row {
   justify-content: space-between;
-  gap: 0.75rem;
-  border-block-start: 1px solid var(--line);
-  padding-top: 1rem;
+  gap: var(--space-4);
+  border-block-start: var(--line-w) solid var(--line);
+  padding-top: var(--space-5);
 }
 
 .fx-botm-card {
-  gap: 2rem;
+  gap: var(--space-7);
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 1.5rem;
+  --pad-card: var(--space-6);
   --card-shadow: var(--shadow-m);
   @media (min-width: 40rem) {
     --pad-card: 2.5rem;
@@ -325,31 +345,25 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 .fx-botm-title {
   font-family: var(--display);
-  font-size: 1.875rem;
+  font-size: var(--title-2);
   line-height: 1.25;
-}
-.fx-botm-text {
-  font-family: var(--ui);
-  font-size: 1.125rem;
-  line-height: 1.75rem;
-  color: var(--muted);
 }
 .fx-botm-text-2 {
   max-width: 65ch;
   font-family: var(--fx-body);
-  font-size: 1.125rem;
+  font-size: var(--fs-h3);
   line-height: 1.625;
   color: var(--muted);
 }
-.fx-botm-title-2 {
-  font-family: var(--display);
-  font-size: 1.5rem;
-  line-height: 2rem;
-}
-.fx-botm-grid {
+.fx-botm-grid,
+.fx-find-next-book-grid,
+.fx-library-grid-2,
+.fx-year-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
+  gap: var(--space-5);
+}
+.fx-botm-grid {
   @media (min-width: 40rem) {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -357,9 +371,11 @@ a:hover > .fx-book > :is(h2, h3) {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
 }
-.fx-botm-caps {
+.fx-botm-caps,
+.fx-picks-caps,
+.fx-pick-club-caps {
   font-family: var(--mono);
-  font-size: 0.625rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--dim);
@@ -370,33 +386,37 @@ a:hover > .fx-book > :is(h2, h3) {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
-  gap: 1rem;
+  gap: var(--space-5);
 }
 .fx-find-next-book-card {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: var(--space-4);
   border-radius: var(--radius-l);
-  border: 1px solid var(--line);
+  border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
-  padding-inline: 1rem;
+  padding-inline: var(--space-5);
+}
+.fx-find-next-book-btn,
+.fx-companion-test-text,
+.fx-list-form-btn,
+.fx-paywall-label-2,
+.fx-shelf-detail-link,
+.fx-stats-label,
+.fx-book-picker-btn,
+.fx-admin-notifications-text-2,
+.fx-admin-user-detail-text-2 {
+  font-family: var(--ui);
+  font-size: var(--fs-body);
+  line-height: 1.25rem;
 }
 .fx-find-next-book-btn {
-  font-family: var(--ui);
-  font-size: 0.875rem;
-  line-height: 1.25rem;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   color: var(--accent-text);
   &:hover {
     text-decoration-line: underline;
   }
 }
 .fx-find-next-book-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
   @media (min-width: 40rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -409,18 +429,18 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 .fx-find-next-book-card-2,
 .fx-library-card-2 {
-  --pad-card: 0.625rem;
+  --pad-card: var(--space-3-5);
 }
 .fx-find-next-book-stack {
   display: flex;
   flex: 1 1 0%;
   flex-direction: column;
-  padding-inline: 0.125rem;
+  padding-inline: var(--space-1);
 }
 .fx-find-next-book-title,
 .fx-journal-archive-title {
   font-family: var(--display);
-  font-size: 1rem;
+  font-size: var(--title-6);
   line-height: 1.375;
   color: var(--text);
   transition-property: color, background-color, border-color;
@@ -429,58 +449,43 @@ a:hover > .fx-book > :is(h2, h3) {
     color: var(--accent-text);
   }
 }
-.fx-find-next-book-text {
+.fx-find-next-book-text,
+.fx-remove-book-button-btn,
+.fx-vocabulary-btn,
+.fx-club-schedule-btn-2,
+.fx-auth-shell-label-3,
+.fx-paywall-label,
+.fx-paywall-text-2,
+.fx-goals-btn,
+.fx-goals-btn-2 {
   font-family: var(--ui);
-  font-size: 0.75rem;
+  font-size: var(--fs-small);
   line-height: 1rem;
+}
+.fx-find-next-book-text {
   color: var(--accent-text);
 }
 .fx-find-next-book-box {
   margin-top: auto;
-  padding-top: 0.75rem;
+  padding-top: var(--space-4);
 }
 
-.fx-picks-grid {
-  display: grid;
-  gap: 1rem;
-  @media (min-width: 40rem) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  @media (min-width: 64rem) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-.fx-picks-title {
-  font-family: var(--display);
-  font-size: 1.25rem;
-  line-height: 1.75rem;
-  color: var(--text);
-  transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
-  a:is(:hover, :focus-visible) & {
-    color: var(--accent-text);
-  }
-}
-.fx-picks-caps {
-  font-family: var(--mono);
-  font-size: 0.625rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--dim);
-}
-
-.fx-book-shelves-picker-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
+.fx-picks-grid,
 .fx-awards-grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-5);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   @media (min-width: 64rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+}
+
+.fx-book-shelves-picker-row,
+.fx-u-profile-row-2,
+.fx-lists-row-2 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
 }
