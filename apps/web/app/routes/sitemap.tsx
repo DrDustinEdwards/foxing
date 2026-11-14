@@ -4,7 +4,7 @@ import { catalogRepo, views } from "@foxing/core";
 import { submitIndexNowIfChanged } from "@drdustinedwards/site-helpers/indexnow";
 import { INDEXNOW_KEY } from "~/lib/indexnow";
 import { SITE_ORIGIN } from "~/lib/origins";
-import { PAGE_DATES_KEY } from "~/lib/page-dates";
+import { PAGE_DATES_KEY, TRACKED_PAGES } from "~/lib/page-dates";
 import { absoluteUrl, journalSeriesPath, journalTagPath } from "~/lib/seo";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import type { Route } from "./+types/sitemap";
@@ -53,39 +53,32 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 
   // Paths here; Prelum's sitemapResponse takes absolute URLs, made below.
   const urls: SitemapEntry[] = [
-    { loc: "/", ...hub("/"), priority: 1, ...covers([homePick?.book, ...homeBooks.books]) },
-    { loc: "/books", ...hub("/books"), priority: 0.9, ...covers(browse.books) },
-    { loc: "/awards", ...hub("/awards"), priority: 0.7 },
-    { loc: "/picks", ...hub("/picks"), priority: 0.7 },
-    { loc: "/book-of-the-month", ...hub("/book-of-the-month"), priority: 0.7 },
-    { loc: "/journal", ...hub("/journal"), priority: 0.7 },
-    { loc: "/journal/archive", ...hub("/journal/archive"), priority: 0.5 },
-    { loc: "/about", ...hub("/about"), priority: 0.3 },
-    { loc: "/accessibility", ...hub("/accessibility"), priority: 0.3 },
-    { loc: "/features", ...hub("/features"), priority: 0.4 },
-    { loc: "/guide", ...hub("/guide"), priority: 0.4 },
-    { loc: "/app-guide", ...hub("/app-guide"), priority: 0.4 },
-    { loc: "/privacy", ...hub("/privacy"), priority: 0.2 },
-    { loc: "/terms", ...hub("/terms"), priority: 0.2 },
+    // The covers on the home page and /books go with those two entries.
+    ...TRACKED_PAGES.map((loc) => ({
+      loc,
+      ...hub(loc),
+      ...(loc === "/"
+        ? covers([homePick?.book, ...homeBooks.books])
+        : loc === "/books"
+          ? covers(browse.books)
+          : {}),
+    })),
     ...books.map((b) => ({
       loc: `/books/${b.slug}`,
       lastmod: b.updatedAt,
-      priority: 0.8,
       ...(b.coverUrl ? { images: [b.coverUrl] } : {}),
     })),
-    ...authors.map((a) => ({ loc: `/authors/${a.slug}`, lastmod: a.updatedAt, priority: 0.6 })),
-    ...awards.map((a) => ({ loc: `/awards/${a.slug}`, lastmod: a.updatedAt, priority: 0.5 })),
-    ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, lastmod: c.updatedAt, priority: 0.5 })),
+    ...authors.map((a) => ({ loc: `/authors/${a.slug}`, lastmod: a.updatedAt })),
+    ...awards.map((a) => ({ loc: `/awards/${a.slug}`, lastmod: a.updatedAt })),
+    ...clubs.map((c) => ({ loc: `/picks/${c.slug}`, lastmod: c.updatedAt })),
     ...posts.map((p) => ({
       loc: `/journal/${p.slug}`,
       lastmod: p.updatedAt,
-      priority: 0.6,
     })),
-    ...tags.map((t) => ({ loc: journalTagPath(t.tag), lastmod: t.updatedAt, priority: 0.4 })),
+    ...tags.map((t) => ({ loc: journalTagPath(t.tag), lastmod: t.updatedAt })),
     ...series.map((s) => ({
       loc: journalSeriesPath(s.series),
       lastmod: s.updatedAt,
-      priority: 0.5,
     })),
   ];
 
@@ -106,9 +99,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     }),
   );
 
-  // Expanded: the compact layout writes no <priority>.
   return sitemapResponse(
     urls.map((u) => ({ ...u, loc: absoluteUrl(u.loc) })),
-    { layout: "expanded", headers: catalogPageHeaders() },
+    { headers: catalogPageHeaders() },
   );
 }
