@@ -14,4 +14,8 @@ export const TRACKED_PAGES = [
   "/about",
   "/accessibility",
   "/features",
+  "/guide",
+  "/app-guide",
+  "/privacy",
+  "/terms",
 ] as const;
