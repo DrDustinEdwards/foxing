@@ -27,15 +27,15 @@
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.156.2",
     "@foxing/types": "*",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.151.3",
-    "drizzle-orm": "^0.45.2",
-    "nanoid": "^5.1.0",
+    "drizzle-orm": "0.45.4",
+    "nanoid": "5.1.16",
     "stripe": "23.1.0",
-    "zod": "^4.6.7"
+    "zod": "4.6.7"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.0.0",
-    "drizzle-kit": "^0.31.10",
-    "typescript": "^5.0.0",
-    "vitest": "^4.1.0"
+    "drizzle-kit": "0.31.11",
+    "typescript": "5.9.3",
+    "vitest": "4.1.12"
   }
 }
