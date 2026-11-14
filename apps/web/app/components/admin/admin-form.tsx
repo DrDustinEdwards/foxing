@@ -64,7 +64,7 @@ export function AdminError({ error }: { error: string | null }) {
   return <FormError error={error} className="mt-3" />;
 }
 
-// A labelled text field: a textarea when it has rows, else an input.
+// A labeled text field: a textarea when it has rows, else an input.
 export function AdminField({
   label,
   onChange,
