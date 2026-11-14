@@ -10,6 +10,7 @@ import type { Route } from "./+types/admin-analytics";
 
 // The audit table is the only Capsomer table on the site, so its styles load with this page alone.
 import "capsomer/table.css";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -23,7 +24,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Analytics | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Analytics | Foxing");
 }
 
 export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
@@ -38,14 +39,7 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
   ];
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Analytics
-        </h1>
-      </div>
-
+    <AdminShell title="Analytics">
       <div className="fx-admin-analytics-grid">
         {tiles.map((t) => (
           <div key={t.label} className="cap-card">

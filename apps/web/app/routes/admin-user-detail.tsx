@@ -19,6 +19,7 @@ import { useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-user-detail";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -31,12 +32,9 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    {
-      title: loaderData ? `Admin · @${loaderData.user.username} | Foxing` : "Admin · User | Foxing",
-    },
-    { name: "robots", content: "noindex" },
-  ];
+  return noindexMeta(
+    loaderData ? `Admin · @${loaderData.user.username} | Foxing` : "Admin · User | Foxing",
+  );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

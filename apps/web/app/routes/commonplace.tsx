@@ -14,9 +14,10 @@ import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/commonplace";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Commonplace | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Commonplace | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

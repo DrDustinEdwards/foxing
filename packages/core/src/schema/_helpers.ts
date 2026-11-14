@@ -1,6 +1,6 @@
 // Shared column builders. SQLite via Drizzle, D1 conventions (spec-cf-schema rev 3):
 // text nanoid PKs, integer timestamp_ms, integer booleans, text json.
-import { integer, text } from "drizzle-orm/sqlite-core";
+import { type AnySQLiteColumn, integer, text } from "drizzle-orm/sqlite-core";
 import { nanoid } from "nanoid";
 
 /** text primary key, server-defaulted to a nanoid (clients MAY supply their own). */
@@ -29,3 +29,7 @@ export const bool = (name: string) => integer(name, { mode: "boolean" });
 
 /** a text column carrying JSON, typed as T. */
 export const json = <T>(name: string) => text(name, { mode: "json" }).$type<T>();
+
+/** a required text foreign key that deletes with the row it points at. */
+export const cascadeFk = (name: string, target: () => AnySQLiteColumn) =>
+  text(name).notNull().references(target, { onDelete: "cascade" });

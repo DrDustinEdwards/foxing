@@ -8,6 +8,7 @@ import { Container, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/diary-edit";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -31,7 +32,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Edit diary entry | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Edit diary entry | Foxing");
 }
 
 export default function DiaryEdit({ loaderData }: Route.ComponentProps) {

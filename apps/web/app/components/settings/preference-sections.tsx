@@ -11,7 +11,7 @@ import { Card, inputClass, SubmitRow, ToggleRow } from "./settings-card";
 import { ThemeSwitch } from "capsomer/react/theme-switch";
 import { THEME_PREF_KEY } from "~/lib/theme";
 import { Link } from "capsomer/react/link";
-import { Avatar } from "~/components/ui";
+import { Avatar, FormError } from "~/components/ui";
 import { CloseFriendToggle } from "~/components/social/close-friend-toggle";
 
 export function BillingSection({
@@ -79,11 +79,7 @@ export function BillingSection({
           </button>
         </div>
       )}
-      {error ? (
-        <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} className="mt-3" />
     </Card>
   );
 }

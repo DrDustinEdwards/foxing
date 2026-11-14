@@ -26,17 +26,12 @@ import {
   views,
 } from "@foxing/core";
 import { errors } from "../error";
-import { parseJson, parseOptionalJson, requireSession } from "../http";
+import { actorOf, parseJson, parseOptionalJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
 import type { Context } from "hono";
 import type { Env } from "../types";
 
 export const clubRoutes = new Hono<Env>();
-
-function actorOf(c: Context<Env>) {
-  const session = requireSession(c);
-  return { session, actor: { userId: session.id, timezone: c.get("profile")?.timezone } };
-}
 
 // Fan out to the club's ClubRoom AFTER the write committed. A live-layer failure must
 // never fail an already-committed write, so this is best-effort and swallowed.

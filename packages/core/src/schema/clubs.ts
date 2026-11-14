@@ -9,7 +9,7 @@ import {
   primaryKey,
   type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
+import { bool, cascadeFk, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";
 
@@ -24,9 +24,7 @@ export const clubs = sqliteTable(
     slug: text("slug").unique(),
     description: text("description"),
     coverUrl: text("cover_url"),
-    creatorId: text("creator_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    creatorId: cascadeFk("creator_id", () => user.id),
     currentBookId: text("current_book_id").references(() => books.id, { onDelete: "set null" }),
     clubType: text("club_type").notNull().default("reader"), // reader | bookstore
     visibility: text("visibility").notNull().default("public"), // public | private
@@ -49,12 +47,8 @@ export const clubs = sqliteTable(
 export const clubMembers = sqliteTable(
   "club_members",
   {
-    clubId: text("club_id")
-      .notNull()
-      .references(() => clubs.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => clubs.id),
+    userId: cascadeFk("user_id", () => user.id),
     status: text("status").notNull().default("active"),
     role: text("role").notNull().default("member"),
     joinedAt: ts("joined_at"),
@@ -76,13 +70,9 @@ export const clubThreads = sqliteTable(
   "club_threads",
   {
     id: idPk(),
-    clubId: text("club_id")
-      .notNull()
-      .references(() => clubs.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => clubs.id),
     bookId: text("book_id").references(() => books.id, { onDelete: "set null" }),
-    authorId: text("author_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    authorId: cascadeFk("author_id", () => user.id),
     type: text("type").notNull().default("discussion"), // discussion | announcement
     title: text("title").notNull(),
     chapter: text("chapter"),
@@ -103,15 +93,11 @@ export const clubPosts = sqliteTable(
   "club_posts",
   {
     id: idPk(),
-    threadId: text("thread_id")
-      .notNull()
-      .references(() => clubThreads.id, { onDelete: "cascade" }),
+    threadId: cascadeFk("thread_id", () => clubThreads.id),
     parentPostId: text("parent_post_id").references((): AnySQLiteColumn => clubPosts.id, {
       onDelete: "cascade",
     }),
-    authorId: text("author_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    authorId: cascadeFk("author_id", () => user.id),
     content: text("content").notNull(),
     hasSpoiler: bool("has_spoiler").notNull().default(false),
     isEdited: bool("is_edited").notNull().default(false),
@@ -130,12 +116,8 @@ export const clubPolls = sqliteTable(
   "club_polls",
   {
     id: idPk(),
-    clubId: text("club_id")
-      .notNull()
-      .references(() => clubs.id, { onDelete: "cascade" }),
-    createdBy: text("created_by")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => clubs.id),
+    createdBy: cascadeFk("created_by", () => user.id),
     title: text("title").notNull(),
     description: text("description"),
     pollType: text("poll_type").notNull().default("single"), // single | irv
@@ -151,12 +133,8 @@ export const clubPolls = sqliteTable(
 export const clubPollVotes = sqliteTable(
   "club_poll_votes",
   {
-    pollId: text("poll_id")
-      .notNull()
-      .references(() => clubPolls.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    pollId: cascadeFk("poll_id", () => clubPolls.id),
+    userId: cascadeFk("user_id", () => user.id),
     ranks: json<string[]>("ranks").notNull(), // ordered option ids; single-choice = length 1
     createdAt: createdAt(),
   },
@@ -167,12 +145,8 @@ export const clubMeetings = sqliteTable(
   "club_meetings",
   {
     id: idPk(),
-    clubId: text("club_id")
-      .notNull()
-      .references(() => clubs.id, { onDelete: "cascade" }),
-    createdBy: text("created_by")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => clubs.id),
+    createdBy: cascadeFk("created_by", () => user.id),
     title: text("title").notNull(),
     description: text("description"),
     bookId: text("book_id").references(() => books.id, { onDelete: "set null" }),
@@ -196,12 +170,8 @@ export const clubMeetings = sqliteTable(
 export const clubMeetingRsvps = sqliteTable(
   "club_meeting_rsvps",
   {
-    meetingId: text("meeting_id")
-      .notNull()
-      .references(() => clubMeetings.id, { onDelete: "cascade" }),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    meetingId: cascadeFk("meeting_id", () => clubMeetings.id),
+    userId: cascadeFk("user_id", () => user.id),
     status: text("status").notNull(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
@@ -213,9 +183,7 @@ export const clubSchedule = sqliteTable(
   "club_schedule",
   {
     id: idPk(),
-    clubId: text("club_id")
-      .notNull()
-      .references(() => clubs.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => clubs.id),
     chapterName: text("chapter_name").notNull(),
     unlockDate: ts("unlock_date").notNull(),
     createdAt: createdAt(),
@@ -227,12 +195,8 @@ export const clubBooks = sqliteTable(
   "club_books",
   {
     id: idPk(),
-    clubId: text("club_id")
-      .notNull()
-      .references(() => clubs.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    clubId: cascadeFk("club_id", () => clubs.id),
+    bookId: cascadeFk("book_id", () => books.id),
     startedAt: ts("started_at"),
     finishedAt: ts("finished_at"),
     isCurrent: bool("is_current").notNull().default(false),

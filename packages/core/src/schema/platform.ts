@@ -2,16 +2,14 @@
 // event handlers. admin_audit_log records every admin/operator write. announcements
 // is the admin-managed site-content surface (the legacy /admin/content home).
 import { sqliteTable, text, index, primaryKey } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
+import { bool, cascadeFk, createdAt, idPk, json, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 
 export const notifications = sqliteTable(
   "notifications",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     type: text("type").notNull(),
     title: text("title").notNull(),
     body: text("body"),
@@ -26,9 +24,7 @@ export const reports = sqliteTable(
   "reports",
   {
     id: idPk(),
-    reporterId: text("reporter_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    reporterId: cascadeFk("reporter_id", () => user.id),
     targetType: text("target_type").notNull(),
     targetId: text("target_id").notNull(),
     reason: text("reason").notNull(),
@@ -75,9 +71,7 @@ export const adminAuditLog = sqliteTable("admin_audit_log", {
 export const pushTokens = sqliteTable(
   "push_tokens",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     token: text("token").notNull(),
     platform: text("platform").notNull(), // ios | android
     createdAt: createdAt(),

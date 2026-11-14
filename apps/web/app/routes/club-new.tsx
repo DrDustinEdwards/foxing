@@ -10,6 +10,7 @@ import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
 import { signInFrom } from "~/lib/sign-in-path";
 import { useHydrated } from "capsomer/react/hooks";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -19,7 +20,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "New club | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("New club | Foxing");
 }
 
 export default function ClubNew() {

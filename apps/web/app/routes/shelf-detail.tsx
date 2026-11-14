@@ -7,6 +7,7 @@ import { Container, Eyebrow } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/shelf-detail";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -17,10 +18,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
-  return [
-    { title: loaderData ? `${loaderData.shelf.name} | Foxing` : "Shelf | Foxing" },
-    { name: "robots", content: "noindex" },
-  ];
+  return noindexMeta(loaderData ? `${loaderData.shelf.name} | Foxing` : "Shelf | Foxing");
 }
 
 export default function ShelfDetail({ loaderData }: Route.ComponentProps) {

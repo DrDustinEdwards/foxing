@@ -17,9 +17,10 @@ import { cloudflareContext } from "~/context";
 import { getAuth, sessionUserFromRequest } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/email-confirm";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Confirm your email change | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Confirm your email change | Foxing");
 }
 
 // The page's URL holds the token.

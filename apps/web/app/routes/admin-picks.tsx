@@ -10,13 +10,14 @@ import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
   AdminError,
-  adminInputClass,
   useAdminAction,
   AdminRow,
+  AdminField,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-picks";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -31,7 +32,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Celebrity Picks | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Celebrity Picks | Foxing");
 }
 
 // It hydrates (root.tsx, the `hydrate` handle).
@@ -43,14 +44,7 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
   const reload = () => revalidator.revalidate();
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Celebrity Picks
-        </h1>
-      </div>
-
+    <AdminShell title="Celebrity Picks">
       <div className="cap-stack" data-gap="6">
         <AdminCard title="Curator">
           <nav className="cap-tabs-list" data-variant="line" data-size="sm" aria-label="Curator">
@@ -176,32 +170,9 @@ function PickEdit({
 
   return (
     <div className="mt-3 fx-admin-picks-card">
-      <label className="block">
-        <span className="fx-label">Category</span>
-        <input
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className={adminInputClass}
-        />
-      </label>
-      <label className="block">
-        <span className="fx-label">Notes</span>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          className={adminInputClass}
-        />
-      </label>
-      <label className="block">
-        <span className="fx-label">Curator quote</span>
-        <textarea
-          value={curatorQuote}
-          onChange={(e) => setCuratorQuote(e.target.value)}
-          rows={2}
-          className={adminInputClass}
-        />
-      </label>
+      <AdminField label="Category" value={category} onChange={setCategory} />
+      <AdminField label="Notes" value={notes} onChange={setNotes} rows={3} />
+      <AdminField label="Curator quote" value={curatorQuote} onChange={setCuratorQuote} rows={2} />
       <AdminButton variant="primary" pending={pending} onClick={() => void save()}>
         {pending ? "Saving..." : "Save"}
       </AdminButton>

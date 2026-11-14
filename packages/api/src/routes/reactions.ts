@@ -3,17 +3,11 @@
 // Phase 6 uses this for reading_list likes and diary_entry (review) likes.
 import { reactionInput, reactionsDomain } from "@foxing/core";
 import { Hono } from "hono";
-import { parseJson, requireSession } from "../http";
+import { actorOf, parseJson } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
-import type { Context } from "hono";
 import type { Env } from "../types";
 
 export const reactionRoutes = new Hono<Env>();
-
-function actorOf(c: Context<Env>) {
-  const session = requireSession(c);
-  return { session, actor: { userId: session.id, timezone: c.get("profile")?.timezone } };
-}
 
 reactionRoutes.put("/reactions", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);

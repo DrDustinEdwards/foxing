@@ -80,6 +80,11 @@ export function buildMeta({ pathname, ...page }: MetaInput): MetaDescriptor[] {
   return head({ ...page, path: pathname });
 }
 
+/** The head of a page that stays out of the index (a signed-in screen, a sign-in step): its title and nothing else. */
+export function noindexMeta(title: string): MetaDescriptor[] {
+  return [{ title }, { name: "robots", content: "noindex" }];
+}
+
 const ORGANIZATION_ID = `${SITE_ORIGIN}/#organization`;
 
 /** Foxing itself, on the home page, where Google reads an Organization's name and logo

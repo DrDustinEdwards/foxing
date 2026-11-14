@@ -13,9 +13,10 @@ import { cloudflareContext } from "~/context";
 import { getAuth, sessionUserFromRequest } from "~/lib/auth.server";
 import { linkPageHeaders, redirectOrLimited } from "~/lib/link-confirm.server";
 import type { Route } from "./+types/sign-in-confirm";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Sign in to Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Sign in to Foxing");
 }
 
 // The page's URL holds the token.

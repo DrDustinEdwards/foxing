@@ -9,9 +9,10 @@ import { YearView } from "~/components/reading/year-view";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/year";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Your year in reading | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Your year in reading | Foxing");
 }
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {

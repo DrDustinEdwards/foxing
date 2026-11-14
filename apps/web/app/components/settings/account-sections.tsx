@@ -17,6 +17,7 @@ import {
 import { useFetcher, useRevalidator } from "react-router";
 import { ButtonLink } from "capsomer/react/link";
 import { signInHref } from "~/lib/sign-in-path";
+import { FormError } from "~/components/ui";
 
 // Bio length matches the legacy limit so the counter and the stored value agree.
 const BIO_MAX = 200;
@@ -822,11 +823,7 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
           {pending ? "Deleting..." : "Delete my account"}
         </button>
       </div>
-      {error ? (
-        <p className="cap-text mt-3" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} className="mt-3" />
     </section>
   );
 }

@@ -61,46 +61,22 @@ const rowShape = {
   authorAvatarUrl: profiles.avatarUrl,
 } as const;
 
-function toRow(r: {
-  id: string;
-  userId: string;
-  type: string;
-  locator: Record<string, unknown> | null;
-  selectedText: string | null;
-  body: string | null;
-  color: string | null;
-  chapter: string | null;
-  visibility: string;
-  containsSpoilers: boolean;
-  isPinned: boolean;
-  clubId: string | null;
-  parentId: string | null;
-  createdAt: Date;
-  authorId: string;
-  authorUsername: string | null;
-  authorDisplayName: string | null;
-  authorAvatarUrl: string | null;
-}): SocialAnnotationRow {
+function toRow(
+  r: Omit<SocialAnnotationRow, "author"> & {
+    authorId: string;
+    authorUsername: string | null;
+    authorDisplayName: string | null;
+    authorAvatarUrl: string | null;
+  },
+): SocialAnnotationRow {
+  const { authorId, authorUsername, authorDisplayName, authorAvatarUrl, ...row } = r;
   return {
-    id: r.id,
-    userId: r.userId,
-    type: r.type,
-    locator: r.locator,
-    selectedText: r.selectedText,
-    body: r.body,
-    color: r.color,
-    chapter: r.chapter,
-    visibility: r.visibility,
-    containsSpoilers: r.containsSpoilers,
-    isPinned: r.isPinned,
-    clubId: r.clubId,
-    parentId: r.parentId,
-    createdAt: r.createdAt,
+    ...row,
     author: {
-      id: r.authorId,
-      username: r.authorUsername,
-      displayName: r.authorDisplayName,
-      avatarUrl: r.authorAvatarUrl,
+      id: authorId,
+      username: authorUsername,
+      displayName: authorDisplayName,
+      avatarUrl: authorAvatarUrl,
     },
   };
 }
@@ -114,26 +90,7 @@ export async function viewerClubIdsReadingBook(
   viewerId: string,
   bookId: string,
 ): Promise<string[]> {
-  const rows = await db
-    .select({ clubId: clubMembers.clubId })
-    .from(clubMembers)
-    .innerJoin(clubs, eq(clubs.id, clubMembers.clubId))
-    .leftJoin(
-      clubBooks,
-      and(
-        eq(clubBooks.clubId, clubMembers.clubId),
-        eq(clubBooks.bookId, bookId),
-        eq(clubBooks.isCurrent, true),
-      ),
-    )
-    .where(
-      and(
-        eq(clubMembers.userId, viewerId),
-        eq(clubMembers.status, "active"),
-        or(eq(clubs.currentBookId, bookId), isNotNull(clubBooks.id)),
-      ),
-    );
-  return [...new Set(rows.map((r) => r.clubId))];
+  return (await shareableClubsForBook(db, viewerId, bookId)).map((c) => c.id);
 }
 
 /** The viewer's active clubs whose CURRENT read is this book, with names, for the

@@ -11,6 +11,7 @@ import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/club-detail";
 import { MembershipControls, ThreadsSection } from "../components/clubs/club-sections";
 import { MeetingsSection, PollsSection, ScheduleSection } from "../components/clubs/club-schedule";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -22,7 +23,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
 
 export function meta({ loaderData }: Route.MetaArgs) {
   const name = loaderData?.page.club.name ?? "Club";
-  return [{ title: `${name} | Foxing` }, { name: "robots", content: "noindex" }];
+  return noindexMeta(`${name} | Foxing`);
 }
 
 export default function ClubDetail({ loaderData, params }: Route.ComponentProps) {

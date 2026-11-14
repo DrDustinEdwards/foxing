@@ -5,6 +5,7 @@
 import { useToggleShelfBook } from "@foxing/client";
 import type { Shelf } from "@foxing/types";
 import { Link } from "capsomer/react/link";
+import { FormError } from "~/components/ui";
 
 export function BookShelvesPicker({
   bookId,
@@ -49,11 +50,7 @@ export function BookShelvesPicker({
           })}
         </div>
       )}
-      {toggle.error ? (
-        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {toggle.error}
-        </p>
-      ) : null}
+      <FormError error={toggle.error} className="mt-2" />
     </div>
   );
 }

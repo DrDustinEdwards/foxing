@@ -46,7 +46,7 @@ const ADMIN_SECTIONS: AdminEntry[] = [
   entry("/admin/notifications", "Notifications", iconBell, "Readers"),
 ];
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+export function AdminShell({ title, children }: { title?: string; children: React.ReactNode }) {
   const user = useRouteLoaderData<typeof RootLoader>("root")?.navUser ?? null;
   const { pathname } = useLocation();
   return (
@@ -68,7 +68,17 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       prefKey="foxing-admin-rail"
     >
       <link rel="stylesheet" href={adminShellCss} precedence="default" />
-      <div className="cap-admin-page">{children}</div>
+      <div className="cap-admin-page">
+        {title ? (
+          <div className="mb-6">
+            <p className="group-label">Admin</p>
+            <h1 className="cap-title" data-size="2">
+              {title}
+            </h1>
+          </div>
+        ) : null}
+        {children}
+      </div>
     </CapsomerAdminShell>
   );
 }

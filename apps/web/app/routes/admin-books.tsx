@@ -11,10 +11,12 @@ import {
   adminInputClass,
   useAdminAction,
   AdminRow,
+  AdminField,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-books";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -26,7 +28,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Books | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Books | Foxing");
 }
 
 // It hydrates (root.tsx, the `hydrate` handle).
@@ -38,14 +40,7 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
   const reload = () => revalidator.revalidate();
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Books
-        </h1>
-      </div>
-
+    <AdminShell title="Books">
       <div className="cap-stack" data-gap="6">
         <AdminCard title="Search">
           <form method="get" className="cap-cluster" data-gap="3">
@@ -166,49 +161,17 @@ function BookEdit({
   return (
     <div className="mt-3 fx-admin-books-card">
       <div className="fx-admin-books-grid">
-        <label className="block">
-          <span className="fx-label">Title</span>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Author</span>
-          <input
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Publication year</span>
-          <input
-            type="number"
-            value={publicationYear}
-            onChange={(e) => setPublicationYear(e.target.value)}
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Publisher</span>
-          <input
-            value={publisher}
-            onChange={(e) => setPublisher(e.target.value)}
-            className={adminInputClass}
-          />
-        </label>
-      </div>
-      <label className="block">
-        <span className="fx-label">Description</span>
-        <textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={4}
-          className={adminInputClass}
+        <AdminField label="Title" value={title} onChange={setTitle} />
+        <AdminField label="Author" value={author} onChange={setAuthor} />
+        <AdminField
+          label="Publication year"
+          value={publicationYear}
+          onChange={setPublicationYear}
+          type="number"
         />
-      </label>
+        <AdminField label="Publisher" value={publisher} onChange={setPublisher} />
+      </div>
+      <AdminField label="Description" value={description} onChange={setDescription} rows={4} />
       <AdminButton variant="primary" pending={pending} onClick={() => void save()}>
         {pending ? "Saving..." : "Save"}
       </AdminButton>

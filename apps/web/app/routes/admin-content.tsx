@@ -12,10 +12,12 @@ import {
   adminInputClass,
   useAdminAction,
   AdminRow,
+  AdminField,
 } from "~/components/admin/admin-form";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-content";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -25,7 +27,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Content | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Content | Foxing");
 }
 
 const PLACEMENTS = ["banner", "home", "journal"] as const;
@@ -39,14 +41,7 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
   const reload = () => revalidator.revalidate();
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Content
-        </h1>
-      </div>
-
+    <AdminShell title="Content">
       <div className="cap-stack" data-gap="6">
         <CreateAnnouncement onDone={() => void reload()} />
         <AdminCard title="Announcements">
@@ -109,23 +104,8 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
   return (
     <AdminCard title="New announcement">
       <div className="cap-stack">
-        <label className="block">
-          <span className="fx-label">Title</span>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className={adminInputClass}
-          />
-        </label>
-        <label className="block">
-          <span className="fx-label">Body (optional)</span>
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={3}
-            className={adminInputClass}
-          />
-        </label>
+        <AdminField label="Title" value={title} onChange={setTitle} />
+        <AdminField label="Body (optional)" value={body} onChange={setBody} rows={3} />
         <label className="block">
           <span className="fx-label">Placement</span>
           <select
@@ -141,22 +121,8 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
           </select>
         </label>
         <div className="fx-admin-content-grid">
-          <label className="block">
-            <span className="fx-label">Link URL (optional)</span>
-            <input
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              className={adminInputClass}
-            />
-          </label>
-          <label className="block">
-            <span className="fx-label">Link label (optional)</span>
-            <input
-              value={linkLabel}
-              onChange={(e) => setLinkLabel(e.target.value)}
-              className={adminInputClass}
-            />
-          </label>
+          <AdminField label="Link URL (optional)" value={linkUrl} onChange={setLinkUrl} />
+          <AdminField label="Link label (optional)" value={linkLabel} onChange={setLinkLabel} />
         </div>
         <label
           className="cap-text cap-cluster"

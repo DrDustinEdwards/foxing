@@ -1,6 +1,5 @@
-import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
-import { FeatureList, GuideNav, Prose, Section } from "~/components/guide-page";
+import { FeatureList, GuideFooter, GuideNav, Prose, Section } from "~/components/guide-page";
 import { Container, PageHeader } from "~/components/ui";
 import { staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
@@ -102,17 +101,7 @@ export default function Guide() {
           />
         </Section>
 
-        <p className="mt-16 fx-guide-text">
-          Free to join.{" "}
-          <Link to="/signup" className="link">
-            Create an account
-          </Link>{" "}
-          or{" "}
-          <Link to="/books" className="link">
-            browse the library
-          </Link>
-          .
-        </p>
+        <GuideFooter />
       </Container>
     </PageShell>
   );

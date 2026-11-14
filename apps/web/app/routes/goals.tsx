@@ -22,13 +22,14 @@ import { useState } from "react";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { ReadingActivity } from "~/components/reading/reading-activity";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, PageHeader } from "~/components/ui";
+import { Container, EmptyState, FormError, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/goals";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Reading goals | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Reading goals | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -241,11 +242,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
         </div>
       ) : null}
 
-      {error ? (
-        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} className="mt-2" />
     </li>
   );
 }
@@ -287,11 +284,7 @@ function CreateGoal() {
           Saving...
         </p>
       ) : null}
-      {error ? (
-        <p className="cap-text mt-2" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {error}
-        </p>
-      ) : null}
+      <FormError error={error} className="mt-2" />
     </section>
   );
 }

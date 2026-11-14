@@ -7,13 +7,14 @@ import { createDb, views } from "@foxing/core";
 import type { VocabularyWord } from "@foxing/types";
 import { useState } from "react";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, FilterTab, PageHeader } from "~/components/ui";
+import { Container, EmptyState, FilterTab, FormError, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/vocabulary";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Vocabulary | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Vocabulary | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {
@@ -103,11 +104,7 @@ function WordItem({ word }: { word: VocabularyWord }) {
       {word.contextSentence ? (
         <p className="italic fx-vocabulary-text">{word.contextSentence}</p>
       ) : null}
-      {setMastered.error ? (
-        <p className="cap-text" data-size="small" data-tone="crit" data-face="ui" role="alert">
-          {setMastered.error}
-        </p>
-      ) : null}
+      <FormError error={setMastered.error} />
     </li>
   );
 }

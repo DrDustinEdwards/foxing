@@ -1,19 +1,15 @@
 // Social (5 tables). activity_events is written ONLY by the core event emitter on
 // API write paths, which fixes web/mobile feed parity by construction.
 import { integer, sqliteTable, text, index, primaryKey } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, ts, updatedAt } from "./_helpers";
+import { bool, cascadeFk, createdAt, idPk, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";
 
 export const follows = sqliteTable(
   "follows",
   {
-    followerId: text("follower_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    followingId: text("following_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    followerId: cascadeFk("follower_id", () => user.id),
+    followingId: cascadeFk("following_id", () => user.id),
     createdAt: createdAt(),
   },
   (t) => [
@@ -25,12 +21,8 @@ export const follows = sqliteTable(
 export const closeFriends = sqliteTable(
   "close_friends",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    friendId: text("friend_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
+    friendId: cascadeFk("friend_id", () => user.id),
     createdAt: createdAt(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.friendId] })],
@@ -40,9 +32,7 @@ export const readingLists = sqliteTable(
   "reading_lists",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     title: text("title").notNull(),
     slug: text("slug"),
     description: text("description"),
@@ -59,12 +49,8 @@ export const readingListBooks = sqliteTable(
   "reading_list_books",
   {
     id: idPk(),
-    listId: text("list_id")
-      .notNull()
-      .references(() => readingLists.id, { onDelete: "cascade" }),
-    bookId: text("book_id")
-      .notNull()
-      .references(() => books.id, { onDelete: "cascade" }),
+    listId: cascadeFk("list_id", () => readingLists.id),
+    bookId: cascadeFk("book_id", () => books.id),
     position: integer("position").notNull().default(0),
     note: text("note"),
     addedAt: ts("added_at"),
@@ -76,9 +62,7 @@ export const activityEvents = sqliteTable(
   "activity_events",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     type: text("type").notNull(),
     bookId: text("book_id").references(() => books.id, { onDelete: "set null" }),
     targetId: text("target_id"),

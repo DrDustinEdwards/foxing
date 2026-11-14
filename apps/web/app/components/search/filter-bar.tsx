@@ -6,16 +6,10 @@
 // popover: Esc and an outside click close it).
 import { Popover, PopoverContent, PopoverTrigger } from "capsomer/react/popover";
 import { useNavigate, useSearchParams } from "react-router";
+import { BOOKS_ERAS } from "~/components/nav/header-panels";
 
-// Mirror core ERA_BUCKETS / LENGTH_BUCKETS locally so the client bundle stays out of
-// the core query layer (same pattern as the Books nav era chips).
-const ERAS = [
-  { slug: "pre-1800", label: "Before 1800" },
-  { slug: "1800-1849", label: "1800 to 1849" },
-  { slug: "1850-1899", label: "1850 to 1899" },
-  { slug: "1900-1949", label: "1900 to 1949" },
-  { slug: "modern", label: "1950 and later" },
-];
+// The eras are the header's list (nav/header-panels), which mirrors core ERA_BUCKETS; LENGTH_BUCKETS is mirrored here
+// so the client bundle stays out of the core query layer.
 const LENGTHS = [
   { slug: "short", label: "Short, under 40k words" },
   { slug: "medium", label: "Medium, 40k to 120k" },
@@ -53,7 +47,7 @@ export function FilterBar({
 
   const chips = [
     active.genre ? { key: "genre", label: active.genre } : null,
-    active.era ? { key: "era", label: labelFor(ERAS, active.era) } : null,
+    active.era ? { key: "era", label: labelFor(BOOKS_ERAS, active.era) } : null,
     active.length ? { key: "length", label: labelFor(LENGTHS, active.length) } : null,
   ].filter((c): c is { key: string; label: string } => c !== null);
 
@@ -106,7 +100,7 @@ export function FilterBar({
                   className="cap-select"
                 >
                   <option value="">Any era</option>
-                  {ERAS.map((e) => (
+                  {BOOKS_ERAS.map((e) => (
                     <option key={e.slug} value={e.slug}>
                       {e.label}
                     </option>

@@ -4,9 +4,10 @@ import { DemoNotice } from "~/components/demo-notice";
 import { StatsView } from "~/components/reading/stats-view";
 import { sampleStats } from "~/lib/demo/reading-sample";
 import type { Route } from "./+types/stats";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Reading stats demo | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Reading stats demo | Foxing");
 }
 
 export function loader() {

@@ -16,9 +16,10 @@ import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/diary";
+import { noindexMeta } from "~/lib/seo";
 
 export function meta() {
-  return [{ title: "Your diary | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Your diary | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

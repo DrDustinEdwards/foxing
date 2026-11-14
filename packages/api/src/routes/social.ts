@@ -12,17 +12,11 @@ import {
 } from "@foxing/core";
 import { Hono } from "hono";
 import { errors } from "../error";
-import { parseJson, requireSession } from "../http";
+import { actorOf, parseJson, requireSession } from "../http";
 import { rateLimit } from "../middleware/rate-limit";
-import type { Context } from "hono";
 import type { Env } from "../types";
 
 export const socialRoutes = new Hono<Env>();
-
-function actorOf(c: Context<Env>) {
-  const session = requireSession(c);
-  return { session, actor: { userId: session.id, timezone: c.get("profile")?.timezone } };
-}
 
 // -- Follows (free) ---------------------------------------------------------
 

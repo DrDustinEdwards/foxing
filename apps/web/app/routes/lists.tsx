@@ -10,11 +10,12 @@ import { Container, EmptyState, EntityCard, FilterTab, PageHeader } from "~/comp
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/lists";
+import { noindexMeta } from "~/lib/seo";
 
 type ListFilter = "all" | "public" | "private";
 
 export function meta() {
-  return [{ title: "Your lists | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Your lists | Foxing");
 }
 
 export async function loader({ context, request }: Route.LoaderArgs) {

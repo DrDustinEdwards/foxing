@@ -8,7 +8,7 @@ import {
   primaryKey,
   type AnySQLiteColumn,
 } from "drizzle-orm/sqlite-core";
-import { bool, createdAt, idPk, json, updatedAt } from "./_helpers";
+import { bool, cascadeFk, createdAt, idPk, json, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";
 import { clubs } from "./clubs";
@@ -19,9 +19,7 @@ export const annotations = sqliteTable(
   "annotations",
   {
     id: idPk(),
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     // nullable: commonplace entries can come from outside the catalog.
     bookId: text("book_id").references(() => books.id, { onDelete: "cascade" }),
     // set for club passage comments.
@@ -57,9 +55,7 @@ export const annotations = sqliteTable(
 export const reactions = sqliteTable(
   "reactions",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     targetType: text("target_type").notNull(),
     targetId: text("target_id").notNull(),
     kind: text("kind").notNull(),
@@ -74,9 +70,7 @@ export const reactions = sqliteTable(
 export const saves = sqliteTable(
   "saves",
   {
-    userId: text("user_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    userId: cascadeFk("user_id", () => user.id),
     targetType: text("target_type").notNull(),
     targetId: text("target_id").notNull(),
     createdAt: createdAt(),

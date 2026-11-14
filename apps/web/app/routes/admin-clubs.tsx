@@ -16,6 +16,7 @@ import {
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-clubs";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -27,7 +28,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export function meta() {
-  return [{ title: "Admin · Clubs | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Admin · Clubs | Foxing");
 }
 
 // It hydrates (root.tsx, the `hydrate` handle).
@@ -39,14 +40,7 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
   const reload = () => revalidator.revalidate();
 
   return (
-    <AdminShell>
-      <div className="mb-6">
-        <p className="group-label">Admin</p>
-        <h1 className="cap-title" data-size="2">
-          Clubs
-        </h1>
-      </div>
-
+    <AdminShell title="Clubs">
       <div className="cap-stack" data-gap="6">
         <AdminCard title="Search">
           <form method="get" className="cap-cluster" data-gap="3">

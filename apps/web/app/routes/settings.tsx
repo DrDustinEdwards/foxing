@@ -41,6 +41,7 @@ import {
   VisibilitySection,
 } from "../components/settings/preference-sections";
 import { signInHref } from "~/lib/sign-in-path";
+import { noindexMeta } from "~/lib/seo";
 
 export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -154,7 +155,7 @@ const dateTimeLabel = new Intl.DateTimeFormat("en-US", {
 });
 
 export function meta() {
-  return [{ title: "Settings | Foxing" }, { name: "robots", content: "noindex" }];
+  return noindexMeta("Settings | Foxing");
 }
 
 export default function Settings({ loaderData }: Route.ComponentProps) {
