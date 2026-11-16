@@ -25,9 +25,9 @@
     "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.51.0",
     "fast-xml-parser": "^5.8.0",
     "jszip": "^3.10.1",
-    "oxfmt": "0.77.0",
-    "oxlint": "1.92.0",
-    "oxlint-tsgolint": "7.0.2006",
+    "oxfmt": "0.78.0",
+    "oxlint": "1.93.0",
+    "oxlint-tsgolint": "7.0.2007",
     "p-limit": "^6.2.0",
     "typescript": "^5.0.0",
     "vite": "^8.0.0"
