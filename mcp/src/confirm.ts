@@ -3,7 +3,7 @@
  * administrator's confirmation tied to that exact action).
  *
  * A write tool called without `confirm` changes nothing. It answers with a preview of exactly what it would send and a
- * token from site-runtime ./confirm-token: signed claims naming the tool and its arguments (`confirm` aside), with an
+ * token from site-runtime ./confirm-token: signed claims naming the tool and a fingerprint of its arguments, with an
  * expiry, keyed from the operator token this Worker already holds, so nothing is stored and no new secret is needed.
  * The same call with that token, within ten minutes, runs it. Any other argument, another tool or an old token is
  * refused and sends nothing.
@@ -27,10 +27,13 @@ async function keys(env: ConfirmEnv): Promise<string[] | null> {
   return [await sha256Hex(`${LABEL}\n${secret}`)];
 }
 
-/** The claims a token is bound to: the tool and its arguments, `confirm` aside, as canonical JSON. */
-function bound(tool: string, args: Record<string, unknown>) {
+/**
+ * The claims a token is bound to: the tool and a fingerprint of its arguments (`confirm` aside, as canonical JSON), so
+ * a token stays the same length however long the edit is (a 20,000-character description would otherwise ride in it).
+ */
+async function bound(tool: string, args: Record<string, unknown>) {
   const { confirm: _ignored, ...rest } = args;
-  return { tool, args: canonicalJson(rest) };
+  return { tool, args: await sha256Hex(canonicalJson(rest)) };
 }
 
 /** A token for exactly this call, or null when the Worker has no operator token to key it with. */
@@ -42,7 +45,7 @@ export async function confirmationFor(
 ) {
   const k = await keys(env);
   if (!k) return null;
-  return mintConfirm({ keys: k, claims: bound(tool, args), ttlSeconds: TTL_SECONDS, now });
+  return mintConfirm({ keys: k, claims: await bound(tool, args), ttlSeconds: TTL_SECONDS, now });
 }
 
 /** Whether `token` was issued for exactly this tool and these arguments, and is still fresh. */
@@ -55,5 +58,5 @@ export async function isConfirmed(
 ): Promise<boolean> {
   const k = await keys(env);
   if (!k) return false;
-  return (await redeemConfirm({ keys: k, token, expect: bound(tool, args), now })).ok;
+  return (await redeemConfirm({ keys: k, token, expect: await bound(tool, args), now })).ok;
 }

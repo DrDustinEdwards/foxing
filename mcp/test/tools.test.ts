@@ -24,7 +24,9 @@ const tool = (name: string) => {
   assert.ok(found, `no tool ${name}`);
   return found;
 };
-const call = (name: string, args: Record<string, unknown> = {}) => tool(name).handler(env, args);
+/** Parsed by the tool's input schema first, as the MCP server does, so a real confirm token must fit it. */
+const call = (name: string, args: Record<string, unknown> = {}) =>
+  tool(name).handler(env, tool(name).config.inputSchema.parse(args));
 /** A write tool's two calls: the preview, then the same arguments with its confirm token. */
 const confirmCall = async (name: string, args: Record<string, unknown>) => {
   const preview = await call(name, args);

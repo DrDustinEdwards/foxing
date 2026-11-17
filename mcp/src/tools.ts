@@ -292,7 +292,10 @@ const cursorSchema = z
 
 const confirmSchema = z
   .string()
-  .max(100)
+  .regex(
+    /^[A-Za-z0-9_-]{1,2048}\.[A-Za-z0-9_-]{43}$/,
+    "Pass the confirm token from the preview, unchanged.",
+  )
   .optional()
   .describe(
     "Leave out on the first call: it changes nothing and returns a preview and a confirm token. After the " +
@@ -862,18 +865,7 @@ export const TOOLS: ToolDefinition[] = [
       inputSchema: z.strictObject({
         user_id: idSchema("reader"),
         suspended: z.boolean().describe("true suspends the reader, false lifts the suspension."),
-        confirm: z
-          .string()
-          .regex(
-            /^[A-Za-z0-9_-]{1,2048}\.[A-Za-z0-9_-]{43}$/,
-            "Pass the confirm token from the preview, unchanged.",
-          )
-          .optional()
-          .describe(
-            "Leave out on the first call: it changes nothing and returns a preview and a confirm " +
-              "token. After the administrator approves the preview, call again with the same " +
-              "arguments and this token.",
-          ),
+        confirm: confirmSchema,
       }),
       outputSchema: z.looseObject({
         ok: z.boolean().optional(),
