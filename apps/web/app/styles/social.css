@@ -62,7 +62,7 @@
 .fx-remove-book-button-label-2,
 .fx-close-friend-toggle-label-2 {
   font-family: var(--ui);
-  font-size: 0.65rem;
+  font-size: var(--fs-tiny);
   color: var(--crit);
 }
 
@@ -95,9 +95,14 @@
 .fx-goals-caps,
 .fx-home-caps,
 .fx-admin-user-detail-caps-2,
-.fx-diary-caps-4 {
+.fx-diary-caps-4,
+.fx-me-caps,
+.fx-stats-caps,
+.fx-admin-user-detail-caps,
+.fx-admin-caps,
+.fx-admin-analytics-caps {
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
 }
@@ -251,7 +256,7 @@
   gap: var(--space-4);
 }
 .fx-highlights-text {
-  padding-left: 22px;
+  padding-left: var(--space-5-5);
 }
 .fx-highlights-chip {
   text-transform: capitalize;
@@ -384,10 +389,6 @@
 .fx-admin-user-detail-caps,
 .fx-admin-caps,
 .fx-admin-analytics-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
   color: var(--dim);
 }
 .fx-me-caps {
@@ -501,7 +502,7 @@
 }
 .fx-u-profile-label-5 {
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: var(--fs-tiny);
   color: var(--dim);
 }
 .fx-u-profile-quote {
@@ -533,11 +534,17 @@
   }
 }
 .fx-u-profile-caps,
-.fx-year-caps {
+.fx-year-caps,
+.fx-club-sections-caps,
+.fx-club-thread-caps,
+.fx-club-schedule-caps {
   font-family: var(--mono);
-  font-size: 0.65rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: var(--tracking-wide);
+}
+.fx-u-profile-caps,
+.fx-year-caps {
   color: var(--dim);
 }
 .fx-profile-row {
@@ -554,7 +561,7 @@
 }
 .fx-u-profile-caps-2 {
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   color: var(--dim);
 }

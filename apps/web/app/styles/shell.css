@@ -101,7 +101,7 @@
 .fx-acct-stats dt {
   margin-block-start: var(--space-1);
   font-family: var(--mono);
-  font-size: 0.55rem;
+  font-size: var(--fs-tiny);
   line-height: var(--leading-tight-5);
   text-transform: uppercase;
   letter-spacing: var(--tracking-wider);

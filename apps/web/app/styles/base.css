@@ -222,11 +222,15 @@
 }
 .group-label,
 .fx-journal-tag-caps,
-.fx-books-caps {
+.fx-books-caps,
+.fx-award-detail-caps,
+.fx-botm-caps,
+.fx-picks-caps,
+.fx-pick-club-caps {
   font-family: var(--mono);
   font-size: var(--fs-tiny);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--tracking-spaced);
   color: var(--dim);
 }
 .card-label {
@@ -239,7 +243,7 @@
 .badge,
 .fx-acct-foot {
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
 }

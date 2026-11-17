@@ -16,7 +16,7 @@
   }
   & > :is(h2, h3) {
     font-family: var(--display);
-    line-height: 1.35;
+    line-height: var(--leading-snug-5);
     color: var(--text);
   }
 }
@@ -216,17 +216,6 @@ a:hover > .fx-book > :is(h2, h3) {
   font-family: var(--mono);
   font-size: var(--fs-small);
   line-height: var(--line-box-4);
-  color: var(--dim);
-}
-
-.fx-award-detail-caps,
-.fx-botm-caps,
-.fx-picks-caps,
-.fx-pick-club-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-spaced);
   color: var(--dim);
 }
 

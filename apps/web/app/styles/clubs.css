@@ -110,14 +110,6 @@
     margin-top: var(--space-3);
   }
 }
-.fx-club-sections-caps,
-.fx-club-thread-caps,
-.fx-club-schedule-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
-}
 .fx-club-sections-caps {
   justify-self: start;
 }
@@ -217,7 +209,7 @@
 
 .fx-join-code-caps,
 .fx-clubs-caps {
-  letter-spacing: 0.14em;
+  letter-spacing: var(--tracking-spaced);
   color: var(--dim);
 }
 .fx-join-code-title,

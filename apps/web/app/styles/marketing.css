@@ -108,10 +108,10 @@
   }
   & ul {
     list-style: disc;
-    padding-inline-start: 1.3rem;
+    padding-inline-start: var(--space-5-5);
   }
   & li + li {
-    margin-top: 0.4rem;
+    margin-top: var(--space-2-5);
   }
   & a {
     color: var(--accent-text);

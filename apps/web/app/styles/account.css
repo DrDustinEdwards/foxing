@@ -55,7 +55,7 @@
 }
 .fx-auth-shell-label-3 {
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: var(--tracking-wide);
   color: var(--dim);
 }
 .fx-auth-shell-text-2 {
