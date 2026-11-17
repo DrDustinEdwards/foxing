@@ -2,11 +2,6 @@
 # Each one is an advisory with a patched version that our dependency chain cannot take yet.
 
 [[IgnoredVulns]]
-id = "GHSA-wx4j-mvgx-mqwp"
-ignoreUntil = 2026-12-17
-reason = "satori 0.15.2 is workers-og's pin and workers-og 0.0.27 (latest) bundles its own copy, so a lockfile bump would change nothing. Cards are rasterized to PNG by resvg and card text has < and > replaced, so no SVG reaches a consumer. Fix: replace workers-og in site-runtime's share-card, network-wide."
-
-[[IgnoredVulns]]
 id = "GHSA-67mh-4wv8-2f99"
 ignoreUntil = 2026-12-17
 reason = "esbuild 0.18.20 is pinned (~0.18.20) by @esbuild-kit/core-utils, which drizzle-kit 0.31.x loads. Dev machine only (drizzle-kit generate), no dev server runs with it. Removed when drizzle-kit drops @esbuild-kit."

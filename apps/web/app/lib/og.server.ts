@@ -2,7 +2,7 @@
 // drawn and kept at the edge by site-runtime's shareCardResponse under each route's key. Each route builds its own
 // card HTML.
 import { googleFont, shareCardResponse } from "@dustinedwards/site-runtime/share-card";
-import { ImageResponse } from "workers-og";
+import { drawShareCard } from "@dustinedwards/site-runtime/share-card-draw";
 import { edgeCache } from "~/lib/cache.server";
 import { publicPageHeaders } from "@dustinedwards/site-runtime/edge-cache";
 import { FONT_CACHE_ORIGIN } from "~/lib/origins";
@@ -38,7 +38,7 @@ export async function ogCard(
     loaded ??= loadOgFonts();
     return loaded;
   };
-  const card = await shareCardResponse(ImageResponse, {
+  const card = await shareCardResponse(drawShareCard, {
     cacheKey,
     cache: edgeCache(),
     fonts: async () => (await fonts()).fonts,
