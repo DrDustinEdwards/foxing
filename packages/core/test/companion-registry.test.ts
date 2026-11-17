@@ -99,8 +99,8 @@ describe("call cost", () => {
       cacheWrite: 50_000,
       cacheWrite1h: 0,
     });
-    // Sonnet 5: 100 x $2 + 200,000 reads x $0.20 + 50,000 writes x $2.50 per million = $0.1652, rounded up.
+    // Sonnet 5.5: 100 x $2 + 200,000 reads x $0.10 + 50,000 writes x $2.50 per million = $0.1452, rounded up.
     expect(uncached).toBe(1);
-    expect(cached).toBe(17);
+    expect(cached).toBe(15);
   });
 });
