@@ -628,6 +628,7 @@ const site = defineSite<Env>({
  */
 export class Renderer extends siteRenderer(WorkerEntrypoint<Env>, site) {}
 
-const worker = siteWorker(site);
+// The queue consumer goes in beside the shared fetch and cron, so Sentry (site-runtime ./sentry) wraps it too.
+const worker = siteWorker(site, { queue });
 
-export default { ...worker, queue } satisfies ExportedHandler<Env, CacheJobMessage>;
+export default worker satisfies ExportedHandler<Env, CacheJobMessage>;
