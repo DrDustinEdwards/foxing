@@ -30,14 +30,18 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 function Frame({ step, children }: { step: 1 | 2; children: React.ReactNode }) {
   return (
     <div className="fx-onboarding-box">
-      <div className="fx-onboarding-stack">
+      <div className="cap-stack fx-onboarding-stack" data-gap="7">
         <Link to="/" className="fx-onboarding-link">
           {/* Fox emoji is allowed in auth chrome (Rule 9). */}
           <span aria-hidden="true">🦊</span>
           <span>Foxing</span>
         </Link>
-        <p className="mt-8 fx-onboarding-caps">Step {step} of 2</p>
-        <main className="mt-3">{children}</main>
+        <div className="cap-stack" data-gap="4">
+          <p className="fx-onboarding-caps">Step {step} of 2</p>
+          <main className="cap-stack" data-gap="7">
+            {children}
+          </main>
+        </div>
       </div>
     </div>
   );
@@ -83,12 +87,14 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
   if (step === 1) {
     return (
       <Frame step={1}>
-        <h1 className="fx-onboarding-title">Set up your profile</h1>
-        <p className="mt-3 fx-onboarding-text">
-          Your username is how other readers find you. You can change your display name and favorite
-          genres later in settings.
-        </p>
-        <form onSubmit={(e) => void onSubmitProfile(e)} className="mt-8 fx-onboarding-form">
+        <div className="cap-stack" data-gap="4">
+          <h1 className="fx-onboarding-title">Set up your profile</h1>
+          <p className="fx-onboarding-text">
+            Your username is how other readers find you. You can change your display name and
+            favorite genres later in settings.
+          </p>
+        </div>
+        <form onSubmit={(e) => void onSubmitProfile(e)} className="cap-stack" data-gap="6">
           <label className="block">
             <span className="block fx-onboarding-label">Username</span>
             <input
@@ -118,7 +124,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
 
           {genres.length ? (
             <fieldset>
-              <legend className="mb-2 fx-onboarding-legend">
+              <legend className="fx-onboarding-label">
                 Favorite genres <span className="fx-onboarding-label-3">(optional)</span>
               </legend>
               <div className="fx-onboarding-row">
@@ -161,39 +167,45 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
 
   return (
     <Frame step={2}>
-      <h1 className="fx-onboarding-title">Start your first book</h1>
-      <p className="mt-3 fx-onboarding-text">
-        Award winners to begin with. Adding one shelves it as reading and opens its page.
-      </p>
-
-      {error ? (
-        <p role="alert" className="mt-4 fx-onboarding-text-2">
-          {error}
-        </p>
-      ) : null}
+      <div className="cap-stack">
+        <div className="cap-stack" data-gap="4">
+          <h1 className="fx-onboarding-title">Start your first book</h1>
+          <p className="fx-onboarding-text">
+            Award winners to begin with. Adding one shelves it as reading and opens its page.
+          </p>
+        </div>
+        {error ? (
+          <p role="alert" className="fx-onboarding-text-2">
+            {error}
+          </p>
+        ) : null}
+      </div>
 
       {starters.length ? (
-        <ul className="mt-8 fx-onboarding-grid">
+        <ul className="fx-onboarding-grid">
           {starters.map((book) => (
-            <li key={book.id} className="fx-onboarding-stack-2">
-              <Link to={`/books/${book.slug}`} className="group">
-                <CoverImage
-                  src={book.coverUrl}
-                  alt={`${book.title} by ${book.author}`}
-                  fallbackLabel={book.title}
-                  sizes="(min-width: 40rem) 200px, 45vw"
-                />
-                <h2 className="mt-3 fx-onboarding-title-2">{book.title}</h2>
-              </Link>
-              <p className="cap-text mt-1" data-size="small" data-tone="dim" data-face="ui">
-                {book.author}
-              </p>
+            <li key={book.id} className="cap-stack" data-gap="3">
+              <div className="cap-stack" data-gap="2">
+                <Link to={`/books/${book.slug}`} className="group cap-stack" data-gap="4">
+                  <CoverImage
+                    src={book.coverUrl}
+                    alt={`${book.title} by ${book.author}`}
+                    fallbackLabel={book.title}
+                    sizes="(min-width: 40rem) 200px, 45vw"
+                  />
+                  <h2 className="fx-onboarding-title-2">{book.title}</h2>
+                </Link>
+                <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+                  {book.author}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => void startReading(book)}
                 disabled={savingId !== null}
-                className="cap-btn mt-2 justify-center fx-onboarding-btn"
+                className="cap-btn"
                 data-size="sm"
+                data-block
               >
                 {savingId === book.id ? "Adding..." : "Start reading"}
               </button>
@@ -201,7 +213,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           ))}
         </ul>
       ) : (
-        <p className="mt-8 fx-onboarding-text">
+        <p className="fx-onboarding-text">
           The catalog is warming up.{" "}
           <Link to="/books" className="link">
             Browse the library
@@ -210,7 +222,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
         </p>
       )}
 
-      <div className="mt-10">
+      <div>
         <button
           type="button"
           onClick={() => void navigate("/home")}
