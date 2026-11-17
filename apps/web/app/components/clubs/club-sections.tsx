@@ -6,7 +6,7 @@ import { Link } from "capsomer/react/link";
 export function ErrorText({ error }: { error: string | null }) {
   if (!error) return null;
   return (
-    <p className="mt-2 fx-club-sections-text" role="alert">
+    <p className="fx-club-sections-text" role="alert">
       {error}
     </p>
   );
@@ -32,7 +32,7 @@ export function MembershipControls({
   const error = join.error ?? leave.error ?? rotate.error;
 
   return (
-    <div className="fx-club-sections-box">
+    <div className="cap-stack fx-club-sections-box" data-gap="3">
       {!isMember ? (
         <button
           type="button"
@@ -46,7 +46,7 @@ export function MembershipControls({
       ) : (
         <div className="cap-stack" data-gap="3">
           {joinCode ? (
-            <div className="py-2 fx-club-sections-card">
+            <div className="cap-stack fx-club-sections-card" data-gap="2" data-align="start">
               <p className="group-label">Invite link</p>
               <p className="cap-text" data-size="small" data-face="ui">
                 <Link to={`/join/${joinCode}`} className="fx-club-sections-link">
@@ -57,7 +57,7 @@ export function MembershipControls({
                 type="button"
                 onClick={() => rotate.fire({ clubId })}
                 disabled={pending}
-                className="mt-1 fx-club-sections-btn"
+                className="fx-club-sections-btn"
               >
                 Reset link
               </button>
@@ -104,7 +104,7 @@ export function ThreadsSection({
   }
 
   return (
-    <section>
+    <section className="cap-stack" data-gap="4">
       <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="cap-title" data-size="3">
           Discussions
@@ -115,7 +115,7 @@ export function ThreadsSection({
       </div>
 
       {open ? (
-        <form onSubmit={(e) => void create(e)} className="mt-3 cap-card fx-club-sections-card-2">
+        <form onSubmit={(e) => void create(e)} className="cap-card fx-club-sections-card-2">
           <input
             name="title"
             required
@@ -144,11 +144,11 @@ export function ThreadsSection({
       ) : null}
 
       {threads.length === 0 ? (
-        <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
           No discussions yet.
         </p>
       ) : (
-        <ul className="mt-4 fx-club-sections-list">
+        <ul className="cap-stack" data-gap="3">
           {threads.map((t) => (
             <li key={t.id}>
               <Link to={`/clubs/${slug}/t/${t.id}`}>
