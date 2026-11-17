@@ -6,7 +6,7 @@
 .fx-follow-button-text {
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--crit);
 }
 
@@ -17,7 +17,7 @@
   padding-inline: var(--space-4);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   border-color: color-mix(in srgb, var(--crit) 50%, transparent);
   background-color: var(--crit-soft);
   color: var(--crit);
@@ -39,7 +39,7 @@
 .fx-remove-book-button-btn {
   color: var(--dim);
   transition-property: color, background-color, border-color, opacity, box-shadow, transform;
-  transition-duration: 150ms;
+  transition-duration: var(--dur-quick);
   &:disabled {
     opacity: var(--opacity-half);
   }
@@ -61,7 +61,7 @@
   padding-left: var(--space-5);
   font-family: var(--fx-body);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--text);
 }
 
@@ -70,7 +70,7 @@
 .fx-join-code-text-3 {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
 }
 
 .fx-diary-caps {
@@ -94,9 +94,9 @@
 .fx-diary-caps-3 {
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: var(--tracking-spaced);
   color: var(--dim);
 }
 .fx-diary-caps-4 {
@@ -128,14 +128,14 @@
   overflow: hidden;
   font-family: var(--fx-body);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 .fx-diary-link-2 {
   display: inline-block;
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
   &:hover {
     color: var(--accent-text);
@@ -150,7 +150,7 @@
   padding-inline: var(--space-5);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 .fx-feed-card-2,
@@ -163,7 +163,7 @@
   min-width: 0;
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
 }
 .fx-feed-link {
   font-weight: var(--weight-medium);
@@ -177,7 +177,7 @@
   display: inline-block;
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
   &:hover {
     color: var(--accent-text);
@@ -206,14 +206,14 @@
 .fx-highlights-quote {
   font-family: var(--fx-body);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--text);
 }
 .fx-highlights-text {
   padding-left: 22px;
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 .fx-highlights-chip {
@@ -226,7 +226,7 @@
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
   &:hover {
     color: var(--accent-text);
@@ -252,14 +252,14 @@
 .fx-list-detail-title {
   font-family: var(--display);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--dim);
 }
 .fx-list-detail-text-2,
 .fx-pick-club-text {
   font-family: var(--fx-body);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 
@@ -292,7 +292,7 @@
   overflow: hidden;
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 /* Gap, not margins: each cover's <picture> is display: contents (Capsomer's Picture). */
@@ -303,7 +303,7 @@
 .fx-lists-img {
   height: 4rem;
   width: 2.75rem;
-  border-radius: 0.25rem;
+  border-radius: var(--radius-s-5);
   border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
   object-fit: cover;
@@ -313,7 +313,7 @@
 .fx-me-stack {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5-5);
   @media (min-width: 40rem) {
     flex-direction: row;
     align-items: center;
@@ -324,17 +324,17 @@
 .fx-home-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 2.25rem;
+  line-height: var(--line-box-9);
   @media (min-width: 40rem) {
     font-size: var(--title-1);
-    line-height: 2.5rem;
+    line-height: var(--line-box-10);
   }
 }
 .fx-me-text-2 {
   max-width: 42rem;
   font-family: var(--fx-body);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--muted);
 }
 .fx-me-card {
@@ -364,7 +364,7 @@
 .fx-onboarding-text-2 {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--crit);
 }
 .fx-notifications-text-2,
@@ -372,7 +372,7 @@
   margin-top: var(--space-1);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 .fx-people-card {
@@ -393,13 +393,13 @@
 .fx-year-label {
   font-family: var(--mono);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--accent-text);
 }
 .fx-u-profile-stack {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: var(--space-5-5);
   @media (min-width: 40rem) {
     flex-direction: row;
     align-items: flex-start;
@@ -408,7 +408,7 @@
 }
 .fx-u-profile-row {
   display: flex;
-  gap: 1.25rem;
+  gap: var(--space-5-5);
 }
 .fx-u-profile-text,
 .fx-list-detail-label,
@@ -416,7 +416,7 @@
 .fx-account-sections-label-2 {
   font-family: var(--mono);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--dim);
 }
 .fx-u-profile-text-2 {
@@ -462,14 +462,14 @@
   padding-inline: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 .fx-u-profile-label-4 {
   margin-top: var(--space-2-5);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -502,12 +502,12 @@
   margin-top: var(--space-1);
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 .fx-u-profile-grid-2 {
   display: grid;
-  gap: 2.5rem;
+  gap: var(--space-7-5);
   @media (min-width: 64rem) {
     grid-template-columns: 1.4fr 1fr;
   }
@@ -551,7 +551,7 @@
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 .fx-u-profile-item-2 {
@@ -579,14 +579,14 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.25rem;
+  gap: var(--space-5-5);
   padding-block: var(--space-9);
 }
 
 .fx-vocabulary-title {
   font-family: var(--display);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   font-weight: var(--weight-semibold);
   color: var(--text);
 }
@@ -618,7 +618,7 @@
 .fx-vocabulary-text {
   font-family: var(--fx-body);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--dim);
 }
 
@@ -651,7 +651,7 @@
 .fx-year-link {
   font-family: var(--display);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--text);
   &:hover {
     color: var(--accent-text);
@@ -667,6 +667,6 @@
 .fx-commonplace-text {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }

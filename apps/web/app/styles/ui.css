@@ -32,7 +32,7 @@ a.fx-tag:hover {
    design-system Rule 15: shadow-sm to shadow-md on hover, the border stays quiet, the title turns
    accent. */
 .fx-entity {
-  --pad-card: 1.25rem;
+  --pad-card: var(--space-5-5);
   --card-shadow: var(--shadow-s);
   border-radius: var(--radius-l);
   @media (prefers-reduced-motion: no-preference) {
@@ -70,7 +70,7 @@ a:hover > .fx-entity {
   font-family: var(--ui);
 }
 .fx-avatar[data-fx-size="sm"] {
-  --cap-avatar-size: 2rem;
+  --cap-avatar-size: var(--title-1-5);
 }
 .fx-avatar[data-fx-size="md"] {
   --cap-avatar-size: var(--title-1);
@@ -80,7 +80,7 @@ a:hover > .fx-entity {
 }
 
 .fx-page-head {
-  margin-block-end: 2.5rem;
+  margin-block-end: var(--space-7-5);
 }
 .fx-page-title {
   font-family: var(--display);
@@ -90,7 +90,7 @@ a:hover > .fx-entity {
 }
 @media (min-width: 40rem) {
   .fx-page-title {
-    font-size: 3rem;
+    font-size: var(--display-3);
   }
 }
 

@@ -4,7 +4,7 @@
 .article-prose {
   font-family: var(--fx-body);
   font-size: 1.1875rem;
-  line-height: 1.75;
+  line-height: var(--leading-airy);
   color: var(--muted);
 }
 .article-prose > * + * {
@@ -65,7 +65,7 @@
   padding-inline: var(--space-3);
   margin-inline: calc(-1 * var(--space-3));
   transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
+  transition-duration: var(--dur-quick);
   &:hover {
     background-color: var(--fx-hover);
   }
@@ -78,14 +78,14 @@
   margin-top: var(--space-1);
   font-family: var(--fx-body);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 .fx-journal-archive-label,
 .fx-u-profile-text-3 {
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 
@@ -93,7 +93,7 @@
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--dim);
 }
 .fx-journal-post-img {
@@ -118,13 +118,13 @@
   display: grid;
 }
 .fx-journal-tag-card {
-  --pad-card: 1.25rem;
+  --pad-card: var(--space-5-5);
   --card-shadow: var(--shadow-s);
 }
 .fx-journal-tag-title {
   font-family: var(--display);
   font-size: var(--fs-h3);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -161,7 +161,7 @@
 .fx-journal-card {
   gap: var(--space-6);
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 1.25rem;
+  --pad-card: var(--space-5-5);
   --card-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
     --pad-card: var(--space-7);
@@ -188,7 +188,7 @@
 .fx-journal-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -201,7 +201,7 @@
   overflow: hidden;
   font-family: var(--fx-body);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--muted);
 }
 .fx-journal-card-2 {
@@ -217,7 +217,7 @@
 .fx-journal-title-2 {
   font-family: var(--display);
   font-size: var(--title-4);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -227,6 +227,6 @@
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }

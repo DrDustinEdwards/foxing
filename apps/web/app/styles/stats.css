@@ -16,7 +16,7 @@
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--text);
 }
 .fx-goals-btn {
@@ -40,14 +40,14 @@
 .fx-library-text {
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 .fx-goals-text-4 {
   margin-top: var(--space-1);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 
@@ -87,7 +87,7 @@
 .fx-home-title-2 {
   font-family: var(--display);
   font-size: var(--title-3);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
 }
 .fx-home-text-2 {
   font-family: var(--ui);
@@ -107,7 +107,7 @@
   margin-left: var(--space-2-5);
   font-family: var(--ui);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--muted);
 }
 .fx-home-grid-2 {
@@ -145,7 +145,7 @@
   padding: var(--space-1) var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--muted);
 }
 .fx-library-label-3 {
@@ -166,7 +166,7 @@
 .fx-library-link-2 {
   font-family: var(--display);
   font-size: var(--title-6);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
   &:hover {
     color: var(--accent-text);
@@ -180,11 +180,11 @@
 .fx-library-row {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
 }
 .fx-library-btn {
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
   &:hover {
     text-decoration-line: underline;

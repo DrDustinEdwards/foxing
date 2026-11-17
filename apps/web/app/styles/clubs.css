@@ -3,7 +3,7 @@
 .fx-club-thread-link {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--accent-text);
   text-decoration-line: underline;
 }
@@ -23,7 +23,7 @@
 .fx-join-code-text-2 {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--dim);
 }
 .fx-club-schedule-list-2 {
@@ -38,7 +38,7 @@
 .fx-u-profile-label-6 {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--text);
 }
 .fx-club-schedule-row {
@@ -52,7 +52,7 @@
   padding-inline: var(--space-4);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
 }
 .fx-club-schedule-form {
   border-radius: var(--radius-l);
@@ -71,7 +71,7 @@
   padding: var(--space-2-5) var(--space-4);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   border-color: color-mix(in srgb, var(--crit) 50%, transparent);
   background-color: var(--crit-soft);
   color: var(--crit);
@@ -94,7 +94,7 @@
 .fx-club-schedule-btn-3 {
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
   text-decoration-line: underline;
   &:hover {
@@ -136,20 +136,20 @@
 }
 .fx-club-detail-grid {
   display: grid;
-  gap: 2.5rem;
+  gap: var(--space-7-5);
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 1fr) 300px;
   }
 }
 .fx-club-detail-box {
   & > * + * {
-    margin-top: 2.5rem;
+    margin-top: var(--space-7-5);
   }
 }
 
 .fx-club-new-form {
   & > * + * {
-    margin-top: 1.25rem;
+    margin-top: var(--space-5-5);
   }
 }
 .fx-club-new-field,
@@ -157,7 +157,7 @@
 .fx-onboarding-legend {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   font-weight: var(--weight-medium);
   color: var(--text);
 }
@@ -169,7 +169,7 @@
 .fx-club-thread-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 2.25rem;
+  line-height: var(--line-box-9);
 }
 .fx-club-thread-list {
   & > * + * {
@@ -198,7 +198,7 @@
   overflow: hidden;
   font-family: var(--fx-body);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--muted);
 }
 .fx-clubs-grid {
@@ -213,7 +213,7 @@
 .fx-clubs-caps {
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--dim);
@@ -222,7 +222,7 @@
 .fx-shelf-detail-title {
   font-family: var(--display);
   font-size: var(--title-1);
-  line-height: 2.5rem;
+  line-height: var(--line-box-10);
 }
 .fx-join-code-text {
   font-family: var(--fx-body);
@@ -231,7 +231,7 @@
 
 .fx-pick-club-grid {
   display: grid;
-  gap: 1.25rem;
+  gap: var(--space-5-5);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -251,7 +251,7 @@
 .fx-pick-club-title {
   font-family: var(--display);
   font-size: var(--title-6);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -283,7 +283,7 @@
   padding-inline: var(--space-4);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   border-color: color-mix(in srgb, var(--crit) 50%, transparent);
   background-color: var(--crit-soft);
   color: var(--crit);

@@ -16,7 +16,7 @@
 }
 .fx-values {
   display: grid;
-  gap: 2.5rem;
+  gap: var(--space-7-5);
 }
 @media (min-width: 40rem) {
   .fx-values {
@@ -62,7 +62,7 @@
   padding-bottom: var(--space-6);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
   color: var(--accent-text);
 }
 .fx-guide-link {
@@ -71,20 +71,20 @@
   }
 }
 .fx-guide-section {
-  margin-bottom: 3.5rem;
-  scroll-margin-top: 6rem;
+  margin-bottom: var(--space-8-5);
+  scroll-margin-top: var(--space-10);
 }
 .fx-guide-title {
   font-family: var(--display);
   font-size: var(--title-3);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   color: var(--text);
 }
 .fx-guide-text-2,
 .fx-about-text {
   font-family: var(--fx-body);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--muted);
 }
 .fx-guide-row-2 {
@@ -92,7 +92,7 @@
   gap: var(--space-3);
   font-family: var(--fx-body);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--muted);
 }
 
@@ -100,7 +100,7 @@
 .fx-statement {
   font-family: var(--ui);
   font-size: var(--title-6);
-  line-height: 1.625;
+  line-height: var(--leading-relaxed-5);
   color: var(--muted);
   & > * + * {
     margin-top: var(--space-5);
