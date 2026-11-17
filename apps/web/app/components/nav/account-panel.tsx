@@ -216,7 +216,7 @@ function AccountPanel({
 
       <dl className="fx-acct-stats">
         {stats.map((stat) => (
-          <div key={stat.label}>
+          <div key={stat.label} className="cap-stack" data-gap="1">
             <dd className="cap-title" data-size="4">
               {stat.value}
             </dd>

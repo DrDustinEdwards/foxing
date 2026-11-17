@@ -70,7 +70,7 @@ export default function AdminNotifications() {
           </p>
           <AdminField label="Title" value={title} onChange={setTitle} />
           <AdminField label="Body (optional)" value={body} onChange={setBody} rows={3} />
-          <label className="block">
+          <label className="cap-field">
             <span className="fx-label">Type {CONFIRM_WORD} to confirm</span>
             <input
               value={confirm}

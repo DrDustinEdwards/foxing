@@ -29,7 +29,7 @@ const NAV_ANCHORS = [
 export default function AppGuide() {
   return (
     <PageShell>
-      <Container className="measure-prose">
+      <Container className="measure-prose cap-stack" data-gap="8">
         <PageHeader
           title="Using the Foxing app"
           lede="How the Foxing mobile app works: reading offline, highlights and notes, vocabulary, sync across devices, and notifications."

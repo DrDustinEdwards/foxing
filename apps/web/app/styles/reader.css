@@ -2,7 +2,7 @@
    route only, so no other page downloads it. */
 .fx-reader-panels-label,
 .fx-reader-popovers-label-5 {
-  margin-left: var(--space-2);
+  margin-inline-start: var(--space-2);
   font-variant-numeric: tabular-nums;
 }
 /* The reader's side sheet (reader-panels.tsx SidePanel) on Capsomer's dialog, which places it: the
@@ -113,7 +113,6 @@
   line-height: var(--line-box-5);
 }
 .fx-reader-panels-label-8 {
-  margin-top: var(--space-1);
   display: flex;
   gap: var(--space-2);
   font-size: var(--fs-small);
@@ -301,7 +300,7 @@
   line-height: var(--line-box-5);
 }
 .fx-reader-popovers-label-7 {
-  margin-right: var(--space-2);
+  margin-inline-end: var(--space-2);
   font-weight: var(--weight-medium);
 }
 .fx-reader-popovers-stack-2 {

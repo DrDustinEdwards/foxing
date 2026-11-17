@@ -332,7 +332,7 @@ export function ContentsList({
                     }}
                     aria-hidden
                   />
-                  <span className="fx-reader-panels-label-6">
+                  <span className="cap-stack fx-reader-panels-label-6" data-gap="1">
                     {a.selectedText ? (
                       <span className="fx-reader-panels-label-7">{a.selectedText}</span>
                     ) : null}

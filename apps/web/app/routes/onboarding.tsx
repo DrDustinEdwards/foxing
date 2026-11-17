@@ -95,8 +95,8 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         <form onSubmit={(e) => void onSubmitProfile(e)} className="cap-stack" data-gap="6">
-          <label className="block">
-            <span className="block fx-onboarding-label">Username</span>
+          <label className="cap-field">
+            <span className="fx-onboarding-label">Username</span>
             <input
               name="username"
               required
@@ -106,11 +106,11 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
               autoComplete="username"
               className="cap-input fx-onboarding-input"
             />
-            <span className="block fx-onboarding-label-2">Letters, numbers, and underscores.</span>
+            <span className="fx-onboarding-label-2">Letters, numbers, and underscores.</span>
           </label>
 
-          <label className="block">
-            <span className="block fx-onboarding-label">
+          <label className="cap-field">
+            <span className="fx-onboarding-label">
               Display name <span className="fx-onboarding-label-3">(optional)</span>
             </span>
             <input
@@ -124,7 +124,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
 
           {genres.length ? (
             <fieldset>
-              <legend className="fx-onboarding-label">
+              <legend className="fx-onboarding-label fx-onboarding-legend">
                 Favorite genres <span className="fx-onboarding-label-3">(optional)</span>
               </legend>
               <div className="fx-onboarding-row">

@@ -1,7 +1,4 @@
 /* /books only, linked by routes/books.tsx: the filter card and its disclosure. */
-.fx-books-caps {
-  margin-bottom: var(--space-3-5);
-}
 .fx-books-card {
   gap: var(--space-6);
   --pad-card: var(--space-5-5);
@@ -13,7 +10,7 @@
   justify-content: space-between;
   gap: var(--space-4);
   border-block-start: var(--line-w) solid var(--line);
-  padding-top: var(--space-5);
+  padding-block-start: var(--space-5);
 }
 
 /* The filters' disclosure: a native details whose summary reads as a control, the active filters beside it.

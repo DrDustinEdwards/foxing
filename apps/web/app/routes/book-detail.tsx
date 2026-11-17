@@ -135,144 +135,146 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container>
-        <Breadcrumbs
-          trail={[
-            { label: "Home", to: "/" },
-            { label: "Books", to: "/books" },
-            { label: book.title },
-          ]}
-        />
+      <Container className="cap-stack" data-gap="9">
+        <div className="cap-stack" data-gap="6">
+          <Breadcrumbs
+            trail={[
+              { label: "Home", to: "/" },
+              { label: "Books", to: "/books" },
+              { label: book.title },
+            ]}
+          />
 
-        <div className="fx-book-detail-grid">
-          {/* Cover column (LCP). */}
-          <div className="cap-stack fx-book-detail-box" data-gap="6">
-            <div className="fx-book-detail-box-2">
-              <CoverImage
-                src={book.coverUrl}
-                alt={`Cover of ${book.title} by ${book.author}`}
-                fallbackLabel={book.title}
-                priority
-                sizes="(min-width: 64rem) 260px, 60vw"
-              />
-            </div>
-            <div className="fx-book-detail-stack">
-              {readable ? (
-                <Button to={`/read/${book.slug}`} variant="primary">
-                  Read now
-                </Button>
-              ) : null}
-              <BookStatusControl
-                book={{
-                  id: bookId,
-                  slug: book.slug,
-                  title: book.title,
-                  author: book.author,
-                  coverUrl: book.coverUrl,
-                }}
-                currentStatus={mine?.status ?? null}
-                signedIn={signedIn}
-                loginHref={loginHref}
-              />
-              {signedIn ? (
-                <BookShelvesPicker
-                  bookId={bookId}
-                  shelves={shelves}
-                  memberOf={mine?.shelfIds ?? []}
+          <div className="fx-book-detail-grid">
+            {/* Cover column (LCP). */}
+            <div className="cap-stack fx-book-detail-box" data-gap="6">
+              <div className="fx-book-detail-box-2">
+                <CoverImage
+                  src={book.coverUrl}
+                  alt={`Cover of ${book.title} by ${book.author}`}
+                  fallbackLabel={book.title}
+                  priority
+                  sizes="(min-width: 64rem) 260px, 60vw"
                 />
-              ) : null}
-              {buys.map((b) => (
-                <ButtonLink
-                  key={b.retailer}
-                  href={b.url}
-                  variant={b.retailer === "bookshop" ? "secondary" : "quiet"}
-                  className={b.retailer === "bookshop" ? undefined : "fx-btn-ghost"}
-                  away
-                  newTab
-                  sponsored={b.sponsored}
-                >
-                  {b.retailer === "library" ? b.label : `Buy at ${b.label}`}
-                </ButtonLink>
-              ))}
+              </div>
+              <div className="fx-book-detail-stack">
+                {readable ? (
+                  <Button to={`/read/${book.slug}`} variant="primary">
+                    Read now
+                  </Button>
+                ) : null}
+                <BookStatusControl
+                  book={{
+                    id: bookId,
+                    slug: book.slug,
+                    title: book.title,
+                    author: book.author,
+                    coverUrl: book.coverUrl,
+                  }}
+                  currentStatus={mine?.status ?? null}
+                  signedIn={signedIn}
+                  loginHref={loginHref}
+                />
+                {signedIn ? (
+                  <BookShelvesPicker
+                    bookId={bookId}
+                    shelves={shelves}
+                    memberOf={mine?.shelfIds ?? []}
+                  />
+                ) : null}
+                {buys.map((b) => (
+                  <ButtonLink
+                    key={b.retailer}
+                    href={b.url}
+                    variant={b.retailer === "bookshop" ? "secondary" : "quiet"}
+                    className={b.retailer === "bookshop" ? undefined : "fx-btn-ghost"}
+                    away
+                    newTab
+                    sponsored={b.sponsored}
+                  >
+                    {b.retailer === "library" ? b.label : `Buy at ${b.label}`}
+                  </ButtonLink>
+                ))}
+              </div>
             </div>
-          </div>
 
-          {/* Detail column. */}
-          <div className="cap-stack" data-gap="7">
-            <div className="cap-stack" data-gap="6">
-              <div className="cap-stack" data-gap="4">
-                <Eyebrow>{community ? "Tracked title" : "In the reading library"}</Eyebrow>
-                <h1 className="fx-book-detail-title">{book.title}</h1>
-                <p className="fx-book-detail-text">
-                  by{" "}
-                  {book.authorSlug ? (
-                    <Link to={`/authors/${book.authorSlug}`} className="link">
-                      {book.author}
-                    </Link>
-                  ) : (
-                    book.author
-                  )}
-                </p>
+            {/* Detail column. */}
+            <div className="cap-stack" data-gap="7">
+              <div className="cap-stack" data-gap="6">
+                <div className="cap-stack" data-gap="4">
+                  <Eyebrow>{community ? "Tracked title" : "In the reading library"}</Eyebrow>
+                  <h1 className="fx-book-detail-title">{book.title}</h1>
+                  <p className="fx-book-detail-text">
+                    by{" "}
+                    {book.authorSlug ? (
+                      <Link to={`/authors/${book.authorSlug}`} className="link">
+                        {book.author}
+                      </Link>
+                    ) : (
+                      book.author
+                    )}
+                  </p>
+                </div>
+
+                <div className="fx-book-detail-row">
+                  {book.publicationYear ? <Chip>{book.publicationYear}</Chip> : null}
+                  {time ? <Chip>{time}</Chip> : null}
+                  {book.publisher ? <Chip>{book.publisher}</Chip> : null}
+                </div>
+
+                {awards.length > 0 ? (
+                  <div className="cap-card">
+                    <Eyebrow>Recognition</Eyebrow>
+                    <ul className="fx-book-detail-stack-2">
+                      {awards.map((a) => (
+                        <li
+                          key={`${a.awardSlug}-${a.year}`}
+                          className="cap-text"
+                          data-size="small"
+                          data-face="ui"
+                        >
+                          <Link to={`/awards/${a.awardSlug}`} className="link">
+                            {a.awardName}
+                          </Link>
+                          <span className="cap-text" data-tone="dim">
+                            {a.year ? `, ${a.year}` : ""} · {a.distinction}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </div>
 
-              <div className="fx-book-detail-row">
-                {book.publicationYear ? <Chip>{book.publicationYear}</Chip> : null}
-                {time ? <Chip>{time}</Chip> : null}
-                {book.publisher ? <Chip>{book.publisher}</Chip> : null}
-              </div>
-
-              {awards.length > 0 ? (
-                <div className="cap-card">
-                  <Eyebrow>Recognition</Eyebrow>
-                  <ul className="fx-book-detail-stack-2">
-                    {awards.map((a) => (
-                      <li
-                        key={`${a.awardSlug}-${a.year}`}
-                        className="cap-text"
-                        data-size="small"
-                        data-face="ui"
-                      >
-                        <Link to={`/awards/${a.awardSlug}`} className="link">
-                          {a.awardName}
-                        </Link>
-                        <span className="cap-text" data-tone="dim">
-                          {a.year ? `, ${a.year}` : ""} · {a.distinction}
-                        </span>
-                      </li>
+              {book.description ? (
+                <div className="cap-stack fx-book-detail-box-3" data-gap="5">
+                  {book.description
+                    .split(/\n{2,}/)
+                    .filter(Boolean)
+                    .map((para) => (
+                      <p key={para.slice(0, 40)}>{para}</p>
                     ))}
-                  </ul>
+                </div>
+              ) : null}
+
+              {book.subjects.length > 0 ? (
+                <div className="cap-stack" data-gap="4">
+                  <Eyebrow>Genres</Eyebrow>
+                  <div className="cap-cluster" data-gap="3">
+                    {book.subjects.map((s) => (
+                      <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>
+                        {catalogRepo.genreLabel(s)}
+                      </TagPill>
+                    ))}
+                  </div>
                 </div>
               ) : null}
             </div>
-
-            {book.description ? (
-              <div className="cap-stack fx-book-detail-box-3" data-gap="5">
-                {book.description
-                  .split(/\n{2,}/)
-                  .filter(Boolean)
-                  .map((para) => (
-                    <p key={para.slice(0, 40)}>{para}</p>
-                  ))}
-              </div>
-            ) : null}
-
-            {book.subjects.length > 0 ? (
-              <div className="cap-stack" data-gap="4">
-                <Eyebrow>Genres</Eyebrow>
-                <div className="cap-cluster" data-gap="3">
-                  {book.subjects.map((s) => (
-                    <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>
-                      {catalogRepo.genreLabel(s)}
-                    </TagPill>
-                  ))}
-                </div>
-              </div>
-            ) : null}
           </div>
         </div>
 
         {related.length > 0 ? (
-          <section className="cap-stack fx-book-detail-section" data-gap="6">
+          <section className="cap-stack" data-gap="6">
             <h2 className="fx-book-detail-title-2">More like this</h2>
             <BookGrid>
               {related.map((b) => (

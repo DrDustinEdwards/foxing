@@ -31,7 +31,6 @@
   --card-shadow: var(--shadow-m);
 }
 .fx-auth-shell-label {
-  margin-bottom: var(--space-2-5);
   color: var(--muted);
 }
 .fx-auth-shell-link-2 {
@@ -133,10 +132,10 @@
 .fx-account-sections-label-4 {
   color: var(--ok);
 }
-.fx-account-sections-form {
-  & > * + * {
-    margin-top: var(--space-4);
-  }
+/* A fieldset's legend is no flex item, so a stack's gap would not space it from the first row:
+   the rows keep owl margins. */
+.fx-account-sections-form > * + * {
+  margin-block-start: var(--space-4);
 }
 .fx-account-sections-field {
   font-family: var(--ui);
@@ -226,8 +225,9 @@
 .fx-onboarding-text {
   color: var(--muted);
 }
-.fx-onboarding-label {
-  margin-bottom: var(--space-2-5);
+/* The genre fieldset's legend: no flex item, so it keeps the margin a field's gap gives a label. */
+.fx-onboarding-legend {
+  margin-block-end: var(--space-2);
 }
 .fx-onboarding-label-3 {
   font-weight: var(--weight-regular);

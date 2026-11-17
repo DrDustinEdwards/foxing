@@ -17,9 +17,6 @@
   border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
   padding: var(--space-5);
-  & > * + * {
-    margin-top: var(--space-4);
-  }
 }
 .fx-admin-books-grid,
 .fx-admin-botm-grid,
@@ -39,9 +36,6 @@
   color: var(--accent-text);
 }
 
-.fx-admin-user-detail-text {
-  margin-top: var(--space-1);
-}
 .fx-admin-user-detail-card {
   --radius-l: 0.375rem;
   background-color: var(--ground);
@@ -67,17 +61,11 @@
 }
 .fx-admin-user-detail-box {
   border-block-start: var(--line-w) solid var(--line);
-  padding-top: var(--space-5-5);
-  & > * + * {
-    margin-top: var(--space-3);
-  }
+  padding-block-start: var(--space-5-5);
 }
 .fx-admin-user-detail-box-2 {
   border-block-start: var(--line-w) solid color-mix(in srgb, var(--crit) 40%, transparent);
-  padding-top: var(--space-5-5);
-  & > * + * {
-    margin-top: var(--space-3);
-  }
+  padding-block-start: var(--space-5-5);
 }
 .fx-admin-user-detail-text-2 {
   font-weight: var(--weight-medium);

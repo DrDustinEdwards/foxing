@@ -39,7 +39,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="cap-stack" data-gap="1">
       <p className="fx-admin-user-detail-caps">{label}</p>
       <p className="fx-admin-user-detail-text">{children}</p>
     </div>
@@ -190,7 +190,7 @@ function OperatorControls({
           {tier.dialog}
         </div>
 
-        <div className="fx-admin-user-detail-box">
+        <div className="cap-stack fx-admin-user-detail-box" data-gap="3">
           <p
             className="cap-text"
             data-size="small"
@@ -237,7 +237,7 @@ function OperatorControls({
           </div>
         </div>
 
-        <div className="fx-admin-user-detail-box-2">
+        <div className="cap-stack fx-admin-user-detail-box-2" data-gap="3">
           <p className="fx-admin-user-detail-text-2">Delete account</p>
           <p className="cap-text" data-size="tiny" data-tone="muted" data-face="ui">
             Permanently erases this account and all of its data. Type{" "}

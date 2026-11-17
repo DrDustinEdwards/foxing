@@ -120,7 +120,7 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
           label="Share reading progress"
           subtext="Show what you are currently reading on your profile."
         />
-        <label className="block">
+        <label className="cap-field">
           <span className="fx-label">Default highlight and note audience</span>
           <span className="cap-stack" data-gap="2">
             <select

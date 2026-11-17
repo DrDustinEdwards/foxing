@@ -98,7 +98,7 @@ function FacetLink({
 
 function FacetGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div>
+    <div className="cap-stack" data-gap="3">
       <p className="fx-books-caps">{label}</p>
       <div className="cap-cluster" data-gap="3">
         {children}

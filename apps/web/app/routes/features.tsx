@@ -30,7 +30,7 @@ const NAV_ANCHORS = [
 export default function Features() {
   return (
     <PageShell>
-      <Container className="measure-prose">
+      <Container className="measure-prose cap-stack" data-gap="8">
         <PageHeader
           title="What Foxing does"
           lede="Everything on this page is available today, free. This page grows as more of Foxing ships."
