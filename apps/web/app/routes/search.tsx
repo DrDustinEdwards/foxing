@@ -1,4 +1,4 @@
-import { views } from "@foxing/core";
+import { catalogRepo, views } from "@foxing/core";
 import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
@@ -18,7 +18,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const q = (url.searchParams.get("q") ?? "").trim();
   const page = parsePage(url.searchParams.get("page"));
   const filters = {
-    genre: url.searchParams.get("genre") || undefined,
+    genre: catalogRepo.toGenres([url.searchParams.get("genre") ?? ""])[0],
     era: url.searchParams.get("era") || undefined,
     length: url.searchParams.get("length") || undefined,
   };

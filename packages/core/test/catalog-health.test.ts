@@ -6,6 +6,7 @@ import {
   isValidIsbn13,
   type HealthBook,
 } from "../src/domain/catalog-health";
+import { toGenres } from "../src/repositories/catalog/facets";
 
 const ORIGIN = "https://covers.example.com";
 
@@ -21,7 +22,7 @@ const book = (over: Partial<HealthBook>): HealthBook => ({
   isbn: null,
   isbn13: null,
   publicationYear: 1815,
-  subjects: ["Fiction"],
+  subjects: ["romance"],
   gutenbergId: null,
   amazonUrl: null,
   bookshopUrl: null,
@@ -62,6 +63,15 @@ describe("auditCatalog", () => {
       "missing_year",
     ]);
     expect(checksOf([book({ ...bare, sourceType: "community" })])).toEqual(["missing_cover"]);
+  });
+
+  it("counts template filler as no description and a heading-only subject list as no genre", () => {
+    const filler =
+      "A thoughtful and enduring work by Jane Austen. Emma rewards readers who read slowly.";
+    expect(
+      checksOf([book({ description: filler, subjects: ["England -- Fiction"] })]).sort(),
+    ).toEqual(["missing_description", "missing_subjects"]);
+    expect(checksOf([book({ subjects: ["Love stories"] })])).toEqual([]);
   });
 
   it("flags a cover on another host, a bad ISBN, an ISBN-10 and ISBN-13 of different editions", () => {
@@ -122,5 +132,24 @@ describe("auditCatalog", () => {
     ]);
     expect(found.filter((c) => c === "duplicate_gutenberg_id")).toHaveLength(2);
     expect(found.filter((c) => c === "bad_retailer_link")).toHaveLength(2);
+  });
+});
+
+describe("toGenres", () => {
+  it("keeps Foxing's genre slugs, maps Library of Congress headings onto them and drops the rest", () => {
+    expect(
+      toGenres([
+        "Frankenstein's monster (Fictitious character) -- Fiction",
+        "Gothic fiction",
+        "Horror tales",
+        "Science fiction",
+        "Monsters -- Fiction",
+      ]),
+    ).toEqual(["horror", "science-fiction"]);
+    expect(toGenres(["Fantasy", "fantasy", "Animals -- Juvenile fiction", "Gothic"])).toEqual([
+      "fantasy",
+      "children",
+    ]);
+    expect(toGenres(null)).toEqual([]);
   });
 });

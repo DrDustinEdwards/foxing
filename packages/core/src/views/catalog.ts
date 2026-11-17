@@ -3,6 +3,7 @@
 // safe to cache at the edge. The reader's own state on a book is views.myBook.
 import type * as W from "@foxing/types";
 import { type AffiliateConfig, buyLinks } from "../config/affiliate";
+import { isTemplateDescription } from "../domain/catalog-health";
 import type { Db } from "../db";
 import * as catalogRepo from "../repositories/catalog";
 import * as clubsRepo from "../repositories/clubs";
@@ -79,7 +80,7 @@ export interface CatalogQuery {
 export async function browse(db: Db, query: CatalogQuery): Promise<W.BrowsePage> {
   const [result, genres] = await Promise.all([
     catalogRepo.listBooks(db, {
-      subject: query.subject || undefined,
+      subject: catalogRepo.toGenres([query.subject ?? ""])[0],
       era: query.era || undefined,
       length: query.length || undefined,
       sort: BROWSE_SORTS.has(query.sort ?? "")
@@ -116,7 +117,7 @@ export async function search(db: Db, q: string, query: CatalogQuery): Promise<W.
   const [result, authors, genres] = await Promise.all([
     catalogRepo.searchCatalog(db, term, {
       page: query.page,
-      subject: query.subject,
+      subject: catalogRepo.toGenres([query.subject ?? ""])[0],
       era: query.era,
       length: query.length,
     }),
@@ -188,10 +189,11 @@ export async function bookPage(
       coverUrl: book.coverUrl,
       publicationYear: book.publicationYear,
       readable: catalogRepo.isReadable(book),
-      description: book.description,
+      // Template filler ("A thoughtful and enduring work by ...") describes nothing, so the page shows none.
+      description: isTemplateDescription(book.description) ? null : book.description,
       language: book.language,
       wordCount: book.wordCount,
-      subjects: book.subjects ?? [],
+      subjects: catalogRepo.toGenres(book.subjects),
       moodTags: book.moodTags ?? [],
       contentWarnings: book.contentWarnings ?? [],
       pacing: book.pacing,

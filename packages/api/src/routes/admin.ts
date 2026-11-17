@@ -7,7 +7,14 @@
 // changes (suspend, tier) are preview then perform; see below. Who is an admin is the
 // ADMIN_EMAIL and CO_OWNER_EMAILS setting alone, so no route grants or revokes it.
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
-import { adminRepo, CATALOG_CHECK_NAMES, type Db, deleteAccount, webUrl } from "@foxing/core";
+import {
+  adminRepo,
+  CATALOG_CHECK_NAMES,
+  catalogRepo,
+  type Db,
+  deleteAccount,
+  webUrl,
+} from "@foxing/core";
 import { Hono } from "hono";
 import type { Context } from "hono";
 import { z } from "zod";
@@ -351,7 +358,8 @@ const bookMetaInput = z.object({
   description: z.string().max(20000).nullable().optional(),
   publicationYear: z.number().int().nullable().optional(),
   publisher: z.string().max(500).nullable().optional(),
-  subjects: z.array(z.string()).nullable().optional(),
+  // Genre slugs from Foxing's fixed list only, so a raw subject heading never becomes a reader's genre.
+  subjects: z.array(z.enum(catalogRepo.GENRE_SLUGS)).nullable().optional(),
 });
 
 adminRoutes.patch("/admin/books/:id", rateLimit("write"), async (c) => {

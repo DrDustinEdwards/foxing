@@ -8,7 +8,7 @@ import { inList } from "@dustinedwards/site-runtime/d1";
 import { clampPageSize } from "./page-size";
 import { chunked, type Db } from "../../db";
 import { bookAwards, books, userBooks } from "../../schema";
-import { resolveEra, resolveLength } from "./facets";
+import { resolveEra, resolveLength, toGenres } from "./facets";
 
 export type Book = typeof books.$inferSelect;
 
@@ -174,12 +174,12 @@ export async function listBooksByAuthorSlug(db: Db, authorSlug: string): Promise
 }
 
 /**
- * Up to `limit` other catalog books sharing the book's first subject, covers first, a different handful each time.
+ * Up to `limit` other catalog books sharing the book's first genre (toGenres), covers first, a different handful each time.
  * ORDER BY RANDOM() read every book of the subject on each page view. This starts at a random id inside the
  * subject's index instead and wraps once, so it reads about `limit` rows however large the subject is.
  */
 export async function getRelatedBooks(db: Db, book: Book, limit = 6): Promise<BookCard[]> {
-  const subject = (book.subjects ?? [])[0];
+  const subject = toGenres(book.subjects)[0];
   if (!subject) return [];
   const pivot = nanoid();
   const found: Array<RelatedRow> = [];

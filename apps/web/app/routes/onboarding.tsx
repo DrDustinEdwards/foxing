@@ -138,7 +138,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
                       onClick={() => toggleGenre(g.subject)}
                       className="cap-chip"
                     >
-                      {g.subject}
+                      {g.label}
                     </button>
                   );
                 })}
