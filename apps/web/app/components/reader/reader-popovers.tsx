@@ -129,7 +129,10 @@ export function AttributionPopover({
       ref={ref}
       role="dialog"
       aria-label={`Annotation by ${authorName(other.author)}`}
-      className={anchored ? "fx-reader-pop" : "fx-reader-pop fx-reader-pop-docked"}
+      className={
+        anchored ? "cap-stack fx-reader-pop" : "cap-stack fx-reader-pop fx-reader-pop-docked"
+      }
+      data-gap="3"
       style={
         anchored
           ? pos
@@ -138,7 +141,7 @@ export function AttributionPopover({
           : { background: canvas.bg, color: canvas.text }
       }
     >
-      <div className="mb-2 cap-cluster" data-gap="3">
+      <div className="cap-cluster" data-gap="3">
         <span
           className="fx-reader-popovers-label"
           style={{ background: tintFor((other.color as HighlightColor) ?? "amber", "light") }}
@@ -161,24 +164,20 @@ export function AttributionPopover({
       </div>
 
       {other.selectedText ? (
-        <p className="mb-2 italic fx-reader-popovers-text">“{other.selectedText}”</p>
+        <p className="italic fx-reader-popovers-text">“{other.selectedText}”</p>
       ) : null}
 
       {other.body ? (
         gated && !revealed ? (
-          <button
-            type="button"
-            onClick={onReveal}
-            className="cap-btn mb-2 fx-reader-popovers-btn-2"
-          >
+          <button type="button" onClick={onReveal} className="cap-btn fx-reader-popovers-btn-2">
             <span className="fx-reader-popovers-label-4">{gateLabel}.</span> Tap to reveal.
           </button>
         ) : (
-          <p className="mb-2 fx-reader-popovers-text-2">{other.body}</p>
+          <p className="fx-reader-popovers-text-2">{other.body}</p>
         )
       ) : null}
 
-      <div className="mb-2 fx-reader-popovers-row-2">
+      <div className="fx-reader-popovers-row-2">
         <button
           type="button"
           aria-pressed={other.likedByMe}
@@ -196,7 +195,7 @@ export function AttributionPopover({
       </div>
 
       {replies.length > 0 ? (
-        <ul className="mb-2 fx-reader-popovers-stack">
+        <ul className="fx-reader-popovers-stack">
           {replies.map((r) => (
             <li key={r.id} className="fx-reader-popovers-item">
               <span className="fx-reader-popovers-label-7">{authorName(r.author)}:</span>
@@ -264,7 +263,7 @@ export function SelectionToolbar({
     <div
       role="toolbar"
       aria-label="Highlight selection"
-      className="py-2 fx-reader-popovers-row-4"
+      className="fx-reader-popovers-row-4"
       style={{ background: canvas.bg, color: canvas.text }}
     >
       {highlightColorValues.map((c) => (
@@ -321,8 +320,12 @@ export function NoteComposer({
 }) {
   const [share, setShare] = useState(false);
   return (
-    <div className="fx-reader-popovers-box" style={{ background: canvas.bg, color: canvas.text }}>
-      <div className="mb-2 fx-reader-popovers-row-5">
+    <div
+      className="cap-stack fx-reader-popovers-box"
+      data-gap="3"
+      style={{ background: canvas.bg, color: canvas.text }}
+    >
+      <div className="fx-reader-popovers-row-5">
         {highlightColorValues.map((c) => (
           <button
             key={c}
@@ -343,7 +346,7 @@ export function NoteComposer({
         placeholder="Add a note"
         className="cap-input fx-reader-note"
       />
-      <div className="mt-2 cap-spread" data-gap="3" data-align="center">
+      <div className="cap-spread" data-gap="3" data-align="center">
         {canShareToClub ? (
           <label className="fx-reader-popovers-row-7">
             <input type="checkbox" checked={share} onChange={(e) => setShare(e.target.checked)} />
@@ -396,9 +399,10 @@ export function EditPopover({
       aria-label="Edit annotation"
       className={
         anchored
-          ? "fx-reader-pop fx-reader-pop-narrow"
-          : "fx-reader-pop fx-reader-pop-narrow fx-reader-pop-docked"
+          ? "cap-stack fx-reader-pop fx-reader-pop-narrow"
+          : "cap-stack fx-reader-pop fx-reader-pop-narrow fx-reader-pop-docked"
       }
+      data-gap="3"
       style={
         anchored
           ? pos
@@ -407,7 +411,7 @@ export function EditPopover({
           : { background: canvas.bg, color: canvas.text }
       }
     >
-      <div className="mb-2 fx-reader-popovers-row-5">
+      <div className="fx-reader-popovers-row-5">
         {highlightColorValues.map((c) => (
           <button
             key={c}
@@ -421,7 +425,7 @@ export function EditPopover({
         ))}
       </div>
       {annotation.selectedText ? (
-        <p className="mb-2 italic fx-reader-popovers-text-3">“{annotation.selectedText}”</p>
+        <p className="italic fx-reader-popovers-text-3">“{annotation.selectedText}”</p>
       ) : null}
       <textarea
         value={body}
@@ -429,7 +433,7 @@ export function EditPopover({
         placeholder="Add a note"
         className="cap-input fx-reader-popovers-btn-2"
       />
-      <div className="mt-2 fx-reader-popovers-row-8">
+      <div className="fx-reader-popovers-row-8">
         <button type="button" onClick={onDelete} className="fx-reader-popovers-btn-11">
           Delete
         </button>
