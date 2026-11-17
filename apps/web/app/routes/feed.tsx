@@ -37,62 +37,64 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
           lede="What the people you follow are reading."
         />
 
-        {rows.length === 0 ? (
-          <EmptyState
-            title="Your feed is quiet"
-            body="Follow other readers to see their reviews, finishes, and lists here."
-          />
-        ) : (
-          <ul className="cap-stack" data-gap="4">
-            {rows.map((row) =>
-              row.kind === "follower" ? (
-                <li key={`f-${row.id}`} className="py-3 fx-feed-card">
-                  {row.actorLabel}
-                </li>
-              ) : (
-                <li key={`a-${row.id}`} className="items-start cap-card fx-feed-card-2">
-                  <Avatar
-                    src={row.actor?.avatarUrl ?? null}
-                    name={row.actor?.displayName ?? row.actor?.username ?? "Reader"}
-                    size="sm"
-                  />
-                  <div className="fx-feed-box">
-                    <p className="cap-text" data-tone="muted">
-                      {row.actor ? (
-                        <Link to={`/u/${row.actor.username}`} className="fx-feed-link">
-                          {row.actor.displayName ?? row.actor.username}
+        <div className="cap-stack" data-gap="6">
+          {rows.length === 0 ? (
+            <EmptyState
+              title="Your feed is quiet"
+              body="Follow other readers to see their reviews, finishes, and lists here."
+            />
+          ) : (
+            <ul className="cap-stack" data-gap="4">
+              {rows.map((row) =>
+                row.kind === "follower" ? (
+                  <li key={`f-${row.id}`} className="py-3 fx-feed-card">
+                    {row.actorLabel}
+                  </li>
+                ) : (
+                  <li key={`a-${row.id}`} className="items-start cap-card fx-feed-card-2">
+                    <Avatar
+                      src={row.actor?.avatarUrl ?? null}
+                      name={row.actor?.displayName ?? row.actor?.username ?? "Reader"}
+                      size="sm"
+                    />
+                    <div className="fx-feed-box">
+                      <p className="cap-text" data-tone="muted">
+                        {row.actor ? (
+                          <Link to={`/u/${row.actor.username}`} className="fx-feed-link">
+                            {row.actor.displayName ?? row.actor.username}
+                          </Link>
+                        ) : (
+                          <span className="cap-text" data-tone="ink" data-weight="strong">
+                            Someone
+                          </span>
+                        )}{" "}
+                        {activityText(row)}
+                      </p>
+                      {row.book ? (
+                        <Link to={`/books/${row.book.slug}`} className="fx-feed-link-2">
+                          {row.book.title}
                         </Link>
-                      ) : (
-                        <span className="cap-text" data-tone="ink" data-weight="strong">
-                          Someone
-                        </span>
-                      )}{" "}
-                      {activityText(row)}
-                    </p>
-                    {row.book ? (
-                      <Link to={`/books/${row.book.slug}`} className="fx-feed-link-2">
-                        {row.book.title}
-                      </Link>
-                    ) : null}
-                  </div>
-                </li>
-              ),
-            )}
-          </ul>
-        )}
+                      ) : null}
+                    </div>
+                  </li>
+                ),
+              )}
+            </ul>
+          )}
 
-        {nextCursor ? (
-          <div className="cap-text mt-6" data-align="center">
-            <Link
-              to={`/feed?cursor=${encodeURIComponent(nextCursor)}`}
-              className="cap-text link"
-              data-size="small"
-              data-face="ui"
-            >
-              Older activity
-            </Link>
-          </div>
-        ) : null}
+          {nextCursor ? (
+            <div className="cap-text" data-align="center">
+              <Link
+                to={`/feed?cursor=${encodeURIComponent(nextCursor)}`}
+                className="cap-text link"
+                data-size="small"
+                data-face="ui"
+              >
+                Older activity
+              </Link>
+            </div>
+          ) : null}
+        </div>
       </Container>
     </PageShell>
   );

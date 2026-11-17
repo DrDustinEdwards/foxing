@@ -33,53 +33,59 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <div className="mb-10 items-end fx-notifications-row">
-          <PageHeader eyebrow="Activity" title="Notifications" className="mb-0" />
-          {unread > 0 ? (
-            <button
-              type="button"
-              onClick={markAllRead}
-              disabled={pending}
-              className="cap-btn cap-keep"
-            >
-              {pending ? "Marking..." : "Mark all read"}
-            </button>
+        <PageHeader
+          eyebrow="Activity"
+          title="Notifications"
+          actions={
+            unread > 0 ? (
+              <button
+                type="button"
+                onClick={markAllRead}
+                disabled={pending}
+                className="cap-btn cap-keep"
+              >
+                {pending ? "Marking..." : "Mark all read"}
+              </button>
+            ) : null
+          }
+        />
+        <div className="cap-stack" data-gap="5">
+          {error ? (
+            <p className="fx-notifications-text" role="alert">
+              {error}
+            </p>
           ) : null}
+          {notifications.length === 0 ? (
+            <EmptyState
+              title="No notifications yet."
+              body="Replies, follows, and club activity will show up here."
+            />
+          ) : (
+            <ul className="cap-stack" data-gap="3">
+              {notifications.map((n) => (
+                <li key={n.id} className="items-start cap-card fx-notifications-card">
+                  <span
+                    aria-hidden="true"
+                    className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"}
+                  />
+                  <div className="cap-stack cap-shrink" data-gap="2">
+                    <p
+                      className="cap-text"
+                      data-size="small"
+                      data-tone="ink"
+                      data-weight="strong"
+                      data-face="ui"
+                    >
+                      {n.title}
+                    </p>
+                    {n.body ? <p className="fx-notifications-text-2">{n.body}</p> : null}
+                    <p className="fx-notifications-text-3">{formatDate(new Date(n.createdAt))}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        {error ? (
-          <p className="mb-4 fx-notifications-text" role="alert">
-            {error}
-          </p>
-        ) : null}
-        {notifications.length === 0 ? (
-          <EmptyState
-            title="No notifications yet."
-            body="Replies, follows, and club activity will show up here."
-          />
-        ) : (
-          <ul className="cap-stack" data-gap="3">
-            {notifications.map((n) => (
-              <li key={n.id} className="items-start cap-card fx-notifications-card">
-                <span aria-hidden="true" className={n.isRead ? "fx-dot" : "fx-dot fx-dot-unread"} />
-                <div className="cap-shrink">
-                  <p
-                    className="cap-text"
-                    data-size="small"
-                    data-tone="ink"
-                    data-weight="strong"
-                    data-face="ui"
-                  >
-                    {n.title}
-                  </p>
-                  {n.body ? <p className="fx-notifications-text-2">{n.body}</p> : null}
-                  <p className="mt-1 fx-notifications-text-3">
-                    {formatDate(new Date(n.createdAt))}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
       </Container>
     </PageShell>
   );

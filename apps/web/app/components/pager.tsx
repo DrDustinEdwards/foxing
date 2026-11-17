@@ -19,17 +19,15 @@ export function Pager({
 }) {
   if (pageCount <= 1) return null;
   return (
-    <div className="mt-12">
-      <Pagination
-        form="steps"
-        page={page}
-        pageCount={pageCount}
-        hrefFor={hrefFor}
-        prevLabel={prevLabel}
-        nextLabel={nextLabel}
-        label={label}
-        renderLink={({ href, ...p }) => <Link to={href} {...p} />}
-      />
-    </div>
+    <Pagination
+      form="steps"
+      page={page}
+      pageCount={pageCount}
+      hrefFor={hrefFor}
+      prevLabel={prevLabel}
+      nextLabel={nextLabel}
+      label={label}
+      renderLink={({ href, ...p }) => <Link to={href} {...p} />}
+    />
   );
 }

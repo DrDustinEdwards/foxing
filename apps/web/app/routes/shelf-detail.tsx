@@ -26,17 +26,19 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
   const { shelf, books } = useShelf(loaderData.shelf.id, loaderData).data;
   return (
     <PageShell>
-      <Container>
-        <Link to="/library" className="fx-shelf-detail-link">
-          All shelves
-        </Link>
-        <h1 className="mt-2 fx-shelf-detail-title">{shelf.name}</h1>
-        {shelf.description ? (
-          <p className="mt-2 fx-shelf-detail-text">{shelf.description}</p>
-        ) : null}
+      <Container className="cap-stack" data-gap="7">
+        <div className="cap-stack" data-gap="3">
+          <p>
+            <Link to="/library" className="fx-shelf-detail-link">
+              All shelves
+            </Link>
+          </p>
+          <h1 className="fx-shelf-detail-title">{shelf.name}</h1>
+          {shelf.description ? <p className="fx-shelf-detail-text">{shelf.description}</p> : null}
+        </div>
 
-        <div className="mt-8">
-          <Eyebrow className="mb-4">
+        <div className="cap-stack" data-gap="5">
+          <Eyebrow>
             {books.length} {books.length === 1 ? "book" : "books"}
           </Eyebrow>
           {books.length === 0 ? (

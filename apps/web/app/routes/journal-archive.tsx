@@ -54,55 +54,59 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
           lede={`${result.total} ${result.total === 1 ? "article" : "articles"}`}
         />
 
-        {tags.length > 0 ? (
-          <div className="mb-10 fx-journal-archive-row">
-            {tags.map((t) => (
-              <TagPill key={t.tag} to={journalTagPath(t.tag)}>
-                {t.tag.replace(/-/g, " ")} &middot; {t.count}
-              </TagPill>
-            ))}
+        <div className="cap-stack" data-gap="8">
+          <div className="cap-stack" data-gap="7">
+            {tags.length > 0 ? (
+              <div className="fx-journal-archive-row">
+                {tags.map((t) => (
+                  <TagPill key={t.tag} to={journalTagPath(t.tag)}>
+                    {t.tag.replace(/-/g, " ")} &middot; {t.count}
+                  </TagPill>
+                ))}
+              </div>
+            ) : null}
+
+            {result.posts.length === 0 ? (
+              <EmptyState title="No articles match those filters." />
+            ) : (
+              <ul className="fx-journal-archive-stack">
+                {result.posts.map((post) => (
+                  <li key={post.slug}>
+                    <Link
+                      to={`/journal/${post.slug}`}
+                      className="group items-start py-4 fx-journal-archive-link-2"
+                    >
+                      <div className="fx-journal-archive-box">
+                        <p className="cap-clamp fx-journal-archive-title" data-lines="1">
+                          {post.title}
+                        </p>
+                        {post.excerpt ? (
+                          <p className="cap-clamp fx-journal-archive-text" data-lines="1">
+                            {post.excerpt}
+                          </p>
+                        ) : null}
+                      </div>
+                      {post.tags?.[0] ? (
+                        <span className="cap-keep fx-journal-archive-label">
+                          {post.tags[0].replace(/-/g, " ")}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        ) : null}
 
-        {result.posts.length === 0 ? (
-          <EmptyState title="No articles match those filters." />
-        ) : (
-          <ul className="fx-journal-archive-stack">
-            {result.posts.map((post) => (
-              <li key={post.slug}>
-                <Link
-                  to={`/journal/${post.slug}`}
-                  className="group items-start py-4 fx-journal-archive-link-2"
-                >
-                  <div className="fx-journal-archive-box">
-                    <p className="cap-clamp fx-journal-archive-title" data-lines="1">
-                      {post.title}
-                    </p>
-                    {post.excerpt ? (
-                      <p className="cap-clamp fx-journal-archive-text" data-lines="1">
-                        {post.excerpt}
-                      </p>
-                    ) : null}
-                  </div>
-                  {post.tags?.[0] ? (
-                    <span className="cap-keep fx-journal-archive-label">
-                      {post.tags[0].replace(/-/g, " ")}
-                    </span>
-                  ) : null}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <Pager
-          page={result.page}
-          pageCount={result.pageCount}
-          hrefFor={(n) => pageHref("/journal/archive", {}, n)}
-          prevLabel="Newer"
-          nextLabel="Older"
-          label="Journal pages"
-        />
+          <Pager
+            page={result.page}
+            pageCount={result.pageCount}
+            hrefFor={(n) => pageHref("/journal/archive", {}, n)}
+            prevLabel="Newer"
+            nextLabel="Older"
+            label="Journal pages"
+          />
+        </div>
       </Container>
     </PageShell>
   );

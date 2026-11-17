@@ -37,25 +37,24 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container>
-        <div className="mb-8 items-end fx-find-next-book-row">
-          <PageHeader
-            eyebrow="For you"
-            title="Find your next book"
-            lede={
-              aiPersonalized
-                ? "Picks chosen for your reading, with a reason for each."
-                : "Picks drawn from what you read and love, with a reason for each."
-            }
-            className="mb-0"
-          />
-          <ButtonLink to="/find-next-book?refresh=1" className="cap-keep">
-            Refresh
-          </ButtonLink>
-        </div>
+      <Container className="cap-stack" data-gap="7">
+        <PageHeader
+          eyebrow="For you"
+          title="Find your next book"
+          lede={
+            aiPersonalized
+              ? "Picks chosen for your reading, with a reason for each."
+              : "Picks drawn from what you read and love, with a reason for each."
+          }
+          actions={
+            <ButtonLink to="/find-next-book?refresh=1" className="cap-keep">
+              Refresh
+            </ButtonLink>
+          }
+        />
 
         {!isPlus ? (
-          <div className="mb-8 py-3 fx-find-next-book-card">
+          <div className="py-3 fx-find-next-book-card">
             <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
               Plus tunes these to you with AI-personalized reasons.
             </p>
@@ -89,7 +88,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
 
 function RecCard({ rec }: { rec: Recommendation }) {
   return (
-    <div className="cap-card fx-find-next-book-card-2">
+    <div className="cap-card cap-stack fx-find-next-book-card-2" data-gap="5">
       <Link to={`/books/${rec.slug}`} className="block">
         <CoverImage
           src={rec.coverUrl}
@@ -98,15 +97,17 @@ function RecCard({ rec }: { rec: Recommendation }) {
           sizes="(min-width: 64rem) 200px, (min-width: 40rem) 30vw, 45vw"
         />
       </Link>
-      <div className="mt-3 fx-find-next-book-stack">
-        <Link to={`/books/${rec.slug}`} className="group">
-          <h3 className="fx-find-next-book-title">{rec.title}</h3>
-        </Link>
-        <p className="cap-text mt-1" data-size="small" data-tone="dim" data-face="ui">
-          {rec.author}
-          {rec.publicationYear ? <span> &middot; {rec.publicationYear}</span> : null}
-        </p>
-        <p className="mt-2 fx-find-next-book-text" data-testid="rec-reason">
+      <div className="cap-stack fx-find-next-book-stack" data-gap="3">
+        <div className="cap-stack" data-gap="2">
+          <Link to={`/books/${rec.slug}`} className="group">
+            <h3 className="fx-find-next-book-title">{rec.title}</h3>
+          </Link>
+          <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+            {rec.author}
+            {rec.publicationYear ? <span> &middot; {rec.publicationYear}</span> : null}
+          </p>
+        </div>
+        <p className="fx-find-next-book-text" data-testid="rec-reason">
           {rec.reason}
         </p>
         <div className="fx-find-next-book-box">

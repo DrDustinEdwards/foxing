@@ -119,88 +119,90 @@ export default function Books({ loaderData }: Route.ComponentProps) {
         />
 
         {/* Filters: plain links, no client JS, fully cacheable. */}
-        <div className="mb-10 cap-card fx-books-card">
-          <FacetGroup label="Genre">
-            {genres.map((g) => (
-              <FacetLink
-                key={g.subject}
-                active={filters.subject === g.subject}
-                to={query(filters, {
-                  subject: filters.subject === g.subject ? null : g.subject,
-                  page: null,
-                })}
-              >
-                {g.subject}
-              </FacetLink>
-            ))}
-          </FacetGroup>
-          <FacetGroup label="Era">
-            {catalogRepo.ERA_BUCKETS.map((b) => (
-              <FacetLink
-                key={b.slug}
-                active={filters.era === b.slug}
-                to={query(filters, { era: filters.era === b.slug ? null : b.slug, page: null })}
-              >
-                {b.label}
-              </FacetLink>
-            ))}
-          </FacetGroup>
-          <FacetGroup label="Length">
-            {catalogRepo.LENGTH_BUCKETS.map((b) => (
-              <FacetLink
-                key={b.slug}
-                active={filters.length === b.slug}
-                to={query(filters, {
-                  length: filters.length === b.slug ? null : b.slug,
-                  page: null,
-                })}
-              >
-                {b.label}
-              </FacetLink>
-            ))}
-          </FacetGroup>
-          <div className="fx-books-row">
-            <div className="cap-cluster" data-gap="3">
-              <span className="group-label">Sort</span>
-              {(
-                [
-                  ["title", "A to Z"],
-                  ["year-desc", "Newest"],
-                  ["year-asc", "Oldest"],
-                ] as const
-              ).map(([value, label]) => (
+        <div className="cap-stack" data-gap="7">
+          <div className="cap-card fx-books-card">
+            <FacetGroup label="Genre">
+              {genres.map((g) => (
                 <FacetLink
-                  key={value}
-                  active={(filters.sort ?? "title") === value}
-                  to={query(filters, { sort: value === "title" ? null : value, page: null })}
+                  key={g.subject}
+                  active={filters.subject === g.subject}
+                  to={query(filters, {
+                    subject: filters.subject === g.subject ? null : g.subject,
+                    page: null,
+                  })}
                 >
-                  {label}
+                  {g.subject}
                 </FacetLink>
               ))}
-            </div>
-            {anyFilterSet ? (
-              <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
-                Clear filters
-              </Link>
-            ) : null}
-          </div>
-        </div>
-
-        {result.books.length === 0 ? (
-          <EmptyState
-            title="No books match those filters"
-            body="Try removing a filter or browsing a different era."
-          />
-        ) : (
-          <>
-            <BookGrid>
-              {result.books.map((b, i) => (
-                <BookCard key={b.slug} book={b} position={i} headingLevel={2} />
+            </FacetGroup>
+            <FacetGroup label="Era">
+              {catalogRepo.ERA_BUCKETS.map((b) => (
+                <FacetLink
+                  key={b.slug}
+                  active={filters.era === b.slug}
+                  to={query(filters, { era: filters.era === b.slug ? null : b.slug, page: null })}
+                >
+                  {b.label}
+                </FacetLink>
               ))}
-            </BookGrid>
-            <Pagination filters={filters} result={result} query={query} />
-          </>
-        )}
+            </FacetGroup>
+            <FacetGroup label="Length">
+              {catalogRepo.LENGTH_BUCKETS.map((b) => (
+                <FacetLink
+                  key={b.slug}
+                  active={filters.length === b.slug}
+                  to={query(filters, {
+                    length: filters.length === b.slug ? null : b.slug,
+                    page: null,
+                  })}
+                >
+                  {b.label}
+                </FacetLink>
+              ))}
+            </FacetGroup>
+            <div className="fx-books-row">
+              <div className="cap-cluster" data-gap="3">
+                <span className="group-label">Sort</span>
+                {(
+                  [
+                    ["title", "A to Z"],
+                    ["year-desc", "Newest"],
+                    ["year-asc", "Oldest"],
+                  ] as const
+                ).map(([value, label]) => (
+                  <FacetLink
+                    key={value}
+                    active={(filters.sort ?? "title") === value}
+                    to={query(filters, { sort: value === "title" ? null : value, page: null })}
+                  >
+                    {label}
+                  </FacetLink>
+                ))}
+              </div>
+              {anyFilterSet ? (
+                <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
+                  Clear filters
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          {result.books.length === 0 ? (
+            <EmptyState
+              title="No books match those filters"
+              body="Try removing a filter or browsing a different era."
+            />
+          ) : (
+            <div className="cap-stack" data-gap="8">
+              <BookGrid>
+                {result.books.map((b, i) => (
+                  <BookCard key={b.slug} book={b} position={i} headingLevel={2} />
+                ))}
+              </BookGrid>
+              <Pagination filters={filters} result={result} query={query} />
+            </div>
+          )}
+        </div>
       </Container>
     </PageShell>
   );
@@ -220,7 +222,7 @@ function Pagination({
   const next =
     result.page < result.pageCount ? query(filters, { page: String(result.page + 1) }) : null;
   return (
-    <nav aria-label="Pagination" className="mt-12 justify-center fx-books-row-2">
+    <nav aria-label="Pagination" className="justify-center fx-books-row-2">
       {prev ? (
         <ButtonLink to={prev} rel="prev">
           Previous

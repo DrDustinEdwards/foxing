@@ -32,11 +32,7 @@ export function YearView({
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
-        <PageHeader
-          eyebrow={`Year in Reading ${year}`}
-          title="Your reading year"
-          className="mb-0"
-        />
+        <PageHeader eyebrow={`Year in Reading ${year}`} title="Your reading year" />
         {notice}
 
         <nav aria-label="Choose a year" className="cap-cluster" data-gap="3">

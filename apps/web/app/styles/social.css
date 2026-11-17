@@ -171,7 +171,7 @@
   color: var(--muted);
 }
 .fx-diary-link-2 {
-  display: inline-block;
+  align-self: flex-start;
   &:hover {
     color: var(--accent-text);
     text-decoration-line: underline;
@@ -254,6 +254,10 @@
 .fx-highlights-row {
   display: flex;
   gap: var(--space-4);
+}
+/* The color dot sits level with the quote's first line. */
+.fx-highlights-dot {
+  margin-block-start: var(--space-3);
 }
 .fx-highlights-text {
   padding-left: var(--space-5-5);
@@ -407,7 +411,6 @@
   line-height: var(--line-box-5);
   color: var(--crit);
 }
-.fx-notifications-text-2,
 .fx-year-text-2 {
   margin-top: var(--space-1);
 }
@@ -641,14 +644,6 @@
 .fx-commonplace-input {
   min-width: 12rem;
   flex: 1 1 0%;
-}
-.fx-diary-row,
-.fx-lists-row,
-.fx-notifications-row,
-.fx-lists-row {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-5);
 }
 .fx-diary-link,
 .fx-year-link {

@@ -166,8 +166,8 @@ export function TypographyControls({
   const themes: ReaderTheme[] = ["light", "sepia", "dark"];
   return (
     <div className="cap-stack">
-      <div>
-        <span className="mb-2 block fx-reader-panels-label-4">Theme</span>
+      <div className="cap-stack" data-gap="3">
+        <span className="fx-reader-panels-label-4">Theme</span>
         <div className="cap-cluster" data-gap="3">
           {themes.map((t) => (
             <button
@@ -269,8 +269,9 @@ export function ContentsList({
   onDelete: (id: string) => void;
   onOpenMark: (a: ReaderAnnotation) => void;
 }) {
+  // The dialog body's own gap is 8px; the contents, bookmarks and marks sit 32px apart.
   return (
-    <>
+    <div className="cap-stack" data-gap="7">
       <nav aria-label="Table of contents">
         <ul className="fx-reader-panels-stack">
           {toc.map((t) => (
@@ -287,8 +288,8 @@ export function ContentsList({
         </ul>
       </nav>
       {bookmarks.length > 0 ? (
-        <div className="mt-6">
-          <h3 className="mb-2 fx-reader-panels-label-4">Bookmarks</h3>
+        <div className="cap-stack" data-gap="3">
+          <h3 className="fx-reader-panels-label-4">Bookmarks</h3>
           <ul className="fx-reader-panels-stack">
             {bookmarks.map((b) => (
               <li key={b.id} className="cap-cluster" data-gap="3">
@@ -314,8 +315,8 @@ export function ContentsList({
       ) : null}
 
       {marks.length > 0 ? (
-        <div className="mt-6">
-          <h3 className="mb-2 fx-reader-panels-label-4">Highlights & notes</h3>
+        <div className="cap-stack" data-gap="3">
+          <h3 className="fx-reader-panels-label-4">Highlights & notes</h3>
           <ul className="cap-stack" data-gap="2">
             {marks.map((a) => (
               <li key={a.id}>
@@ -325,7 +326,7 @@ export function ContentsList({
                   onClick={() => onOpenMark(a)}
                 >
                   <span
-                    className="mt-1 fx-reader-panels-label-5"
+                    className="fx-reader-panels-label-5"
                     style={{
                       background: tintFor((a.color as HighlightColor) ?? "amber", "light"),
                     }}
@@ -348,7 +349,7 @@ export function ContentsList({
           </ul>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }
 

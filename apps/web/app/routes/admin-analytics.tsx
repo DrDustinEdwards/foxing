@@ -52,34 +52,32 @@ export default function AdminAnalytics({ loaderData }: Route.ComponentProps) {
         ))}
       </div>
 
-      <div className="mt-8">
-        <AdminCard title="Audit log">
-          {audit.length === 0 ? (
-            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-              No admin actions logged yet.
-            </p>
-          ) : (
-            <Table caption="Recent admin actions" captionHidden>
-              <thead>
-                <tr>
-                  <th scope="col">Action</th>
-                  <th scope="col">Actor</th>
-                  <th scope="col">When</th>
+      <AdminCard title="Audit log">
+        {audit.length === 0 ? (
+          <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+            No admin actions logged yet.
+          </p>
+        ) : (
+          <Table caption="Recent admin actions" captionHidden>
+            <thead>
+              <tr>
+                <th scope="col">Action</th>
+                <th scope="col">Actor</th>
+                <th scope="col">When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {audit.map((a) => (
+                <tr key={a.id}>
+                  <td>{a.action}</td>
+                  <td>{a.actor ?? "System"}</td>
+                  <td>{mediumDateTime.format(a.performedAt)}</td>
                 </tr>
-              </thead>
-              <tbody>
-                {audit.map((a) => (
-                  <tr key={a.id}>
-                    <td>{a.action}</td>
-                    <td>{a.actor ?? "System"}</td>
-                    <td>{mediumDateTime.format(a.performedAt)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
-          )}
-        </AdminCard>
-      </div>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </AdminCard>
     </AdminShell>
   );
 }

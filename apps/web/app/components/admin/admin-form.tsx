@@ -61,7 +61,7 @@ export function useAdminAction(opts?: { onDone?: () => void }) {
 }
 
 export function AdminError({ error }: { error: string | null }) {
-  return <FormError error={error} className="mt-3" />;
+  return <FormError error={error} />;
 }
 
 // A labeled text field: a textarea when it has rows, else an input.
@@ -111,7 +111,7 @@ export function AdminRow({
   children?: React.ReactNode;
 }) {
   return (
-    <li className="py-3">
+    <li className="cap-stack py-3" data-gap="4">
       <div className="cap-spread" data-gap="4" data-align="center">
         <div className="cap-shrink">
           <p

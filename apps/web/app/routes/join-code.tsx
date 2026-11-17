@@ -46,39 +46,44 @@ export default function JoinCode({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container className="cap-text" data-align="center">
-        <p className="fx-join-code-caps">You have been invited to</p>
-        <h1 className="mt-2 fx-join-code-title">{club.name}</h1>
-        {club.description ? <p className="mt-3 fx-join-code-text">{club.description}</p> : null}
-        <p className="mt-3 fx-join-code-text-2">
-          {memberCount} {memberCount === 1 ? "member" : "members"}
-        </p>
-
-        {alreadyMember ? (
-          <button
-            type="button"
-            onClick={() => void navigate(`/clubs/${club.slug}`)}
-            className="cap-btn mt-8"
-            data-variant="primary"
-          >
-            Open club
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => void join()}
-            disabled={pending}
-            className="cap-btn mt-8"
-            data-variant="primary"
-          >
-            {pending ? "Joining..." : "Join this club"}
-          </button>
-        )}
-        {error ? (
-          <p className="mt-3 fx-join-code-text-3" role="alert">
-            {error}
+      <Container className="cap-text cap-stack" data-align="center" data-gap="7">
+        <div className="cap-stack" data-gap="4" data-align="center">
+          <div className="cap-stack" data-gap="3" data-align="center">
+            <p className="fx-join-code-caps">You have been invited to</p>
+            <h1 className="fx-join-code-title">{club.name}</h1>
+          </div>
+          {club.description ? <p className="fx-join-code-text">{club.description}</p> : null}
+          <p className="fx-join-code-text-2">
+            {memberCount} {memberCount === 1 ? "member" : "members"}
           </p>
-        ) : null}
+        </div>
+        <div className="cap-stack" data-gap="4" data-align="center">
+          {alreadyMember ? (
+            <button
+              type="button"
+              onClick={() => void navigate(`/clubs/${club.slug}`)}
+              className="cap-btn"
+              data-variant="primary"
+            >
+              Open club
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void join()}
+              disabled={pending}
+              className="cap-btn"
+              data-variant="primary"
+            >
+              {pending ? "Joining..." : "Join this club"}
+            </button>
+          )}
+          {error ? (
+            <p className="fx-join-code-text-3" role="alert">
+              {error}
+            </p>
+          ) : null}
+        </div>
       </Container>
     </PageShell>
   );

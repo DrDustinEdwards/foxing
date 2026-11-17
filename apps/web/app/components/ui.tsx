@@ -134,7 +134,7 @@ export function EntityCard({
 /** Breadcrumb trail, Capsomer's. The BreadcrumbList JSON-LD is Prelum's (lib/seo.ts). */
 export function Breadcrumbs({ trail }: { trail: Array<{ label: string; to?: string }> }) {
   return (
-    <nav aria-label="Breadcrumb" className="cap-breadcrumb mb-6">
+    <nav aria-label="Breadcrumb" className="cap-breadcrumb fx-breadcrumbs">
       <ol className="cap-breadcrumb-list">
         {trail.map((c, i) => (
           <li key={`${c.label}-${c.to ?? "end"}`} className="cap-breadcrumb-item">
@@ -206,26 +206,49 @@ export function Avatar({
   );
 }
 
-/** Page title block: eyebrow + display heading + optional lede. */
+/** Page title block: eyebrow + display heading + optional lede, and the page's own actions
+    (a New button, Refresh) beside it when there are any. */
 export function PageHeader({
   eyebrow,
   title,
   lede,
-  className,
+  actions,
+  children,
 }: {
   eyebrow?: string;
   title: string;
   lede?: string;
-  className?: string;
+  actions?: React.ReactNode;
+  /** A line under the lede, such as a link to the full archive. */
+  children?: React.ReactNode;
 }) {
-  return (
-    <header className={cn("fx-page-head", className)}>
-      {eyebrow && <Eyebrow className="mb-3">{eyebrow}</Eyebrow>}
-      <h1 className="fx-page-title">{title}</h1>
+  const heading = (
+    <div className="cap-stack" data-gap="5">
+      {eyebrow ? (
+        <div className="cap-stack" data-gap="4">
+          <Eyebrow>{eyebrow}</Eyebrow>
+          <h1 className="fx-page-title">{title}</h1>
+        </div>
+      ) : (
+        <h1 className="fx-page-title">{title}</h1>
+      )}
       {lede && (
-        <p className="cap-text measure mt-4" data-size="lead" data-tone="muted">
+        <p className="cap-text measure" data-size="lead" data-tone="muted">
           {lede}
         </p>
+      )}
+      {children}
+    </div>
+  );
+  return (
+    <header className="fx-page-head">
+      {actions ? (
+        <div className="cap-spread" data-gap="5" data-align="end">
+          {heading}
+          {actions}
+        </div>
+      ) : (
+        heading
       )}
     </header>
   );

@@ -77,7 +77,13 @@
 .fx-journal-post-row {
   color: var(--dim);
 }
+/* The post is prose in flow, where the series box's own margins collapse with these, so the
+   header and the cover keep margins rather than a stack's gap. */
+.fx-journal-post-head {
+  margin-block-end: var(--space-7);
+}
 .fx-journal-post-img {
+  margin-block-end: var(--space-7-5);
   aspect-ratio: 16 / 9;
   width: 100%;
   border-radius: var(--radius-l);
@@ -116,14 +122,6 @@
   color: var(--muted);
 }
 
-.fx-journal-text {
-  margin-top: calc(-1 * var(--space-6));
-}
-.fx-journal-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-}
 .fx-journal-grid {
   display: grid;
   gap: var(--space-7);

@@ -44,13 +44,17 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
 
   return (
     <PageShell>
-      <Container>
-        <Link to={`/clubs/${club.slug}`} className="fx-club-thread-link">
-          &larr; {club.name}
-        </Link>
-        <h1 className="mt-3 fx-club-thread-title">{thread.title}</h1>
+      <Container className="cap-stack" data-gap="7">
+        <div className="cap-stack" data-gap="4">
+          <p>
+            <Link to={`/clubs/${club.slug}`} className="fx-club-thread-link">
+              &larr; {club.name}
+            </Link>
+          </p>
+          <h1 className="fx-club-thread-title">{thread.title}</h1>
+        </div>
 
-        <ul className="mt-8 fx-club-thread-list" data-testid="post-list">
+        <ul className="fx-club-thread-list" data-testid="post-list">
           {posts.length === 0 ? (
             <li className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No posts yet. Start the conversation.
@@ -69,26 +73,28 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
         </ul>
 
         {isMember ? (
-          <form onSubmit={(e) => void post(e)} className="mt-8">
-            <label htmlFor="content" className="block fx-club-thread-field">
-              Add a reply
-            </label>
-            <textarea
-              id="content"
-              name="content"
-              rows={3}
-              required
-              className="cap-input py-2 fx-club-thread-input"
-            />
+          <form onSubmit={(e) => void post(e)} className="cap-stack" data-gap="3">
+            <div>
+              <label htmlFor="content" className="block fx-club-thread-field">
+                Add a reply
+              </label>
+              <textarea
+                id="content"
+                name="content"
+                rows={3}
+                required
+                className="cap-input py-2 fx-club-thread-input"
+              />
+            </div>
             {error ? (
-              <p className="mt-2 fx-club-thread-text-2" role="alert">
+              <p className="fx-club-thread-text-2" role="alert">
                 {error}
               </p>
             ) : null}
             <button
               type="submit"
               disabled={pending || !hydrated}
-              className="cap-btn mt-2"
+              className="cap-btn"
               data-variant="primary"
             >
               {pending ? "Posting..." : "Post reply"}

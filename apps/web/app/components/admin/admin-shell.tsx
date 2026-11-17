@@ -70,7 +70,7 @@ export function AdminShell({ title, children }: { title?: string; children: Reac
       <link rel="stylesheet" href={adminShellCss} precedence="default" />
       <div className="cap-admin-page">
         {title ? (
-          <div className="mb-6">
+          <div>
             <p className="group-label">Admin</p>
             <h1 className="cap-title" data-size="2">
               {title}

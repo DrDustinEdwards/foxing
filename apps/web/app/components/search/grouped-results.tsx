@@ -25,8 +25,8 @@ export function GroupedResults({
   const nothing = books.length === 0 && authors.length === 0;
 
   return (
-    <div className="mt-8">
-      <p role="status" aria-live="polite" className="mb-6 fx-grouped-results-text">
+    <div className="cap-stack" data-gap="6">
+      <p role="status" aria-live="polite" className="fx-grouped-results-text">
         {fuzzy ? (
           <>
             No exact match for{" "}
@@ -59,40 +59,44 @@ export function GroupedResults({
         />
       ) : null}
 
-      {authors.length > 0 ? (
-        <section aria-labelledby="results-authors" className="mb-10">
-          <h2 id="results-authors" className="mb-4 fx-grouped-results-caps">
-            Authors · {authors.length}
-          </h2>
-          <ul className="fx-grouped-results-grid">
-            {authors.map((a) => (
-              <li key={a.slug}>
-                <Link to={`/authors/${a.slug}`} className="fx-result-row">
-                  <span className="cap-clamp fx-grouped-results-title" data-lines="1">
-                    {a.name}
-                  </span>
-                  <span className="cap-keep fx-grouped-results-label">
-                    {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      {nothing ? null : (
+        <div className="cap-stack" data-gap="7">
+          {authors.length > 0 ? (
+            <section aria-labelledby="results-authors" className="cap-stack" data-gap="5">
+              <h2 id="results-authors" className="fx-grouped-results-caps">
+                Authors · {authors.length}
+              </h2>
+              <ul className="fx-grouped-results-grid">
+                {authors.map((a) => (
+                  <li key={a.slug}>
+                    <Link to={`/authors/${a.slug}`} className="fx-result-row">
+                      <span className="cap-clamp fx-grouped-results-title" data-lines="1">
+                        {a.name}
+                      </span>
+                      <span className="cap-keep fx-grouped-results-label">
+                        {a.bookCount} {a.bookCount === 1 ? "book" : "books"}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
 
-      {books.length > 0 ? (
-        <section aria-labelledby="results-books">
-          <h2 id="results-books" className="mb-4 fx-grouped-results-caps">
-            Books · {formatCount(bookTotal)}
-          </h2>
-          <BookGrid>
-            {books.map((b) => (
-              <BookCard key={b.slug} book={b} />
-            ))}
-          </BookGrid>
-        </section>
-      ) : null}
+          {books.length > 0 ? (
+            <section aria-labelledby="results-books" className="cap-stack" data-gap="5">
+              <h2 id="results-books" className="fx-grouped-results-caps">
+                Books · {formatCount(bookTotal)}
+              </h2>
+              <BookGrid>
+                {books.map((b) => (
+                  <BookCard key={b.slug} book={b} />
+                ))}
+              </BookGrid>
+            </section>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

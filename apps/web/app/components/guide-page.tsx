@@ -28,10 +28,12 @@ export function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section id={id} className="fx-guide-section">
-      <Eyebrow className="mb-2">{eyebrow}</Eyebrow>
-      <h2 className="fx-guide-title">{heading}</h2>
-      <div className="mt-4 cap-stack">{children}</div>
+    <section id={id} className="cap-stack fx-guide-section" data-gap="5">
+      <div className="cap-stack" data-gap="3">
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <h2 className="fx-guide-title">{heading}</h2>
+      </div>
+      <div className="cap-stack">{children}</div>
     </section>
   );
 }
@@ -57,7 +59,7 @@ export function FeatureList({ items }: { items: string[] }) {
 
 export function GuideFooter() {
   return (
-    <p className="mt-16 fx-guide-text">
+    <p className="fx-guide-text">
       Free to join.{" "}
       <Link to="/signup" className="link">
         Create an account

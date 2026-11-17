@@ -1,5 +1,5 @@
 import { catalogRepo } from "@foxing/core";
-import { Link } from "capsomer/react/link";
+import { JournalCard } from "~/components/journal-card";
 import { PageShell } from "~/components/page-shell";
 import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
@@ -56,16 +56,14 @@ export default function JournalSeries({ loaderData }: Route.ComponentProps) {
         <ol className="fx-journal-tag-grid">
           {parts.map((post, i) => (
             <li key={post.slug}>
-              <Link to={`/journal/${post.slug}`}>
-                <div className="cap-card fx-journal-tag-card">
-                  <span className="mb-2 fx-journal-tag-caps">Part {i + 1}</span>
-                  <h2 className="fx-journal-tag-title">{post.title}</h2>
-                  {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
-                  {post.readingTimeMinutes ? (
-                    <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
-                  ) : null}
-                </div>
-              </Link>
+              <JournalCard
+                to={`/journal/${post.slug}`}
+                label={`Part ${i + 1}`}
+                title={post.title}
+                excerpt={post.excerpt}
+                minutes={post.readingTimeMinutes}
+                heading="h2"
+              />
             </li>
           ))}
         </ol>

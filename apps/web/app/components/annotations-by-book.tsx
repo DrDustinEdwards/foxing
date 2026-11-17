@@ -58,7 +58,7 @@ export function AnnotationFilters({
   children?: ReactNode;
 }) {
   return (
-    <div className="mb-6 cap-stack" data-gap="4">
+    <div className="cap-stack" data-gap="4">
       <div className="cap-cluster" data-gap="4">
         <input
           type="search"
@@ -152,7 +152,7 @@ export function BookGroups<T extends BookFields>({
           </h2>
           <ul className="cap-stack" data-gap="4">
             {g.items.map((e) => (
-              <li key={e.id} className="cap-card">
+              <li key={e.id} className="cap-card cap-stack" data-gap="5">
                 {renderItem(e)}
               </li>
             ))}

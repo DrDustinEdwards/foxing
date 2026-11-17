@@ -66,6 +66,10 @@
     text-decoration-line: underline;
   }
 }
+/* The guide's closing line sits a section break below the last section. */
+.fx-guide-text {
+  margin-block-start: var(--space-9);
+}
 .fx-guide-section {
   margin-bottom: var(--space-8-5);
   scroll-margin-top: var(--space-10);

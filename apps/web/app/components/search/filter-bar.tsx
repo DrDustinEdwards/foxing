@@ -52,7 +52,7 @@ export function FilterBar({
   ].filter((c): c is { key: string; label: string } => c !== null);
 
   return (
-    <div className="mt-6">
+    <div className="cap-stack" data-gap="4" data-align="start">
       <Popover>
         <PopoverTrigger className="cap-btn fx-filter-btn" data-on={chips.length ? "" : undefined}>
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -91,8 +91,8 @@ export function FilterBar({
               })}
             </fieldset>
 
-            <label className="block">
-              <span className="group-label block mb-2">Era</span>
+            <label className="cap-stack" data-gap="3">
+              <span className="group-label">Era</span>
               <span className="cap-select-wrap" data-native="">
                 <select
                   value={active.era ?? ""}
@@ -109,8 +109,8 @@ export function FilterBar({
               </span>
             </label>
 
-            <label className="block">
-              <span className="group-label block mb-2">Length</span>
+            <label className="cap-stack" data-gap="3">
+              <span className="group-label">Length</span>
               <span className="cap-select-wrap" data-native="">
                 <select
                   value={active.length ?? ""}
@@ -137,7 +137,7 @@ export function FilterBar({
       </Popover>
 
       {chips.length ? (
-        <ul className="cap-cluster mt-3" data-gap="3">
+        <ul className="cap-cluster" data-gap="3">
           {chips.map((c) => (
             <li key={c.key}>
               <button type="button" onClick={() => apply(c.key, null)} className="cap-chip">

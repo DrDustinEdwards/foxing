@@ -37,20 +37,23 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <div className="mb-10 items-end fx-lists-row">
-          <PageHeader eyebrow="Reading" title="Your lists" className="mb-0" />
-          <ButtonLink to="/lists/new" className="cap-keep" variant="primary">
-            New list
-          </ButtonLink>
-        </div>
+        <PageHeader
+          eyebrow="Reading"
+          title="Your lists"
+          actions={
+            <ButtonLink to="/lists/new" className="cap-keep" variant="primary">
+              New list
+            </ButtonLink>
+          }
+        />
         {lists.length === 0 ? (
           <EmptyState
             title="No lists yet."
             body="Group books into a list to share what you are reading or want to read."
           />
         ) : (
-          <>
-            <nav aria-label="Filter lists" className="mb-6 fx-lists-row-2">
+          <div className="cap-stack" data-gap="6">
+            <nav aria-label="Filter lists" className="fx-lists-row-2">
               <FilterTab active={filter === "all"} onClick={() => setFilter("all")}>
                 All {lists.length}
               </FilterTab>
@@ -67,19 +70,19 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                   <EntityCard to={`/lists/${l.id}`}>
                     <div className="fx-lists-row-3">
                       {l.covers.length > 0 ? <CoverStack covers={l.covers} /> : null}
-                      <div className="fx-lists-box">
-                        <div className="fx-lists-row-4">
-                          <h2 className="cap-title" data-size="5">
-                            {l.title}
-                          </h2>
-                          {!l.isPublic ? (
-                            <span className="cap-keep fx-lists-caps">Private</span>
-                          ) : null}
+                      <div className="cap-stack fx-lists-box" data-gap="3">
+                        <div className="cap-stack" data-gap="2">
+                          <div className="fx-lists-row-4">
+                            <h2 className="cap-title" data-size="5">
+                              {l.title}
+                            </h2>
+                            {!l.isPublic ? (
+                              <span className="cap-keep fx-lists-caps">Private</span>
+                            ) : null}
+                          </div>
+                          {l.description ? <p className="fx-lists-text">{l.description}</p> : null}
                         </div>
-                        {l.description ? (
-                          <p className="mt-1 fx-lists-text">{l.description}</p>
-                        ) : null}
-                        <p className="mt-2 fx-lists-text-2">
+                        <p className="fx-lists-text-2">
                           {l.bookCount} {l.bookCount === 1 ? "book" : "books"}
                           {" · "}
                           {l.isPublic ? "public" : "private"}
@@ -90,7 +93,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
                 </li>
               ))}
             </ul>
-          </>
+          </div>
         )}
       </Container>
     </PageShell>

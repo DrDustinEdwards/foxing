@@ -68,21 +68,23 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
                     sizes="80px"
                   />
                 </Link>
-                <div className="cap-shrink">
-                  {date ? (
-                    <p className="fx-pick-club-caps">
-                      {date}
-                      {p.category ? ` · ${p.category}` : ""}
-                    </p>
-                  ) : null}
-                  <Link to={`/books/${b.slug}`} className="block">
-                    <h2 className="mt-1 fx-pick-club-title">{b.title}</h2>
-                    <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-                      {b.author}
-                    </p>
-                  </Link>
+                <div className="cap-stack cap-shrink" data-gap="3">
+                  <div className="cap-stack" data-gap="2">
+                    {date ? (
+                      <p className="fx-pick-club-caps">
+                        {date}
+                        {p.category ? ` · ${p.category}` : ""}
+                      </p>
+                    ) : null}
+                    <Link to={`/books/${b.slug}`} className="block">
+                      <h2 className="fx-pick-club-title">{b.title}</h2>
+                      <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+                        {b.author}
+                      </p>
+                    </Link>
+                  </div>
                   {p.curatorQuote ? (
-                    <p className="mt-2 italic fx-pick-club-text">&ldquo;{p.curatorQuote}&rdquo;</p>
+                    <p className="italic fx-pick-club-text">&ldquo;{p.curatorQuote}&rdquo;</p>
                   ) : null}
                 </div>
               </li>

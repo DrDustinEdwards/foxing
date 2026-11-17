@@ -50,7 +50,7 @@ export default function AdminDashboard({ loaderData }: Route.ComponentProps) {
         ))}
       </div>
 
-      <div className="mt-8 fx-admin-grid-2">
+      <div className="fx-admin-grid-2">
         <AdminCard title="Recent signups">
           {stats.recentSignups.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">

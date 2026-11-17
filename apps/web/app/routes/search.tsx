@@ -63,34 +63,37 @@ export default function Search({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <PageHeader eyebrow="Find your next read" title="Search" />
-        <SearchBox initialQuery={q} />
-
-        {result ? (
-          <>
-            <FilterBar genres={genres} active={filters} />
-            <GroupedResults
-              q={q}
-              books={result.books}
-              bookTotal={result.total}
-              fuzzy={result.fuzzy}
-              authors={authors}
-            />
-            <Pager
-              page={result.page}
-              pageCount={result.pageCount}
-              hrefFor={hrefFor}
-              label="Result pages"
-            />
-          </>
-        ) : (
-          <p className="cap-text mt-8" data-tone="muted" data-face="ui">
-            Start typing to search, or{" "}
-            <Link to="/books" className="link">
-              browse the whole library
-            </Link>
-            .
-          </p>
-        )}
+        <div className="cap-stack" data-gap="7">
+          <div className="cap-stack" data-gap="6">
+            <SearchBox initialQuery={q} />
+            {result ? <FilterBar genres={genres} active={filters} /> : null}
+          </div>
+          {result ? (
+            <div className="cap-stack" data-gap="8">
+              <GroupedResults
+                q={q}
+                books={result.books}
+                bookTotal={result.total}
+                fuzzy={result.fuzzy}
+                authors={authors}
+              />
+              <Pager
+                page={result.page}
+                pageCount={result.pageCount}
+                hrefFor={hrefFor}
+                label="Result pages"
+              />
+            </div>
+          ) : (
+            <p className="cap-text" data-tone="muted" data-face="ui">
+              Start typing to search, or{" "}
+              <Link to="/books" className="link">
+                browse the whole library
+              </Link>
+              .
+            </p>
+          )}
+        </div>
       </Container>
     </PageShell>
   );

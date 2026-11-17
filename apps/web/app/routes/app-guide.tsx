@@ -97,7 +97,7 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <p className="mt-16 fx-guide-text">
+        <p className="fx-guide-text">
           New to Foxing?{" "}
           <Link to="/guide" className="link">
             Read the web guide

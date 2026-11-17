@@ -20,8 +20,8 @@ export function loader() {
 export default function GoalsDemo({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
-      <Container className="fx-goals-wrap">
-        <PageHeader eyebrow="Reading" title="Reading goals" className="mb-0" />
+      <Container className="cap-stack" data-gap="7">
+        <PageHeader eyebrow="Reading" title="Reading goals" />
         <DemoNotice />
         <ReadingActivity weeks={loaderData.weeks} streak={loaderData.streak} />
       </Container>
