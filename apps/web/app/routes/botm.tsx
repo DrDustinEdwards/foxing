@@ -44,61 +44,65 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
           lede="One book, chosen each month, to read together."
         />
 
-        {!current?.book ? (
-          <EmptyState title="No pick yet" body="The next Book of the Month lands soon." />
-        ) : (
-          <article className="cap-card fx-botm-card">
-            <div className="fx-botm-box">
-              <Link to={`/books/${current.book.slug}`}>
-                <CoverImage
-                  src={current.book.coverUrl}
-                  alt={`${current.book.title} by ${current.book.author}`}
-                  fallbackLabel={current.book.title}
-                  priority
-                  sizes="(min-width: 64rem) 240px, 60vw"
-                />
-              </Link>
-            </div>
-            <div>
-              <Eyebrow>{monthLabel(current.year, current.month)}</Eyebrow>
-              <h2 className="mt-2 fx-botm-title">
-                <Link to={`/books/${current.book.slug}`} className="hover-accent">
-                  {current.book.title}
+        <div className="cap-stack" data-gap="9">
+          {!current?.book ? (
+            <EmptyState title="No pick yet" body="The next Book of the Month lands soon." />
+          ) : (
+            <article className="cap-card fx-botm-card">
+              <div className="fx-botm-box">
+                <Link to={`/books/${current.book.slug}`}>
+                  <CoverImage
+                    src={current.book.coverUrl}
+                    alt={`${current.book.title} by ${current.book.author}`}
+                    fallbackLabel={current.book.title}
+                    priority
+                    sizes="(min-width: 64rem) 240px, 60vw"
+                  />
                 </Link>
-              </h2>
-              <p className="mt-2 fx-botm-text">{current.book.author}</p>
-              {current.curatorNote ? (
-                <p className="mt-5 fx-botm-text-2">{current.curatorNote}</p>
-              ) : null}
-              <div className="mt-6">
-                <Button to={`/books/${current.book.slug}`}>View the book</Button>
               </div>
-            </div>
-          </article>
-        )}
-
-        {archive.length > 0 ? (
-          <section className="mt-16">
-            <h2 className="mb-6 fx-botm-title-2">Past picks</h2>
-            <ul className="fx-botm-grid">
-              {archive.map((e) =>
-                e.book ? (
-                  <li key={e.id}>
-                    <Link to={`/books/${e.book.slug}`} className="block">
-                      <CoverImage
-                        src={e.book.coverUrl}
-                        alt={`${e.book.title} by ${e.book.author}`}
-                        fallbackLabel={e.book.title}
-                        sizes="160px"
-                      />
-                      <p className="mt-2 fx-botm-caps">{monthLabel(e.year, e.month)}</p>
+              <div className="cap-stack" data-gap="6">
+                <div className="cap-stack" data-gap="3">
+                  <Eyebrow>{monthLabel(current.year, current.month)}</Eyebrow>
+                  <h2 className="fx-botm-title">
+                    <Link to={`/books/${current.book.slug}`} className="hover-accent">
+                      {current.book.title}
                     </Link>
-                  </li>
-                ) : null,
-              )}
-            </ul>
-          </section>
-        ) : null}
+                  </h2>
+                  <p className="fx-botm-text">{current.book.author}</p>
+                </div>
+                {current.curatorNote ? (
+                  <p className="fx-botm-text-2">{current.curatorNote}</p>
+                ) : null}
+                <div>
+                  <Button to={`/books/${current.book.slug}`}>View the book</Button>
+                </div>
+              </div>
+            </article>
+          )}
+
+          {archive.length > 0 ? (
+            <section className="cap-stack" data-gap="6">
+              <h2 className="fx-botm-title-2">Past picks</h2>
+              <ul className="fx-botm-grid">
+                {archive.map((e) =>
+                  e.book ? (
+                    <li key={e.id}>
+                      <Link to={`/books/${e.book.slug}`} className="cap-stack" data-gap="3">
+                        <CoverImage
+                          src={e.book.coverUrl}
+                          alt={`${e.book.title} by ${e.book.author}`}
+                          fallbackLabel={e.book.title}
+                          sizes="160px"
+                        />
+                        <p className="fx-botm-caps">{monthLabel(e.year, e.month)}</p>
+                      </Link>
+                    </li>
+                  ) : null,
+                )}
+              </ul>
+            </section>
+          ) : null}
+        </div>
       </Container>
     </PageShell>
   );
