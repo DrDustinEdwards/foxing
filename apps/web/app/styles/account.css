@@ -97,11 +97,6 @@
   line-height: var(--line-box-6);
   color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
 }
-.fx-paywall-list {
-  & > * + * {
-    margin-top: var(--space-3);
-  }
-}
 .fx-paywall-row-2,
 .fx-goals-label,
 .fx-journal-post-row {
@@ -122,6 +117,7 @@
   color: color-mix(in srgb, var(--fx-on-dark) 60%, transparent);
 }
 .fx-paywall-text-3 {
+  padding-block: var(--space-3);
   border-radius: var(--radius-m);
   border: var(--line-w) solid color-mix(in srgb, var(--accent) 60%, transparent);
   color: var(--fx-on-dark);

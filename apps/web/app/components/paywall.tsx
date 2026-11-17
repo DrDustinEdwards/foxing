@@ -60,23 +60,25 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
       className="fx-paywall-card"
     >
       <link rel="stylesheet" href={planChoiceCss} precedence="default" />
-      <p id={titleId} className="fx-paywall-title">
-        <span aria-hidden="true">🦊</span> Foxing Plus
-      </p>
-      <p className="mt-1 italic fx-paywall-text">your AI reading companion.</p>
+      <div className="cap-stack" data-gap="6">
+        <div className="cap-stack" data-gap="2">
+          <p id={titleId} className="fx-paywall-title">
+            <span aria-hidden="true">🦊</span> Foxing Plus
+          </p>
+          <p className="italic fx-paywall-text">your AI reading companion.</p>
+        </div>
 
-      <ul className="mt-5 fx-paywall-list">
-        {FEATURES.map((f) => (
-          <li key={f} className="fx-paywall-row-2">
-            <span aria-hidden="true" className="fx-mark">
-              +
-            </span>
-            {f}
-          </li>
-        ))}
-      </ul>
+        <ul className="cap-stack" data-gap="3">
+          {FEATURES.map((f) => (
+            <li key={f} className="fx-paywall-row-2">
+              <span aria-hidden="true" className="fx-mark">
+                +
+              </span>
+              {f}
+            </li>
+          ))}
+        </ul>
 
-      <div className="mt-6">
         <PlanChoice
           name="plan"
           className="fx-paywall-plans"
@@ -91,37 +93,41 @@ export function Paywall({ open, onClose }: { open: boolean; onClose: () => void 
             note: PLANS[key].note,
           }))}
         />
+
+        <div className="cap-stack" data-gap="4">
+          <div className="cap-stack" data-gap="3">
+            <button
+              type="button"
+              onClick={() => void startTrial()}
+              disabled={pending}
+              className="cap-btn fx-paywall-btn-2"
+              data-variant="primary"
+              data-size="lg"
+            >
+              {pending ? "Starting..." : "Start free 7-day trial"}
+            </button>
+            <p className="cap-text fx-paywall-text-2" data-align="center">
+              No charge until trial ends. Cancel anytime.
+            </p>
+          </div>
+
+          {error ? (
+            <p className="cap-text fx-paywall-text-3" data-align="center" role="alert">
+              {error}
+            </p>
+          ) : null}
+
+          <p className="cap-text fx-paywall-text-2" data-align="center">
+            <Link to="/privacy" className="fx-paywall-link">
+              Privacy
+            </Link>
+            <span aria-hidden="true"> · </span>
+            <Link to="/terms" className="fx-paywall-link">
+              Terms
+            </Link>
+          </p>
+        </div>
       </div>
-
-      <button
-        type="button"
-        onClick={() => void startTrial()}
-        disabled={pending}
-        className="cap-btn mt-5 fx-paywall-btn-2"
-        data-variant="primary"
-        data-size="lg"
-      >
-        {pending ? "Starting..." : "Start free 7-day trial"}
-      </button>
-      <p className="cap-text mt-2 fx-paywall-text-2" data-align="center">
-        No charge until trial ends. Cancel anytime.
-      </p>
-
-      {error ? (
-        <p className="cap-text mt-3 py-2 fx-paywall-text-3" data-align="center" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <p className="cap-text mt-4 fx-paywall-text-2" data-align="center">
-        <Link to="/privacy" className="fx-paywall-link">
-          Privacy
-        </Link>
-        <span aria-hidden="true"> · </span>
-        <Link to="/terms" className="fx-paywall-link">
-          Terms
-        </Link>
-      </p>
       {/* Last in the order, as Capsomer's Close is, so opening focuses the chosen plan. */}
       <DialogClose label="Dismiss" className="fx-paywall-btn" />
     </Dialog>
