@@ -49,7 +49,7 @@ export function Card({ title, children }: { title: string; children: React.React
       <h2 className="cap-title" data-size="4">
         {title}
       </h2>
-      <div>{children}</div>
+      <div className="cap-stack">{children}</div>
     </section>
   );
 }
