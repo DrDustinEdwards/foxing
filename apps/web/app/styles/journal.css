@@ -3,8 +3,8 @@
 /* Journal article prose: Source Serif body on a comfortable measure. */
 .article-prose {
   font-family: var(--fx-body);
-  font-size: 1.1875rem;
-  line-height: 1.75;
+  font-size: var(--fs-h3);
+  line-height: var(--leading-airy);
   color: var(--muted);
 }
 .article-prose > * + * {
@@ -17,10 +17,10 @@
   margin-block-start: 1.8em;
 }
 .article-prose h2 {
-  font-size: 1.6rem;
+  font-size: var(--title-3);
 }
 .article-prose h3 {
-  font-size: 1.3rem;
+  font-size: var(--title-4);
 }
 .article-prose a {
   color: var(--accent-text);
@@ -33,12 +33,12 @@
 }
 .article-prose blockquote {
   border-inline-start: var(--line-w-bar) solid var(--accent-line);
-  padding-inline-start: 1.1rem;
+  padding-inline-start: var(--space-5);
   font-style: italic;
   color: var(--dim);
 }
 .article-prose :is(ul, ol) {
-  padding-inline-start: 1.3rem;
+  padding-inline-start: var(--space-5-5);
 }
 .article-prose ul {
   list-style: disc;
@@ -58,14 +58,10 @@
   }
 }
 .fx-journal-archive-link-2 {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-5);
-  border-radius: var(--radius-m);
   padding-inline: var(--space-3);
   margin-inline: calc(-1 * var(--space-3));
   transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
+  transition-duration: var(--dur-quick);
   &:hover {
     background-color: var(--fx-hover);
   }
@@ -76,24 +72,9 @@
 }
 .fx-journal-archive-text {
   margin-top: var(--space-1);
-  font-family: var(--fx-body);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
-.fx-journal-archive-label,
-.fx-u-profile-text-3 {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
 }
 
 .fx-journal-post-row {
-  gap: var(--space-3);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
   color: var(--dim);
 }
 .fx-journal-post-img {
@@ -118,13 +99,13 @@
   display: grid;
 }
 .fx-journal-tag-card {
-  --pad-card: 1.25rem;
+  --pad-card: var(--space-5-5);
   --card-shadow: var(--shadow-s);
 }
 .fx-journal-tag-title {
   font-family: var(--display);
   font-size: var(--fs-h3);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -132,11 +113,6 @@
 }
 .fx-journal-tag-text,
 .fx-journal-text-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  font-family: var(--fx-body);
   color: var(--muted);
 }
 
@@ -161,7 +137,7 @@
 .fx-journal-card {
   gap: var(--space-6);
   --radius-l: var(--fx-radius-hero);
-  --pad-card: 1.25rem;
+  --pad-card: var(--space-5-5);
   --card-shadow: var(--shadow-s);
   @media (min-width: 40rem) {
     --pad-card: var(--space-7);
@@ -188,20 +164,15 @@
 .fx-journal-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
 .fx-journal-text-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  font-family: var(--fx-body);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--muted);
 }
 .fx-journal-card-2 {
@@ -217,7 +188,7 @@
 .fx-journal-title-2 {
   font-family: var(--display);
   font-size: var(--title-4);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
@@ -225,8 +196,4 @@
 }
 .fx-journal-row-2 {
   gap: var(--space-3);
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
 }

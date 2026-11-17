@@ -1,9 +1,5 @@
 .fx-book-picker-label {
   min-width: 0;
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--text);
 }
 .fx-book-picker-label-2 {
   font-weight: var(--weight-medium);
@@ -38,10 +34,6 @@
   border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
   padding: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
 }
 .fx-admin-notifications-text-2 {
   color: var(--accent-text);
@@ -49,10 +41,6 @@
 
 .fx-admin-user-detail-text {
   margin-top: var(--space-1);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--text);
 }
 .fx-admin-user-detail-card {
   --radius-l: 0.375rem;
@@ -62,7 +50,7 @@
 .fx-admin-user-detail-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 2.25rem;
+  line-height: var(--line-box-9);
   color: var(--text);
 }
 .fx-admin-user-detail-grid {
@@ -79,14 +67,14 @@
 }
 .fx-admin-user-detail-box {
   border-block-start: var(--line-w) solid var(--line);
-  padding-top: 1.25rem;
+  padding-top: var(--space-5-5);
   & > * + * {
     margin-top: var(--space-3);
   }
 }
 .fx-admin-user-detail-box-2 {
   border-block-start: var(--line-w) solid color-mix(in srgb, var(--crit) 40%, transparent);
-  padding-top: 1.25rem;
+  padding-top: var(--space-5-5);
   & > * + * {
     margin-top: var(--space-3);
   }
@@ -101,7 +89,7 @@
   border: var(--line-w) solid var(--crit);
   padding: var(--space-1) var(--space-3);
   font-family: var(--mono);
-  font-size: 0.6rem;
+  font-size: var(--fs-tiny);
   text-transform: uppercase;
   color: var(--crit);
 }
@@ -115,13 +103,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-.fx-admin-text,
-.fx-admin-analytics-text {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--muted);
-}
 .fx-admin-grid-2 {
   display: grid;
   gap: var(--space-6);
@@ -131,10 +112,6 @@
 }
 .fx-admin-link,
 .fx-admin-user-detail-link {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
   &:hover {
     color: var(--accent-text);
   }
@@ -142,7 +119,7 @@
 .fx-admin-label {
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--muted);
 }
 

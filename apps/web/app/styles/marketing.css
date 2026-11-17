@@ -16,7 +16,7 @@
 }
 .fx-values {
   display: grid;
-  gap: 2.5rem;
+  gap: var(--space-7-5);
 }
 @media (min-width: 40rem) {
   .fx-values {
@@ -60,10 +60,6 @@
   gap: var(--space-5);
   border-block-end: var(--line-w) solid var(--line);
   padding-bottom: var(--space-6);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--accent-text);
 }
 .fx-guide-link {
   &:hover {
@@ -71,36 +67,33 @@
   }
 }
 .fx-guide-section {
-  margin-bottom: 3.5rem;
-  scroll-margin-top: 6rem;
+  margin-bottom: var(--space-8-5);
+  scroll-margin-top: var(--space-10);
 }
 .fx-guide-title {
   font-family: var(--display);
   font-size: var(--title-3);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   color: var(--text);
 }
 .fx-guide-text-2,
-.fx-about-text {
+.fx-about-text,
+.fx-guide-row-2 {
   font-family: var(--fx-body);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--muted);
 }
 .fx-guide-row-2 {
   display: flex;
   gap: var(--space-3);
-  font-family: var(--fx-body);
-  font-size: var(--title-6);
-  line-height: 1.5rem;
-  color: var(--muted);
 }
 
 /* The accessibility statement: Prelum's markup (h2, p, ul, a) in the legal pages' type. */
 .fx-statement {
   font-family: var(--ui);
   font-size: var(--title-6);
-  line-height: 1.625;
+  line-height: var(--leading-relaxed-5);
   color: var(--muted);
   & > * + * {
     margin-top: var(--space-5);
@@ -115,10 +108,10 @@
   }
   & ul {
     list-style: disc;
-    padding-inline-start: 1.3rem;
+    padding-inline-start: var(--space-5-5);
   }
   & li + li {
-    margin-top: 0.4rem;
+    margin-top: var(--space-2-5);
   }
   & a {
     color: var(--accent-text);

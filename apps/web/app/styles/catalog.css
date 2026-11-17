@@ -16,7 +16,7 @@
   }
   & > :is(h2, h3) {
     font-family: var(--display);
-    line-height: 1.35;
+    line-height: var(--leading-snug-5);
     color: var(--text);
   }
 }
@@ -73,7 +73,7 @@ a:hover > .fx-book > :is(h2, h3) {
   overflow-wrap: anywhere;
   font-family: var(--display);
   font-size: var(--fs-body);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   color: var(--dim);
 }
 
@@ -124,18 +124,36 @@ a:hover > .fx-book > :is(h2, h3) {
   gap: var(--space-3);
 }
 .fx-book-status-control-text,
-.fx-onboarding-label-2 {
-  margin-top: var(--space-2-5);
+.fx-onboarding-label-2,
+.fx-diary-link-2,
+.fx-highlights-text,
+.fx-u-profile-label-3,
+.fx-club-sections-btn,
+.fx-club-schedule-btn-3,
+.fx-preference-sections-label,
+.fx-journal-tag-text-2,
+.fx-commonplace-text-2,
+.fx-goals-text-2,
+.fx-library-text,
+.fx-goals-text-4,
+.fx-journal-row-2 {
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
-.fx-book-status-control-text-2 {
+.fx-book-status-control-text,
+.fx-onboarding-label-2 {
+  margin-top: var(--space-2-5);
+}
+.fx-book-status-control-text-2,
+.fx-u-profile-label-4 {
   margin-top: var(--space-2-5);
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
+}
+.fx-book-status-control-text-2 {
   color: var(--crit);
 }
 
@@ -174,7 +192,7 @@ a:hover > .fx-book > :is(h2, h3) {
   padding: var(--space-4) var(--space-5);
   box-shadow: var(--shadow-s);
   @media (prefers-reduced-motion: no-preference) {
-    transition: box-shadow 150ms;
+    transition: box-shadow var(--dur-quick);
   }
   &:hover {
     box-shadow: var(--shadow-m);
@@ -183,38 +201,37 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-grouped-results-title {
   font-family: var(--display);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: var(--text);
 }
 .fx-grouped-results-label,
 .fx-people-label-2,
 .fx-lists-text-2,
 .fx-notifications-text-3,
-.fx-preference-sections-label-3 {
+.fx-preference-sections-label-3,
+.fx-feed-link-2,
+.fx-u-profile-text-4,
+.fx-journal-archive-label,
+.fx-u-profile-text-3 {
   font-family: var(--mono);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
   color: var(--dim);
 }
 
 .fx-award-detail-caps {
   margin-top: var(--space-2-5);
   padding-inline: var(--space-1);
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--dim);
 }
 
 .fx-awards-title,
 .fx-picks-title {
   font-family: var(--display);
   font-size: var(--title-4);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--text);
   transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
+  transition-duration: var(--dur-quick);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
@@ -222,7 +239,7 @@ a:hover > .fx-book > :is(h2, h3) {
 
 .fx-book-detail-grid {
   display: grid;
-  gap: 2.5rem;
+  gap: var(--space-7-5);
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
   }
@@ -230,7 +247,7 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-book-detail-box {
   @media (min-width: 64rem) {
     position: sticky;
-    top: 6rem;
+    top: var(--space-10);
     align-self: flex-start;
   }
 }
@@ -250,9 +267,9 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-journal-post-title {
   font-family: var(--display);
   font-size: var(--title-1);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   @media (min-width: 40rem) {
-    font-size: 3rem;
+    font-size: var(--display-3);
     line-height: var(--leading-none);
   }
 }
@@ -260,7 +277,7 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-botm-text {
   font-family: var(--ui);
   font-size: var(--fs-h3);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--muted);
 }
 .fx-book-detail-row,
@@ -275,37 +292,35 @@ a:hover > .fx-book > :is(h2, h3) {
   flex-direction: column;
   gap: var(--space-2-5);
 }
-.fx-book-detail-box-3 {
+.fx-book-detail-box-3,
+.fx-botm-text-2 {
   max-width: 65ch;
   font-family: var(--fx-body);
   font-size: var(--fs-h3);
-  line-height: 1.625;
+  line-height: var(--leading-relaxed-5);
   color: var(--muted);
+}
+.fx-book-detail-box-3 {
   & > p {
     margin-top: var(--space-5);
   }
 }
 .fx-book-detail-section {
-  margin-top: 5rem;
+  margin-top: var(--space-9-5);
 }
 .fx-book-detail-title-2,
 .fx-botm-title-2 {
   font-family: var(--display);
   font-size: var(--title-3);
-  line-height: 2rem;
+  line-height: var(--line-box-8);
 }
 
 .fx-books-caps {
   margin-bottom: var(--space-3-5);
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--dim);
 }
 .fx-books-card {
   gap: var(--space-6);
-  --pad-card: 1.25rem;
+  --pad-card: var(--space-5-5);
 }
 .fx-books-row,
 .fx-find-next-book-card,
@@ -329,7 +344,7 @@ a:hover > .fx-book > :is(h2, h3) {
   --pad-card: var(--space-6);
   --card-shadow: var(--shadow-m);
   @media (min-width: 40rem) {
-    --pad-card: 2.5rem;
+    --pad-card: var(--space-7-5);
   }
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
@@ -346,14 +361,7 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-botm-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 1.25;
-}
-.fx-botm-text-2 {
-  max-width: 65ch;
-  font-family: var(--fx-body);
-  font-size: var(--fs-h3);
-  line-height: 1.625;
-  color: var(--muted);
+  line-height: var(--leading-tight-5);
 }
 .fx-botm-grid,
 .fx-find-next-book-grid,
@@ -370,15 +378,6 @@ a:hover > .fx-book > :is(h2, h3) {
   @media (min-width: 64rem) {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-}
-.fx-botm-caps,
-.fx-picks-caps,
-.fx-pick-club-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--dim);
 }
 
 .fx-find-next-book-row,
@@ -407,7 +406,7 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-admin-user-detail-text-2 {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
 }
 .fx-find-next-book-btn {
   font-weight: var(--weight-medium);
@@ -438,13 +437,23 @@ a:hover > .fx-book > :is(h2, h3) {
   padding-inline: var(--space-1);
 }
 .fx-find-next-book-title,
-.fx-journal-archive-title {
+.fx-journal-archive-title,
+.fx-onboarding-title-2,
+.fx-pick-club-title,
+.fx-library-link-2 {
   font-family: var(--display);
   font-size: var(--title-6);
-  line-height: 1.375;
+  line-height: var(--leading-snug-5);
   color: var(--text);
+}
+.fx-find-next-book-title,
+.fx-journal-archive-title,
+.fx-onboarding-title-2 {
   transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
+  transition-duration: var(--dur-quick);
+}
+.fx-find-next-book-title,
+.fx-journal-archive-title {
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
@@ -460,7 +469,7 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-goals-btn-2 {
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
 }
 .fx-find-next-book-text {
   color: var(--accent-text);

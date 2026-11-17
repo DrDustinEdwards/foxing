@@ -75,7 +75,7 @@
   inline-size: 100%;
   max-inline-size: 72rem;
   margin-inline: auto;
-  padding-inline: 1.25rem;
+  padding-inline: var(--space-5-5);
 }
 @media (min-width: 40rem) {
   .fx-wrap {
@@ -162,7 +162,7 @@
   margin-block-start: var(--space-7);
 }
 .mt-10 {
-  margin-block-start: 2.5rem;
+  margin-block-start: var(--space-7-5);
 }
 .mt-12 {
   margin-block-start: var(--space-8);
@@ -171,13 +171,13 @@
   margin-block-start: var(--space-9);
 }
 .mt-5 {
-  margin-block-start: 1.25rem;
+  margin-block-start: var(--space-5-5);
 }
 .mb-1 {
   margin-block-end: var(--space-2);
 }
 .mb-5 {
-  margin-block-end: 1.25rem;
+  margin-block-end: var(--space-5-5);
 }
 .mb-2 {
   margin-block-end: var(--space-3);
@@ -195,7 +195,7 @@
   margin-block-end: var(--space-7);
 }
 .mb-10 {
-  margin-block-end: 2.5rem;
+  margin-block-end: var(--space-7-5);
 }
 
 /* Text roles are Capsomer's (.cap-text, .cap-title, .cap-clamp in capsomer/text.css), at
@@ -215,25 +215,37 @@
 .fx-grouped-results-caps,
 .fx-onboarding-caps {
   font-family: var(--mono);
-  font-size: 0.6875rem;
+  font-size: var(--fs-tiny-5);
   text-transform: uppercase;
-  letter-spacing: 0.18em;
+  letter-spacing: var(--tracking-spread);
   color: var(--dim);
 }
 .group-label,
-.fx-journal-tag-caps {
+.fx-journal-tag-caps,
+.fx-books-caps,
+.fx-award-detail-caps,
+.fx-botm-caps,
+.fx-picks-caps,
+.fx-pick-club-caps {
   font-family: var(--mono);
   font-size: var(--fs-tiny);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
+  letter-spacing: var(--tracking-spaced);
   color: var(--dim);
 }
 .card-label {
   font-family: var(--mono);
-  font-size: 0.6875rem;
+  font-size: var(--fs-tiny-5);
   text-transform: uppercase;
   letter-spacing: var(--tracking-widest);
   color: var(--dim);
+}
+.badge,
+.fx-acct-foot {
+  font-family: var(--mono);
+  font-size: var(--fs-tiny);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
 }
 .badge {
   display: inline-flex;
@@ -242,10 +254,6 @@
   padding: var(--space-1) var(--space-3);
   background: var(--accent-soft);
   color: var(--accent-text);
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-widest);
   white-space: nowrap;
 }
 .badge-quiet {

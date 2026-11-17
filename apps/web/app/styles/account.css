@@ -10,43 +10,31 @@
   min-height: 100dvh;
   place-items: center;
   background-color: var(--ground);
-  padding: var(--space-8) 1.25rem;
+  padding: var(--space-8) var(--space-5-5);
 }
 .fx-auth-shell-box {
   width: 100%;
   max-width: 24rem;
 }
-.fx-auth-shell-link {
+.fx-auth-shell-link,
+.fx-paywall-title {
   font-family: var(--display);
   font-size: var(--title-3);
-  line-height: 2rem;
+  line-height: var(--line-box-8);
   font-weight: var(--weight-semibold);
+}
+.fx-auth-shell-link {
   color: var(--text);
 }
 .fx-auth-shell-card {
-  --pad-card: 1.75rem;
+  --pad-card: var(--space-6-5);
   --card-shadow: var(--shadow-m);
 }
 .fx-auth-shell-text {
   margin-top: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
-.fx-auth-shell-box-2,
-.fx-grouped-results-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--dim);
 }
 .fx-auth-shell-label {
   margin-bottom: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  font-weight: var(--weight-medium);
   color: var(--muted);
 }
 .fx-auth-shell-link-2 {
@@ -67,7 +55,7 @@
 }
 .fx-auth-shell-label-3 {
   text-transform: uppercase;
-  letter-spacing: 0.025em;
+  letter-spacing: var(--tracking-wide);
   color: var(--dim);
 }
 .fx-auth-shell-text-2 {
@@ -75,10 +63,6 @@
   border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
   padding: var(--space-3-5) var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
 }
 
 /* The paywall's look on Capsomer's dialog (paywall.tsx): Capsomer places, sizes and animates it. */
@@ -101,22 +85,16 @@
   border-radius: var(--radius-full);
   color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
   transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
+  transition-duration: var(--dur-quick);
   &:hover {
     background-color: color-mix(in srgb, #fff 10%, transparent);
     color: var(--fx-on-dark);
   }
 }
-.fx-paywall-title {
-  font-family: var(--display);
-  font-size: var(--title-3);
-  line-height: 2rem;
-  font-weight: var(--weight-semibold);
-}
 .fx-paywall-text {
   font-family: var(--fx-body);
   font-size: var(--title-6);
-  line-height: 1.5rem;
+  line-height: var(--line-box-6);
   color: color-mix(in srgb, var(--fx-on-dark) 70%, transparent);
 }
 .fx-paywall-list {
@@ -124,12 +102,16 @@
     margin-top: var(--space-3);
   }
 }
-.fx-paywall-row-2 {
-  display: flex;
+.fx-paywall-row-2,
+.fx-goals-label,
+.fx-journal-post-row {
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
+}
+.fx-paywall-row-2 {
+  display: flex;
   color: color-mix(in srgb, var(--fx-on-dark) 90%, transparent);
 }
 .fx-paywall-btn-2,
@@ -142,10 +124,6 @@
 .fx-paywall-text-3 {
   border-radius: var(--radius-m);
   border: var(--line-w) solid color-mix(in srgb, var(--accent) 60%, transparent);
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
   color: var(--fx-on-dark);
 }
 .fx-paywall-link {
@@ -154,19 +132,10 @@
     color: var(--fx-on-dark);
   }
 }
-
-.fx-account-sections-label,
-.fx-account-sections-text,
-.fx-guide-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
-}
 .fx-account-sections-label-3 {
   font-family: var(--ui);
   font-size: var(--fs-small);
-  line-height: 1rem;
+  line-height: var(--line-box-4);
 }
 .fx-account-sections-label-4 {
   color: var(--ok);
@@ -179,7 +148,7 @@
 .fx-account-sections-field {
   font-family: var(--ui);
   font-size: var(--fs-body);
-  line-height: 1.25rem;
+  line-height: var(--line-box-5);
 }
 .fx-account-sections-card {
   border-radius: var(--radius-l);
@@ -190,17 +159,8 @@
 .fx-account-sections-title {
   font-family: var(--display);
   font-size: var(--title-4);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   color: var(--crit);
-}
-
-.fx-preference-sections-label,
-.fx-journal-tag-text-2,
-.fx-commonplace-text-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: 1rem;
-  color: var(--dim);
 }
 .fx-preference-sections-stack,
 .fx-settings-card-stack {
@@ -228,21 +188,16 @@
   background-color: var(--ground);
   padding-inline: var(--space-4);
 }
-.fx-preference-sections-label-2,
-.fx-people-label,
-.fx-goals-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  font-weight: var(--weight-medium);
-  color: var(--text);
-}
 
-.fx-settings-card-card {
+.fx-settings-card-card,
+.fx-journal-archive-link-2 {
   display: flex;
   justify-content: space-between;
   gap: var(--space-5);
   border-radius: var(--radius-m);
+}
+
+.fx-settings-card-card {
   border: var(--line-w) solid var(--line);
   background-color: var(--ground);
   padding: var(--space-4);
@@ -258,21 +213,21 @@
   min-height: 100dvh;
   max-width: 42rem;
   flex-direction: column;
-  padding: 2.5rem 1.25rem;
+  padding: var(--space-7-5) var(--space-5-5);
 }
 .fx-onboarding-link {
   font-family: var(--display);
   font-size: var(--title-4);
-  line-height: 1.75rem;
+  line-height: var(--line-box-7);
   font-weight: var(--weight-semibold);
 }
 .fx-onboarding-title {
   font-family: var(--display);
   font-size: var(--title-2);
-  line-height: 1.25;
+  line-height: var(--leading-tight-5);
   @media (min-width: 40rem) {
     font-size: var(--title-1);
-    line-height: 2.5rem;
+    line-height: var(--line-box-10);
   }
 }
 .fx-onboarding-text {
@@ -280,11 +235,6 @@
 }
 .fx-onboarding-label {
   margin-bottom: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  font-weight: var(--weight-medium);
-  color: var(--text);
 }
 .fx-onboarding-label-3 {
   font-weight: var(--weight-regular);
@@ -301,28 +251,18 @@
 .fx-onboarding-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: var(--space-5-5);
   @media (min-width: 40rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 .fx-onboarding-title-2 {
-  font-family: var(--display);
-  font-size: var(--title-6);
-  line-height: 1.375;
-  color: var(--text);
-  transition-property: color, background-color, border-color;
-  transition-duration: 150ms;
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
 .fx-onboarding-btn-2,
 .fx-diary-form-btn {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
-  color: var(--muted);
   &:hover {
     color: var(--text);
   }
@@ -344,14 +284,4 @@
   --radius-m: var(--radius-l);
   /* The band is dark in both themes, so the radios draw dark rather than white. */
   color-scheme: dark;
-}
-
-.fx-diary-form-text {
-  border-radius: var(--radius-m);
-  border-width: var(--line-w);
-  border-style: solid;
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: 1.25rem;
 }
