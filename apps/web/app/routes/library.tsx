@@ -71,13 +71,13 @@ export default function Library({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container>
+      <Container className="cap-stack" data-gap="7">
         <h1 className="cap-title" data-size="1">
           Your library
         </h1>
 
-        <div className="mt-8 fx-library-grid">
-          <div>
+        <div className="fx-library-grid">
+          <div className="cap-stack" data-gap="6">
             <Tabs value={tab} onValueChange={(v) => setTab(v as ShelfStatus)}>
               <TabsList aria-label="Reading status">
                 {STATUS_TABS.map((t) => (
@@ -101,15 +101,19 @@ export default function Library({ loaderData }: Route.ComponentProps) {
               tabIndex={0}
             >
               {shown.length === 0 ? (
-                <EmptyState className="mt-10" title={EMPTY_COPY[tab]}>
+                <EmptyState title={EMPTY_COPY[tab]}>
                   <Link to="/books" className="cap-btn">
                     Find a book
                   </Link>
                 </EmptyState>
               ) : (
-                <div className="mt-6 fx-library-grid-2">
+                <div className="fx-library-grid-2">
                   {shown.map((e) => (
-                    <div key={e.bookId} className="cap-card fx-library-card-2">
+                    <div
+                      key={e.bookId}
+                      className="cap-card cap-stack fx-library-card-2"
+                      data-gap="5"
+                    >
                       <Link to={`/books/${e.slug}`} className="relative block">
                         <CoverImage
                           src={e.coverUrl}
@@ -139,20 +143,15 @@ export default function Library({ loaderData }: Route.ComponentProps) {
                           </span>
                         ) : null}
                       </Link>
-                      <div className="mt-3 fx-library-box">
+                      <div className="cap-stack fx-library-box" data-gap="2">
                         <Link to={`/books/${e.slug}`} className="fx-library-link-2">
                           {e.title}
                         </Link>
-                        <p
-                          className="cap-text mt-1"
-                          data-size="small"
-                          data-tone="dim"
-                          data-face="ui"
-                        >
+                        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
                           {e.author}
                         </p>
                       </div>
-                      <div className="mt-2 fx-library-box">
+                      <div className="fx-library-box">
                         <BookStatusControl
                           book={{
                             id: e.bookId,
@@ -215,67 +214,70 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
   const error = draft.error ?? remove.error;
 
   return (
-    <section className="cap-card">
-      <Eyebrow>Reading goals</Eyebrow>
-      {goals.length === 0 ? (
-        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-          No goals set.
-        </p>
-      ) : (
-        <ul className="cap-stack" data-gap="4">
-          {goals.map(({ goal, progress }) => (
-            <li key={goal.id}>
-              <div className="fx-library-row">
-                <span>
-                  {goal.target} {goal.type} in {goalPeriodLabel(goal)}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => remove.fire({ id: goal.id })}
-                  className="fx-library-btn"
-                >
-                  Remove
-                </button>
-              </div>
-              <Meter
-                className="mt-1"
-                label="Progress"
-                value={progress}
-                max={goal.target}
-                valueText={`${progress} of ${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="mt-3 fx-library-row-2">
-        <label className="cap-text" data-size="small" data-face="ui">
-          <span className="cap-sr-only">Books</span>
-          <input
-            type="number"
-            min={1}
-            value={draft.target}
-            onChange={(e) => draft.setTarget(Math.max(1, Number(e.target.value)))}
-            className="cap-input fx-library-input"
-          />
-        </label>
-        <GoalPeriodSelect value={draft.period} onChange={draft.setPeriod} />
-        <button
-          type="button"
-          onClick={draft.add}
-          disabled={draft.pending}
-          className="cap-btn"
-          data-size="sm"
-        >
-          Set
-        </button>
+    <section className="cap-card cap-stack" data-gap="5">
+      <div className="cap-stack" data-gap="3">
+        <Eyebrow>Reading goals</Eyebrow>
+        {goals.length === 0 ? (
+          <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+            No goals set.
+          </p>
+        ) : (
+          <ul className="cap-stack" data-gap="4">
+            {goals.map(({ goal, progress }) => (
+              <li key={goal.id} className="cap-stack" data-gap="2">
+                <div className="fx-library-row">
+                  <span>
+                    {goal.target} {goal.type} in {goalPeriodLabel(goal)}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => remove.fire({ id: goal.id })}
+                    className="fx-library-btn"
+                  >
+                    Remove
+                  </button>
+                </div>
+                <Meter
+                  label="Progress"
+                  value={progress}
+                  max={goal.target}
+                  valueText={`${progress} of ${goal.target} ${goal.type} in ${goalPeriodLabel(goal)}`}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-      {draft.pending ? (
-        <p className="mt-2 fx-library-text" role="status">
-          Saving...
-        </p>
-      ) : null}
-      <FormError error={error} className="mt-2" />
+      <div className="cap-stack" data-gap="3">
+        <div className="fx-library-row-2">
+          <label className="cap-text" data-size="small" data-face="ui">
+            <span className="cap-sr-only">Books</span>
+            <input
+              type="number"
+              min={1}
+              value={draft.target}
+              onChange={(e) => draft.setTarget(Math.max(1, Number(e.target.value)))}
+              className="cap-input fx-library-input"
+            />
+          </label>
+          <GoalPeriodSelect value={draft.period} onChange={draft.setPeriod} />
+          <button
+            type="button"
+            onClick={draft.add}
+            disabled={draft.pending}
+            className="cap-btn"
+            data-size="sm"
+          >
+            Set
+          </button>
+        </div>
+        {draft.pending ? (
+          <p className="fx-library-text" role="status">
+            Saving...
+          </p>
+        ) : null}
+        <FormError error={error} />
+      </div>
     </section>
   );
 }
@@ -292,53 +294,57 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
   }
 
   return (
-    <section className="cap-card">
-      <Eyebrow>Shelves</Eyebrow>
-      {shelves.length === 0 ? (
-        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-          No shelves yet.
-        </p>
-      ) : (
-        <ul className="fx-library-stack">
-          {shelves.map((s) => (
-            <li key={s.id} className="fx-library-row">
-              <Link to={`/shelves/${s.id}`} className="hover-accent">
-                {s.name}
-              </Link>
-              <button
-                type="button"
-                onClick={() => remove.fire({ id: s.id })}
-                className="fx-library-btn"
-              >
-                Remove
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      <div className="mt-3 fx-library-row-2">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="New shelf"
-          className="cap-input fx-library-input-2"
-        />
-        <button
-          type="button"
-          onClick={() => void addShelf()}
-          disabled={create.pending}
-          className="cap-btn"
-          data-size="sm"
-        >
-          Add
-        </button>
+    <section className="cap-card cap-stack" data-gap="5">
+      <div className="cap-stack" data-gap="3">
+        <Eyebrow>Shelves</Eyebrow>
+        {shelves.length === 0 ? (
+          <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
+            No shelves yet.
+          </p>
+        ) : (
+          <ul className="fx-library-stack">
+            {shelves.map((s) => (
+              <li key={s.id} className="fx-library-row">
+                <Link to={`/shelves/${s.id}`} className="hover-accent">
+                  {s.name}
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => remove.fire({ id: s.id })}
+                  className="fx-library-btn"
+                >
+                  Remove
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-      {create.pending ? (
-        <p className="mt-2 fx-library-text" role="status">
-          Saving...
-        </p>
-      ) : null}
-      <FormError error={error} className="mt-2" />
+      <div className="cap-stack" data-gap="3">
+        <div className="fx-library-row-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="New shelf"
+            className="cap-input fx-library-input-2"
+          />
+          <button
+            type="button"
+            onClick={() => void addShelf()}
+            disabled={create.pending}
+            className="cap-btn"
+            data-size="sm"
+          >
+            Add
+          </button>
+        </div>
+        {create.pending ? (
+          <p className="fx-library-text" role="status">
+            Saving...
+          </p>
+        ) : null}
+        <FormError error={error} />
+      </div>
     </section>
   );
 }
