@@ -10,7 +10,9 @@
   // global_fetch_strictly_public: the OAuth provider fetches a Client ID
   // Metadata Document (CIMD) from the client's URL. At this compatibility date
   // nodejs_compat is on by default, which the MCP SDK needs.
-  "compatibility_flags": ["global_fetch_strictly_public"],
+  // enable_request_signal: request.signal fires on a client disconnect (site-runtime reads it); on by
+  // default only from a compatibility date of 2026-11-17.
+  "compatibility_flags": ["global_fetch_strictly_public", "enable_request_signal"],
 
   // Logs: every invocation (head_sampling_rate 1), stated so a change to it is a reviewed one; an admin
   // server's traffic is one person's.
