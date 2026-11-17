@@ -153,8 +153,7 @@
   }
 }
 .fx-club-new-field,
-.fx-club-thread-field,
-.fx-onboarding-legend {
+.fx-club-thread-field {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: 1.25rem;
