@@ -124,18 +124,36 @@ a:hover > .fx-book > :is(h2, h3) {
   gap: var(--space-3);
 }
 .fx-book-status-control-text,
-.fx-onboarding-label-2 {
-  margin-top: var(--space-2-5);
+.fx-onboarding-label-2,
+.fx-diary-link-2,
+.fx-highlights-text,
+.fx-u-profile-label-3,
+.fx-club-sections-btn,
+.fx-club-schedule-btn-3,
+.fx-preference-sections-label,
+.fx-journal-tag-text-2,
+.fx-commonplace-text-2,
+.fx-goals-text-2,
+.fx-library-text,
+.fx-goals-text-4,
+.fx-journal-row-2 {
   font-family: var(--ui);
   font-size: var(--fs-small);
   line-height: var(--line-box-4);
   color: var(--dim);
 }
-.fx-book-status-control-text-2 {
+.fx-book-status-control-text,
+.fx-onboarding-label-2 {
+  margin-top: var(--space-2-5);
+}
+.fx-book-status-control-text-2,
+.fx-u-profile-label-4 {
   margin-top: var(--space-2-5);
   font-family: var(--ui);
   font-size: var(--fs-small);
   line-height: var(--line-box-4);
+}
+.fx-book-status-control-text-2 {
   color: var(--crit);
 }
 
@@ -190,21 +208,31 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-people-label-2,
 .fx-lists-text-2,
 .fx-notifications-text-3,
-.fx-preference-sections-label-3 {
+.fx-preference-sections-label-3,
+.fx-feed-link-2,
+.fx-u-profile-text-4,
+.fx-journal-archive-label,
+.fx-u-profile-text-3 {
   font-family: var(--mono);
   font-size: var(--fs-small);
   line-height: var(--line-box-4);
   color: var(--dim);
 }
 
-.fx-award-detail-caps {
-  margin-top: var(--space-2-5);
-  padding-inline: var(--space-1);
+.fx-award-detail-caps,
+.fx-botm-caps,
+.fx-picks-caps,
+.fx-pick-club-caps {
   font-family: var(--mono);
   font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: var(--tracking-spaced);
   color: var(--dim);
+}
+
+.fx-award-detail-caps {
+  margin-top: var(--space-2-5);
+  padding-inline: var(--space-1);
 }
 
 .fx-awards-title,
@@ -275,12 +303,15 @@ a:hover > .fx-book > :is(h2, h3) {
   flex-direction: column;
   gap: var(--space-2-5);
 }
-.fx-book-detail-box-3 {
+.fx-book-detail-box-3,
+.fx-botm-text-2 {
   max-width: 65ch;
   font-family: var(--fx-body);
   font-size: var(--fs-h3);
   line-height: var(--leading-relaxed-5);
   color: var(--muted);
+}
+.fx-book-detail-box-3 {
   & > p {
     margin-top: var(--space-5);
   }
@@ -297,11 +328,6 @@ a:hover > .fx-book > :is(h2, h3) {
 
 .fx-books-caps {
   margin-bottom: var(--space-3-5);
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--dim);
 }
 .fx-books-card {
   gap: var(--space-6);
@@ -348,13 +374,6 @@ a:hover > .fx-book > :is(h2, h3) {
   font-size: var(--title-2);
   line-height: var(--leading-tight-5);
 }
-.fx-botm-text-2 {
-  max-width: 65ch;
-  font-family: var(--fx-body);
-  font-size: var(--fs-h3);
-  line-height: var(--leading-relaxed-5);
-  color: var(--muted);
-}
 .fx-botm-grid,
 .fx-find-next-book-grid,
 .fx-library-grid-2,
@@ -370,15 +389,6 @@ a:hover > .fx-book > :is(h2, h3) {
   @media (min-width: 64rem) {
     grid-template-columns: repeat(6, minmax(0, 1fr));
   }
-}
-.fx-botm-caps,
-.fx-picks-caps,
-.fx-pick-club-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-spaced);
-  color: var(--dim);
 }
 
 .fx-find-next-book-row,
@@ -438,13 +448,23 @@ a:hover > .fx-book > :is(h2, h3) {
   padding-inline: var(--space-1);
 }
 .fx-find-next-book-title,
-.fx-journal-archive-title {
+.fx-journal-archive-title,
+.fx-onboarding-title-2,
+.fx-pick-club-title,
+.fx-library-link-2 {
   font-family: var(--display);
   font-size: var(--title-6);
   line-height: var(--leading-snug-5);
   color: var(--text);
+}
+.fx-find-next-book-title,
+.fx-journal-archive-title,
+.fx-onboarding-title-2 {
   transition-property: color, background-color, border-color;
   transition-duration: var(--dur-quick);
+}
+.fx-find-next-book-title,
+.fx-journal-archive-title {
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }

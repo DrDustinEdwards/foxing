@@ -1,5 +1,13 @@
 /* The shared pieces of components/ui.tsx that Capsomer has no component for: the tag pill and
    metadata chip of Rule 07, the entity card, the page heading, and Foxing's avatar sizes. */
+.fx-tag,
+.fx-lists-caps,
+.fx-vocabulary-caps {
+  font-family: var(--mono);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-caps);
+}
 .fx-tag {
   display: inline-flex;
   align-items: center;
@@ -7,10 +15,6 @@
   padding: var(--space-2) var(--space-3-5);
   background: var(--accent-soft);
   color: var(--accent-text);
-  font-family: var(--mono);
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-caps);
 }
 a.fx-tag:hover {
   color: var(--accent-text);

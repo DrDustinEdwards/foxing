@@ -60,10 +60,6 @@
   gap: var(--space-5);
   border-block-end: var(--line-w) solid var(--line);
   padding-bottom: var(--space-6);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--accent-text);
 }
 .fx-guide-link {
   &:hover {
@@ -81,7 +77,8 @@
   color: var(--text);
 }
 .fx-guide-text-2,
-.fx-about-text {
+.fx-about-text,
+.fx-guide-row-2 {
   font-family: var(--fx-body);
   font-size: var(--title-6);
   line-height: var(--line-box-6);
@@ -90,10 +87,6 @@
 .fx-guide-row-2 {
   display: flex;
   gap: var(--space-3);
-  font-family: var(--fx-body);
-  font-size: var(--title-6);
-  line-height: var(--line-box-6);
-  color: var(--muted);
 }
 
 /* The accessibility statement: Prelum's markup (h2, p, ul, a) in the legal pages' type. */

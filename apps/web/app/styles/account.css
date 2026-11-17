@@ -16,11 +16,14 @@
   width: 100%;
   max-width: 24rem;
 }
-.fx-auth-shell-link {
+.fx-auth-shell-link,
+.fx-paywall-title {
   font-family: var(--display);
   font-size: var(--title-3);
   line-height: var(--line-box-8);
   font-weight: var(--weight-semibold);
+}
+.fx-auth-shell-link {
   color: var(--text);
 }
 .fx-auth-shell-card {
@@ -29,24 +32,9 @@
 }
 .fx-auth-shell-text {
   margin-top: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--muted);
-}
-.fx-auth-shell-box-2,
-.fx-grouped-results-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--dim);
 }
 .fx-auth-shell-label {
   margin-bottom: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  font-weight: var(--weight-medium);
   color: var(--muted);
 }
 .fx-auth-shell-link-2 {
@@ -75,10 +63,6 @@
   border: var(--line-w) solid var(--line);
   background-color: var(--sunken);
   padding: var(--space-3-5) var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--muted);
 }
 
 /* The paywall's look on Capsomer's dialog (paywall.tsx): Capsomer places, sizes and animates it. */
@@ -107,12 +91,6 @@
     color: var(--fx-on-dark);
   }
 }
-.fx-paywall-title {
-  font-family: var(--display);
-  font-size: var(--title-3);
-  line-height: var(--line-box-8);
-  font-weight: var(--weight-semibold);
-}
 .fx-paywall-text {
   font-family: var(--fx-body);
   font-size: var(--title-6);
@@ -124,12 +102,16 @@
     margin-top: var(--space-3);
   }
 }
-.fx-paywall-row-2 {
-  display: flex;
+.fx-paywall-row-2,
+.fx-goals-label,
+.fx-journal-post-row {
   gap: var(--space-3);
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
+}
+.fx-paywall-row-2 {
+  display: flex;
   color: color-mix(in srgb, var(--fx-on-dark) 90%, transparent);
 }
 .fx-paywall-btn-2,
@@ -142,10 +124,6 @@
 .fx-paywall-text-3 {
   border-radius: var(--radius-m);
   border: var(--line-w) solid color-mix(in srgb, var(--accent) 60%, transparent);
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
   color: var(--fx-on-dark);
 }
 .fx-paywall-link {
@@ -153,15 +131,6 @@
   &:hover {
     color: var(--fx-on-dark);
   }
-}
-
-.fx-account-sections-label,
-.fx-account-sections-text,
-.fx-guide-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--muted);
 }
 .fx-account-sections-label-3 {
   font-family: var(--ui);
@@ -193,15 +162,6 @@
   line-height: var(--line-box-7);
   color: var(--crit);
 }
-
-.fx-preference-sections-label,
-.fx-journal-tag-text-2,
-.fx-commonplace-text-2 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: var(--line-box-4);
-  color: var(--dim);
-}
 .fx-preference-sections-stack,
 .fx-settings-card-stack {
   display: flex;
@@ -228,21 +188,16 @@
   background-color: var(--ground);
   padding-inline: var(--space-4);
 }
-.fx-preference-sections-label-2,
-.fx-people-label,
-.fx-goals-text {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  font-weight: var(--weight-medium);
-  color: var(--text);
-}
 
-.fx-settings-card-card {
+.fx-settings-card-card,
+.fx-journal-archive-link-2 {
   display: flex;
   justify-content: space-between;
   gap: var(--space-5);
   border-radius: var(--radius-m);
+}
+
+.fx-settings-card-card {
   border: var(--line-w) solid var(--line);
   background-color: var(--ground);
   padding: var(--space-4);
@@ -285,11 +240,6 @@
 }
 .fx-onboarding-label {
   margin-bottom: var(--space-2-5);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  font-weight: var(--weight-medium);
-  color: var(--text);
 }
 .fx-onboarding-label-3 {
   font-weight: var(--weight-regular);
@@ -316,22 +266,12 @@
   flex-direction: column;
 }
 .fx-onboarding-title-2 {
-  font-family: var(--display);
-  font-size: var(--title-6);
-  line-height: var(--leading-snug-5);
-  color: var(--text);
-  transition-property: color, background-color, border-color;
-  transition-duration: var(--dur-quick);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
 }
 .fx-onboarding-btn-2,
 .fx-diary-form-btn {
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--muted);
   &:hover {
     color: var(--text);
   }
@@ -353,14 +293,4 @@
   --radius-m: var(--radius-l);
   /* The band is dark in both themes, so the radios draw dark rather than white. */
   color-scheme: dark;
-}
-
-.fx-diary-form-text {
-  border-radius: var(--radius-m);
-  border-width: var(--line-w);
-  border-style: solid;
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
 }

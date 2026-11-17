@@ -58,10 +58,6 @@
   }
 }
 .fx-journal-archive-link-2 {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-5);
-  border-radius: var(--radius-m);
   padding-inline: var(--space-3);
   margin-inline: calc(-1 * var(--space-3));
   transition-property: color, background-color, border-color;
@@ -76,24 +72,9 @@
 }
 .fx-journal-archive-text {
   margin-top: var(--space-1);
-  font-family: var(--fx-body);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--muted);
-}
-.fx-journal-archive-label,
-.fx-u-profile-text-3 {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: var(--line-box-4);
-  color: var(--dim);
 }
 
 .fx-journal-post-row {
-  gap: var(--space-3);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
   color: var(--dim);
 }
 .fx-journal-post-img {
@@ -132,11 +113,6 @@
 }
 .fx-journal-tag-text,
 .fx-journal-text-3 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  font-family: var(--fx-body);
   color: var(--muted);
 }
 
@@ -195,11 +171,6 @@
   }
 }
 .fx-journal-text-2 {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  overflow: hidden;
-  font-family: var(--fx-body);
   font-size: var(--fs-h3);
   line-height: var(--line-box-7);
   color: var(--muted);
@@ -225,8 +196,4 @@
 }
 .fx-journal-row-2 {
   gap: var(--space-3);
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: var(--line-box-4);
-  color: var(--dim);
 }

@@ -221,7 +221,8 @@
   color: var(--dim);
 }
 .group-label,
-.fx-journal-tag-caps {
+.fx-journal-tag-caps,
+.fx-books-caps {
   font-family: var(--mono);
   font-size: var(--fs-tiny);
   text-transform: uppercase;
@@ -235,6 +236,13 @@
   letter-spacing: var(--tracking-widest);
   color: var(--dim);
 }
+.badge,
+.fx-acct-foot {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-widest);
+}
 .badge {
   display: inline-flex;
   align-items: center;
@@ -242,10 +250,6 @@
   padding: var(--space-1) var(--space-3);
   background: var(--accent-soft);
   color: var(--accent-text);
-  font-family: var(--mono);
-  font-size: 0.6rem;
-  text-transform: uppercase;
-  letter-spacing: var(--tracking-widest);
   white-space: nowrap;
 }
 .badge-quiet {

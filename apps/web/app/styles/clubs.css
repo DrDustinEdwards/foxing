@@ -1,10 +1,15 @@
 .fx-club-schedule-btn,
 .fx-club-sections-btn-2,
-.fx-club-thread-link {
+.fx-club-thread-link,
+.fx-guide-row {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
   color: var(--accent-text);
+}
+.fx-club-schedule-btn,
+.fx-club-sections-btn-2,
+.fx-club-thread-link {
   text-decoration-line: underline;
 }
 .fx-club-schedule-btn-2 {
@@ -20,7 +25,9 @@
   --pad-card: var(--space-4);
 }
 .fx-club-schedule-text-2,
-.fx-join-code-text-2 {
+.fx-join-code-text-2,
+.fx-auth-shell-box-2,
+.fx-grouped-results-text {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
@@ -35,7 +42,9 @@
   --pad-card: var(--space-4);
 }
 .fx-club-schedule-text-3,
-.fx-u-profile-label-6 {
+.fx-u-profile-label-6,
+.fx-book-picker-label,
+.fx-admin-user-detail-text {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
@@ -49,10 +58,6 @@
   border-radius: var(--radius-l);
   border: var(--line-w) solid var(--line);
   background-color: var(--surface);
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
 }
 .fx-club-schedule-form {
   border-radius: var(--radius-l);
@@ -92,10 +97,6 @@
 }
 .fx-club-sections-btn,
 .fx-club-schedule-btn-3 {
-  font-family: var(--ui);
-  font-size: var(--fs-small);
-  line-height: var(--line-box-4);
-  color: var(--dim);
   text-decoration-line: underline;
   &:hover {
     color: var(--text);
@@ -109,16 +110,16 @@
     margin-top: var(--space-3);
   }
 }
-.fx-club-sections-caps {
-  justify-self: start;
-  border-radius: var(--radius-full);
-  background-color: var(--accent-soft);
-  padding: var(--space-1) var(--space-3);
+.fx-club-sections-caps,
+.fx-club-thread-caps,
+.fx-club-schedule-caps {
   font-family: var(--mono);
   font-size: var(--fs-tiny);
   text-transform: uppercase;
   letter-spacing: 0.025em;
-  color: var(--accent-text);
+}
+.fx-club-sections-caps {
+  justify-self: start;
 }
 
 .fx-club-detail-label {
@@ -154,11 +155,24 @@
 }
 .fx-club-new-field,
 .fx-club-thread-field,
-.fx-onboarding-legend {
+.fx-onboarding-legend,
+.fx-preference-sections-label-2,
+.fx-people-label,
+.fx-goals-text,
+.fx-onboarding-label,
+.fx-auth-shell-label {
   font-family: var(--ui);
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
   font-weight: var(--weight-medium);
+}
+.fx-club-new-field,
+.fx-club-thread-field,
+.fx-onboarding-legend,
+.fx-preference-sections-label-2,
+.fx-people-label,
+.fx-goals-text,
+.fx-onboarding-label {
   color: var(--text);
 }
 .fx-club-new-input-2 {
@@ -183,10 +197,6 @@
 }
 .fx-club-thread-caps,
 .fx-club-schedule-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-  text-transform: uppercase;
-  letter-spacing: 0.025em;
   color: var(--dim);
 }
 .fx-club-thread-input {
@@ -196,10 +206,6 @@
 
 .fx-clubs-text {
   overflow: hidden;
-  font-family: var(--fx-body);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
-  color: var(--muted);
 }
 .fx-clubs-grid {
   display: grid;
@@ -211,10 +217,6 @@
 
 .fx-join-code-caps,
 .fx-clubs-caps {
-  font-family: var(--mono);
-  font-size: var(--fs-small);
-  line-height: var(--line-box-4);
-  text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--dim);
 }
@@ -249,10 +251,6 @@
   width: 5rem;
 }
 .fx-pick-club-title {
-  font-family: var(--display);
-  font-size: var(--title-6);
-  line-height: var(--leading-snug-5);
-  color: var(--text);
   a:is(:hover, :focus-visible) & {
     color: var(--accent-text);
   }
@@ -277,13 +275,6 @@
 }
 
 .fx-club-new-text-2 {
-  border-radius: var(--radius-m);
-  border-width: var(--line-w);
-  border-style: solid;
-  padding-inline: var(--space-4);
-  font-family: var(--ui);
-  font-size: var(--fs-body);
-  line-height: var(--line-box-5);
   border-color: color-mix(in srgb, var(--crit) 50%, transparent);
   background-color: var(--crit-soft);
   color: var(--crit);
