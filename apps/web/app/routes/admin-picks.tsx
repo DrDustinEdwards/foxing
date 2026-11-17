@@ -169,7 +169,7 @@ function PickEdit({
   }
 
   return (
-    <div className="fx-admin-picks-card">
+    <div className="cap-stack fx-admin-picks-card" data-gap="4">
       <AdminField label="Category" value={category} onChange={setCategory} />
       <AdminField label="Notes" value={notes} onChange={setNotes} rows={3} />
       <AdminField label="Curator quote" value={curatorQuote} onChange={setCuratorQuote} rows={2} />

@@ -106,7 +106,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
       <div className="cap-stack">
         <AdminField label="Title" value={title} onChange={setTitle} />
         <AdminField label="Body (optional)" value={body} onChange={setBody} rows={3} />
-        <label className="block">
+        <label className="cap-field">
           <span className="fx-label">Placement</span>
           <select
             value={placement}

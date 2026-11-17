@@ -14,7 +14,7 @@ export function BookPicker({
 }) {
   if (selected) {
     return (
-      <div>
+      <div className="cap-field">
         <span className="fx-label">{label}</span>
         <div className="py-2 fx-book-picker-card">
           <span className="fx-book-picker-label">

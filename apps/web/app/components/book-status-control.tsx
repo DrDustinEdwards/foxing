@@ -49,7 +49,7 @@ export function BookStatusControl({
   }
 
   return (
-    <div className="fx-book-status-control-box">
+    <div className="cap-stack fx-book-status-control-box" data-gap="3">
       <label className="fx-book-status-control-row">
         <span className="cap-sr-only">Reading status</span>
         <select

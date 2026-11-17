@@ -54,7 +54,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
           <h1 className="fx-club-thread-title">{thread.title}</h1>
         </div>
 
-        <ul className="fx-club-thread-list" data-testid="post-list">
+        <ul className="cap-stack" data-gap="5" data-testid="post-list">
           {posts.length === 0 ? (
             <li className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No posts yet. Start the conversation.
@@ -74,7 +74,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
 
         {isMember ? (
           <form onSubmit={(e) => void post(e)} className="cap-stack" data-gap="3">
-            <div>
+            <div className="cap-field">
               <label htmlFor="content" className="block fx-club-thread-field">
                 Add a reply
               </label>

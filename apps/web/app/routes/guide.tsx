@@ -28,7 +28,7 @@ const NAV_ANCHORS = [
 export default function Guide() {
   return (
     <PageShell>
-      <Container className="measure-prose">
+      <Container className="measure-prose cap-stack" data-gap="8">
         <PageHeader
           title="Using Foxing on the web"
           lede="How the foxing.app web platform works: finding books, tracking your reading, joining clubs, and following other readers."

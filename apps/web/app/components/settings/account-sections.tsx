@@ -63,7 +63,7 @@ export function ProfileSection({
   return (
     <Card title="Profile">
       <form onSubmit={(e) => void save(e)} className="cap-stack">
-        <label className="block">
+        <label className="cap-field">
           <span className="fx-label">Display name</span>
           <input
             value={displayName}
@@ -92,7 +92,7 @@ export function ProfileSection({
             className={inputClass}
           />
         </label>
-        <label className="block">
+        <label className="cap-field">
           <span className="fx-label">Favorite genres (comma separated)</span>
           <input
             value={genres}
@@ -148,7 +148,7 @@ export function UsernameSection({ initial }: { initial: string }) {
   return (
     <Card title="Username">
       <form onSubmit={(e) => void save(e)} className="cap-stack" data-gap="4">
-        <label className="block" htmlFor={inputId}>
+        <label className="cap-field" htmlFor={inputId}>
           <span className="fx-label">Username</span>
           <span className="cap-stack" data-gap="2">
             <span className="cap-cluster" data-gap="3">
@@ -237,7 +237,7 @@ export function EmailSection({ initial }: { initial: string }) {
         address from a link sent there.
       </p>
       <form onSubmit={(e) => void change(e)} className="cap-stack" data-gap="4">
-        <label className="block">
+        <label className="cap-field">
           <span className="fx-label">New email</span>
           <input
             type="email"

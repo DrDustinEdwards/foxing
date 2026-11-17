@@ -78,7 +78,7 @@
   border-left-width: var(--line-w-thick);
   border-left-style: solid;
   border-color: var(--line);
-  padding-left: var(--space-5);
+  padding-inline-start: var(--space-5);
 }
 
 .fx-diary-new-text,
@@ -122,7 +122,7 @@
   padding: var(--space-1) var(--space-3);
 }
 .fx-diary-caps-2 {
-  margin-right: var(--space-3);
+  margin-inline-end: var(--space-3);
 }
 .fx-diary-caps-3,
 .fx-join-code-caps,
@@ -229,8 +229,6 @@
   }
 }
 .fx-feed-link-2 {
-  margin-top: var(--space-1);
-  display: inline-block;
   &:hover {
     color: var(--accent-text);
   }
@@ -260,7 +258,7 @@
   margin-block-start: var(--space-3);
 }
 .fx-highlights-text {
-  padding-left: var(--space-5-5);
+  padding-inline-start: var(--space-5-5);
 }
 .fx-highlights-chip {
   text-transform: capitalize;
@@ -395,12 +393,9 @@
 .fx-admin-analytics-caps {
   color: var(--dim);
 }
-.fx-me-caps {
-  margin-top: var(--space-1);
-}
 .fx-me-box {
   border-block-start: var(--line-w) solid var(--line);
-  padding-top: var(--space-5);
+  padding-block-start: var(--space-5);
 }
 
 .fx-notifications-text,
@@ -410,9 +405,6 @@
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
   color: var(--crit);
-}
-.fx-year-text-2 {
-  margin-top: var(--space-1);
 }
 .fx-people-card,
 .fx-year-card-2 {
@@ -526,9 +518,6 @@
   --radius-l: var(--radius-m);
   --pad-card: var(--space-5);
 }
-.fx-u-profile-text-4 {
-  margin-top: var(--space-1);
-}
 .fx-u-profile-grid-2 {
   display: grid;
   gap: var(--space-7-5);
@@ -574,7 +563,7 @@
 }
 .fx-u-profile-item-2 {
   border-block-end: var(--line-w) solid var(--line);
-  padding-bottom: var(--space-3);
+  padding-block-end: var(--space-3);
 }
 .fx-u-profile-title-2 {
   font-family: var(--display);

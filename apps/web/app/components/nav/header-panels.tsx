@@ -90,31 +90,33 @@ export function PicksPanel({
 }) {
   return (
     <div className="fx-panel fx-panel-picks">
-      {botm ? (
-        <Link to="/book-of-the-month" className="fx-panel-pick">
-          <span className="cap-text group-label" data-tone="accent">
-            Foxing pick
-          </span>
-          <span className="cap-title" data-size="6">
-            {botm.title}
-          </span>
-          <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
-            {botm.author}
-          </span>
-        </Link>
-      ) : null}
-      {featuredClubs.length > 0 ? (
-        <>
-          <div className="cap-site-header-panel-label">Featured clubs</div>
-          <ul className="cap-site-header-panel-list fx-panel-two">
-            {featuredClubs.map((club) => (
-              <li key={club.slug}>
-                <Link to={`/picks/${club.slug}`}>{club.name}</Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      ) : null}
+      <div className="cap-stack" data-gap="4">
+        {botm ? (
+          <Link to="/book-of-the-month" className="fx-panel-pick">
+            <span className="cap-text group-label" data-tone="accent">
+              Foxing pick
+            </span>
+            <span className="cap-title" data-size="6">
+              {botm.title}
+            </span>
+            <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
+              {botm.author}
+            </span>
+          </Link>
+        ) : null}
+        {featuredClubs.length > 0 ? (
+          <div>
+            <div className="cap-site-header-panel-label">Featured clubs</div>
+            <ul className="cap-site-header-panel-list fx-panel-two">
+              {featuredClubs.map((club) => (
+                <li key={club.slug}>
+                  <Link to={`/picks/${club.slug}`}>{club.name}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
       <hr />
       <ul className="cap-site-header-panel-list fx-panel-foot">
         <li>

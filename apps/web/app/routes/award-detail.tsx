@@ -56,7 +56,7 @@ export default function AwardDetail({ loaderData }: Route.ComponentProps) {
         />
         <BookGrid>
           {award.entries.map((e) => (
-            <div key={`${e.book.slug}-${e.year}`}>
+            <div key={`${e.book.slug}-${e.year}`} className="cap-stack" data-gap="3">
               <BookCard book={e.book} headingLevel={2} />
               {e.year ? (
                 <p className="fx-award-detail-caps">

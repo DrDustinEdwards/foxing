@@ -81,8 +81,8 @@ export function ConfirmButtonForm({ label, limited }: { label: string; limited?:
 /** Labeled text input matching the settings form rows. */
 function Field({ label, ...props }: { label: string } & InputHTMLAttributes<HTMLInputElement>) {
   return (
-    <label className="block">
-      <span className="block fx-auth-shell-label">{label}</span>
+    <label className="cap-field">
+      <span className="fx-auth-shell-label">{label}</span>
       <input className="cap-input fx-input-ground cap-full" {...props} />
     </label>
   );

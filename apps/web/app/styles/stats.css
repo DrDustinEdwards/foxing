@@ -27,9 +27,6 @@
 .fx-goals-input {
   width: 4rem;
 }
-.fx-goals-text-4 {
-  margin-top: var(--space-1);
-}
 
 .fx-home-grid,
 .fx-library-grid {
@@ -84,7 +81,7 @@
   line-height: var(--leading-none);
 }
 .fx-home-label {
-  margin-left: var(--space-2-5);
+  margin-inline-start: var(--space-2-5);
   font-family: var(--ui);
   font-size: var(--title-6);
   line-height: var(--line-box-6);
@@ -95,11 +92,7 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
   border-block-start: var(--line-w) solid var(--line);
-  padding-top: var(--space-5);
-}
-.fx-home-caps,
-.fx-admin-user-detail-caps-2 {
-  margin-top: var(--space-1);
+  padding-block-start: var(--space-5);
 }
 
 .fx-library-grid-2 {

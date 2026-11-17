@@ -142,13 +142,8 @@ a:hover > .fx-book > :is(h2, h3) {
   line-height: var(--line-box-4);
   color: var(--dim);
 }
-.fx-book-status-control-text,
-.fx-onboarding-label-2 {
-  margin-top: var(--space-2-5);
-}
 .fx-book-status-control-text-2,
 .fx-u-profile-label-4 {
-  margin-top: var(--space-2-5);
   font-family: var(--ui);
   font-size: var(--fs-small);
   line-height: var(--line-box-4);
@@ -220,7 +215,6 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 
 .fx-award-detail-caps {
-  margin-top: var(--space-2-5);
   padding-inline: var(--space-1);
 }
 
@@ -300,9 +294,6 @@ a:hover > .fx-book > :is(h2, h3) {
   font-size: var(--fs-h3);
   line-height: var(--leading-relaxed-5);
   color: var(--muted);
-}
-.fx-book-detail-section {
-  margin-top: var(--space-9-5);
 }
 .fx-book-detail-title-2,
 .fx-botm-title-2 {
@@ -456,8 +447,8 @@ a:hover > .fx-book > :is(h2, h3) {
   color: var(--accent-text);
 }
 .fx-find-next-book-box {
-  margin-top: auto;
-  padding-top: var(--space-4);
+  margin-block-start: auto;
+  padding-block-start: var(--space-4);
 }
 
 .fx-picks-grid,

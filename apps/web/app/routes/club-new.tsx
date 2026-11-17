@@ -50,8 +50,8 @@ export default function ClubNew() {
           <p className="fx-club-new-text">Pick a book, set the pace, and read together.</p>
         </div>
 
-        <form onSubmit={(e) => void onSubmit(e)} className="fx-club-new-form">
-          <div>
+        <form onSubmit={(e) => void onSubmit(e)} className="cap-stack" data-gap="5">
+          <div className="cap-field">
             <label htmlFor="name" className="block fx-club-new-field">
               Club name
             </label>
@@ -63,7 +63,7 @@ export default function ClubNew() {
               className="cap-input py-2 fx-club-new-input"
             />
           </div>
-          <div>
+          <div className="cap-field">
             <label htmlFor="description" className="block fx-club-new-field">
               Description
             </label>
@@ -75,7 +75,7 @@ export default function ClubNew() {
               className="cap-input py-2 fx-club-new-input"
             />
           </div>
-          <div>
+          <div className="cap-field">
             <label htmlFor="visibility" className="block fx-club-new-field">
               Visibility
             </label>

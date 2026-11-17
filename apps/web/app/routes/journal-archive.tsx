@@ -76,7 +76,7 @@ export default function JournalArchive({ loaderData }: Route.ComponentProps) {
                       to={`/journal/${post.slug}`}
                       className="group items-start py-4 fx-journal-archive-link-2"
                     >
-                      <div className="fx-journal-archive-box">
+                      <div className="cap-stack fx-journal-archive-box" data-gap="1">
                         <p className="cap-clamp fx-journal-archive-title" data-lines="1">
                           {post.title}
                         </p>

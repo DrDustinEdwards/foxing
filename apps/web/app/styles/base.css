@@ -146,8 +146,6 @@
   font-style: italic;
 }
 .fx-label {
-  display: block;
-  margin-block-end: var(--space-2);
   font-family: var(--ui);
   font-size: var(--fs-body);
   color: var(--muted);

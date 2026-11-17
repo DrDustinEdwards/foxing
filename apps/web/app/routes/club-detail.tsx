@@ -62,7 +62,7 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
 
         {isMember ? (
           <div className="fx-club-detail-grid">
-            <div className="fx-club-detail-box">
+            <div className="cap-stack" data-gap="7">
               <ThreadsSection clubId={club.id} slug={club.slug ?? ""} threads={threads} />
               <PollsSection
                 clubId={club.id}
@@ -71,7 +71,7 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
                 viewerId={viewerId}
               />
             </div>
-            <aside className="fx-club-detail-box">
+            <aside className="cap-stack" data-gap="7">
               <MeetingsSection clubId={club.id} meetings={meetings} />
               <ScheduleSection clubId={club.id} schedule={schedule} canModerate={isModerator} />
             </aside>

@@ -176,7 +176,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
             <ul className="fx-u-profile-row-3">
               {currentlyReading.map((b) => (
                 <li key={b.bookId} className="fx-u-profile-item">
-                  <Link to={`/books/${b.slug}`} className="block">
+                  <Link to={`/books/${b.slug}`} className="cap-stack" data-gap="3">
                     <span className="block fx-u-profile-label-2">
                       {b.coverUrl ? (
                         <CoverPicture
@@ -194,11 +194,13 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
                         </span>
                       )}
                     </span>
-                    <span className="cap-clamp block fx-u-profile-label-4" data-lines="1">
-                      {b.title}
-                    </span>
-                    <span className="cap-clamp block fx-u-profile-label-5" data-lines="1">
-                      {Math.round(b.progressPct)}% read
+                    <span>
+                      <span className="cap-clamp block fx-u-profile-label-4" data-lines="1">
+                        {b.title}
+                      </span>
+                      <span className="cap-clamp block fx-u-profile-label-5" data-lines="1">
+                        {Math.round(b.progressPct)}% read
+                      </span>
                     </span>
                   </Link>
                 </li>
@@ -408,7 +410,7 @@ function ProfileCovers({ books }: { books: CoverBook[] }) {
     <ul className="fx-u-profile-row-3">
       {books.map((b) => (
         <li key={b.bookId} className="fx-u-profile-item-3">
-          <Link to={`/books/${b.slug}`} className="block">
+          <Link to={`/books/${b.slug}`} className="cap-stack" data-gap="3">
             <span className="block fx-u-profile-label-2">
               {b.coverUrl ? (
                 <CoverPicture

@@ -105,7 +105,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
     <AdminCard title="New pick">
       <div className="cap-stack">
         <div className="fx-admin-botm-grid">
-          <label className="block">
+          <label className="cap-field">
             <span className="fx-label">Month</span>
             <select
               value={month}
@@ -119,7 +119,7 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
               ))}
             </select>
           </label>
-          <label className="block">
+          <label className="cap-field">
             <span className="fx-label">Year</span>
             <input
               type="number"

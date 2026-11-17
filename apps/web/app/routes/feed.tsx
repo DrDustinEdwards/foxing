@@ -57,7 +57,7 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
                       name={row.actor?.displayName ?? row.actor?.username ?? "Reader"}
                       size="sm"
                     />
-                    <div className="fx-feed-box">
+                    <div className="cap-stack fx-feed-box" data-gap="1" data-align="start">
                       <p className="cap-text" data-tone="muted">
                         {row.actor ? (
                           <Link to={`/u/${row.actor.username}`} className="fx-feed-link">

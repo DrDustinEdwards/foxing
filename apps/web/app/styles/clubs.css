@@ -102,7 +102,7 @@
 }
 
 .fx-club-detail-label {
-  margin-left: var(--space-4);
+  margin-inline-start: var(--space-4);
   display: inline-flex;
   align-items: center;
   gap: var(--space-2-5);
@@ -119,17 +119,6 @@
   gap: var(--space-7-5);
   @media (min-width: 64rem) {
     grid-template-columns: minmax(0, 1fr) 300px;
-  }
-}
-.fx-club-detail-box {
-  & > * + * {
-    margin-top: var(--space-7-5);
-  }
-}
-
-.fx-club-new-form {
-  & > * + * {
-    margin-top: var(--space-5-5);
   }
 }
 .fx-club-new-field,
@@ -162,11 +151,6 @@
   font-size: var(--title-2);
   line-height: var(--line-box-9);
 }
-.fx-club-thread-list {
-  & > * + * {
-    margin-top: var(--space-5);
-  }
-}
 .fx-club-thread-text {
   white-space: pre-wrap;
   font-family: var(--fx-body);
@@ -177,7 +161,6 @@
   color: var(--dim);
 }
 .fx-club-thread-input {
-  margin-top: var(--space-2-5);
   width: 100%;
 }
 
@@ -237,7 +220,6 @@
   --pad-card: var(--space-5);
 }
 .fx-club-new-input {
-  margin-top: var(--space-2-5);
   width: 100%;
 }
 

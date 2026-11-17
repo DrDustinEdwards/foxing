@@ -79,7 +79,7 @@ export function AdminField({
   placeholder?: string;
 }) {
   return (
-    <label className="block">
+    <label className="cap-field">
       <span className="fx-label">{label}</span>
       {rows ? (
         <textarea
