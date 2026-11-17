@@ -3,7 +3,7 @@
 /* Journal article prose: Source Serif body on a comfortable measure. */
 .article-prose {
   font-family: var(--fx-body);
-  font-size: 1.1875rem;
+  font-size: var(--fs-h3);
   line-height: var(--leading-airy);
   color: var(--muted);
 }
@@ -17,10 +17,10 @@
   margin-block-start: 1.8em;
 }
 .article-prose h2 {
-  font-size: 1.6rem;
+  font-size: var(--title-3);
 }
 .article-prose h3 {
-  font-size: 1.3rem;
+  font-size: var(--title-4);
 }
 .article-prose a {
   color: var(--accent-text);
@@ -33,12 +33,12 @@
 }
 .article-prose blockquote {
   border-inline-start: var(--line-w-bar) solid var(--accent-line);
-  padding-inline-start: 1.1rem;
+  padding-inline-start: var(--space-5);
   font-style: italic;
   color: var(--dim);
 }
 .article-prose :is(ul, ol) {
-  padding-inline-start: 1.3rem;
+  padding-inline-start: var(--space-5-5);
 }
 .article-prose ul {
   list-style: disc;
