@@ -156,6 +156,9 @@ function SiteFooter() {
           <p className="cap-text measure-xs" data-size="small" data-tone="dim">
             A reading home for the classics and the conversations around them.
           </p>
+          <p className="cap-text measure-xs" data-size="small" data-tone="dim">
+            Some text on Foxing, such as book descriptions, may be written with AI help.
+          </p>
           <Link to="/about" className="fx-footer-link">
             About
           </Link>

@@ -12,7 +12,10 @@ import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/compon
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { coverAttributes } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
+import { render } from "@drdustinedwards/site-helpers/render/nomath";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
+import { excerpt, htmlToText } from "@drdustinedwards/site-helpers/text";
+import { markup } from "capsomer/behavior/trusted-html";
 import { bookLd, buildMeta } from "~/lib/seo";
 import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
@@ -23,6 +26,13 @@ import { signInHref } from "~/lib/sign-in-path";
  * (site-runtime ./preload). None with a srcset, whose width the browser picks, and none for a
  * cover URL a Link header cannot carry (preloads refuses it), which would otherwise fail the page.
  */
+/** Catalog text (Markdown: paragraphs, the odd list or bold title) as HTML, through Prelum's render, which drops raw HTML. */
+async function textHtml(body: string | null): Promise<string | null> {
+  if (!body) return null;
+  const { html } = await render({ file: "book-text", body, resolveImage: async () => null });
+  return html;
+}
+
 function coverLink(src: string | null): string {
   const attrs = src ? coverAttributes(src) : null;
   if (!attrs || attrs.srcset) return "";
@@ -59,6 +69,15 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
     ? await Promise.all([views.myBook(db, userId, book.id), views.shelves(db, userId)])
     : [undefined, []];
 
+  // The catalog's own description first (the generated one only where the catalog's was filler or empty), and the
+  // generated notes on the author, the reading order and books like it.
+  const [descriptionHtml, authorBio, readingOrder, similarBooks] = await Promise.all([
+    textHtml(book.description ?? page.ai.description),
+    textHtml(page.ai.authorBio),
+    textHtml(page.ai.readingOrder),
+    textHtml(page.ai.similarBooks),
+  ]);
+
   const link = coverLink(book.coverUrl);
   return data(
     {
@@ -72,12 +91,19 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       bookId: book.id,
       loginHref: signInHref(`/books/${book.slug}`),
       buys: page.buys,
+      descriptionHtml,
+      notes: [
+        { id: "author", title: `About ${book.author}`, html: authorBio },
+        { id: "reading-order", title: "Reading order", html: readingOrder },
+        { id: "similar", title: "If you like this", html: similarBooks },
+      ].filter((n): n is { id: string; title: string; html: string } => n.html !== null),
       book: {
         slug: book.slug,
         title: book.title,
         author: book.author,
         authorSlug: book.authorSlug,
-        description: book.description,
+        // Plain text for the meta description and the JSON-LD.
+        description: descriptionHtml ? htmlToText(descriptionHtml) : null,
         coverUrl: book.coverUrl,
         publicationYear: book.publicationYear,
         language: book.language,
@@ -100,7 +126,7 @@ export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Book not found | Foxing" }];
   const { book, community } = data;
   const description =
-    book.description?.slice(0, 200) ??
+    (book.description ? excerpt(book.description, 200) : null) ??
     `${book.title} by ${book.author} on Foxing. Read the classics and track your reading.`;
   return [
     ...buildMeta({
@@ -125,7 +151,7 @@ function readingTime(words: number | null): string | null {
 }
 
 export default function BookDetail({ loaderData }: Route.ComponentProps) {
-  const { book, awards, related, buys, readable, community } = loaderData;
+  const { book, awards, related, buys, readable, community, descriptionHtml, notes } = loaderData;
   const { signedIn, bookId, loginHref } = loaderData;
   // The reader's state for this book lives in the cache, so a status or shelf change
   // shows at once and survives navigating away and back.
@@ -246,14 +272,22 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 ) : null}
               </div>
 
-              {book.description ? (
-                <div className="cap-stack fx-book-detail-box-3" data-gap="5">
-                  {book.description
-                    .split(/\n{2,}/)
-                    .filter(Boolean)
-                    .map((para) => (
-                      <p key={para.slice(0, 40)}>{para}</p>
-                    ))}
+              {descriptionHtml ? (
+                <div
+                  className="cap-stack fx-book-detail-box-3"
+                  data-gap="5"
+                  dangerouslySetInnerHTML={markup(descriptionHtml)}
+                />
+              ) : null}
+
+              {notes.length > 0 ? (
+                <div className="fx-book-detail-notes">
+                  {notes.map((n) => (
+                    <details key={n.id}>
+                      <summary>{n.title}</summary>
+                      <div className="article-prose" dangerouslySetInnerHTML={markup(n.html)} />
+                    </details>
+                  ))}
                 </div>
               ) : null}
 
