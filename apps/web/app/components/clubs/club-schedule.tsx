@@ -52,7 +52,7 @@ export function PollsSection({
   }
 
   return (
-    <section>
+    <section className="cap-stack" data-gap="4">
       <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="cap-title" data-size="3">
           Polls
@@ -63,7 +63,7 @@ export function PollsSection({
       </div>
 
       {open ? (
-        <form onSubmit={(e) => void create(e)} className="mt-3 cap-card fx-club-schedule-card">
+        <form onSubmit={(e) => void create(e)} className="cap-card fx-club-schedule-card">
           <input
             name="title"
             required
@@ -107,16 +107,16 @@ export function PollsSection({
       ) : null}
 
       {polls.length === 0 ? (
-        <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
           No polls yet.
         </p>
       ) : (
-        <div className="mt-4 fx-club-schedule-box">
+        <div className="cap-stack" data-gap="5">
           <link rel="stylesheet" href={pollCss} precedence="default" />
           {polls.map((poll) => {
             const total = Object.values(poll.tallies).reduce((a, b) => a + b, 0);
             return (
-              <div key={poll.id} className="cap-card">
+              <div key={poll.id} className="cap-card cap-stack" data-gap="5">
                 <div className="cap-spread" data-gap="4" data-align="center">
                   <p className="cap-text" data-tone="ink" data-weight="strong" data-face="ui">
                     {poll.title}
@@ -148,7 +148,6 @@ export function PollsSection({
                 />
                 {total > 0 ? (
                   <ChartFrame
-                    className="mt-4"
                     draw={pollChart(
                       poll.id,
                       poll.options.map((o) => ({ label: o.label, votes: poll.tallies[o.id] ?? 0 })),
@@ -190,7 +189,7 @@ export function MeetingsSection({
   }
 
   return (
-    <section>
+    <section className="cap-stack" data-gap="4">
       <div className="cap-spread" data-gap="4" data-align="center">
         <h2 className="cap-title" data-size="4">
           Meetings
@@ -200,7 +199,7 @@ export function MeetingsSection({
         </button>
       </div>
       {open ? (
-        <form onSubmit={(e) => void create(e)} className="mt-3 cap-card fx-club-schedule-card-2">
+        <form onSubmit={(e) => void create(e)} className="cap-card fx-club-schedule-card-2">
           <input
             name="title"
             required
@@ -227,19 +226,21 @@ export function MeetingsSection({
         </form>
       ) : null}
       {meetings.length === 0 ? (
-        <p className="mt-3 fx-club-schedule-text-2">No meetings scheduled.</p>
+        <p className="fx-club-schedule-text-2">No meetings scheduled.</p>
       ) : (
-        <ul className="mt-3 fx-club-schedule-list-2">
+        <ul className="cap-stack" data-gap="3">
           {meetings.map((m) => (
-            <li key={m.id} className="cap-card fx-club-schedule-card-3">
-              <p className="fx-club-schedule-text-3">{m.title}</p>
-              {/* The viewer's zone, named, with UTC beside it, so members in other zones read the same
+            <li key={m.id} className="cap-card cap-stack fx-club-schedule-card-3" data-gap="5">
+              <div className="cap-stack" data-gap="3">
+                <p className="fx-club-schedule-text-3">{m.title}</p>
+                {/* The viewer's zone, named, with UTC beside it, so members in other zones read the same
                   moment; Capsomer's Time hydrates cleanly from the server's UTC. */}
-              <p className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
-                <Time at={m.meetingDate} format="exact" />
-              </p>
+                <p className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
+                  <Time at={m.meetingDate} format="exact" />
+                </p>
+              </div>
               {!m.isCancelled ? (
-                <div className="mt-2 fx-club-schedule-row">
+                <div className="fx-club-schedule-row">
                   {(["going", "maybe", "not_going"] as const).map((s) => (
                     <button
                       key={s}
@@ -252,7 +253,7 @@ export function MeetingsSection({
                   ))}
                 </div>
               ) : (
-                <p className="cap-text mt-1" data-size="tiny" data-tone="dim" data-face="ui">
+                <p className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
                   Canceled
                 </p>
               )}
@@ -293,18 +294,18 @@ export function ScheduleSection({
   }
 
   return (
-    <section>
+    <section className="cap-stack" data-gap="4">
       <h2 className="cap-title" data-size="4">
         Reading schedule
       </h2>
       {schedule.length === 0 ? (
-        <p className="mt-3 fx-club-schedule-text-2">No schedule set.</p>
+        <p className="fx-club-schedule-text-2">No schedule set.</p>
       ) : (
-        <ul className="fx-club-schedule-list">
+        <ul className="cap-stack" data-gap="3">
           {schedule.map((s) => {
             const unlocked = s.unlockDate <= now;
             return (
-              <li key={s.id} className="py-2 fx-club-schedule-card-4">
+              <li key={s.id} className="fx-club-schedule-card-4">
                 <span className="cap-text" data-tone={unlocked ? "ink" : "dim"}>
                   {s.chapterName}
                 </span>
@@ -317,7 +318,11 @@ export function ScheduleSection({
         </ul>
       )}
       {canModerate ? (
-        <form onSubmit={(e) => void add(e)} className="mt-3 fx-club-schedule-form">
+        <form
+          onSubmit={(e) => void add(e)}
+          className="cap-stack fx-club-schedule-form"
+          data-gap="3"
+        >
           <input
             name="chapter"
             required

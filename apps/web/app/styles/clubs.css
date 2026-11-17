@@ -16,11 +16,6 @@
   color: var(--dim);
   text-decoration-line: underline;
 }
-.fx-club-schedule-list {
-  & > * + * {
-    margin-top: var(--space-2-5);
-  }
-}
 .fx-club-schedule-card-2 {
   --pad-card: var(--space-4);
 }
@@ -32,11 +27,6 @@
   font-size: var(--fs-body);
   line-height: var(--line-box-5);
   color: var(--dim);
-}
-.fx-club-schedule-list-2 {
-  & > * + * {
-    margin-top: var(--space-3);
-  }
 }
 .fx-club-schedule-card-3 {
   --pad-card: var(--space-4);
@@ -55,6 +45,7 @@
   gap: var(--space-3);
 }
 .fx-club-schedule-card-4 {
+  padding-block: var(--space-3);
   border-radius: var(--radius-l);
   border: var(--line-w) solid var(--line);
   background-color: var(--surface);
@@ -63,9 +54,6 @@
   border-radius: var(--radius-l);
   border: var(--line-w) dashed var(--line);
   padding: var(--space-4);
-  & > * + * {
-    margin-top: var(--space-3);
-  }
 }
 
 .fx-club-sections-text,
@@ -83,11 +71,15 @@
 }
 .fx-club-sections-box {
   text-align: right;
+  & > .cap-btn {
+    align-self: flex-end;
+  }
 }
 .fx-club-sections-card {
   border-radius: var(--radius-l);
   border: var(--line-w) solid var(--line);
   background-color: var(--surface);
+  padding-block: var(--space-3);
   padding-inline: var(--space-4);
   text-align: left;
 }
@@ -104,11 +96,6 @@
 }
 .fx-club-sections-card-2 {
   --pad-card: var(--space-5);
-}
-.fx-club-sections-list {
-  & > * + * {
-    margin-top: var(--space-3);
-  }
 }
 .fx-club-sections-caps {
   justify-self: start;
@@ -248,11 +235,6 @@
 
 .fx-club-schedule-card {
   --pad-card: var(--space-5);
-}
-.fx-club-schedule-box {
-  & > * + * {
-    margin-top: var(--space-5);
-  }
 }
 .fx-club-new-input {
   margin-top: var(--space-2-5);

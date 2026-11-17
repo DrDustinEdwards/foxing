@@ -85,13 +85,19 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 function ContinueReadingCard({ reading }: { reading: Entry | null }) {
   if (!reading) {
     return (
-      <section className="cap-text justify-center cap-card fx-home-card" data-align="center">
-        <Eyebrow className="mb-2">Continue reading</Eyebrow>
-        <p className="cap-title" data-size="4">
-          Nothing in progress
-        </p>
-        <p className="mt-2 fx-home-text">Start a book and it shows up here with your progress.</p>
-        <div className="mt-5">
+      <section
+        className="cap-text justify-center cap-card cap-stack fx-home-card"
+        data-gap="6"
+        data-align="center"
+      >
+        <div className="cap-stack" data-gap="5">
+          <Eyebrow>Continue reading</Eyebrow>
+          <p className="cap-title" data-size="4">
+            Nothing in progress
+          </p>
+          <p className="fx-home-text">Start a book and it shows up here with your progress.</p>
+        </div>
+        <div>
           <Button to="/books">Browse the library</Button>
         </div>
       </section>
@@ -111,23 +117,26 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
           />
         </Link>
       </div>
-      <div>
-        <Eyebrow>Continue reading</Eyebrow>
-        <h2 className="mt-2 fx-home-title-2">
-          <Link to={`/books/${reading.slug}`} className="hover-accent">
-            {reading.title}
-          </Link>
-        </h2>
-        <p className="mt-1 fx-home-text-2">{reading.author}</p>
+      <div className="cap-stack" data-gap="5">
+        <div className="cap-stack" data-gap="3">
+          <Eyebrow>Continue reading</Eyebrow>
+          <div className="cap-stack" data-gap="2">
+            <h2 className="fx-home-title-2">
+              <Link to={`/books/${reading.slug}`} className="hover-accent">
+                {reading.title}
+              </Link>
+            </h2>
+            <p className="fx-home-text-2">{reading.author}</p>
+          </div>
+        </div>
         <Meter
-          className="mt-4"
           label="Reading progress"
           value={progress}
           max={100}
           display={`${progress}% read`}
           valueText={`${progress}% of ${reading.title} read`}
         />
-        <div className="mt-5">
+        <div>
           <Button to={`/books/${reading.slug}`} variant="secondary">
             Open book
           </Button>
@@ -142,16 +151,18 @@ function StreakCard({ streak: s }: { streak: Streak }) {
     s.currentStreak === 0 ? "Open a book to start a streak." : "Read today to keep it going.";
 
   return (
-    <aside className="cap-card fx-home-card-3">
-      <Eyebrow className="mb-3">Reading streak</Eyebrow>
-      <p className="fx-home-title-3">
-        {s.currentStreak}
-        <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>
-      </p>
-      <p className="cap-text mt-2" data-size="small" data-tone="muted" data-face="ui">
-        {subtext}
-      </p>
-      <dl className="cap-text mt-5 fx-home-grid-2" data-align="center">
+    <aside className="cap-card cap-stack fx-home-card-3" data-gap="6">
+      <div className="cap-stack" data-gap="5">
+        <Eyebrow>Reading streak</Eyebrow>
+        <p className="fx-home-title-3">
+          {s.currentStreak}
+          <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>
+        </p>
+        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+          {subtext}
+        </p>
+      </div>
+      <dl className="cap-text fx-home-grid-2" data-align="center">
         <div>
           <dd className="cap-title" data-size="4">
             {s.longestStreak}
