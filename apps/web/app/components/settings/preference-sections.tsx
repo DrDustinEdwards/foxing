@@ -23,7 +23,8 @@ export function BillingSection({
   tier: "free" | "plus";
   status: string | null;
   periodEndLabel: string | null;
-  onUpgrade: () => void;
+  /** Opens the paywall, or null while Plus cannot be bought (billing not configured). */
+  onUpgrade: (() => void) | null;
 }) {
   const portal = useBillingPortal();
   // Stays pending while the browser leaves for Stripe.
@@ -68,16 +69,21 @@ export function BillingSection({
               <span className="cap-text" data-tone="ink" data-weight="strong">
                 Free
               </span>{" "}
-              plan. Clubs and the whole social layer are free. Plus adds the AI reading companion.
+              plan. Clubs and the whole social layer are free.
+              {onUpgrade
+                ? " Plus adds the AI reading companion."
+                : " Foxing Plus, the AI reading companion, is not open for sign-up yet."}
             </p>
-            <button
-              type="button"
-              onClick={onUpgrade}
-              className="cap-btn self-start"
-              data-variant="primary"
-            >
-              Upgrade to Plus
-            </button>
+            {onUpgrade ? (
+              <button
+                type="button"
+                onClick={onUpgrade}
+                className="cap-btn self-start"
+                data-variant="primary"
+              >
+                Upgrade to Plus
+              </button>
+            ) : null}
           </>
         )}
         <FormError error={error} />

@@ -1,8 +1,9 @@
 // Find next book (auth-gated, noindex): a tiered recommendation grid. Reads run
 // in-process via core (loadRecommendations); the Want-to-read write per book goes to
 // /api/v1 through BookStatusControl (visible pending + role=alert error). Free readers
-// get data-driven picks with a subtle upgrade affordance; Plus readers get AI-personalised
-// reasons. Refresh busts the AI cache (rate-limited in core).
+// get data-driven picks, with a subtle upgrade affordance once Plus can be bought (billing
+// configured); Plus readers get AI-personalised reasons. Refresh busts the AI cache
+// (rate-limited in core).
 import { useState } from "react";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
@@ -11,7 +12,7 @@ import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import type { Recommendation } from "@foxing/core";
+import { billing, type Recommendation } from "@foxing/core";
 import { requireProfile } from "~/lib/profile.server";
 import { loadRecommendations } from "~/lib/recommendations.server";
 import type { Route } from "./+types/find-next-book";
@@ -28,11 +29,13 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { recommendations, aiPersonalized, isPlus } = await loadRecommendations(env, user.id, {
     refresh,
   });
-  return { recommendations, aiPersonalized, isPlus };
+  // No upgrade is offered while Plus cannot be bought (CLAUDE.md rule 6).
+  const canUpgrade = !isPlus && billing.stripeSettings(env) !== null;
+  return { recommendations, aiPersonalized, canUpgrade };
 }
 
 export default function FindNextBook({ loaderData }: Route.ComponentProps) {
-  const { recommendations, aiPersonalized, isPlus } = loaderData;
+  const { recommendations, aiPersonalized, canUpgrade } = loaderData;
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   return (
@@ -53,7 +56,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
           }
         />
 
-        {!isPlus ? (
+        {canUpgrade ? (
           <div className="py-3 fx-find-next-book-card">
             <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
               Plus tunes these to you with AI-personalized reasons.
@@ -81,7 +84,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
           </div>
         )}
       </Container>
-      <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      {canUpgrade ? <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} /> : null}
     </PageShell>
   );
 }

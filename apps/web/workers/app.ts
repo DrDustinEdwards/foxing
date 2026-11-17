@@ -166,24 +166,18 @@ const api = createApi({
   },
   // Stripe secrets + price ids are not set yet (Phase 4b gate). When all four are
   // present the real client is used; otherwise the not-configured stub makes billing
-  // routes answer 503 cleanly, and everything else works.
+  // routes answer 503 cleanly, the pages offer no upgrade, and everything else works.
   resolveBilling: (env) => {
-    const e = env as unknown as Env;
-    if (
-      e.STRIPE_SECRET_KEY &&
-      e.STRIPE_WEBHOOK_SECRET &&
-      e.STRIPE_PRICE_MONTHLY &&
-      e.STRIPE_PRICE_ANNUAL
-    ) {
-      return {
-        client: billing.createStripeBilling({
-          secretKey: e.STRIPE_SECRET_KEY,
-          webhookSecret: e.STRIPE_WEBHOOK_SECRET,
-        }),
-        prices: { monthly: e.STRIPE_PRICE_MONTHLY, annual: e.STRIPE_PRICE_ANNUAL },
-      };
-    }
-    return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
+    const stripe = billing.stripeSettings(env as unknown as Env);
+    if (!stripe)
+      return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
+    return {
+      client: billing.createStripeBilling({
+        secretKey: stripe.secretKey,
+        webhookSecret: stripe.webhookSecret,
+      }),
+      prices: stripe.prices,
+    };
   },
   // The live layer: one ClubRoom Durable Object per club (clubRoomHub). The DO never writes D1.
   resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
