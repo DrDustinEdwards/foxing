@@ -1,4 +1,4 @@
-import { capitalize, formatCount } from "@drdustinedwards/site-helpers/text";
+import { formatCount } from "@drdustinedwards/site-helpers/text";
 import { catalogRepo, views } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
@@ -9,6 +9,7 @@ import { loaderBase } from "~/lib/loader.server";
 import { itemList, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { SITE_ORIGIN } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
+import "~/styles/books.css";
 import type { Route } from "./+types/books";
 
 type Filters = {
@@ -23,7 +24,8 @@ export function parseFilters(url: URL): Filters {
   const p = url.searchParams;
   const sort = p.get("sort");
   return {
-    subject: p.get("subject") || undefined,
+    // A genre from Foxing's list; an old link with a raw heading lands on the genre it maps to.
+    subject: catalogRepo.toGenres([p.get("subject") ?? ""])[0],
     era: p.get("era") || undefined,
     length: p.get("length") || undefined,
     sort: sort === "year-desc" || sort === "year-asc" ? sort : "title",
@@ -59,7 +61,7 @@ export const headers = () => publicPageHeaders({ freshSeconds: 1800, staleSecond
 export function meta({ loaderData: data, location }: Route.MetaArgs) {
   if (!data) return [{ title: "Books | Foxing" }];
   const label = data.filters.subject
-    ? `${capitalize(data.filters.subject)} books`
+    ? `${catalogRepo.genreLabel(data.filters.subject)} books`
     : "Browse the library";
   return [
     ...buildMeta({
@@ -108,6 +110,11 @@ function FacetGroup({ label, children }: { label: string; children: React.ReactN
 export default function Books({ loaderData }: Route.ComponentProps) {
   const { filters, result, genres } = loaderData;
   const anyFilterSet = !!(filters.subject || filters.era || filters.length);
+  const activeLabels = [
+    filters.subject ? catalogRepo.genreLabel(filters.subject) : null,
+    catalogRepo.resolveEra(filters.era)?.label,
+    catalogRepo.resolveLength(filters.length)?.label,
+  ].filter((l): l is string => !!l);
 
   return (
     <PageShell>
@@ -118,74 +125,85 @@ export default function Books({ loaderData }: Route.ComponentProps) {
           lede={`${formatCount(result.total)} readable classics, free to read in Foxing.`}
         />
 
-        {/* Filters: plain links, no client JS, fully cacheable. */}
         <div className="cap-stack" data-gap="7">
-          <div className="cap-card fx-books-card">
-            <FacetGroup label="Genre">
-              {genres.map((g) => (
-                <FacetLink
-                  key={g.subject}
-                  active={filters.subject === g.subject}
-                  to={query(filters, {
-                    subject: filters.subject === g.subject ? null : g.subject,
-                    page: null,
-                  })}
-                >
-                  {g.subject}
-                </FacetLink>
-              ))}
-            </FacetGroup>
-            <FacetGroup label="Era">
-              {catalogRepo.ERA_BUCKETS.map((b) => (
-                <FacetLink
-                  key={b.slug}
-                  active={filters.era === b.slug}
-                  to={query(filters, { era: filters.era === b.slug ? null : b.slug, page: null })}
-                >
-                  {b.label}
-                </FacetLink>
-              ))}
-            </FacetGroup>
-            <FacetGroup label="Length">
-              {catalogRepo.LENGTH_BUCKETS.map((b) => (
-                <FacetLink
-                  key={b.slug}
-                  active={filters.length === b.slug}
-                  to={query(filters, {
-                    length: filters.length === b.slug ? null : b.slug,
-                    page: null,
-                  })}
-                >
-                  {b.label}
-                </FacetLink>
-              ))}
-            </FacetGroup>
-            <div className="fx-books-row">
-              <div className="cap-cluster" data-gap="3">
-                <span className="group-label">Sort</span>
-                {(
-                  [
-                    ["title", "A to Z"],
-                    ["year-desc", "Newest"],
-                    ["year-asc", "Oldest"],
-                  ] as const
-                ).map(([value, label]) => (
+          {/* Filters: plain links, no client JS, fully cacheable. A native disclosure, closed on a phone so the
+              first books are on screen; from 40rem it is always open and its summary is hidden (styles/books.css). */}
+          <details className="fx-books-filters">
+            <summary>
+              Filter and sort
+              {activeLabels.length ? (
+                <span className="cap-text" data-tone="dim" data-size="small">
+                  {activeLabels.join(", ")}
+                </span>
+              ) : null}
+            </summary>
+            <div className="cap-card fx-books-card">
+              <FacetGroup label="Genre">
+                {genres.map((g) => (
                   <FacetLink
-                    key={value}
-                    active={(filters.sort ?? "title") === value}
-                    to={query(filters, { sort: value === "title" ? null : value, page: null })}
+                    key={g.subject}
+                    active={filters.subject === g.subject}
+                    to={query(filters, {
+                      subject: filters.subject === g.subject ? null : g.subject,
+                      page: null,
+                    })}
                   >
-                    {label}
+                    {g.label}
                   </FacetLink>
                 ))}
+              </FacetGroup>
+              <FacetGroup label="Era">
+                {catalogRepo.ERA_BUCKETS.map((b) => (
+                  <FacetLink
+                    key={b.slug}
+                    active={filters.era === b.slug}
+                    to={query(filters, { era: filters.era === b.slug ? null : b.slug, page: null })}
+                  >
+                    {b.label}
+                  </FacetLink>
+                ))}
+              </FacetGroup>
+              <FacetGroup label="Length">
+                {catalogRepo.LENGTH_BUCKETS.map((b) => (
+                  <FacetLink
+                    key={b.slug}
+                    active={filters.length === b.slug}
+                    to={query(filters, {
+                      length: filters.length === b.slug ? null : b.slug,
+                      page: null,
+                    })}
+                  >
+                    {b.label}
+                  </FacetLink>
+                ))}
+              </FacetGroup>
+              <div className="fx-books-row">
+                <div className="cap-cluster" data-gap="3">
+                  <span className="group-label">Sort</span>
+                  {(
+                    [
+                      ["title", "A to Z"],
+                      ["year-desc", "Newest"],
+                      ["year-asc", "Oldest"],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <FacetLink
+                      key={value}
+                      active={(filters.sort ?? "title") === value}
+                      to={query(filters, { sort: value === "title" ? null : value, page: null })}
+                    >
+                      {label}
+                    </FacetLink>
+                  ))}
+                </div>
+                {anyFilterSet ? (
+                  <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
+                    Clear filters
+                  </Link>
+                ) : null}
               </div>
-              {anyFilterSet ? (
-                <Link to="/books" className="cap-text link" data-size="small" data-face="ui">
-                  Clear filters
-                </Link>
-              ) : null}
             </div>
-          </div>
+          </details>
 
           {result.books.length === 0 ? (
             <EmptyState

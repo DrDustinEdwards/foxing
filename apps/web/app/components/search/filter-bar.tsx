@@ -26,7 +26,7 @@ export function FilterBar({
   genres,
   active,
 }: {
-  genres: Array<{ subject: string; count: number }>;
+  genres: Array<{ subject: string; label: string; count: number }>;
   active: ActiveFilters;
 }) {
   const navigate = useNavigate();
@@ -46,7 +46,15 @@ export function FilterBar({
   }
 
   const chips = [
-    active.genre ? { key: "genre", label: active.genre } : null,
+    active.genre
+      ? {
+          key: "genre",
+          label: labelFor(
+            genres.map((g) => ({ slug: g.subject, label: g.label })),
+            active.genre,
+          ),
+        }
+      : null,
     active.era ? { key: "era", label: labelFor(BOOKS_ERAS, active.era) } : null,
     active.length ? { key: "length", label: labelFor(LENGTHS, active.length) } : null,
   ].filter((c): c is { key: string; label: string } => c !== null);
@@ -85,7 +93,7 @@ export function FilterBar({
                     aria-pressed={on}
                     onClick={() => apply("genre", on ? null : g.subject)}
                   >
-                    {g.subject}
+                    {g.label}
                   </button>
                 );
               })}

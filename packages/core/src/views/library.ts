@@ -6,6 +6,7 @@ import { decodeCursor, encodeCursor } from "@dustinedwards/site-runtime/d1";
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import * as annotationsRepo from "../repositories/annotations";
+import { genreLabel, toGenres } from "../repositories/catalog/facets";
 import * as libraryRepo from "../repositories/library";
 import * as notificationsRepo from "../repositories/notifications";
 import * as profilesRepo from "../repositories/profiles";
@@ -103,7 +104,7 @@ export async function streak(db: Db, userId: string, now = Date.now()): Promise<
 
 const DAY_MS = 86_400_000;
 
-/** Books finished in each month of a year and the year's most-read subjects, the shape
+/** Books finished in each month of a year and the year's most-read genres, the shape
  *  both the stats page and the Year in Reading recap chart. */
 export async function finishedSpread(
   db: Db,
@@ -126,9 +127,9 @@ export async function finishedSpread(
     const local = new Date(localDay(b.finishedAt.getTime(), timezone) * DAY_MS);
     if (local.getUTCFullYear() !== year) continue;
     monthly[local.getUTCMonth()] += 1;
-    for (const subject of b.subjects ?? []) {
-      const name = subject.trim();
-      if (name) genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
+    for (const slug of toGenres(b.subjects)) {
+      const name = genreLabel(slug);
+      genreCounts.set(name, (genreCounts.get(name) ?? 0) + 1);
     }
   }
   return {

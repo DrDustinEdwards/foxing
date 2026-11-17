@@ -501,7 +501,10 @@ export interface SearchSuggest {
 }
 
 export interface GenreFacet {
+  /** A genre slug from Foxing's fixed list (core's GENRES). */
   subject: string;
+  /** Its reader-facing name. */
+  label: string;
   count: number;
 }
 

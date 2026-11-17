@@ -1,7 +1,7 @@
 import { preloads } from "@dustinedwards/site-runtime/preload";
 import { renameRedirect } from "@dustinedwards/site-runtime/url";
 import { useMyBook, useShelves } from "@foxing/client";
-import { views } from "@foxing/core";
+import { catalogRepo, views } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { BookShelvesPicker } from "~/components/book-shelves-picker";
@@ -258,11 +258,11 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
 
             {book.subjects.length > 0 ? (
               <div className="cap-stack" data-gap="4">
-                <Eyebrow>Subjects</Eyebrow>
+                <Eyebrow>Genres</Eyebrow>
                 <div className="cap-cluster" data-gap="3">
-                  {book.subjects.slice(0, 12).map((s) => (
+                  {book.subjects.map((s) => (
                     <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>
-                      {s}
+                      {catalogRepo.genreLabel(s)}
                     </TagPill>
                   ))}
                 </div>

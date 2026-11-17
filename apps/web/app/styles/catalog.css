@@ -311,14 +311,6 @@ a:hover > .fx-book > :is(h2, h3) {
   line-height: var(--line-box-8);
 }
 
-.fx-books-caps {
-  margin-bottom: var(--space-3-5);
-}
-.fx-books-card {
-  gap: var(--space-6);
-  --pad-card: var(--space-5-5);
-}
-.fx-books-row,
 .fx-find-next-book-card,
 .fx-goals-label,
 .fx-journal-post-row,
@@ -326,12 +318,6 @@ a:hover > .fx-book > :is(h2, h3) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-}
-.fx-books-row {
-  justify-content: space-between;
-  gap: var(--space-4);
-  border-block-start: var(--line-w) solid var(--line);
-  padding-top: var(--space-5);
 }
 
 .fx-botm-card {

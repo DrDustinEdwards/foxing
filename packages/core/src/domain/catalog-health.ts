@@ -8,6 +8,8 @@
 // retailer. Catalog books (public domain, readable) are held to the page's fields; community books are reader-added
 // from outside data and only checked for what they do have.
 
+import { toGenres } from "../repositories/catalog/facets";
+
 export type Severity = "error" | "warning";
 
 export type CatalogCheck =
@@ -44,7 +46,8 @@ export const CATALOG_CHECKS: Record<
   missing_description: {
     severity: "error",
     scope: "catalog",
-    summary: "A catalog book with no description: its page has no summary text.",
+    summary:
+      "A catalog book with no real description (empty, or template filler that describes nothing): its page has no summary text.",
   },
   missing_epub: {
     severity: "error",
@@ -59,7 +62,8 @@ export const CATALOG_CHECKS: Record<
   missing_subjects: {
     severity: "warning",
     scope: "catalog",
-    summary: "A catalog book with no subjects: it is left out of subject browsing.",
+    summary:
+      "A catalog book with no genre from Foxing's list (subjects empty, or only headings that map to none): it is left out of genre browsing.",
   },
   invalid_isbn: {
     severity: "error",
@@ -205,6 +209,35 @@ const AMAZON_HOST = /(?:^|\.)amazon\.[a-z.]+$|(?:^|\.)amzn\.(?:to|com)$/i;
 
 const blank = (value: string | null | undefined) => !value || value.trim() === "";
 
+// The openings of the two-sentence template the catalog was seeded with ("A thoughtful and enduring work by
+// <author>. <title> rewards readers who like to read slowly and carefully."), 1,417 of 1,432 catalog books on
+// 2026-11-17. It is the same line for hundreds of books, so it describes none of them.
+const TEMPLATE_OPENINGS = [
+  "a thoughtful and enduring work by ",
+  "a profound and moving work by ",
+  "a gripping mystery by ",
+  "a classic adventure by ",
+  "a thrilling adventure by ",
+  "a moving story of love and longing by ",
+  "a delightful and witty read by ",
+  "a deeply felt work by ",
+  "a warm and charming story by ",
+  "a haunting and atmospheric work by ",
+  "a witty and entertaining work by ",
+  "an adventurous and thoughtful work by ",
+  "a compelling mystery by ",
+  "a dark and atmospheric work by ",
+  "a beloved romantic work by ",
+  "a gripping and suspenseful work by ",
+];
+
+/** True for a seeded template line rather than a description of the book. */
+export function isTemplateDescription(value: string | null | undefined): boolean {
+  if (blank(value)) return false;
+  const text = value!.trim().toLowerCase();
+  return text.length < 300 && TEMPLATE_OPENINGS.some((o) => text.startsWith(o));
+}
+
 /**
  * Every finding for `books`, errors first, then by title. `coverOrigin` is the host Foxing's own covers are served
  * from (https://covers.foxing.app), without a trailing slash.
@@ -231,10 +264,14 @@ export function auditCatalog(books: HealthBook[], coverOrigin: string): Finding[
 
     if (catalog) {
       if (blank(book.description)) add(book, "missing_description", "description is empty.");
+      else if (isTemplateDescription(book.description))
+        add(book, "missing_description", "description is template filler.");
       if (blank(book.epubUrl)) add(book, "missing_epub", "epub_url is empty.");
       if (book.publicationYear === null) add(book, "missing_year", "publication_year is empty.");
       if (!book.subjects || book.subjects.length === 0)
         add(book, "missing_subjects", "subjects is empty.");
+      else if (toGenres(book.subjects).length === 0)
+        add(book, "missing_subjects", "no subject maps to a Foxing genre.");
     }
 
     const ten = normalizeIsbn(book.isbn);

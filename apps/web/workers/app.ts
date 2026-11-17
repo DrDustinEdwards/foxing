@@ -36,7 +36,7 @@ import {
   type GatewayStep,
 } from "@dustinedwards/site-runtime/worker";
 import { createApi } from "@foxing/api";
-import { billing, catalogRepo, companion, createDb, push } from "@foxing/core";
+import { billing, catalogHealthDomain, catalogRepo, companion, createDb, push } from "@foxing/core";
 import { Hono } from "hono";
 import type { ServerBuild } from "react-router";
 import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
@@ -454,7 +454,10 @@ async function queue(
         id: book.id,
         title: book.title,
         author: book.author,
-        description: book.description,
+        // Template filler would only teach the model a line that describes nothing.
+        description: catalogHealthDomain.isTemplateDescription(book.description)
+          ? null
+          : book.description,
         publicationYear: book.publicationYear,
         subjects: book.subjects,
       });
