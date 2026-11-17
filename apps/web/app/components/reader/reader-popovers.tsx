@@ -30,6 +30,7 @@ const COLOR_MEANING: Record<HighlightColor, string> = {
 function useAnchoredPopover(
   anchor: DecorationRect | null,
   onClose: () => void,
+  canvas: { bg: string; text: string },
   remeasure: string = "",
 ) {
   const ref = useRef<HTMLDivElement | null>(null);
@@ -60,7 +61,19 @@ function useAnchoredPopover(
     setPos({ top, left });
   }, [anchor, remeasure]);
 
-  return { ref, pos };
+  // The popover's own box: placed at pos once measured (hidden until then), or docked above the
+  // bottom bar when there is no anchor; a stack of rows in the canvas's colors either way.
+  const colors = { background: canvas.bg, color: canvas.text };
+  return {
+    ref,
+    "data-gap": "3",
+    className: anchor ? "cap-stack fx-reader-pop" : "cap-stack fx-reader-pop fx-reader-pop-docked",
+    style: !anchor
+      ? colors
+      : pos
+        ? { top: pos.top, left: pos.left, ...colors }
+        : { top: 0, left: 0, visibility: "hidden" as const, ...colors },
+  };
 }
 
 function authorName(a: AnnotationAuthor): string {
@@ -101,16 +114,16 @@ export function AttributionPopover({
   const [busy, setBusy] = useState(false);
   // Re-measured when the content changes size (a reply typed, the note revealed, a reply
   // added), so it stays anchored to the passage.
-  const { ref, pos } = useAnchoredPopover(
+  const pop = useAnchoredPopover(
     anchor,
     onClose,
+    canvas,
     `${replies.length}|${revealed}|${replyText}`,
   );
 
   const gated = other.gate.spoiler || (progressGateEnabled && other.gate.ahead);
   const gateLabel = other.gate.spoiler ? "Contains spoilers" : "Ahead of where you are";
   const canReply = shareableClubs.length > 0;
-  const anchored = anchor != null;
 
   const submit = async () => {
     const body = replyText.trim();
@@ -125,22 +138,7 @@ export function AttributionPopover({
   };
 
   return (
-    <div
-      ref={ref}
-      role="dialog"
-      aria-label={`Annotation by ${authorName(other.author)}`}
-      className={
-        anchored ? "cap-stack fx-reader-pop" : "cap-stack fx-reader-pop fx-reader-pop-docked"
-      }
-      data-gap="3"
-      style={
-        anchored
-          ? pos
-            ? { top: pos.top, left: pos.left, background: canvas.bg, color: canvas.text }
-            : { top: 0, left: 0, visibility: "hidden", background: canvas.bg, color: canvas.text }
-          : { background: canvas.bg, color: canvas.text }
-      }
-    >
+    <div role="dialog" aria-label={`Annotation by ${authorName(other.author)}`} {...pop}>
       <div className="cap-cluster" data-gap="3">
         <span
           className="fx-reader-popovers-label"
@@ -386,30 +384,17 @@ export function EditPopover({
   onClose: () => void;
 }) {
   const [body, setBody] = useState(annotation.body ?? "");
-  const { ref, pos } = useAnchoredPopover(anchor, onClose);
+  const pop = useAnchoredPopover(anchor, onClose, canvas);
 
-  const anchored = anchor != null;
   // No full-screen backdrop: it would intercept every reader click and read as a
   // frozen page. The popover closes on Close, Escape, a page turn, or opening
   // another annotation, so reading interaction is never blocked.
   return (
     <div
-      ref={ref}
       role="dialog"
       aria-label="Edit annotation"
-      className={
-        anchored
-          ? "cap-stack fx-reader-pop fx-reader-pop-narrow"
-          : "cap-stack fx-reader-pop fx-reader-pop-narrow fx-reader-pop-docked"
-      }
-      data-gap="3"
-      style={
-        anchored
-          ? pos
-            ? { top: pos.top, left: pos.left, background: canvas.bg, color: canvas.text }
-            : { top: 0, left: 0, visibility: "hidden", background: canvas.bg, color: canvas.text }
-          : { background: canvas.bg, color: canvas.text }
-      }
+      {...pop}
+      className={`${pop.className} fx-reader-pop-narrow`}
     >
       <div className="fx-reader-popovers-row-5">
         {highlightColorValues.map((c) => (
