@@ -90,7 +90,7 @@ a:hover > .fx-entity {
   font-family: var(--display);
   font-size: var(--title-1);
   font-weight: var(--weight-semibold);
-  line-height: var(--leading-tight);
+  line-height: 1.15;
 }
 @media (min-width: 40rem) {
   .fx-page-title {

@@ -42,44 +42,46 @@ export function BillingSection({
 
   return (
     <Card title="Plan">
-      {isPlus ? (
-        <div className="cap-stack" data-gap="4">
-          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-            You are on{" "}
-            <span className="cap-text" data-tone="ink" data-weight="strong">
-              Foxing Plus
-            </span>
-            {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
-          </p>
-          <button
-            type="button"
-            onClick={() => void manage()}
-            disabled={pending}
-            className="cap-btn"
-          >
-            {pending ? "Opening..." : "Manage billing"}
-          </button>
-        </div>
-      ) : (
-        <div className="cap-stack" data-gap="4">
-          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-            You are on the{" "}
-            <span className="cap-text" data-tone="ink" data-weight="strong">
-              Free
-            </span>{" "}
-            plan. Clubs and the whole social layer are free. Plus adds the AI reading companion.
-          </p>
-          <button
-            type="button"
-            onClick={onUpgrade}
-            className="cap-btn self-start"
-            data-variant="primary"
-          >
-            Upgrade to Plus
-          </button>
-        </div>
-      )}
-      <FormError error={error} className="mt-3" />
+      <div className="cap-stack" data-gap="4">
+        {isPlus ? (
+          <>
+            <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+              You are on{" "}
+              <span className="cap-text" data-tone="ink" data-weight="strong">
+                Foxing Plus
+              </span>
+              {status ? ` (${status})` : ""}.{periodEndLabel ? ` Renews ${periodEndLabel}.` : ""}
+            </p>
+            <button
+              type="button"
+              onClick={() => void manage()}
+              disabled={pending}
+              className="cap-btn"
+            >
+              {pending ? "Opening..." : "Manage billing"}
+            </button>
+          </>
+        ) : (
+          <>
+            <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+              You are on the{" "}
+              <span className="cap-text" data-tone="ink" data-weight="strong">
+                Free
+              </span>{" "}
+              plan. Clubs and the whole social layer are free. Plus adds the AI reading companion.
+            </p>
+            <button
+              type="button"
+              onClick={onUpgrade}
+              className="cap-btn self-start"
+              data-variant="primary"
+            >
+              Upgrade to Plus
+            </button>
+          </>
+        )}
+        <FormError error={error} />
+      </div>
     </Card>
   );
 }
@@ -120,20 +122,22 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
         />
         <label className="block">
           <span className="fx-label">Default highlight and note audience</span>
-          <select
-            value={defaultAnnotation}
-            onChange={(e) =>
-              setDefaultAnnotation(e.target.value as VisibilityValues["defaultAnnotation"])
-            }
-            className={inputClass}
-          >
-            <option value="private">Private (only me)</option>
-            <option value="friends">Close friends</option>
-            <option value="public">Public</option>
-          </select>
-          <span className="mt-1 block fx-preference-sections-label">
-            New highlights and notes start with this audience. You can change any one when you make
-            it.
+          <span className="cap-stack" data-gap="2">
+            <select
+              value={defaultAnnotation}
+              onChange={(e) =>
+                setDefaultAnnotation(e.target.value as VisibilityValues["defaultAnnotation"])
+              }
+              className={inputClass}
+            >
+              <option value="private">Private (only me)</option>
+              <option value="friends">Close friends</option>
+              <option value="public">Public</option>
+            </select>
+            <span className="fx-preference-sections-label">
+              New highlights and notes start with this audience. You can change any one when you
+              make it.
+            </span>
           </span>
         </label>
         <SubmitRow
@@ -197,22 +201,34 @@ export function NotificationsSection({
         />
         {quietOn ? (
           <div className="cap-cluster" data-gap="4">
-            <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+            <label
+              className="cap-stack cap-text"
+              data-gap="2"
+              data-size="small"
+              data-tone="muted"
+              data-face="ui"
+            >
               From
               <input
                 type="time"
                 value={start}
                 onChange={(e) => setStart(e.target.value)}
-                className={`${inputClass} mt-1`}
+                className={inputClass}
               />
             </label>
-            <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+            <label
+              className="cap-stack cap-text"
+              data-gap="2"
+              data-size="small"
+              data-tone="muted"
+              data-face="ui"
+            >
               To
               <input
                 type="time"
                 value={end}
                 onChange={(e) => setEnd(e.target.value)}
-                className={`${inputClass} mt-1`}
+                className={inputClass}
               />
             </label>
           </div>
@@ -263,7 +279,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
         Close friends see your friends-only reviews, activity, and shared annotations.
       </p>
       {friends.length === 0 ? (
-        <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
           No close friends yet. Add readers you follow from{" "}
           <Link to="/people" className="fx-preference-sections-link">
             People
@@ -271,7 +287,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
           .
         </p>
       ) : (
-        <ul className="mt-4 fx-preference-sections-stack-2">
+        <ul className="fx-preference-sections-stack-2">
           {friends.map((f) => (
             <li key={f.id} className="py-2 fx-preference-sections-card">
               <Link to={`/u/${f.username}`} className="fx-preference-sections-link-2">
@@ -290,7 +306,7 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
           ))}
         </ul>
       )}
-      <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+      <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
         Add close friends from{" "}
         <Link to="/people" className="fx-preference-sections-link">
           People
