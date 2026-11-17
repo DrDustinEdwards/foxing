@@ -4,7 +4,7 @@
 .fx-lists-caps,
 .fx-vocabulary-caps {
   font-family: var(--mono);
-  font-size: 0.6875rem;
+  font-size: var(--fs-tiny-5);
   text-transform: uppercase;
   letter-spacing: var(--tracking-caps);
 }
