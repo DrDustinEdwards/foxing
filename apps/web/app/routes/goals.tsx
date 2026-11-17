@@ -213,16 +213,7 @@ function GoalItem({ row, active, now }: { row: GoalWithProgress; active: boolean
 
       {editing ? (
         <div className="cap-cluster" data-gap="3">
-          <label className="cap-text" data-size="small" data-face="ui">
-            <span className="cap-sr-only">New target</span>
-            <input
-              type="number"
-              min={1}
-              value={target}
-              onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))}
-              className="cap-input fx-goals-input"
-            />
-          </label>
+          <TargetInput label="New target" value={target} onChange={setTarget} />
           <button
             type="button"
             onClick={() => void save()}
@@ -259,16 +250,7 @@ function CreateGoal() {
       <div className="cap-stack" data-gap="3">
         <p className="fx-goals-text">Set a new goal</p>
         <div className="cap-cluster" data-gap="3">
-          <label className="cap-text" data-size="small" data-face="ui">
-            <span className="cap-sr-only">Number of books</span>
-            <input
-              type="number"
-              min={1}
-              value={target}
-              onChange={(e) => setTarget(Math.max(1, Number(e.target.value)))}
-              className="cap-input fx-goals-input"
-            />
-          </label>
+          <TargetInput label="Number of books" value={target} onChange={setTarget} />
           <span className="cap-text" data-size="small" data-tone="muted" data-face="ui">
             books
           </span>
@@ -297,3 +279,27 @@ function CreateGoal() {
 
 // It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
+
+/** A goal's target, a whole number of at least one, with its label for screen readers. */
+function TargetInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+}) {
+  return (
+    <label className="cap-text" data-size="small" data-face="ui">
+      <span className="cap-sr-only">{label}</span>
+      <input
+        type="number"
+        min={1}
+        value={value}
+        onChange={(e) => onChange(Math.max(1, Number(e.target.value)))}
+        className="cap-input fx-goals-input"
+      />
+    </label>
+  );
+}
