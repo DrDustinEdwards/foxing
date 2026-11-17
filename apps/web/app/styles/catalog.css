@@ -253,6 +253,7 @@ a:hover > .fx-book > :is(h2, h3) {
 }
 .fx-book-detail-box-2 {
   margin-inline: auto;
+  inline-size: 100%;
   max-width: 260px;
   @media (min-width: 64rem) {
     margin-inline: 0;
@@ -299,11 +300,6 @@ a:hover > .fx-book > :is(h2, h3) {
   font-size: var(--fs-h3);
   line-height: var(--leading-relaxed-5);
   color: var(--muted);
-}
-.fx-book-detail-box-3 {
-  & > p {
-    margin-top: var(--space-5);
-  }
 }
 .fx-book-detail-section {
   margin-top: var(--space-9-5);

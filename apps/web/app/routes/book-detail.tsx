@@ -146,7 +146,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
 
         <div className="fx-book-detail-grid">
           {/* Cover column (LCP). */}
-          <div className="fx-book-detail-box">
+          <div className="cap-stack fx-book-detail-box" data-gap="6">
             <div className="fx-book-detail-box-2">
               <CoverImage
                 src={book.coverUrl}
@@ -156,7 +156,7 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
                 sizes="(min-width: 64rem) 260px, 60vw"
               />
             </div>
-            <div className="mt-5 fx-book-detail-stack">
+            <div className="fx-book-detail-stack">
               {readable ? (
                 <Button to={`/read/${book.slug}`} variant="primary">
                   Read now
@@ -198,53 +198,55 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
           </div>
 
           {/* Detail column. */}
-          <div>
-            <Eyebrow className="mb-3">
-              {community ? "Tracked title" : "In the reading library"}
-            </Eyebrow>
-            <h1 className="fx-book-detail-title">{book.title}</h1>
-            <p className="mt-3 fx-book-detail-text">
-              by{" "}
-              {book.authorSlug ? (
-                <Link to={`/authors/${book.authorSlug}`} className="link">
-                  {book.author}
-                </Link>
-              ) : (
-                book.author
-              )}
-            </p>
+          <div className="cap-stack" data-gap="7">
+            <div className="cap-stack" data-gap="6">
+              <div className="cap-stack" data-gap="4">
+                <Eyebrow>{community ? "Tracked title" : "In the reading library"}</Eyebrow>
+                <h1 className="fx-book-detail-title">{book.title}</h1>
+                <p className="fx-book-detail-text">
+                  by{" "}
+                  {book.authorSlug ? (
+                    <Link to={`/authors/${book.authorSlug}`} className="link">
+                      {book.author}
+                    </Link>
+                  ) : (
+                    book.author
+                  )}
+                </p>
+              </div>
 
-            <div className="mt-5 fx-book-detail-row">
-              {book.publicationYear ? <Chip>{book.publicationYear}</Chip> : null}
-              {time ? <Chip>{time}</Chip> : null}
-              {book.publisher ? <Chip>{book.publisher}</Chip> : null}
+              <div className="fx-book-detail-row">
+                {book.publicationYear ? <Chip>{book.publicationYear}</Chip> : null}
+                {time ? <Chip>{time}</Chip> : null}
+                {book.publisher ? <Chip>{book.publisher}</Chip> : null}
+              </div>
+
+              {awards.length > 0 ? (
+                <div className="cap-card">
+                  <Eyebrow>Recognition</Eyebrow>
+                  <ul className="fx-book-detail-stack-2">
+                    {awards.map((a) => (
+                      <li
+                        key={`${a.awardSlug}-${a.year}`}
+                        className="cap-text"
+                        data-size="small"
+                        data-face="ui"
+                      >
+                        <Link to={`/awards/${a.awardSlug}`} className="link">
+                          {a.awardName}
+                        </Link>
+                        <span className="cap-text" data-tone="dim">
+                          {a.year ? `, ${a.year}` : ""} · {a.distinction}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
 
-            {awards.length > 0 ? (
-              <div className="mt-6 cap-card">
-                <Eyebrow>Recognition</Eyebrow>
-                <ul className="fx-book-detail-stack-2">
-                  {awards.map((a) => (
-                    <li
-                      key={`${a.awardSlug}-${a.year}`}
-                      className="cap-text"
-                      data-size="small"
-                      data-face="ui"
-                    >
-                      <Link to={`/awards/${a.awardSlug}`} className="link">
-                        {a.awardName}
-                      </Link>
-                      <span className="cap-text" data-tone="dim">
-                        {a.year ? `, ${a.year}` : ""} · {a.distinction}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
             {book.description ? (
-              <div className="mt-8 fx-book-detail-box-3">
+              <div className="cap-stack fx-book-detail-box-3" data-gap="5">
                 {book.description
                   .split(/\n{2,}/)
                   .filter(Boolean)
@@ -255,8 +257,8 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             ) : null}
 
             {book.subjects.length > 0 ? (
-              <div className="mt-8">
-                <Eyebrow className="mb-3">Subjects</Eyebrow>
+              <div className="cap-stack" data-gap="4">
+                <Eyebrow>Subjects</Eyebrow>
                 <div className="cap-cluster" data-gap="3">
                   {book.subjects.slice(0, 12).map((s) => (
                     <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>
@@ -270,8 +272,8 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
         </div>
 
         {related.length > 0 ? (
-          <section className="fx-book-detail-section">
-            <h2 className="mb-6 fx-book-detail-title-2">More like this</h2>
+          <section className="cap-stack fx-book-detail-section" data-gap="6">
+            <h2 className="fx-book-detail-title-2">More like this</h2>
             <BookGrid>
               {related.map((b) => (
                 <BookCard key={b.slug} book={b} />

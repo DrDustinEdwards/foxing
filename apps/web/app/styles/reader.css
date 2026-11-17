@@ -338,6 +338,7 @@
   gap: var(--space-2-5);
   border-radius: var(--radius-full);
   border: var(--line-w) solid var(--line);
+  padding-block: var(--space-3);
   padding-inline: var(--space-4);
   box-shadow: var(--shadow-m);
 }
