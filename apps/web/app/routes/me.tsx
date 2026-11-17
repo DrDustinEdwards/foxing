@@ -53,11 +53,13 @@ export default function Me({ loaderData }: Route.ComponentProps) {
       <Container className="cap-stack" data-gap="7">
         <header className="items-start fx-me-stack">
           <Avatar src={profile.avatarUrl} name={name} size="lg" />
-          <div className="cap-shrink">
-            <h1 className="fx-me-title">{name}</h1>
-            <p className="mt-1 fx-me-text">@{profile.username}</p>
+          <div className="cap-stack cap-shrink" data-gap="3">
+            <div className="cap-stack" data-gap="2">
+              <h1 className="fx-me-title">{name}</h1>
+              <p className="fx-me-text">@{profile.username}</p>
+            </div>
             {joined ? (
-              <p className="cap-text mt-2" data-size="small" data-tone="muted" data-face="ui">
+              <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 Reading on Foxing since {joined}
               </p>
             ) : null}
@@ -80,8 +82,8 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
         {profile.bio ? <p className="fx-me-text-2">{profile.bio}</p> : null}
 
-        <section className="cap-card fx-me-card">
-          <Eyebrow className="mb-4">Your reading</Eyebrow>
+        <section className="cap-card cap-stack fx-me-card" data-gap="6">
+          <Eyebrow>Your reading</Eyebrow>
           <dl className="cap-text fx-me-grid" data-align="center">
             {statTiles.map((tile) => (
               <div key={tile.label}>
@@ -92,7 +94,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
               </div>
             ))}
           </dl>
-          <div className="mt-5 fx-me-box">
+          <div className="fx-me-box">
             <Link to="/library" className="cap-text link" data-size="small" data-face="ui">
               Go to your library
             </Link>
@@ -100,8 +102,8 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         </section>
 
         {profile.favoriteGenres.length > 0 ? (
-          <section>
-            <Eyebrow className="mb-3">Favorite genres</Eyebrow>
+          <section className="cap-stack" data-gap="4">
+            <Eyebrow>Favorite genres</Eyebrow>
             <div className="cap-cluster" data-gap="3">
               {profile.favoriteGenres.map((g) => (
                 <Chip key={g}>{g}</Chip>

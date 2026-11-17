@@ -1,8 +1,8 @@
 import { titleCase } from "@drdustinedwards/site-helpers/text";
 import { catalogRepo } from "@foxing/core";
 import { redirect } from "react-router";
-import { Link } from "capsomer/react/link";
 import { pageHref, parsePage } from "capsomer/behavior/pagination";
+import { JournalCard } from "~/components/journal-card";
 import { PageShell } from "~/components/page-shell";
 import { Pager } from "~/components/pager";
 import { Breadcrumbs, Container, EmptyState, PageHeader } from "~/components/ui";
@@ -60,37 +60,32 @@ export default function JournalTag({ loaderData }: Route.ComponentProps) {
           lede={`${result.total} ${result.total === 1 ? "post" : "posts"}`}
         />
 
-        {result.posts.length === 0 ? (
-          <EmptyState title="Nothing here yet." />
-        ) : (
-          <div className="fx-journal-tag-grid">
-            {result.posts.map((post) => (
-              <Link key={post.slug} to={`/journal/${post.slug}`}>
-                <div className="cap-card fx-journal-tag-card">
-                  {post.tags?.[0] ? (
-                    <span className="mb-2 fx-journal-tag-caps">
-                      {post.tags[0].replace(/-/g, " ")}
-                    </span>
-                  ) : null}
-                  <h3 className="fx-journal-tag-title">{post.title}</h3>
-                  {post.excerpt ? <p className="mt-2 fx-journal-tag-text">{post.excerpt}</p> : null}
-                  {post.readingTimeMinutes ? (
-                    <p className="mt-3 fx-journal-tag-text-2">{post.readingTimeMinutes} min read</p>
-                  ) : null}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        <Pager
-          page={result.page}
-          pageCount={result.pageCount}
-          hrefFor={(n) => pageHref(journalTagPath(tag), {}, n)}
-          prevLabel="Newer"
-          nextLabel="Older"
-          label="Journal pages"
-        />
+        <div className="cap-stack" data-gap="8">
+          {result.posts.length === 0 ? (
+            <EmptyState title="Nothing here yet." />
+          ) : (
+            <div className="fx-journal-tag-grid">
+              {result.posts.map((post) => (
+                <JournalCard
+                  key={post.slug}
+                  to={`/journal/${post.slug}`}
+                  label={post.tags?.[0]?.replace(/-/g, " ")}
+                  title={post.title}
+                  excerpt={post.excerpt}
+                  minutes={post.readingTimeMinutes}
+                />
+              ))}
+            </div>
+          )}
+          <Pager
+            page={result.page}
+            pageCount={result.pageCount}
+            hrefFor={(n) => pageHref(journalTagPath(tag), {}, n)}
+            prevLabel="Newer"
+            nextLabel="Older"
+            label="Journal pages"
+          />
+        </div>
       </Container>
     </PageShell>
   );

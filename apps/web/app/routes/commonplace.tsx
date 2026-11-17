@@ -57,7 +57,7 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
             body="Notes and saved passages from the reader will appear here."
           />
         ) : (
-          <>
+          <div className="cap-stack" data-gap="6">
             <AnnotationFilters
               query={query}
               onQuery={setQuery}
@@ -80,12 +80,12 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
                       {e.selectedText}
                     </blockquote>
                   ) : null}
-                  {e.body ? <p className="mt-3 fx-commonplace-text">{e.body}</p> : null}
-                  {e.chapter ? <p className="mt-3 fx-commonplace-text-2">{e.chapter}</p> : null}
+                  {e.body ? <p className="fx-commonplace-text">{e.body}</p> : null}
+                  {e.chapter ? <p className="fx-commonplace-text-2">{e.chapter}</p> : null}
                 </>
               )}
             />
-          </>
+          </div>
         )}
       </Container>
     </PageShell>

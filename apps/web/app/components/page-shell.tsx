@@ -145,16 +145,18 @@ function SiteFooter() {
   return (
     <footer className="fx-footer">
       <Container className="fx-footer-cols">
-        <div className="fx-footer-brand">
-          <Link to="/" className="fx-footer-mark">
-            <span aria-hidden="true">🦊</span>
-            <span>Foxing</span>
-          </Link>
-          <p className="fx-footer-motto">reading, together.</p>
-          <p className="cap-text mt-3 measure-xs" data-size="small" data-tone="dim">
+        <div className="cap-stack fx-footer-brand" data-gap="4" data-align="start">
+          <div className="cap-stack" data-gap="3" data-align="start">
+            <Link to="/" className="fx-footer-mark">
+              <span aria-hidden="true">🦊</span>
+              <span>Foxing</span>
+            </Link>
+            <p className="fx-footer-motto">reading, together.</p>
+          </div>
+          <p className="cap-text measure-xs" data-size="small" data-tone="dim">
             A reading home for the classics and the conversations around them.
           </p>
-          <Link to="/about" className="fx-footer-link mt-3 block">
+          <Link to="/about" className="fx-footer-link">
             About
           </Link>
         </div>
@@ -216,9 +218,9 @@ function FooterCol({
   links: Array<{ to: string; label: string }>;
 }) {
   return (
-    <div>
+    <div className="cap-stack" data-gap="4">
       <p className="group-label">{title}</p>
-      <ul className="cap-stack mt-3" data-gap="3">
+      <ul className="cap-stack" data-gap="3">
         {links.map((l) => (
           <li key={l.to}>
             <Link to={l.to} className="fx-footer-link">

@@ -43,7 +43,7 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container>
+      <Container className="cap-stack" data-gap="8">
         <div className="cap-spread" data-gap="5" data-align="center">
           <h1 className="cap-title" data-size="1">
             Book clubs
@@ -53,16 +53,15 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
           </ButtonLink>
         </div>
 
-        <section className="mt-10">
+        <section className="cap-stack" data-gap="5">
           <h2 className="fx-clubs-caps">Your clubs</h2>
           {mine.length === 0 ? (
             <EmptyState
-              className="mt-4"
               title="You have not joined a club yet."
               body="Join one below, or start your own."
             />
           ) : (
-            <div className="mt-4 fx-clubs-grid">
+            <div className="fx-clubs-grid">
               {mine.map((club) => (
                 <ClubRow key={club.id} club={club} />
               ))}
@@ -70,14 +69,14 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
           )}
         </section>
 
-        <section className="mt-12">
+        <section className="cap-stack" data-gap="5">
           <h2 className="fx-clubs-caps">Discover</h2>
           {discover.length === 0 ? (
-            <p className="cap-text mt-4" data-size="small" data-tone="dim" data-face="ui">
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No public clubs yet.
             </p>
           ) : (
-            <div className="mt-4 fx-clubs-grid">
+            <div className="fx-clubs-grid">
               {discover.map((club) => (
                 <ClubRow key={club.id} club={club} />
               ))}

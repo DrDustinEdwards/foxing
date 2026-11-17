@@ -42,13 +42,15 @@ export default function ClubNew() {
 
   return (
     <PageShell>
-      <Container>
-        <h1 className="cap-title" data-size="1">
-          Start a club
-        </h1>
-        <p className="mt-2 fx-club-new-text">Pick a book, set the pace, and read together.</p>
+      <Container className="cap-stack" data-gap="7">
+        <div className="cap-stack" data-gap="3">
+          <h1 className="cap-title" data-size="1">
+            Start a club
+          </h1>
+          <p className="fx-club-new-text">Pick a book, set the pace, and read together.</p>
+        </div>
 
-        <form onSubmit={(e) => void onSubmit(e)} className="mt-8 fx-club-new-form">
+        <form onSubmit={(e) => void onSubmit(e)} className="fx-club-new-form">
           <div>
             <label htmlFor="name" className="block fx-club-new-field">
               Club name

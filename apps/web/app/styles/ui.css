@@ -83,8 +83,17 @@ a:hover > .fx-entity {
   --cap-avatar-size: 5rem;
 }
 
+/* A page's header and breadcrumbs keep the page's section space below them in plain flow.
+   In a stack the stack's gap spaces them (gap over child margins: Modern Web Guidance,
+   css-layout). */
 .fx-page-head {
   margin-block-end: var(--space-7-5);
+}
+.fx-breadcrumbs {
+  margin-block-end: var(--space-6);
+}
+.cap-stack > :is(.fx-page-head, .fx-breadcrumbs) {
+  margin-block-end: 0;
 }
 .fx-page-title {
   font-family: var(--display);

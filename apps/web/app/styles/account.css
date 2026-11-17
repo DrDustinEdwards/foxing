@@ -30,9 +30,6 @@
   --pad-card: var(--space-6-5);
   --card-shadow: var(--shadow-m);
 }
-.fx-auth-shell-text {
-  margin-top: var(--space-2-5);
-}
 .fx-auth-shell-label {
   margin-bottom: var(--space-2-5);
   color: var(--muted);

@@ -97,7 +97,7 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
             body="Highlights you make in the reader will appear here."
           />
         ) : (
-          <>
+          <div className="cap-stack" data-gap="6">
             <AnnotationFilters
               query={query}
               onQuery={setQuery}
@@ -129,16 +129,16 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
               renderItem={(h) => (
                 <>
                   <div className="items-start fx-highlights-row">
-                    <span className="mt-2">
+                    <span className="fx-highlights-dot">
                       <ColorDot color={h.color} />
                     </span>
                     <blockquote className="italic fx-highlights-quote">{h.selectedText}</blockquote>
                   </div>
-                  {h.chapter ? <p className="mt-3 fx-highlights-text">{h.chapter}</p> : null}
+                  {h.chapter ? <p className="fx-highlights-text">{h.chapter}</p> : null}
                 </>
               )}
             />
-          </>
+          </div>
         )}
       </Container>
     </PageShell>

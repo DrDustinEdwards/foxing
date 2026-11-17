@@ -107,13 +107,16 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
 
   return (
     <PageShell>
-      <Container>
-        <div className="mb-8 items-end fx-diary-row">
-          <PageHeader eyebrow="Reading" title="Your diary" className="mb-0" />
-          <ButtonLink to="/diary/new" className="cap-keep" variant="primary">
-            New entry
-          </ButtonLink>
-        </div>
+      <Container className="cap-stack" data-gap="7">
+        <PageHeader
+          eyebrow="Reading"
+          title="Your diary"
+          actions={
+            <ButtonLink to="/diary/new" className="cap-keep" variant="primary">
+              New entry
+            </ButtonLink>
+          }
+        />
 
         {entries.length === 0 ? (
           <EmptyState
@@ -121,8 +124,8 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
             body="Log a book to record what you read, when you read it, and what you thought."
           />
         ) : (
-          <>
-            <div className="mb-6 cap-cluster" data-gap="5">
+          <div className="cap-stack" data-gap="6">
+            <div className="cap-cluster" data-gap="5">
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Rating</span>
                 <select
@@ -182,7 +185,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
                 ))}
               </div>
             )}
-          </>
+          </div>
         )}
       </Container>
     </PageShell>
@@ -209,9 +212,9 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
           </Link>
         ) : null}
       </div>
-      <div className="fx-diary-box-2">
+      <div className="cap-stack fx-diary-box-2" data-gap="3">
         <div className="cap-spread" data-gap="4" data-align="start">
-          <div className="cap-shrink">
+          <div className="cap-stack cap-shrink" data-gap="2">
             <div className="cap-cluster" data-gap="3">
               {e.book ? (
                 <Link to={`/books/${e.book.slug}`} className="fx-diary-link">
@@ -224,7 +227,7 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
               )}
               {reread ? <RereadBadge /> : null}
             </div>
-            <div className="mt-1 cap-cluster" data-gap="4">
+            <div className="cap-cluster" data-gap="4">
               {e.ratingHalf == null ? null : <Rating value={e.ratingHalf / 2} size="sm" />}
               {e.logDate ? (
                 <span className="cap-text" data-size="tiny" data-tone="dim" data-face="mono">
@@ -235,8 +238,8 @@ function EntryCard({ entry: e, reread }: { entry: OwnDiaryEntry; reread: boolean
           </div>
           <VisibilityBadge visibility={e.visibility} />
         </div>
-        {e.review?.trim() ? <p className="mt-2 fx-diary-text">{e.review}</p> : null}
-        <Link to={`/diary/${e.id}/edit`} className="mt-2 fx-diary-link-2">
+        {e.review?.trim() ? <p className="fx-diary-text">{e.review}</p> : null}
+        <Link to={`/diary/${e.id}/edit`} className="fx-diary-link-2">
           Edit
         </Link>
       </div>

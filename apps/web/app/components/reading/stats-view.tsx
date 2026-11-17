@@ -39,9 +39,9 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
 
   return (
     <PageShell>
-      <Container>
+      <Container className="cap-stack" data-gap="7">
         <PageHeader eyebrow="Reading" title="Your stats" />
-        {notice ? <div className="mb-6">{notice}</div> : null}
+        {notice}
 
         <dl className="fx-stats-grid">
           {tiles.map((tile) => (
@@ -55,19 +55,19 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
         </dl>
 
         {finishedThisYear > 0 ? (
-          <section className="mt-10 cap-card">
+          <section className="cap-card">
             <ChartFrame draw={monthsChart(monthly, year)} />
           </section>
         ) : null}
 
         {genres.length > 0 ? (
-          <section className="mt-10 cap-card">
+          <section className="cap-card">
             <ChartFrame draw={genresChart(genres, year)} />
           </section>
         ) : null}
 
-        <section className="mt-10">
-          <Eyebrow className="mb-4">Goals</Eyebrow>
+        <section className="cap-stack" data-gap="5">
+          <Eyebrow>Goals</Eyebrow>
           {goals.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No goals set.

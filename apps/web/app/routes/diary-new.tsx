@@ -37,21 +37,23 @@ export default function DiaryNew({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <PageHeader eyebrow="Diary" title="Log a book" />
-        {book ? (
-          <DiaryForm
-            mode="create"
-            bookId={book.id}
-            bookTitle={book.title}
-            redirectTo={`/u/${username}`}
-          />
-        ) : (
-          <DiaryBookPicker />
-        )}
-        <p className="mt-6 fx-diary-new-text">
-          <Link to="/library" className="link">
-            Go to your library
-          </Link>
-        </p>
+        <div className="cap-stack" data-gap="6">
+          {book ? (
+            <DiaryForm
+              mode="create"
+              bookId={book.id}
+              bookTitle={book.title}
+              redirectTo={`/u/${username}`}
+            />
+          ) : (
+            <DiaryBookPicker />
+          )}
+          <p className="fx-diary-new-text">
+            <Link to="/library" className="link">
+              Go to your library
+            </Link>
+          </p>
+        </div>
       </Container>
     </PageShell>
   );

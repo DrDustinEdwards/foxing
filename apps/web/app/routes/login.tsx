@@ -47,17 +47,18 @@ export default function Login({ loaderData }: Route.ComponentProps) {
         </>
       }
     >
-      {error ? (
-        <p role="alert" className="mb-4 fx-login-text-2">
-          {error}
-        </p>
-      ) : null}
-
-      <div className="cap-stack">
-        <PasskeyButton redirectTo={next ?? undefined} />
-        <SocialButtons methods={methods} next={next ?? undefined} />
-        <AuthDivider />
-        <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} next={next ?? undefined} />
+      <div className="cap-stack" data-gap="5">
+        {error ? (
+          <p role="alert" className="fx-login-text-2">
+            {error}
+          </p>
+        ) : null}
+        <div className="cap-stack">
+          <PasskeyButton redirectTo={next ?? undefined} />
+          <SocialButtons methods={methods} next={next ?? undefined} />
+          <AuthDivider />
+          <MagicLinkForm turnstileSiteKey={methods.turnstileSiteKey} next={next ?? undefined} />
+        </div>
       </div>
     </AuthShell>
   );

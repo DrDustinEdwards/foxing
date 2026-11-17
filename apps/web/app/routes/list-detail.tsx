@@ -57,12 +57,12 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
       <Container className="cap-stack" data-gap="7">
         <header className="cap-stack">
           <div className="cap-spread" data-gap="5" data-align="start">
-            <div>
+            <div className="cap-stack" data-gap="3" data-align="start">
               <h1 className="cap-title" data-size="1">
                 {list.title}
               </h1>
               {owner ? (
-                <Link to={`/u/${owner.username}`} className="mt-2 fx-list-detail-link">
+                <Link to={`/u/${owner.username}`} className="fx-list-detail-link">
                   <Avatar
                     src={owner.avatarUrl}
                     name={owner.displayName ?? owner.username}
@@ -102,20 +102,22 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
               <li key={entry.bookId} className="cap-card fx-list-detail-card">
                 <div className="fx-list-detail-row">
                   <span className="fx-list-detail-label">{i + 1}</span>
-                  <div className="cap-shrink">
-                    {entry.book ? (
-                      <Link to={`/books/${entry.book.slug}`} className="fx-list-detail-link-2">
-                        {entry.book.title}
-                      </Link>
-                    ) : (
-                      <span className="fx-list-detail-title">Unavailable book</span>
-                    )}
-                    {entry.book ? (
-                      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-                        {entry.book.author}
-                      </p>
-                    ) : null}
-                    {entry.note ? <p className="mt-1 fx-list-detail-text-2">{entry.note}</p> : null}
+                  <div className="cap-stack cap-shrink" data-gap="2">
+                    <div>
+                      {entry.book ? (
+                        <Link to={`/books/${entry.book.slug}`} className="fx-list-detail-link-2">
+                          {entry.book.title}
+                        </Link>
+                      ) : (
+                        <span className="fx-list-detail-title">Unavailable book</span>
+                      )}
+                      {entry.book ? (
+                        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+                          {entry.book.author}
+                        </p>
+                      ) : null}
+                    </div>
+                    {entry.note ? <p className="fx-list-detail-text-2">{entry.note}</p> : null}
                   </div>
                 </div>
                 {isOwner ? <RemoveBookButton listId={list.id} bookId={entry.bookId} /> : null}

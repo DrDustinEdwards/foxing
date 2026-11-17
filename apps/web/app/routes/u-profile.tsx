@@ -120,18 +120,20 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
         <header className="items-start fx-u-profile-stack">
           <div className="items-start fx-u-profile-row">
             <Avatar src={profile.avatarUrl} name={name} size="lg" />
-            <div className="cap-shrink">
-              <h1 className="fx-u-profile-title">{name}</h1>
-              <p className="mt-1 fx-u-profile-text">@{profile.username}</p>
-              {profile.bio ? <p className="mt-3 fx-u-profile-text-2">{profile.bio}</p> : null}
-              <dl className="mt-4 fx-u-profile-stats">
+            <div className="cap-stack cap-shrink" data-gap="4">
+              <div className="cap-stack" data-gap="2">
+                <h1 className="fx-u-profile-title">{name}</h1>
+                <p className="fx-u-profile-text">@{profile.username}</p>
+              </div>
+              {profile.bio ? <p className="fx-u-profile-text-2">{profile.bio}</p> : null}
+              <dl className="fx-u-profile-stats">
                 <StatTile label="Books read" value={booksRead} />
                 <StatTile label="Highlights" value={highlightCount} />
                 <StatTile label="Followers" value={followerCount} />
                 <StatTile label="Following" value={followingCount} />
               </dl>
               {profile.favoriteGenres.length > 0 ? (
-                <div className="mt-3 fx-u-profile-row-2">
+                <div className="fx-u-profile-row-2">
                   {profile.favoriteGenres.slice(0, 6).map((g) => (
                     <TagPill key={g}>{g}</TagPill>
                   ))}
@@ -139,7 +141,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
               ) : null}
               <Link
                 to={isOwner ? "/year" : `/u/${profile.username}/recap/${currentYear()}`}
-                className="mt-3 fx-u-profile-link"
+                className="fx-u-profile-link"
               >
                 {currentYear()} in reading
               </Link>
@@ -386,9 +388,9 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
 
 function StatTile({ label, value }: { label: string; value: number }) {
   return (
-    <div>
+    <div className="cap-stack" data-gap="2">
       <dd className="fx-u-profile-title-2">{value}</dd>
-      <dt className="mt-1 fx-u-profile-caps-3">{label}</dt>
+      <dt className="fx-u-profile-caps-3">{label}</dt>
     </div>
   );
 }
@@ -443,11 +445,11 @@ function PrivateProfile({
     <PageShell>
       <Container className="cap-text fx-u-profile-wrap" data-align="center">
         <Avatar src={profile.avatarUrl} name={name} size="lg" />
-        <div>
+        <div className="cap-stack" data-gap="2">
           <h1 className="cap-title" data-size="2">
             {name}
           </h1>
-          <p className="mt-1 fx-u-profile-text">@{profile.username}</p>
+          <p className="fx-u-profile-text">@{profile.username}</p>
         </div>
         <EmptyState
           title="This profile is private"

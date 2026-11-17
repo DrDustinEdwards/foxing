@@ -159,7 +159,7 @@ function BookEdit({
   }
 
   return (
-    <div className="mt-3 fx-admin-books-card">
+    <div className="fx-admin-books-card">
       <div className="fx-admin-books-grid">
         <AdminField label="Title" value={title} onChange={setTitle} />
         <AdminField label="Author" value={author} onChange={setAuthor} />

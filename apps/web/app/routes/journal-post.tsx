@@ -158,10 +158,12 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
         {/* h-entry and e-content name the post's own text for site-api's webmention hook, which
             sends to the links inside it only. No style reads either class. */}
         <article className="h-entry">
-          <header className="mb-8">
-            <Eyebrow>The Journal</Eyebrow>
-            <h1 className="mt-3 fx-journal-post-title">{post.title}</h1>
-            <div className="mt-4 fx-journal-post-row">
+          <header className="cap-stack fx-journal-post-head" data-gap="5">
+            <div className="cap-stack" data-gap="4">
+              <Eyebrow>The Journal</Eyebrow>
+              <h1 className="fx-journal-post-title">{post.title}</h1>
+            </div>
+            <div className="fx-journal-post-row">
               {author ? (
                 <span>
                   By <span className="p-author h-card">{author}</span>
@@ -186,7 +188,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
               picture={pictureProps(cover, {
                 alt: post.coverImageAlt ?? "",
                 priority: true,
-                className: "mb-10 fx-journal-post-img",
+                className: "fx-journal-post-img",
                 focus: post.coverFocus,
               })}
             />

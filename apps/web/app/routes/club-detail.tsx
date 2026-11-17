@@ -34,16 +34,14 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
 
   return (
     <PageShell>
-      <Container>
+      <Container className="cap-stack" data-gap="7">
         <div className="items-start fx-club-detail-row">
-          <div>
+          <div className="cap-stack" data-gap="3">
             <h1 className="cap-title" data-size="1">
               {club.name}
             </h1>
-            {club.description ? (
-              <p className="mt-2 fx-club-detail-text">{club.description}</p>
-            ) : null}
-            <p className="cap-text mt-2" data-size="small" data-tone="dim" data-face="ui">
+            {club.description ? <p className="fx-club-detail-text">{club.description}</p> : null}
+            <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               {club.memberCount} {club.memberCount === 1 ? "member" : "members"}
               {isMember && connected ? (
                 <span className="fx-club-detail-label">
@@ -63,7 +61,7 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
         </div>
 
         {isMember ? (
-          <div className="mt-10 fx-club-detail-grid">
+          <div className="fx-club-detail-grid">
             <div className="fx-club-detail-box">
               <ThreadsSection clubId={club.id} slug={club.slug ?? ""} threads={threads} />
               <PollsSection
@@ -79,10 +77,7 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
             </aside>
           </div>
         ) : (
-          <EmptyState
-            className="mt-10"
-            title="Join this club to read its discussions, polls, and meetings."
-          />
+          <EmptyState title="Join this club to read its discussions, polls, and meetings." />
         )}
       </Container>
     </PageShell>

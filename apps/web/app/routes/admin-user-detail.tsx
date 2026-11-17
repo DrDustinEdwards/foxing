@@ -65,11 +65,13 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
 
   return (
     <AdminShell>
-      <div className="mb-6">
-        <Link to="/admin/users" className="fx-admin-user-detail-link">
-          Back to users
-        </Link>
-        <h1 className="mt-2 fx-admin-user-detail-title">@{user.username}</h1>
+      <div className="cap-stack" data-gap="3">
+        <p>
+          <Link to="/admin/users" className="fx-admin-user-detail-link">
+            Back to users
+          </Link>
+        </p>
+        <h1 className="fx-admin-user-detail-title">@{user.username}</h1>
       </div>
 
       <AdminCard
@@ -111,24 +113,20 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
         {suspend.dialog}
       </AdminCard>
 
-      <div className="mt-6">
-        <AdminCard title="Activity">
-          <div className="fx-admin-user-detail-grid-2">
-            <StatTile label="Books read" value={stats.booksFinished} />
-            <StatTile label="Highlights" value={stats.highlights} />
-            <StatTile label="Clubs" value={stats.clubsJoined} />
-            <StatTile label="Diary" value={stats.diaryEntries} />
-          </div>
-        </AdminCard>
-      </div>
+      <AdminCard title="Activity">
+        <div className="fx-admin-user-detail-grid-2">
+          <StatTile label="Books read" value={stats.booksFinished} />
+          <StatTile label="Highlights" value={stats.highlights} />
+          <StatTile label="Clubs" value={stats.clubsJoined} />
+          <StatTile label="Diary" value={stats.diaryEntries} />
+        </div>
+      </AdminCard>
 
-      <div className="mt-6">
-        <OperatorControls
-          userId={user.id}
-          username={user.username}
-          isPlus={user.subscriptionTier === "plus"}
-        />
-      </div>
+      <OperatorControls
+        userId={user.id}
+        username={user.username}
+        isPlus={user.subscriptionTier === "plus"}
+      />
     </AdminShell>
   );
 }

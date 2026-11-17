@@ -54,36 +54,38 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
           eyebrow="Reading, closely"
           title="The Journal"
           lede="Essays on the books in the library, and the ideas inside them."
-        />
-        <p className="mb-10 fx-journal-text">
-          <Link to="/journal/archive" className="cap-text link" data-size="small" data-face="ui">
-            All articles
-          </Link>
-        </p>
+        >
+          <p>
+            <Link to="/journal/archive" className="cap-text link" data-size="small" data-face="ui">
+              All articles
+            </Link>
+          </p>
+        </PageHeader>
 
-        {result.posts.length === 0 ? (
-          <EmptyState title="Nothing published yet" body="The first essays are on the way." />
-        ) : (
-          <div className="fx-journal-stack">
-            {lead ? <LeadPost post={lead} cover={covers[lead.coverImageUrl ?? ""]} /> : null}
-            {rest.length > 0 ? (
-              <div className="fx-journal-grid">
-                {rest.map((p) => (
-                  <PostCard key={p.slug} post={p} cover={covers[p.coverImageUrl ?? ""]} />
-                ))}
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        <Pager
-          page={result.page}
-          pageCount={result.pageCount}
-          hrefFor={(n) => pageHref("/journal", {}, n)}
-          prevLabel="Newer"
-          nextLabel="Older"
-          label="Journal pages"
-        />
+        <div className="cap-stack" data-gap="8">
+          {result.posts.length === 0 ? (
+            <EmptyState title="Nothing published yet" body="The first essays are on the way." />
+          ) : (
+            <>
+              {lead ? <LeadPost post={lead} cover={covers[lead.coverImageUrl ?? ""]} /> : null}
+              {rest.length > 0 ? (
+                <div className="fx-journal-grid">
+                  {rest.map((p) => (
+                    <PostCard key={p.slug} post={p} cover={covers[p.coverImageUrl ?? ""]} />
+                  ))}
+                </div>
+              ) : null}
+            </>
+          )}
+          <Pager
+            page={result.page}
+            pageCount={result.pageCount}
+            hrefFor={(n) => pageHref("/journal", {}, n)}
+            prevLabel="Newer"
+            nextLabel="Older"
+            label="Journal pages"
+          />
+        </div>
       </Container>
     </PageShell>
   );
@@ -109,12 +111,14 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
         ) : (
           <div className="fx-journal-box-2" aria-hidden="true" />
         )}
-        <div>
-          <Eyebrow>
-            {post.featured ? "Featured" : (formatLongDate(post.publishedAt) ?? "Essay")}
-          </Eyebrow>
-          <h2 className="mt-2 fx-journal-title">{post.title}</h2>
-          {post.excerpt ? <p className="mt-3 fx-journal-text-2">{post.excerpt}</p> : null}
+        <div className="cap-stack" data-gap="4">
+          <div className="cap-stack" data-gap="3">
+            <Eyebrow>
+              {post.featured ? "Featured" : (formatLongDate(post.publishedAt) ?? "Essay")}
+            </Eyebrow>
+            <h2 className="fx-journal-title">{post.title}</h2>
+          </div>
+          {post.excerpt ? <p className="fx-journal-text-2">{post.excerpt}</p> : null}
           <PostMeta post={post} />
         </div>
       </div>
@@ -125,21 +129,23 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
 function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
   return (
     <Link to={`/journal/${post.slug}`}>
-      <div className="cap-card fx-journal-card-2">
+      <div className="cap-card cap-stack fx-journal-card-2" data-gap="6">
         {cover ? (
           <Picture
             picture={pictureProps(
               { ...cover, sizes: "(min-width: 64rem) 33vw, (min-width: 40rem) 50vw, 100vw" },
               {
                 alt: post.coverImageAlt ?? "",
-                className: "mb-4 fx-journal-img-2",
+                className: "fx-journal-img-2",
                 focus: post.coverFocus,
               },
             )}
           />
         ) : null}
-        <h3 className="fx-journal-title-2">{post.title}</h3>
-        {post.excerpt ? <p className="mt-2 fx-journal-text-3">{post.excerpt}</p> : null}
+        <div className="cap-stack" data-gap="5">
+          <h3 className="fx-journal-title-2">{post.title}</h3>
+          {post.excerpt ? <p className="fx-journal-text-3">{post.excerpt}</p> : null}
+        </div>
         <PostMeta post={post} />
       </div>
     </Link>
@@ -149,7 +155,7 @@ function PostCard({ post, cover }: { post: Post; cover?: ImageAttributes }) {
 function PostMeta({ post }: { post: Post }) {
   const date = formatLongDate(post.publishedAt);
   return (
-    <div className="mt-4 fx-journal-row-2">
+    <div className="fx-journal-row-2">
       {date ? <span>{date}</span> : null}
       {post.readingTimeMinutes ? (
         <>

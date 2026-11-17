@@ -524,7 +524,7 @@ describe("Carrel site API: the Journal adapter", () => {
     // The real page: the site header and footer around the post, with its byline and series line.
     expect(html).toContain('data-cap="site-header"');
     expect(html).toContain('class="fx-footer"');
-    expect(html).toContain('<h1 class="mt-3 fx-journal-post-title">Preview me</h1>');
+    expect(html).toContain('<h1 class="fx-journal-post-title">Preview me</h1>');
     expect(html).toContain('By <span class="p-author h-card">Ada Reader</span>');
     // The series nav: no part is live yet, so the preview is the series' only part.
     expect(html.replaceAll("<!-- -->", "")).toContain(

@@ -35,23 +35,27 @@ export function AuthShell({
 }) {
   return (
     <main className="fx-auth-shell-grid">
-      <div className="fx-auth-shell-box">
-        <Link to="/" className="mb-8 justify-center fx-auth-shell-link">
+      <div className="cap-stack fx-auth-shell-box" data-gap="7">
+        <Link to="/" className="justify-center fx-auth-shell-link">
           <span aria-hidden="true">🦊</span>
           <span>Foxing</span>
         </Link>
-        <div className="cap-card fx-auth-shell-card">
-          <h1 className="cap-title" data-size="3">
-            {title}
-          </h1>
-          {subtitle ? <p className="fx-auth-shell-text">{subtitle}</p> : null}
-          <div className="mt-6">{children}</div>
-        </div>
-        {footer ? (
-          <div className="cap-text mt-5 fx-auth-shell-box-2" data-align="center">
-            {footer}
+        <div className="cap-stack" data-gap="5">
+          <div className="cap-card cap-stack fx-auth-shell-card" data-gap="7">
+            <div className="cap-stack" data-gap="4">
+              <h1 className="cap-title" data-size="3">
+                {title}
+              </h1>
+              {subtitle ? <p className="fx-auth-shell-text">{subtitle}</p> : null}
+            </div>
+            <div>{children}</div>
           </div>
-        ) : null}
+          {footer ? (
+            <div className="cap-text fx-auth-shell-box-2" data-align="center">
+              {footer}
+            </div>
+          ) : null}
+        </div>
       </div>
     </main>
   );

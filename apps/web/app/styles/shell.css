@@ -248,7 +248,6 @@
   font-weight: var(--weight-semibold);
 }
 .fx-footer-motto {
-  margin-block-start: var(--space-3);
   font-style: italic;
   color: var(--dim);
 }

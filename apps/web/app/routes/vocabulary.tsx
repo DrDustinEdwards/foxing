@@ -49,8 +49,8 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
             body="Look up a word in the reader and it will be kept here for review."
           />
         ) : (
-          <>
-            <nav aria-label="Filter words" className="mb-5 fx-vocabulary-row">
+          <div className="cap-stack" data-gap="6">
+            <nav aria-label="Filter words" className="fx-vocabulary-row">
               <FilterTab active={filter === "all"} onClick={() => setFilter("all")}>
                 All {words.length}
               </FilterTab>
@@ -73,7 +73,7 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
                 ))}
               </ul>
             )}
-          </>
+          </div>
         )}
       </Container>
     </PageShell>
