@@ -12,7 +12,7 @@ import {
   securityHistory,
   signInMethods,
 } from "@dustinedwards/site-runtime/sign-in";
-import { createDb, views } from "@foxing/core";
+import { billing, createDb, views } from "@foxing/core";
 import { useState } from "react";
 import { redirect } from "react-router";
 import { PageShell } from "~/components/page-shell";
@@ -72,6 +72,8 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     bio: profile.bio ?? "",
     favoriteGenres: (profile.favoriteGenres ?? []).join(", "),
     tier: isPlus ? ("plus" as const) : ("free" as const),
+    // Plus is offered only once it can be bought (CLAUDE.md rule 6).
+    canUpgrade: !isPlus && billing.stripeSettings(env) !== null,
     subscriptionStatus: profile.subscriptionStatus,
     periodEndLabel: profile.subscriptionPeriodEnd
       ? dateLabel.format(profile.subscriptionPeriodEnd)
@@ -172,7 +174,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
             tier={loaderData.tier}
             status={loaderData.subscriptionStatus}
             periodEndLabel={loaderData.periodEndLabel}
-            onUpgrade={() => setPaywallOpen(true)}
+            onUpgrade={loaderData.canUpgrade ? () => setPaywallOpen(true) : null}
           />
           <VisibilitySection initial={loaderData.visibility} />
           <NotificationsSection initial={loaderData.notifications} />
@@ -187,7 +189,9 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
           <DangerSection fresh={loaderData.sessions !== null} />
         </div>
       </Container>
-      <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      {loaderData.canUpgrade ? (
+        <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      ) : null}
     </PageShell>
   );
 }
