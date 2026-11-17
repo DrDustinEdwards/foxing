@@ -6,7 +6,7 @@ import {
   useUsernameAvailable,
 } from "@foxing/client";
 import type { ClubHandover } from "@foxing/types";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { Card, inputClass, SubmitRow } from "./settings-card";
 import { authClient, signInAgainIfStale, signOutToHome } from "~/lib/auth-client";
 import {
@@ -72,8 +72,8 @@ export function ProfileSection({
             className={inputClass}
           />
         </label>
-        <label className="block">
-          <span className="mb-1 fx-account-sections-label">
+        <label className="cap-stack" data-gap="2">
+          <span className="fx-account-sections-label">
             Bio
             <span
               className="cap-text"
@@ -120,6 +120,7 @@ export function UsernameSection({ initial }: { initial: string }) {
   const [saved, setSaved] = useState(initial);
   const [status, setStatus] = useState<"saved" | null>(null);
   const { run, pending, error } = useChangeUsername();
+  const inputId = useId();
   const normalized = value.trim().toLowerCase();
   const changed = normalized !== saved;
   const valid = USERNAME_RE.test(normalized);
@@ -147,38 +148,41 @@ export function UsernameSection({ initial }: { initial: string }) {
   return (
     <Card title="Username">
       <form onSubmit={(e) => void save(e)} className="cap-stack" data-gap="4">
-        <label className="block">
+        <label className="block" htmlFor={inputId}>
           <span className="fx-label">Username</span>
-          <div className="cap-cluster" data-gap="3">
-            <span className="fx-account-sections-label-2">@</span>
-            <input
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              className={inputClass}
-            />
-          </div>
-          <span className="mt-1 block fx-account-sections-label-3" aria-live="polite">
-            {avail === "checking" ? (
-              <span className="cap-text" data-tone="dim">
-                Checking...
-              </span>
-            ) : null}
-            {avail === "available" ? (
-              <span className="fx-account-sections-label-4">Available.</span>
-            ) : null}
-            {avail === "taken" ? (
-              <span className="cap-text" data-size="small" data-tone="crit" data-face="ui">
-                That username is taken.
-              </span>
-            ) : null}
-            {avail === "invalid" ? (
-              <span className="cap-text" data-size="small" data-tone="crit" data-face="ui">
-                3 to 30 letters, numbers, or underscores.
-              </span>
-            ) : null}
+          <span className="cap-stack" data-gap="2">
+            <span className="cap-cluster" data-gap="3">
+              <span className="fx-account-sections-label-2">@</span>
+              <input
+                id={inputId}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                className={inputClass}
+              />
+            </span>
+            <span className="fx-account-sections-label-3" aria-live="polite">
+              {avail === "checking" ? (
+                <span className="cap-text" data-tone="dim">
+                  Checking...
+                </span>
+              ) : null}
+              {avail === "available" ? (
+                <span className="fx-account-sections-label-4">Available.</span>
+              ) : null}
+              {avail === "taken" ? (
+                <span className="cap-text" data-size="small" data-tone="crit" data-face="ui">
+                  That username is taken.
+                </span>
+              ) : null}
+              {avail === "invalid" ? (
+                <span className="cap-text" data-size="small" data-tone="crit" data-face="ui">
+                  3 to 30 letters, numbers, or underscores.
+                </span>
+              ) : null}
+            </span>
           </span>
         </label>
         <SubmitRow
@@ -232,7 +236,7 @@ export function EmailSection({ initial }: { initial: string }) {
         . To change it, approve the change from a link sent to this address, then confirm the new
         address from a link sent there.
       </p>
-      <form onSubmit={(e) => void change(e)} className="mt-4 fx-account-sections-form">
+      <form onSubmit={(e) => void change(e)} className="cap-stack" data-gap="4">
         <label className="block">
           <span className="fx-label">New email</span>
           <input
@@ -263,9 +267,7 @@ export function AdminSection() {
       <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         You have operator access to the Foxing admin tools.
       </p>
-      <ButtonLink to="/admin" className="mt-4 fx-account-sections-link">
-        Open admin dashboard
-      </ButtonLink>
+      <ButtonLink to="/admin">Open admin dashboard</ButtonLink>
     </Card>
   );
 }
@@ -553,9 +555,7 @@ export function SessionsSection({ sessions }: { sessions: SessionSettings | null
         <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
           To see where you are signed in, sign in again.
         </p>
-        <ButtonLink to={signInHref("/settings")} className="mt-4 fx-account-sections-link">
-          Sign in again
-        </ButtonLink>
+        <ButtonLink to={signInHref("/settings")}>Sign in again</ButtonLink>
       </Card>
     );
 
@@ -656,7 +656,7 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
           ))}
         </ul>
       )}
-      <p className="cap-text mt-4" data-size="small" data-tone="dim">
+      <p className="cap-text" data-size="small" data-tone="dim">
         Something you do not recognize? Sign out the other devices above and remove any passkey you
         did not add.
       </p>
@@ -675,13 +675,9 @@ export function DataSection({ fresh }: { fresh: boolean }) {
         {fresh ? null : " It holds everything, so sign in again first."}
       </p>
       {fresh ? (
-        <ButtonLink href="/api/v1/account/export" className="mt-4">
-          Download your data
-        </ButtonLink>
+        <ButtonLink href="/api/v1/account/export">Download your data</ButtonLink>
       ) : (
-        <ButtonLink to={signInHref("/settings")} className="mt-4">
-          Sign in again
-        </ButtonLink>
+        <ButtonLink to={signInHref("/settings")}>Sign in again</ButtonLink>
       )}
     </Card>
   );
@@ -703,7 +699,7 @@ function ClubHandoverFields({
 }) {
   if (clubs.length === 0) return null;
   return (
-    <fieldset className="mt-4 fx-account-sections-form">
+    <fieldset className="fx-account-sections-form">
       <legend className="cap-text" data-size="small" data-tone="muted" data-face="ui">
         You created {clubs.length === 1 ? "a club" : `${clubs.length} clubs`}. Choose who takes each
         one over, so its members keep their discussions.
@@ -723,14 +719,14 @@ function ClubHandoverFields({
             has no other members, so it will be deleted with your account.
           </p>
         ) : (
-          <label key={club.clubId} className="block fx-account-sections-field">
+          <label key={club.clubId} className="cap-stack fx-account-sections-field" data-gap="2">
             <span className="cap-text" data-tone="ink" data-weight="strong">
               {club.name}
             </span>
             <select
               value={choice[club.clubId] ?? club.suggested ?? DELETE_CLUB}
               onChange={(e) => onChoose(club.clubId, e.target.value)}
-              className={`${inputClass} mt-1`}
+              className={inputClass}
             >
               {club.candidates.map((m) => (
                 <option key={m.userId} value={m.userId}>
@@ -777,22 +773,20 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
 
   if (!fresh)
     return (
-      <section className="fx-account-sections-card">
+      <section className="cap-stack fx-account-sections-card">
         <h2 className="fx-account-sections-title">Delete account</h2>
-        <p className="mt-4 fx-account-sections-text">
+        <p className="fx-account-sections-text">
           This permanently removes your account and all of your data. To keep someone else from
           doing it on a device you left signed in, sign in again first.
         </p>
-        <ButtonLink to={signInHref("/settings")} className="mt-4">
-          Sign in again
-        </ButtonLink>
+        <ButtonLink to={signInHref("/settings")}>Sign in again</ButtonLink>
       </section>
     );
 
   return (
-    <section className="fx-account-sections-card">
+    <section className="cap-stack fx-account-sections-card">
       <h2 className="fx-account-sections-title">Delete account</h2>
-      <p className="mt-4 fx-account-sections-text">
+      <p className="fx-account-sections-text">
         This permanently removes your account and all of your data. It cannot be undone. Type
         <span className="cap-text" data-tone="ink" data-weight="strong">
           {" "}
@@ -810,9 +804,9 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
         onChange={(e) => setConfirm(e.target.value)}
         aria-label={`Type ${CONFIRM_PHRASE} to confirm`}
         placeholder={CONFIRM_PHRASE}
-        className={`${inputClass} mt-4`}
+        className={inputClass}
       />
-      <div className="mt-4">
+      <div className="cap-stack" data-gap="4">
         <button
           type="button"
           onClick={() => void remove()}
@@ -822,8 +816,8 @@ export function DangerSection({ fresh }: { fresh: boolean }) {
         >
           {pending ? "Deleting..." : "Delete my account"}
         </button>
+        <FormError error={error} />
       </div>
-      <FormError error={error} className="mt-3" />
     </section>
   );
 }
