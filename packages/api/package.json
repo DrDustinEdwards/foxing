@@ -14,7 +14,7 @@
   "dependencies": {
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.161.1",
     "@foxing/core": "*",
-    "hono": "^4.12.0",
+    "hono": "^4.13.19",
     "zod": "^4.6.7"
   },
   "devDependencies": {
