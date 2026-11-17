@@ -39,7 +39,7 @@ jobs:
       pull-requests: write
       id-token: write
       checks: write
-    uses: DrDustinEdwards/devkit/.github/workflows/pr.yml@96077f74b3e1a57e636b3653ec605c8c10e53a49 # v0.51.1
+    uses: DrDustinEdwards/devkit/.github/workflows/pr.yml@0a33b382def5404f806696de8fbe93c2670da696 # v0.51.2
     with:
       review: true
       # The web build needs the lifecycle scripts, so the one install runs them; devkit-no-bloat runs Knip and jscpd
