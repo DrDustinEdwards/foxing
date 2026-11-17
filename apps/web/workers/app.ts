@@ -36,10 +36,22 @@ import {
   type GatewayStep,
 } from "@dustinedwards/site-runtime/worker";
 import { createApi } from "@foxing/api";
-import { billing, catalogHealthDomain, catalogRepo, companion, createDb, push } from "@foxing/core";
+import {
+  billing,
+  catalogHealthDomain,
+  catalogRepo,
+  companion,
+  companionRepo,
+  createDb,
+  push,
+} from "@foxing/core";
 import { Hono } from "hono";
 import type { ServerBuild } from "react-router";
-import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
+import {
+  anthropicCaller,
+  anthropicFactChecker,
+  anthropicStructured,
+} from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { images } from "../app/lib/images";
 import { HELLO_EMAIL, SITE_ORIGIN } from "../app/lib/origins";
@@ -342,7 +354,7 @@ const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {
 // and enqueues one message per book; the queue consumer generates the 4 free-cached
 // actions for that book and writes book_ai_cache. Both reuse the same core functions
 // the manual proof script and the admin ops route call (one generation code path).
-type CacheJobMessage = { bookId: string };
+type CacheJobMessage = { bookId: string; factCheck?: true };
 
 // The push delivery sweep. Runs on a frequent cron: it push-delivers notifications
 // created since the last sweep (deduped in KV), gated per user by category prefs + quiet
@@ -388,6 +400,29 @@ async function enqueueCompanionCache(env: Env): Promise<void> {
     );
 }
 
+// Daily: enqueue catalog books whose cached texts have no fact-check yet, FACT_CHECK_BATCH at a time (new books after
+// the first sweep). While the KV key `companion-fact-check:only` holds a JSON array of book ids, only those are checked
+// (a trial run before the sweep); delete the key to sweep.
+const FACT_CHECK_BATCH = 300;
+const FACT_CHECK_ONLY_KEY = "companion-fact-check:only";
+async function enqueueFactCheck(env: Env): Promise<void> {
+  const db = createDb(env.DB);
+  const only = (await env.APP_KV.get(FACT_CHECK_ONLY_KEY, "json")) as string[] | null;
+  const books = await companionRepo.findBooksNeedingFactCheck(
+    db,
+    FACT_CHECK_BATCH,
+    only ?? undefined,
+  );
+  await Promise.all(
+    books.map((book) =>
+      env.COMPANION_CACHE_QUEUE.send({
+        bookId: book.id,
+        factCheck: true,
+      } satisfies CacheJobMessage),
+    ),
+  );
+}
+
 // Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
 // timeouts, which /health's cron check reads too. A failed job fails the invocation (Cron Events
 // shows it) after the others have run.
@@ -400,6 +435,7 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "push-sweep": runPushSweep,
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,
+  "companion-fact-check": enqueueFactCheck,
   "prune-expired-auth": (env) => pruneExpiredAuth(env.DB),
   "page-dates": runPageDates,
 };
@@ -424,6 +460,29 @@ function cronLists(env: Env): Record<string, CronJob[]> {
   );
 }
 
+/** One fact-check job: check the book's cached texts, retrying later when the call fails or the key is missing. */
+async function factCheckMessage(
+  db: ReturnType<typeof createDb>,
+  checker: companion.FactChecker | null,
+  message: Message<CacheJobMessage>,
+): Promise<void> {
+  if (!checker) return message.retry();
+  try {
+    const book = await catalogRepo.getBookById(db, message.body.bookId);
+    const result = book && (await companion.factCheckBook(db, checker, book));
+    if (result) logEvent("companion_fact_checked", { ...result });
+    message.ack();
+  } catch (err) {
+    const limited = err instanceof Error && err.message.includes("(rate_limited)");
+    logEvent(
+      "companion_fact_check_failed",
+      { book_id: message.body.bookId, error: err },
+      { level: limited ? "warn" : "error" },
+    );
+    message.retry({ delaySeconds: 60 * message.attempts });
+  }
+}
+
 async function queue(
   batch: MessageBatch<CacheJobMessage>,
   env: Env,
@@ -431,8 +490,13 @@ async function queue(
 ): Promise<void> {
   const db = createDb(env.DB);
   const caller = anthropicCaller(env);
+  const checker = anthropicFactChecker(env);
 
   for (const message of batch.messages) {
+    if (message.body.factCheck) {
+      await factCheckMessage(db, checker, message);
+      continue;
+    }
     if (!caller) {
       // No key yet: retry later rather than dropping the job or generating nothing.
       message.retry();
