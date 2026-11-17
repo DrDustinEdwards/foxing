@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.62.0",
-    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.42.1",
+    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.43.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.164.1",
     "@foxing/types": "*",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.155.1",
