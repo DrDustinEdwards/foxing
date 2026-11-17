@@ -12,7 +12,7 @@ import { PRIVACY_EMAIL } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/privacy";
 
-const UPDATED = "2026-07-10";
+const UPDATED = "2026-11-17";
 
 const SECTIONS: LegalSection[] = [
   {
@@ -50,7 +50,9 @@ const SECTIONS: LegalSection[] = [
         Email Sending. If you sign in with Google or Apple, Foxing receives your name and email
         address from them and keeps none of their access tokens. A passkey leaves only its public
         key with Foxing; the private key stays on your device. Data is processed in Cloudflare's
-        network under its data processing terms.
+        network under its data processing terms. When the server hits an error, a report goes to
+        Sentry, an error-tracking service: what failed and the page's path, never your IP address,
+        cookies, email address or account details, and no Sentry script runs in your browser.
       </p>
     ),
   },
