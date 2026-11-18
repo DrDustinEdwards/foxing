@@ -5,7 +5,7 @@
 //
 // The ways in are the family's one sign-in (site-runtime ./sign-in): a passkey first, Google
 // and Apple, and an emailed link (with Turnstile once its keys are set). No passwords.
-import { CONFIRM_PATH, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
+import { CONFIRM_PATH, SIGN_IN_EXPIRES_IN_WORDS, SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in";
 import { SIGN_IN_WORDS, UNDELIVERABLE_EMAIL } from "@dustinedwards/site-runtime/sign-in-words";
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
@@ -136,7 +136,7 @@ async function startSocial(
     provider,
     callbackURL: afterLink(redirectTo),
     newUserCallbackURL: AFTER_LINK_NEW,
-    errorCallbackURL: "/login",
+    errorCallbackURL: SIGN_IN_PATH,
   });
   // The call redirects the whole page; reset only if it somehow returns.
   setPending(false);

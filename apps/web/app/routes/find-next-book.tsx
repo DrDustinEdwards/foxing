@@ -4,6 +4,7 @@
 // get data-driven picks, with a subtle upgrade affordance once Plus can be bought (billing
 // configured); Plus readers get AI-personalised reasons. Refresh busts the AI cache
 // (rate-limited in core).
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
 import { useState } from "react";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
@@ -115,7 +116,7 @@ function RecCard({ rec }: { rec: Recommendation }) {
             }}
             currentStatus={null}
             signedIn
-            loginHref="/login"
+            loginHref={SIGN_IN_PATH}
           />
         </div>
       </div>

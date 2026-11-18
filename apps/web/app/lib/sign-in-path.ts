@@ -2,8 +2,7 @@
 // a reader is sent from goes as `next`, which /login carries through every way in and checks
 // again (safeNextPath).
 
-/** The sign-in page. */
-const SIGN_IN_PATH = "/login";
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
 
 /** The sign-in page, returning to `next`. */
 export function signInHref(next?: string | null) {

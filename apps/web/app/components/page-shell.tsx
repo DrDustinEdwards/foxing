@@ -1,3 +1,4 @@
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
 import { Icon, iconBell, iconSearch } from "capsomer/react/icons";
 import {
   type HeaderExtra,
@@ -127,7 +128,7 @@ function SiteNav() {
         extras={extras}
         themePrefKey={THEME_PREF_KEY}
         account={user ? headerAccount(user, signingOut, () => void signOut()) : undefined}
-        signIn={user ? undefined : { href: "/login" }}
+        signIn={user ? undefined : { href: SIGN_IN_PATH }}
         skipTo="#main"
         renderLink={routerRenderLink}
       />
@@ -184,7 +185,7 @@ function SiteFooter() {
         <FooterCol
           title="Account"
           links={[
-            { to: "/login", label: "Sign in" },
+            { to: SIGN_IN_PATH, label: "Sign in" },
             { to: "/signup", label: "Create account" },
           ]}
         />
