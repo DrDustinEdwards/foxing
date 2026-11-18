@@ -58,3 +58,5 @@ export {
 } from "./poll-result";
 export * as catalogHealthDomain from "./catalog-health";
 export { CATALOG_CHECK_NAMES } from "./catalog-health";
+
+export { cleanBookMarkup } from "./epub-clean";
