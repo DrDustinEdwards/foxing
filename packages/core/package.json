@@ -28,6 +28,8 @@
     "@foxing/types": "*",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.155.1",
     "drizzle-orm": "^0.45.2",
+    "entities": "8.1.0",
+    "htmlparser2": "12.0.0",
     "nanoid": "^5.1.0",
     "stripe": "23.1.0",
     "zod": "^4.6.7"
