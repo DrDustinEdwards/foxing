@@ -5,7 +5,8 @@ import { runReaderClean } from "../app/lib/reader-clean.server";
 // The stored books' pages are rewritten once with the cleaner the explode script uses; a second run
 // finds the done flag and touches nothing.
 it("cleans stored pages in place, keeps their type, and is done after one pass", async () => {
-  const dirty = '<p onclick="x()">Hi</p><script>alert(1)</script><iframe src="https://example.com"></iframe>';
+  const dirty =
+    '<p onclick="x()">Hi</p><script>alert(1)</script><iframe src="https://example.com"></iframe>';
   await env.MEDIA.put("reader/sample/ch1.xhtml", dirty, {
     httpMetadata: { contentType: "application/xhtml+xml" },
   });
