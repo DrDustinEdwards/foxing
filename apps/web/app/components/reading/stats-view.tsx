@@ -40,7 +40,7 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
-        <PageHeader eyebrow="Reading" title="Your stats" />
+        <PageHeader title="Your stats" />
         {notice}
 
         <dl className="fx-stats-grid">

@@ -119,11 +119,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="The library"
-          title="Browse the books"
-          lede={`${formatCount(result.total)} readable classics, free to read in Foxing.`}
-        />
+        <PageHeader title="Browse the books" lede={`${formatCount(result.total)} books`} />
 
         <div className="cap-stack" data-gap="7">
           {/* Filters: plain links, no client JS, fully cacheable. A native disclosure, closed on a phone so the
@@ -206,10 +202,7 @@ export default function Books({ loaderData }: Route.ComponentProps) {
           </details>
 
           {result.books.length === 0 ? (
-            <EmptyState
-              title="No books match those filters"
-              body="Try removing a filter or browsing a different era."
-            />
+            <EmptyState title="No books match those filters" />
           ) : (
             <div className="cap-stack" data-gap="8">
               <BookGrid>

@@ -131,10 +131,7 @@ export default function EmailConfirm({ loaderData, actionData }: Route.Component
     );
 
   return (
-    <AuthShell
-      title="Confirm your email change"
-      subtitle="Nothing changes until you press the button."
-    >
+    <AuthShell title="Confirm your email change">
       <ConfirmButtonForm label="Confirm" limited={actionData?.limited} />
     </AuthShell>
   );

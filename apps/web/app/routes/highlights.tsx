@@ -86,16 +86,9 @@ export default function Highlights({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Reading"
-          title="Highlights"
-          lede="The passages you highlight while reading gather here."
-        />
+        <PageHeader title="Highlights" />
         {highlights.length === 0 ? (
-          <EmptyState
-            title="No highlights yet."
-            body="Highlights you make in the reader will appear here."
-          />
+          <EmptyState title="No highlights yet." />
         ) : (
           <div className="cap-stack" data-gap="6">
             <AnnotationFilters

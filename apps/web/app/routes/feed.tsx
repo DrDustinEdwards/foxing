@@ -31,18 +31,11 @@ export default function Feed({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Your Foxing"
-          title="Feed"
-          lede="What the people you follow are reading."
-        />
+        <PageHeader title="Feed" />
 
         <div className="cap-stack" data-gap="6">
           {rows.length === 0 ? (
-            <EmptyState
-              title="Your feed is quiet"
-              body="Follow other readers to see their reviews, finishes, and lists here."
-            />
+            <EmptyState title="Your feed is quiet" />
           ) : (
             <ul className="cap-stack" data-gap="4">
               {rows.map((row) =>

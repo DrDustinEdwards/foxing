@@ -87,13 +87,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
   if (step === 1) {
     return (
       <Frame step={1}>
-        <div className="cap-stack" data-gap="4">
-          <h1 className="fx-onboarding-title">Set up your profile</h1>
-          <p className="fx-onboarding-text">
-            Your username is how other readers find you. You can change your display name and
-            favorite genres later in settings.
-          </p>
-        </div>
+        <h1 className="fx-onboarding-title">Set up your profile</h1>
         <form onSubmit={(e) => void onSubmitProfile(e)} className="cap-stack" data-gap="6">
           <label className="cap-field">
             <span className="fx-onboarding-label">Username</span>
@@ -168,12 +162,7 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
   return (
     <Frame step={2}>
       <div className="cap-stack">
-        <div className="cap-stack" data-gap="4">
-          <h1 className="fx-onboarding-title">Start your first book</h1>
-          <p className="fx-onboarding-text">
-            Award winners to begin with. Adding one shelves it as reading and opens its page.
-          </p>
-        </div>
+        <h1 className="fx-onboarding-title">Start your first book</h1>
         {error ? (
           <p role="alert" className="fx-onboarding-text-2">
             {error}
@@ -214,7 +203,6 @@ export default function Onboarding({ loaderData }: Route.ComponentProps) {
         </ul>
       ) : (
         <p className="fx-onboarding-text">
-          The catalog is warming up.{" "}
           <Link to="/books" className="link">
             Browse the library
           </Link>{" "}

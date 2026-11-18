@@ -153,9 +153,6 @@ function SiteFooter() {
             </Link>
             <p className="fx-footer-motto">reading, together.</p>
           </div>
-          <p className="cap-text measure-xs" data-size="small" data-tone="dim">
-            A reading home for the classics and the conversations around them.
-          </p>
           <Link to="/about" className="fx-footer-link">
             About
           </Link>

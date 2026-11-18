@@ -47,7 +47,7 @@ export default function AdminContent({ loaderData }: Route.ComponentProps) {
         <AdminCard title="Announcements">
           {announcements.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-              No announcements yet. Create one above.
+              No announcements yet.
             </p>
           ) : (
             <ul className="divided">

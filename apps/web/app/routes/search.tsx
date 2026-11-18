@@ -62,7 +62,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader eyebrow="Find your next read" title="Search" />
+        <PageHeader title="Search" />
         <div className="cap-stack" data-gap="7">
           <div className="cap-stack" data-gap="6">
             <SearchBox initialQuery={q} />

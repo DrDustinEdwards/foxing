@@ -55,13 +55,10 @@ export default function Recap({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="8">
-        <PageHeader eyebrow={`Year in Reading ${year}`} title={`${displayName}'s reading year`} />
+        <PageHeader title={`${displayName}'s ${year} reading year`} />
 
         {recap.booksFinished === 0 ? (
-          <EmptyState
-            title={`No finishes logged in ${year}`}
-            body="Books show up here as they are marked finished."
-          />
+          <EmptyState title={`No finishes logged in ${year}`} />
         ) : (
           <>
             <YearNumbers recap={recap} />

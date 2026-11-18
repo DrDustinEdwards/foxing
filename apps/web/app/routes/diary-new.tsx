@@ -36,7 +36,7 @@ export default function DiaryNew({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader eyebrow="Diary" title="Log a book" />
+        <PageHeader title="Log a book" />
         <div className="cap-stack" data-gap="6">
           {book ? (
             <DiaryForm

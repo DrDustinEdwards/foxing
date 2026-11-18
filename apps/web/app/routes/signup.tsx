@@ -30,7 +30,6 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
   return (
     <AuthShell
       title="Create your account"
-      subtitle="Track what you read and join the conversation."
       footer={
         <>
           Already have an account? <AuthLink to="/login">Sign in</AuthLink>

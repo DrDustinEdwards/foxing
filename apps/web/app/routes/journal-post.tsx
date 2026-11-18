@@ -3,7 +3,7 @@ import { catalogRepo } from "@foxing/core";
 import { journalPreviewContext } from "~/context";
 import { PageShell } from "~/components/page-shell";
 import { Picture } from "capsomer/react/picture";
-import { Breadcrumbs, Container, Eyebrow, TagPill } from "~/components/ui";
+import { Breadcrumbs, Container, TagPill } from "~/components/ui";
 import { pictureProps } from "@dustinedwards/site-runtime/image";
 import { formatLongDate } from "~/lib/dates";
 import { renderJournalBody } from "~/lib/journal-body.server";
@@ -159,10 +159,7 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
             sends to the links inside it only. No style reads either class. */}
         <article className="h-entry">
           <header className="cap-stack fx-journal-post-head" data-gap="5">
-            <div className="cap-stack" data-gap="4">
-              <Eyebrow>The Journal</Eyebrow>
-              <h1 className="fx-journal-post-title">{post.title}</h1>
-            </div>
+            <h1 className="fx-journal-post-title">{post.title}</h1>
             <div className="fx-journal-post-row">
               {author ? (
                 <span>

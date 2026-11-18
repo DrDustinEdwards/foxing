@@ -52,12 +52,7 @@ export function GroupedResults({
         )}
       </p>
 
-      {nothing ? (
-        <EmptyState
-          title={`Nothing found for "${q}"`}
-          body="Try an author's last name, or a word from the title."
-        />
-      ) : null}
+      {nothing ? <EmptyState title={`Nothing found for "${q}"`} /> : null}
 
       {nothing ? null : (
         <div className="cap-stack" data-gap="7">

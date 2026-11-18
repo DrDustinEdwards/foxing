@@ -92,7 +92,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Container className="py-6">
           <Hero
             align="center"
-            eyebrow="A reading home for the classics"
             title="Read the classics. Keep the record."
             lead={`${formatCount(total)} books, free to read. Track what you finish, mark the passages that stay with you, and follow the picks worth reading.`}
             actions={
@@ -208,9 +207,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           ships. */}
       <Container>
         <CtaBand
-          eyebrow="Start reading"
           title="Read the classics. Finally understand them."
-          note="iOS and Android apps coming soon"
           actions={
             <>
               <Button to="/signup">Join free on web</Button>
@@ -220,8 +217,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             </>
           }
         >
-          Read free on the web today. The iOS and Android apps are on the way, with your library,
-          highlights, and streak carried across.
+          iOS and Android apps are on the way.
         </CtaBand>
       </Container>
     </PageShell>

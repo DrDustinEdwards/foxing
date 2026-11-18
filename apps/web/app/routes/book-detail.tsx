@@ -8,7 +8,7 @@ import { BookShelvesPicker } from "~/components/book-shelves-picker";
 import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
-import { Breadcrumbs, Button, Chip, Container, Eyebrow, TagPill } from "~/components/ui";
+import { Breadcrumbs, Button, Chip, Container, TagPill } from "~/components/ui";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { coverAttributes } from "~/lib/images";
 import { affiliateConfig, catalogPageHeaders, loaderBase } from "~/lib/loader.server";
@@ -125,7 +125,7 @@ function readingTime(words: number | null): string | null {
 }
 
 export default function BookDetail({ loaderData }: Route.ComponentProps) {
-  const { book, awards, related, buys, readable, community } = loaderData;
+  const { book, awards, related, buys, readable } = loaderData;
   const { signedIn, bookId, loginHref } = loaderData;
   // The reader's state for this book lives in the cache, so a status or shelf change
   // shows at once and survives navigating away and back.
@@ -202,7 +202,6 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
             <div className="cap-stack" data-gap="7">
               <div className="cap-stack" data-gap="6">
                 <div className="cap-stack" data-gap="4">
-                  <Eyebrow>{community ? "Tracked title" : "In the reading library"}</Eyebrow>
                   <h1 className="fx-book-detail-title">{book.title}</h1>
                   <p className="fx-book-detail-text">
                     by{" "}
@@ -224,7 +223,6 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
 
                 {awards.length > 0 ? (
                   <div className="cap-card">
-                    <Eyebrow>Recognition</Eyebrow>
                     <ul className="fx-book-detail-stack-2">
                       {awards.map((a) => (
                         <li
@@ -259,7 +257,6 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
 
               {book.subjects.length > 0 ? (
                 <div className="cap-stack" data-gap="4">
-                  <Eyebrow>Genres</Eyebrow>
                   <div className="cap-cluster" data-gap="3">
                     {book.subjects.map((s) => (
                       <TagPill key={s} to={`/books?subject=${encodeURIComponent(s)}`}>

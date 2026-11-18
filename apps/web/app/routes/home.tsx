@@ -90,13 +90,9 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
         data-gap="6"
         data-align="center"
       >
-        <div className="cap-stack" data-gap="5">
-          <Eyebrow>Continue reading</Eyebrow>
-          <p className="cap-title" data-size="4">
-            Nothing in progress
-          </p>
-          <p className="fx-home-text">Start a book and it shows up here with your progress.</p>
-        </div>
+        <p className="cap-title" data-size="4">
+          Nothing in progress
+        </p>
         <div>
           <Button to="/books">Browse the library</Button>
         </div>
@@ -118,16 +114,13 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
         </Link>
       </div>
       <div className="cap-stack" data-gap="5">
-        <div className="cap-stack" data-gap="3">
-          <Eyebrow>Continue reading</Eyebrow>
-          <div className="cap-stack" data-gap="2">
-            <h2 className="fx-home-title-2">
-              <Link to={`/books/${reading.slug}`} className="hover-accent">
-                {reading.title}
-              </Link>
-            </h2>
-            <p className="fx-home-text-2">{reading.author}</p>
-          </div>
+        <div className="cap-stack" data-gap="2">
+          <h2 className="fx-home-title-2">
+            <Link to={`/books/${reading.slug}`} className="hover-accent">
+              {reading.title}
+            </Link>
+          </h2>
+          <p className="fx-home-text-2">{reading.author}</p>
         </div>
         <Meter
           label="Reading progress"
@@ -147,9 +140,6 @@ function ContinueReadingCard({ reading }: { reading: Entry | null }) {
 }
 
 function StreakCard({ streak: s }: { streak: Streak }) {
-  const subtext =
-    s.currentStreak === 0 ? "Open a book to start a streak." : "Read today to keep it going.";
-
   return (
     <aside className="cap-card cap-stack fx-home-card-3" data-gap="6">
       <div className="cap-stack" data-gap="5">
@@ -157,9 +147,6 @@ function StreakCard({ streak: s }: { streak: Streak }) {
         <p className="fx-home-title-3">
           {s.currentStreak}
           <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>
-        </p>
-        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-          {subtext}
         </p>
       </div>
       <dl className="cap-text fx-home-grid-2" data-align="center">

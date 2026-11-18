@@ -165,7 +165,7 @@ export default function Settings({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader eyebrow="Account" title="Settings" />
+        <PageHeader title="Settings" />
         <div className="cap-stack" data-gap="7">
           <ProfileSection initial={loaderData} />
           <UsernameSection initial={loaderData.username} />

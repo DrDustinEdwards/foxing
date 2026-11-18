@@ -36,7 +36,7 @@ export default function Accessibility() {
   return (
     <PageShell>
       <Container className="measure-prose">
-        <PageHeader eyebrow="Last reviewed 1 November 2026" title={statement.title} />
+        <PageHeader title={statement.title} lede="Last reviewed 1 November 2026" />
         {/* Raw HTML: Prelum's fixed statement markup; no reader text reaches it. */}
         <div className="fx-statement" dangerouslySetInnerHTML={markup(statement.html)} />
       </Container>

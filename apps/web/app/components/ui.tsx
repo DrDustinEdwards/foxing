@@ -157,12 +157,10 @@ export function Breadcrumbs({ trail }: { trail: Array<{ label: string; to?: stri
 /** Plain empty state. Illustration zones are not extended here (design decision). */
 export function EmptyState({
   title,
-  body,
   className,
   children,
 }: {
   title: string;
-  body?: string;
   className?: string;
   children?: React.ReactNode;
 }) {
@@ -173,7 +171,6 @@ export function EmptyState({
     >
       <div className="cap-empty-header">
         <p className="cap-empty-title">{title}</p>
-        {body && <p className="cap-empty-text">{body}</p>}
       </div>
       {children ? <div className="cap-empty-content">{children}</div> : null}
     </div>
@@ -206,16 +203,14 @@ export function Avatar({
   );
 }
 
-/** Page title block: eyebrow + display heading + optional lede, and the page's own actions
+/** Page title block: display heading + optional lede, and the page's own actions
     (a New button, Refresh) beside it when there are any. */
 export function PageHeader({
-  eyebrow,
   title,
   lede,
   actions,
   children,
 }: {
-  eyebrow?: string;
   title: string;
   lede?: string;
   actions?: React.ReactNode;
@@ -224,14 +219,7 @@ export function PageHeader({
 }) {
   const heading = (
     <div className="cap-stack" data-gap="5">
-      {eyebrow ? (
-        <div className="cap-stack" data-gap="4">
-          <Eyebrow>{eyebrow}</Eyebrow>
-          <h1 className="fx-page-title">{title}</h1>
-        </div>
-      ) : (
-        <h1 className="fx-page-title">{title}</h1>
-      )}
+      <h1 className="fx-page-title">{title}</h1>
       {lede && (
         <p className="cap-text measure" data-size="lead" data-tone="muted">
           {lede}
