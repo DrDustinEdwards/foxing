@@ -64,7 +64,7 @@ const FACT_CHECK_DOMAINS = [
   "openlibrary.org",
 ];
 
-/** The fact-check's call: one Messages request with the web search tool, at most five searches. */
+/** The fact-check's call: one Messages request with the web search tool, at most three searches. */
 export function anthropicFactChecker(env: Env): companion.FactChecker | null {
   if (!env.ANTHROPIC_API_KEY) return null;
   return async ({ model, system, user }) => {
@@ -80,7 +80,7 @@ export function anthropicFactChecker(env: Env): companion.FactChecker | null {
           {
             type: "web_search_20250305",
             name: "web_search",
-            max_uses: 5,
+            max_uses: 3,
             allowed_domains: FACT_CHECK_DOMAINS,
           },
         ],

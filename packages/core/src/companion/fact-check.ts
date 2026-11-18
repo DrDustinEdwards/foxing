@@ -93,7 +93,7 @@ export async function factCheckBook(
   );
   if (!cached.length) return null;
 
-  const model = resolveModel("standard");
+  const model = resolveModel("fast");
   const parts = [`"${book.title}" by ${book.author}`];
   if (book.description) parts.push(untrusted("catalog-description", book.description));
   for (const row of cached) parts.push(untrusted(row.action, row.content as string));
