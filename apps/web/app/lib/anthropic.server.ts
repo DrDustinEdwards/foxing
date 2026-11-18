@@ -73,7 +73,9 @@ export function anthropicFactChecker(env: Env): companion.FactChecker | null {
       APP,
       {
         model,
-        max_tokens: 6000,
+        // The reply is the corrected texts as JSON plus the search narration. 6000 cut it off (stop_reason max_tokens)
+        // on 8 of 10 trial books: each cut-off call was billed, thrown away and retried.
+        max_tokens: 16000,
         system,
         messages: [{ role: "user", content: user }],
         tools: [
@@ -85,7 +87,7 @@ export function anthropicFactChecker(env: Env): companion.FactChecker | null {
           },
         ],
       },
-      { feature: "catalog-fact-check" },
+      { feature: "catalog-fact-check", timeoutMs: 180_000 },
     );
     if (!result.ok) throw failed(result as MessageFailure);
     const searches = (result.content as { type: string; name?: string }[]).filter(

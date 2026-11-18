@@ -479,6 +479,8 @@ async function factCheckMessage(
       { book_id: message.body.bookId, error: err },
       { level: limited ? "warn" : "error" },
     );
+    // Every attempt is billed, so a book that keeps failing is given up on after three instead of six.
+    if (message.attempts >= 3) return message.ack();
     message.retry({ delaySeconds: 60 * message.attempts });
   }
 }
