@@ -159,11 +159,6 @@
   display: flex;
   flex-direction: column;
 }
-.fx-preference-sections-link {
-  color: var(--accent-text);
-  text-decoration-line: underline;
-  text-underline-offset: 2px;
-}
 .fx-preference-sections-stack-2 {
   display: flex;
   flex-direction: column;

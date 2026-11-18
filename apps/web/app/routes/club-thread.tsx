@@ -57,7 +57,7 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
         <ul className="cap-stack" data-gap="5" data-testid="post-list">
           {posts.length === 0 ? (
             <li className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-              No posts yet. Start the conversation.
+              No posts yet.
             </li>
           ) : (
             posts.map((p) => (

@@ -56,10 +56,7 @@ export default function Clubs({ loaderData }: Route.ComponentProps) {
         <section className="cap-stack" data-gap="5">
           <h2 className="fx-clubs-caps">Your clubs</h2>
           {mine.length === 0 ? (
-            <EmptyState
-              title="You have not joined a club yet."
-              body="Join one below, or start your own."
-            />
+            <EmptyState title="You have not joined a club yet." />
           ) : (
             <div className="fx-clubs-grid">
               {mine.map((club) => (

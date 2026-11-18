@@ -367,9 +367,7 @@ export function SignInPrompt({ loginHref, onClose }: { loginHref: string; onClos
     >
       <DialogHeader>
         <DialogTitle>Sign in to save</DialogTitle>
-        <DialogDescription>
-          Reading is free. Sign in to keep highlights, notes, bookmarks, and your place.
-        </DialogDescription>
+        <DialogDescription>Sign in to keep highlights, notes, and your place.</DialogDescription>
       </DialogHeader>
       <DialogFooter>
         <DialogClose part="cancel">Keep reading</DialogClose>

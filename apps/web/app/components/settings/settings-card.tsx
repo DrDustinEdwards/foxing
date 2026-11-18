@@ -5,12 +5,10 @@ export function ToggleRow({
   checked,
   onChange,
   label,
-  subtext,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
-  subtext: string;
 }) {
   return (
     <div className="items-start fx-settings-card-card">
@@ -23,9 +21,6 @@ export function ToggleRow({
           data-face="ui"
         >
           {label}
-        </span>
-        <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
-          {subtext}
         </span>
       </div>
       {/* Capsomer's switch, sky blue when on (Rule 05). */}

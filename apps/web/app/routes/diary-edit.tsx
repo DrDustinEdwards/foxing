@@ -40,7 +40,7 @@ export default function DiaryEdit({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader eyebrow="Diary" title="Edit entry" />
+        <PageHeader title="Edit entry" />
         <DiaryForm
           mode="edit"
           entryId={entry.id}

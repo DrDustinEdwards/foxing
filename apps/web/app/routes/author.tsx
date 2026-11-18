@@ -68,11 +68,8 @@ export default function Author({ loaderData }: Route.ComponentProps) {
           ]}
         />
         <PageHeader
-          eyebrow="Author"
           title={author.name}
-          lede={`${author.bookCount} ${author.bookCount === 1 ? "book" : "books"} in the library${
-            range ? `, published ${range}` : ""
-          }.`}
+          lede={`${author.bookCount} ${author.bookCount === 1 ? "book" : "books"}${range ? `, ${range}` : ""}`}
         />
         <BookGrid>
           {author.books.map((b, i) => (

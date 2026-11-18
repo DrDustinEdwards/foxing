@@ -1,5 +1,4 @@
 import { Link } from "capsomer/react/link";
-import { Eyebrow } from "~/components/ui";
 
 // The parts the three guide pages share (routes/guide.tsx, app-guide.tsx, features.tsx): the jump
 // links under the header, a section, a paragraph, a dotted list and the closing sign-up line.
@@ -18,21 +17,16 @@ export function GuideNav({ anchors }: { anchors: { href: string; label: string }
 
 export function Section({
   id,
-  eyebrow,
   heading,
   children,
 }: {
   id: string;
-  eyebrow: string;
   heading: string;
   children: React.ReactNode;
 }) {
   return (
     <section id={id} className="cap-stack fx-guide-section" data-gap="5">
-      <div className="cap-stack" data-gap="3">
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <h2 className="fx-guide-title">{heading}</h2>
-      </div>
+      <h2 className="fx-guide-title">{heading}</h2>
       <div className="cap-stack">{children}</div>
     </section>
   );

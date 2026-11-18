@@ -92,10 +92,7 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
         {isOwner ? <AddBookToList listId={list.id} /> : null}
 
         {books.length === 0 ? (
-          <EmptyState
-            title="No books yet"
-            body={isOwner ? "Search above to add books." : undefined}
-          />
+          <EmptyState title="No books yet" />
         ) : (
           <ol className="cap-stack" data-gap="4">
             {books.map((entry, i) => (

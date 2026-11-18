@@ -5,8 +5,7 @@ import { Banner } from "capsomer/react/banner";
 export function DemoNotice() {
   return (
     <Banner tone="info" title="Demo with sample data">
-      This is how the page looks for a signed-in reader. The numbers are made up, and nothing here
-      belongs to a real account.
+      Numbers are made up.
     </Banner>
   );
 }

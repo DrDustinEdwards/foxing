@@ -22,7 +22,7 @@ export default function ListNew({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader eyebrow="Lists" title="New reading list" />
+        <PageHeader title="New reading list" />
         <ListForm mode="create" redirectTo={`/u/${loaderData.username}`} />
       </Container>
     </PageShell>

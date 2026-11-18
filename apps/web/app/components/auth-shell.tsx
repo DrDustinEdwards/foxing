@@ -460,8 +460,7 @@ function SignInCodeForm({
   return (
     <form className="cap-stack" data-gap="4" onSubmit={(event) => void submitCode(event)}>
       <p role="status" className="fx-auth-shell-text-2">
-        Check your email. Open the sign-in link, or type the code from the same email here. Both
-        work for {SIGN_IN_EXPIRES_IN_WORDS}.
+        Check your email for a link or code. Valid for {SIGN_IN_EXPIRES_IN_WORDS}.
       </p>
       <Field
         label="Code"

@@ -30,14 +30,11 @@ export default function AppGuide() {
   return (
     <PageShell>
       <Container className="measure-prose cap-stack" data-gap="8">
-        <PageHeader
-          title="Using the Foxing app"
-          lede="How the Foxing mobile app works: reading offline, highlights and notes, vocabulary, sync across devices, and notifications."
-        />
+        <PageHeader title="Using the Foxing app" />
 
         <GuideNav anchors={NAV_ANCHORS} />
 
-        <Section id="reading" eyebrow="Reading" heading="Reading offline">
+        <Section id="reading" heading="Reading offline">
           <Prose>
             Open a book from your library and it downloads to your device in a few seconds. Once it
             is on your device, it reads offline, with no connection needed. Your place is saved
@@ -53,7 +50,7 @@ export default function AppGuide() {
           />
         </Section>
 
-        <Section id="highlights" eyebrow="Highlights" heading="Highlights and notes">
+        <Section id="highlights" heading="Highlights and notes">
           <Prose>
             Tap and drag to select a passage, then pick a color. There are seven colors to sort your
             highlights however you like. Add a note to any highlight. If your profile is public,
@@ -62,7 +59,7 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <Section id="vocabulary" eyebrow="Vocabulary" heading="Vocabulary lookups">
+        <Section id="vocabulary" heading="Vocabulary lookups">
           <Prose>
             Tap any word to see what it means in that sentence, in that book. Every word you look up
             is saved to your vocabulary with its definition, the sentence you found it in, and the
@@ -71,7 +68,7 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <Section id="companion" eyebrow="Companion" heading="The AI reading companion">
+        <Section id="companion" heading="The AI reading companion">
           <Prose>
             Foxing Plus adds an AI companion to the reader. Select a passage for a plainer reading,
             historical context, or the literary devices at work. Ask your own question, or get a
@@ -80,7 +77,7 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <Section id="sync" eyebrow="Sync" heading="Sync across devices">
+        <Section id="sync" heading="Sync across devices">
           <Prose>
             Your account is the same everywhere. Reading position, shelves, highlights, and
             vocabulary sync between your phone and foxing.app. Changes you make offline are queued
@@ -89,7 +86,7 @@ export default function AppGuide() {
           </Prose>
         </Section>
 
-        <Section id="notifications" eyebrow="Notifications" heading="Notifications">
+        <Section id="notifications" heading="Notifications">
           <Prose>
             Push notifications keep you current on the reading you care about: replies in your
             clubs, new followers, and reminders tied to your reading goals. Turn them on or off from

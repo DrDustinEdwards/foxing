@@ -40,11 +40,7 @@ export default function Awards({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Recognition"
-          title="Literary awards"
-          lede="The prizes that shaped the canon, mapped to books you can read now."
-        />
+        <PageHeader title="Literary awards" />
         <div className="fx-awards-grid">
           {awards.map((a) => (
             <EntityCard key={a.slug} to={`/awards/${a.slug}`}>

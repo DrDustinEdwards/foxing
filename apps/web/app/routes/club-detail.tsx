@@ -77,7 +77,7 @@ export default function ClubDetail({ loaderData, params }: Route.ComponentProps)
             </aside>
           </div>
         ) : (
-          <EmptyState title="Join this club to read its discussions, polls, and meetings." />
+          <EmptyState title="Join to see discussions." />
         )}
       </Container>
     </PageShell>

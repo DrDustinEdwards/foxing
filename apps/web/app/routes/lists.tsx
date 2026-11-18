@@ -38,7 +38,6 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <PageHeader
-          eyebrow="Reading"
           title="Your lists"
           actions={
             <ButtonLink to="/lists/new" className="cap-keep" variant="primary">
@@ -47,10 +46,7 @@ export default function Lists({ loaderData }: Route.ComponentProps) {
           }
         />
         {lists.length === 0 ? (
-          <EmptyState
-            title="No lists yet."
-            body="Group books into a list to share what you are reading or want to read."
-          />
+          <EmptyState title="No lists yet." />
         ) : (
           <div className="cap-stack" data-gap="6">
             <nav aria-label="Filter lists" className="fx-lists-row-2">

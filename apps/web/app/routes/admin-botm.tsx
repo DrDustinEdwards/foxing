@@ -44,7 +44,7 @@ export default function AdminBotm({ loaderData }: Route.ComponentProps) {
         <AdminCard title="Scheduled picks">
           {rows.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-              No picks yet. Create one above.
+              No picks yet.
             </p>
           ) : (
             <ul className="divided">

@@ -26,29 +26,23 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
   const refresh = new URL(request.url).searchParams.get("refresh") === "1";
-  const { recommendations, aiPersonalized, isPlus } = await loadRecommendations(env, user.id, {
+  const { recommendations, isPlus } = await loadRecommendations(env, user.id, {
     refresh,
   });
   // No upgrade is offered while Plus cannot be bought (CLAUDE.md rule 6).
   const canUpgrade = !isPlus && billing.stripeSettings(env) !== null;
-  return { recommendations, aiPersonalized, canUpgrade };
+  return { recommendations, canUpgrade };
 }
 
 export default function FindNextBook({ loaderData }: Route.ComponentProps) {
-  const { recommendations, aiPersonalized, canUpgrade } = loaderData;
+  const { recommendations, canUpgrade } = loaderData;
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
         <PageHeader
-          eyebrow="For you"
           title="Find your next book"
-          lede={
-            aiPersonalized
-              ? "Picks chosen for your reading, with a reason for each."
-              : "Picks drawn from what you read and love, with a reason for each."
-          }
           actions={
             <ButtonLink to="/find-next-book?refresh=1" className="cap-keep">
               Refresh
@@ -72,10 +66,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
         ) : null}
 
         {recommendations.length === 0 ? (
-          <EmptyState
-            title="No recommendations yet."
-            body="Add a few books to your library and check back."
-          />
+          <EmptyState title="No recommendations yet." />
         ) : (
           <div className="fx-find-next-book-grid">
             {recommendations.map((rec) => (

@@ -223,11 +223,6 @@
   width: 100%;
 }
 
-.fx-club-new-text {
-  font-family: var(--fx-body);
-  color: var(--muted);
-}
-
 .fx-club-new-text-2 {
   border-color: color-mix(in srgb, var(--crit) 50%, transparent);
   background-color: var(--crit-soft);

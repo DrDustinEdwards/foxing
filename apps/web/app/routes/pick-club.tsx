@@ -47,11 +47,7 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
             { label: club.name },
           ]}
         />
-        <PageHeader
-          eyebrow={club.curator ?? "Book club"}
-          title={club.name}
-          lede={club.description ?? `${withBooks.length} picks tracked.`}
-        />
+        <PageHeader title={club.name} lede={club.description ?? club.curator ?? undefined} />
         <ul className="fx-pick-club-grid">
           {withBooks.map((p) => {
             const b = p.book;

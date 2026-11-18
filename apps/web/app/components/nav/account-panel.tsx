@@ -237,12 +237,7 @@ function AccountPanel({
       </div>
 
       <div className="fx-acct-group">
-        <MenuLink
-          to="/find-next-book"
-          label="Find next book"
-          sublabel="AI recommendations for you"
-          icon={OWN.findnext}
-        />
+        <MenuLink to="/find-next-book" label="Find next book" icon={OWN.findnext} />
         {user.isAdmin ? <MenuLink to="/admin" label="Admin dashboard" icon={OWN.admin} /> : null}
       </div>
 

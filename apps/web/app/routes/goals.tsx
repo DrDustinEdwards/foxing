@@ -85,7 +85,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
-        <PageHeader eyebrow="Reading" title="Reading goals" />
+        <PageHeader title="Reading goals" />
 
         <CreateGoal />
 
@@ -94,7 +94,7 @@ export default function Goals({ loaderData }: Route.ComponentProps) {
             Active
           </h2>
           {active.length === 0 ? (
-            <EmptyState title="No active goals." body="Set a target above to start tracking." />
+            <EmptyState title="No active goals." />
           ) : (
             <ul className="cap-stack" data-gap="4">
               {active.map((g) => (
