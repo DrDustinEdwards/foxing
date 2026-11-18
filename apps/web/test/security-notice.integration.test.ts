@@ -35,9 +35,14 @@ async function signInHarness(secret: string) {
       }),
     );
   const signIn = async (email: string) => {
-    await post("/email-otp/send-verification-otp", { email, type: "sign-in" });
+    const ask = await post("/email-otp/send-verification-otp", { email, type: "sign-in" });
     const otp = sent.at(-1)?.text.match(/\b(\d{6})\b/)?.[1];
-    const res = await post("/sign-in/email-otp", { email, otp });
+    // The code only works with the cookie the request that mailed it set.
+    const codeCookie = ask.headers
+      .getSetCookie()
+      .map((c) => c.split(";")[0])
+      .join("; ");
+    const res = await post("/sign-in/email-otp", { email, otp }, codeCookie);
     expect(res.status).toBe(200);
     return (
       res.headers
