@@ -70,3 +70,10 @@ export async function seedUser(id: string, tier: "free" | "plus" = "free") {
     updatedAt: new Date(),
   });
 }
+
+/** The cookies a response set, as the Cookie header the next request sends back. */
+export const cookiesFrom = (res: Response) =>
+  res.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .join("; ");

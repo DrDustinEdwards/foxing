@@ -6,6 +6,7 @@ import { getAuth } from "../app/lib/auth.server";
 import * as library from "../app/routes/library";
 import * as login from "../app/routes/login";
 import * as passkeyOffer from "../app/routes/passkey-offer";
+import { cookiesFrom } from "./test-api";
 
 /** The Worker's env with mail caught instead of sent. */
 function mailEnv(secret: string) {
@@ -28,12 +29,12 @@ describe("the app's sign-in code", () => {
   it("is mailed on request and signs in", async () => {
     const { sent, testEnv } = mailEnv("test-secret-value-for-app-code-only");
     const auth = await getAuth(testEnv);
-    const post = (path: string, body: object) =>
+    const post = (path: string, body: object, extra: Record<string, string> = {}) =>
       auth.handler(
         new Request(`https://foxing.app/api/auth${path}`, {
           method: "POST",
           // What the Expo client sends in place of a browser's Origin.
-          headers: { "Content-Type": "application/json", "expo-origin": "foxing://" },
+          headers: { "Content-Type": "application/json", "expo-origin": "foxing://", ...extra },
           body: JSON.stringify(body),
         }),
       );
@@ -45,7 +46,12 @@ describe("the app's sign-in code", () => {
     expect(sent[0]?.to).toBe(email);
     expect(code).toBeDefined();
 
-    const signIn = await post("/sign-in/email-otp", { email, otp: code });
+    // The code only works with the cookie the request that mailed it set; the Expo client keeps it.
+    const signIn = await post(
+      "/sign-in/email-otp",
+      { email, otp: code },
+      { cookie: cookiesFrom(ask) },
+    );
     expect(signIn.status).toBe(200);
     expect(((await signIn.json()) as { user?: { email: string } }).user?.email).toBe(email);
   });
@@ -93,24 +99,22 @@ describe("signing in from a protected page", () => {
 
     // The reader signs in with an emailed code.
     const auth = await getAuth(testEnv);
-    const call = (path: string, body: object) =>
+    const call = (path: string, body: object, cookie = "") =>
       auth.handler(
         new Request(`${ORIGIN}/api/auth${path}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", Origin: ORIGIN },
+          headers: { "Content-Type": "application/json", Origin: ORIGIN, Cookie: cookie },
           body: JSON.stringify(body),
         }),
       );
     const email = "returning-reader@example.com";
-    await call("/email-otp/send-verification-otp", { email, type: "sign-in" });
+    const codeAsk = await call("/email-otp/send-verification-otp", { email, type: "sign-in" });
+    const codeCookie = cookiesFrom(codeAsk);
     const code = sent.at(-1)?.text.match(/\b(\d{6})\b/)?.[1];
     expect(code).toBeDefined();
-    const signedIn = await call("/sign-in/email-otp", { email, otp: code });
+    const signedIn = await call("/sign-in/email-otp", { email, otp: code }, codeCookie);
     expect(signedIn.status).toBe(200);
-    const cookie = signedIn.headers
-      .getSetCookie()
-      .map((c) => c.split(";")[0])
-      .join("; ");
+    const cookie = cookiesFrom(signedIn);
 
     // The passkey offer's "Not now" goes on to the page they asked for.
     const offer = new Request(`${ORIGIN}/passkey?next=${encodeURIComponent(next ?? "")}`, {
