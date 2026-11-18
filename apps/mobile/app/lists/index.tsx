@@ -55,9 +55,7 @@ export default function MyListsScreen() {
               textAlign: "center",
             }}
           >
-            {lists.error
-              ? "Could not load your lists."
-              : "No lists yet."}
+            {lists.error ? "Could not load your lists." : "No lists yet."}
           </Text>
         </View>
       ) : (

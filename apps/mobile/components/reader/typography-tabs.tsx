@@ -188,11 +188,7 @@ export function FontTab({
       </Section>
 
       <Section label="Drop cap">
-        <ToggleRow
-          value={prefs.dropCap}
-          onValueChange={(v) => set("dropCap", v)}
-          label="On"
-        />
+        <ToggleRow value={prefs.dropCap} onValueChange={(v) => set("dropCap", v)} label="On" />
       </Section>
     </View>
   );
@@ -358,11 +354,7 @@ export function CanvasTab({
       </Section>
 
       <Section label="Focus mode">
-        <ToggleRow
-          value={prefs.focusMode}
-          onValueChange={(v) => set("focusMode", v)}
-          label="On"
-        />
+        <ToggleRow value={prefs.focusMode} onValueChange={(v) => set("focusMode", v)} label="On" />
       </Section>
 
       <Section label="Auto-scroll">

@@ -55,9 +55,7 @@ export default function DiscoverFilterScreen() {
               textAlign: "center",
             }}
           >
-            {browse.isError
-              ? "Couldn't load these books."
-              : "Nothing matches."}
+            {browse.isError ? "Couldn't load these books." : "Nothing matches."}
           </Text>
         </View>
       ) : (

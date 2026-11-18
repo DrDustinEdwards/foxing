@@ -137,9 +137,7 @@ export default function VocabularyScreen() {
               marginTop: 32,
             }}
           >
-            {rows.length === 0
-              ? "No words yet."
-              : "No matches."}
+            {rows.length === 0 ? "No words yet." : "No matches."}
           </Text>
         ) : (
           filtered.map((r) => {

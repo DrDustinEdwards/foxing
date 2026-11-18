@@ -88,11 +88,7 @@ export function AddBookSheet({
     >
       {mode === "choose" ? (
         <>
-          <AddOption
-            Icon={Compass}
-            label="Browse catalog"
-            onPress={onBrowse}
-          />
+          <AddOption Icon={Compass} label="Browse catalog" onPress={onBrowse} />
           <AddOption
             Icon={LinkSimple}
             label="Add from URL"
