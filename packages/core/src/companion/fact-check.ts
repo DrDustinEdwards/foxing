@@ -23,7 +23,7 @@ Per text, answer "ok" when every claim holds, or "fixed" with a full corrected t
 
 ${UNTRUSTED_DATA_RULE}
 
-End with one JSON object in a \`\`\`json fence and nothing after it:
+Write no commentary between searches. End with one JSON object in a \`\`\`json fence and nothing after it:
 {"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "corrected": "full corrected text, only when fixed"}}, "sources": ["https://..."]}
 Include every action you were given and no other.`;
 
