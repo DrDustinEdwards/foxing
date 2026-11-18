@@ -30,6 +30,12 @@ describe("parseFactCheck", () => {
     const json = '{"texts":{"a":{"verdict":"fixed","issues":[],"corrected":"One.\n\nTwo."}}}';
     expect(parseFactCheck(fence(json))?.texts.a.corrected).toBe("One.\n\nTwo.");
     expect(parseFactCheck(`${json}\nDone.`)?.texts.a.verdict).toBe("fixed");
+
+    // A reply that leaves "texts" open puts "sources" inside it: the array is the sources, not an action.
+    const open = '{"texts":{"a":{"verdict":"ok","issues":[]},"sources":["https://example.com/a"]}}';
+    const nested = parseFactCheck(fence(open));
+    expect(Object.keys(nested?.texts ?? {})).toEqual(["a"]);
+    expect(nested?.sources).toEqual(["https://example.com/a"]);
   });
 
   it("refuses a fix with no corrected text, an unknown verdict and a reply that is not JSON", () => {
