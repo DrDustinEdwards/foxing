@@ -1,3 +1,4 @@
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { PRIVATE_PAGE_HEADERS } from "@dustinedwards/site-runtime/edge-cache";
 import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
 import {
@@ -32,7 +33,7 @@ export default function Signup({ loaderData }: Route.ComponentProps) {
       title="Create your account"
       footer={
         <>
-          Already have an account? <AuthLink to="/login">Sign in</AuthLink>
+          Already have an account? <AuthLink to={SIGN_IN_PATH}>Sign in</AuthLink>
         </>
       }
     >
