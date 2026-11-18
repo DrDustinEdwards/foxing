@@ -57,7 +57,7 @@ export default function MyListsScreen() {
           >
             {lists.error
               ? "Could not load your lists."
-              : "No lists yet. Create one to start curating."}
+              : "No lists yet."}
           </Text>
         </View>
       ) : (

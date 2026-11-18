@@ -83,7 +83,7 @@ export default function ReadingTimelineScreen() {
               marginTop: 12,
             }}
           >
-            You haven't finished a book yet. Your reading history will appear here.
+            No finished books yet.
           </Text>
         </View>
       ) : (

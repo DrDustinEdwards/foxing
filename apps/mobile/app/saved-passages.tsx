@@ -151,7 +151,7 @@ export default function SavedPassagesScreen() {
               marginTop: 12,
             }}
           >
-            Add a note to a highlight while reading to save it here.
+            No saved passages yet.
           </Text>
         </View>
       ) : (

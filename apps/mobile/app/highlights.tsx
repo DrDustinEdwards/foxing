@@ -74,7 +74,7 @@ export default function HighlightsScreen() {
             >
               {highlights.error
                 ? "Could not load your highlights."
-                : "You haven't saved any highlights yet. Long press a passage while reading to capture one."}
+                : "No highlights yet."}
             </Text>
           </View>
         ) : (

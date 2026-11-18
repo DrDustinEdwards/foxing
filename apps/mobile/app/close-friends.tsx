@@ -58,17 +58,6 @@ export default function CloseFriendsScreen() {
           Close Friends
         </Text>
       </View>
-      <Text
-        style={{
-          fontFamily: Fonts.body,
-          fontSize: 13,
-          color: colors.textSecondary,
-          paddingHorizontal: 16,
-          marginBottom: 8,
-        }}
-      >
-        Close friends see what you share with friends only.
-      </Text>
       {people.isPending ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />

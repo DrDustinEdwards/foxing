@@ -138,7 +138,7 @@ export default function VocabularyScreen() {
             }}
           >
             {rows.length === 0
-              ? "No words yet. Tap any word in your reading to add it here."
+              ? "No words yet."
               : "No matches."}
           </Text>
         ) : (
@@ -409,16 +409,6 @@ function FlashcardMode({ rows, masteredCount, total, onMaster, onExit }: Flashca
                 }}
                 multiline
               />
-              <Text
-                style={{
-                  fontFamily: Fonts.ui,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  marginTop: 6,
-                }}
-              >
-                Just for practice, nothing is graded or saved.
-              </Text>
             </View>
 
             <View className="flex-row gap-3 mt-6">

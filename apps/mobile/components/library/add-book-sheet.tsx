@@ -91,13 +91,11 @@ export function AddBookSheet({
           <AddOption
             Icon={Compass}
             label="Browse catalog"
-            subtitle="Public-domain classics from Gutenberg + Standard Ebooks"
             onPress={onBrowse}
           />
           <AddOption
             Icon={LinkSimple}
             label="Add from URL"
-            subtitle="Paste a Standard Ebooks, Goodreads or Open Library link"
             onPress={() => setMode("url")}
             topBorder
           />
@@ -175,13 +173,11 @@ export function AddBookSheet({
 function AddOption({
   Icon,
   label,
-  subtitle,
   onPress,
   topBorder,
 }: {
   Icon: React.ComponentType<{ color: string; size: number }>;
   label: string;
-  subtitle: string;
   onPress: () => void;
   topBorder?: boolean;
 }) {
@@ -208,11 +204,6 @@ function AddOption({
       <View style={{ flex: 1 }}>
         <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 15, color: colors.textPrimary }}>
           {label}
-        </Text>
-        <Text
-          style={{ fontFamily: Fonts.ui, fontSize: 11, color: colors.textTertiary, marginTop: 2 }}
-        >
-          {subtitle}
         </Text>
       </View>
     </Pressable>
