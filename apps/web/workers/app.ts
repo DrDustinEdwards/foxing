@@ -476,7 +476,11 @@ async function factCheckMessage(
     const limited = err instanceof Error && err.message.includes("(rate_limited)");
     logEvent(
       "companion_fact_check_failed",
-      { book_id: message.body.bookId, error: err },
+      {
+        book_id: message.body.bookId,
+        error: err,
+        reply_tail: (err as { replyTail?: string }).replyTail,
+      },
       { level: limited ? "warn" : "error" },
     );
     // Every attempt is billed, so a book that keeps failing is given up on after three instead of six.
