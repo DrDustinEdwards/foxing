@@ -3,7 +3,7 @@ import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 import { deleteUserAccount, getAuth, sessionUserFromRequest } from "../app/lib/auth.server";
-import { testApi } from "./test-api";
+import { cookiesFrom, testApi } from "./test-api";
 
 let harnesses = 0;
 
@@ -38,10 +38,7 @@ async function signInHarness(secret: string) {
     const ask = await post("/email-otp/send-verification-otp", { email, type: "sign-in" });
     const otp = sent.at(-1)?.text.match(/\b(\d{6})\b/)?.[1];
     // The code only works with the cookie the request that mailed it set.
-    const codeCookie = ask.headers
-      .getSetCookie()
-      .map((c) => c.split(";")[0])
-      .join("; ");
+    const codeCookie = cookiesFrom(ask);
     const res = await post("/sign-in/email-otp", { email, otp }, codeCookie);
     expect(res.status).toBe(200);
     return (
