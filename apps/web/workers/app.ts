@@ -546,7 +546,11 @@ async function queue(
         { book_id: message.body.bookId, error: err },
         { level: limited ? "warn" : "error" },
       );
-      message.retry(limited ? { delaySeconds: 60 * message.attempts } : undefined);
+      // A failed reply that came back was billed, and a book that fails the prose check fails again, so it is given up
+      // after three attempts, as the fact check is, not six at four calls each. The next daily run picks it up again.
+      if (limited) message.retry({ delaySeconds: 60 * message.attempts });
+      else if (message.attempts >= 3) message.ack();
+      else message.retry();
     }
   }
 }
