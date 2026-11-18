@@ -57,7 +57,7 @@ export default function DiscoverFilterScreen() {
           >
             {browse.isError
               ? "Couldn't load these books."
-              : "Nothing matches yet. Try a different filter."}
+              : "Nothing matches."}
           </Text>
         </View>
       ) : (
