@@ -3,7 +3,7 @@
 // /api/v1); after that each card lives in the @foxing/client cache. Writes (status,
 // shelves, goals) patch the cache at once and refetch only what they touched, so the
 // page never reloads. Status transitions emit events server-side.
-import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import {
   goalPeriodLabel,
   useCreateShelf,

@@ -2,7 +2,7 @@
 // only shows this page, so a mail scanner that opens every link spends nothing; the button's POST
 // signs in through confirmSignInLink. A refused link comes back here with ?error= and the time it
 // was mailed, so the page can tell a used link from an expired one (signInLinkProblem).
-import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import {
   SIGN_IN_LINK_WORDS,
   confirmSignInLink,

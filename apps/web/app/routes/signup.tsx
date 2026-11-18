@@ -1,4 +1,4 @@
-import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { PRIVATE_PAGE_HEADERS } from "@dustinedwards/site-runtime/edge-cache";
 import { signInMethods } from "@dustinedwards/site-runtime/sign-in";
 import {

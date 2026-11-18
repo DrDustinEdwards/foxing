@@ -1,4 +1,4 @@
-import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { Icon, iconBell, iconSearch } from "capsomer/react/icons";
 import {
   type HeaderExtra,

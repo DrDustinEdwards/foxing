@@ -1,4 +1,4 @@
-import { CONFIRM_PATH, SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-client";
+import { CONFIRM_PATH, SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { type RouteConfig, index, layout, prefix, route } from "@react-router/dev/routes";
 
 export default [
