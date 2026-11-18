@@ -403,9 +403,14 @@ async function enqueueCompanionCache(env: Env): Promise<void> {
 // Daily: enqueue catalog books whose cached texts have no fact-check yet, FACT_CHECK_BATCH at a time (new books after
 // the first sweep). While the KV key `companion-fact-check:only` holds a JSON array of book ids, only those are checked
 // (a trial run before the sweep); delete the key to sweep.
-const FACT_CHECK_BATCH = 300;
+// The queue takes hours to check a batch, and a book is only recorded once it is checked, so a second run inside the
+// FACT_CHECK_HOLD_SECONDS after one would queue (and pay for) the same books again: it does nothing instead.
+const FACT_CHECK_BATCH = 1500;
 const FACT_CHECK_ONLY_KEY = "companion-fact-check:only";
+const FACT_CHECK_HOLD_KEY = "companion-fact-check:enqueued";
+const FACT_CHECK_HOLD_SECONDS = 20 * 60 * 60;
 async function enqueueFactCheck(env: Env): Promise<void> {
+  if (await env.APP_KV.get(FACT_CHECK_HOLD_KEY)) return;
   const db = createDb(env.DB);
   const only = (await env.APP_KV.get(FACT_CHECK_ONLY_KEY, "json")) as string[] | null;
   const books = await companionRepo.findBooksNeedingFactCheck(
@@ -421,6 +426,10 @@ async function enqueueFactCheck(env: Env): Promise<void> {
       } satisfies CacheJobMessage),
     ),
   );
+  if (books.length)
+    await env.APP_KV.put(FACT_CHECK_HOLD_KEY, new Date().toISOString(), {
+      expirationTtl: FACT_CHECK_HOLD_SECONDS,
+    });
 }
 
 // Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
