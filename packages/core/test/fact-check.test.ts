@@ -27,6 +27,12 @@ describe("parseFactCheck", () => {
     expect(parsed?.texts.author_bio.verdict).toBe("ok");
   });
 
+  it("reads a corrected text with real newlines in it, and a reply with no fence or text after the JSON", () => {
+    const json = '{"texts":{"a":{"verdict":"fixed","issues":[],"corrected":"One.\n\nTwo."}}}';
+    expect(parseFactCheck(fence(json))?.texts.a.corrected).toBe("One.\n\nTwo.");
+    expect(parseFactCheck(`${json}\nDone.`)?.texts.a.verdict).toBe("fixed");
+  });
+
   it("refuses a fix with no corrected text, an unknown verdict and a reply that is not JSON", () => {
     expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"fixed","issues":[]}}}'))).toBeNull();
     expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"maybe"}}}'))).toBeNull();

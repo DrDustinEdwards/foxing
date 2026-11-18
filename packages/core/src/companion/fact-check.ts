@@ -40,15 +40,31 @@ function str(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
 }
 
-/** The JSON object in the reply's last json fence (or the whole reply), validated; null when it does not fit. */
+/** JSON.parse, and on failure once more with each raw control character inside a string escaped: a model that writes a
+ * multi-paragraph corrected text puts real newlines in the string, which JSON forbids (RFC 8259, section 7). */
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    const escaped = raw.replace(/"(?:[^"\\]|\\.)*"/g, (s) =>
+      s.replace(/\p{Cc}/gu, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`),
+    );
+    if (escaped === raw) throw err;
+    return JSON.parse(escaped);
+  }
+}
+
+/** The JSON object in the reply's last json fence (or the first `{` to the last `}`), validated; null when it does not fit. */
 export function parseFactCheck(
   text: string,
 ): { texts: Record<string, Verdict>; sources: string[] } | null {
   const fences = [...text.matchAll(/```json\s*([\s\S]*?)```/g)];
-  const raw = fences.length ? fences[fences.length - 1][1] : text.slice(text.indexOf("{"));
+  const raw = fences.length
+    ? fences[fences.length - 1][1]
+    : text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
   let value: unknown;
   try {
-    value = JSON.parse(raw);
+    value = parseJson(raw);
   } catch {
     return null;
   }
@@ -100,7 +116,15 @@ export async function factCheckBook(
   const reply = await check({ model, system: FACT_CHECK_SYSTEM, user: parts.join("\n\n") });
 
   const parsed = parseFactCheck(reply.text);
-  if (!parsed) throw new Error(`the fact-check reply for ${book.id} was not the expected JSON`);
+  if (!parsed) {
+    // The end of the reply rides along on the error so the next failure names its cause (a catalog text, public).
+    throw Object.assign(
+      new Error(`the fact-check reply for ${book.id} was not the expected JSON`),
+      {
+        replyTail: reply.text.slice(-300),
+      },
+    );
+  }
   const missing = cached.filter((row) => !parsed.texts[row.action]);
   if (missing.length)
     throw new Error(
