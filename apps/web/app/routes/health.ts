@@ -1,5 +1,6 @@
 import { cronCheck } from "@dustinedwards/site-runtime/cron";
 import {
+  aiOutcomeCheck,
   authSpikeCheck,
   durableObjectCheck,
   emailCheck,
@@ -19,7 +20,7 @@ import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 // ALONE: without it no page, sign-in or API answer works, so 503 is true. Everything else warns,
 // because the catalog still renders without it: the newest dump or a files pass older than 26 hours
 // (under `backup`), the MEDIA and COVERS buckets, APP_KV, Images (cover and journal picture sizes),
-// the companion cache queue (the companion only), the ClubRoom and rate limiter
+// the companion cache queue (the companion only), the last companion model call (`ai-companion`), the ClubRoom and rate limiter
 // Durable Objects (live club updates, and the API's limits), and a cron job that failed, overran,
 // went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts), and a spike of failed
 // sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck).
@@ -40,6 +41,10 @@ export function loader({ context }: Route.LoaderArgs) {
       imagesCheck("images", env.IMAGES),
       emailCheck("email", env.EMAIL),
       queueCheck("companion-queue", env.COMPANION_CACHE_QUEUE),
+      // The last real companion call failed (a spend cap, a revoked key): the queue above still answers then.
+      aiOutcomeCheck("companion", env.APP_KV),
+      // The last real Journal alt-text call failed.
+      aiOutcomeCheck("alt-text", env.APP_KV),
       durableObjectCheck("club-room", env.CLUB_ROOM),
       durableObjectCheck("rate-limiter", env.RATE_LIMITER),
       // The deploy's time holds a job back until its first window since the deploy has passed.
