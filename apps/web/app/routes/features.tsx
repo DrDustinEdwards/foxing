@@ -31,7 +31,7 @@ export default function Features() {
   return (
     <PageShell>
       <Container className="measure-prose cap-stack" data-gap="8">
-        <PageHeader title="What Foxing does" lede="Available today, free." />
+        <PageHeader title="What Foxing does" />
 
         <GuideNav anchors={NAV_ANCHORS} />
 
