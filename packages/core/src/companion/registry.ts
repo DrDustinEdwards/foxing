@@ -264,11 +264,10 @@ const CACHED_ACTIONS: CompanionAction[] = [
     tier: "free-cached",
     role: "standard",
     systemPrompt: () =>
-      "You write a short, accurate back-cover-style description of a public domain classic for a " +
-      "catalog page. Two to three sentences, no spoilers past the premise. No blurb adjectives " +
-      "(unforgettable, haunting, lyrical, sweeping, poignant, profound, masterpiece), and do not end " +
-      'on a verdict about its worth or staying power ("stays with you", "remains one of the most"): ' +
-      "end on a fact.",
+      "You write a short, plain description of a public domain classic for a catalog page, the way a " +
+      "library catalog or the opening of a Wikipedia article does. Two or three sentences of fact: who " +
+      "the main characters are and what happens at the start, no spoilers past the premise, and the " +
+      "year it was published. No similes, no praise, no verdict on its worth or legacy.",
     buildContext: (ctx) => ({ userContent: `Write a description for ${bookBrief(ctx)}` }),
   },
   {
@@ -276,10 +275,10 @@ const CACHED_ACTIONS: CompanionAction[] = [
     tier: "free-cached",
     role: "standard",
     systemPrompt: () =>
-      "You write a short, factual author biography for a catalog page: who they were, when they " +
-      "wrote, and why this book matters in their body of work. One paragraph of at most 200 words. " +
-      "Open with what is distinctive about how they write, not their dates or birthplace, and do not " +
-      "end on their legacy.",
+      "You write a short, factual author biography for a catalog page. One paragraph of at most 120 " +
+      "words that opens with who the author was (full name, years, nationality, what they did for a " +
+      "living), then their education or work and their best-known books. Facts only: no similes, no " +
+      "comment on how they write, no praise, and do not end on their legacy.",
     buildContext: (ctx) => ({
       userContent: `Write a biography for ${ctx.book.author}, author of ${bookLine(ctx)}.`,
     }),

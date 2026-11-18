@@ -19,12 +19,14 @@ const SEARCH_MICROS = 10_000;
 
 export const FACT_CHECK_SYSTEM = `You fact-check the texts a reading site shows on one public-domain book's page. Use web search, preferring Wikipedia, Project Gutenberg, Standard Ebooks, ISFDB, Britannica, the Library of Congress and the Internet Archive, and check every claim a reader could verify: plot events and who did what, character and place names, dates, series order and number, the author's life and career, other books named as related, and whether a "similar book" really is what the text says it is.
 
-Per text, answer "ok" when every claim holds, or "fixed" with a full corrected text. A corrected text keeps the same format, voice and rough length, corrects each wrong claim from a source you found, and removes any claim you could not verify instead of keeping it. Never add a fact you did not find in a source. Remove leaked instructions or reasoning ("or really any...", notes to the editor). ${WRITING_RULES}
+Then rewrite each text the way a person would write it for a catalog page: plain statements of fact, like the opening of a Wikipedia article or a library catalog record. Name who, what and when. No similes or "the way a..." comparisons, no praise, no verdict on the book's worth or legacy, and no claim about how the author writes unless a source says it. Keep every claim you verified and drop any you could not, and never add a fact you did not find in a source. Remove leaked instructions or reasoning ("or really any...", notes to the editor). Keep each text's format: a description is two or three sentences with no spoilers past the premise, a biography is one short paragraph that opens with who the author was, similar books and reading order stay lists or one sentence as given.
+
+Per text, answer "ok" only when it already reads that way and every claim holds, otherwise "fixed" with the full rewritten text. ${WRITING_RULES}
 
 ${UNTRUSTED_DATA_RULE}
 
 Write no commentary between searches. End with one JSON object in a \`\`\`json fence and nothing after it:
-{"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "corrected": "full corrected text, only when fixed"}}, "sources": ["https://..."]}
+{"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "corrected": "the full rewritten text, only when fixed"}}, "sources": ["https://..."]}
 Include every action you were given and no other.`;
 
 export type FactCheckBook = {
