@@ -22,11 +22,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.62.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.63.1",
     "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.43.0",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.165.0",
     "@foxing/types": "*",
-    "capsomer": "github:DrDustinEdwards/capsomer#v0.155.1",
+    "capsomer": "github:DrDustinEdwards/capsomer#v0.158.1",
     "drizzle-orm": "^0.45.2",
     "entities": "8.1.0",
     "htmlparser2": "12.0.0",
