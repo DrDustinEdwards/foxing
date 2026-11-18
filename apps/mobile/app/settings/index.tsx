@@ -313,7 +313,6 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             label="Haptic feedback"
-            sub="Subtle buzz on highlights, badges, and milestones"
             value={hapticsOn}
             onChange={(v) => {
               setHapticsOn(v);
@@ -341,7 +340,6 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             label="High contrast mode"
-            sub="Stronger contrast for text and icons"
             value={highContrast}
             onChange={(v) => {
               setHighContrast(v);
@@ -350,7 +348,6 @@ export default function SettingsScreen() {
           />
           <ToggleRow
             label="Reduce motion"
-            sub="Disable page-turn and other animations"
             value={reduceMotion}
             onChange={(v) => {
               setReduceMotion(v);
@@ -392,7 +389,6 @@ export default function SettingsScreen() {
         <Section title="Personalization">
           <ToggleRow
             label="Remember font and theme per book"
-            sub="Each book reopens with the last typography you used for it"
             value={userPrefs.rememberPerBook}
             onChange={(v) => void updateUserPrefs({ ...userPrefs, rememberPerBook: v })}
           />
@@ -413,16 +409,6 @@ export default function SettingsScreen() {
                   ? `${Math.round((calibratedWpm * 60) / 250)} pages/hr`
                   : `${calibratedWpm} wpm`
                 : "Still learning your pace…"}
-            </Text>
-            <Text
-              style={{
-                fontFamily: Fonts.ui,
-                fontSize: 11,
-                color: colors.textTertiary,
-                marginTop: 4,
-              }}
-            >
-              Calculated automatically from your reading sessions.
             </Text>
           </View>
         </Section>
@@ -449,7 +435,6 @@ export default function SettingsScreen() {
         <Section title="Notifications">
           <ToggleRow
             label="Daily reading reminder"
-            sub="Scheduled on this device"
             value={reminders.dailyReminder}
             onChange={(v) => void updateReminders({ ...reminders, dailyReminder: v })}
           />
@@ -460,18 +445,16 @@ export default function SettingsScreen() {
               onChange={(t) => void updateReminders({ ...reminders, reminderTime: t })}
             />
           ) : null}
-          {Object.entries(NOTIFICATION_LABELS).map(([cat, { label, subtext }]) => (
+          {Object.entries(NOTIFICATION_LABELS).map(([cat, { label }]) => (
             <ToggleRow
               key={cat}
               label={label}
-              sub={subtext}
               value={categories[cat] ?? false}
               onChange={(on) => toggleCategory(cat, on)}
             />
           ))}
           <ToggleRow
             label="Quiet hours"
-            sub="Pause notifications between these times, in your timezone"
             value={quietHours !== null}
             onChange={(on) =>
               savePrefs({ quietHours: on ? { start: "22:00", end: "07:00" } : null })
@@ -496,13 +479,11 @@ export default function SettingsScreen() {
         <Section title="Privacy">
           <ToggleRow
             label="Public profile"
-            sub="Let other readers find your profile, library and reviews"
             value={visibility.profile !== "private"}
             onChange={(on) => saveVisibility({ profile: on ? "public" : "private" })}
           />
           <ToggleRow
             label="Share reading progress"
-            sub="Show what you are currently reading on your profile"
             value={visibility.progress !== "private"}
             onChange={(on) => saveVisibility({ progress: on ? "public" : "private" })}
           />
@@ -545,17 +526,6 @@ export default function SettingsScreen() {
         </Section>
 
         <Section title="Close friends">
-          <Text
-            style={{
-              fontFamily: Fonts.body,
-              fontSize: 13,
-              color: colors.textTertiary,
-              marginBottom: 8,
-              lineHeight: 18,
-            }}
-          >
-            Close friends see your friends-only highlights, notes and activity.
-          </Text>
           <LinkRow
             label="Manage close friends"
             onPress={() => router.push("/close-friends" as never)}

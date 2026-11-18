@@ -15,7 +15,7 @@ function statusMessage(status: W.ShelfStatus): string {
     case "paused":
       return "Nothing paused.";
     default:
-      return "Nothing abandoned, nice.";
+      return "Nothing abandoned.";
   }
 }
 

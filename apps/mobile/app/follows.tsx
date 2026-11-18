@@ -91,9 +91,7 @@ export default function FollowsScreen() {
               paddingHorizontal: 24,
             }}
           >
-            {tab === "following"
-              ? "You're not following anyone yet."
-              : "No followers yet, once you share a profile, they'll appear here."}
+            {tab === "following" ? "You're not following anyone yet." : "No followers yet."}
           </Text>
         ) : tab === "following" ? (
           following.map((p) => (

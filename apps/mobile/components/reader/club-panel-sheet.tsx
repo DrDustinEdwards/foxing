@@ -263,7 +263,7 @@ function DiscussionList({
             textAlign: "center",
           }}
         >
-          No discussion yet. Long-press a passage to start one.
+          No discussion yet.
         </Text>
       </View>
     );

@@ -320,7 +320,7 @@ function MyPlacesTab({
           <ActivityIndicator color={colors.brandUi} />
         </View>
       ) : bookmarks.length === 0 ? (
-        <EmptyText>No bookmarks yet. Tap the bookmark icon in the top bar to add one.</EmptyText>
+        <EmptyText>No bookmarks yet.</EmptyText>
       ) : (
         bookmarks.map((b) => (
           <View
@@ -365,7 +365,7 @@ function MyPlacesTab({
 
       <SectionHeader>Recent</SectionHeader>
       {recent.length === 0 ? (
-        <EmptyText>No reading history yet. Turn a page to start building one.</EmptyText>
+        <EmptyText>No reading history yet.</EmptyText>
       ) : (
         <>
           {recent.map((e, i) => (

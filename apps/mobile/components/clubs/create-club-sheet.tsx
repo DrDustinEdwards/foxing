@@ -10,9 +10,9 @@ import { Fonts } from "@/constants/fonts";
 type ClubPace = "chill" | "steady" | "fast";
 
 const PACE_OPTIONS: Array<{ id: ClubPace; label: string; subtitle: string }> = [
-  { id: "chill", label: "Chill", subtitle: "A chapter a week, no pressure." },
-  { id: "steady", label: "Steady", subtitle: "Two-to-three chapters a week." },
-  { id: "fast", label: "Fast", subtitle: "Daily reading, fast turnaround." },
+  { id: "chill", label: "Chill", subtitle: "1 chapter/week" },
+  { id: "steady", label: "Steady", subtitle: "2-3 chapters/week" },
+  { id: "fast", label: "Fast", subtitle: "Daily" },
 ];
 
 interface CreatedClub {
@@ -259,7 +259,7 @@ function BasicsStep({
               marginTop: 2,
             }}
           >
-            Anyone can find and join. Turn off to make membership invite-only.
+            Anyone can join. Off = invite-only.
           </Text>
         </View>
         <Switch
