@@ -25,17 +25,14 @@ describe("parseFactCheck", () => {
       fixes: [{ find: "the tonic", replace: "the coffee" }],
     });
     expect(parsed?.texts.author_bio.verdict).toBe("ok");
-  });
 
-  it("refuses a fix with no fixes, an unknown verdict and a reply that is not JSON", () => {
-    expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"fixed","issues":[]}}}'))).toBeNull();
-    expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"maybe"}}}'))).toBeNull();
-    expect(parseFactCheck("All good.")).toBeNull();
-  });
-});
+    // A replacement with real newlines in it (JSON forbids them), and a reply with no fence or text after the JSON.
+    const json =
+      '{"texts":{"a":{"verdict":"fixed","issues":[],"fixes":[{"find":"x","replace":"One.\n\nTwo."}]}}}';
+    expect(parseFactCheck(fence(json))?.texts.a.fixes?.[0].replace).toBe("One.\n\nTwo.");
+    expect(parseFactCheck(`${json}\nDone.`)?.texts.a.verdict).toBe("fixed");
 
-describe("applyFixes", () => {
-  it("replaces each phrase, removes a claim with an empty replacement, and refuses one that does not match once", () => {
+    // applyFixes: each fix applied, a claim removed with an empty replacement, and a find that is not there once refused.
     const text = "Poirot arrives in 1916. The tonic was poisoned. Hastings narrates.";
     expect(
       applyFixes(text, [
@@ -45,5 +42,11 @@ describe("applyFixes", () => {
     ).toBe("Poirot arrives in 1917. Hastings narrates.");
     expect(applyFixes(text, [{ find: "Watson", replace: "Hastings" }])).toBeNull();
     expect(applyFixes("a b a", [{ find: "a", replace: "c" }])).toBeNull();
+  });
+
+  it("refuses a fix with no fixes, an unknown verdict and a reply that is not JSON", () => {
+    expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"fixed","issues":[]}}}'))).toBeNull();
+    expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"maybe"}}}'))).toBeNull();
+    expect(parseFactCheck("All good.")).toBeNull();
   });
 });
