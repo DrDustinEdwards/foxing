@@ -2,9 +2,9 @@
 // consumer, one book per message. The checker is injected (a Messages call with the web search tool, built in
 // apps/web/app/lib/anthropic.server.ts), so a test supplies a stub with no network call and no key.
 //
-// Nothing wrong stays on the page: a text the model corrects is replaced by the corrected text (the original is kept
-// in book_ai_review), and a corrected text that fails the prose check is blanked, which the page skips like any empty
-// text. A call that did not finish throws and writes nothing, so the queue retries the book.
+// Nothing wrong stays on the page: the model returns only its fixes (the exact wrong phrase and what replaces it),
+// which are applied here to the stored text so nothing else is reworded (the original is kept in book_ai_review), and a
+// corrected text that fails the prose check is blanked, which the page skips like any empty text. A call that did not finish throws and writes nothing, so the queue retries the book.
 import { checkProse, OUT_OF_PLACE, WRITING_RULES } from "@dustinedwards/site-runtime/prose";
 import { UNTRUSTED_DATA_RULE, untrusted } from "@dustinedwards/site-runtime/anthropic";
 import { costMicros } from "@dustinedwards/site-runtime/ai-engine";
@@ -19,12 +19,12 @@ const SEARCH_MICROS = 10_000;
 
 export const FACT_CHECK_SYSTEM = `You fact-check the texts a reading site shows on one public-domain book's page. Use web search, preferring Wikipedia, Project Gutenberg, Standard Ebooks, ISFDB, Britannica, the Library of Congress and the Internet Archive, and check every claim a reader could verify: plot events and who did what, character and place names, dates, series order and number, the author's life and career, other books named as related, and whether a "similar book" really is what the text says it is.
 
-Per text, answer "ok" when every claim holds, or "fixed" with a full corrected text. A corrected text keeps the same format, voice and rough length, corrects each wrong claim from a source you found, and removes any claim you could not verify instead of keeping it. Never add a fact you did not find in a source. Remove leaked instructions or reasoning ("or really any...", notes to the editor). ${WRITING_RULES}
+Per text, answer "ok" when every claim holds, or "fixed" with a list of fixes. Never return the whole text. A fix is {"find": "...", "replace": "..."}: "find" is the exact wrong words copied from the text, long enough to occur once in it, and "replace" is what goes in their place, written in the text's own voice and corrected from a source you found. To remove a claim you could not verify, or leaked instructions or reasoning ("or really any...", notes to the editor), give an empty "replace" and cover the whole sentence or list item. Never add a fact you did not find in a source. Fixes must not overlap. ${WRITING_RULES}
 
 ${UNTRUSTED_DATA_RULE}
 
 Write no commentary between searches. End with one JSON object in a \`\`\`json fence and nothing after it:
-{"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "corrected": "full corrected text, only when fixed"}}, "sources": ["https://..."]}
+{"texts": {"<action>": {"verdict": "ok" | "fixed", "issues": ["what was wrong, short"], "fixes": [{"find": "exact words", "replace": "words that replace them"}]}}, "sources": ["https://..."]}
 Include every action you were given and no other.`;
 
 export type FactCheckBook = {
@@ -34,7 +34,8 @@ export type FactCheckBook = {
   description: string | null;
 };
 
-type Verdict = { verdict: "ok" | "fixed"; issues: string[]; corrected?: string };
+type Fix = { find: string; replace: string };
+type Verdict = { verdict: "ok" | "fixed"; issues: string[]; fixes?: Fix[] };
 
 function str(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
@@ -75,15 +76,42 @@ export function parseFactCheck(
     const issues = Array.isArray(v?.issues) ? v.issues.filter((i) => typeof i === "string") : [];
     if (v?.verdict === "ok") texts[action] = { verdict: "ok", issues };
     else if (v?.verdict === "fixed") {
-      const corrected = str(v.corrected);
-      if (!corrected) return null;
-      texts[action] = { verdict: "fixed", issues, corrected };
+      const fixes: Fix[] = Array.isArray(v.fixes)
+        ? (v.fixes as { find?: unknown; replace?: unknown }[]).map((f) => ({
+            find: str(f?.find) ?? "",
+            replace: typeof f?.replace === "string" ? f.replace : "",
+          }))
+        : [];
+      if (!fixes.length || fixes.some((f) => !f.find)) return null;
+      texts[action] = { verdict: "fixed", issues, fixes };
     } else return null;
   }
   const sources = Array.isArray(body.sources)
     ? body.sources.filter((s): s is string => typeof s === "string").slice(0, 12)
     : [];
   return { texts, sources };
+}
+
+/** The text with each fix applied, or null when a "find" is not in it exactly once or two fixes overlap. */
+export function applyFixes(text: string, fixes: Fix[]): string | null {
+  const spans: { at: number; end: number; replace: string }[] = [];
+  for (const { find, replace } of fixes) {
+    const at = text.indexOf(find);
+    if (at < 0 || text.indexOf(find, at + 1) >= 0) return null;
+    spans.push({ at, end: at + find.length, replace });
+  }
+  spans.sort((a, b) => a.at - b.at);
+  let out = "";
+  let from = 0;
+  for (const span of spans) {
+    if (span.at < from) return null;
+    out += text.slice(from, span.at) + span.replace;
+    from = span.end;
+  }
+  return (out + text.slice(from))
+    .replace(/ {2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 }
 
 export type FactCheckResult = {
@@ -131,6 +159,17 @@ export async function factCheckBook(
       `the fact-check reply for ${book.id} left out ${missing.map((r) => r.action).join(", ")}`,
     );
 
+  // Apply every fix before anything is saved: a fix that does not match the stored text throws, so the book retries whole.
+  const corrected = new Map<string, string>();
+  for (const row of cached) {
+    const v = parsed.texts[row.action];
+    if (v.verdict !== "fixed") continue;
+    const text = applyFixes(row.content as string, v.fixes as Fix[]);
+    if (text === null)
+      throw new Error(`a fix for ${book.id} ${row.action} did not match the stored text`);
+    corrected.set(row.action, text);
+  }
+
   const cost = Math.ceil((costMicros(model, reply.usage) ?? 0) + reply.searches * SEARCH_MICROS);
   const share = Math.ceil(cost / cached.length);
   const own = `${book.title} ${book.author}`.toLowerCase();
@@ -149,11 +188,12 @@ export async function factCheckBook(
     let verdict: "ok" | "fixed" | "withheld" = v.verdict;
     let next: string | null = null;
     if (v.verdict === "fixed") {
-      const high = checkProse(v.corrected as string, { allow }).filter(
+      const fixed = corrected.get(row.action) as string;
+      const high = checkProse(fixed, { allow }).filter(
         (i) => i.severity === "high" || i.severity === "critical",
       );
       // A correction that is itself unfit to show leaves nothing wrong on the page: the text is blanked.
-      next = high.length ? "" : (v.corrected as string);
+      next = high.length ? "" : fixed;
       verdict = high.length ? "withheld" : "fixed";
     }
     await companionRepo.saveFactCheck(db, {
