@@ -72,8 +72,13 @@ export function parseFactCheck(
   }
   const body = value as { texts?: Record<string, Record<string, unknown>>; sources?: unknown };
   if (!body || typeof body.texts !== "object" || body.texts === null) return null;
+  // A reply that forgets the brace closing "texts" puts "sources" inside it (every failed reply on 2026-11-18 ended
+  // `]}}`); the array is the sources, not an action.
+  const nested = body.texts.sources;
+  const sourceList = body.sources ?? (Array.isArray(nested) ? nested : undefined);
   const texts: Record<string, Verdict> = {};
   for (const [action, v] of Object.entries(body.texts)) {
+    if (v === nested && Array.isArray(nested)) continue;
     const issues = Array.isArray(v?.issues) ? v.issues.filter((i) => typeof i === "string") : [];
     if (v?.verdict === "ok") texts[action] = { verdict: "ok", issues };
     else if (v?.verdict === "fixed") {
@@ -82,8 +87,8 @@ export function parseFactCheck(
       texts[action] = { verdict: "fixed", issues, corrected };
     } else return null;
   }
-  const sources = Array.isArray(body.sources)
-    ? body.sources.filter((s): s is string => typeof s === "string").slice(0, 12)
+  const sources = Array.isArray(sourceList)
+    ? sourceList.filter((s): s is string => typeof s === "string").slice(0, 12)
     : [];
   return { texts, sources };
 }
