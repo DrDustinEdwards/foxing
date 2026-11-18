@@ -207,7 +207,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           ships. */}
       <Container>
         <CtaBand
-          title="Read the classics. Finally understand them."
+          title="Join free. iOS and Android apps are on the way."
           actions={
             <>
               <Button to="/signup">Join free on web</Button>
@@ -216,9 +216,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </Button>
             </>
           }
-        >
-          iOS and Android apps are on the way.
-        </CtaBand>
+        />
       </Container>
     </PageShell>
   );
