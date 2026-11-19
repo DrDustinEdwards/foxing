@@ -33,8 +33,8 @@ export const CRON_TRIGGERS = {
     // The day each hub and code-written page last changed, for /sitemap.xml's lastmod (app/lib/page-dates.ts).
     { name: "page-dates", everyMinutes: 1440, timeoutMs: 2 * 60_000 },
     { name: "covers-backup", backup: true, everyMinutes: 1440, timeoutMs: 6 * 60_000 },
-    // Cleans the books exploded before the cleaner existed (app/lib/reader-clean.server.ts); a no-op once done.
-    { name: "reader-clean", everyMinutes: 1440, timeoutMs: 4 * 60_000 },
+    // Cleans the books exploded before the cleaner existed (app/lib/reader-clean.server.ts); a no-op once done (30 minutes while the backfill runs; set it back to 1440 or remove it after).
+    { name: "reader-clean", everyMinutes: 30, timeoutMs: 4 * 60_000 },
   ],
 } as const;
 
