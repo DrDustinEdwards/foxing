@@ -38,15 +38,11 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Foxing selects"
-          title="Book of the Month"
-          lede="One book, chosen each month, to read together."
-        />
+        <PageHeader title="Book of the Month" />
 
         <div className="cap-stack" data-gap="9">
           {!current?.book ? (
-            <EmptyState title="No pick yet" body="The next Book of the Month lands soon." />
+            <EmptyState title="No pick yet" />
           ) : (
             <article className="cap-card fx-botm-card">
               <div className="fx-botm-box">

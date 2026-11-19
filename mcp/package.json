@@ -13,17 +13,17 @@
   },
   "dependencies": {
     "@cloudflare/workers-oauth-provider": "1.2.4",
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.62.0",
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.161.0",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.63.1",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.169.1",
     "@modelcontextprotocol/server": "2.4.0",
-    "agents": "0.32.0",
+    "agents": "0.33.0",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.51.2",
-    "@modelcontextprotocol/conformance": "0.2.0-alpha.11",
+    "@dustinedwards/devkit": "github:DrDustinEdwards/devkit#v0.53.0",
+    "@modelcontextprotocol/conformance": "0.2.0-alpha.12",
     "typescript": "5.9.3",
-    "wrangler": "4.151.3"
+    "wrangler": "4.164.0"
   },
   "engines": {
     "node": ">=24"

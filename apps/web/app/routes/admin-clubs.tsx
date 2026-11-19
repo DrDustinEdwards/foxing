@@ -42,7 +42,7 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell title="Clubs">
       <div className="cap-stack" data-gap="6">
-        <AdminCard title="Search">
+        <AdminCard>
           <form method="get" className="cap-cluster" data-gap="3">
             <input name="q" defaultValue={q} placeholder="Club name" className={adminInputClass} />
             <AdminButton variant="primary" type="submit">
@@ -51,7 +51,7 @@ export default function AdminClubs({ loaderData }: Route.ComponentProps) {
           </form>
         </AdminCard>
 
-        <AdminCard title="Clubs">
+        <AdminCard>
           {clubs.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No clubs match this search.

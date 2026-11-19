@@ -1,8 +1,10 @@
 // Find next book (auth-gated, noindex): a tiered recommendation grid. Reads run
 // in-process via core (loadRecommendations); the Want-to-read write per book goes to
 // /api/v1 through BookStatusControl (visible pending + role=alert error). Free readers
-// get data-driven picks with a subtle upgrade affordance; Plus readers get AI-personalised
-// reasons. Refresh busts the AI cache (rate-limited in core).
+// get data-driven picks, with a subtle upgrade affordance once Plus can be bought (billing
+// configured); Plus readers get AI-personalised reasons. Refresh busts the AI cache
+// (rate-limited in core).
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { useState } from "react";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { BookStatusControl } from "~/components/book-status-control";
@@ -11,7 +13,7 @@ import { PageShell } from "~/components/page-shell";
 import { Paywall } from "~/components/paywall";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
-import type { Recommendation } from "@foxing/core";
+import { billing, type Recommendation } from "@foxing/core";
 import { requireProfile } from "~/lib/profile.server";
 import { loadRecommendations } from "~/lib/recommendations.server";
 import type { Route } from "./+types/find-next-book";
@@ -25,27 +27,23 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const { user } = await requireProfile(env, request);
   const refresh = new URL(request.url).searchParams.get("refresh") === "1";
-  const { recommendations, aiPersonalized, isPlus } = await loadRecommendations(env, user.id, {
+  const { recommendations, isPlus } = await loadRecommendations(env, user.id, {
     refresh,
   });
-  return { recommendations, aiPersonalized, isPlus };
+  // No upgrade is offered while Plus cannot be bought (CLAUDE.md rule 6).
+  const canUpgrade = !isPlus && billing.stripeSettings(env) !== null;
+  return { recommendations, canUpgrade };
 }
 
 export default function FindNextBook({ loaderData }: Route.ComponentProps) {
-  const { recommendations, aiPersonalized, isPlus } = loaderData;
+  const { recommendations, canUpgrade } = loaderData;
   const [paywallOpen, setPaywallOpen] = useState(false);
 
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
         <PageHeader
-          eyebrow="For you"
           title="Find your next book"
-          lede={
-            aiPersonalized
-              ? "Picks chosen for your reading, with a reason for each."
-              : "Picks drawn from what you read and love, with a reason for each."
-          }
           actions={
             <ButtonLink to="/find-next-book?refresh=1" className="cap-keep">
               Refresh
@@ -53,7 +51,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
           }
         />
 
-        {!isPlus ? (
+        {canUpgrade ? (
           <div className="py-3 fx-find-next-book-card">
             <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
               Plus tunes these to you with AI-personalized reasons.
@@ -69,10 +67,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
         ) : null}
 
         {recommendations.length === 0 ? (
-          <EmptyState
-            title="No recommendations yet."
-            body="Add a few books to your library and check back."
-          />
+          <EmptyState title="No recommendations yet." />
         ) : (
           <div className="fx-find-next-book-grid">
             {recommendations.map((rec) => (
@@ -81,7 +76,7 @@ export default function FindNextBook({ loaderData }: Route.ComponentProps) {
           </div>
         )}
       </Container>
-      <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} />
+      {canUpgrade ? <Paywall open={paywallOpen} onClose={() => setPaywallOpen(false)} /> : null}
     </PageShell>
   );
 }
@@ -121,7 +116,7 @@ function RecCard({ rec }: { rec: Recommendation }) {
             }}
             currentStatus={null}
             signedIn
-            loginHref="/login"
+            loginHref={SIGN_IN_PATH}
           />
         </div>
       </div>

@@ -22,7 +22,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
     ? new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric" }).format(profile.createdAt)
     : null;
   return {
-    email: user.email,
     profile: {
       username: profile.username,
       displayName: profile.displayName,
@@ -40,7 +39,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
 }
 
 export default function Me({ loaderData }: Route.ComponentProps) {
-  const { email, profile, joined, stats } = loaderData;
+  const { profile, joined, stats } = loaderData;
   const name = profile.displayName ?? profile.username;
   const statTiles = [
     { label: "books finished", value: stats.booksFinished },
@@ -83,7 +82,6 @@ export default function Me({ loaderData }: Route.ComponentProps) {
         {profile.bio ? <p className="fx-me-text-2">{profile.bio}</p> : null}
 
         <section className="cap-card cap-stack fx-me-card" data-gap="6">
-          <Eyebrow>Your reading</Eyebrow>
           <dl className="cap-text fx-me-grid" data-align="center">
             {statTiles.map((tile) => (
               <div key={tile.label} className="cap-stack" data-gap="1">
@@ -111,10 +109,6 @@ export default function Me({ loaderData }: Route.ComponentProps) {
             </div>
           </section>
         ) : null}
-
-        <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-          Signed in as {email}
-        </p>
       </Container>
     </PageShell>
   );

@@ -40,11 +40,6 @@
   --radius-l: var(--fx-radius-hero);
   --pad-card: var(--space-7);
 }
-.fx-home-text {
-  margin-inline: auto;
-  max-width: 24rem;
-  color: var(--muted);
-}
 .fx-home-card-2 {
   gap: var(--space-6);
   --radius-l: var(--fx-radius-hero);

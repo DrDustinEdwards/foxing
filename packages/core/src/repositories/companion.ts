@@ -1,11 +1,18 @@
 // Companion persistence: per-book conversation threads/messages, and the free-cached
 // catalog generator output, and the daily usage quota. All companion data access goes through here.
 import { reserveSettle } from "@dustinedwards/site-runtime/ai-caps";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { quotaDay } from "../companion/quota";
 import { COMPANION_QUOTA } from "../config/companion";
 import type { Db } from "../db";
-import { bookAiCache, companionMessages, companionThreads, companionUsage } from "../schema";
+import {
+  bookAiCache,
+  bookAiReview,
+  books,
+  companionMessages,
+  companionThreads,
+  companionUsage,
+} from "../schema";
 
 export type CompanionThread = typeof companionThreads.$inferSelect;
 export type CompanionMessageRow = typeof companionMessages.$inferSelect;
@@ -111,6 +118,68 @@ export async function upsertCachedAction(
       target: [bookAiCache.bookId, bookAiCache.action],
       set: { content, model, generatedAt: new Date() },
     });
+}
+
+/**
+ * Record one fact-check. A correction (`next` a string, blank for a withheld text) replaces the cached text and keeps
+ * the old one in `original`; `next` null leaves the text as it was. One batch, so the text and its record never part.
+ */
+export async function saveFactCheck(
+  db: Db,
+  r: {
+    bookId: string;
+    action: string;
+    verdict: string;
+    issues: string[];
+    original: unknown;
+    next: string | null;
+    sources: string[];
+    searches: number;
+    costMicros: number;
+    model: string;
+  },
+): Promise<void> {
+  const review = db
+    .insert(bookAiReview)
+    .values({
+      bookId: r.bookId,
+      action: r.action,
+      verdict: r.verdict,
+      issues: r.issues,
+      original: r.original,
+      sources: r.sources,
+      searches: r.searches,
+      costMicros: r.costMicros,
+      model: r.model,
+      checkedAt: new Date(),
+    })
+    .onConflictDoNothing();
+  if (r.next === null) await review;
+  else
+    await db.batch([
+      db
+        .update(bookAiCache)
+        .set({ content: r.next, model: r.model, generatedAt: new Date() })
+        .where(and(eq(bookAiCache.bookId, r.bookId), eq(bookAiCache.action, r.action))),
+      review,
+    ]);
+}
+
+/** Catalog books with cached texts and no fact-check yet, in id order, limited to `only` when it is given. */
+export async function findBooksNeedingFactCheck(db: Db, limit: number, only?: string[]) {
+  return db
+    .select()
+    .from(books)
+    .where(
+      and(
+        eq(books.sourceType, "catalog"),
+        sql`EXISTS (SELECT 1 FROM book_ai_cache WHERE book_ai_cache.book_id = ${books.id})`,
+        sql`NOT EXISTS (SELECT 1 FROM book_ai_review WHERE book_ai_review.book_id = ${books.id})`,
+        only ? inArray(books.id, only) : undefined,
+      ),
+    )
+    .orderBy(asc(books.id))
+    .limit(limit);
 }
 
 /**

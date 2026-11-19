@@ -50,7 +50,7 @@ export default function JournalSeries({ loaderData }: Route.ComponentProps) {
         />
         <PageHeader
           title={series}
-          lede={`A series in ${parts.length} ${parts.length === 1 ? "part" : "parts"}`}
+          lede={`${parts.length} ${parts.length === 1 ? "part" : "parts"}`}
         />
 
         <ol className="fx-journal-tag-grid">

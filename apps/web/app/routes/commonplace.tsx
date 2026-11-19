@@ -46,16 +46,9 @@ export default function Commonplace({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Reading"
-          title="Commonplace"
-          lede="Notes and passages you save while reading gather here."
-        />
+        <PageHeader title="Commonplace" />
         {entries.length === 0 ? (
-          <EmptyState
-            title="Nothing saved yet."
-            body="Notes and saved passages from the reader will appear here."
-          />
+          <EmptyState title="Nothing saved yet." />
         ) : (
           <div className="cap-stack" data-gap="6">
             <AnnotationFilters

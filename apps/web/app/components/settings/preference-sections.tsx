@@ -23,7 +23,8 @@ export function BillingSection({
   tier: "free" | "plus";
   status: string | null;
   periodEndLabel: string | null;
-  onUpgrade: () => void;
+  /** Opens the paywall, or null while Plus cannot be bought (billing not configured). */
+  onUpgrade: (() => void) | null;
 }) {
   const portal = useBillingPortal();
   // Stays pending while the browser leaves for Stripe.
@@ -68,16 +69,19 @@ export function BillingSection({
               <span className="cap-text" data-tone="ink" data-weight="strong">
                 Free
               </span>{" "}
-              plan. Clubs and the whole social layer are free. Plus adds the AI reading companion.
+              plan.
+              {onUpgrade ? "" : " Plus is not open for sign-up yet."}
             </p>
-            <button
-              type="button"
-              onClick={onUpgrade}
-              className="cap-btn self-start"
-              data-variant="primary"
-            >
-              Upgrade to Plus
-            </button>
+            {onUpgrade ? (
+              <button
+                type="button"
+                onClick={onUpgrade}
+                className="cap-btn self-start"
+                data-variant="primary"
+              >
+                Upgrade to Plus
+              </button>
+            ) : null}
           </>
         )}
         <FormError error={error} />
@@ -112,13 +116,11 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
           checked={profile === "public"}
           onChange={(on) => setProfile(on ? "public" : "private")}
           label="Public profile"
-          subtext="Let other readers find your profile, library, and reviews. When off, only you can see it."
         />
         <ToggleRow
           checked={progress === "public"}
           onChange={(on) => setProgress(on ? "public" : "private")}
           label="Share reading progress"
-          subtext="Show what you are currently reading on your profile."
         />
         <label className="cap-field">
           <span className="fx-label">Default highlight and note audience</span>
@@ -134,10 +136,6 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
               <option value="friends">Close friends</option>
               <option value="public">Public</option>
             </select>
-            <span className="fx-preference-sections-label">
-              New highlights and notes start with this audience. You can change any one when you
-              make it.
-            </span>
           </span>
         </label>
         <SubmitRow
@@ -178,10 +176,6 @@ export function NotificationsSection({
   return (
     <Card title="Notifications">
       <form onSubmit={(e) => void save(e)} className="cap-stack">
-        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-          Choose which push notifications the mobile app sends you. Quiet hours pause them overnight
-          in your timezone.
-        </p>
         <div className="cap-stack" data-gap="4">
           {Object.keys(NOTIFICATION_LABELS).map((cat) => (
             <ToggleRow
@@ -189,16 +183,10 @@ export function NotificationsSection({
               checked={categories[cat] ?? false}
               onChange={(on) => setCategories((c) => ({ ...c, [cat]: on }))}
               label={NOTIFICATION_LABELS[cat].label}
-              subtext={NOTIFICATION_LABELS[cat].subtext}
             />
           ))}
         </div>
-        <ToggleRow
-          checked={quietOn}
-          onChange={setQuietOn}
-          label="Quiet hours"
-          subtext="Pause notifications between these times."
-        />
+        <ToggleRow checked={quietOn} onChange={setQuietOn} label="Quiet hours" />
         {quietOn ? (
           <div className="cap-cluster" data-gap="4">
             <label
@@ -260,9 +248,6 @@ export function AppearanceSection() {
           >
             Theme
           </span>
-          <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
-            Switch between light and dark. Your choice is remembered on this device.
-          </span>
         </div>
         <ThemeSwitch prefKey={THEME_PREF_KEY} />
       </div>
@@ -275,16 +260,9 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
   const friends = usePeople(people).data.closeFriends;
   return (
     <Card title="Close friends">
-      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-        Close friends see your friends-only reviews, activity, and shared annotations.
-      </p>
       {friends.length === 0 ? (
         <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-          No close friends yet. Add readers you follow from{" "}
-          <Link to="/people" className="fx-preference-sections-link">
-            People
-          </Link>
-          .
+          No close friends yet.
         </p>
       ) : (
         <ul className="fx-preference-sections-stack-2">
@@ -306,13 +284,6 @@ export function CloseFriendsSection({ people }: { people: PeoplePage }) {
           ))}
         </ul>
       )}
-      <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-        Add close friends from{" "}
-        <Link to="/people" className="fx-preference-sections-link">
-          People
-        </Link>
-        , where you can pick from the readers you follow.
-      </p>
     </Card>
   );
 }

@@ -48,7 +48,7 @@ export default function AdminUsers({ loaderData }: Route.ComponentProps) {
           </form>
         </AdminCard>
 
-        <AdminCard title="Readers">
+        <AdminCard>
           {users.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               {q ? "No readers match that search." : "No readers yet."}

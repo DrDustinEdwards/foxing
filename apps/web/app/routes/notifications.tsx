@@ -34,7 +34,6 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container>
         <PageHeader
-          eyebrow="Activity"
           title="Notifications"
           actions={
             unread > 0 ? (
@@ -56,10 +55,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
             </p>
           ) : null}
           {notifications.length === 0 ? (
-            <EmptyState
-              title="No notifications yet."
-              body="Replies, follows, and club activity will show up here."
-            />
+            <EmptyState title="No notifications yet." />
           ) : (
             <ul className="cap-stack" data-gap="3">
               {notifications.map((n) => (

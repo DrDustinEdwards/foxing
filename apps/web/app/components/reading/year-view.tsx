@@ -32,7 +32,7 @@ export function YearView({
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
-        <PageHeader eyebrow={`Year in Reading ${year}`} title="Your reading year" />
+        <PageHeader title="Your reading year" />
         {notice}
 
         <nav aria-label="Choose a year" className="cap-cluster" data-gap="3">
@@ -49,10 +49,7 @@ export function YearView({
         </nav>
 
         {recap.booksFinished === 0 ? (
-          <EmptyState
-            title={`No finishes logged in ${year}`}
-            body="Books show up here as you mark them finished."
-          />
+          <EmptyState title={`No finishes logged in ${year}`} />
         ) : (
           <>
             <YearNumbers recap={recap} />
@@ -92,11 +89,9 @@ export function YearView({
 
         {share ? (
           <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-            Want to share this?{" "}
             <Link to={`/u/${username}/recap/${year}`} className="link">
-              View the public version
+              Public version
             </Link>
-            .
           </p>
         ) : null}
       </Container>

@@ -109,7 +109,6 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
     <PageShell>
       <Container className="cap-stack" data-gap="7">
         <PageHeader
-          eyebrow="Reading"
           title="Your diary"
           actions={
             <ButtonLink to="/diary/new" className="cap-keep" variant="primary">
@@ -119,10 +118,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
         />
 
         {entries.length === 0 ? (
-          <EmptyState
-            title="No diary entries yet."
-            body="Log a book to record what you read, when you read it, and what you thought."
-          />
+          <EmptyState title="No diary entries yet." />
         ) : (
           <div className="cap-stack" data-gap="6">
             <div className="cap-cluster" data-gap="5">
@@ -167,10 +163,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
             </div>
 
             {shown.length === 0 ? (
-              <EmptyState
-                title="No entries match those filters."
-                body="Try widening the filters."
-              />
+              <EmptyState title="No entries match those filters." />
             ) : (
               <div className="cap-stack" data-gap="7">
                 {groups.map((g) => (

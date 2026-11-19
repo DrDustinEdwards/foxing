@@ -42,7 +42,7 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
   return (
     <AdminShell title="Books">
       <div className="cap-stack" data-gap="6">
-        <AdminCard title="Search">
+        <AdminCard>
           <form method="get" className="cap-cluster" data-gap="3">
             <input
               name="q"
@@ -56,7 +56,7 @@ export default function AdminBooks({ loaderData }: Route.ComponentProps) {
           </form>
         </AdminCard>
 
-        <AdminCard title="Catalog">
+        <AdminCard>
           {books.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No books match this search.

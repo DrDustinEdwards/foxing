@@ -40,7 +40,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
   return (
     <AuthShell
       title="Sign in"
-      subtitle={next ? "Sign in again to go on." : "Welcome back to Foxing."}
+      subtitle={next ? "Sign in again to go on." : undefined}
       footer={
         <>
           New to Foxing? <AuthLink to="/signup">Create an account</AuthLink>

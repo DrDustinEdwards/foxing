@@ -75,7 +75,7 @@ export default function DiscoverReadersScreen() {
               marginTop: 24,
             }}
           >
-            Type at least two letters to search readers.
+            Type 2+ letters.
           </Text>
         ) : people.length === 0 ? (
           <Text

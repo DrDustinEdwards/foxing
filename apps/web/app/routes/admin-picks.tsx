@@ -68,7 +68,7 @@ export default function AdminPicks({ loaderData }: Route.ComponentProps) {
           </nav>
         </AdminCard>
 
-        <AdminCard title="Picks">
+        <AdminCard>
           {picks.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No picks for this curator yet.

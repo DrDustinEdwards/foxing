@@ -18,6 +18,32 @@ export const PLUS_PRICING = {
 /** The two Stripe price IDs, read from Worker env (STRIPE_PRICE_MONTHLY/_ANNUAL). */
 export type BillingPriceConfig = { monthly: string; annual: string };
 
+/** The Worker settings billing needs: Stripe's secret key, its webhook secret and the two prices. */
+export type StripeEnv = {
+  STRIPE_SECRET_KEY?: string;
+  STRIPE_WEBHOOK_SECRET?: string;
+  STRIPE_PRICE_MONTHLY?: string;
+  STRIPE_PRICE_ANNUAL?: string;
+};
+
+/** The Stripe settings when all four are set, else null: Plus cannot be bought yet, so the
+ *  billing routes answer 503 and the pages offer no upgrade (CLAUDE.md rule 6). */
+export function stripeSettings(env: StripeEnv): {
+  secretKey: string;
+  webhookSecret: string;
+  prices: BillingPriceConfig;
+} | null {
+  const { STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL } =
+    env;
+  if (!STRIPE_SECRET_KEY || !STRIPE_WEBHOOK_SECRET || !STRIPE_PRICE_MONTHLY || !STRIPE_PRICE_ANNUAL)
+    return null;
+  return {
+    secretKey: STRIPE_SECRET_KEY,
+    webhookSecret: STRIPE_WEBHOOK_SECRET,
+    prices: { monthly: STRIPE_PRICE_MONTHLY, annual: STRIPE_PRICE_ANNUAL },
+  };
+}
+
 export function priceIdForPlan(plan: BillingPlan, prices: BillingPriceConfig): string {
   return plan === "annual" ? prices.annual : prices.monthly;
 }

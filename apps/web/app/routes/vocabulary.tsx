@@ -38,16 +38,9 @@ export default function Vocabulary({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Reading"
-          title="Vocabulary"
-          lede="Words you save while reading collect here with their definitions."
-        />
+        <PageHeader title="Vocabulary" />
         {words.length === 0 ? (
-          <EmptyState
-            title="No saved words yet."
-            body="Look up a word in the reader and it will be kept here for review."
-          />
+          <EmptyState title="No saved words yet." />
         ) : (
           <div className="cap-stack" data-gap="6">
             <nav aria-label="Filter words" className="fx-vocabulary-row">

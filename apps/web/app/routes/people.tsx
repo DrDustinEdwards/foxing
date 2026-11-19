@@ -56,21 +56,14 @@ export default function People({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="8">
-        <PageHeader
-          eyebrow="Your Foxing"
-          title="People"
-          lede="The readers you follow and who follow you."
-        />
+        <PageHeader title="People" />
 
         <section className="cap-stack">
           <h2 className="cap-title" data-size="3">
             Following
           </h2>
           {following.length === 0 ? (
-            <EmptyState
-              title="Not following anyone yet"
-              body="Open a reader's profile to follow them."
-            />
+            <EmptyState title="Not following anyone yet" />
           ) : (
             <ul className="cap-stack" data-gap="3">
               {following.map((p) => (
@@ -105,12 +98,9 @@ export default function People({ loaderData }: Route.ComponentProps) {
           <h2 className="cap-title" data-size="3">
             Close friends
           </h2>
-          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-            Close friends see your friends-only reviews, activity, and shared annotations.
-          </p>
           {closeFriends.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-              No close friends yet. Add someone from your Following list.
+              No close friends yet.
             </p>
           ) : (
             <ul className="cap-stack" data-gap="3">

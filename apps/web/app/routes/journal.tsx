@@ -50,11 +50,7 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Reading, closely"
-          title="The Journal"
-          lede="Essays on the books in the library, and the ideas inside them."
-        >
+        <PageHeader title="The Journal">
           <p>
             <Link to="/journal/archive" className="cap-text link" data-size="small" data-face="ui">
               All articles
@@ -64,7 +60,7 @@ export default function Journal({ loaderData }: Route.ComponentProps) {
 
         <div className="cap-stack" data-gap="8">
           {result.posts.length === 0 ? (
-            <EmptyState title="Nothing published yet" body="The first essays are on the way." />
+            <EmptyState title="Nothing published yet" />
           ) : (
             <>
               {lead ? <LeadPost post={lead} cover={covers[lead.coverImageUrl ?? ""]} /> : null}
@@ -113,9 +109,9 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
         )}
         <div className="cap-stack" data-gap="4">
           <div className="cap-stack" data-gap="3">
-            <Eyebrow>
-              {post.featured ? "Featured" : (formatLongDate(post.publishedAt) ?? "Essay")}
-            </Eyebrow>
+            {post.featured || post.publishedAt ? (
+              <Eyebrow>{post.featured ? "Featured" : formatLongDate(post.publishedAt)}</Eyebrow>
+            ) : null}
             <h2 className="fx-journal-title">{post.title}</h2>
           </div>
           {post.excerpt ? <p className="fx-journal-text-2">{post.excerpt}</p> : null}

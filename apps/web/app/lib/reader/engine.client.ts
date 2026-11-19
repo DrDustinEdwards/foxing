@@ -307,6 +307,8 @@ async function openEngine(opts: CreateEngineOptions): Promise<ReaderEngine> {
   const navListeners: EpubNavigatorListeners = {
     frameLoaded: () => {},
     positionChanged: (loc) => listeners.onPosition(serialize(loc)),
+    viewportChanged: () => {},
+    timelineItemChanged: () => {},
     tap: () => false,
     click: () => false,
     zoom: () => {},

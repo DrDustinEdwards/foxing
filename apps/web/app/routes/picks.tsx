@@ -40,11 +40,7 @@ export default function Picks({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader
-          eyebrow="Curated elsewhere"
-          title="Book club picks"
-          lede="The reading lists behind the famous book clubs, tracked and searchable."
-        />
+        <PageHeader title="Book club picks" />
         <div className="fx-picks-grid">
           {clubs.map((c) => (
             <EntityCard key={c.slug} to={`/picks/${c.slug}`}>

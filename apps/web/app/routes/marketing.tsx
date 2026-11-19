@@ -22,7 +22,8 @@ import type { Route } from "./+types/marketing";
 
 // FAQ structured data (schema.org FAQPage). Restores the rich result the legacy
 // landing emitted. Availability is phrased for web-now, apps-coming-soon since the
-// mobile app is not shipping yet. Plus pricing stays in sync with billing/config.
+// mobile app is not shipping yet. Plus is described as Settings describes it: not open for sign-up
+// until it can be bought (CLAUDE.md rule 6), so no price or trial is stated here.
 const FAQ_SCHEMA = faqPage([
   {
     question: "Where can I read classic books for free?",
@@ -42,12 +43,12 @@ const FAQ_SCHEMA = faqPage([
   {
     question: "Is Foxing free to use?",
     answer:
-      "Yes. The complete reading and social product is free: the reader, all 1,400+ classic books, tracking and stats, and the entire clubs layer (unlimited clubs, discussions, and shared annotations). Foxing Plus ($12.99/month) adds the AI reading companion. A 7-day free trial is available.",
+      "Yes. The complete reading and social product is free: the reader, all 1,400+ classic books, tracking and stats, and the entire clubs layer (unlimited clubs, discussions, and shared annotations). Foxing Plus, the AI reading companion, is not open for sign-up yet.",
   },
   {
     question: "Does Foxing have an AI for reading?",
     answer:
-      "Yes. Foxing includes an AI companion. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. The AI companion is a Foxing Plus feature.",
+      "Yes. Foxing includes an AI companion. Tap any word for a contextual definition. Tap any passage for analysis, historical context, or a plain English explanation. Ask the AI anything about the book without spoilers. The AI companion is a Foxing Plus feature, and Foxing Plus is not open for sign-up yet.",
   },
 ]);
 
@@ -91,7 +92,6 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <Container className="py-6">
           <Hero
             align="center"
-            eyebrow="A reading home for the classics"
             title="Read the classics. Keep the record."
             lead={`${formatCount(total)} books, free to read. Track what you finish, mark the passages that stay with you, and follow the picks worth reading.`}
             actions={
@@ -207,9 +207,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           ships. */}
       <Container>
         <CtaBand
-          eyebrow="Start reading"
-          title="Read the classics. Finally understand them."
-          note="iOS and Android apps coming soon"
+          title="Join free. iOS and Android apps are on the way."
           actions={
             <>
               <Button to="/signup">Join free on web</Button>
@@ -218,10 +216,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               </Button>
             </>
           }
-        >
-          Read free on the web today. The iOS and Android apps are on the way, with your library,
-          highlights, and streak carried across.
-        </CtaBand>
+        />
       </Container>
     </PageShell>
   );

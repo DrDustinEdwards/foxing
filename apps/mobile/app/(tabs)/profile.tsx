@@ -118,16 +118,6 @@ export default function ProfileScreen() {
                   >
                     Your reading personality
                   </Text>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.body,
-                      fontSize: 13,
-                      color: colors.brandSubtleText,
-                      marginTop: 2,
-                    }}
-                  >
-                    What your reading says about you, written by the companion.
-                  </Text>
                 </View>
               </Pressable>
             ) : null}

@@ -36,7 +36,6 @@ export default function FeedScreen() {
         <FeedEmptyState
           icon={<Newspaper color={colors.brandSubtleText} size={32} weight="regular" />}
           title="Sign in to see your feed"
-          body="Once you're signed in and following other readers, their activity will appear here."
         />
       </SafeAreaView>
     );
