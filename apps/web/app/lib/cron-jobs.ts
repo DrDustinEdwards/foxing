@@ -17,12 +17,7 @@ export const CRON_TRIGGERS = {
     { name: "prune-404", everyMinutes: 1440, timeoutMs: 60_000 },
     { name: "prune-auth-events", everyMinutes: 1440, timeoutMs: 60_000 },
   ],
-  "*/5 * * * *": [
-    { name: "push-sweep", everyMinutes: 5, timeoutMs: 4 * 60_000 },
-    // Cleans the books exploded before the cleaner existed (app/lib/reader-clean.server.ts), a pass at a time
-    // until it sets its done flag; then a one-read no-op. Move it to the daily trigger or remove it once done.
-    { name: "reader-clean", everyMinutes: 5, timeoutMs: 4 * 60_000 },
-  ],
+  "*/5 * * * *": [{ name: "push-sweep", everyMinutes: 5, timeoutMs: 4 * 60_000 }],
   // Every minute: Carrel's site API puts due scheduled posts and updates live, retries the publish
   // hooks that failed, empties the content trash of posts 30 days in it, and prunes its replay
   // store (app/lib/carrel/site-api.server.ts).
