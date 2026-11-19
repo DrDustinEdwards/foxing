@@ -1,7 +1,7 @@
 // Terms of service. Static content, edge-cached. Audited against the current
 // build: reading now happens on the web as well as in the app (no app-only
-// claim), and paid plans / AI output are scoped to when those features are
-// available. Catalog sourcing and governing law carry over unchanged.
+// claim), paid plans are scoped to when they are offered, and AI output covers
+// the AI-written catalog text the book pages show today. Catalog sourcing and governing law carry over unchanged.
 import { PageShell } from "~/components/page-shell";
 import { LegalDoc, type LegalSection } from "capsomer/react/legal-doc";
 import "capsomer/legal-doc.css";
@@ -70,8 +70,8 @@ const SECTIONS: LegalSection[] = [
     title: "AI output",
     body: (
       <p>
-        When AI summaries or analysis are available, they are provided as-is and can be wrong. Do
-        not treat them as the last word on a book.
+        Some text on Foxing, such as book descriptions and notes on authors, may be written with AI
+        help. It is provided as-is and can be wrong, so do not treat it as the last word on a book.
       </p>
     ),
   },

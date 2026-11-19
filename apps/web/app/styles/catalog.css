@@ -294,6 +294,30 @@ a:hover > .fx-book > :is(h2, h3) {
   line-height: var(--leading-relaxed-5);
   color: var(--muted);
 }
+/* The notes on the author, the reading order and similar books: native disclosures, closed, on the description's
+   measure, with rules between them. Capsomer's disclosure.css would add 2.2 kB gzip to the page for three summaries
+   (devkit-route-weight), so, as on /books (styles/books.css), the few rules they need are here. */
+.fx-book-detail-notes {
+  max-width: 65ch;
+  border-block-start: var(--line-w) solid var(--line);
+
+  & > details {
+    border-block-end: var(--line-w) solid var(--line);
+  }
+  & summary {
+    padding-block: var(--space-3);
+    font-family: var(--ui);
+    font-weight: var(--weight-semibold);
+    color: var(--text);
+    cursor: pointer;
+  }
+  & details[open] > summary {
+    margin-block-end: var(--space-2);
+  }
+  & details > .article-prose {
+    padding-block-end: var(--space-5);
+  }
+}
 .fx-book-detail-title-2,
 .fx-botm-title-2 {
   font-family: var(--display);
