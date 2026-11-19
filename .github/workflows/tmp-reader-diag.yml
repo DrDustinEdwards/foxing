@@ -1,0 +1,23 @@
+name: tmp reader diag
+on:
+  push:
+    branches: [claude/project-thread-fbi6hl]
+permissions:
+  contents: read
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm exec -w web -- playwright install --with-deps chromium
+      - name: Diag
+        env:
+          PLAYWRIGHT_BASE_URL: https://foxing.app
+        run: node apps/web/e2e/tmp-diag.mjs
