@@ -44,9 +44,11 @@ describe("parseFactCheck", () => {
     expect(nested.sources).toEqual(["https://example.com/a"]);
   });
 
-  it("refuses a fix with no corrected text, an unknown verdict and a reply that is not JSON", () => {
-    expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"fixed","issues":[]}}}'))).toEqual({
-      error: 'a is "fixed" with no corrected text',
+  it("reads a fix with no corrected text as an empty text, and refuses an unknown verdict and a reply that is not JSON", () => {
+    expect(read(fence('{"texts":{"a":{"verdict":"fixed","issues":[]}}}')).texts.a).toEqual({
+      verdict: "fixed",
+      issues: [],
+      corrected: "",
     });
     expect(parseFactCheck(fence('{"texts":{"a":{"verdict":"maybe"}}}'))).toEqual({
       error: 'a has the verdict "maybe"',
