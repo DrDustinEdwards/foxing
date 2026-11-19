@@ -43,7 +43,7 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
           </Eyebrow>
           {books.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
-              Add books to this shelf from any book page.
+              No books yet.
             </p>
           ) : (
             <BookGrid>

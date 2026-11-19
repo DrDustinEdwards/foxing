@@ -169,7 +169,7 @@ export default function ScanScreen() {
               opacity: 0.85,
             }}
           >
-            Point the camera at the barcode on the back of the book.
+            Scan the barcode.
           </Text>
         </View>
       ) : (

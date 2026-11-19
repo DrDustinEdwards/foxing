@@ -229,12 +229,10 @@ export function EmailSection({ initial }: { initial: string }) {
   return (
     <Card title="Email">
       <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-        Your account email is{" "}
         <span className="cap-text" data-tone="ink" data-weight="strong">
           {initial}
         </span>
-        . To change it, approve the change from a link sent to this address, then confirm the new
-        address from a link sent there.
+        . We will email a link to both addresses.
       </p>
       <form onSubmit={(e) => void change(e)} className="cap-stack" data-gap="4">
         <label className="cap-field">
@@ -264,9 +262,6 @@ export function EmailSection({ initial }: { initial: string }) {
 export function AdminSection() {
   return (
     <Card title="Admin">
-      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-        You have operator access to the Foxing admin tools.
-      </p>
       <ButtonLink to="/admin">Open admin dashboard</ButtonLink>
     </Card>
   );
@@ -351,8 +346,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
     <Card title="Sign-in">
       <div className="cap-stack">
         <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-          A passkey signs you in with your face, fingerprint or device PIN. It only works on Foxing,
-          so it cannot be phished. You can always sign in with an email link too.
+          You can always sign in with an email link.
         </p>
         {initial.passkeys.length > 0 ? (
           <ul className="cap-stack" data-gap="4">
@@ -458,8 +452,7 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
         ) : null}
         {initial.secondPasskey ? (
           <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-            Add a passkey on a second device too, so you can still use a passkey if you lose this
-            one.
+            Add a second passkey on another device.
           </p>
         ) : null}
         <div>
@@ -639,7 +632,7 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
     <Card title="Recent security activity">
       {activity.length === 0 ? (
         <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-          Nothing yet. Sign-ins and changes to how you sign in will show here.
+          Nothing yet.
         </p>
       ) : (
         <ul className="cap-stack" data-gap="4">
@@ -670,9 +663,8 @@ export function DataSection({ fresh }: { fresh: boolean }) {
   return (
     <Card title="Your data">
       <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-        Download a JSON archive of everything tied to your account: your profile, library, reading
-        history, highlights, notes, and goals.
-        {fresh ? null : " It holds everything, so sign in again first."}
+        A JSON archive of your account data.
+        {fresh ? null : " Sign in again first."}
       </p>
       {fresh ? (
         <ButtonLink href="/api/v1/account/export">Download your data</ButtonLink>

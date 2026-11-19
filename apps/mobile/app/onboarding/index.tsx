@@ -421,9 +421,6 @@ function ProfileStep({
   return (
     <View>
       <Heading>Make your profile</Heading>
-      <Sub>
-        Your username is how other readers find you. You can change your display name later.
-      </Sub>
       <View className="gap-4">
         <View className="gap-1">
           <TextInput
@@ -489,7 +486,7 @@ function FirstBookStep({
         <ActivityIndicator color={colors.brandUi} />
       ) : books.length === 0 ? (
         <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.textTertiary }}>
-          No starter books right now. Skip ahead and find one in Discover.
+          No starter books right now.
         </Text>
       ) : (
         <View className="flex-row flex-wrap" style={{ gap: 10 }}>

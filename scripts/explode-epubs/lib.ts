@@ -9,6 +9,7 @@
 import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
 import { posix } from "node:path";
+import { cleanBookMarkup } from "../../packages/core/src/domain/epub-clean.ts";
 
 export interface RwpmLink {
   href: string;
@@ -139,7 +140,14 @@ export async function explodeEpub(buf: Buffer): Promise<ExplodeResult> {
   const files = new Map<string, Buffer>();
   for (const entry of Object.values(zip.files)) {
     if (entry.dir || entry.name === "mimetype") continue;
-    files.set(entry.name, await entry.async("nodebuffer"));
+    const bytes = await entry.async("nodebuffer");
+    // A book's pages and SVG files are cleaned here, once, before they are stored.
+    files.set(
+      entry.name,
+      /\.(?:x?html?|svg)$/i.test(entry.name)
+        ? Buffer.from(cleanBookMarkup(bytes.toString("utf-8")))
+        : bytes,
+    );
   }
 
   // Position list: distribute positions across reading order by stripped-text

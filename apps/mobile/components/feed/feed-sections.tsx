@@ -13,7 +13,7 @@ export function FeedEmptyState({
 }: {
   icon: React.ReactNode;
   title: string;
-  body: string;
+  body?: string;
 }) {
   const colors = useColors();
   return (
@@ -51,17 +51,19 @@ export function FeedEmptyState({
       >
         {title}
       </Text>
-      <Text
-        style={{
-          fontFamily: Fonts.body,
-          fontSize: 14,
-          color: colors.textTertiary,
-          textAlign: "center",
-          lineHeight: 20,
-        }}
-      >
-        {body}
-      </Text>
+      {body ? (
+        <Text
+          style={{
+            fontFamily: Fonts.body,
+            fontSize: 14,
+            color: colors.textTertiary,
+            textAlign: "center",
+            lineHeight: 20,
+          }}
+        >
+          {body}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -81,7 +83,6 @@ export function FeedListEmpty({ error }: { error: string | null }) {
     <FeedEmptyState
       icon={<Newspaper color={colors.brandSubtleText} size={32} weight="regular" />}
       title="Your feed is quiet"
-      body="Follow other readers to see their reviews, finishes and lists here."
     />
   );
 }
@@ -218,17 +219,6 @@ export function PopularSection({
             >
               Find readers like you
             </Text>
-            <Text
-              style={{
-                fontFamily: Fonts.ui,
-                fontSize: 12,
-                color: colors.brandSubtleText,
-                opacity: 0.85,
-                marginTop: 2,
-              }}
-            >
-              We'll fill your feed once you follow a few people.
-            </Text>
           </View>
         </Pressable>
       ) : null}
@@ -237,7 +227,7 @@ export function PopularSection({
       {trending.length === 0 ? (
         <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
           <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textTertiary }}>
-            Check back in a day, the community's still warming up.
+            Nothing popular yet.
           </Text>
         </View>
       ) : (

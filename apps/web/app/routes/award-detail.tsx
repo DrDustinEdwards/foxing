@@ -50,9 +50,8 @@ export default function AwardDetail({ loaderData }: Route.ComponentProps) {
           ]}
         />
         <PageHeader
-          eyebrow={award.scope ?? "Literary award"}
           title={award.name}
-          lede={`${award.entries.length} ${award.entries.length === 1 ? "winner" : "winners"} in the library.`}
+          lede={`${award.scope ? `${award.scope}, ` : ""}${award.entries.length} ${award.entries.length === 1 ? "winner" : "winners"}`}
         />
         <BookGrid>
           {award.entries.map((e) => (

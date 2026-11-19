@@ -1,3 +1,4 @@
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { Icon, iconBell, iconSearch } from "capsomer/react/icons";
 import {
   type HeaderExtra,
@@ -127,7 +128,7 @@ function SiteNav() {
         extras={extras}
         themePrefKey={THEME_PREF_KEY}
         account={user ? headerAccount(user, signingOut, () => void signOut()) : undefined}
-        signIn={user ? undefined : { href: "/login" }}
+        signIn={user ? undefined : { href: SIGN_IN_PATH }}
         skipTo="#main"
         renderLink={routerRenderLink}
       />
@@ -153,9 +154,6 @@ function SiteFooter() {
             </Link>
             <p className="fx-footer-motto">reading, together.</p>
           </div>
-          <p className="cap-text measure-xs" data-size="small" data-tone="dim">
-            A reading home for the classics and the conversations around them.
-          </p>
           <p className="cap-text measure-xs" data-size="small" data-tone="dim">
             Some text on Foxing, such as book descriptions, may be written with AI help.
           </p>
@@ -190,7 +188,7 @@ function SiteFooter() {
         <FooterCol
           title="Account"
           links={[
-            { to: "/login", label: "Sign in" },
+            { to: SIGN_IN_PATH, label: "Sign in" },
             { to: "/signup", label: "Create account" },
           ]}
         />

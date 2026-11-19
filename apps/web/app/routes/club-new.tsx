@@ -43,12 +43,9 @@ export default function ClubNew() {
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
-        <div className="cap-stack" data-gap="3">
-          <h1 className="cap-title" data-size="1">
-            Start a club
-          </h1>
-          <p className="fx-club-new-text">Pick a book, set the pace, and read together.</p>
-        </div>
+        <h1 className="cap-title" data-size="1">
+          Start a club
+        </h1>
 
         <form onSubmit={(e) => void onSubmit(e)} className="cap-stack" data-gap="5">
           <div className="cap-field">

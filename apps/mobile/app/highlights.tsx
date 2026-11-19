@@ -72,9 +72,7 @@ export default function HighlightsScreen() {
                 textAlign: "center",
               }}
             >
-              {highlights.error
-                ? "Could not load your highlights."
-                : "You haven't saved any highlights yet. Long press a passage while reading to capture one."}
+              {highlights.error ? "Could not load your highlights." : "No highlights yet."}
             </Text>
           </View>
         ) : (

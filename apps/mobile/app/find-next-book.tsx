@@ -104,7 +104,7 @@ export default function FindNextBookScreen() {
             ) : null}
             {data.recommendations.length === 0 ? (
               <Text style={{ fontFamily: Fonts.body, fontSize: 13, color: colors.textTertiary }}>
-                No recommendations yet. Add a few books to your library and check back.
+                No recommendations yet.
               </Text>
             ) : (
               data.recommendations.map((r) => (

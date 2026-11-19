@@ -36,10 +36,22 @@ import {
   type GatewayStep,
 } from "@dustinedwards/site-runtime/worker";
 import { createApi } from "@foxing/api";
-import { billing, catalogHealthDomain, catalogRepo, companion, createDb, push } from "@foxing/core";
+import {
+  billing,
+  catalogHealthDomain,
+  catalogRepo,
+  companion,
+  companionRepo,
+  createDb,
+  push,
+} from "@foxing/core";
 import { Hono } from "hono";
 import type { ServerBuild } from "react-router";
-import { anthropicCaller, anthropicStructured } from "../app/lib/anthropic.server";
+import {
+  anthropicCaller,
+  anthropicFactChecker,
+  anthropicStructured,
+} from "../app/lib/anthropic.server";
 import { edgeCache } from "../app/lib/cache.server";
 import { images } from "../app/lib/images";
 import { HELLO_EMAIL, SITE_ORIGIN } from "../app/lib/origins";
@@ -59,6 +71,7 @@ import { ROBOTS_DISALLOW, SITE_NAME } from "../app/lib/seo";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { operatorTools } from "../app/lib/operator.server";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import { runReaderClean } from "../app/lib/reader-clean.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { PAGE_DATES_KEY, TRACKED_PAGES } from "../app/lib/page-dates";
 import { problemResponse } from "@dustinedwards/site-runtime/http-errors";
@@ -166,24 +179,18 @@ const api = createApi({
   },
   // Stripe secrets + price ids are not set yet (Phase 4b gate). When all four are
   // present the real client is used; otherwise the not-configured stub makes billing
-  // routes answer 503 cleanly, and everything else works.
+  // routes answer 503 cleanly, the pages offer no upgrade, and everything else works.
   resolveBilling: (env) => {
-    const e = env as unknown as Env;
-    if (
-      e.STRIPE_SECRET_KEY &&
-      e.STRIPE_WEBHOOK_SECRET &&
-      e.STRIPE_PRICE_MONTHLY &&
-      e.STRIPE_PRICE_ANNUAL
-    ) {
-      return {
-        client: billing.createStripeBilling({
-          secretKey: e.STRIPE_SECRET_KEY,
-          webhookSecret: e.STRIPE_WEBHOOK_SECRET,
-        }),
-        prices: { monthly: e.STRIPE_PRICE_MONTHLY, annual: e.STRIPE_PRICE_ANNUAL },
-      };
-    }
-    return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
+    const stripe = billing.stripeSettings(env as unknown as Env);
+    if (!stripe)
+      return { client: billing.notConfiguredBilling(), prices: { monthly: "", annual: "" } };
+    return {
+      client: billing.createStripeBilling({
+        secretKey: stripe.secretKey,
+        webhookSecret: stripe.webhookSecret,
+      }),
+      prices: stripe.prices,
+    };
   },
   // The live layer: one ClubRoom Durable Object per club (clubRoomHub). The DO never writes D1.
   resolveHub: (env) => clubRoomHub((env as unknown as Env).CLUB_ROOM),
@@ -348,7 +355,7 @@ const hono: GatewayStep<Env> = async (request, env, ctx, kit) => {
 // and enqueues one message per book; the queue consumer generates the 4 free-cached
 // actions for that book and writes book_ai_cache. Both reuse the same core functions
 // the manual proof script and the admin ops route call (one generation code path).
-type CacheJobMessage = { bookId: string };
+type CacheJobMessage = { bookId: string; factCheck?: true };
 
 // The push delivery sweep. Runs on a frequent cron: it push-delivers notifications
 // created since the last sweep (deduped in KV), gated per user by category prefs + quiet
@@ -394,6 +401,38 @@ async function enqueueCompanionCache(env: Env): Promise<void> {
     );
 }
 
+// Daily: enqueue catalog books whose cached texts have no fact-check yet, FACT_CHECK_BATCH at a time (new books after
+// the first sweep). While the KV key `companion-fact-check:only` holds a JSON array of book ids, only those are checked
+// (a trial run before the sweep); delete the key to sweep.
+// The queue takes hours to check a batch, and a book is only recorded once it is checked, so a second run inside the
+// FACT_CHECK_HOLD_SECONDS after one would queue (and pay for) the same books again: it does nothing instead.
+const FACT_CHECK_BATCH = 1500;
+const FACT_CHECK_ONLY_KEY = "companion-fact-check:only";
+const FACT_CHECK_HOLD_KEY = "companion-fact-check:enqueued";
+const FACT_CHECK_HOLD_SECONDS = 20 * 60 * 60;
+async function enqueueFactCheck(env: Env): Promise<void> {
+  if (await env.APP_KV.get(FACT_CHECK_HOLD_KEY)) return;
+  const db = createDb(env.DB);
+  const only = (await env.APP_KV.get(FACT_CHECK_ONLY_KEY, "json")) as string[] | null;
+  const books = await companionRepo.findBooksNeedingFactCheck(
+    db,
+    FACT_CHECK_BATCH,
+    only ?? undefined,
+  );
+  await Promise.all(
+    books.map((book) =>
+      env.COMPANION_CACHE_QUEUE.send({
+        bookId: book.id,
+        factCheck: true,
+      } satisfies CacheJobMessage),
+    ),
+  );
+  if (books.length)
+    await env.APP_KV.put(FACT_CHECK_HOLD_KEY, new Date().toISOString(), {
+      expirationTtl: FACT_CHECK_HOLD_SECONDS,
+    });
+}
+
 // Each job's work, by name; app/lib/cron-jobs.ts names each trigger's jobs with their intervals and
 // timeouts, which /health's cron check reads too. A failed job fails the invocation (Cron Events
 // shows it) after the others have run.
@@ -406,8 +445,10 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "push-sweep": runPushSweep,
   "carrel-schedules": (env) => runCarrelSchedules(env, new Date()),
   "companion-cache": enqueueCompanionCache,
+  "companion-fact-check": enqueueFactCheck,
   "prune-expired-auth": (env) => pruneExpiredAuth(env.DB),
   "page-dates": runPageDates,
+  "reader-clean": runReaderClean,
 };
 
 /** A job from app/lib/cron-jobs.ts with its work. */
@@ -430,6 +471,35 @@ function cronLists(env: Env): Record<string, CronJob[]> {
   );
 }
 
+/** One fact-check job: check the book's cached texts, retrying later when the call fails or the key is missing. */
+async function factCheckMessage(
+  db: ReturnType<typeof createDb>,
+  checker: companion.FactChecker | null,
+  message: Message<CacheJobMessage>,
+): Promise<void> {
+  if (!checker) return message.retry();
+  try {
+    const book = await catalogRepo.getBookById(db, message.body.bookId);
+    const result = book && (await companion.factCheckBook(db, checker, book));
+    if (result) logEvent("companion_fact_checked", { ...result });
+    message.ack();
+  } catch (err) {
+    const limited = err instanceof Error && err.message.includes("(rate_limited)");
+    logEvent(
+      "companion_fact_check_failed",
+      {
+        book_id: message.body.bookId,
+        error: err,
+        reply_tail: (err as { replyTail?: string }).replyTail,
+      },
+      { level: limited ? "warn" : "error" },
+    );
+    // Every attempt is billed, so a book that keeps failing is given up on after three instead of six.
+    if (message.attempts >= 3) return message.ack();
+    message.retry({ delaySeconds: 60 * message.attempts });
+  }
+}
+
 async function queue(
   batch: MessageBatch<CacheJobMessage>,
   env: Env,
@@ -437,8 +507,13 @@ async function queue(
 ): Promise<void> {
   const db = createDb(env.DB);
   const caller = anthropicCaller(env);
+  const checker = anthropicFactChecker(env);
 
   for (const message of batch.messages) {
+    if (message.body.factCheck) {
+      await factCheckMessage(db, checker, message);
+      continue;
+    }
     if (!caller) {
       // No key yet: retry later rather than dropping the job or generating nothing.
       message.retry();
@@ -471,7 +546,11 @@ async function queue(
         { book_id: message.body.bookId, error: err },
         { level: limited ? "warn" : "error" },
       );
-      message.retry(limited ? { delaySeconds: 60 * message.attempts } : undefined);
+      // A failed reply that came back was billed, and a book that fails the prose check fails again, so it is given up
+      // after three attempts, as the fact check is, not six at four calls each. The next daily run picks it up again.
+      if (limited) message.retry({ delaySeconds: 60 * message.attempts });
+      else if (message.attempts >= 3) message.ack();
+      else message.retry();
     }
   }
 }

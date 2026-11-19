@@ -118,7 +118,7 @@ export function DiscussionsTab({
               paddingHorizontal: 24,
             }}
           >
-            No discussions yet. Use the AI starter or kick things off with a question.
+            No discussions yet.
           </Text>
         </View>
       ) : (

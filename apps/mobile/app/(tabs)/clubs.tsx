@@ -227,24 +227,10 @@ function ClubsEmpty({ tab, onCreate }: { tab: Tab; onCreate: () => void }) {
           fontSize: 18,
           color: colors.textPrimary,
           textAlign: "center",
-          marginBottom: 6,
-        }}
-      >
-        {tab === "mine" ? "No clubs yet" : "Nothing to discover"}
-      </Text>
-      <Text
-        style={{
-          fontFamily: Fonts.body,
-          fontSize: 14,
-          color: colors.textTertiary,
-          textAlign: "center",
-          lineHeight: 20,
           marginBottom: 16,
         }}
       >
-        {tab === "mine"
-          ? "Start a club around a book you love, invite friends or open it to anyone."
-          : "Public clubs will show up here as readers create them."}
+        {tab === "mine" ? "No clubs yet" : "Nothing to discover"}
       </Text>
       {tab === "mine" ? (
         <Pressable

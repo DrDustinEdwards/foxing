@@ -5,7 +5,12 @@
 //
 // The ways in are the family's one sign-in (site-runtime ./sign-in): a passkey first, Google
 // and Apple, and an emailed link (with Turnstile once its keys are set). No passwords.
-import { CONFIRM_PATH, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
+import {
+  CONFIRM_PATH,
+  SIGN_IN_EXPIRES_IN_WORDS,
+  SIGN_IN_PATH,
+} from "@dustinedwards/site-runtime/sign-in";
+import { SIGN_IN_WORDS, UNDELIVERABLE_EMAIL } from "@dustinedwards/site-runtime/sign-in-words";
 import { mountTurnstile } from "@dustinedwards/site-runtime/turnstile";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, InputHTMLAttributes, ReactNode } from "react";
@@ -135,7 +140,7 @@ async function startSocial(
     provider,
     callbackURL: afterLink(redirectTo),
     newUserCallbackURL: AFTER_LINK_NEW,
-    errorCallbackURL: "/login",
+    errorCallbackURL: SIGN_IN_PATH,
   });
   // The call redirects the whole page; reset only if it somehow returns.
   setPending(false);
@@ -347,13 +352,20 @@ export function MagicLinkForm({
       )
       .catch(() => null);
     setPending(false);
-    // The refusals to show are the ones about the site, never the address: the bot check, and
-    // the link request turned off (no Turnstile keys) or its counter down. Everything else gets
+    // The refusals to show are the ones about the site, never whether the address has an account:
+    // the bot check, an address no mail reaches, and the link request turned off (no Turnstile
+    // keys) or its counter down. Everything else gets
     // the same neutral result, so the form never says whether an address has an account.
     const code = (res?.error as { code?: string } | undefined)?.code;
     if (code === "MISSING_RESPONSE" || code === "VERIFICATION_FAILED") {
       setRefusal("Complete the check, then send the link again.");
       setAttempt((n) => n + 1);
+      return;
+    }
+    // Email Service will not mail the address (an earlier mail bounced or was marked as spam), so
+    // check-your-inbox would wait for nothing (site-runtime ./sign-in's 422 UNDELIVERABLE_EMAIL).
+    if (code === UNDELIVERABLE_EMAIL) {
+      setRefusal(SIGN_IN_WORDS.link.undeliverable);
       return;
     }
     if (code === "TURNSTILE_NOT_SET" || code === "RATE_LIMIT_UNAVAILABLE") {
@@ -452,8 +464,7 @@ function SignInCodeForm({
   return (
     <form className="cap-stack" data-gap="4" onSubmit={(event) => void submitCode(event)}>
       <p role="status" className="fx-auth-shell-text-2">
-        Check your email. Open the sign-in link, or type the code from the same email here. Both
-        work for {SIGN_IN_EXPIRES_IN_WORDS}.
+        Check your email for a link or code. Valid for {SIGN_IN_EXPIRES_IN_WORDS}.
       </p>
       <Field
         label="Code"

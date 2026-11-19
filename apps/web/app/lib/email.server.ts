@@ -3,7 +3,7 @@
 // rendered by Capsomer's email templates (capsomer/email), which escape every value
 // and refuse a link that is not https.
 
-import { sendEmail } from "@dustinedwards/site-runtime/email";
+import { EmailNotSent, sendEmail } from "@dustinedwards/site-runtime/email";
 import { type NoticeDetail, SIGN_IN_EXPIRES_IN_WORDS } from "@dustinedwards/site-runtime/sign-in";
 import {
   type Brand,
@@ -25,7 +25,7 @@ async function send(env: Env, to: string, mail: Rendered, secrets: string[] = []
     { to, from: { email: env.EMAIL_FROM, name: "Foxing" }, ...mail },
     { secrets },
   );
-  if (!outcome.sent) throw new Error(`Email not sent (${outcome.code}).`);
+  if (!outcome.sent) throw new EmailNotSent(outcome.code);
 }
 
 /** The sign-in mail (site-runtime ./sign-in) on Capsomer's magic-link template: the link signs

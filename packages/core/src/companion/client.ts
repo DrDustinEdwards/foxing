@@ -34,3 +34,13 @@ export type StructuredCaller = (
   args: CompanionCallArgs,
   schema: Record<string, unknown>,
 ) => Promise<{ value: unknown; usage: Usage }>;
+
+/**
+ * One web-searching call that answers with text (the fact-check): the reply, what it spent and how many searches it
+ * ran. Throws when the call did not finish.
+ */
+export type FactChecker = (args: { model: string; system: string; user: string }) => Promise<{
+  text: string;
+  usage: Usage;
+  searches: number;
+}>;

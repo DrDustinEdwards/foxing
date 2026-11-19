@@ -21,7 +21,7 @@ export default function GoalsDemo({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container className="cap-stack" data-gap="7">
-        <PageHeader eyebrow="Reading" title="Reading goals" />
+        <PageHeader title="Reading goals" />
         <DemoNotice />
         <ReadingActivity weeks={loaderData.weeks} streak={loaderData.streak} />
       </Container>

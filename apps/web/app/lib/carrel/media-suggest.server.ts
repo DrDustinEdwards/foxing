@@ -7,7 +7,9 @@
 import { mediaSuggester } from "@dustinedwards/site-api";
 
 /** What the model suggests for one stored picture. Throws when the site has no AI binding. */
-export const suggestFor = mediaSuggester({
+export const suggestFor = mediaSuggester<Env>({
   app: "foxing",
   describe: "in the Journal of Foxing, a website about reading classic books",
+  // /health's ai-alt-text check.
+  outcomeKv: (env) => env.APP_KV,
 });

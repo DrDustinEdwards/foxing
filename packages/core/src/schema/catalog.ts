@@ -226,3 +226,22 @@ export const bookAiCache = sqliteTable(
   },
   (t) => [primaryKey({ columns: [t.bookId, t.action] })],
 );
+
+// One fact-check of one cached text (companion/fact-check.ts). `original` keeps the text a correction replaced, so a
+// check can be audited or undone; it is null when the text was left as it was.
+export const bookAiReview = sqliteTable(
+  "book_ai_review",
+  {
+    bookId: cascadeFk("book_id", () => books.id),
+    action: text("action").notNull(),
+    verdict: text("verdict").notNull(), // ok | fixed | withheld
+    issues: json<string[]>("issues"),
+    original: text("original", { mode: "json" }),
+    sources: json<string[]>("sources"),
+    searches: integer("searches").notNull(),
+    costMicros: integer("cost_micros").notNull(),
+    model: text("model").notNull(),
+    checkedAt: ts("checked_at").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.bookId, t.action] })],
+);

@@ -44,7 +44,7 @@ export function PassageCommentList({
             textAlign: "center",
           }}
         >
-          Nothing here yet. Be the first to comment.
+          No comments yet.
         </Text>
       </View>
     );

@@ -33,7 +33,7 @@ export default function ListEdit({ loaderData }: Route.ComponentProps) {
   return (
     <PageShell>
       <Container>
-        <PageHeader eyebrow="Lists" title="Edit list" />
+        <PageHeader title="Edit list" />
         <ListForm
           mode="edit"
           listId={list.id}

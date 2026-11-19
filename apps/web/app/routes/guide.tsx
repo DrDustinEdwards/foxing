@@ -29,14 +29,11 @@ export default function Guide() {
   return (
     <PageShell>
       <Container className="measure-prose cap-stack" data-gap="8">
-        <PageHeader
-          title="Using Foxing on the web"
-          lede="How the foxing.app web platform works: finding books, tracking your reading, joining clubs, and following other readers."
-        />
+        <PageHeader title="Using Foxing on the web" />
 
         <GuideNav anchors={NAV_ANCHORS} />
 
-        <Section id="find" eyebrow="Find books" heading="Finding what to read next">
+        <Section id="find" heading="Finding what to read next">
           <Prose>
             The catalog is public-domain literature, free to read and free to browse. No account is
             needed to open a book. Browse by genre, era, or book length, or use search, which groups
@@ -52,7 +49,7 @@ export default function Guide() {
           />
         </Section>
 
-        <Section id="read" eyebrow="Read" heading="Reading in the browser">
+        <Section id="read" heading="Reading in the browser">
           <Prose>
             Open any book to read it in the web reader. Your place is saved as you go, so you return
             to where you left off. The reader shares your account, so a book you start on the web
@@ -60,7 +57,7 @@ export default function Guide() {
           </Prose>
         </Section>
 
-        <Section id="track" eyebrow="Track" heading="Keeping track of your reading">
+        <Section id="track" heading="Keeping track of your reading">
           <Prose>
             Every book has a shelf selector. Set its status, and it appears in your library.
           </Prose>
@@ -74,7 +71,7 @@ export default function Guide() {
           />
         </Section>
 
-        <Section id="clubs" eyebrow="Clubs" heading="Joining a book club">
+        <Section id="clubs" heading="Joining a book club">
           <Prose>
             foxing.app/clubs lists public reading clubs. Join any of them from the web. Clubs are
             separate from the celebrity picks at foxing.app/book-clubs and from Foxing's own monthly
@@ -82,7 +79,7 @@ export default function Guide() {
           </Prose>
         </Section>
 
-        <Section id="follow" eyebrow="Follow" heading="Following other readers">
+        <Section id="follow" heading="Following other readers">
           <Prose>
             Follow any reader from a public profile, and their activity appears in your home feed. A
             public profile shows favorite books, recent reviews, and reading stats. You control what
@@ -90,7 +87,7 @@ export default function Guide() {
           </Prose>
         </Section>
 
-        <Section id="account" eyebrow="Account" heading="Your account and settings">
+        <Section id="account" heading="Your account and settings">
           <FeatureList
             items={[
               "Edit your profile, change your email or username, and set light or dark mode",

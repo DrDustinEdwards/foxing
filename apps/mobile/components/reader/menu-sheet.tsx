@@ -222,17 +222,6 @@ export function MenuSheet({
                       >
                         Ask a question
                       </Text>
-                      <Text
-                        style={{
-                          fontFamily: Fonts.ui,
-                          fontSize: 11,
-                          color: colors.textOnBrand,
-                          opacity: 0.85,
-                          marginTop: 1,
-                        }}
-                      >
-                        Chat about this book and where you are
-                      </Text>
                     </View>
                     {locked ? <Lock color={colors.textOnBrand} size={16} weight="fill" /> : null}
                   </Pressable>

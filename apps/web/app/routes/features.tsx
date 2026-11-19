@@ -31,14 +31,11 @@ export default function Features() {
   return (
     <PageShell>
       <Container className="measure-prose cap-stack" data-gap="8">
-        <PageHeader
-          title="What Foxing does"
-          lede="Everything on this page is available today, free. This page grows as more of Foxing ships."
-        />
+        <PageHeader title="What Foxing does" />
 
         <GuideNav anchors={NAV_ANCHORS} />
 
-        <Section id="read" eyebrow="Read" heading="1,400+ classic books, free to read">
+        <Section id="read" heading="1,400+ classic books, free to read">
           <Prose>
             Every book in the catalog is from the public domain: Frankenstein, Pride and Prejudice,
             Sherlock Holmes, Moby-Dick, Dracula, Crime and Punishment, and 1,400 more. Free to read
@@ -46,7 +43,7 @@ export default function Features() {
           </Prose>
         </Section>
 
-        <Section id="find" eyebrow="Browse & search" heading="Find what to read next">
+        <Section id="find" heading="Find what to read next">
           <FeatureList
             items={[
               "Browse by genre, era, or book length",
@@ -60,7 +57,7 @@ export default function Features() {
           />
         </Section>
 
-        <Section id="track" eyebrow="Track" heading="Keep track of what you read">
+        <Section id="track" heading="Keep track of what you read">
           <Prose>
             Every book you've read, every book you want to read. On the web, no app required.
           </Prose>
@@ -74,14 +71,14 @@ export default function Features() {
           />
         </Section>
 
-        <Section id="journal" eyebrow="Journal" heading="Essays on the books in the library">
+        <Section id="journal" heading="Essays on the books in the library">
           <Prose>
             Close readings, context, and short essays on the classics and the ideas inside them,
             browsable by tag.
           </Prose>
         </Section>
 
-        <Section id="account" eyebrow="Account" heading="Your data is yours">
+        <Section id="account" heading="Your data is yours">
           <FeatureList
             items={[
               "Edit your profile and manage your passkeys from Settings",

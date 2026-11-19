@@ -299,7 +299,7 @@ export default function UProfile({ loaderData, params }: Route.ComponentProps) {
               ) : null}
             </div>
             {diary.length === 0 ? (
-              <EmptyState title="No entries yet" body="Reviews and ratings will appear here." />
+              <EmptyState title="No entries yet" />
             ) : (
               <ul className="cap-stack">
                 {diary.map((d) => (
@@ -453,10 +453,7 @@ function PrivateProfile({
           </h1>
           <p className="fx-u-profile-text">@{profile.username}</p>
         </div>
-        <EmptyState
-          title="This profile is private"
-          body="This reader keeps their library, reviews, and activity to themselves."
-        />
+        <EmptyState title="This profile is private" />
       </Container>
     </PageShell>
   );

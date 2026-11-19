@@ -1,10 +1,11 @@
+import { CONFIRM_PATH, SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { type RouteConfig, index, layout, prefix, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/marketing.tsx"),
   route("signup", "routes/signup.tsx"),
-  route("login", "routes/login.tsx"),
-  route("sign-in/confirm", "routes/sign-in-confirm.tsx"),
+  route(SIGN_IN_PATH.slice(1), "routes/login.tsx"),
+  route(CONFIRM_PATH.slice(1), "routes/sign-in-confirm.tsx"),
   route("email/confirm", "routes/email-confirm.tsx"),
 
   // Social, public: profiles, recaps and a shared list.

@@ -1,30 +1,23 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
-// The Plus paywall (Phase 4b), driven through the visible UI with the real login fixture.
-// The e2e account is free tier, so /settings offers the upgrade and the paywall opens.
-// Real Stripe checkout is not exercised here (no keys on the preview) -- that is the
-// keyed Dustin gate; here we lock the paywall opening and the visible CTA state.
-test.describe("Plus paywall (signed in, free tier)", () => {
-  test("settings offers an upgrade that opens the paywall", async ({ page }) => {
+// The Plus offer on /settings, driven through the visible UI with the real login fixture. The
+// e2e account is free tier. Plus is offered only once it can be bought (the Stripe settings are
+// set, CLAUDE.md rule 6), so this spec reads which state the target is in from what the page
+// shows and checks that state. It never starts a checkout: this suite runs against the live site
+// after every deploy, and a checkout is the keyed Dustin gate (billing.integration.test.ts covers
+// the route's answers).
+test.describe("Plus offer (signed in, free tier)", () => {
+  test("Plus is offered only when it can be bought, and its paywall is accessible", async ({
+    page,
+  }) => {
     await page.goto("/settings", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /upgrade to plus/i }).click();
-    await expect(page.getByRole("dialog", { name: /foxing plus/i })).toBeVisible();
-  });
-
-  test("the trial CTA attempts checkout and surfaces a visible state", async ({ page }) => {
-    await page.goto("/settings", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /upgrade to plus/i }).click();
-    const dialog = page.getByRole("dialog", { name: /foxing plus/i });
-    await dialog.getByRole("button", { name: /start free 7-day trial/i }).click();
-    // No Stripe keys on the preview: the endpoint answers 503 and the paywall shows a
-    // visible message, never a silent no-op.
-    await expect(dialog.getByRole("alert")).toBeVisible();
-  });
-
-  test("the open paywall has no serious accessibility violations (WCAG AA)", async ({ page }) => {
-    await page.goto("/settings", { waitUntil: "networkidle" });
-    await page.getByRole("button", { name: /upgrade to plus/i }).click();
+    const upgrade = page.getByRole("button", { name: /upgrade to plus/i });
+    if ((await upgrade.count()) === 0) {
+      await expect(page.getByText(/not open for sign-up yet/i)).toBeVisible();
+      return;
+    }
+    await upgrade.click();
     await expect(page.getByRole("dialog", { name: /foxing plus/i })).toBeVisible();
     const results = await new AxeBuilder({ page })
       .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])

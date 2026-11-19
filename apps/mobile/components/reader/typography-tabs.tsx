@@ -34,11 +34,11 @@ const FONT_SIZE_LABELS: Record<FontSizeStep, string> = {
   "3xl": "3XL",
 };
 
-const FONT_FAMILY_STEPS: { key: FontFamilyKey; label: string; subtitle: string }[] = [
-  { key: "foxing", label: "Source Serif 4", subtitle: "Foxing default" },
-  { key: "classic", label: "Georgia", subtitle: "Classic" },
+const FONT_FAMILY_STEPS: { key: FontFamilyKey; label: string; subtitle?: string }[] = [
+  { key: "foxing", label: "Source Serif 4" },
+  { key: "classic", label: "Georgia" },
   { key: "dyslexic", label: "OpenDyslexic", subtitle: "Dyslexic-friendly" },
-  { key: "modern", label: "System Sans", subtitle: "Modern" },
+  { key: "modern", label: "System Sans" },
 ];
 
 const LINE_SPACING_STEPS: LineSpacingStep[] = ["tight", "normal", "relaxed", "spacious"];
@@ -138,16 +138,18 @@ export function FontTab({
                   >
                     {f.label}
                   </Text>
-                  <Text
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 11,
-                      color: colors.textTertiary,
-                      marginTop: 2,
-                    }}
-                  >
-                    {f.subtitle}
-                  </Text>
+                  {f.subtitle ? (
+                    <Text
+                      style={{
+                        fontFamily: Fonts.ui,
+                        fontSize: 11,
+                        color: colors.textTertiary,
+                        marginTop: 2,
+                      }}
+                    >
+                      {f.subtitle}
+                    </Text>
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -181,16 +183,12 @@ export function FontTab({
         <ToggleRow
           value={prefs.firstLineIndent}
           onValueChange={(v) => set("firstLineIndent", v)}
-          label="Indent the first line of every paragraph"
+          label="On"
         />
       </Section>
 
       <Section label="Drop cap">
-        <ToggleRow
-          value={prefs.dropCap}
-          onValueChange={(v) => set("dropCap", v)}
-          label="Large stylized letter at chapter starts"
-        />
+        <ToggleRow value={prefs.dropCap} onValueChange={(v) => set("dropCap", v)} label="On" />
       </Section>
     </View>
   );
@@ -318,7 +316,7 @@ export function CanvasTab({
         <ToggleRow
           value={prefs.rulerEnabled}
           onValueChange={(v) => set("rulerEnabled", v)}
-          label="Highlight current line"
+          label="On"
         />
         {prefs.rulerEnabled && (
           <RulerOptions
@@ -334,7 +332,7 @@ export function CanvasTab({
         <ToggleRow
           value={prefs.popularHighlightsEnabled}
           onValueChange={(v) => set("popularHighlightsEnabled", v)}
-          label="Show passages others highlighted"
+          label="On"
         />
       </Section>
 
@@ -351,23 +349,19 @@ export function CanvasTab({
         <ToggleRow
           value={prefs.warmScreen}
           onValueChange={(v) => set("warmScreen", v)}
-          label="Warmer screen tone for evening reading"
+          label="On"
         />
       </Section>
 
       <Section label="Focus mode">
-        <ToggleRow
-          value={prefs.focusMode}
-          onValueChange={(v) => set("focusMode", v)}
-          label="Dim everything except the paragraph you're on"
-        />
+        <ToggleRow value={prefs.focusMode} onValueChange={(v) => set("focusMode", v)} label="On" />
       </Section>
 
       <Section label="Auto-scroll">
         <ToggleRow
           value={prefs.autoScroll}
           onValueChange={(v) => set("autoScroll", v)}
-          label="Advance pages automatically"
+          label="On"
         />
         {prefs.autoScroll ? (
           <AutoScrollSpeed

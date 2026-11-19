@@ -1,6 +1,7 @@
 // Follow / unfollow control. Writes PUT/DELETE /follows/:userId through the shared
 // client, which patches the profile and people screens in place. Anonymous visitors get a sign-in link instead. A failed
 // write shows a visible error (never silent).
+import { SIGN_IN_PATH } from "@dustinedwards/site-runtime/sign-in-path";
 import { useFollow } from "@foxing/client";
 import { Button } from "~/components/ui";
 
@@ -17,7 +18,7 @@ export function FollowButton({
 
   if (!signedIn) {
     return (
-      <Button to="/login" variant="secondary">
+      <Button to={SIGN_IN_PATH} variant="secondary">
         Sign in to follow
       </Button>
     );
