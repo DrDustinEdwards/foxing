@@ -67,7 +67,9 @@ export function cleanBookMarkup(source: string): string {
       onprocessinginstruction(_name, data) {
         if (skipDepth) return;
         flush();
-        out.push("<", data, ">");
+        // htmlparser2 hands over `?xml version="1.0"?` without its closing "?"; a declaration without it is not
+        // XML, and the reader's DOMParser refuses the whole page.
+        out.push("<", data.startsWith("?") && !data.endsWith("?") ? `${data}?` : data, ">");
       },
       onopentag(name, attrs) {
         if (skipDepth) {
