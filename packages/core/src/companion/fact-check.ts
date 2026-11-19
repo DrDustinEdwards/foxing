@@ -92,9 +92,9 @@ export function parseFactCheck(
     const issues = Array.isArray(v?.issues) ? v.issues.filter((i) => typeof i === "string") : [];
     if (v?.verdict === "ok") texts[action] = { verdict: "ok", issues };
     else if (v?.verdict === "fixed") {
-      const corrected = str(v.corrected);
-      if (!corrected) return { error: `${action} is "fixed" with no corrected text` };
-      texts[action] = { verdict: "fixed", issues, corrected };
+      // A text with no claim left that a source backs is "fixed" to nothing (the Wrong Letter's similar books, on every
+      // try): the empty correction blanks it, which the page skips like any empty text.
+      texts[action] = { verdict: "fixed", issues, corrected: str(v.corrected) ?? "" };
     } else
       return {
         error: `${action} has the verdict ${JSON.stringify(v?.verdict)}`,
@@ -178,7 +178,7 @@ export async function factCheckBook(
       );
       // A correction that is itself unfit to show leaves nothing wrong on the page: the text is blanked.
       next = high.length ? "" : (v.corrected as string);
-      verdict = high.length ? "withheld" : "fixed";
+      verdict = high.length || !next ? "withheld" : "fixed";
     }
     await companionRepo.saveFactCheck(db, {
       bookId: book.id,
