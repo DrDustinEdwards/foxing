@@ -71,6 +71,7 @@ import { ROBOTS_DISALLOW, SITE_NAME } from "../app/lib/seo";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { operatorTools } from "../app/lib/operator.server";
 import { runBackup, runCoversBackup, runMediaBackup } from "../app/lib/backup.server";
+import { runReaderClean } from "../app/lib/reader-clean.server";
 import { CRON_TRIGGERS, type CronJobName } from "../app/lib/cron-jobs";
 import { PAGE_DATES_KEY, TRACKED_PAGES } from "../app/lib/page-dates";
 import { problemResponse } from "@dustinedwards/site-runtime/http-errors";
@@ -447,6 +448,7 @@ const CRON_RUNS: Record<CronJobName, (env: Env) => Promise<unknown>> = {
   "companion-fact-check": enqueueFactCheck,
   "prune-expired-auth": (env) => pruneExpiredAuth(env.DB),
   "page-dates": runPageDates,
+  "reader-clean": runReaderClean,
 };
 
 /** A job from app/lib/cron-jobs.ts with its work. */

@@ -26,6 +26,12 @@ describe("cleanBookMarkup", () => {
     );
   });
 
+  it("keeps the XML declaration and doctype intact", () => {
+    const page = '<html xmlns="http://www.w3.org/1999/xhtml"><body><p>Hi</p></body></html>';
+    const declared = `<?xml version="1.0" encoding="utf-8"?>\n<!DOCTYPE html>\n${page}`;
+    expect(cleanBookMarkup(declared)).toBe(declared);
+  });
+
   it("keeps entities, empty elements, comments and CDATA as written", () => {
     const input = '<p class="x">a&nbsp;b<br/><span></span><!--c--><![CDATA[<x>]]></p>';
     expect(cleanBookMarkup(input)).toBe(input);
