@@ -36,7 +36,11 @@ export type FactCheckBook = {
   description: string | null;
 };
 
-type Verdict = { verdict: "ok" | "fixed"; issues: string[]; corrected?: string };
+type Verdict = {
+  verdict: "ok" | "fixed";
+  issues: string[];
+  corrected?: string;
+};
 
 function str(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
@@ -56,10 +60,10 @@ function parseJson(raw: string): unknown {
   }
 }
 
-/** The JSON object in the reply's last json fence (or the first `{` to the last `}`), validated; null when it does not fit. */
+/** The JSON object in the reply's last json fence (or the first `{` to the last `}`), validated; `{ error }` names what does not fit. */
 export function parseFactCheck(
   text: string,
-): { texts: Record<string, Verdict>; sources: string[] } | null {
+): { texts: Record<string, Verdict>; sources: string[] } | { error: string } {
   const fences = [...text.matchAll(/```json\s*([\s\S]*?)```/g)];
   const raw = fences.length
     ? fences[fences.length - 1][1]
@@ -67,11 +71,17 @@ export function parseFactCheck(
   let value: unknown;
   try {
     value = parseJson(raw);
-  } catch {
-    return null;
+  } catch (err) {
+    return {
+      error: `the JSON does not parse (${err instanceof Error ? err.message : err})`,
+    };
   }
-  const body = value as { texts?: Record<string, Record<string, unknown>>; sources?: unknown };
-  if (!body || typeof body.texts !== "object" || body.texts === null) return null;
+  const body = value as {
+    texts?: Record<string, Record<string, unknown>>;
+    sources?: unknown;
+  };
+  if (!body || typeof body.texts !== "object" || body.texts === null)
+    return { error: 'the JSON has no "texts" object' };
   // A reply that forgets the brace closing "texts" puts "sources" inside it (every failed reply on 2026-11-18 ended
   // `]}}`); the array is the sources, not an action.
   const nested = body.texts.sources;
@@ -83,9 +93,12 @@ export function parseFactCheck(
     if (v?.verdict === "ok") texts[action] = { verdict: "ok", issues };
     else if (v?.verdict === "fixed") {
       const corrected = str(v.corrected);
-      if (!corrected) return null;
+      if (!corrected) return { error: `${action} is "fixed" with no corrected text` };
       texts[action] = { verdict: "fixed", issues, corrected };
-    } else return null;
+    } else
+      return {
+        error: `${action} has the verdict ${JSON.stringify(v?.verdict)}`,
+      };
   }
   const sources = Array.isArray(sourceList)
     ? sourceList.filter((s): s is string => typeof s === "string").slice(0, 12)
@@ -120,13 +133,17 @@ export async function factCheckBook(
   const parts = [`"${book.title}" by ${book.author}`];
   if (book.description) parts.push(untrusted("catalog-description", book.description));
   for (const row of cached) parts.push(untrusted(row.action, row.content as string));
-  const reply = await check({ model, system: FACT_CHECK_SYSTEM, user: parts.join("\n\n") });
+  const reply = await check({
+    model,
+    system: FACT_CHECK_SYSTEM,
+    user: parts.join("\n\n"),
+  });
 
   const parsed = parseFactCheck(reply.text);
-  if (!parsed) {
+  if ("error" in parsed) {
     // The end of the reply rides along on the error so the next failure names its cause (a catalog text, public).
     throw Object.assign(
-      new Error(`the fact-check reply for ${book.id} was not the expected JSON`),
+      new Error(`the fact-check reply for ${book.id} was not the expected JSON: ${parsed.error}`),
       {
         replyTail: reply.text.slice(-300),
       },
