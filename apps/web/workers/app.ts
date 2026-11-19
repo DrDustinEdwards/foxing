@@ -7,7 +7,7 @@
 //   /reader-assets/*, /media/* -> the reader's book files and every picture
 // Anything it has no route for passes on to the page (React Router, through the Renderer when public).
 // aislop-ignore-next-line ai-slop/hallucinated-import -- a Workers built-in, not an npm package
-import { WorkerEntrypoint } from "cloudflare:workers";
+import { exports as workerExports, WorkerEntrypoint } from "cloudflare:workers";
 import { kvPageRecord, trackPageDates } from "@drdustinedwards/site-helpers/lastmod";
 import { markdownPath } from "@drdustinedwards/site-helpers/llms";
 import { markdownCopies } from "@drdustinedwards/site-helpers/markdown-copy";
@@ -567,10 +567,12 @@ export { RateLimiter } from "@dustinedwards/site-runtime/rate-limit/durable-obje
 // has its copy but stays out of llms-full.txt, which leaves the hubs, the picks, the awards and the Journal.
 /** Keeps the day each hub and code-written page last changed, from what its Markdown copy says: /sitemap.xml's lastmod. */
 async function runPageDates(env: Env) {
+  // A cron has no request context; the gateway reads the Renderer from ctx.exports, so the Worker's own loopback goes there.
   const ctx = {
     waitUntil() {},
     passThroughOnException() {},
     props: {},
+    exports: workerExports,
   } as unknown as ExecutionContext;
   const store = kvPageRecord(env.APP_KV, PAGE_DATES_KEY);
   return trackPageDates({
