@@ -21,3 +21,15 @@ jobs:
         env:
           PLAYWRIGHT_BASE_URL: https://foxing.app
         run: node apps/web/e2e/tmp-diag.mjs
+      - name: Public project, trace on
+        continue-on-error: true
+        env:
+          CI: "true"
+          PLAYWRIGHT_BASE_URL: https://foxing.app
+        run: npm exec -w web -- playwright test --project=public --trace on
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
+        if: always()
+        with:
+          name: traces
+          path: apps/web/test-results/**
+          retention-days: 3
