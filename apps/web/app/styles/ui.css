@@ -74,13 +74,13 @@ a:hover > .fx-entity {
   font-family: var(--ui);
 }
 .fx-avatar[data-fx-size="sm"] {
-  --cap-avatar-size: var(--title-1-5);
+  --cap-avatar-box: var(--title-1-5);
 }
 .fx-avatar[data-fx-size="md"] {
-  --cap-avatar-size: var(--title-1);
+  --cap-avatar-box: var(--title-1);
 }
 .fx-avatar[data-fx-size="lg"] {
-  --cap-avatar-size: 5rem;
+  --cap-avatar-box: 5rem;
 }
 
 /* A page's header and breadcrumbs keep the page's section space below them in plain flow.
