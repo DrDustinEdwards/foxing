@@ -1326,7 +1326,6 @@ export default function Reader() {
       <CompanionSheet
         visible={companionTool !== null}
         title={companionTool ? COMPANION_TOOL_TITLES[companionTool] : ""}
-        eyebrow={companionTool === "book_insight" ? book.title : currentChapter.title || null}
         request={
           !companionTool
             ? null
