@@ -34,7 +34,13 @@
   },
   "overrides": {
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "@esbuild-kit/core-utils": {
+      "esbuild": "0.25.12"
+    },
+    "@expo/fingerprint": {
+      "minimatch": "11.0.8"
+    }
   },
   "engines": {
     "node": ">=26 <27"
