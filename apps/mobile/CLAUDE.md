@@ -1,7 +1,7 @@
 # Mobile App Rules
 
-Expo React Native reader. Expo SDK 57, New Architecture enabled,
-RN 0.86.3. Reader runs react-native-readium 5.0.0-rc.17.
+Expo React Native reader. Expo SDK 58, New Architecture enabled,
+RN 0.88. Reader runs react-native-readium 5.3.0.
 
 ## Styling
 

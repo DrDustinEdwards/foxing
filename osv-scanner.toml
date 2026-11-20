@@ -15,13 +15,3 @@ reason = "glob 13.0.7 is pinned (^13) by expo-updates and @expo/fingerprint, bui
 id = "GHSA-g3hv-75wg-m249"
 ignoreUntil = 2026-12-17
 reason = "minimatch 10.2.6 comes in through the same expo-updates and @expo/fingerprint glob 13 (^10.2.2), build-time only."
-
-[[IgnoredVulns]]
-id = "GHSA-qr28-fpjm-wq7f"
-ignoreUntil = 2026-12-17
-reason = "decode-uri-component 0.2.2 is required (^0.2.2) by query-string 7, which expo-router uses; 0.5.x is ESM-only and breaks query-string 7's require. Removed when expo-router takes a newer query-string."
-
-[[IgnoredVulns]]
-id = "GHSA-vcc3-ghjq-m6fr"
-ignoreUntil = 2026-12-17
-reason = "Same as GHSA-qr28-fpjm-wq7f: decode-uri-component 0.2.2 via expo-router's query-string 7."

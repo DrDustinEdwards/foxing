@@ -1,6 +1,14 @@
 import { useSearch, useSetBookStatus, useSuggest } from "@foxing/client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { View, Text, Pressable, ScrollView, TextInput, ActivityIndicator } from "react-native";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  TextInput,
+  ActivityIndicator,
+  type TextInputInstance,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -41,7 +49,7 @@ export default function SearchScreen() {
   const [term, setTerm] = useState("");
   const [filter, setFilter] = useState<FilterKey>("all");
   const [recent, setRecent] = useState<string[]>([]);
-  const inputRef = useRef<TextInput>(null);
+  const inputRef = useRef<TextInputInstance>(null);
 
   useEffect(() => {
     // Autofocus on open.

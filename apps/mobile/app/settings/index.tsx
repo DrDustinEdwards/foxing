@@ -227,7 +227,7 @@ export default function SettingsScreen() {
     try {
       const archive = await api.get<unknown>("/account/export");
       const file = new File(Paths.cache, "foxing-export.json");
-      file.write(JSON.stringify(archive, null, 2));
+      await file.write(JSON.stringify(archive, null, 2));
       await Sharing.shareAsync(file.uri, {
         mimeType: "application/json",
         dialogTitle: "Your Foxing data",
