@@ -101,7 +101,9 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
         {profile.favoriteGenres.length > 0 ? (
           <section className="cap-stack" data-gap="4">
-            <h2 className="cap-title" data-size="3">Favorite genres</h2>
+            <h2 className="cap-title" data-size="3">
+              Favorite genres
+            </h2>
             <div className="cap-cluster" data-gap="3">
               {profile.favoriteGenres.map((g) => (
                 <Chip key={g}>{g}</Chip>

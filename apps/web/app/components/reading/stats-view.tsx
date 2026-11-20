@@ -67,7 +67,9 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
         ) : null}
 
         <section className="cap-stack" data-gap="5">
-          <h2 className="cap-title" data-size="3">Goals</h2>
+          <h2 className="cap-title" data-size="3">
+            Goals
+          </h2>
           {goals.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No goals set.

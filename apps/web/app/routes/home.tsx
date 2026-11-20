@@ -143,7 +143,9 @@ function StreakCard({ streak: s }: { streak: Streak }) {
   return (
     <aside className="cap-card cap-stack fx-home-card-3" data-gap="6">
       <div className="cap-stack" data-gap="5">
-        <h2 className="cap-title" data-size="3">Reading streak</h2>
+        <h2 className="cap-title" data-size="3">
+          Reading streak
+        </h2>
         <p className="fx-home-title-3">
           {s.currentStreak}
           <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>

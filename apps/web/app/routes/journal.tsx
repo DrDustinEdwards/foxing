@@ -110,7 +110,9 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
         <div className="cap-stack" data-gap="4">
           <div className="cap-stack" data-gap="3">
             {post.featured || post.publishedAt ? (
-              <p className="cap-meta">{post.featured ? "Featured" : formatLongDate(post.publishedAt)}</p>
+              <p className="cap-meta">
+                {post.featured ? "Featured" : formatLongDate(post.publishedAt)}
+              </p>
             ) : null}
             <h2 className="fx-journal-title">{post.title}</h2>
           </div>

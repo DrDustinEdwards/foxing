@@ -123,7 +123,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </Link>
               </div>
               <div className="cap-stack" data-gap="3">
-                <p className="cap-meta">{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</p>
+                <p className="cap-meta">
+                  {pick.source === "botm" ? "Book of the Month" : "Today's Pick"}
+                </p>
                 <h2 className="cap-title" data-size="3">
                   <Link to={`/books/${pick.book.slug}`} className="hover-accent">
                     {pick.book.title}
