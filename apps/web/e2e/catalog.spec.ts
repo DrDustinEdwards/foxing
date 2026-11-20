@@ -24,6 +24,11 @@ test.describe("public catalog flows", () => {
       .map((n) => n["@type"]);
     expect(types).toContain("Book");
     expect(types.filter((t) => t === "BreadcrumbList")).toHaveLength(1);
+
+    // The old site's /book/<slug> address lands on the same page.
+    const own = new URL(page.url()).pathname;
+    await page.goto(own.replace("/books/", "/book/"));
+    await expect(page).toHaveURL(new RegExp(`${own}$`));
   });
 
   test("search-as-you-type suggests books", async ({ page }) => {

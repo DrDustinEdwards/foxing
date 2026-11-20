@@ -28,6 +28,7 @@ export default [
   // Public catalog (stored at the edge, workers/app.ts). Slugs for SEO (mobile uses ids).
   route("books", "routes/books.tsx"),
   route("books/:slug", "routes/book-detail.tsx"),
+  route("book/:slug", "routes/book-legacy.tsx"),
   route("authors/:slug", "routes/author.tsx"),
   route("awards", "routes/awards.tsx"),
   route("awards/:slug", "routes/award-detail.tsx"),
