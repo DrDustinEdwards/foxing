@@ -9,7 +9,7 @@ import "capsomer/meter.css";
 import { numberFormat } from "enarratio";
 import type { ReactNode } from "react";
 import { PageShell } from "~/components/page-shell";
-import { Container, Eyebrow, PageHeader } from "~/components/ui";
+import { Container, PageHeader } from "~/components/ui";
 import { genresChart, monthsChart } from "~/lib/reading-charts";
 
 export type StatsData = ReadingStats & {
@@ -67,7 +67,9 @@ export function StatsView({ data, notice }: { data: StatsData; notice?: ReactNod
         ) : null}
 
         <section className="cap-stack" data-gap="5">
-          <Eyebrow>Goals</Eyebrow>
+          <h2 className="cap-title" data-size="3">
+            Goals
+          </h2>
           {goals.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No goals set.

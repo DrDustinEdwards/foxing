@@ -40,8 +40,7 @@ export function WordLookupSheet({
   return (
     <CompanionSheet
       visible={visible}
-      title={more ? "About the word" : "Look up"}
-      eyebrow={word}
+      title={more ? `About “${word}”` : `Look up “${word}”`}
       request={request}
       onClose={onClose}
       onAnswer={(definition) => {

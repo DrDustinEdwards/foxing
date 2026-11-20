@@ -7,13 +7,11 @@ import { Hero } from "capsomer/react/hero";
 import { Link } from "capsomer/react/link";
 import "capsomer/hero.css";
 import "capsomer/cta-band.css";
-// The hero and the CTA band draw their eyebrows with Capsomer's eyebrow (Capsomer 0.150).
-import "capsomer/eyebrow.css";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
 import { SearchBox } from "~/components/search-box";
-import { Button, Container, EntityCard, Eyebrow } from "~/components/ui";
+import { Button, Container, EntityCard } from "~/components/ui";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
@@ -125,7 +123,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                 </Link>
               </div>
               <div className="cap-stack" data-gap="3">
-                <Eyebrow>{pick.source === "botm" ? "Book of the Month" : "Today's Pick"}</Eyebrow>
+                <p className="cap-meta">
+                  {pick.source === "botm" ? "Book of the Month" : "Today's Pick"}
+                </p>
                 <h2 className="cap-title" data-size="3">
                   <Link to={`/books/${pick.book.slug}`} className="hover-accent">
                     {pick.book.title}

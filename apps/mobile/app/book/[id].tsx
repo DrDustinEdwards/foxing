@@ -969,7 +969,6 @@ export default function BookDetail() {
       <CompanionSheet
         visible={companion !== null}
         title={companion === "deep_dive" ? "Go deeper" : "An insight"}
-        eyebrow={book.title}
         request={companion ? { action: companion, bookId: book.id } : null}
         onClose={() => setCompanion(null)}
       />

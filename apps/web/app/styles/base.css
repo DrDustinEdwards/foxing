@@ -150,7 +150,6 @@
   font-size: var(--fs-body);
   color: var(--muted);
 }
-.eyebrow,
 .fx-grouped-results-caps,
 .fx-onboarding-caps {
   font-family: var(--mono);

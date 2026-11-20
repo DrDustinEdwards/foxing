@@ -7,7 +7,7 @@ import { Meter } from "capsomer/react/meter";
 import "capsomer/meter.css";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
-import { Button, Container, Eyebrow } from "~/components/ui";
+import { Button, Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import type { LibraryEntry as Entry, Streak } from "@foxing/types";
 import { loadLibraryData } from "~/lib/library.server";
@@ -143,7 +143,9 @@ function StreakCard({ streak: s }: { streak: Streak }) {
   return (
     <aside className="cap-card cap-stack fx-home-card-3" data-gap="6">
       <div className="cap-stack" data-gap="5">
-        <Eyebrow>Reading streak</Eyebrow>
+        <h2 className="cap-title" data-size="3">
+          Reading streak
+        </h2>
         <p className="fx-home-title-3">
           {s.currentStreak}
           <span className="fx-home-label">{s.currentStreak === 1 ? "day" : "days"}</span>

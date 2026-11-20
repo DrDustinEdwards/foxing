@@ -290,7 +290,6 @@ export default function ProfileScreen() {
       <CompanionSheet
         visible={personalityOpen}
         title="Your reading personality"
-        eyebrow={profile?.displayName ?? profile?.username ?? ""}
         request={anchorBookId ? { action: "reading_personality", bookId: anchorBookId } : null}
         onClose={() => setPersonalityOpen(false)}
       />

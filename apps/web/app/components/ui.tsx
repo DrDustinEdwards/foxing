@@ -21,17 +21,6 @@ export function Container({
   );
 }
 
-/** Small-caps DM Mono section eyebrow (design-system Rule 07). */
-export function Eyebrow({
-  children,
-  className,
-}: {
-  children: React.ReactNode;
-  className?: string;
-}) {
-  return <p className={cn("eyebrow", className)}>{children}</p>;
-}
-
 /** Brand-subtle tag pill (Rule 07 tag role). */
 export function TagPill({
   children,

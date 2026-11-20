@@ -24,7 +24,7 @@ import { BookStatusControl } from "~/components/book-status-control";
 import { CoverImage } from "~/components/cover-image";
 import { GoalPeriodSelect, useGoalDraft } from "~/components/goal-form";
 import { PageShell } from "~/components/page-shell";
-import { Container, EmptyState, Eyebrow, FormError } from "~/components/ui";
+import { Container, EmptyState, FormError } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { loadLibraryData } from "~/lib/library.server";
 import { requireProfile } from "~/lib/profile.server";
@@ -188,7 +188,9 @@ export default function Library({ loaderData }: Route.ComponentProps) {
 function StreakCard({ streak: s }: { streak: Streak }) {
   return (
     <section className="cap-card">
-      <Eyebrow>Reading streak</Eyebrow>
+      <h2 className="cap-title" data-size="3">
+        Reading streak
+      </h2>
       <dl className="cap-text fx-library-grid-3" data-align="center">
         {[
           { k: "Current", v: s.currentStreak },
@@ -217,7 +219,9 @@ function GoalsCard({ goals }: { goals: GoalWithProgress[] }) {
   return (
     <section className="cap-card cap-stack" data-gap="5">
       <div className="cap-stack" data-gap="3">
-        <Eyebrow>Reading goals</Eyebrow>
+        <h2 className="cap-title" data-size="3">
+          Reading goals
+        </h2>
         {goals.length === 0 ? (
           <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
             No goals set.
@@ -297,7 +301,9 @@ function ShelvesCard({ shelves }: { shelves: Shelf[] }) {
   return (
     <section className="cap-card cap-stack" data-gap="5">
       <div className="cap-stack" data-gap="3">
-        <Eyebrow>Shelves</Eyebrow>
+        <h2 className="cap-title" data-size="3">
+          Shelves
+        </h2>
         {shelves.length === 0 ? (
           <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
             No shelves yet.

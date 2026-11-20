@@ -12,7 +12,6 @@ import { Fonts } from "@/constants/fonts";
 export function CompanionSheet({
   visible,
   title,
-  eyebrow,
   request,
   onClose,
   children,
@@ -21,8 +20,6 @@ export function CompanionSheet({
 }: {
   visible: boolean;
   title: string;
-  /** A small label above the answer: the chapter, or the word. */
-  eyebrow?: string | null;
   /** Sent when the sheet opens or the request changes; null waits (e.g. for a search query). */
   request: CompanionRequest | null;
   onClose: () => void;
@@ -64,20 +61,6 @@ export function CompanionSheet({
       }
     >
       {children}
-      {eyebrow ? (
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            marginBottom: 8,
-          }}
-        >
-          {eyebrow}
-        </Text>
-      ) : null}
       {companion.planRequired ? (
         <View>
           <Text
