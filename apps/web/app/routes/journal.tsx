@@ -5,7 +5,7 @@ import { pageHref, parsePage } from "capsomer/behavior/pagination";
 import { PageShell } from "~/components/page-shell";
 import { Pager } from "~/components/pager";
 import { Picture } from "capsomer/react/picture";
-import { Container, EmptyState, Eyebrow, PageHeader, TagPill } from "~/components/ui";
+import { Container, EmptyState, PageHeader, TagPill } from "~/components/ui";
 import { pictureProps } from "@dustinedwards/site-runtime/image";
 import { formatLongDate } from "~/lib/dates";
 import { journalCovers } from "~/lib/journal-images.server";
@@ -110,7 +110,7 @@ function LeadPost({ post, cover }: { post: Post; cover?: ImageAttributes }) {
         <div className="cap-stack" data-gap="4">
           <div className="cap-stack" data-gap="3">
             {post.featured || post.publishedAt ? (
-              <Eyebrow>{post.featured ? "Featured" : formatLongDate(post.publishedAt)}</Eyebrow>
+              <p className="cap-meta">{post.featured ? "Featured" : formatLongDate(post.publishedAt)}</p>
             ) : null}
             <h2 className="fx-journal-title">{post.title}</h2>
           </div>

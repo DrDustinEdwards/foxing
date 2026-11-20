@@ -4,7 +4,7 @@
 import { createDb, libraryRepo } from "@foxing/core";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { PageShell } from "~/components/page-shell";
-import { Avatar, Chip, Container, Eyebrow } from "~/components/ui";
+import { Avatar, Chip, Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/me";
@@ -101,7 +101,7 @@ export default function Me({ loaderData }: Route.ComponentProps) {
 
         {profile.favoriteGenres.length > 0 ? (
           <section className="cap-stack" data-gap="4">
-            <Eyebrow>Favorite genres</Eyebrow>
+            <h2 className="cap-title" data-size="3">Favorite genres</h2>
             <div className="cap-cluster" data-gap="3">
               {profile.favoriteGenres.map((g) => (
                 <Chip key={g}>{g}</Chip>

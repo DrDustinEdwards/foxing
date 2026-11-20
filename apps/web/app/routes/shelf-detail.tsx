@@ -3,7 +3,7 @@ import { createDb, views } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { BookCard, BookGrid } from "~/components/book-card";
 import { PageShell } from "~/components/page-shell";
-import { Container, Eyebrow } from "~/components/ui";
+import { Container } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/shelf-detail";
@@ -38,9 +38,9 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
         </div>
 
         <div className="cap-stack" data-gap="5">
-          <Eyebrow>
+          <p className="cap-meta">
             {books.length} {books.length === 1 ? "book" : "books"}
-          </Eyebrow>
+          </p>
           {books.length === 0 ? (
             <p className="cap-text" data-size="small" data-tone="dim" data-face="ui">
               No books yet.

@@ -3,7 +3,7 @@ import { catalogRepo } from "@foxing/core";
 import { Link } from "capsomer/react/link";
 import { CoverImage } from "~/components/cover-image";
 import { PageShell } from "~/components/page-shell";
-import { Button, Container, EmptyState, Eyebrow, PageHeader } from "~/components/ui";
+import { Button, Container, EmptyState, PageHeader } from "~/components/ui";
 import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/botm";
@@ -58,7 +58,7 @@ export default function Botm({ loaderData }: Route.ComponentProps) {
               </div>
               <div className="cap-stack" data-gap="6">
                 <div className="cap-stack" data-gap="3">
-                  <Eyebrow>{monthLabel(current.year, current.month)}</Eyebrow>
+                  <p className="cap-meta">{monthLabel(current.year, current.month)}</p>
                   <h2 className="fx-botm-title">
                     <Link to={`/books/${current.book.slug}`} className="hover-accent">
                       {current.book.title}
