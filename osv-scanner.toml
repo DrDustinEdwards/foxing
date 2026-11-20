@@ -1,17 +1,2 @@
 # OSV-Scanner exceptions (devkit dependencies.yml). Each has a reason and a date it expires, so it is looked at again.
 # Each one is an advisory with a patched version that our dependency chain cannot take yet.
-
-[[IgnoredVulns]]
-id = "GHSA-67mh-4wv8-2f99"
-ignoreUntil = 2026-12-17
-reason = "esbuild 0.18.20 is pinned (~0.18.20) by @esbuild-kit/core-utils, which drizzle-kit 0.31.x loads. Dev machine only (drizzle-kit generate), no dev server runs with it. Removed when drizzle-kit drops @esbuild-kit."
-
-[[IgnoredVulns]]
-id = "GHSA-3g3m-2fjr-6pw4"
-ignoreUntil = 2026-12-17
-reason = "glob 13.0.7 is pinned (^13) by expo-updates and @expo/fingerprint, build-time Expo CLI code reading our own project files. Removed with the next Expo SDK patch that takes glob 14."
-
-[[IgnoredVulns]]
-id = "GHSA-g3hv-75wg-m249"
-ignoreUntil = 2026-12-17
-reason = "minimatch 10.2.6 comes in through the same expo-updates and @expo/fingerprint glob 13 (^10.2.2), build-time only."
