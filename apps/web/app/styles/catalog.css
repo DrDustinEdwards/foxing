@@ -89,30 +89,6 @@ a:hover > .fx-book > :is(h2, h3) {
   block-size: 1.25rem;
   color: var(--dim);
 }
-/* The search filters. */
-.fx-filter-btn {
-  border-radius: var(--radius-full);
-}
-.fx-filter-btn[data-on] {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-text);
-}
-.fx-filter-count {
-  display: inline-grid;
-  place-items: center;
-  min-inline-size: 1.25rem;
-  block-size: 1.25rem;
-  padding-inline: var(--space-2);
-  border-radius: var(--radius-full);
-  background: var(--primary);
-  color: var(--primary-fg);
-  font-family: var(--mono);
-  font-size: var(--fs-tiny);
-}
-.fx-filter-panel {
-  inline-size: min(22rem, 90vw);
-}
 
 .fx-book-status-control-box {
   width: 100%;

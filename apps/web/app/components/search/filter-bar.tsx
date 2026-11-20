@@ -1,11 +1,9 @@
-// Search filter bar: progressive disclosure (a Filters button reveals the panel) over
-// the three facets backed by real catalog data (genre from subjects, era, length).
-// URL-driven: every change navigates to /search with the param set, resetting page, so
-// the loader re-runs and results are server-rendered. Mood/difficulty/language stay
-// hidden until enrichment populates them. The panel is Capsomer's popover (the platform's
-// popover: Esc and an outside click close it).
-import { Popover, PopoverContent, PopoverTrigger } from "capsomer/react/popover";
-import { useNavigate, useSearchParams } from "react-router";
+// Search filters: Capsomer's FilterBar, a GET form on /search that applies as a reader picks (genre from subjects, era,
+// length: the facets backed by real catalog data). Each change submits the form, which drops `page`, so the loader
+// re-runs and results are server-rendered. The query rides along as a hidden field.
+import { FilterBar as CapFilterBar } from "capsomer/react/filter-bar";
+import { Link } from "capsomer/react/link";
+import { Form } from "react-router";
 import { BOOKS_ERAS } from "~/components/nav/header-panels";
 
 // The eras are the header's list (nav/header-panels), which mirrors core ERA_BUCKETS; LENGTH_BUCKETS is mirrored here
@@ -18,145 +16,75 @@ const LENGTHS = [
 
 export type ActiveFilters = { genre?: string; era?: string; length?: string };
 
-function labelFor(list: Array<{ slug: string; label: string }>, slug?: string) {
-  return list.find((o) => o.slug === slug)?.label ?? slug ?? "";
+function Facet({
+  name,
+  label,
+  any,
+  value,
+  options,
+}: {
+  name: string;
+  label: string;
+  any: string;
+  value?: string;
+  options: Array<{ slug: string; label: string }>;
+}) {
+  return (
+    <label className="cap-stack" data-gap="3">
+      <span className="group-label">{label}</span>
+      <span className="cap-select-wrap" data-native="">
+        <select key={value ?? ""} name={name} defaultValue={value ?? ""} className="cap-select">
+          <option value="">{any}</option>
+          {options.map((o) => (
+            <option key={o.slug} value={o.slug}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+      </span>
+    </label>
+  );
 }
 
 export function FilterBar({
+  q,
   genres,
   active,
 }: {
+  q: string;
   genres: Array<{ subject: string; label: string; count: number }>;
   active: ActiveFilters;
 }) {
-  const navigate = useNavigate();
-  const [params] = useSearchParams();
-
-  function apply(key: string, value: string | null) {
-    const next = new URLSearchParams(params);
-    next.delete("page");
-    if (value) next.set(key, value);
-    else next.delete(key);
-    void navigate(`/search?${next.toString()}`);
-  }
-
-  function clearAll() {
-    const q = params.get("q");
-    void navigate(q ? `/search?q=${encodeURIComponent(q)}` : "/search");
-  }
-
-  const chips = [
-    active.genre
-      ? {
-          key: "genre",
-          label: labelFor(
-            genres.map((g) => ({ slug: g.subject, label: g.label })),
-            active.genre,
-          ),
-        }
-      : null,
-    active.era ? { key: "era", label: labelFor(BOOKS_ERAS, active.era) } : null,
-    active.length ? { key: "length", label: labelFor(LENGTHS, active.length) } : null,
-  ].filter((c): c is { key: string; label: string } => c !== null);
-
+  const filtered = Boolean(active.genre || active.era || active.length);
   return (
-    <div className="cap-stack" data-gap="4" data-align="start">
-      <Popover>
-        <PopoverTrigger className="cap-btn fx-filter-btn" data-on={chips.length ? "" : undefined}>
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <path
-              d="M4 6h16M7 12h10M10 18h4"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-            />
-          </svg>
-          Filters
-          {chips.length ? <span className="fx-filter-count">{chips.length}</span> : null}
-        </PopoverTrigger>
-        <PopoverContent
-          side="bottom"
-          align="start"
-          aria-label="Filters"
-          className="fx-filter-panel"
-        >
-          <div className="cap-stack">
-            <fieldset className="cap-chips">
-              <legend className="group-label cap-full">Genre</legend>
-              {genres.map((g) => {
-                const on = active.genre === g.subject;
-                return (
-                  <button
-                    key={g.subject}
-                    type="button"
-                    className="cap-chip"
-                    aria-pressed={on}
-                    onClick={() => apply("genre", on ? null : g.subject)}
-                  >
-                    {g.label}
-                  </button>
-                );
-              })}
-            </fieldset>
-
-            <label className="cap-stack" data-gap="3">
-              <span className="group-label">Era</span>
-              <span className="cap-select-wrap" data-native="">
-                <select
-                  value={active.era ?? ""}
-                  onChange={(e) => apply("era", e.target.value || null)}
-                  className="cap-select"
-                >
-                  <option value="">Any era</option>
-                  {BOOKS_ERAS.map((e) => (
-                    <option key={e.slug} value={e.slug}>
-                      {e.label}
-                    </option>
-                  ))}
-                </select>
-              </span>
-            </label>
-
-            <label className="cap-stack" data-gap="3">
-              <span className="group-label">Length</span>
-              <span className="cap-select-wrap" data-native="">
-                <select
-                  value={active.length ?? ""}
-                  onChange={(e) => apply("length", e.target.value || null)}
-                  className="cap-select"
-                >
-                  <option value="">Any length</option>
-                  {LENGTHS.map((l) => (
-                    <option key={l.slug} value={l.slug}>
-                      {l.label}
-                    </option>
-                  ))}
-                </select>
-              </span>
-            </label>
-
-            {chips.length ? (
-              <button type="button" onClick={clearAll} className="cap-link-btn">
-                Clear all filters
-              </button>
-            ) : null}
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {chips.length ? (
-        <ul className="cap-cluster" data-gap="3">
-          {chips.map((c) => (
-            <li key={c.key}>
-              <button type="button" onClick={() => apply(c.key, null)} className="cap-chip">
-                {c.label}
-                <span aria-hidden="true">×</span>
-                <span className="cap-sr-only">Remove filter</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
+    <CapFilterBar
+      label="Filter search results"
+      Form={Form}
+      action="/search"
+      live
+      clearHref={filtered ? (q ? `/search?q=${encodeURIComponent(q)}` : "/search") : null}
+      renderLink={({ href, className, children }) => (
+        <Link to={href} className={className}>
+          {children}
+        </Link>
+      )}
+    >
+      <input type="hidden" name="q" value={q} />
+      <Facet
+        name="genre"
+        label="Genre"
+        any="Any genre"
+        value={active.genre}
+        options={genres.map((g) => ({ slug: g.subject, label: g.label }))}
+      />
+      <Facet name="era" label="Era" any="Any era" value={active.era} options={BOOKS_ERAS} />
+      <Facet
+        name="length"
+        label="Length"
+        any="Any length"
+        value={active.length}
+        options={LENGTHS}
+      />
+    </CapFilterBar>
   );
 }
