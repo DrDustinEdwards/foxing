@@ -95,7 +95,7 @@ export default function DiscoverFilterScreen() {
                   </Text>
                 </Pressable>
               </View>
-            ) : null
+            ) : undefined
           }
           renderItem={({ item }) => (
             <Pressable

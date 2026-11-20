@@ -39,6 +39,9 @@
     "@expo/fingerprint": {
       "minimatch": "11.0.8"
     },
+    "@sentry/bundler-plugins": {
+      "glob": "14.0.6"
+    },
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },

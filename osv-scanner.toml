@@ -1,12 +1,2 @@
 # OSV-Scanner exceptions (devkit dependencies.yml). Each has a reason and a date it expires, so it is looked at again.
 # Each one is an advisory with a patched version that our dependency chain cannot take yet.
-
-[[IgnoredVulns]]
-id = "GHSA-qr28-fpjm-wq7f"
-ignoreUntil = 2026-12-17
-reason = "decode-uri-component 0.2.2 is required (^0.2.2) by query-string 7, which expo-router uses; 0.5.x is ESM-only and breaks query-string 7's require. Removed with the Expo SDK 58 upgrade (expo-router 58 drops query-string)."
-
-[[IgnoredVulns]]
-id = "GHSA-vcc3-ghjq-m6fr"
-ignoreUntil = 2026-12-17
-reason = "Same as GHSA-qr28-fpjm-wq7f: decode-uri-component 0.2.2 via expo-router's query-string 7."

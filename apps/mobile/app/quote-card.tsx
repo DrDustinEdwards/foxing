@@ -67,7 +67,7 @@ export default function QuoteCardScreen() {
   // URI we can hand to MediaLibrary / Share.
   const captureCard = useCallback(async (): Promise<string | null> => {
     try {
-      const uri = await captureRef(viewShotRef as unknown as React.RefObject<View>, {
+      const uri = await captureRef(viewShotRef, {
         format: "png",
         quality: 0.95,
       });
@@ -201,10 +201,7 @@ export default function QuoteCardScreen() {
               (not the surrounding ScrollView padding). The inner View has
               collapsable={false} because Android RN may otherwise flatten
               it and the screenshot would miss it. */}
-        <ViewShot
-          ref={viewShotRef as unknown as React.RefObject<ViewShotRef>}
-          options={{ format: "png", quality: 0.95 }}
-        >
+        <ViewShot ref={viewShotRef} options={{ format: "png", quality: 0.95 }}>
           <View collapsable={false}>
             <CardPreview
               cardType={cardType}

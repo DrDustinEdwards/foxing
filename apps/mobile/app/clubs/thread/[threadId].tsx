@@ -10,6 +10,7 @@ import {
   TextInput,
   Switch,
   Alert,
+  type ScrollViewInstance,
 } from "react-native";
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { Screen } from "@/components/ui/screen";
@@ -39,7 +40,7 @@ export default function ThreadScreen() {
   const [replyTo, setReplyTo] = useState<W.ClubPostItem | null>(null);
   // Per-post reveal state for spoiler bodies. Defaults to hidden.
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
-  const scrollRef = useRef<ScrollView>(null);
+  const scrollRef = useRef<ScrollViewInstance>(null);
 
   // Arrange posts: top-level first, then nest direct replies under each.
   // We only render ONE level of nesting to keep the layout sane.
