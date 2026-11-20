@@ -66,7 +66,7 @@ export default function Search({ loaderData }: Route.ComponentProps) {
         <div className="cap-stack" data-gap="7">
           <div className="cap-stack" data-gap="6">
             <SearchBox initialQuery={q} />
-            {result ? <FilterBar genres={genres} active={filters} /> : null}
+            {result ? <FilterBar q={q} genres={genres} active={filters} /> : null}
           </div>
           {result ? (
             <div className="cap-stack" data-gap="8">
