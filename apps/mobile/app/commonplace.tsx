@@ -179,7 +179,7 @@ export default function CommonplaceScreen() {
               textAlign: "center",
             }}
           >
-            Save passages from any book to build your personal anthology.
+            Nothing saved yet.
           </Text>
         </View>
       ) : (
