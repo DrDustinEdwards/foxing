@@ -162,7 +162,9 @@ export default function YearInReadingScreen() {
           {/* Slide 1, total books */}
           <Slide width={width}>
             <Text style={styles.heroNumber}>{stats.totalBooks}</Text>
-            <Text style={styles.heroLabel}>book{stats.totalBooks === 1 ? "" : "s"} finished in {year}</Text>
+            <Text style={styles.heroLabel}>
+              book{stats.totalBooks === 1 ? "" : "s"} finished in {year}
+            </Text>
           </Slide>
 
           {/* Slide 2, pages + hours */}
@@ -200,7 +202,9 @@ export default function YearInReadingScreen() {
               <Text style={styles.heroNumber}>{stats.longestStreak}</Text>
               <Flame color={C.brandUi} size={28} weight="fill" />
             </View>
-            <Text style={styles.heroLabel}>day{stats.longestStreak === 1 ? "" : "s"} longest streak</Text>
+            <Text style={styles.heroLabel}>
+              day{stats.longestStreak === 1 ? "" : "s"} in your longest streak
+            </Text>
             <View
               style={{
                 flexDirection: "row",
