@@ -15,6 +15,7 @@ import {
   signalUnknownCredential,
 } from "@dustinedwards/site-runtime/sign-in-client";
 import { useFetcher, useRevalidator } from "react-router";
+import { NativeSelect } from "capsomer/react/select-native";
 import { ButtonLink } from "capsomer/react/link";
 import { signInHref } from "~/lib/sign-in-path";
 import { FormError } from "~/components/ui";
@@ -707,19 +708,18 @@ function ClubHandoverFields({
             <span className="cap-text" data-tone="ink" data-weight="strong">
               {club.name}
             </span>
-            <select
+            <NativeSelect
+              data-fill="ground"
               value={choice[club.clubId] ?? club.suggested ?? DELETE_CLUB}
               onChange={(e) => onChoose(club.clubId, e.target.value)}
-              className={inputClass}
-            >
-              {club.candidates.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.name}
-                  {m.role === "moderator" ? " (moderator)" : ""}
-                </option>
-              ))}
-              <option value={DELETE_CLUB}>Nobody: delete the club and all its posts</option>
-            </select>
+              options={[
+                ...club.candidates.map((m) => ({
+                  value: m.userId,
+                  label: m.role === "moderator" ? `${m.name} (moderator)` : m.name,
+                })),
+                { value: DELETE_CLUB, label: "Nobody: delete the club and all its posts" },
+              ]}
+            />
           </label>
         ),
       )}

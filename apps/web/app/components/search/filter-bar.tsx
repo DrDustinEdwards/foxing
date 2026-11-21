@@ -3,7 +3,7 @@
 // re-runs and results are server-rendered. The query rides along as a hidden field.
 import { FilterBar as CapFilterBar } from "capsomer/react/filter-bar";
 import { Link } from "capsomer/react/link";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { Form } from "react-router";
 import { BOOKS_ERAS } from "~/components/nav/header-panels";
 
@@ -33,9 +33,8 @@ function Facet({
   return (
     <label className="cap-stack" data-gap="3">
       <span className="group-label">{label}</span>
-      <Select
+      <NativeSelect
         key={value ?? ""}
-        native
         name={name}
         defaultValue={value ?? ""}
         options={[

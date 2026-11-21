@@ -1,6 +1,7 @@
 // Shared by the commonplace and highlights pages: the search and book filter row, and the
 // filtered annotations grouped under their book.
 import type { ReactNode } from "react";
+import { NativeSelect } from "capsomer/react/select-native";
 import { Link } from "capsomer/react/link";
 
 type BookFields = {
@@ -71,14 +72,14 @@ export function AnnotationFilters({
         {books.length > 1 ? (
           <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
             <span className="cap-sr-only">Filter by book</span>
-            <select value={book} onChange={(e) => onBook(e.target.value)} className="cap-select">
-              <option value="all">All books</option>
-              {books.map((b) => (
-                <option key={b.key} value={b.key}>
-                  {b.label}
-                </option>
-              ))}
-            </select>
+            <NativeSelect
+              value={book}
+              onChange={(e) => onBook(e.target.value)}
+              options={[
+                { value: "all", label: "All books" },
+                ...books.map((b) => ({ value: b.key, label: b.label })),
+              ]}
+            />
           </label>
         ) : null}
       </div>

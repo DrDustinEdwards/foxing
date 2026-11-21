@@ -2,6 +2,7 @@
 // publish/unpublish, and delete. A published row with a book is what makes Today's Pick
 // and the BOTM surfaces render. Reads in-process; writes to /api/v1/admin/botm with a
 // visible error on failure.
+import { NativeSelect } from "capsomer/react/select-native";
 import { MONTH_NAMES } from "@foxing/client";
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
@@ -107,17 +108,12 @@ function CreateBotm({ onDone }: { onDone: () => void }) {
         <div className="fx-admin-botm-grid">
           <label className="cap-field">
             <span className="fx-label">Month</span>
-            <select
-              value={month}
+            <NativeSelect
+              data-fill="ground"
+              value={String(month)}
               onChange={(e) => setMonth(Number(e.target.value))}
-              className={adminInputClass}
-            >
-              {MONTH_NAMES.map((m, i) => (
-                <option key={m} value={i + 1}>
-                  {m}
-                </option>
-              ))}
-            </select>
+              options={MONTH_NAMES.map((m, i) => ({ value: String(i + 1), label: m }))}
+            />
           </label>
           <label className="cap-field">
             <span className="fx-label">Year</span>

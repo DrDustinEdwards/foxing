@@ -8,6 +8,7 @@ import {
 import type { PeoplePage } from "@foxing/types";
 import { useState } from "react";
 import { Card, inputClass, SubmitRow, ToggleRow } from "./settings-card";
+import { NativeSelect } from "capsomer/react/select-native";
 import { ThemeSwitch } from "capsomer/react/theme-switch";
 import { THEME_PREF_KEY } from "~/lib/theme";
 import { Link } from "capsomer/react/link";
@@ -124,19 +125,18 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
         />
         <label className="cap-field">
           <span className="fx-label">Default highlight and note audience</span>
-          <span className="cap-stack" data-gap="2">
-            <select
-              value={defaultAnnotation}
-              onChange={(e) =>
-                setDefaultAnnotation(e.target.value as VisibilityValues["defaultAnnotation"])
-              }
-              className={inputClass}
-            >
-              <option value="private">Private (only me)</option>
-              <option value="friends">Close friends</option>
-              <option value="public">Public</option>
-            </select>
-          </span>
+          <NativeSelect
+            data-fill="ground"
+            value={defaultAnnotation}
+            onChange={(e) =>
+              setDefaultAnnotation(e.target.value as VisibilityValues["defaultAnnotation"])
+            }
+            options={[
+              { value: "private", label: "Private (only me)" },
+              { value: "friends", label: "Close friends" },
+              { value: "public", label: "Public" },
+            ]}
+          />
         </label>
         <SubmitRow
           disabled={pending}

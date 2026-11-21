@@ -6,8 +6,8 @@ export default defineConfig({
   // devkit's ignore patterns (Oxlint does not carry ignorePatterns through extends), and apps/discord,
   // which waits on Dustin (CLAUDE.md hard rule 9).
   ignorePatterns: [...ignorePatterns, "apps/discord/"],
-  // Capsomer's Select renders a native <select>, so a label around it labels a control.
-  settings: { "jsx-a11y": { components: { Select: "select" } } },
+  // Capsomer's NativeSelect renders a native <select>, so a label around it labels a control.
+  settings: { "jsx-a11y": { components: { NativeSelect: "select" } } },
   overrides: [
     { files: ["scripts/**", "bin/**", "test/**"], ...node },
     {

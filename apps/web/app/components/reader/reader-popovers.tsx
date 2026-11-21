@@ -1,3 +1,4 @@
+import { NativeSelect } from "capsomer/react/select-native";
 import { type HighlightColor, highlightColorValues } from "@foxing/core";
 import type {
   AnnotationAuthor,
@@ -206,18 +207,12 @@ export function AttributionPopover({
       {canReply ? (
         <div className="fx-reader-popovers-stack-2">
           {shareableClubs.length > 1 ? (
-            <select
+            <NativeSelect
               aria-label="Reply in club"
               value={clubId}
               onChange={(e) => setClubId(e.target.value)}
-              className="cap-select"
-            >
-              {shareableClubs.map((cl) => (
-                <option key={cl.id} value={cl.id}>
-                  {cl.name}
-                </option>
-              ))}
-            </select>
+              options={shareableClubs.map((cl) => ({ value: cl.id, label: cl.name }))}
+            />
           ) : null}
           <textarea
             value={replyText}

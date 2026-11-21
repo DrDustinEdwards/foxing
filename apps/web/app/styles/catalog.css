@@ -93,12 +93,6 @@ a:hover > .fx-book > :is(h2, h3) {
 .fx-book-status-control-box {
   width: 100%;
 }
-.fx-book-status-control-row {
-  display: flex;
-  width: 100%;
-  align-items: center;
-  gap: var(--space-3);
-}
 .fx-book-status-control-text,
 .fx-onboarding-label-2,
 .fx-diary-link-2,
