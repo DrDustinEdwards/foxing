@@ -281,7 +281,6 @@ export type SignInSettings = {
     lastUsed: string | null;
   }[];
   /** Exactly one passkey: suggest a second, on another device. */
-  secondPasskey: boolean;
   /** The providers the site offers, and whether this account is joined to each. */
   providers: { id: "google" | "apple"; label: string; accountId: string | null }[];
 };
@@ -345,9 +344,6 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
   return (
     <Card title="Sign-in">
       <div className="cap-stack">
-        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-          You can always sign in with an email link.
-        </p>
         {initial.passkeys.length > 0 ? (
           <ul className="cap-stack" data-gap="4">
             {initial.passkeys.map((p) =>
@@ -449,11 +445,6 @@ export function SignInSection({ initial }: { initial: SignInSettings }) {
               ),
             )}
           </ul>
-        ) : null}
-        {initial.secondPasskey ? (
-          <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-            Add a second passkey on another device.
-          </p>
         ) : null}
         <div>
           <button
@@ -662,10 +653,11 @@ export function SecurityHistorySection({ activity }: { activity: SecurityActivit
 export function DataSection({ fresh }: { fresh: boolean }) {
   return (
     <Card title="Your data">
-      <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
-        A JSON archive of your account data.
-        {fresh ? null : " Sign in again first."}
-      </p>
+      {fresh ? null : (
+        <p className="cap-text" data-size="small" data-tone="muted" data-face="ui">
+          Sign in again first.
+        </p>
+      )}
       {fresh ? (
         <ButtonLink href="/api/v1/account/export">Download your data</ButtonLink>
       ) : (

@@ -47,7 +47,7 @@ export const CATALOG_CHECKS: Record<
     severity: "error",
     scope: "catalog",
     summary:
-      "A catalog book with no real description (empty, or template filler that describes nothing): its page has no summary text.",
+      "A catalog book whose page has no summary text: its description is empty or template filler and no generated description is stored.",
   },
   missing_epub: {
     severity: "error",
@@ -111,6 +111,8 @@ export type HealthBook = {
   sourceType: string;
   coverUrl: string | null;
   description: string | null;
+  /** The stored generated description (book_ai_cache, book_description), shown when the catalog's is empty or filler. */
+  aiDescription?: string | null;
   epubUrl: string | null;
   isbn: string | null;
   isbn13: string | null;
@@ -271,9 +273,12 @@ export function auditCatalog(books: HealthBook[], coverOrigin: string): Finding[
       add(book, "cover_not_hosted", `cover_url points to ${hostOf(book.coverUrl!)}.`);
 
     if (catalog) {
-      if (blank(book.description)) add(book, "missing_description", "description is empty.");
-      else if (isTemplateDescription(book.description))
-        add(book, "missing_description", "description is template filler.");
+      // The page shows the catalog's description, else the stored generated one, so only a book with neither is missing one.
+      if (blank(book.aiDescription)) {
+        if (blank(book.description)) add(book, "missing_description", "description is empty.");
+        else if (isTemplateDescription(book.description))
+          add(book, "missing_description", "description is template filler.");
+      }
       if (blank(book.epubUrl)) add(book, "missing_epub", "epub_url is empty.");
       if (book.publicationYear === null && !isCollectionTitle(book.title))
         add(book, "missing_year", "publication_year is empty.");

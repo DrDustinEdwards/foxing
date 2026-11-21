@@ -161,14 +161,14 @@ export default function YearInReadingScreen() {
         >
           {/* Slide 1, total books */}
           <Slide width={width}>
-            <Text style={styles.kicker}>YOUR {year} IN READING</Text>
             <Text style={styles.heroNumber}>{stats.totalBooks}</Text>
-            <Text style={styles.heroLabel}>book{stats.totalBooks === 1 ? "" : "s"} finished</Text>
+            <Text style={styles.heroLabel}>
+              book{stats.totalBooks === 1 ? "" : "s"} finished in {year}
+            </Text>
           </Slide>
 
           {/* Slide 2, pages + hours */}
           <Slide width={width}>
-            <Text style={styles.kicker}>PAGES</Text>
             <Text style={styles.heroNumber}>{stats.totalPages.toLocaleString()}</Text>
             <Text style={styles.heroLabel}>pages read</Text>
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 18, gap: 6 }}>
@@ -181,7 +181,6 @@ export default function YearInReadingScreen() {
 
           {/* Slide 3, top genre */}
           <Slide width={width}>
-            <Text style={styles.kicker}>TOP GENRE</Text>
             {stats.topGenre ? (
               <Text style={styles.heroTitle}>{stats.topGenre}</Text>
             ) : (
@@ -190,21 +189,20 @@ export default function YearInReadingScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12, gap: 6 }}>
               <Books color={C.brandUi} size={16} />
               <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: C.textSecondary }}>
-                {stats.topGenre
-                  ? "where you spent most of your reading"
-                  : "add subjects to your books to see your top genre"}
+                {stats.topGenre ? "top genre" : "add subjects to your books to see your top genre"}
               </Text>
             </View>
           </Slide>
 
           {/* Slide 4, streak + heat map */}
           <Slide width={width}>
-            <Text style={styles.kicker}>LONGEST STREAK</Text>
             <View style={{ flexDirection: "row", alignItems: "baseline", gap: 8 }}>
               <Text style={styles.heroNumber}>{stats.longestStreak}</Text>
               <Flame color={C.brandUi} size={28} weight="fill" />
             </View>
-            <Text style={styles.heroLabel}>day{stats.longestStreak === 1 ? "" : "s"} in a row</Text>
+            <Text style={styles.heroLabel}>
+              day{stats.longestStreak === 1 ? "" : "s"} in your longest streak
+            </Text>
             <View
               style={{
                 flexDirection: "row",
@@ -241,7 +239,6 @@ export default function YearInReadingScreen() {
 
           {/* Slide 5, most highlighted */}
           <Slide width={width}>
-            <Text style={styles.kicker}>MOST HIGHLIGHTED</Text>
             {stats.mostHighlightedBook ? (
               <>
                 <Text style={[styles.heroTitle, { fontSize: 22 }]} numberOfLines={3}>
@@ -270,7 +267,7 @@ export default function YearInReadingScreen() {
                   <Text
                     style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: C.textSecondary }}
                   >
-                    {stats.mostHighlightedBook.count} highlights
+                    {stats.mostHighlightedBook.count} highlights, the most of any book
                   </Text>
                 </View>
               </>
@@ -281,7 +278,6 @@ export default function YearInReadingScreen() {
 
           {/* Slide 6, reading personality */}
           <Slide width={width}>
-            <Text style={styles.kicker}>YOUR READING PERSONALITY</Text>
             {personality.text ? (
               <Text
                 style={{
@@ -418,13 +414,6 @@ function Slide({ width, children }: { width: number; children: React.ReactNode }
 }
 
 const styles = {
-  kicker: {
-    fontFamily: Fonts.uiMedium,
-    fontSize: 11,
-    color: C.textTertiary,
-    letterSpacing: 1.4,
-    marginBottom: 18,
-  } as const,
   heroNumber: {
     fontFamily: Fonts.displayBold,
     fontSize: 96,

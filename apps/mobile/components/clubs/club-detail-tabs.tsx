@@ -254,17 +254,6 @@ export function ReadingTab({
           <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>
             No book selected yet
           </Text>
-          <Text
-            style={{
-              fontFamily: Fonts.body,
-              fontSize: 13,
-              color: colors.textTertiary,
-              marginTop: 4,
-              lineHeight: 19,
-            }}
-          >
-            The owner can set a current book, it'll show here with a "reading up to" marker.
-          </Text>
         </View>
       )}
 

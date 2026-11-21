@@ -1,5 +1,12 @@
 import type { Db } from "../db";
-import { bookOfTheMonth, books, clubs, externalBookClubPicks, externalBookClubs } from "../schema";
+import {
+  bookAiCache,
+  bookOfTheMonth,
+  books,
+  clubs,
+  externalBookClubPicks,
+  externalBookClubs,
+} from "../schema";
 import { and, desc, eq, isNull, or, sql } from "drizzle-orm";
 import { likeContains } from "@dustinedwards/site-runtime/d1";
 import {
@@ -79,6 +86,16 @@ export async function getCatalogHealth(
       bookshopUrl: books.bookshopUrl,
     })
     .from(books);
+  const generated = await db
+    .select({ bookId: bookAiCache.bookId, content: bookAiCache.content })
+    .from(bookAiCache)
+    .where(eq(bookAiCache.action, "book_description"));
+  const aiText = new Map(
+    generated.flatMap((g) =>
+      typeof g.content === "string" ? [[g.bookId, g.content] as const] : [],
+    ),
+  );
+  for (const row of rows) row.aiDescription = aiText.get(row.id) ?? null;
   const [botm] = await db
     .select({ n: sql<number>`count(*)` })
     .from(bookOfTheMonth)
