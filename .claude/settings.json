@@ -1,7 +1,14 @@
 {
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "attribution": {
     "commit": "",
     "pr": ""
+  },
+  "env": {
+    "GIT_AUTHOR_NAME": "Dustin Edwards",
+    "GIT_AUTHOR_EMAIL": "204601333+DrDustinEdwards@users.noreply.github.com",
+    "GIT_COMMITTER_NAME": "Dustin Edwards",
+    "GIT_COMMITTER_EMAIL": "204601333+DrDustinEdwards@users.noreply.github.com"
   },
   "hooks": {
     "PreToolUse": [
@@ -23,56 +30,27 @@
           }
         ]
       }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'cd \"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel)}/apps/web\" && npx tsc --noEmit 2>&1 | tail -20; exit ${PIPESTATUS[0]}'"
-          }
-        ]
-      }
-    ],
-    "Notification": [
-      {
-        "matcher": "idle_prompt",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'osascript -e '\\''display notification \"Claude Code is done\" with title \"Foxing\"'\\'' 2>/dev/null || notify-send '\\''Foxing'\\'' '\\''Claude Code is done'\\'' 2>/dev/null || true'"
-          }
-        ]
-      }
     ]
   },
   "permissions": {
     "allow": [
-      "Bash(npm *)",
       "Bash(npm run *)",
+      "Bash(npm test*)",
       "Bash(npx tsc *)",
-      "Bash(npx wrangler types*)",
-      "Bash(npx wrangler d1 execute * --command *SELECT*)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(npx vitest *)",
       "Bash(git show *)",
       "Bash(git log *)",
-      "Bash(git branch*)",
-      "Bash(git submodule update --init*)"
+      "Bash(git branch*)"
     ],
     "ask": [
-      "Bash(git push *)",
-      "Bash(npm run deploy*)",
       "Bash(npm run deploy*)",
       "Bash(npx wrangler deploy*)",
+      "Bash(npx wrangler secret*)",
       "Bash(npx wrangler d1 migrations apply*)",
       "Bash(npx wrangler d1 execute *DELETE*)",
-      "Bash(npx wrangler d1 execute *DROP*)",
-      "Bash(npx wrangler secret*)"
+      "Bash(npx wrangler d1 execute *DROP*)"
     ],
-    "deny": ["Bash(rm -rf *)", "Read(./.env*)", "Read(./.dev.vars)", "Read(./apps/web/.dev.vars)"]
-  },
-  "defaultMode": "acceptEdits"
+    "deny": ["Bash(rm -rf *)", "Read(**/.env*)", "Read(**/.dev.vars)"]
+  }
 }
