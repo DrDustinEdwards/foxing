@@ -62,12 +62,8 @@ export function loader({ context }: Route.LoaderArgs) {
           const { checks } = await adminRepo.getCatalogHealth(createDb(env.DB), {
             coverOrigin: COVER_ORIGIN,
           });
-          const bad = checks.filter(
-            (c) =>
-              ["invalid_isbn", "duplicate_isbn", "bad_retailer_link"].includes(c.check) &&
-              c.count > 0,
-          );
-          if (bad.length) throw new Error(bad.map((c) => `${c.count} ${c.check}`).join(", "));
+          const bad = checks.filter((c) => c.count > 0 && /isbn|retailer/.test(c.check));
+          if (bad.length) throw new Error(bad.map((c) => c.check).join(", "));
         },
       },
     ].map((check) => ({ ...check, level: "warn" as const })),

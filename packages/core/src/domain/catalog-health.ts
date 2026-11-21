@@ -135,7 +135,7 @@ export type Finding = {
 
 /** A generic collection ("Short Fiction", "Conan Stories"): no single year fits. */
 export function isCollectionTitle(title: string): boolean {
-  return /^(short (fiction|plays|works|science fiction)|poetry|plays|essays|travel essays)$|\b(stories|folktales)$/i.test(
+  return /^(short [\w ]+|poetry|plays|essays|travel essays)$|\b(stories|folktales)$/i.test(
     title.trim(),
   );
 }
