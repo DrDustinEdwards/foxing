@@ -7,7 +7,11 @@ import assert from "node:assert/strict";
 import { beforeEach, describe, test } from "node:test";
 
 import type { Caller } from "../src/auth.ts";
-import { OUTSIDE_DATA_NOTICE } from "@dustinedwards/site-runtime/mcp-server";
+import {
+  OUTSIDE_DATA_NOTICE,
+  toolListHash,
+  toolListProblems,
+} from "@dustinedwards/site-runtime/mcp-server";
 
 import { handleMcp } from "../src/mcp-handler.ts";
 import { TOOLS, type ToolEnv } from "../src/tools.ts";
@@ -23,6 +27,8 @@ import {
 
 const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
 const ERA = "2025-11-25";
+/** The read grant's tools/list hash; the daily check pins the same (live/areas.json, --tools-hash). Update after reviewing a tool change. */
+const READ_LIST_HASH = "4494b19d0efbadb2e2eb6c6929b487ba40ce662f0bc8753f73108631ebbbd0d3";
 
 let foxing: FakeFoxing;
 let log: FakeLog;
@@ -90,6 +96,21 @@ describe("handleMcp", () => {
       listed.map((t) => t.name),
       TOOLS.map((t) => t.name),
     );
+  });
+
+  test("PLANT: both grants' tools/list pass the family's list check (T1-T4, T9), and the read list is pinned (T12)", async () => {
+    for (const caller of [WRITER, READER]) {
+      const { tools } = (await rpc("tools/list", {}, caller)).result;
+      assert.ok(tools.length > 0);
+      assert.deepEqual(
+        toolListProblems(tools)
+          .filter((p) => p.severity === "error")
+          .map((p) => `${p.item} ${p.tool}: ${p.detail}`),
+        [],
+      );
+    }
+    const read = (await rpc("tools/list", {}, READER)).result.tools;
+    assert.equal(await toolListHash(read), READ_LIST_HASH);
   });
 
   test("tools/call becomes one admin API request, logged before and after, and returns its JSON", async () => {
