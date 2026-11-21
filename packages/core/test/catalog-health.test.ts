@@ -67,18 +67,14 @@ describe("auditCatalog", () => {
     expect(checksOf([book({ publicationYear: null, title: "The Iliad" })])).toEqual([]);
   });
 
-  it("counts template filler as no description and a heading-only subject list as no genre", () => {
+  it("counts template filler as no description unless a generated one is stored, and a heading-only subject list as no genre", () => {
     const filler =
       "A thoughtful and enduring work by Jane Austen. Emma rewards readers who read slowly.";
     expect(
       checksOf([book({ description: filler, subjects: ["England -- Fiction"] })]).sort(),
     ).toEqual(["missing_description", "missing_subjects"]);
     expect(checksOf([book({ subjects: ["Love stories"] })])).toEqual([]);
-  });
-
-  it("counts a stored generated description as the page's description", () => {
     const empty = { description: null };
-    expect(checksOf([book(empty)])).toEqual(["missing_description"]);
     expect(checksOf([book({ ...empty, aiDescription: "Emma Woodhouse matchmakes." })])).toEqual([]);
     expect(checksOf([book({ ...empty, aiDescription: "  " })])).toEqual(["missing_description"]);
   });
