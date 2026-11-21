@@ -6,7 +6,9 @@
 import { createExecutionContext, env, waitOnExecutionContext } from "cloudflare:test";
 import type { ErrorBody, MediaDetail, MediaItem, WriteResult } from "@dustinedwards/site-api";
 import { adminRepo, createDb, schema } from "@foxing/core";
+import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { renderJournalBody } from "../app/lib/journal-body.server";
 import worker from "../workers/app";
 
 // Fake test data only: not a real key.
@@ -169,6 +171,21 @@ describe("Journal media: upload, serve, use and delete", () => {
     // The last bytes are kept, so a delete can be undone by hand.
     const kept = (await env.BACKUPS.list({ prefix: `journal-media/replaced/${item.id}/` })).objects;
     expect(await objectBytes(env.BACKUPS, kept[0]?.key ?? "")).toEqual(png("reading-room"));
+  });
+
+  it("writes a body picture with its stored placeholder, and a GIF with its reduced-motion still", async () => {
+    const png1 = await upload("body-pic");
+    const gif = await upload("body-gif");
+    const gifKey = gif.id.replace(/\.png$/, ".gif");
+    await db().update(schema.media).set({ placeholder: "data:image/webp;base64,AAAA" });
+    await db().update(schema.media).set({ key: gifKey }).where(eq(schema.media.key, gif.id));
+    const html = await renderJournalBody(
+      db(),
+      "t",
+      `![One](/media/${png1.id})\n\n![Two](/media/${gifKey})`,
+    );
+    expect(html).toContain("has-lqip");
+    expect(html).toContain("motion-still");
   });
 
   it("refuses a stale version, even for two writes in the same second, and changes nothing", async () => {

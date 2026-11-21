@@ -76,10 +76,9 @@ function keysIn(content: string): string[] {
 }
 
 /**
- * Prelum's image options for a post's body: each library picture's size, and its AVIF and WebP sizes at the column's
- * width with a versioned link to the original. A picture outside the library is written unsized, as before. No
- * placeholder yet: Prelum writes one as a bare background-image (img.has-lqip), which needs Capsomer's picture.css
- * (0.57), and this site does not load that stylesheet yet.
+ * Prelum's image options for a post's body: each library picture's size and stored placeholder, and its AVIF and WebP
+ * sizes at the column's width with a versioned link to the original, plus a GIF's reduced-motion stills. A picture
+ * outside the library is written unsized, as before.
  */
 export async function journalBodyImages(db: Db, content: string) {
   const keys = keysIn(content);
@@ -93,7 +92,13 @@ export async function journalBodyImages(db: Db, content: string) {
   return {
     resolveImage: async (src: string) => {
       const row = rowOf(src);
-      return row?.width && row.height ? { width: row.width, height: row.height } : null;
+      return row?.width && row.height
+        ? {
+            width: row.width,
+            height: row.height,
+            ...(row.placeholder ? { placeholder: row.placeholder } : {}),
+          }
+        : null;
     },
     media: {
       keyOf,
@@ -106,11 +111,11 @@ export async function journalBodyImages(db: Db, content: string) {
           srcSet: attrs.srcset,
           sizes: attrs.sizes,
           href: images.url(`${PATH}${row.key}`, { version: row.sha256 }),
-          // A GIF's reduced-motion stills are left out: this Prelum's <picture> writes no `media`, so a still would
-          // win for every reader.
-          sources: attrs.sources
-            .filter((s) => !s.media)
-            .map((s) => ({ type: s.type, srcSet: s.srcset })),
+          sources: attrs.sources.map((s) => ({
+            type: s.type,
+            srcSet: s.srcset,
+            ...(s.media ? { media: s.media } : {}),
+          })),
         };
       },
     },
