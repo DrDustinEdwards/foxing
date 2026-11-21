@@ -11,6 +11,7 @@ import { sessionUserFromRequest } from "~/lib/auth.server";
 import type { Route } from "./+types/join-code";
 import { signInFrom } from "~/lib/sign-in-path";
 import { noindexMeta } from "~/lib/seo";
+export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);

@@ -12,6 +12,7 @@ import type { Route } from "./+types/club-detail";
 import { MembershipControls, ThreadsSection } from "../components/clubs/club-sections";
 import { MeetingsSection, PollsSection, ScheduleSection } from "../components/clubs/club-schedule";
 import { noindexMeta } from "~/lib/seo";
+export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);

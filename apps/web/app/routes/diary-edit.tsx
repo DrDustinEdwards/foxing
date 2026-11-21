@@ -9,6 +9,7 @@ import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/diary-edit";
 import { noindexMeta } from "~/lib/seo";
+export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);

@@ -16,6 +16,7 @@ import { SeriesNav } from "capsomer/react/series-nav";
 import seriesCss from "~/styles/journal-series.css?url";
 import type { Route } from "./+types/journal-post";
 import { markup } from "capsomer/behavior/trusted-html";
+export { ErrorBoundary } from "~/components/route-error";
 
 // The series nav's parts: the live posts of the series in reading order. A Carrel preview of a part
 // not yet live joins at its part number, so the preview shows the nav the post will have.

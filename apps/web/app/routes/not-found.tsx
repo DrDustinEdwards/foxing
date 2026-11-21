@@ -1,7 +1,8 @@
-import { ErrorPage, errorTitle } from "capsomer/react/error-page";
-import { PageShell } from "~/components/page-shell";
+import { errorTitle } from "capsomer/react/error-page";
 import { SITE_NAME } from "~/lib/seo";
 import type { Route } from "./+types/not-found";
+
+export { ErrorBoundary } from "~/components/route-error";
 
 // Every address no route matches. Its own route, so the header and footer the error page wears load only here and
 // not with the root, which every page that hydrates carries. The root loader is skipped for an unmatched address,
@@ -15,11 +16,3 @@ export function meta({ error }: Route.MetaArgs) {
 }
 
 export default () => null;
-
-export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  return (
-    <PageShell>
-      <ErrorPage error={error} home="/" as="div" dev={import.meta.env.DEV} />
-    </PageShell>
-  );
-}

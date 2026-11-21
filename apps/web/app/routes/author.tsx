@@ -7,6 +7,7 @@ import { catalogPageHeaders, loaderBase } from "~/lib/loader.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { SITE_NAME, absoluteUrl, buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/author";
+export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);

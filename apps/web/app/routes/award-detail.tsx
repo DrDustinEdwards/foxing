@@ -7,6 +7,7 @@ import { itemList, jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { SITE_ORIGIN } from "~/lib/origins";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/award-detail";
+export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { db } = loaderBase(context, request);

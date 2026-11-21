@@ -5,6 +5,7 @@ import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { listingPageHeaders, loaderBase } from "~/lib/loader.server";
 import { buildMeta, SITE_NAME } from "~/lib/seo";
 import type { Route } from "./+types/journal-series";
+export { ErrorBoundary } from "~/components/route-error";
 
 // A series' own page: every live part, in reading order. The series nav on each part links here.
 export async function loader({ context, request, params }: Route.LoaderArgs) {
