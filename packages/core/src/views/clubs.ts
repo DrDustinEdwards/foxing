@@ -1,6 +1,6 @@
 // Club views: the clubs index, the club page and a thread page in their /api/v1 wire
 // shape (@foxing/types). Each returns null when the viewer may not see it: a private
-// club is "not found" to anyone but its active members (Grok audit 2026-10-21, FX-1).
+// club is "not found" to anyone but its active members.
 import type * as W from "@foxing/types";
 import type { Db } from "../db";
 import { canModerateRole } from "../domain/clubs";

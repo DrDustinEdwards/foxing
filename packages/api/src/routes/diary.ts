@@ -23,7 +23,7 @@ diaryRoutes.post("/diary", rateLimit("write"), async (c) => {
   return c.json({ entry }, 201);
 });
 
-// The same audience as the profile page (Grok audit 2026-10-21, FX-7).
+// The same audience as the profile page.
 diaryRoutes.get("/diary/:id", async (c) => {
   const entry = await views.diaryEntry(
     c.get("db"),

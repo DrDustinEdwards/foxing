@@ -6,7 +6,6 @@ import { z } from "zod";
 
 const tuple = <T extends readonly [string, ...string[]]>(v: T) => v;
 
-// -- Catalog ---------------------------------------------------------------
 export const sourceTypeValues = tuple(["catalog", "community"] as const);
 export const sourceType = z.enum(sourceTypeValues);
 export type SourceType = z.infer<typeof sourceType>;
@@ -25,12 +24,10 @@ export const bookAiActionValues = tuple([
 ] as const);
 export const bookAiAction = z.enum(bookAiActionValues);
 
-// -- Profiles / tiers ------------------------------------------------------
 export const subscriptionTierValues = tuple(["free", "plus"] as const);
 export const subscriptionTier = z.enum(subscriptionTierValues);
 export type SubscriptionTier = z.infer<typeof subscriptionTier>;
 
-// -- Library / tracking ----------------------------------------------------
 export const userBookStatusValues = tuple([
   "want",
   "reading",
@@ -51,7 +48,6 @@ export const goalType = z.enum(goalTypeValues);
 export const goalPeriodValues = tuple(["year", "month", "week"] as const);
 export const goalPeriod = z.enum(goalPeriodValues);
 
-// -- Annotations layer -----------------------------------------------------
 export const annotationTypeValues = tuple([
   "highlight",
   "note",
@@ -104,7 +100,6 @@ export const saveTargetValues = tuple([
 ] as const);
 export const saveTarget = z.enum(saveTargetValues);
 
-// -- Clubs -----------------------------------------------------------------
 export const clubTypeValues = tuple(["reader", "bookstore"] as const);
 export const clubType = z.enum(clubTypeValues);
 
@@ -138,7 +133,6 @@ export const meetingType = z.enum(meetingTypeValues);
 export const rsvpStatusValues = tuple(["going", "maybe", "not_going"] as const);
 export const rsvpStatus = z.enum(rsvpStatusValues);
 
-// -- Platform --------------------------------------------------------------
 export const reportTargetValues = tuple([
   "annotation",
   "club_post",
@@ -161,7 +155,6 @@ export const pushPlatform = z.enum(pushPlatformValues);
 export const companionRoleValues = tuple(["user", "assistant"] as const);
 export const companionRole = z.enum(companionRoleValues);
 
-// -- Events / notifications ------------------------------------------------
 // activity_events.type. Emitted only by the core event emitter on write paths.
 // Extensible: add a value here when a new emit() call needs it.
 export const activityTypeValues = tuple([

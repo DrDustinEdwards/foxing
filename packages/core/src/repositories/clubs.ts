@@ -42,8 +42,6 @@ export function generateJoinCode(): string {
   return makeJoinCode();
 }
 
-// -- Clubs ------------------------------------------------------------------
-
 /** Public clubs matching a name query, for the command palette's federated search.
  *  Only PUBLIC clubs with a slug are returned, so this is safe on the anonymous suggest
  *  endpoint (private clubs never surface here). */
@@ -193,8 +191,6 @@ export async function setCurrentBook(db: Db, clubId: string, bookId: string): Pr
   await db.insert(clubBooks).values({ clubId, bookId, startedAt: now, isCurrent: true });
   await db.update(clubs).set({ currentBookId: bookId, updatedAt: now }).where(eq(clubs.id, clubId));
 }
-
-// -- Membership -------------------------------------------------------------
 
 export async function getMembership(
   db: Db,

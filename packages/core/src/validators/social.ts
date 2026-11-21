@@ -5,7 +5,6 @@ import { z } from "zod";
 import { webUrl } from "./web-url";
 import { diaryVisibility, reactionTarget } from "../enums";
 
-// -- Diary / reviews --------------------------------------------------------
 // diary_entries is THE review + rating home. rating_half is 1-10 halves (0.5-5 stars);
 // omit for a review-only entry. Re-reads are allowed, so there is no per-book uniqueness.
 
@@ -29,8 +28,6 @@ export const updateDiaryInput = z
   })
   .refine((v) => Object.keys(v).length > 0, { message: "no fields to update" });
 export type UpdateDiaryInput = z.infer<typeof updateDiaryInput>;
-
-// -- Reading lists ----------------------------------------------------------
 
 export const createListInput = z.object({
   title: z.string().min(1).max(200),
@@ -57,7 +54,6 @@ export const addListBookInput = z.object({
 });
 export type AddListBookInput = z.infer<typeof addListBookInput>;
 
-// -- Reactions --------------------------------------------------------------
 // Generic like/reaction. Phase 6 wires reading_list + diary_entry targets; the enum
 // carries the full set for later phases. kind is 'like' by default (no emoji in UI).
 

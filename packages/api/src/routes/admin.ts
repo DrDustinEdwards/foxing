@@ -55,8 +55,6 @@ async function audit(c: Context<Env>, action: string, params: Record<string, unk
 
 const onOff = z.object({ on: z.boolean() });
 
-// ---- Reads --------------------------------------------------------------------
-
 const MAX_PAGE = 50;
 
 const pageQuery = z.object({
@@ -211,8 +209,6 @@ adminRoutes.get("/admin/catalog-health", async (c) => {
   });
 });
 
-// ---- Users --------------------------------------------------------------------
-
 // Role and permission changes are preview then perform. A request without `confirm`
 // changes nothing: it returns who gains or loses what, and a single-use token bound to
 // that change (admin-confirm.ts). Only a second request carrying the token performs
@@ -350,8 +346,6 @@ adminRoutes.delete("/admin/users/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- Books --------------------------------------------------------------------
-
 const bookMetaInput = z.object({
   title: z.string().min(1).max(500).optional(),
   author: z.string().min(1).max(500).optional(),
@@ -382,8 +376,6 @@ adminRoutes.post("/admin/books/:id/staff-pick", rateLimit("write"), async (c) =>
   await audit(c, on ? "book.feature" : "book.unfeature", { id });
   return c.json({ ok: true });
 });
-
-// ---- Book of the Month --------------------------------------------------------
 
 const botmInput = z.object({
   bookId: z.string().nullable().optional(),
@@ -430,8 +422,6 @@ adminRoutes.delete("/admin/botm/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- Celebrity picks ----------------------------------------------------------
-
 adminRoutes.post("/admin/picks/:id/publish", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const id = c.req.param("id");
@@ -457,8 +447,6 @@ adminRoutes.patch("/admin/picks/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- Reader clubs -------------------------------------------------------------
-
 adminRoutes.post("/admin/clubs/:id/verify", rateLimit("write"), async (c) => {
   const admin = requireAdmin(c);
   const id = c.req.param("id");
@@ -476,8 +464,6 @@ adminRoutes.delete("/admin/clubs/:id", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// ---- Broadcast notifications --------------------------------------------------
-
 adminRoutes.post("/admin/notifications/broadcast", rateLimit("write"), async (c) => {
   requireAdmin(c);
   const input = await parseJson(
@@ -492,8 +478,6 @@ adminRoutes.post("/admin/notifications/broadcast", rateLimit("write"), async (c)
   await audit(c, "notification.broadcast", { title: input.title, recipients: count });
   return c.json({ recipients: count });
 });
-
-// ---- Announcements ------------------------------------------------------------
 
 const announcementInput = z.object({
   title: z.string().min(1).max(200),

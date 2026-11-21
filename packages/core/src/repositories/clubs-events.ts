@@ -10,8 +10,6 @@ import type {
 import { clubMeetingRsvps, clubMeetings, clubPolls, clubPollVotes, clubSchedule } from "../schema";
 import { and, desc, eq } from "drizzle-orm";
 
-// -- Polls ------------------------------------------------------------------
-
 export async function createPoll(
   db: Db,
   clubId: string,
@@ -79,8 +77,6 @@ export async function closePoll(db: Db, id: string): Promise<ClubPoll | null> {
     .returning();
   return row ?? null;
 }
-
-// -- Meetings ---------------------------------------------------------------
 
 export async function createMeeting(
   db: Db,
@@ -164,8 +160,6 @@ export async function upsertRsvp(
 export async function listRsvps(db: Db, meetingId: string): Promise<ClubMeetingRsvp[]> {
   return db.select().from(clubMeetingRsvps).where(eq(clubMeetingRsvps.meetingId, meetingId));
 }
-
-// -- Schedule ---------------------------------------------------------------
 
 export async function createSchedule(
   db: Db,

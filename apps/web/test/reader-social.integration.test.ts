@@ -181,7 +181,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     await seedBook(OTHER_BOOK);
   });
 
-  // -- CELL 1: the airtight invariant. Others' PRIVATE never returned, for ANY
   //    relationship (club-mate, close friend, stranger). This is checked first.
   it("cell 1: others' PRIVATE annotations never appear (club-mate, close friend, stranger)", async () => {
     await seedUser("viewer");
@@ -210,7 +209,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.popular).toHaveLength(0);
   });
 
-  // -- CELL 2: public stranger is visible, tagged public.
   it("cell 2: a stranger's PUBLIC annotation is returned, layer=public", async () => {
     await seedUser("viewer");
     await seedUser("stranger");
@@ -223,7 +221,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others[0].author.id).toBe("stranger");
   });
 
-  // -- CELL 3: club annotation from a co-reader in a shared current-read club.
   it("cell 3: a co-reader's CLUB annotation (shared current read) is returned, layer=club", async () => {
     await seedUser("viewer");
     await seedUser("clubmate");
@@ -237,7 +234,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others[0].layer).toBe("club");
   });
 
-  // -- CELL 4 (Flag 1): shared club whose CURRENT read is not this book -> NOT returned.
   it("cell 4: a CLUB annotation in a club NOT currently reading this book is NOT returned", async () => {
     await seedUser("viewer");
     await seedUser("clubmate");
@@ -253,7 +249,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others).toHaveLength(0);
   });
 
-  // -- CELL 5: viewer not an ACTIVE member of the shared club -> NOT returned.
   it("cell 5: viewer's non-active membership in the reading club yields nothing", async () => {
     await seedUser("viewer");
     await seedUser("clubmate");
@@ -266,7 +261,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others).toHaveLength(0);
   });
 
-  // -- CELL 6: AUTHOR not an ACTIVE member -> NOT returned.
   it("cell 6: a non-active author's club annotation is NOT returned", async () => {
     await seedUser("viewer");
     await seedUser("author");
@@ -279,7 +273,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others).toHaveLength(0);
   });
 
-  // -- CELL 7: friends annotation from someone who added the viewer -> layer=friend.
   it("cell 7: a close friend's FRIENDS annotation is returned, layer=friend", async () => {
     await seedUser("viewer");
     await seedUser("friend");
@@ -291,7 +284,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others[0].layer).toBe("friend");
   });
 
-  // -- CELL 8: friends annotation from a non-friend -> NOT returned.
   it("cell 8: a FRIENDS annotation from someone who did NOT add the viewer is NOT returned", async () => {
     await seedUser("viewer");
     await seedUser("stranger");
@@ -303,7 +295,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others).toHaveLength(0);
   });
 
-  // -- CELL 9: two clubs, same book, both current reads -> the one annotation dedups.
   it("cell 9: an author in two shared current-read clubs yields the annotation ONCE", async () => {
     await seedUser("viewer");
     await seedUser("clubmate");
@@ -320,7 +311,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.others[0].layer).toBe("club");
   });
 
-  // -- CELL 10: passage comments scoped to the viewer's active clubs reading the book.
   it("cell 10: passage comments surface only for active clubs currently reading the book", async () => {
     await seedUser("viewer");
     await seedUser("clubmate");
@@ -365,7 +355,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(ids).not.toContain(notReading);
   });
 
-  // -- CELL 11: progress gate ahead/behind, end to end.
   it("cell 11: others' items ahead of the viewer are gated ahead; at/behind are not", async () => {
     await seedUser("viewer");
     await seedUser("stranger");
@@ -379,7 +368,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(byId[behind].gate.ahead).toBe(false);
   });
 
-  // -- CELL 12: manual spoiler flag gates regardless of progress; never gates MINE.
   it("cell 12: contains_spoilers gates others regardless of position; the viewer's own is never gated", async () => {
     await seedUser("viewer");
     await seedUser("stranger");
@@ -406,7 +394,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.mine.map((m) => m.id)).toContain(own);
   });
 
-  // -- CELL 14: popular = >= 3 DISTINCT public users on the same normalized passage.
   it("cell 14: popular highlights require 3 distinct public users on a normalized passage", async () => {
     await seedUser("viewer");
     await seedUser("u1");
@@ -433,7 +420,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.popular[0].count).toBe(3);
   });
 
-  // -- CELL 15: anonymous viewer -> public + popular only; no mine/club/friend/comments.
   it("cell 15: an anonymous viewer sees only public and popular", async () => {
     await seedUser("stranger");
     await seedUser("u1");
@@ -460,7 +446,6 @@ describe("reader social-layer resolution matrix (local D1)", () => {
     expect(out.popular.map((p) => p.normalizedText)).toContain("popular line");
   });
 
-  // -- MINE: the viewer sees their OWN private/friends/public/club, at every visibility.
   it("mine: the viewer's own annotations are returned at every visibility", async () => {
     await seedUser("viewer");
     const priv = await ann({ userId: "viewer", visibility: "private" });

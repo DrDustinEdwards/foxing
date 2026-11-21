@@ -4,7 +4,6 @@ import { and, desc, eq, getTableColumns } from "drizzle-orm";
 
 /** Insert one notification per onboarded user. Returns how many were written. Chunked
  *  so a large audience never exceeds D1's bound-parameter limit (db.ts). */
-// ---- Broadcast notifications --------------------------------------------------
 
 export async function broadcastNotification(
   db: Db,
@@ -31,8 +30,6 @@ export async function broadcastNotification(
   }
   return rows.length;
 }
-
-// ---- Announcements ------------------------------------------------------------
 
 export type Announcement = typeof announcements.$inferSelect;
 

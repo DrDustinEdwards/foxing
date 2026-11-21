@@ -21,8 +21,6 @@ export type SyncAdapter = {
   listChanged(db: Db, userId: string, sinceMs: number): Promise<unknown[]>;
 };
 
-// -- annotations ------------------------------------------------------------
-
 const annotationAdapter: SyncAdapter = {
   async probe(db, userId, op) {
     const [row] = await db
@@ -95,8 +93,6 @@ const annotationAdapter: SyncAdapter = {
   },
 };
 
-// -- user_books (keyed by (user, book); upsert) -----------------------------
-
 function userBookValues(p: Record<string, unknown>, clientTs: number) {
   const v: Record<string, unknown> = { updatedAt: new Date(clientTs) };
   if ("status" in p) v.status = p.status;
@@ -158,8 +154,6 @@ const userBookAdapter: SyncAdapter = {
   },
 };
 
-// -- reading_sessions (append-only) -----------------------------------------
-
 const sessionAdapter: SyncAdapter = {
   appendOnly: true,
   async probe(db, userId, op) {
@@ -198,8 +192,6 @@ const sessionAdapter: SyncAdapter = {
       );
   },
 };
-
-// -- vocabulary (updated_at nullable -> coalesce created_at) ----------------
 
 const VOCAB_TS = sql<number>`coalesce(${vocabulary.updatedAt}, ${vocabulary.createdAt})`;
 
@@ -248,8 +240,6 @@ const vocabularyAdapter: SyncAdapter = {
       .where(and(eq(vocabulary.userId, userId), gt(VOCAB_TS, sinceMs)));
   },
 };
-
-// -- diary_entries ----------------------------------------------------------
 
 const diaryAdapter: SyncAdapter = {
   async probe(db, userId, op) {

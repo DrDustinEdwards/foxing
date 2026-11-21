@@ -82,7 +82,7 @@ export async function profilePage(
 
   const isOwner = viewerId === profile.id;
   // A non-public profile shows a "private" notice to everyone but its owner, with just
-  // enough identity to confirm the account exists (Grok audit 2026-10-21, FX-2).
+  // enough identity to confirm the account exists.
   if (!isOwner && (profile.visibility?.profile ?? "public") !== "public") {
     return {
       isPrivate: true,

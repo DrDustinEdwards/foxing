@@ -7,8 +7,6 @@ import { useApi } from "./provider";
 import { patch, useSeededQuery } from "capsomer/react/data";
 import { useWrite } from "./query";
 
-// --- Shelf status -----------------------------------------------------------
-
 export function useLibrary<S extends W.LibraryEntry[] | undefined = undefined>(seed?: S) {
   const api = useApi();
   return useSeededQuery(
@@ -84,8 +82,6 @@ export function useSetBookStatus() {
   });
 }
 
-// --- Custom shelves ---------------------------------------------------------
-
 export function useShelves<S extends W.Shelf[] | undefined = undefined>(seed?: S) {
   const api = useApi();
   return useSeededQuery(
@@ -143,8 +139,6 @@ export function useToggleShelfBook() {
     invalidates: ({ shelfId, bookId }) => [keys.shelf(shelfId), keys.myBook(bookId)],
   });
 }
-
-// --- Goals and streak -------------------------------------------------------
 
 export function useGoals<S extends W.GoalWithProgress[] | undefined = undefined>(seed?: S) {
   const api = useApi();
@@ -210,8 +204,6 @@ export function useStats<S extends W.ReadingStats | undefined = undefined>(seed?
   );
 }
 
-// --- The reader's own annotations, across books --------------------------------
-
 export function useMyAnnotations<S extends W.MyAnnotation[] | undefined = undefined>(
   types: W.AnnotationType[],
   seed?: S,
@@ -229,8 +221,6 @@ export function useMyAnnotations<S extends W.MyAnnotation[] | undefined = undefi
     seed,
   );
 }
-
-// --- Vocabulary -------------------------------------------------------------
 
 export function useVocabulary<S extends W.VocabularyWord[] | undefined = undefined>(seed?: S) {
   const api = useApi();
@@ -255,8 +245,6 @@ export function useSetMastered() {
     invalidates: () => [keys.vocabulary],
   });
 }
-
-// --- Notifications ----------------------------------------------------------
 
 export function useNotifications<S extends W.NotificationsPage | undefined = undefined>(seed?: S) {
   const api = useApi();

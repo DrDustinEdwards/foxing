@@ -85,7 +85,7 @@ profileRoutes.patch("/me/visibility", rateLimit("write"), async (c) => {
 
 // GET /u/:username - the profile page, visibility-aware. A non-public profile shows
 // only enough identity to confirm the account exists, to everyone but its owner: the
-// same view the web page renders (Grok audit 2026-10-21, FX-2).
+// same view the web page renders.
 profileRoutes.get("/u/:username", async (c) => {
   const page = await views.profilePage(
     c.get("db"),

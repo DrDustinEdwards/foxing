@@ -48,8 +48,6 @@ describe("social API (web -> api -> core -> D1)", () => {
     }
   });
 
-  // -- Follows --------------------------------------------------------------
-
   it("PUT /follows/:id creates the edge and emits a new_follower notification to the target", async () => {
     await seedUser("alice");
     await seedUser("bob");
@@ -90,8 +88,6 @@ describe("social API (web -> api -> core -> D1)", () => {
     const res = await call("/follows/alice", { method: "PUT", user: "alice" });
     expect(res.status).toBe(422);
   });
-
-  // -- Diary event emission respects visibility -----------------------------
 
   it("private diary entry emits NO activity event", async () => {
     await seedUser("alice");
@@ -157,8 +153,6 @@ describe("social API (web -> api -> core -> D1)", () => {
     expect(book.weightedRating).toBeCloseTo(4.0, 5);
   });
 
-  // -- List likes via reactions ---------------------------------------------
-
   it("liking a list writes a reactions row and notifies the owner (not the liker)", async () => {
     await seedUser("alice");
     await seedUser("bob");
@@ -221,8 +215,6 @@ describe("social API (web -> api -> core -> D1)", () => {
       );
     expect(events).toHaveLength(1);
   });
-
-  // -- Feed end-to-end visibility -------------------------------------------
 
   it("GET /feed shows a followed author's public review but hides their friends-only one", async () => {
     await seedUser("alice"); // author
@@ -295,8 +287,6 @@ describe("social API (web -> api -> core -> D1)", () => {
     const activity = rows.filter((r) => r.kind === "activity").map((r) => r.id);
     expect(activity.slice(0, 3)).toEqual(["e-a149", "e-a148", "e-a147"]);
   });
-
-  // -- Notifications ----------------------------------------------------------
 
   it("POST /notifications/read marks the named ones, refuses a malformed body, and marks all for a body naming no ids", async () => {
     await seedUser("alice");

@@ -171,7 +171,6 @@ export async function latestRatingsForBooks(
   return latest;
 }
 
-// -- Book rating aggregate --------------------------------------------------
 // Recomputed in core after every diary write (spec-cf-schema: "rating aggregates
 // recomputed from diary_entries by core, not triggers"). The aggregate takes each
 // user's LATEST rated entry for the book and averages rating_half. weighted_rating is

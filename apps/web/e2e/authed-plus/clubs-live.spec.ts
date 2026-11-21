@@ -36,7 +36,6 @@ test.describe("clubs live layer (signed in, plus)", () => {
     test.setTimeout(60_000);
     const suffix = Date.now().toString(36);
 
-    // --- Context A: create a club -----------------------------------------
     await page.goto("/clubs/new");
     await page.getByLabel("Club name").fill(`Live Club ${suffix}`);
     await page.getByRole("button", { name: /^create club$/i }).click();
@@ -57,7 +56,6 @@ test.describe("clubs live layer (signed in, plus)", () => {
     await expect(page).toHaveURL(/\/t\//);
     const threadUrl = page.url();
 
-    // --- Context B: second connection to the same thread ------------------
     const ctxB = await browser.newContext({ storageState: "e2e/.auth/plus.json" });
     const pageB = await ctxB.newPage();
     await gotoLive(pageB, threadUrl);
@@ -70,7 +68,6 @@ test.describe("clubs live layer (signed in, plus)", () => {
     await expect(page.getByText(postText)).toBeVisible();
     await expect(pageB.getByText(postText)).toBeVisible();
 
-    // --- Live poll tally across contexts ----------------------------------
     // Create the poll first so B's page loads it, THEN vote so B sees the live tally.
     // The live socket opens once the page has hydrated, so "New poll" is a working button
     // by then; a click on the server-rendered page before that opens no form.

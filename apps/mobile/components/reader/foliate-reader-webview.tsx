@@ -19,7 +19,6 @@ export interface ReaderSettings {
   paragraphSpacing?: number;
   marginPx?: number;
   justify?: boolean;
-  // Phase D additions
   letterSpacingEm?: number;
   firstLineIndent?: boolean;
   dropCap?: boolean;
@@ -61,7 +60,6 @@ export interface ReaderRef {
     list: Array<{ text?: string; cfi: string; count: number }>,
     colorHex?: string,
   ) => void;
-  // Phase D additions
   startAutoScroll: (wpm: number) => void;
   stopAutoScroll: () => void;
   // Layout: 1 (default) or 2 (dual-page spread). The renderer reapplies

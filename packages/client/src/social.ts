@@ -10,8 +10,6 @@ import { useApi } from "./provider";
 import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
 import { useWrite } from "./query";
 
-// --- Reads ------------------------------------------------------------------
-
 export function useFeed<S extends W.FeedPage | undefined = undefined>(
   cursor: string | null,
   seed?: S,
@@ -137,8 +135,6 @@ export function useSuggest(q: string, delayMs = 180): W.SearchSuggest {
   return enabled ? (data ?? NO_SUGGESTIONS) : NO_SUGGESTIONS;
 }
 
-// --- Follows and close friends ----------------------------------------------
-
 function patchProfile(
   userId: string,
   update: (p: W.ProfilePage & { isPrivate: false }) => W.ProfilePage,
@@ -197,8 +193,6 @@ export function useCloseFriend() {
   });
 }
 
-// --- Reactions --------------------------------------------------------------
-
 export function useReaction() {
   const api = useApi();
   return useWrite<{ targetType: W.ReactionTarget; targetId: string; on: boolean; kind?: string }>({
@@ -220,8 +214,6 @@ export function useReaction() {
       targetType === "reading_list" ? [keys.list(targetId)] : [],
   });
 }
-
-// --- Reading lists ----------------------------------------------------------
 
 export interface ListInput {
   title: string;
@@ -280,8 +272,6 @@ export function useRemoveListBook() {
     invalidates: ({ listId }) => [keys.list(listId), keys.myLists],
   });
 }
-
-// --- Diary ------------------------------------------------------------------
 
 export interface DiaryInput {
   bookId: string;

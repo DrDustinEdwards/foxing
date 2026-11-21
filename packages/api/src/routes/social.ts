@@ -18,8 +18,6 @@ import type { Env } from "../types";
 
 export const socialRoutes = new Hono<Env>();
 
-// -- Follows (free) ---------------------------------------------------------
-
 socialRoutes.put("/follows/:userId", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   await socialDomain.followUser(c.get("db"), actor, c.req.param("userId"));
@@ -32,7 +30,6 @@ socialRoutes.delete("/follows/:userId", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// -- Close friends (free; the friends-only visibility audience) -------------
 // A social / privacy control, not a Plus feature: it is the audience for friends-only
 // diary entries, activity, and shared annotations, all part of the free social layer.
 
@@ -53,8 +50,6 @@ socialRoutes.get("/people", async (c) => {
   const session = requireSession(c);
   return c.json(await views.people(c.get("db"), session.id));
 });
-
-// -- Reading lists ----------------------------------------------------------
 
 socialRoutes.get("/lists", async (c) => {
   const session = requireSession(c);
@@ -106,7 +101,6 @@ socialRoutes.get("/lists/:id", async (c) => {
   return c.json(page);
 });
 
-// -- Feed -------------------------------------------------------------------
 // Server-side visibility resolution. The viewer is always the session user; there is no
 // way to request "someone else's feed".
 
@@ -115,8 +109,6 @@ socialRoutes.get("/feed", async (c) => {
   const cursor = c.req.query("cursor");
   return c.json(await views.feed(c.get("db"), session.id, cursor ?? null));
 });
-
-// -- Recap ------------------------------------------------------------------
 
 socialRoutes.get("/recap/:year", async (c) => {
   const session = requireSession(c);
