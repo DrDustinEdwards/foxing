@@ -126,3 +126,5 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

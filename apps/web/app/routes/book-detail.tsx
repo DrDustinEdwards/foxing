@@ -318,3 +318,5 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

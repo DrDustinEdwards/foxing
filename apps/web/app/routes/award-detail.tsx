@@ -69,3 +69,5 @@ export default function AwardDetail({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

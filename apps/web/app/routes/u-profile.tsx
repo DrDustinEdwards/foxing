@@ -458,3 +458,5 @@ function PrivateProfile({
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

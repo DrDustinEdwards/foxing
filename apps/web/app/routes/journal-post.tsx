@@ -205,3 +205,5 @@ export default function JournalPost({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

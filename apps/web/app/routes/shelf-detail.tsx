@@ -60,3 +60,5 @@ export default function ShelfDetail({ loaderData }: Route.ComponentProps) {
 
 // It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
+
+export { ErrorBoundary } from "~/components/route-error";
