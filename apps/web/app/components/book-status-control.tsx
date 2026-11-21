@@ -5,6 +5,7 @@
 import { useSetBookStatus } from "@foxing/client";
 import type { BookRef, ShelfStatus } from "@foxing/types";
 import { useState } from "react";
+import { Select } from "capsomer/react/select";
 import { ButtonLink } from "capsomer/react/link";
 
 const STATUSES = [
@@ -50,9 +51,10 @@ export function BookStatusControl({
 
   return (
     <div className="cap-stack fx-book-status-control-box" data-gap="3">
-      <label className="fx-book-status-control-row">
+      <label className="cap-field">
         <span className="cap-sr-only">Reading status</span>
-        <select
+        <Select
+          native
           value={status ?? ""}
           disabled={setStatus.pending}
           onChange={(e) =>
@@ -62,16 +64,12 @@ export function BookStatusControl({
                 : (e.target.value as ShelfStatus),
             )
           }
-          className="cap-select py-2 fx-book-status-control-box"
-        >
-          <option value="">Add to library</option>
-          {STATUSES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-          {status ? <option value="remove">Remove from library</option> : null}
-        </select>
+          options={[
+            { value: "", label: "Add to library" },
+            ...STATUSES.map((s) => ({ value: s.value, label: s.label })),
+            ...(status ? [{ value: "remove", label: "Remove from library" }] : []),
+          ]}
+        />
       </label>
       {setStatus.pending ? (
         <p className="fx-book-status-control-text" role="status">

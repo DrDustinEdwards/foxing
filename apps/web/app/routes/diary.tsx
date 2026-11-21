@@ -6,6 +6,7 @@ import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
+import { Select } from "capsomer/react/select";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { Rating } from "capsomer/react/rating";
 import "capsomer/rating.css";
@@ -124,38 +125,41 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
             <div className="cap-cluster" data-gap="5">
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Rating</span>
-                <select
+                <Select
+                  native
                   value={rating}
                   onChange={(e) => setRating(e.target.value as RatingFilter)}
-                  className="cap-select"
-                >
-                  <option value="all">All</option>
-                  <option value="rated">Rated</option>
-                  <option value="unrated">Unrated</option>
-                </select>
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "rated", label: "Rated" },
+                    { value: "unrated", label: "Unrated" },
+                  ]}
+                />
               </label>
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Review</span>
-                <select
+                <Select
+                  native
                   value={review}
                   onChange={(e) => setReview(e.target.value as ReviewFilter)}
-                  className="cap-select"
-                >
-                  <option value="all">All</option>
-                  <option value="reviewed">With a review</option>
-                </select>
+                  options={[
+                    { value: "all", label: "All" },
+                    { value: "reviewed", label: "With a review" },
+                  ]}
+                />
               </label>
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Sort</span>
-                <select
+                <Select
+                  native
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortOrder)}
-                  className="cap-select"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="rating">Highest rated</option>
-                </select>
+                  options={[
+                    { value: "newest", label: "Newest" },
+                    { value: "oldest", label: "Oldest" },
+                    { value: "rating", label: "Highest rated" },
+                  ]}
+                />
               </label>
               <span className="cap-text" data-size="tiny" data-tone="dim" data-face="ui">
                 {shown.length} of {entries.length}

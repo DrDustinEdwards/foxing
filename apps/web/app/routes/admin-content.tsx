@@ -1,6 +1,7 @@
 // Admin: Content. Create site announcements (banner, home, or journal placement) and
 // manage the existing set: activate/deactivate and delete. Reads announcements in-process;
 // writes to /api/v1/admin/announcements with a visible error on failure.
+import { Select } from "capsomer/react/select";
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
@@ -9,7 +10,6 @@ import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
 import {
   AdminButton,
   AdminError,
-  adminInputClass,
   useAdminAction,
   AdminRow,
   AdminField,
@@ -108,17 +108,13 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
         <AdminField label="Body (optional)" value={body} onChange={setBody} rows={3} />
         <label className="cap-field">
           <span className="fx-label">Placement</span>
-          <select
+          <Select
+            native
+            data-fill="ground"
             value={placement}
             onChange={(e) => setPlacement(e.target.value as (typeof PLACEMENTS)[number])}
-            className={adminInputClass}
-          >
-            {PLACEMENTS.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
+            options={PLACEMENTS.map((p) => ({ value: p, label: p }))}
+          />
         </label>
         <div className="fx-admin-content-grid">
           <AdminField label="Link URL (optional)" value={linkUrl} onChange={setLinkUrl} />

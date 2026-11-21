@@ -9,6 +9,7 @@ import { sessionUserFromRequest } from "~/lib/auth.server";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
 import { signInFrom } from "~/lib/sign-in-path";
+import { Select } from "capsomer/react/select";
 import { useHydrated } from "capsomer/react/hooks";
 import { noindexMeta } from "~/lib/seo";
 
@@ -76,15 +77,16 @@ export default function ClubNew() {
             <label htmlFor="visibility" className="block fx-club-new-field">
               Visibility
             </label>
-            <select
+            <Select
+              native
               id="visibility"
               name="visibility"
               defaultValue="public"
-              className="cap-select py-2 fx-club-new-input"
-            >
-              <option value="public">Public - anyone can find and join</option>
-              <option value="private">Private - members only, join by link</option>
-            </select>
+              options={[
+                { value: "public", label: "Public - anyone can find and join" },
+                { value: "private", label: "Private - members only, join by link" },
+              ]}
+            />
           </div>
           <label
             className="cap-text cap-cluster"
