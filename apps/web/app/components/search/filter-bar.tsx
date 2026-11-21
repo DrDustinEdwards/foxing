@@ -3,6 +3,7 @@
 // re-runs and results are server-rendered. The query rides along as a hidden field.
 import { FilterBar as CapFilterBar } from "capsomer/react/filter-bar";
 import { Link } from "capsomer/react/link";
+import { Select } from "capsomer/react/select";
 import { Form } from "react-router";
 import { BOOKS_ERAS } from "~/components/nav/header-panels";
 
@@ -32,16 +33,16 @@ function Facet({
   return (
     <label className="cap-stack" data-gap="3">
       <span className="group-label">{label}</span>
-      <span className="cap-select-wrap" data-native="">
-        <select key={value ?? ""} name={name} defaultValue={value ?? ""} className="cap-select">
-          <option value="">{any}</option>
-          {options.map((o) => (
-            <option key={o.slug} value={o.slug}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </span>
+      <Select
+        key={value ?? ""}
+        native
+        name={name}
+        defaultValue={value ?? ""}
+        options={[
+          { value: "", label: any },
+          ...options.map((o) => ({ value: o.slug, label: o.label })),
+        ]}
+      />
     </label>
   );
 }
