@@ -131,7 +131,7 @@ export type Finding = {
   detail: string;
 };
 
-/** A generic collection ("Short Fiction", "Poetry", "Conan Stories"): its works span years, so no single year fits. */
+/** A generic collection ("Short Fiction", "Conan Stories"): no single year fits. */
 export function isCollectionTitle(title: string): boolean {
   return /^(short (fiction|plays|works|science fiction)|poetry|plays|essays|travel essays)$|\b(stories|folktales)$/i.test(
     title.trim(),

@@ -25,8 +25,8 @@ import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 // the companion cache queue (the companion only), the last companion model call (`ai-companion`), the ClubRoom and rate limiter
 // Durable Objects (live club updates, and the API's limits), and a cron job that failed, overran,
 // went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts), and a spike of failed
-// sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck), and book data that is
-// wrong rather than missing (`catalog-data`: an invalid or shared ISBN, a bad retailer link).
+// sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck), and an invalid or shared ISBN
+// or bad retailer link (`catalog-data`).
 // durableObjectCheck mints an id and sends nothing, queueCheck and emailCheck send nothing, so none is
 // billed or mails anyone. Left out: CARREL_RATE_LIMIT (the rate-limiting binding has no read, and a probe would spend
 // Carrel's budget). `sha` is the deployed commit, which CI's deploy passes as DEPLOY_SHA (devkit's worker-deploy.yml; a manual
