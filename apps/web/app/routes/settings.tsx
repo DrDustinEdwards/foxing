@@ -5,7 +5,6 @@ import { readCapped } from "@dustinedwards/site-runtime/body";
 import { securityHistoryWords } from "@dustinedwards/site-runtime/sign-in-words";
 import {
   accountSessions,
-  needsSecondPasskey,
   passkeyLastUsed,
   passkeyRows,
   revokeSessionById,
@@ -98,7 +97,6 @@ export async function loader({ context, request }: Route.LoaderArgs) {
         created: p.createdAt ? dateLabel.format(p.createdAt) : null,
         lastUsed: p.lastUsedAt ? dateLabel.format(p.lastUsedAt) : null,
       })),
-      secondPasskey: needsSecondPasskey(passkeys),
       providers: [
         ...(methods.google
           ? [{ id: "google" as const, label: "Google", accountId: linked.get("google") ?? null }]
