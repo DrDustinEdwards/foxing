@@ -1,7 +1,7 @@
 // Admin: Content. Create site announcements (banner, home, or journal placement) and
 // manage the existing set: activate/deactivate and delete. Reads announcements in-process;
 // writes to /api/v1/admin/announcements with a visible error on failure.
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { adminRepo, createDb } from "@foxing/core";
 import { useState } from "react";
 import { useRevalidator } from "react-router";
@@ -108,8 +108,7 @@ function CreateAnnouncement({ onDone }: { onDone: () => void }) {
         <AdminField label="Body (optional)" value={body} onChange={setBody} rows={3} />
         <label className="cap-field">
           <span className="fx-label">Placement</span>
-          <Select
-            native
+          <NativeSelect
             data-fill="ground"
             value={placement}
             onChange={(e) => setPlacement(e.target.value as (typeof PLACEMENTS)[number])}

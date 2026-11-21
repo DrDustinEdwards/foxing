@@ -9,7 +9,7 @@ import { sessionUserFromRequest } from "~/lib/auth.server";
 import { cloudflareContext } from "~/context";
 import type { Route } from "./+types/club-new";
 import { signInFrom } from "~/lib/sign-in-path";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { useHydrated } from "capsomer/react/hooks";
 import { noindexMeta } from "~/lib/seo";
 
@@ -77,8 +77,7 @@ export default function ClubNew() {
             <label htmlFor="visibility" className="block fx-club-new-field">
               Visibility
             </label>
-            <Select
-              native
+            <NativeSelect
               id="visibility"
               name="visibility"
               defaultValue="public"

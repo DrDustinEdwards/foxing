@@ -15,7 +15,7 @@ import {
   signalUnknownCredential,
 } from "@dustinedwards/site-runtime/sign-in-client";
 import { useFetcher, useRevalidator } from "react-router";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { ButtonLink } from "capsomer/react/link";
 import { signInHref } from "~/lib/sign-in-path";
 import { FormError } from "~/components/ui";
@@ -708,8 +708,7 @@ function ClubHandoverFields({
             <span className="cap-text" data-tone="ink" data-weight="strong">
               {club.name}
             </span>
-            <Select
-              native
+            <NativeSelect
               data-fill="ground"
               value={choice[club.clubId] ?? club.suggested ?? DELETE_CLUB}
               onChange={(e) => onChoose(club.clubId, e.target.value)}

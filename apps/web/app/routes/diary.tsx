@@ -6,7 +6,7 @@ import { useDiary } from "@foxing/client";
 import { createDb, views } from "@foxing/core";
 import type { DiaryEntry as OwnDiaryEntry } from "@foxing/types";
 import { useState } from "react";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { ButtonLink, Link } from "capsomer/react/link";
 import { Rating } from "capsomer/react/rating";
 import "capsomer/rating.css";
@@ -125,8 +125,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
             <div className="cap-cluster" data-gap="5">
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Rating</span>
-                <Select
-                  native
+                <NativeSelect
                   value={rating}
                   onChange={(e) => setRating(e.target.value as RatingFilter)}
                   options={[
@@ -138,8 +137,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
               </label>
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Review</span>
-                <Select
-                  native
+                <NativeSelect
                   value={review}
                   onChange={(e) => setReview(e.target.value as ReviewFilter)}
                   options={[
@@ -150,8 +148,7 @@ export default function Diary({ loaderData }: Route.ComponentProps) {
               </label>
               <label className="cap-text" data-size="small" data-tone="muted" data-face="ui">
                 <span className="fx-diary-caps-2">Sort</span>
-                <Select
-                  native
+                <NativeSelect
                   value={sort}
                   onChange={(e) => setSort(e.target.value as SortOrder)}
                   options={[

@@ -4,7 +4,7 @@
 // emits no event). Failed writes surface a visible error.
 import { useCreateDiaryEntry, useUpdateDiaryEntry } from "@foxing/client";
 import type { Visibility } from "@foxing/types";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { RatingInput } from "capsomer/react/rating";
 import "capsomer/rating.css";
 import { useState } from "react";
@@ -96,8 +96,7 @@ export function DiaryForm({
 
       <label className="cap-stack" data-gap="3">
         <span className="group-label">Who can see this</span>
-        <Select
-          native
+        <NativeSelect
           value={visibility}
           onChange={(e) => setVisibility(e.target.value as Visibility)}
           options={[

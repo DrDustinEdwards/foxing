@@ -1,7 +1,7 @@
 // Shared by the goals page and the library's goals card: a books goal for the current
 // period, and the period picker. The write goes through @foxing/client, which refetches
 // the goals list; no page reload.
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { isoWeek, useCreateGoal } from "@foxing/client";
 import { useState } from "react";
 
@@ -45,8 +45,7 @@ export function GoalPeriodSelect({
   return (
     <label className="cap-text" data-size="small" data-face="ui">
       <span className="cap-sr-only">Goal period</span>
-      <Select
-        native
+      <NativeSelect
         value={value}
         onChange={(e) => onChange(e.target.value as Period)}
         options={[

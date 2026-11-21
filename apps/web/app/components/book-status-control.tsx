@@ -5,7 +5,7 @@
 import { useSetBookStatus } from "@foxing/client";
 import type { BookRef, ShelfStatus } from "@foxing/types";
 import { useState } from "react";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { ButtonLink } from "capsomer/react/link";
 
 const STATUSES = [
@@ -53,8 +53,7 @@ export function BookStatusControl({
     <div className="cap-stack fx-book-status-control-box" data-gap="3">
       <label className="cap-field">
         <span className="cap-sr-only">Reading status</span>
-        <Select
-          native
+        <NativeSelect
           value={status ?? ""}
           disabled={setStatus.pending}
           onChange={(e) =>

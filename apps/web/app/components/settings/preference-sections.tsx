@@ -8,7 +8,7 @@ import {
 import type { PeoplePage } from "@foxing/types";
 import { useState } from "react";
 import { Card, inputClass, SubmitRow, ToggleRow } from "./settings-card";
-import { Select } from "capsomer/react/select";
+import { NativeSelect } from "capsomer/react/select-native";
 import { ThemeSwitch } from "capsomer/react/theme-switch";
 import { THEME_PREF_KEY } from "~/lib/theme";
 import { Link } from "capsomer/react/link";
@@ -125,8 +125,7 @@ export function VisibilitySection({ initial }: { initial: VisibilityValues }) {
         />
         <label className="cap-field">
           <span className="fx-label">Default highlight and note audience</span>
-          <Select
-            native
+          <NativeSelect
             data-fill="ground"
             value={defaultAnnotation}
             onChange={(e) =>
