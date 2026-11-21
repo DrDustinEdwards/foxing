@@ -10,9 +10,11 @@ import {
   queueCheck,
   r2Check,
 } from "@dustinedwards/site-runtime/health";
+import { adminRepo, createDb } from "@foxing/core";
 import { cloudflareContext } from "~/context";
 import { backupStatus } from "~/lib/backup.server";
 import { CRON_WATCHED } from "~/lib/cron-jobs";
+import { COVER_ORIGIN } from "~/lib/origins";
 import type { Route } from "./+types/health";
 import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 
@@ -23,7 +25,8 @@ import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 // the companion cache queue (the companion only), the last companion model call (`ai-companion`), the ClubRoom and rate limiter
 // Durable Objects (live club updates, and the API's limits), and a cron job that failed, overran,
 // went stale or never ran (`cron_runs`, against app/lib/cron-jobs.ts), and a spike of failed
-// sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck).
+// sign-ins or sign-in mails in the last hour (`auth_events`, site-runtime authSpikeCheck), and book data that is
+// wrong rather than missing (`catalog-data`: an invalid or shared ISBN, a bad retailer link).
 // durableObjectCheck mints an id and sends nothing, queueCheck and emailCheck send nothing, so none is
 // billed or mails anyone. Left out: CARREL_RATE_LIMIT (the rate-limiting binding has no read, and a probe would spend
 // Carrel's budget). `sha` is the deployed commit, which CI's deploy passes as DEPLOY_SHA (devkit's worker-deploy.yml; a manual
@@ -53,6 +56,20 @@ export function loader({ context }: Route.LoaderArgs) {
         deployedAt: deployedAt(env),
       }),
       authSpikeCheck(env.DB),
+      {
+        name: "catalog-data",
+        run: async () => {
+          const { checks } = await adminRepo.getCatalogHealth(createDb(env.DB), {
+            coverOrigin: COVER_ORIGIN,
+          });
+          const bad = checks.filter(
+            (c) =>
+              ["invalid_isbn", "duplicate_isbn", "bad_retailer_link"].includes(c.check) &&
+              c.count > 0,
+          );
+          if (bad.length) throw new Error(bad.map((c) => `${c.count} ${c.check}`).join(", "));
+        },
+      },
     ].map((check) => ({ ...check, level: "warn" as const })),
   });
 }
