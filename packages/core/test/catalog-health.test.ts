@@ -74,6 +74,13 @@ describe("auditCatalog", () => {
     expect(checksOf([book({ subjects: ["Love stories"] })])).toEqual([]);
   });
 
+  it("counts a stored generated description as the page's description", () => {
+    const empty = { description: null };
+    expect(checksOf([book(empty)])).toEqual(["missing_description"]);
+    expect(checksOf([book({ ...empty, aiDescription: "Emma Woodhouse matchmakes." })])).toEqual([]);
+    expect(checksOf([book({ ...empty, aiDescription: "  " })])).toEqual(["missing_description"]);
+  });
+
   it("flags a cover on another host, a bad ISBN, an ISBN-10 and ISBN-13 of different editions", () => {
     expect(checksOf([book({ coverUrl: "https://elsewhere.test/c.jpg" })])).toEqual([
       "cover_not_hosted",
