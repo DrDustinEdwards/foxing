@@ -7,6 +7,7 @@ import { ErrorPage, errorTitle } from "capsomer/react/error-page";
 import { LinkPrefetch } from "capsomer/react/link";
 import { themeScript } from "capsomer/theme-server";
 import { useState } from "react";
+import { SITE_SCRIPT } from "virtual:islands";
 import {
   Links,
   Meta,
@@ -91,7 +92,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links nonce={nonce} />
         {/* Same-origin, so script-src 'self' allows it; the nonce is renewed per reader like every other. Not on a
             hydrating page, whose React components wire the same markup themselves. */}
-        {hydrates ? null : <script src="/site.js" defer nonce={nonce} />}
+        {hydrates ? null : <script {...SITE_SCRIPT} defer nonce={nonce} />}
       </head>
       <body>
         {children}
