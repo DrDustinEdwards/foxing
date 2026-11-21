@@ -43,7 +43,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { navUser, navMenu };
 }
 
-// The error path's title (an unmatched address matches no route but the root); every page sets its own.
+// The error path's title for an error the root shows; every page sets its own, and a missing page's is in routes/not-found.tsx.
 export function meta({ error }: Route.MetaArgs) {
   return error ? [{ title: errorTitle(error, SITE_NAME) }] : [];
 }
