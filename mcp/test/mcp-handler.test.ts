@@ -14,7 +14,7 @@ import {
 } from "@dustinedwards/site-runtime/mcp-server";
 
 import { handleMcp } from "../src/mcp-handler.ts";
-import { TOOLS, type ToolEnv } from "../src/tools.ts";
+import type { ToolEnv } from "../src/tools.ts";
 import {
   READER,
   WRITER,
@@ -75,27 +75,6 @@ describe("handleMcp", () => {
     assert.equal(message.result.serverInfo.name, "foxing-admin-mcp");
     assert.match(message.result.instructions, /Carrel owns all writing/);
     assert.equal(foxing.calls.length, 0);
-  });
-
-  test("tools/list offers exactly the foxing_ tools, each with all four annotations", async () => {
-    const message = await rpc("tools/list", {});
-    const listed = message.result.tools as Array<{
-      name: string;
-      annotations: Record<string, unknown>;
-    }>;
-    assert.deepEqual(listed.map((t) => t.name).sort(), TOOLS.map((t) => t.name).sort());
-    assert.equal(listed.length, 12);
-    for (const t of listed) {
-      assert.match(t.name, /^foxing_[a-z_]+$/);
-      for (const hint of ["readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"]) {
-        assert.equal(typeof t.annotations[hint], "boolean", `${t.name} ${hint}`);
-      }
-    }
-    // tools/list order is deterministic: registration order.
-    assert.deepEqual(
-      listed.map((t) => t.name),
-      TOOLS.map((t) => t.name),
-    );
   });
 
   test("PLANT: both grants' tools/list pass the family's list check (T1-T4, T9), and the read list is pinned (T12)", async () => {
