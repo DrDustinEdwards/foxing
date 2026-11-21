@@ -8,7 +8,6 @@ import { cloudflareContext } from "~/context";
 import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/list-edit";
 import { noindexMeta } from "~/lib/seo";
-export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -48,3 +47,5 @@ export default function ListEdit({ loaderData }: Route.ComponentProps) {
 
 // It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
+
+export { ErrorBoundary } from "~/components/route-error";

@@ -15,7 +15,6 @@ import { cloudflareContext } from "~/context";
 import { sessionUserFromRequest } from "~/lib/auth.server";
 import { buildMeta, noindexMeta } from "~/lib/seo";
 import type { Route } from "./+types/list-detail";
-export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -127,3 +126,5 @@ export default function ListDetail({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

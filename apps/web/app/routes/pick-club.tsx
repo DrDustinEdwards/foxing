@@ -7,7 +7,6 @@ import { Breadcrumbs, Container, PageHeader } from "~/components/ui";
 import { loaderBase, staticPageHeaders } from "~/lib/loader.server";
 import { buildMeta } from "~/lib/seo";
 import type { Route } from "./+types/pick-club";
-export { ErrorBoundary } from "~/components/route-error";
 
 function pickDate(year: number | null, month: number | null): string | null {
   if (!year) return null;
@@ -92,3 +91,5 @@ export default function PickClub({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

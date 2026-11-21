@@ -19,7 +19,6 @@ import { sessionUserFromRequest } from "~/lib/auth.server";
 import { jsonLd } from "@drdustinedwards/site-helpers/schema";
 import { absoluteUrl, buildMeta, noindexMeta } from "~/lib/seo";
 import type { Route } from "./+types/u-profile";
-export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -459,3 +458,5 @@ function PrivateProfile({
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

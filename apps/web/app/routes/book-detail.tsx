@@ -20,7 +20,6 @@ import { bookLd, buildMeta } from "~/lib/seo";
 import { data } from "react-router";
 import type { Route } from "./+types/book-detail";
 import { signInHref } from "~/lib/sign-in-path";
-export { ErrorBoundary } from "~/components/route-error";
 
 /**
  * The LCP cover's preload for the Link header, so Early Hints starts it before the HTML arrives
@@ -319,3 +318,5 @@ export default function BookDetail({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";

@@ -13,7 +13,6 @@ import { requireProfile } from "~/lib/profile.server";
 import type { Route } from "./+types/club-thread";
 import { useHydrated } from "capsomer/react/hooks";
 import { noindexMeta } from "~/lib/seo";
-export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -109,3 +108,5 @@ export default function ClubThread({ loaderData, params }: Route.ComponentProps)
 
 // It hydrates (root.tsx, the `hydrate` handle).
 export const handle = { hydrate: true };
+
+export { ErrorBoundary } from "~/components/route-error";

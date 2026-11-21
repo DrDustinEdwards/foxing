@@ -10,7 +10,6 @@ import { createDb, views } from "@foxing/core";
 import type { Route } from "./+types/recap";
 import { SITE_ORIGIN } from "~/lib/origins";
 import { SITE_NAME, buildMeta } from "~/lib/seo";
-export { ErrorBoundary } from "~/components/route-error";
 
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
@@ -70,3 +69,5 @@ export default function Recap({ loaderData }: Route.ComponentProps) {
     </PageShell>
   );
 }
+
+export { ErrorBoundary } from "~/components/route-error";
