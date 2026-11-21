@@ -12,7 +12,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.171.0",
+    "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.172.1",
     "@foxing/core": "*",
     "hono": "4.13.19",
     "zod": "4.6.7"
