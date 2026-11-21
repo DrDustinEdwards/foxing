@@ -56,13 +56,17 @@ a:hover > .fx-entity {
   background: var(--surface);
   padding: var(--space-9) var(--space-6);
 }
-.fx-empty .cap-empty-title {
+.fx-empty .cap-empty-title,
+.cap-error-page .cap-empty-title {
   font-family: var(--display);
   font-size: var(--title-4);
   font-weight: var(--weight-semibold);
+}
+.fx-empty .cap-empty-title {
   color: var(--text);
 }
-.fx-empty .cap-empty-text {
+.fx-empty .cap-empty-text,
+.cap-error-page .cap-empty-text {
   font-family: var(--fx-body);
   font-size: var(--title-6);
   color: var(--muted);
