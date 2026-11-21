@@ -21,11 +21,11 @@
     "legacy": {},
     "tests": {
       "files": 70,
-      "cases": 367
+      "cases": 368
     },
     "comments": {
-      "lines": 6018,
-      "code": 74334,
+      "lines": 6019,
+      "code": 74353,
       "percentage": 7.49
     }
   }
