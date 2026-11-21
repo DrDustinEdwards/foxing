@@ -183,13 +183,6 @@
       "when": 1794948759102,
       "tag": "0025_book_ai_review",
       "breakpoints": true
-    },
-    {
-      "idx": 26,
-      "version": "6",
-      "when": 1794948760102,
-      "tag": "0026_fix_book_isbns_and_years",
-      "breakpoints": true
     }
   ]
 }
