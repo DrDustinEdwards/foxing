@@ -314,7 +314,6 @@ export async function findBooksNeedingCache(
   return rows;
 }
 
-// --- Recommendation candidates (Find next book) ----------------------------
 // The candidate pool is catalog + readable (epub present) + has a cover, so every
 // recommended book can be opened and shows a cover. Owned books are excluded by the
 // caller in-memory (the exclusion set is per-user and small). subjects/rating/staff-pick

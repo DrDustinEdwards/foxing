@@ -48,7 +48,6 @@ async function requireModerator(
   return m;
 }
 
-// -- Club CRUD --------------------------------------------------------------
 // Clubs are free: no tier gate on creation. Everything below is membership/role
 // authorization, which is domain logic (Plus gates the AI companion, never clubs).
 
@@ -114,8 +113,6 @@ export async function rotateInviteCode(db: Db, actor: EventActor, clubId: string
   return clubsRepo.rotateJoinCode(db, clubId);
 }
 
-// -- Membership -------------------------------------------------------------
-
 /** Whether a member's role (the raw text column) may moderate: see ban and mute details. */
 export function canModerateRole(role: string | null | undefined): boolean {
   return membership.canModerate(role as ClubMemberRole);
@@ -134,7 +131,7 @@ export async function joinClub(
   if (existing?.status === "active") return existing;
   if (existing?.status === "banned") throw domainErrors.forbidden("You are banned from this club.");
   // A private club is joined through its invite code or an invitation, never by id: the
-  // same "not found" a non-member gets from GET /clubs/:id (Grok audit 2026-10-21, FX-1).
+  // same "not found" a non-member gets from GET /clubs/:id.
   if (club.visibility === "private" && !opts.viaInvite && existing?.status !== "invited") {
     throw domainErrors.notFound("Club not found.");
   }
@@ -309,8 +306,6 @@ export async function setMemberRole(
   return member as clubsRepo.ClubMember;
 }
 
-// -- Threads + posts --------------------------------------------------------
-
 export async function createThread(
   db: Db,
   actor: EventActor,
@@ -414,8 +409,6 @@ export async function removePost(
   };
 }
 
-// -- Polls ------------------------------------------------------------------
-
 export async function createPoll(
   db: Db,
   actor: EventActor,
@@ -518,8 +511,6 @@ export async function closePoll(
   };
 }
 
-// -- Meetings ---------------------------------------------------------------
-
 export async function createMeeting(
   db: Db,
   actor: EventActor,
@@ -567,8 +558,6 @@ export async function rsvpMeeting(
   await requireActive(db, meeting.clubId, actor.userId);
   await clubsRepo.upsertRsvp(db, meetingId, actor.userId, status);
 }
-
-// -- Schedule ---------------------------------------------------------------
 
 export async function addSchedule(
   db: Db,

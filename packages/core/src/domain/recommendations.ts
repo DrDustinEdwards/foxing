@@ -197,8 +197,6 @@ function selectAiPicks(
   return out.length ? out : null;
 }
 
-// -- Signals ----------------------------------------------------------------
-
 function buildSignals(
   favoriteGenres: string[],
   finished: Array<{ title: string; author: string; subjects: string[] | null }>,
@@ -236,8 +234,6 @@ function buildSignals(
     exampleByAuthor,
   };
 }
-
-// -- AI overlay -------------------------------------------------------------
 
 function buildProfilePrompt(
   favoriteGenres: string[],
@@ -404,8 +400,6 @@ function padTo(recs: Recommendation[], dataRanked: RankedRec[]): Recommendation[
   }
   return out.slice(0, TARGET);
 }
-
-// -- Composition ------------------------------------------------------------
 
 /** Coerce favourite_genres to a clean string[]. A brand-new profile stores NULL (Drizzle
  *  maps it to null); a dirty/legacy value that is not an array collapses to no genres, so

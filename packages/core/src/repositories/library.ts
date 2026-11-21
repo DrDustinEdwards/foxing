@@ -273,8 +273,6 @@ export async function listCurrentlyReading(
     .limit(limit);
 }
 
-// --- Recommendation signals ------------------------------------------------
-
 /** Every book id in the user's library (any status). The exclusion set for
  *  recommendations: never recommend a book they already track. */
 export async function listOwnedBookIds(db: Db, userId: string): Promise<string[]> {
@@ -332,8 +330,6 @@ export async function listFinishedInRangeForStats(
     );
 }
 
-// --- Vocabulary ------------------------------------------------------------
-
 export type VocabularyEntry = typeof vocabulary.$inferSelect;
 
 /** Count of words not yet mastered. Powers the account menu "N words to master" line. */
@@ -369,8 +365,6 @@ export async function setVocabularyMastered(
     .returning();
   return row ?? null;
 }
-
-// --- Custom shelves --------------------------------------------------------
 
 export async function listShelves(db: Db, userId: string): Promise<CustomShelf[]> {
   return db
@@ -471,8 +465,6 @@ export async function shelfIdsForBook(db: Db, userId: string, bookId: string): P
     .where(and(eq(customShelves.userId, userId), eq(customShelfBooks.bookId, bookId)));
   return rows.map((r) => r.shelfId);
 }
-
-// --- Reading goals ---------------------------------------------------------
 
 export async function createGoal(
   db: Db,
@@ -617,8 +609,6 @@ export async function countFinishedInPeriod(
     );
   return Number(rows[0]?.n ?? 0);
 }
-
-// --- Streaks ---------------------------------------------------------------
 
 export async function getStreak(db: Db, userId: string): Promise<ReadingStreak | null> {
   const rows = await db

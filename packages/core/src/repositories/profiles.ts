@@ -109,8 +109,6 @@ export async function updateUsername(
   return row ?? null;
 }
 
-// --- Billing. The Stripe webhook is the only writer of these fields. ---
-
 export async function getProfileByStripeCustomerId(
   db: Db,
   stripeCustomerId: string,

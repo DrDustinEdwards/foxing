@@ -2,7 +2,7 @@
 // all emitted through React Router's meta() so a route declares its SEO in one place.
 //
 // Canonical, OG and JSON-LD URLs always name https://foxing.app, never the request's
-// origin: the workers.dev preview must not claim to be the page (Dustin, 2026-10-25).
+// origin: the workers.dev preview must not claim to be the page.
 // The JSON-LD builders and the IndexNow and robots helpers are Prelum's.
 import { defineHead, absoluteUrl as prelumAbsoluteUrl } from "@drdustinedwards/site-helpers/head";
 import {

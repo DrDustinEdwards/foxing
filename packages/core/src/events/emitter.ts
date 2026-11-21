@@ -82,11 +82,10 @@ const handlers: EventHandlers = {
     };
   },
 
-  // -- Clubs. Recipient lists are passed IN the payload: handlers stay pure
   // (no DB reads), so the domain layer loads active members and hands them here.
 
   // A private club's join is never a public activity row: the feed would hand its id
-  // and name to every follower (Grok audit 2026-10-21, FX-1).
+  // and name to every follower.
   "club.member.joined": (_actor, payload) => {
     const { clubId, clubName, isPrivate } = payload as {
       clubId: string;
@@ -224,7 +223,6 @@ const handlers: EventHandlers = {
     };
   },
 
-  // -- Social. Diary events carry the ENTRY's own visibility (private entries
   // emit no event at all, so the domain never calls these for a private entry). The feed
   // resolver later filters by that stored visibility per viewer.
 

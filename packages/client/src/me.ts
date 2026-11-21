@@ -119,8 +119,6 @@ export function useSetNotificationPrefs() {
   });
 }
 
-// --- Billing ----------------------------------------------------------------
-
 /** Both answer with a Stripe URL to send the reader to. */
 export function useCheckout() {
   const api = useApi();
@@ -133,8 +131,6 @@ export function useBillingPortal() {
   const api = useApi();
   return useWrite<void, { url: string }>({ write: () => api.post("/billing/portal") });
 }
-
-// --- Account ----------------------------------------------------------------
 
 export function useAccountClubs() {
   const api = useApi();

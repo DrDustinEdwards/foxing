@@ -16,8 +16,6 @@ import {
   type HealthBook,
 } from "../domain/catalog-health";
 
-// ---- Books --------------------------------------------------------------------
-
 export type AdminBookRow = {
   id: string;
   title: string;
@@ -141,8 +139,6 @@ export async function setBookStaffPick(
     .where(eq(books.id, id));
 }
 
-// ---- Book of the Month --------------------------------------------------------
-
 export type AdminBotmRow = typeof bookOfTheMonth.$inferSelect & {
   bookTitle: string | null;
   bookAuthor: string | null;
@@ -197,8 +193,6 @@ export async function deleteBotm(db: Db, id: string): Promise<void> {
   await db.delete(bookOfTheMonth).where(eq(bookOfTheMonth.id, id));
 }
 
-// ---- Celebrity picks (external clubs) -----------------------------------------
-
 export async function listPickClubsAdmin(db: Db) {
   return db.select().from(externalBookClubs).orderBy(externalBookClubs.sortOrder);
 }
@@ -241,8 +235,6 @@ export async function updatePick(
     .set({ ...patch, updatedAt: new Date() })
     .where(eq(externalBookClubPicks.id, id));
 }
-
-// ---- Reader clubs ---------------------------------------------------
 
 export type AdminClubRow = {
   id: string;

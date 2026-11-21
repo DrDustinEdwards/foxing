@@ -18,8 +18,6 @@ import * as socialRepo from "../repositories/social";
 import { books, user as authUser } from "../schema";
 import { domainErrors } from "./errors";
 
-// -- Feed resolver (pure) ---------------------------------------------------
-
 export type FeedItemKind = "activity" | "follower";
 
 export type FeedItem =
@@ -54,8 +52,6 @@ export function resolveFeed(input: FeedInputs): socialRepo.ActivityEvent[] {
   });
 }
 
-// -- Follows ----------------------------------------------------------------
-
 export async function followUser(db: Db, actor: EventActor, targetUserId: string): Promise<void> {
   if (targetUserId === actor.userId) throw domainErrors.validation("You cannot follow yourself.");
   const [target] = await db
@@ -76,8 +72,6 @@ export async function followUser(db: Db, actor: EventActor, targetUserId: string
 export async function unfollowUser(db: Db, actor: EventActor, targetUserId: string): Promise<void> {
   await socialRepo.unfollow(db, actor.userId, targetUserId);
 }
-
-// -- Close friends (Plus; tier gate enforced in the route) ------------------
 
 export async function addCloseFriend(
   db: Db,
@@ -103,8 +97,6 @@ export async function removeCloseFriend(
 ): Promise<void> {
   await socialRepo.removeCloseFriend(db, actor.userId, targetUserId);
 }
-
-// -- Reading lists ----------------------------------------------------------
 
 export async function createList(
   db: Db,
@@ -177,7 +169,6 @@ export async function removeBookFromList(
   await socialRepo.removeBookFromList(db, listId, bookId);
 }
 
-// -- Feed assembly ----------------------------------------------------------
 // Load both relationship graphs, fetch candidate activity + the viewer's own
 // new_follower notifications, resolve visibility (pure), merge by created_at, page.
 
@@ -244,8 +235,6 @@ function compareKeys(a: Key, b: Key): number {
   if (a.at !== b.at) return a.at - b.at;
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
-
-// -- Public profile bundle helpers ------------------------------------------
 
 /** Visibilities a viewer may see of a target's content. Owner sees all; a viewer who is
  *  on the target's close-friends list sees friends+public; everyone else sees public. */

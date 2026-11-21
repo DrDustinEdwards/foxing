@@ -12,8 +12,6 @@ import { useApi } from "./provider";
 import { patch, patchAll, useSeededQuery } from "capsomer/react/data";
 import { useWrite } from "./query";
 
-// --- Reads ------------------------------------------------------------------
-
 export function useClubsIndex<S extends W.ClubsIndex | undefined = undefined>(seed?: S) {
   const api = useApi();
   return useSeededQuery(
@@ -67,8 +65,6 @@ function patchClub(clubId: string, update: (page: W.ClubPage) => W.ClubPage) {
   );
 }
 
-// --- Membership -------------------------------------------------------------
-
 export function useJoinClub() {
   const api = useApi();
   return useWrite<{ clubId: string }>({
@@ -108,8 +104,6 @@ export function useCreateClub() {
     invalidates: () => [keys.clubsIndex],
   });
 }
-
-// --- Threads and posts ------------------------------------------------------
 
 export function useCreateThread() {
   const api = useApi();
@@ -155,8 +149,6 @@ export function useRemovePost() {
     invalidates: ({ threadId }) => [keys.thread(threadId)],
   });
 }
-
-// --- Polls ------------------------------------------------------------------
 
 export function useCreatePoll() {
   const api = useApi();
@@ -206,8 +198,6 @@ export function useClosePoll() {
     invalidates: () => [keys.clubPages],
   });
 }
-
-// --- Meetings and schedule --------------------------------------------------
 
 export function useCreateMeeting() {
   const api = useApi();
@@ -280,8 +270,6 @@ export function useRemoveSchedule() {
     invalidates: () => [keys.clubPages],
   });
 }
-
-// --- Live -------------------------------------------------------------------
 
 /** Opens a club's live socket while clubId is set (members only; the server refuses
  *  anyone else). New threads and notices refetch the club page, new posts refetch

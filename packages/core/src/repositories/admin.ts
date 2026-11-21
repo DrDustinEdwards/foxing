@@ -36,8 +36,6 @@ async function countWhere(db: Db, table: SQLiteTable, where?: SQL): Promise<numb
   return row?.n ?? 0;
 }
 
-// ---- Dashboard ----------------------------------------------------------------
-
 export type AdminStats = {
   totalUsers: number;
   plusUsers: number;
@@ -89,8 +87,6 @@ export async function getAdminStats(db: Db): Promise<AdminStats> {
   };
 }
 
-// ---- Audit log ----------------------------------------------------------------
-
 export type AuditEntry = {
   action: string;
   params?: Record<string, unknown> | null;
@@ -118,8 +114,6 @@ export async function listAuditLog(db: Db, limit = 50, offset = 0): Promise<Audi
     .limit(Math.min(limit, 200))
     .offset(offset);
 }
-
-// ---- Users --------------------------------------------------------------------
 
 export type AdminUserRow = {
   id: string;

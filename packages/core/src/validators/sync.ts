@@ -26,8 +26,6 @@ export type SyncVerb = z.infer<typeof syncVerb>;
 // uninterpretable position data is ever written.
 const locator = z.record(z.string(), z.unknown());
 
-// -- Per-resource payloads (writable columns only). Timestamps are epoch ms. ----
-
 const annotationPayload = z.object({
   bookId: z.string().min(1).nullable().optional(),
   clubId: z.string().min(1).nullable().optional(),

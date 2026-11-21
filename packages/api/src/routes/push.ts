@@ -18,8 +18,6 @@ import type { Env } from "../types";
 
 export const pushRoutes = new Hono<Env>();
 
-// -- Push tokens ------------------------------------------------------------
-
 pushRoutes.post("/push/register", rateLimit("write"), async (c) => {
   const session = requireSession(c);
   const { token, platform } = await parseJson(c, pushRegisterInput);
@@ -32,8 +30,6 @@ pushRoutes.delete("/push/:token", rateLimit("write"), async (c) => {
   await pushRepo.deleteToken(c.get("db"), session.id, c.req.param("token"));
   return c.json({ ok: true });
 });
-
-// -- Notifications (in-app) -------------------------------------------------
 
 pushRoutes.get("/notifications", async (c) => {
   const session = requireSession(c);

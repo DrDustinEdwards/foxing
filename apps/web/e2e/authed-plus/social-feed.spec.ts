@@ -91,25 +91,21 @@ test.describe("social feed visibility (two real users)", () => {
     await logReview(page, friendsReview, "friends");
     await logReview(page, privateReview, "private");
 
-    // --- A views B's profile: only the public review is visible so far ---------
     await pageA.goto(`/u/${bUsername}`);
     await expect(pageA.getByText(publicReview)).toBeVisible();
     await expect(pageA.getByText(friendsReview)).toHaveCount(0);
     await expect(pageA.getByText(privateReview)).toHaveCount(0);
 
-    // --- A's feed surfaces B's public activity --------------------------------
     await pageA.goto("/feed");
     await expect(
       pageA.getByRole("link", { name: new RegExp(bUsername, "i") }).first(),
     ).toBeVisible();
 
-    // --- B adds A as a close friend (Plus) from A's profile -------------------
     await page.goto(`/u/${aUsername}`);
     await page.getByRole("button", { name: /^add close friend$/i }).click();
     // The label flips at once and the button stays disabled until the write has landed.
     await expect(page.getByRole("button", { name: /^close friend$/i })).toBeEnabled();
 
-    // --- A now sees the friends-only review; private stays hidden -------------
     await pageA.goto(`/u/${bUsername}`);
     await expect(pageA.getByText(publicReview)).toBeVisible();
     await expect(pageA.getByText(friendsReview)).toBeVisible();

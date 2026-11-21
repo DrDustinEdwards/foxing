@@ -226,7 +226,6 @@ test.describe("social reading: three-account gate", () => {
     // chapter, then A undoing its highlight.
     test.setTimeout(240_000);
 
-    // --- A: share a highlight to the club via the visible control -------------
     await clearLeftoverClubHighlights(browser, "e2e/.auth/plus.json");
     const a = await openReader(browser, "e2e/.auth/plus.json");
     // A passage A has not marked yet: one A already highlighted opens A's edit popover on
@@ -251,7 +250,6 @@ test.describe("social reading: three-account gate", () => {
     await expect(a.getByText(/^Saving/)).toHaveCount(0);
     await expect(a.getByText(/could not/i)).toHaveCount(0);
 
-    // --- B: enable the club layer, see A attributed, reply --------------------
     const b = await openReader(browser, "e2e/.auth/social-b.json");
     // The chip's name carries the count of club annotations after the label.
     await b.getByRole("button", { name: /^my clubs/i }).click();
@@ -266,7 +264,6 @@ test.describe("social reading: three-account gate", () => {
     await attribution.getByRole("button", { name: /^reply$/i }).click();
     await expect(attribution.getByText(replyText)).toBeVisible();
 
-    // --- C: never sees A's club highlight, in ANY layer (the hard gate) -------
     const c = await openReader(browser, "e2e/.auth/social-c.json");
     // A non-member has no club annotations at all: the chip carries no count.
     await expect(c.getByRole("button", { name: "My clubs", exact: true })).toBeVisible();
@@ -281,7 +278,6 @@ test.describe("social reading: three-account gate", () => {
     // And C cannot see B's reply text anywhere on the page.
     await expect(c.getByText(replyText)).toHaveCount(0);
 
-    // --- A: delete the shared highlight through its own popover ---------------
     // The accounts persist across runs, so leave A's page unmarked for the next one.
     const own = await findParagraph(a, passage.text);
     const edit = a.getByRole("dialog", { name: /edit annotation/i });

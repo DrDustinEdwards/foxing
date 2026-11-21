@@ -20,8 +20,6 @@ export type ReadingList = typeof readingLists.$inferSelect;
 export type ReadingListBook = typeof readingListBooks.$inferSelect;
 export type ActivityEvent = typeof activityEvents.$inferSelect;
 
-// -- Follows ----------------------------------------------------------------
-
 /** Idempotent follow. Returns true if a new edge was created. */
 export async function follow(db: Db, followerId: string, followingId: string): Promise<void> {
   await db.insert(follows).values({ followerId, followingId }).onConflictDoNothing();
@@ -80,7 +78,6 @@ export async function countFollowing(db: Db, userId: string): Promise<number> {
   return row?.n ?? 0;
 }
 
-// -- Close friends ----------------------------------------------------------
 // close_friends is a one-directional list the owner (user_id) curates. friend_id is
 // the person granted the owner's friends-only content. It is NOT symmetric and NOT
 // the same graph as follows.
@@ -113,8 +110,6 @@ export async function listCloseFriendOfIds(db: Db, viewerId: string): Promise<st
     .where(eq(closeFriends.friendId, viewerId));
   return rows.map((r) => r.id);
 }
-
-// -- Reading lists ----------------------------------------------------------
 
 export async function createList(
   db: Db,
@@ -246,7 +241,6 @@ export async function removeBookFromList(db: Db, listId: string, bookId: string)
     .where(and(eq(readingListBooks.listId, listId), eq(readingListBooks.bookId, bookId)));
 }
 
-// -- Activity feed candidates -----------------------------------------------
 // Fetch the newest events authored by any of the candidate authors. Visibility
 // filtering per viewer happens in domain/social.ts (the pure resolver), NOT here: this
 // returns raw rows so the resolver stays unit-testable without D1.

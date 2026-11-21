@@ -140,8 +140,6 @@ export function isCollectionTitle(title: string): boolean {
   );
 }
 
-// ---- ISBN ---------------------------------------------------------------------
-
 /** Digits (and a final X for an ISBN-10) with hyphens and spaces removed; "" for none. */
 export function normalizeIsbn(raw: string | null | undefined): string {
   return (raw ?? "").replace(/[\s-]/g, "").toUpperCase();
@@ -179,8 +177,6 @@ function canonicalIsbn(book: Pick<HealthBook, "isbn" | "isbn13">): string | null
   return isbn10To13(ten);
 }
 
-// ---- Titles -------------------------------------------------------------------
-
 function fold(text: string): string {
   return text
     .normalize("NFKD")
@@ -201,8 +197,6 @@ function titleKey(title: string): string {
   return fold(title).replace(/^(?:the|a|an) /, "");
 }
 
-// ---- Links --------------------------------------------------------------------
-
 function linkIsOk(raw: string, host: RegExp): boolean {
   try {
     const url = new URL(raw);
@@ -214,8 +208,6 @@ function linkIsOk(raw: string, host: RegExp): boolean {
 
 const BOOKSHOP_HOST = /(?:^|\.)bookshop\.org$/i;
 const AMAZON_HOST = /(?:^|\.)amazon\.[a-z.]+$|(?:^|\.)amzn\.(?:to|com)$/i;
-
-// ---- The audit ----------------------------------------------------------------
 
 const blank = (value: string | null | undefined) => !value || value.trim() === "";
 

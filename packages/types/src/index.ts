@@ -5,8 +5,6 @@
 // is a Date. Dependency-free on purpose: mobile and web both type-check it. The one
 // runtime export is the club socket's keepalive pair (end of file).
 
-// --- Shared building blocks -------------------------------------------------
-
 export type ShelfStatus = "want" | "reading" | "finished" | "paused" | "abandoned";
 export type Visibility = "private" | "friends" | "public";
 export type ReactionTarget =
@@ -44,8 +42,6 @@ export interface BookRef {
   author: string;
   coverUrl: string | null;
 }
-
-// --- Me ---------------------------------------------------------------------
 
 export interface MyProfile {
   id: string;
@@ -92,8 +88,6 @@ export interface Me {
   /** Null until onboarding has created the profile. */
   profile: MyProfile | null;
 }
-
-// --- Library ----------------------------------------------------------------
 
 export interface LibraryEntry {
   bookId: string;
@@ -210,8 +204,6 @@ export interface MyBookState {
   finishedAt: number | null;
 }
 
-// --- Notifications ----------------------------------------------------------
-
 export interface NotificationItem {
   id: string;
   type: string;
@@ -228,8 +220,6 @@ export interface NotificationsPage {
   /** `<ms>.<id>` of the last row, for `?cursor=`, or null on the last page. */
   nextCursor: string | null;
 }
-
-// --- Clubs ------------------------------------------------------------------
 
 export type ClubRole = "owner" | "moderator" | "member";
 export type ClubMemberStatus =
@@ -366,8 +356,6 @@ export interface ClubsIndex {
   discover: ClubCard[];
 }
 
-// --- Social -----------------------------------------------------------------
-
 export type FeedRow =
   | {
       kind: "activity";
@@ -489,8 +477,6 @@ export interface ListPage {
   liked: boolean;
   books: { bookId: string; note: string | null; position: number; book: BookCard | null }[];
 }
-
-// --- Catalog ----------------------------------------------------------------
 
 /** Search-as-you-type: books, authors, public profiles and public clubs. */
 export interface SearchSuggest {
@@ -635,8 +621,6 @@ export interface Recommendations {
   isPlus: boolean;
 }
 
-// --- Reader annotations -----------------------------------------------------
-
 /** A reading position (Readium locator JSON); the server stores it as given. */
 export type Locator = Record<string, unknown>;
 
@@ -734,8 +718,6 @@ export interface MyAnnotation {
   bookSlug: string | null;
   bookAuthor: string | null;
 }
-
-// --- Club live socket -------------------------------------------------------
 
 /** The keepalive frames of a club's live socket. The ClubRoom registers this exact
  *  pair with setWebSocketAutoResponse, so the runtime answers a ping without waking

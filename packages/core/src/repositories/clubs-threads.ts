@@ -4,8 +4,6 @@ import type { ClubPost, ClubThread } from "./clubs";
 import { clubPosts, clubThreads } from "../schema";
 import { and, desc, eq } from "drizzle-orm";
 
-// -- Threads ----------------------------------------------------------------
-
 export async function createThread(
   db: Db,
   clubId: string,
@@ -63,8 +61,6 @@ export async function removeThread(
     .returning();
   return row ?? null;
 }
-
-// -- Posts ------------------------------------------------------------------
 
 export async function createPost(
   db: Db,

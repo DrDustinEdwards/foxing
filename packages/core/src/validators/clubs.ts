@@ -12,8 +12,6 @@ import {
   rsvpStatus,
 } from "../enums";
 
-// -- Club CRUD --------------------------------------------------------------
-
 export const createClubInput = z.object({
   name: z.string().min(1).max(120),
   description: z.string().max(4000).optional(),
@@ -46,8 +44,6 @@ export const updateClubInput = z
   .refine((v) => Object.keys(v).length > 0, { message: "no fields to update" });
 export type UpdateClubInput = z.infer<typeof updateClubInput>;
 
-// -- Membership -------------------------------------------------------------
-
 // Role change target (approve and unban take no body beyond the path userId).
 export const setRoleInput = z.object({
   role: clubMemberRole,
@@ -69,8 +65,6 @@ export const banMemberInput = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 export type BanMemberInput = z.infer<typeof banMemberInput>;
-
-// -- Threads + posts --------------------------------------------------------
 
 export const createThreadInput = z.object({
   type: clubThreadType.optional(),
@@ -95,8 +89,6 @@ export const removePostInput = z.object({
   reason: z.string().max(500).optional(),
 });
 export type RemovePostInput = z.infer<typeof removePostInput>;
-
-// -- Polls ------------------------------------------------------------------
 
 const pollOptionInput = z.object({
   id: z.string().min(1).max(64),
@@ -124,8 +116,6 @@ export const votePollInput = z.object({
 });
 export type VotePollInput = z.infer<typeof votePollInput>;
 
-// -- Meetings + RSVPs -------------------------------------------------------
-
 export const createMeetingInput = z.object({
   title: z.string().min(1).max(240),
   description: z.string().max(4000).optional(),
@@ -146,8 +136,6 @@ export const rsvpInput = z.object({
   status: rsvpStatus,
 });
 export type RsvpInput = z.infer<typeof rsvpInput>;
-
-// -- Schedule ---------------------------------------------------------------
 
 export const createScheduleInput = z.object({
   chapterName: z.string().min(1).max(240),

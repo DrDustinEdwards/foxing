@@ -21,8 +21,6 @@ import type { Env } from "../types";
 
 export const libraryRoutes = new Hono<Env>();
 
-// --- Shelf status ----------------------------------------------------------
-
 libraryRoutes.get("/library", async (c) => {
   const session = requireSession(c);
   return c.json({ library: await views.library(c.get("db"), session.id) });
@@ -50,8 +48,6 @@ libraryRoutes.delete("/library/:bookId", rateLimit("write"), async (c) => {
   const ok = await libraryRepo.removeFromLibrary(c.get("db"), session.id, c.req.param("bookId"));
   return c.json({ ok });
 });
-
-// --- Custom shelves --------------------------------------------------------
 
 libraryRoutes.get("/shelves", async (c) => {
   const session = requireSession(c);
@@ -105,8 +101,6 @@ libraryRoutes.delete("/shelves/:id/books/:bookId", rateLimit("write"), async (c)
   return c.json({ ok });
 });
 
-// --- Reading goals ---------------------------------------------------------
-
 libraryRoutes.get("/goals", async (c) => {
   const session = requireSession(c);
   return c.json({ goals: await views.goals(c.get("db"), session.id) });
@@ -134,8 +128,6 @@ libraryRoutes.delete("/goals/:id", rateLimit("write"), async (c) => {
   return c.json({ ok });
 });
 
-// --- Vocabulary ------------------------------------------------------------
-
 libraryRoutes.get("/vocabulary", async (c) => {
   const session = requireSession(c);
   return c.json({ words: await views.vocabulary(c.get("db"), session.id) });
@@ -153,8 +145,6 @@ libraryRoutes.patch("/vocabulary/:id", rateLimit("write"), async (c) => {
   if (!entry) throw errors.notFound("Word not found.");
   return c.json({ entry });
 });
-
-// --- Streaks ---------------------------------------------------------------
 
 libraryRoutes.get("/stats", async (c) => {
   const session = requireSession(c);

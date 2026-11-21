@@ -1,7 +1,6 @@
 // Club endpoints: CRUD, membership, threads/posts, polls, meetings,
 // schedule, and the live WebSocket. Handlers stay thin: guard the session, validate,
 // call the core clubs domain (which authorizes, commits to D1, and emits events), then
-// -- only after that returns -- relay any `live` message to the club's ClubRoom via the
 // injected hub. That ordering is the invariant: D1 commits first, then the DO fans out.
 // The DO never writes D1.
 import { logEvent } from "@dustinedwards/site-runtime/log";
@@ -43,8 +42,6 @@ async function notify(c: Context<Env>, clubId: string, live: LiveMessage | LiveM
   }
 }
 
-// -- Reads (the same views the web loaders call in-process) ---------------
-
 clubRoutes.get("/clubs", async (c) => {
   return c.json({ clubs: await views.publicClubs(c.get("db")) });
 });
@@ -56,7 +53,7 @@ clubRoutes.get("/clubs/mine", async (c) => {
 
 // A club by id or slug, with everything its page shows. Private clubs are visible only
 // to their active members; anyone else gets the same "not found" as a club that does
-// not exist (Grok audit 2026-10-21, FX-1).
+// not exist.
 clubRoutes.get("/clubs/:id", async (c) => {
   const page = await views.clubPage(c.get("db"), c.req.param("id"), c.get("session")?.id ?? null);
   if (!page) throw errors.notFound("Club not found.");
@@ -87,8 +84,6 @@ clubRoutes.get("/join/:code", async (c) => {
   });
 });
 
-// -- Club CRUD --------------------------------------------------------------
-
 clubRoutes.post("/clubs", rateLimit("write"), async (c) => {
   const { session } = actorOf(c);
   // Clubs are free: creating, joining, posting, polls, and inline passage comments are
@@ -116,8 +111,6 @@ clubRoutes.post("/clubs/:id/invite-code", rateLimit("write"), async (c) => {
   const joinCode = await clubsDomain.rotateInviteCode(c.get("db"), actor, c.req.param("id"));
   return c.json({ joinCode });
 });
-
-// -- Membership -------------------------------------------------------------
 
 clubRoutes.post("/clubs/:id/join", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
@@ -199,8 +192,6 @@ clubRoutes.post("/clubs/:id/members/:userId/role", rateLimit("write"), async (c)
   return c.json({ member });
 });
 
-// -- Threads + posts --------------------------------------------------------
-
 clubRoutes.post("/clubs/:id/threads", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createThreadInput);
@@ -240,8 +231,6 @@ clubRoutes.delete("/posts/:id", rateLimit("write"), async (c) => {
   return c.json({ post });
 });
 
-// -- Polls ------------------------------------------------------------------
-
 clubRoutes.post("/clubs/:id/polls", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createPollInput);
@@ -268,8 +257,6 @@ clubRoutes.post("/polls/:id/close", rateLimit("write"), async (c) => {
   return c.json({ result });
 });
 
-// -- Meetings ---------------------------------------------------------------
-
 clubRoutes.post("/clubs/:id/meetings", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createMeetingInput);
@@ -290,8 +277,6 @@ clubRoutes.post("/meetings/:id/rsvp", rateLimit("write"), async (c) => {
   return c.json({ ok: true });
 });
 
-// -- Schedule ---------------------------------------------------------------
-
 clubRoutes.post("/clubs/:id/schedule", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   const input = await parseJson(c, createScheduleInput);
@@ -310,7 +295,6 @@ clubRoutes.delete("/clubs/:id/schedule/:scheduleId", rateLimit("write"), async (
   return c.json({ ok: true });
 });
 
-// -- Live layer (WebSocket) -------------------------------------------------
 // Membership is checked BEFORE the upgrade, so a non-member never gets a socket into
 // the ClubRoom. The hub forwards the upgrade to the club's own Durable Object; every
 // broadcast is scoped to that one club's sockets by construction (one DO per club).

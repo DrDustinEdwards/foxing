@@ -17,8 +17,6 @@ import {
 import { z } from "zod";
 import { journalPostVersions, journalPosts, journalSlugRedirects, profiles, user } from "../schema";
 
-// ---- Journal ------------------------------------------------------------------
-
 export type JournalAdminQuery = {
   limit?: number;
   offset?: number;

@@ -6,8 +6,6 @@
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// -- op contract (mirrors packages/core/src/validators/sync.ts) -------------
-
 export type SyncResource = "annotation" | "user_book" | "session" | "vocabulary" | "diary";
 export type SyncVerb = "create" | "update" | "delete";
 
@@ -44,8 +42,6 @@ const MAX_BATCH = 500;
 
 let flushing = false;
 
-// -- client id --------------------------------------------------------------
-
 // 21-char url-safe id used as both op id and row primary key. nanoid is not installed and
 // pulling a native crypto dep is a device gate, so this uses Math.random -- adequate for a
 // per-device offline queue (collisions across a single user's device are vanishingly rare
@@ -58,8 +54,6 @@ export function clientId(): string {
   }
   return out;
 }
-
-// -- persistence ------------------------------------------------------------
 
 async function readQueue(): Promise<SyncOp[]> {
   try {
@@ -79,8 +73,6 @@ async function writeQueue(ops: SyncOp[]): Promise<void> {
     console.warn("[sync-queue] write failed:", e instanceof Error ? e.message : e);
   }
 }
-
-// -- enqueue ----------------------------------------------------------------
 
 // Queue one offline write. Returns the op id (also the row primary key) so the caller can
 // reflect the write in local UI immediately under the same id the server will use.
@@ -102,8 +94,6 @@ export async function enqueue(input: {
   await writeQueue(cur);
   return op.id;
 }
-
-// -- push (flush) -----------------------------------------------------------
 
 // Flush queued ops to /api/v1/sync in <=500 batches, dropping any op the server reports as
 // applied or skipped (both are terminal: skipped means replay/stale/idempotent, never
