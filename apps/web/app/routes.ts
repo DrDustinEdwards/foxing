@@ -113,4 +113,7 @@ export default [
 
   // Liveness and backup age for uptime monitors (JSON, no-store, unauthenticated).
   route("health", "routes/health.ts"),
+
+  // Every other address: a 404 drawn in the site's header and footer.
+  route("*", "routes/not-found.tsx"),
 ] satisfies RouteConfig;

@@ -28,7 +28,6 @@ import "@fontsource-variable/dm-sans/wght.css";
 import "@fontsource/dm-mono/400.css";
 import "@fontsource/dm-mono/500.css";
 import stylesheet from "./app.css?url";
-import { PageShell } from "./components/page-shell";
 import { cloudflareContext } from "./context";
 import { getNavMenu, getNavUser } from "./lib/nav.server";
 import { useNonce } from "@dustinedwards/site-runtime/nonce";
@@ -44,7 +43,7 @@ export async function loader({ context, request }: Route.LoaderArgs) {
   return { navUser, navMenu };
 }
 
-// The error path's title (an unmatched address matches no route but the root); every page sets its own.
+// The error path's title for an error the root shows; every page sets its own, and a missing page's is in routes/not-found.tsx.
 export function meta({ error }: Route.MetaArgs) {
   return error ? [{ title: errorTitle(error, SITE_NAME) }] : [];
 }
@@ -127,12 +126,7 @@ export default function App() {
   );
 }
 
-// Capsomer's error page in the site's frame. The header and footer read the root loader's data only when it ran: an
-// address no route matches skips it, and the frame then shows the signed-out header.
+// Capsomer's error page. No site header: Foxing's reads the root loader's data, which the error path lacks.
 export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
-  return (
-    <PageShell>
-      <ErrorPage error={error} home="/" as="div" dev={import.meta.env.DEV} />
-    </PageShell>
-  );
+  return <ErrorPage error={error} home="/" dev={import.meta.env.DEV} />;
 }
