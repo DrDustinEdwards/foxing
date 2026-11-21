@@ -28,3 +28,11 @@ interface Env extends SiteSecrets {
 
 // The React Router vite plugin supplies this virtual module at build time.
 declare module "virtual:react-router/server-build";
+
+declare module "virtual:islands" {
+  export const SITE_SCRIPT: Readonly<{
+    src: string;
+    integrity?: string;
+    crossOrigin?: "anonymous";
+  }>;
+}

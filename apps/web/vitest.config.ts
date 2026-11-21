@@ -1,5 +1,6 @@
 import path from "node:path";
 import { cloudflareTest, readD1Migrations } from "@cloudflare/vitest-plugin";
+import { siteScript } from "@dustinedwards/devkit/vite/site-script";
 import { defineConfig } from "vitest/config";
 
 // API integration tests run in workerd (miniflare) against a local D1 with the real
@@ -24,6 +25,7 @@ export default defineConfig(async () => {
       ],
     },
     plugins: [
+      siteScript({ toolbar: false }),
       cloudflareTest({
         // A test-only entry that exports the ClubRoom class, so the CLUB_ROOM binding
         // below is a real Durable Object (the app entry pulls in the React Router build).
