@@ -527,7 +527,7 @@ export const TOOLS: ToolDefinition[] = [
         publisher: z.string().max(500).nullable().optional(),
         subjects: z.array(z.string()).nullable().optional(),
         staff_pick: z
-          .object({
+          .strictObject({
             on: z.boolean().describe("true features the book as a staff pick, false removes it."),
             note: z.string().max(500).nullable().optional(),
           })
