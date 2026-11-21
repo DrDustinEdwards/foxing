@@ -57,7 +57,8 @@ export const CATALOG_CHECKS: Record<
   missing_year: {
     severity: "warning",
     scope: "catalog",
-    summary: "A catalog book with no publication year: it is left out of year and era views.",
+    summary:
+      "A catalog book with no publication year: it is left out of year and era views. Generic collections (Short Fiction, Poetry) are not checked.",
   },
   missing_subjects: {
     severity: "warning",
@@ -131,6 +132,13 @@ export type Finding = {
   slug: string;
   detail: string;
 };
+
+/** A generic collection ("Short Fiction", "Conan Stories"): no single year fits. */
+export function isCollectionTitle(title: string): boolean {
+  return /^(short [\w ]+|poetry|plays|essays|travel essays)$|\b(stories|folktales)$/i.test(
+    title.trim(),
+  );
+}
 
 // ---- ISBN ---------------------------------------------------------------------
 
@@ -272,7 +280,8 @@ export function auditCatalog(books: HealthBook[], coverOrigin: string): Finding[
           add(book, "missing_description", "description is template filler.");
       }
       if (blank(book.epubUrl)) add(book, "missing_epub", "epub_url is empty.");
-      if (book.publicationYear === null) add(book, "missing_year", "publication_year is empty.");
+      if (book.publicationYear === null && !isCollectionTitle(book.title))
+        add(book, "missing_year", "publication_year is empty.");
       if (!book.subjects || book.subjects.length === 0)
         add(book, "missing_subjects", "subjects is empty.");
       else if (toGenres(book.subjects).length === 0)
