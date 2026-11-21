@@ -64,6 +64,7 @@ describe("auditCatalog", () => {
     ]);
     expect(checksOf([book({ ...bare, sourceType: "community" })])).toEqual(["missing_cover"]);
     expect(checksOf([book({ publicationYear: null, title: "Short Fiction" })])).toEqual([]);
+    expect(checksOf([book({ publicationYear: null, title: "The Iliad" })])).toEqual([]);
   });
 
   it("counts template filler as no description and a heading-only subject list as no genre", () => {
