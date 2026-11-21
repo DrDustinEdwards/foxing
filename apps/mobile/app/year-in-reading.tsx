@@ -189,9 +189,7 @@ export default function YearInReadingScreen() {
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12, gap: 6 }}>
               <Books color={C.brandUi} size={16} />
               <Text style={{ fontFamily: Fonts.ui, fontSize: 13, color: C.textSecondary }}>
-                {stats.topGenre
-                  ? "top genre"
-                  : "add subjects to your books to see your top genre"}
+                {stats.topGenre ? "top genre" : "add subjects to your books to see your top genre"}
               </Text>
             </View>
           </Slide>
