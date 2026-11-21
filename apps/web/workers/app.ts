@@ -496,8 +496,10 @@ async function factCheckMessage(
       },
       { level: limited ? "warn" : "error" },
     );
-    // Every attempt is billed, so a book that keeps failing is given up on after three instead of six.
-    if (message.attempts >= 3) return message.ack();
+    // Every attempt is billed, so a book that keeps failing is given up on after three instead of six. A reply cut off
+    // at max_tokens is cut off again by the same book, so it is not tried a second time.
+    const cutOff = err instanceof Error && err.message.includes("(truncated)");
+    if (cutOff || message.attempts >= 3) return message.ack();
     message.retry({ delaySeconds: 60 * message.attempts });
   }
 }
