@@ -76,9 +76,7 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
 
       <AdminCard
         title={user.displayName ?? "No name set"}
-        action={
-          <SuspendButton user={user} suspend={suspend} />
-        }
+        action={<SuspendButton user={user} suspend={suspend} />}
       >
         <div className="fx-admin-user-detail-grid">
           <Field label="Email">{user.email ?? "Unknown"}</Field>

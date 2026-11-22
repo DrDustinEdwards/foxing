@@ -52,14 +52,16 @@ export function callApi(
 }
 
 export async function seedAuthUser(id: string) {
-  await createDb(env.DB).insert(schema.user).values({
-    id,
-    name: id,
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+  await createDb(env.DB)
+    .insert(schema.user)
+    .values({
+      id,
+      name: id,
+      email: `${id}@example.com`,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 }
 
 /** A user and their profile: the two rows a signed-in caller needs. */

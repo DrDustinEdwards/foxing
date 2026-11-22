@@ -39,7 +39,6 @@ function strArg(flag: string): string | null {
   return i >= 0 && args[i + 1] ? args[i + 1] : null;
 }
 
-
 const r2 = LOCAL
   ? null
   : new S3Client({
