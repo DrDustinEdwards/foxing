@@ -42,7 +42,12 @@ export default defineConfig({
       output: {
         codeSplitting: {
           // Tiny modules most pages share: one chunk instead of four, so each route lists one file in the Worker's manifest.
-          groups: [{ name: "shared", test: /(hooks\.react|theme-server|status\.react|sign-in-path)\.m?js$/ }],
+          groups: [
+            {
+              name: "shared",
+              test: /(hooks\.react|theme-server|status\.react|sign-in-path)\.m?js$/,
+            },
+          ],
         },
       },
     },
