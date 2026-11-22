@@ -2,7 +2,7 @@
 // (owner can always see their own). Aggregates finishes, top books, and stats in core,
 // with a shareable OG image at /og/recap/:username/:year.
 import { PageShell } from "~/components/page-shell";
-import { TopBooks, YearNumbers } from "~/components/reading/recap-parts";
+import { TopBooks, YearNumbers } from "~/components/reading/year-view";
 import { Container, EmptyState, PageHeader } from "~/components/ui";
 import { cloudflareContext } from "~/context";
 import { sessionUserFromRequest } from "~/lib/auth.server";
