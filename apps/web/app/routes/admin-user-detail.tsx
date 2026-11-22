@@ -15,7 +15,7 @@ import {
   adminInputClass,
   useAdminAction,
 } from "~/components/admin/admin-form";
-import { useRoleChange } from "~/components/admin/confirm-change";
+import { SuspendButton, useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-user-detail";
@@ -76,21 +76,7 @@ export default function AdminUserDetail({ loaderData }: Route.ComponentProps) {
 
       <AdminCard
         title={user.displayName ?? "No name set"}
-        action={
-          <AdminButton
-            variant={user.isSuspended ? "default" : "danger"}
-            pending={suspend.pending}
-            onClick={() =>
-              void suspend.request(
-                `/users/${user.id}/suspend`,
-                { suspended: !user.isSuspended },
-                user.isSuspended ? "Unsuspend" : "Suspend",
-              )
-            }
-          >
-            {user.isSuspended ? "Unsuspend" : "Suspend"}
-          </AdminButton>
-        }
+        action={<SuspendButton user={user} suspend={suspend} />}
       >
         <div className="fx-admin-user-detail-grid">
           <Field label="Email">{user.email ?? "Unknown"}</Field>

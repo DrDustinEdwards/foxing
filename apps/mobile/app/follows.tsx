@@ -3,9 +3,9 @@ import { useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CaretLeft } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
 import { FollowButton } from "@/components/profile/follow-button";
 import { PersonRow } from "@/components/profile/person-row";
 
@@ -24,26 +24,7 @@ export default function FollowsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityLabel="Back"
-        >
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Connections
-        </Text>
-      </View>
+      <BackHeader title="Connections" />
 
       <View className="flex-row px-4 mb-4">
         {(["following", "followers"] as Tab[]).map((t) => {

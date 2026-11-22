@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { testApi } from "./test-api";
+import { seedUser, testApi } from "./test-api";
 
 // The restoration pass: admin user-detail operator mutations and the
 // settings username change/availability endpoints. The
@@ -27,27 +27,6 @@ const call = (pathname: string, user: string | null, init?: RequestInit) =>
     env as never,
   );
 
-async function seedUser(id: string, opts: { tier?: "free" | "plus" } = {}) {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: "Test",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await db.insert(schema.profiles).values({
-    id,
-    username: id,
-    displayName: id,
-    subscriptionTier: opts.tier ?? "free",
-    onboardedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
-
 describe("admin user-detail operator mutations", () => {
   beforeEach(async () => {
     const db = createDb(env.DB);
@@ -56,7 +35,7 @@ describe("admin user-detail operator mutations", () => {
     await db.delete(schema.profiles);
     await db.delete(schema.user);
     await seedUser("admin");
-    await seedUser("reader", { tier: "free" });
+    await seedUser("reader", "free");
   });
 
   // Tier and suspend changes are preview then perform, covered in admin.integration.test.ts.

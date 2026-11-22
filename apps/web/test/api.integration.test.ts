@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { testApi } from "./test-api";
+import { seedAuthUser, testApi } from "./test-api";
 
 // A stub session resolver: the Worker normally injects a Better Auth-backed one.
 // Here the test sets an x-test-user header to act as that user.
@@ -12,18 +12,6 @@ const api = testApi();
 // it under /api/v1. Tests call it directly, so no prefix here.
 const call = (pathname: string, init?: RequestInit) =>
   api.fetch(new Request(`https://test.local${pathname}`, init), env as never);
-
-async function seedUser(id: string) {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: "Test",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
 
 describe("profiles API (web -> api -> core -> D1)", () => {
   beforeEach(async () => {
@@ -41,7 +29,7 @@ describe("profiles API (web -> api -> core -> D1)", () => {
   });
 
   it("round-trips a profile through core to D1", async () => {
-    await seedUser("u_round");
+    await seedAuthUser("u_round");
     const db = createDb(env.DB);
     await db.insert(schema.profiles).values({
       id: "u_round",
@@ -57,7 +45,7 @@ describe("profiles API (web -> api -> core -> D1)", () => {
   });
 
   it("onboards a user through the API contract (201)", async () => {
-    await seedUser("u_ob");
+    await seedAuthUser("u_ob");
     const res = await call("/me/onboard", {
       method: "POST",
       headers: { "x-test-user": "u_ob", "content-type": "application/json" },
@@ -69,8 +57,8 @@ describe("profiles API (web -> api -> core -> D1)", () => {
   });
 
   it("rejects a duplicate username with 409", async () => {
-    await seedUser("u_a");
-    await seedUser("u_b");
+    await seedAuthUser("u_a");
+    await seedAuthUser("u_b");
     const db = createDb(env.DB);
     await db.insert(schema.profiles).values({
       id: "u_a",
@@ -88,7 +76,7 @@ describe("profiles API (web -> api -> core -> D1)", () => {
   });
 
   it("persists visibility prefs through PATCH /me/visibility", async () => {
-    await seedUser("u_vis");
+    await seedAuthUser("u_vis");
     const db = createDb(env.DB);
     await db.insert(schema.profiles).values({
       id: "u_vis",
@@ -120,7 +108,7 @@ describe("profiles API (web -> api -> core -> D1)", () => {
   });
 
   it("rejects an invalid visibility value", async () => {
-    await seedUser("u_vis2");
+    await seedAuthUser("u_vis2");
     const db = createDb(env.DB);
     await db.insert(schema.profiles).values({
       id: "u_vis2",

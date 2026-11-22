@@ -13,16 +13,10 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import {
-  CaretLeft,
-  Trash,
-  ShareNetwork,
-  PencilSimple,
-  Check,
-  BookOpen,
-} from "phosphor-react-native";
-import { useColors } from "@/constants/colors";
+import { Trash, ShareNetwork, PencilSimple, Check, BookOpen } from "phosphor-react-native";
+import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
 
 // Saved Passages, the merged Highlights + Commonplace view per task.md
 // Section 2a. Pulls every highlight where a note has been written, grouped
@@ -90,50 +84,9 @@ export default function SavedPassagesScreen() {
     [del],
   );
 
-  function colorSwatchFor(c: string | null): string {
-    switch (c) {
-      case "amber":
-        return colors.hlAmberT;
-      case "auburn":
-        return colors.hlAuburnT;
-      case "yellow":
-        return colors.hlYellowT;
-      case "sage":
-        return colors.hlSageT;
-      case "cobalt":
-        return colors.hlCobaltT;
-      case "crimson":
-        return colors.hlCrimsonT;
-      case "purple":
-        return colors.hlPurpleT;
-      default:
-        return colors.borderDefault;
-    }
-  }
-
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-        >
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Saved Passages
-        </Text>
-      </View>
+      <BackHeader title="Saved Passages" />
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
@@ -175,7 +128,7 @@ export default function SavedPassagesScreen() {
                   key={e.id}
                   className="flex-row mb-2 rounded-2xl overflow-hidden border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
                 >
-                  <View style={{ width: 4, backgroundColor: colorSwatchFor(e.color) }} />
+                  <View style={{ width: 4, backgroundColor: highlightSwatch(colors, e.color) }} />
                   <View style={{ flex: 1, padding: 12 }}>
                     <Text
                       style={{

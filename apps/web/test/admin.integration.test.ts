@@ -3,7 +3,7 @@ import { createDb, schema } from "@foxing/core";
 import { desc, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import worker from "../workers/app";
-import { testApi } from "./test-api";
+import { seedUser, testApi } from "./test-api";
 
 // The admin write surface is gated on the admin list (ADMIN_EMAIL and CO_OWNER_EMAILS, set in vitest.config.ts) and logs every mutation to
 // admin_audit_log. This drives the API contract directly (the x-test-user stub stands in
@@ -16,26 +16,6 @@ const api = testApi({
 
 const call = (pathname: string, init?: RequestInit) =>
   api.fetch(new Request(`https://test.local${pathname}`, init), env as never);
-
-async function seedUser(id: string) {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: "Test",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await db.insert(schema.profiles).values({
-    id,
-    username: id,
-    displayName: id,
-    onboardedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
 
 const post = (pathname: string, user: string | null, body: unknown) =>
   call(pathname, {

@@ -30,17 +30,19 @@ export function Section({
   );
 }
 
-export function PrimaryBtn({
-  colors,
+export function PillBtn({
   label,
   onPress,
   disabled,
+  variant = "primary",
 }: {
-  colors: ReturnType<typeof useColors>;
   label: string;
   onPress: () => void;
   disabled?: boolean;
+  variant?: "primary" | "outline";
 }) {
+  const colors = useColors();
+  const primary = variant === "primary";
   return (
     <Pressable
       onPress={onPress}
@@ -49,51 +51,16 @@ export function PrimaryBtn({
         paddingHorizontal: 14,
         paddingVertical: 9,
         borderRadius: 999,
-        backgroundColor: colors.brandUi,
+        ...(primary
+          ? { backgroundColor: colors.brandUi }
+          : { borderWidth: 1, borderColor: colors.borderInteractive }),
         opacity: disabled ? 0.6 : 1,
       }}
     >
       <Text
         style={{
           fontFamily: Fonts.uiMedium,
-          color: colors.textOnBrand,
-          fontSize: 13,
-        }}
-      >
-        {label}
-      </Text>
-    </Pressable>
-  );
-}
-
-export function OutlineBtn({
-  colors,
-  label,
-  onPress,
-  disabled,
-}: {
-  colors: ReturnType<typeof useColors>;
-  label: string;
-  onPress: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={{
-        paddingHorizontal: 14,
-        paddingVertical: 9,
-        borderRadius: 999,
-        borderWidth: 1,
-        borderColor: colors.borderInteractive,
-        opacity: disabled ? 0.6 : 1,
-      }}
-    >
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          color: colors.textPrimary,
+          color: primary ? colors.textOnBrand : colors.textPrimary,
           fontSize: 13,
         }}
       >

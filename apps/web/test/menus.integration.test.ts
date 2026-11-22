@@ -1,6 +1,7 @@
 import { env } from "cloudflare:test";
 import { clubsRepo, createDb, libraryRepo, profilesRepo, schema } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
+import { seedUser } from "./test-api";
 
 // The nav menus federate people + clubs into the command palette and show a live
 // "N words to master" count in the account menu. These drive the core reads directly
@@ -9,41 +10,14 @@ import { beforeEach, describe, expect, it } from "vitest";
 
 const db = () => createDb(env.DB);
 
-async function seedUser(
-  id: string,
-  opts: { visibility?: Record<string, string>; displayName?: string } = {},
-) {
-  await db()
-    .insert(schema.user)
-    .values({
-      id,
-      name: "Test",
-      email: `${id}@example.com`,
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-  await db()
-    .insert(schema.profiles)
-    .values({
-      id,
-      username: id,
-      displayName: opts.displayName ?? id,
-      visibility: opts.visibility ?? null,
-      onboardedAt: new Date(),
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-}
-
 describe("command-palette federated search (public only)", () => {
   beforeEach(async () => {
     await db().delete(schema.clubs);
     await db().delete(schema.vocabulary);
     await db().delete(schema.profiles);
     await db().delete(schema.user);
-    await seedUser("marlowe", { displayName: "Marlowe Reads" });
-    await seedUser("marlowe_private", {
+    await seedUser("marlowe", "free", { displayName: "Marlowe Reads" });
+    await seedUser("marlowe_private", "free", {
       displayName: "Marlowe Hidden",
       visibility: { profile: "private" },
     });

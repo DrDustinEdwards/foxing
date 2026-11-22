@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { COMPANION_QUOTA, type companion, companionRepo, createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { testApi } from "./test-api";
+import { seedUser, testApi } from "./test-api";
 
 // Companion route: API-contract layer only (status codes, SSE stream shape), tested
 // through a forged x-test-user session -- the same accepted pattern as
@@ -28,25 +28,6 @@ function throwingCaller(): companion.CompanionCaller {
 
 const db = () => createDb(env.DB);
 
-async function seedUserAndProfile(id: string, tier: "free" | "plus" = "free") {
-  const d = db();
-  await d.insert(schema.user).values({
-    id,
-    name: "Test",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await d.insert(schema.profiles).values({
-    id,
-    username: id,
-    subscriptionTier: tier,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
-
 async function seedBook(): Promise<string> {
   const d = db();
   const [row] = await d
@@ -68,7 +49,7 @@ async function seedBook(): Promise<string> {
 describe("companion repository (direct core calls, local D1)", () => {
   it("creates one thread per (user, book) and appends messages in order", async () => {
     const bookId = await seedBook();
-    await seedUserAndProfile("u_thread", "plus");
+    await seedUser("u_thread", "plus");
 
     const first = await companionRepo.getOrCreateThread(db(), "u_thread", bookId);
     const second = await companionRepo.getOrCreateThread(db(), "u_thread", bookId);
@@ -130,7 +111,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
 
   it("rejects a free-tier user with 403 plus_required", async () => {
     const bookId = await seedBook();
-    await seedUserAndProfile("u_free", "free");
+    await seedUser("u_free", "free");
     const res = await call(apiWith(stubCaller()), "u_free", {
       action: "chat",
       bookId,
@@ -143,7 +124,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
 
   it("streams a response for a plus-tier user under quota", async () => {
     const bookId = await seedBook();
-    await seedUserAndProfile("u_plus", "plus");
+    await seedUser("u_plus", "plus");
     const res = await call(apiWith(stubCaller("The companion's answer.")), "u_plus", {
       action: "chat",
       bookId,
@@ -157,7 +138,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
 
   it("reserves quota before the model call: parallel requests cannot all pass the cap, and a failed reply still counts", async () => {
     const bookId = await seedBook();
-    await seedUserAndProfile("u_over", "plus");
+    await seedUser("u_over", "plus");
     const usage = () =>
       db()
         .select()
@@ -200,7 +181,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
 
   it("surfaces a stream failure as a visible SSE error event, not a silent drop", async () => {
     const bookId = await seedBook();
-    await seedUserAndProfile("u_err", "plus");
+    await seedUser("u_err", "plus");
     const res = await call(apiWith(throwingCaller()), "u_err", {
       action: "chat",
       bookId,
@@ -213,7 +194,7 @@ describe("companion route (forged x-test-user session, API-contract layer)", () 
 
   it("rejects an unknown or cached-only action name at the validation boundary", async () => {
     const bookId = await seedBook();
-    await seedUserAndProfile("u_val", "plus");
+    await seedUser("u_val", "plus");
     const res = await call(apiWith(stubCaller()), "u_val", {
       action: "book_description", // a free-cached action, never accepted here
       bookId,

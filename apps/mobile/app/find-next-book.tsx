@@ -1,8 +1,9 @@
 import { useRecommendations, useRefreshRecommendations, useSetBookStatus } from "@foxing/client";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Linking } from "react-native";
 import { Screen } from "@/components/ui/screen";
+import { BackHeader } from "@/components/ui/back-header";
 import { useRouter } from "expo-router";
-import { ArrowClockwise, CaretLeft } from "phosphor-react-native";
+import { ArrowClockwise } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
@@ -18,27 +19,7 @@ export default function FindNextBookScreen() {
 
   return (
     <Screen>
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-          className="p-2"
-        >
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            flex: 1,
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Find Your Next Book
-        </Text>
+      <BackHeader title="Find Your Next Book">
         <Pressable
           onPress={() => refresh.fire()}
           disabled={refresh.pending}
@@ -53,7 +34,7 @@ export default function FindNextBookScreen() {
             <ArrowClockwise color={colors.textPrimary} size={20} />
           )}
         </Pressable>
-      </View>
+      </BackHeader>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
         {!data ? (

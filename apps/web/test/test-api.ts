@@ -51,24 +51,36 @@ export function callApi(
   );
 }
 
+export async function seedAuthUser(id: string) {
+  await createDb(env.DB)
+    .insert(schema.user)
+    .values({
+      id,
+      name: id,
+      email: `${id}@example.com`,
+      emailVerified: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+}
+
 /** A user and their profile: the two rows a signed-in caller needs. */
-export async function seedUser(id: string, tier: "free" | "plus" = "free") {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: id,
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await db.insert(schema.profiles).values({
-    id,
-    username: id,
-    subscriptionTier: tier,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
+export async function seedUser(
+  id: string,
+  tier: "free" | "plus" = "free",
+  profile: Partial<typeof schema.profiles.$inferInsert> = {},
+) {
+  await seedAuthUser(id);
+  await createDb(env.DB)
+    .insert(schema.profiles)
+    .values({
+      id,
+      username: id,
+      subscriptionTier: tier,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...profile,
+    });
 }
 
 /** The cookies a response set, as the Cookie header the next request sends back. */

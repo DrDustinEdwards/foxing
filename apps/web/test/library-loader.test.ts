@@ -2,24 +2,12 @@ import { env } from "cloudflare:test";
 import { createDb, libraryRepo, schema, views } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { loadLibraryData } from "../app/lib/library.server";
+import { seedAuthUser } from "./test-api";
 
 // Regression: the /library loader used to self-fetch its own /api/v1 and swallow the
 // failure (`if (!res.ok) return {}`), so a reader with tracked books saw an EMPTY
 // library and the dogfood would have lied. The loader now reads core in-process;
 // this proves tracked books actually come back.
-
-async function seedUser(id: string) {
-  await createDb(env.DB)
-    .insert(schema.user)
-    .values({
-      id,
-      name: "Test",
-      email: `${id}@example.com`,
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-}
 
 async function seedBook(id: string, slug: string) {
   await createDb(env.DB).insert(schema.books).values({
@@ -48,7 +36,7 @@ describe("library loader data", () => {
   });
 
   it("returns a reader's tracked books (never silently empty)", async () => {
-    await seedUser("u_lib");
+    await seedAuthUser("u_lib");
     await seedBook("bk_lib", "the-tracked-book");
     await createDb(env.DB).insert(schema.userBooks).values({
       id: "ub_1",
@@ -71,7 +59,7 @@ describe("library loader data", () => {
   });
 
   it("returns empty structures (not an error) when nothing is tracked", async () => {
-    await seedUser("u_empty");
+    await seedAuthUser("u_empty");
     const data = await loadLibraryData(env as never, "u_empty");
     expect(data.library).toEqual([]);
     expect(data.shelves).toEqual([]);
@@ -80,7 +68,7 @@ describe("library loader data", () => {
   });
 
   it("shelf detail returns the shelf and its books for the owner", async () => {
-    await seedUser("u_shelf");
+    await seedAuthUser("u_shelf");
     await seedBook("bk_s1", "shelf-book-one");
     const db = createDb(env.DB);
     const shelf = await libraryRepo.createShelf(db, "u_shelf", { name: "Winter reads" });
@@ -96,8 +84,8 @@ describe("library loader data", () => {
   });
 
   it("shelf detail is null for a shelf the caller does not own", async () => {
-    await seedUser("u_owner");
-    await seedUser("u_other");
+    await seedAuthUser("u_owner");
+    await seedAuthUser("u_other");
     const shelf = await libraryRepo.createShelf(createDb(env.DB), "u_owner", { name: "Private" });
     expect(await views.shelfDetail(createDb(env.DB), "u_other", shelf.id)).toBeNull();
   });

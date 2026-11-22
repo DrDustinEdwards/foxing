@@ -10,7 +10,7 @@ import {
   X as XIcon,
   type Icon,
 } from "phosphor-react-native";
-import { useColors } from "@/constants/colors";
+import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { PrivacySelector, type PrivacyTier } from "@/components/privacy-selector";
 import { AllOptionsSheet, PillAction } from "./floating-pill-parts";
@@ -116,27 +116,7 @@ export function FloatingPill({
 
   if (!visible || !anchor) return null;
 
-  // Pick a swatch background per color from the highlight token map. Using
-  // the foreground tier (-t) for visibility since the bg-tier is meant
-  // to sit BEHIND text, not stand alone as a swatch.
-  const swatchColor = (c: HighlightColor): string => {
-    switch (c) {
-      case "amber":
-        return colors.hlAmberT;
-      case "auburn":
-        return colors.hlAuburnT;
-      case "yellow":
-        return colors.hlYellowT;
-      case "sage":
-        return colors.hlSageT;
-      case "cobalt":
-        return colors.hlCobaltT;
-      case "crimson":
-        return colors.hlCrimsonT;
-      case "purple":
-        return colors.hlPurpleT;
-    }
-  };
+  const swatchColor = (c: HighlightColor): string => highlightSwatch(colors, c);
 
   // One contextual menu, actions adapt to the selection type. The first item
   // is the primary action (labeled, brand-filled); the rest are icon-only so

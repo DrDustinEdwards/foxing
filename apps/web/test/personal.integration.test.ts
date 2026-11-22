@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { testApi } from "./test-api";
+import { seedUser, testApi } from "./test-api";
 
 // Personal surfaces. The goal-edit contract drives the API directly (x-test-user stands
 // in for the Better Auth session the Worker injects). The visible /diary, /goals, and
@@ -22,26 +22,6 @@ const call = (pathname: string, user: string | null, init?: RequestInit) =>
     }),
     env as never,
   );
-
-async function seedUser(id: string) {
-  const db = createDb(env.DB);
-  await db.insert(schema.user).values({
-    id,
-    name: "Test",
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await db.insert(schema.profiles).values({
-    id,
-    username: id,
-    displayName: id,
-    onboardedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-}
 
 describe("reading goal edit", () => {
   beforeEach(async () => {
