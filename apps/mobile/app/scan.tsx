@@ -19,7 +19,7 @@ import { CaretLeft } from "phosphor-react-native";
 import { resolveScannedIsbn, type ResolvedMeta } from "@/lib/scan-book";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { OutlineBtn, PrimaryBtn, Section } from "@/components/scan/scan-controls";
+import { PillBtn, Section } from "@/components/scan/scan-controls";
 
 const STATUS_LABELS: Array<{ value: W.ShelfStatus; label: string }> = [
   { value: "want", label: "Want to read" },
@@ -269,8 +269,7 @@ export default function ScanScreen() {
               {/* READ FREE: public-domain edition in the catalog. */}
               {book.readable ? (
                 <Section colors={colors} label="Read free">
-                  <PrimaryBtn
-                    colors={colors}
+                  <PillBtn
                     label="Read now"
                     onPress={() => router.push(`/reader/${book.id}` as never)}
                   />
@@ -281,9 +280,9 @@ export default function ScanScreen() {
               <Section colors={colors} label="Add to your library">
                 <View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
                   {STATUS_LABELS.map((s) => (
-                    <OutlineBtn
+                    <PillBtn
+                      variant="outline"
                       key={s.value}
-                      colors={colors}
                       label={s.label}
                       disabled={busy}
                       onPress={() => void handleAddToLibrary(s.value)}
@@ -297,9 +296,9 @@ export default function ScanScreen() {
                 <Section colors={colors} label="Your clubs reading it">
                   <View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
                     {readingClubs.map((c) => (
-                      <OutlineBtn
+                      <PillBtn
+                        variant="outline"
                         key={c.id}
-                        colors={colors}
                         label={c.name}
                         onPress={() => router.push(`/clubs/${c.id}` as never)}
                       />
@@ -309,7 +308,7 @@ export default function ScanScreen() {
               ) : null}
 
               <View style={{ marginTop: 14 }}>
-                <OutlineBtn colors={colors} label="Scan again" onPress={rescan} />
+                <PillBtn variant="outline" label="Scan again" onPress={rescan} />
               </View>
             </View>
           ) : null}
@@ -351,12 +350,8 @@ export default function ScanScreen() {
                 </Text>
               )}
               <View className="flex-row" style={{ gap: 8 }}>
-                <PrimaryBtn
-                  colors={colors}
-                  label="Search by title"
-                  onPress={() => router.push("/search" as never)}
-                />
-                <OutlineBtn colors={colors} label="Try again" onPress={rescan} />
+                <PillBtn label="Search by title" onPress={() => router.push("/search" as never)} />
+                <PillBtn variant="outline" label="Try again" onPress={rescan} />
               </View>
             </View>
           ) : null}

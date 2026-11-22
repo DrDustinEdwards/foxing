@@ -80,44 +80,14 @@ function FinishedCard({
         >
           I just finished
         </Text>
-        {coverUrl ? (
-          <Image
-            source={{ uri: coverUrl }}
-            style={{ width: 140, height: 210, borderRadius: 6, marginBottom: 16 }}
-          />
-        ) : (
-          <View
-            style={{
-              width: 140,
-              height: 210,
-              borderRadius: 6,
-              backgroundColor: "rgba(255,255,255,0.15)",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            <BookOpen color={template.bodyColor} size={28} />
-          </View>
-        )}
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: template.bodyColor,
-            textAlign: "center",
-          }}
-          numberOfLines={2}
-        >
-          {bookTitle}
-        </Text>
-        {author ? (
-          <Text
-            style={{ fontFamily: Fonts.ui, fontSize: 13, color: template.metaColor, marginTop: 4 }}
-          >
-            {author}
-          </Text>
-        ) : null}
+        <CardCover
+          template={template}
+          coverUrl={coverUrl}
+          width={140}
+          height={210}
+          fill="rgba(255,255,255,0.15)"
+        />
+        <CardBookTitle template={template} bookTitle={bookTitle} author={author} />
         {rating > 0 ? (
           <View className="flex-row" style={{ marginTop: 10, gap: 2 }}>
             {[1, 2, 3, 4, 5].map((n) => (
@@ -176,44 +146,14 @@ function ReadingCard({
         >
           I'm reading
         </Text>
-        {coverUrl ? (
-          <Image
-            source={{ uri: coverUrl }}
-            style={{ width: 130, height: 195, borderRadius: 6, marginBottom: 16 }}
-          />
-        ) : (
-          <View
-            style={{
-              width: 130,
-              height: 195,
-              borderRadius: 6,
-              backgroundColor: "rgba(255,255,255,0.08)",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 16,
-            }}
-          >
-            <BookOpen color={template.bodyColor} size={28} />
-          </View>
-        )}
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: template.bodyColor,
-            textAlign: "center",
-          }}
-          numberOfLines={2}
-        >
-          {bookTitle}
-        </Text>
-        {author ? (
-          <Text
-            style={{ fontFamily: Fonts.ui, fontSize: 13, color: template.metaColor, marginTop: 4 }}
-          >
-            {author}
-          </Text>
-        ) : null}
+        <CardCover
+          template={template}
+          coverUrl={coverUrl}
+          width={130}
+          height={195}
+          fill="rgba(255,255,255,0.08)"
+        />
+        <CardBookTitle template={template} bookTitle={bookTitle} author={author} />
         {pct !== null ? (
           <View style={{ marginTop: 18, width: "70%" }}>
             <View
@@ -398,5 +338,75 @@ function CardFooter({
         Foxing
       </Text>
     </View>
+  );
+}
+
+function CardCover({
+  template,
+  coverUrl,
+  width,
+  height,
+  fill,
+}: {
+  template: CardPreviewProps["template"];
+  coverUrl?: string | null;
+  width: number;
+  height: number;
+  fill: string;
+}) {
+  if (coverUrl)
+    return (
+      <Image
+        source={{ uri: coverUrl }}
+        style={{ width, height, borderRadius: 6, marginBottom: 16 }}
+      />
+    );
+  return (
+    <View
+      style={{
+        width,
+        height,
+        borderRadius: 6,
+        backgroundColor: fill,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 16,
+      }}
+    >
+      <BookOpen color={template.bodyColor} size={28} />
+    </View>
+  );
+}
+
+function CardBookTitle({
+  template,
+  bookTitle,
+  author,
+}: {
+  template: CardPreviewProps["template"];
+  bookTitle: string;
+  author?: string | null;
+}) {
+  return (
+    <>
+      <Text
+        style={{
+          fontFamily: Fonts.displayBold,
+          fontSize: 18,
+          color: template.bodyColor,
+          textAlign: "center",
+        }}
+        numberOfLines={2}
+      >
+        {bookTitle}
+      </Text>
+      {author ? (
+        <Text
+          style={{ fontFamily: Fonts.ui, fontSize: 13, color: template.metaColor, marginTop: 4 }}
+        >
+          {author}
+        </Text>
+      ) : null}
+    </>
   );
 }
