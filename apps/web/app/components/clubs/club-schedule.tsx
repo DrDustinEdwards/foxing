@@ -8,6 +8,8 @@ import {
 } from "@foxing/client";
 import type { ClubMeetingItem, ClubPollItem, ClubScheduleItem } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
+import "capsomer/chart-frame.css";
+import "capsomer/enarratio.css";
 import { Poll } from "capsomer/react/poll";
 // The poll's styles load only on a club's page (React 19 hoists the link).
 import pollCss from "capsomer/poll.css?url";
