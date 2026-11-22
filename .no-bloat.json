@@ -4,7 +4,7 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "d304184",
+    "measured_at": "53b385f",
     "knip": {
       "files": 2
     },
@@ -19,14 +19,38 @@
       "lines": 0
     },
     "legacy": {},
+    "size": {
+      "apps/mobile/app/book/[id].tsx": 1037,
+      "apps/mobile/app/lists/[id].tsx": 525,
+      "apps/mobile/app/onboarding/index.tsx": 610,
+      "apps/mobile/app/reader/[id].tsx": 1470,
+      "apps/mobile/app/settings/index.tsx": 623,
+      "apps/mobile/components/clubs/club-detail-tabs.tsx": 510,
+      "apps/mobile/components/clubs/create-club-sheet.tsx": 548,
+      "apps/mobile/components/reader/go-to-sheet.tsx": 517,
+      "apps/mobile/components/reader/readium-reader.tsx": 671,
+      "apps/mobile/components/reader/typography-tabs.tsx": 503,
+      "apps/web/app/components/reader/reader-panels.tsx": 504,
+      "apps/web/app/components/reader/reader-view.tsx": 708,
+      "apps/web/app/components/settings/account-sections.tsx": 807,
+      "apps/web/app/lib/carrel/journal-adapter.server.ts": 845,
+      "apps/web/app/styles/reader.css": 589,
+      "apps/web/app/styles/social.css": 652,
+      "apps/web/workers/app.ts": 694,
+      "mcp/src/tools.ts": 990,
+      "packages/api/src/routes/admin.ts": 516,
+      "packages/core/src/domain/clubs.ts": 587,
+      "packages/core/src/repositories/library.ts": 681,
+      "packages/types/src/index.ts": 736
+    },
     "tests": {
       "files": 70,
       "cases": 368
     },
     "comments": {
-      "lines": 6015,
+      "lines": 6019,
       "code": 73923,
-      "percentage": 7.48
+      "percentage": 7.53
     }
   }
 }
