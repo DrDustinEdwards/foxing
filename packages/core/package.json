@@ -22,8 +22,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.63.10",
-    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.46.10",
+    "@drdustinedwards/site-helpers": "github:DrDustinEdwards/prelum#v0.63.11",
+    "@dustinedwards/site-api": "github:DrDustinEdwards/site-api#v0.46.13",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.173.4",
     "@foxing/types": "*",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.164.3",
