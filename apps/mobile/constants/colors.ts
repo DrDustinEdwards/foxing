@@ -299,3 +299,20 @@ export function useColors(): ColorTokens {
   const scheme = useColorScheme();
   return scheme === "dark" ? Colors.dark : Colors.light;
 }
+
+export function highlightPalette(colors: ColorTokens) {
+  return {
+    amber: colors.hlAmberT,
+    auburn: colors.hlAuburnT,
+    yellow: colors.hlYellowT,
+    sage: colors.hlSageT,
+    cobalt: colors.hlCobaltT,
+    crimson: colors.hlCrimsonT,
+    purple: colors.hlPurpleT,
+  };
+}
+
+export function highlightSwatch(colors: ColorTokens, name: string | null): string {
+  const palette: Record<string, string> = highlightPalette(colors);
+  return (name && palette[name]) || colors.borderDefault;
+}

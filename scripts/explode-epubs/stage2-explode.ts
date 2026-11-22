@@ -12,6 +12,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { HeadObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import pLimit from "p-limit";
+import { readerAssetContentType } from "../../apps/web/app/lib/reader-asset-type.ts";
 import { explodeEpub } from "./lib.ts";
 
 const R2_ACCOUNT_ID = "f852925ce701e6c56f6feae83f0eb2d3";
@@ -38,31 +39,6 @@ function strArg(flag: string): string | null {
   return i >= 0 && args[i + 1] ? args[i + 1] : null;
 }
 
-const CONTENT_TYPES: Record<string, string> = {
-  xhtml: "application/xhtml+xml",
-  html: "text/html",
-  htm: "text/html",
-  css: "text/css",
-  js: "text/javascript",
-  json: "application/json",
-  xml: "application/xml",
-  ncx: "application/x-dtbncx+xml",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  svg: "image/svg+xml",
-  webp: "image/webp",
-  avif: "image/avif",
-  otf: "font/otf",
-  ttf: "font/ttf",
-  woff: "font/woff",
-  woff2: "font/woff2",
-};
-function contentType(path: string): string {
-  const ext = path.split(".").pop()?.toLowerCase() ?? "";
-  return CONTENT_TYPES[ext] ?? "application/octet-stream";
-}
 
 const r2 = LOCAL
   ? null
@@ -146,7 +122,7 @@ async function processBook(book: Book): Promise<Result> {
       // (the idempotency check keys on manifest.json).
       const uploads: Array<Promise<void>> = [];
       for (const [path, body] of files) {
-        uploads.push(putR2(`${KEY_PREFIX}/${slug}/${path}`, body, contentType(path)));
+        uploads.push(putR2(`${KEY_PREFIX}/${slug}/${path}`, body, readerAssetContentType(path)));
       }
       const fileLimit = pLimit(12);
       await Promise.all(uploads.map((u) => fileLimit(() => u)));

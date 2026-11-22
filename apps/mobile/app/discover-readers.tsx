@@ -1,11 +1,12 @@
 import { useSuggest } from "@foxing/client";
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
+import { View, Text, ScrollView, TextInput } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { CaretLeft, MagnifyingGlass } from "phosphor-react-native";
+import { MagnifyingGlass } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
 import { PersonRow } from "@/components/profile/person-row";
 
 // Find readers by name, from the same search-as-you-type as the web header (public
@@ -18,26 +19,7 @@ export default function DiscoverReadersScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityLabel="Back"
-        >
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Find readers
-        </Text>
-      </View>
+      <BackHeader title="Find readers" />
       <View
         className="flex-row items-center mx-4 mb-3 px-3 py-2 rounded-full border"
         style={{ borderColor: colors.borderSubtle, backgroundColor: colors.bgSurface }}

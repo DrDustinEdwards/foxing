@@ -2,7 +2,7 @@ import { env } from "cloudflare:test";
 import { createDb, loadReaderAnnotations, schema } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
-import { testApi } from "./test-api";
+import { seedUser, testApi } from "./test-api";
 
 // The reader social-layer resolution matrix, run against local D1 so the ENTITLEMENT is
 // proven where it actually lives: in the SQL. Every "NOT returned" cell asserts the row
@@ -26,25 +26,6 @@ function loc(totalProgression?: number) {
     type: "application/xhtml+xml",
     locations: totalProgression === undefined ? {} : { totalProgression },
   };
-}
-
-async function seedUser(id: string) {
-  const d = db();
-  await d.insert(schema.user).values({
-    id,
-    name: id,
-    email: `${id}@example.com`,
-    emailVerified: true,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
-  await d.insert(schema.profiles).values({
-    id,
-    username: id,
-    displayName: `${id} Name`,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
 }
 
 async function seedBook(id: string) {

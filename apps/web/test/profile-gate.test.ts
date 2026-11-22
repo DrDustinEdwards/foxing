@@ -2,24 +2,12 @@ import { env } from "cloudflare:test";
 import { createDb, schema } from "@foxing/core";
 import { beforeEach, describe, expect, it } from "vitest";
 import { requireProfileForUser } from "../app/lib/profile.server";
+import { seedAuthUser } from "./test-api";
 
 // Regression: a signed-in user with NO profile row (account predates onboarding, or
 // signed up but never chose a username) must be redirected to /onboarding. The /me
 // loader used to fetch its own API and crash on the response, throwing a raw 500.
 // Every profile-gated loader (/me, /library) now routes through requireProfile.
-
-async function seedUser(id: string) {
-  await createDb(env.DB)
-    .insert(schema.user)
-    .values({
-      id,
-      name: "Test",
-      email: `${id}@example.com`,
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-}
 
 describe("profile gate", () => {
   beforeEach(async () => {
@@ -29,7 +17,7 @@ describe("profile gate", () => {
   });
 
   it("redirects a signed-in user with no profile to /onboarding", async () => {
-    await seedUser("u_noprofile");
+    await seedAuthUser("u_noprofile");
     let thrown: unknown;
     try {
       await requireProfileForUser(env as never, {
@@ -46,7 +34,7 @@ describe("profile gate", () => {
   });
 
   it("returns the profile when one exists (no redirect)", async () => {
-    await seedUser("u_hasprofile");
+    await seedAuthUser("u_hasprofile");
     await createDb(env.DB).insert(schema.profiles).values({
       id: "u_hasprofile",
       username: "haver",

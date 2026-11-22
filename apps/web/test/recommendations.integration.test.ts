@@ -3,6 +3,7 @@ import { createDb, getRecommendations, schema } from "@foxing/core";
 import type { StructuredCaller } from "@foxing/core";
 import { eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
+import { seedUser } from "./test-api";
 
 // getRecommendations end to end against local D1 (real migrations) + the real miniflare
 // KV. The AI tier is exercised with a stubbed caller (no network): one that returns a
@@ -15,29 +16,6 @@ const db = () => createDb(env.DB);
 function stubCaller(value: unknown): StructuredCaller {
   const none = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cacheWrite1h: 0 };
   return async () => ({ value, usage: { ...none, input: 20, output: 40, long: { ...none } } });
-}
-
-async function seedUser(id: string, tier: "free" | "plus", favoriteGenres: string[] | null) {
-  await db()
-    .insert(schema.user)
-    .values({
-      id,
-      name: id,
-      email: `${id}@example.com`,
-      emailVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    });
-  await db().insert(schema.profiles).values({
-    id,
-    username: id,
-    displayName: id,
-    favoriteGenres,
-    subscriptionTier: tier,
-    onboardedAt: new Date(),
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  });
 }
 
 interface BookSeed {
@@ -100,7 +78,7 @@ describe("getRecommendations - data tiers (no AI)", () => {
   });
 
   it("returns a full data page for a zero-history free reader (no AI, no crash)", async () => {
-    await seedUser("zero", "free", null);
+    await seedUser("zero", "free", { favoriteGenres: null });
     const set = await getRecommendations(db(), "zero", { caller: null, kv: env.APP_KV });
 
     expect(set.isPlus).toBe(false);
@@ -115,7 +93,7 @@ describe("getRecommendations - data tiers (no AI)", () => {
   });
 
   it("never recommends a book already in the reader's library (any status)", async () => {
-    await seedUser("owner", "free", null);
+    await seedUser("owner", "free", { favoriteGenres: null });
     await db().insert(schema.userBooks).values({
       id: "ub1",
       userId: "owner",
@@ -129,7 +107,7 @@ describe("getRecommendations - data tiers (no AI)", () => {
   });
 
   it("boosts a returning author from reading history with a 'More from' reason", async () => {
-    await seedUser("hist", "free", null);
+    await seedUser("hist", "free", { favoriteGenres: null });
     // Finished a Mary Shelley book -> she becomes a favorite author. That finished book
     // is owned (excluded); her *other* catalog book should surface with an author reason.
     await db().insert(schema.userBooks).values({
@@ -189,7 +167,7 @@ describe("getRecommendations - null genres + large pool (D1 param-cap regression
 
   it("returns the full starter set for a NULL favorite_genres user and never throws", async () => {
     // favorite_genres is explicitly NULL (not []), matching a brand-new profile.
-    await seedUser("newbie", "free", null);
+    await seedUser("newbie", "free", { favoriteGenres: null });
     const set = await getRecommendations(db(), "newbie", { caller: null, kv: env.APP_KV });
 
     expect(set.isPlus).toBe(false);
@@ -216,7 +194,7 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
   });
 
   it("uses the AI selection + reasons when the model returns valid JSON, and a data reason for one that fails the prose check", async () => {
-    await seedUser("plus-ok", "plus", ["Gothic"]);
+    await seedUser("plus-ok", "plus", { favoriteGenres: ["Gothic"] });
     const selection = {
       picks: Array.from({ length: 8 }, (_, i) => ({
         book_id: `b${i}`,
@@ -238,7 +216,7 @@ describe("getRecommendations - AI tier (Plus, stubbed)", () => {
   });
 
   it("falls back to the data ranking silently when the model call fails", async () => {
-    await seedUser("plus-bad", "plus", ["Gothic"]);
+    await seedUser("plus-bad", "plus", { favoriteGenres: ["Gothic"] });
     const set = await getRecommendations(db(), "plus-bad", {
       caller: async () => {
         throw new Error("The model call did not finish (invalid_output).");

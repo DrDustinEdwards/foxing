@@ -8,7 +8,7 @@ import { useState } from "react";
 import { ConfirmDialog } from "capsomer/react/confirm-dialog";
 import confirmDialogCss from "capsomer/confirm-dialog.css?url";
 import { OFFLINE_MESSAGE } from "@foxing/client";
-import { adminFetch, messageFrom } from "./admin-form";
+import { AdminButton, adminFetch, messageFrom } from "./admin-form";
 
 type RoleValue = boolean | string;
 
@@ -79,6 +79,27 @@ export function useRoleChange(opts: { onDone: () => void }) {
   ) : null;
 
   return { pending, error, request, dialog };
+}
+
+export function SuspendButton({
+  user,
+  suspend,
+}: {
+  user: { id: string; isSuspended: boolean };
+  suspend: ReturnType<typeof useRoleChange>;
+}) {
+  const label = user.isSuspended ? "Unsuspend" : "Suspend";
+  return (
+    <AdminButton
+      variant={user.isSuspended ? "default" : "danger"}
+      pending={suspend.pending}
+      onClick={() =>
+        void suspend.request(`/users/${user.id}/suspend`, { suspended: !user.isSuspended }, label)
+      }
+    >
+      {label}
+    </AdminButton>
+  );
 }
 
 function RoleChangeDialog({

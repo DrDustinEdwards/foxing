@@ -5,6 +5,7 @@ import { X as XIcon, Sparkle, ArrowsClockwise } from "phosphor-react-native";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { inputStyle } from "@/components/ui/form-field";
 
 interface DiscussionStarterSheetProps {
   visible: boolean;
@@ -222,18 +223,4 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
       {children}
     </Text>
   );
-}
-
-function inputStyle(colors: ReturnType<typeof useColors>) {
-  return {
-    fontFamily: Fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-    backgroundColor: colors.bgSurface,
-    borderColor: colors.borderSubtle,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  } as const;
 }

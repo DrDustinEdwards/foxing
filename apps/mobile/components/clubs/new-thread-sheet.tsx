@@ -5,6 +5,7 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { X as XIcon } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { inputStyle } from "@/components/ui/form-field";
 
 export function NewThreadSheet({
   visible,
@@ -143,18 +144,4 @@ function fieldLabelStyle(colors: ReturnType<typeof useColors>) {
     textTransform: "uppercase" as const,
     letterSpacing: 0.6,
   };
-}
-
-function inputStyle(colors: ReturnType<typeof useColors>) {
-  return {
-    fontFamily: Fonts.body,
-    fontSize: 15,
-    color: colors.textPrimary,
-    backgroundColor: colors.bgSurface,
-    borderColor: colors.borderSubtle,
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  } as const;
 }
