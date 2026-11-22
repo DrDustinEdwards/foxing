@@ -56,7 +56,7 @@ import {
   type WriteResult,
 } from "@dustinedwards/site-api";
 import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
-import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
+import { d1ScheduledUpdates, utc, waitingUpdates } from "@dustinedwards/site-api/schedules";
 import { adminEmails } from "@dustinedwards/site-runtime/access";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { adminRepo, type catalogRepo, createDb, type Db } from "@foxing/core";
@@ -135,10 +135,6 @@ function blankPost(slug: string): JournalPost {
     updatedAt: now,
   };
 }
-
-/** Every schedule is due by then, so `due` at this time lists every row (ISO text compares). */
-const END_OF_TIME = new Date("9999-12-31T23:59:59.999Z");
-const ALL_ROWS = 10_000;
 
 /** The schedule waiting on a post: its time and the change that made it. */
 type Pending = { publishAt: string; changeId: string } | null;
@@ -492,12 +488,7 @@ export function journalSiteAdapter(options: {
         if (!person) return none;
         authorId = person.id;
       } else if (query.author !== undefined) authorId = null;
-      const waiting = new Map(
-        (await schedules.due(END_OF_TIME, ALL_ROWS)).map((d) => [
-          d.id,
-          { publishAt: d.publishAt, changeId: d.changeId },
-        ]),
-      );
+      const waiting = await waitingUpdates(env.DB);
       const filter = listFilter(query, [...waiting.keys()], authorId);
       const [rows, total] = await Promise.all([
         adminRepo.listJournalAdmin(db, { ...filter, sort, dir, limit: query.limit + 1, offset }),
