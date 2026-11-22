@@ -37,6 +37,21 @@ export default defineConfig({
   // The Worker bundle: Vite, not wrangler, builds it, so wrangler's "minify" does not apply here.
   // Source maps go up with the deploy (upload_source_maps) and are never served.
   environments: { ssr: { build: { minify: true, sourcemap: true } } },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          // Tiny modules most pages share: one chunk instead of four, so each route lists one file in the Worker's manifest.
+          groups: [
+            {
+              name: "shared",
+              test: /(hooks\.react|theme-server|status\.react|sign-in-path)\.m?js$/,
+            },
+          ],
+        },
+      },
+    },
+  },
   plugins: [
     nativeBuiltins(),
     fontDisplayOptional(),
