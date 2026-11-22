@@ -4,7 +4,7 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "53b385f",
+    "measured_at": "d2b93a4",
     "knip": {
       "files": 2
     },
@@ -33,7 +33,7 @@
       "apps/web/app/components/reader/reader-panels.tsx": 504,
       "apps/web/app/components/reader/reader-view.tsx": 708,
       "apps/web/app/components/settings/account-sections.tsx": 807,
-      "apps/web/app/lib/carrel/journal-adapter.server.ts": 845,
+      "apps/web/app/lib/carrel/journal-adapter.server.ts": 836,
       "apps/web/app/styles/reader.css": 589,
       "apps/web/app/styles/social.css": 652,
       "apps/web/workers/app.ts": 694,
@@ -48,8 +48,8 @@
       "cases": 368
     },
     "comments": {
-      "lines": 6019,
-      "code": 73923,
+      "lines": 6017,
+      "code": 73909,
       "percentage": 7.53
     }
   }
