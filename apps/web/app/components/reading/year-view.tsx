@@ -3,8 +3,6 @@
 // charts (Enarratio, in Capsomer's frame), the first and latest finish and the top books.
 import type { RecapBook, RecapPage } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
-import "capsomer/chart-frame.css";
-import "capsomer/enarratio.css";
 import { Link } from "capsomer/react/link";
 import type { ReactNode } from "react";
 import { PageShell } from "~/components/page-shell";

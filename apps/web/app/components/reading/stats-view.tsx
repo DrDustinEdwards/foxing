@@ -4,8 +4,6 @@
 // goal as a meter. Charts render only when their data exists.
 import type { ReadingStats } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
-import "capsomer/chart-frame.css";
-import "capsomer/enarratio.css";
 import { Meter } from "capsomer/react/meter";
 import "capsomer/meter.css";
 import { numberFormat } from "enarratio";

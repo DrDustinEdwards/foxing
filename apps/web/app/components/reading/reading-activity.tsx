@@ -4,8 +4,6 @@
 import { formatCount } from "@drdustinedwards/site-helpers/text";
 import type { Streak } from "@foxing/types";
 import { ChartFrame } from "capsomer/react/chart-frame";
-import "capsomer/chart-frame.css";
-import "capsomer/enarratio.css";
 import { weeksChart } from "~/lib/reading-charts";
 
 export function ReadingActivity({

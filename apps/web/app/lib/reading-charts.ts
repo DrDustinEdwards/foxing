@@ -10,6 +10,8 @@ import { MONTH_ABBR, MONTH_NAMES } from "@foxing/client";
 import { heatStrip } from "enarratio";
 import { barChart } from "enarratio/lite/bar";
 import type { ChartFit } from "capsomer/react/chart-frame";
+import "capsomer/chart-frame.css";
+import "capsomer/enarratio.css";
 
 const SOURCE = "Your Foxing library";
 
