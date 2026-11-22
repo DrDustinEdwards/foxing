@@ -15,7 +15,7 @@ import { CaretLeft, CaretUp, Sparkle, X as XIcon } from "phosphor-react-native";
 import { TtsBar } from "@/components/reader/tts-bar";
 import { GoToSheet } from "@/components/reader/go-to-sheet";
 import { ReaderTopBar } from "@/components/reader/reader-top-bar";
-import { useColors } from "@/constants/colors";
+import { highlightPalette, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import type {
   PassageCommentMarker,
@@ -244,23 +244,12 @@ export default function Reader() {
 
   // Design-token-aware highlight palette pushed into the WebView so the
   // foliate annotation rects match what the FloatingPill swatches preview.
-  const highlightPalette = useMemo<Record<HighlightColor, string>>(
-    () => ({
-      amber: colors.hlAmberT,
-      auburn: colors.hlAuburnT,
-      yellow: colors.hlYellowT,
-      sage: colors.hlSageT,
-      cobalt: colors.hlCobaltT,
-      crimson: colors.hlCrimsonT,
-      purple: colors.hlPurpleT,
-    }),
-    [colors],
-  );
+  const palette = useMemo<Record<HighlightColor, string>>(() => highlightPalette(colors), [colors]);
 
   useEffect(() => {
     if (readerState !== "ready") return;
-    readerRef.current?.setHighlightColors(highlightPalette);
-  }, [highlightPalette, readerState]);
+    readerRef.current?.setHighlightColors(palette);
+  }, [palette, readerState]);
 
   // Paint the reader's own highlights once the book is open, and again when they change.
   useEffect(() => {

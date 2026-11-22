@@ -6,8 +6,8 @@ import { adminRepo, createDb } from "@foxing/core";
 import { useRevalidator } from "react-router";
 import { ButtonLink } from "capsomer/react/link";
 import { AdminCard, AdminShell } from "~/components/admin/admin-shell";
-import { AdminButton, AdminError, adminInputClass, AdminRow } from "~/components/admin/admin-form";
-import { useRoleChange } from "~/components/admin/confirm-change";
+import { AdminError, adminInputClass, AdminRow } from "~/components/admin/admin-form";
+import { SuspendButton, useRoleChange } from "~/components/admin/confirm-change";
 import { cloudflareContext } from "~/context";
 import { requireAdmin } from "~/lib/admin.server";
 import type { Route } from "./+types/admin-users";
@@ -91,19 +91,7 @@ function UserRow({
       meta={<>{user.displayName ?? "No name set"}</>}
       actions={
         <>
-          <AdminButton
-            variant={user.isSuspended ? "default" : "danger"}
-            pending={suspend.pending}
-            onClick={() =>
-              void suspend.request(
-                `/users/${user.id}/suspend`,
-                { suspended: !user.isSuspended },
-                user.isSuspended ? "Unsuspend" : "Suspend",
-              )
-            }
-          >
-            {user.isSuspended ? "Unsuspend" : "Suspend"}
-          </AdminButton>
+          <SuspendButton user={user} suspend={suspend} />
           <ButtonLink to={`/admin/users/${user.id}`}>View</ButtonLink>
         </>
       }

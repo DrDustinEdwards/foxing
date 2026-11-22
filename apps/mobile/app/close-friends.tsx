@@ -2,9 +2,10 @@ import { useCloseFriend, usePeople } from "@foxing/client";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { CaretLeft, X as XIcon, Plus } from "phosphor-react-native";
+import { X as XIcon, Plus } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
 import { PersonRow } from "@/components/profile/person-row";
 
 // Close friends see what you share with friends only. They are chosen from the
@@ -38,26 +39,7 @@ export default function CloseFriendsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityLabel="Back"
-        >
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Close Friends
-        </Text>
-      </View>
+      <BackHeader title="Close Friends" />
       {people.isPending ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />

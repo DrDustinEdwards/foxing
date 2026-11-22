@@ -3,7 +3,7 @@ import { useState, useCallback, useMemo } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Share } from "react-native";
 import { X as XIcon, Export } from "phosphor-react-native";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
-import { useColors } from "@/constants/colors";
+import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { encodeLocator } from "@/components/reader/readium-helpers";
 import { HIGHLIGHT_COLORS, type HighlightColor } from "@/components/reader/floating-pill";
@@ -64,30 +64,6 @@ export function HighlightsSheet({
   );
   const [filterColor, setFilterColor] = useState<HighlightColor | null>(null);
   const [formatPickerOpen, setFormatPickerOpen] = useState(false);
-
-  const swatchBg = useCallback(
-    (c: string) => {
-      switch (c) {
-        case "amber":
-          return colors.hlAmberT;
-        case "auburn":
-          return colors.hlAuburnT;
-        case "yellow":
-          return colors.hlYellowT;
-        case "sage":
-          return colors.hlSageT;
-        case "cobalt":
-          return colors.hlCobaltT;
-        case "crimson":
-          return colors.hlCrimsonT;
-        case "purple":
-          return colors.hlPurpleT;
-        default:
-          return colors.borderDefault;
-      }
-    },
-    [colors],
-  );
 
   const filtered = useMemo(
     () => (filterColor ? rows.filter((r) => r.color === filterColor) : rows),
@@ -196,7 +172,7 @@ export function HighlightsSheet({
                     width: 24,
                     height: 24,
                     borderRadius: 12,
-                    backgroundColor: swatchBg(c),
+                    backgroundColor: highlightSwatch(colors, c),
                     borderWidth: 2,
                     borderColor: filterColor === c ? colors.brandUi : colors.borderSubtle,
                   }}
@@ -238,7 +214,7 @@ export function HighlightsSheet({
                 }}
                 className="mb-3 rounded-2xl flex-row overflow-hidden border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
               >
-                <View style={{ width: 4, backgroundColor: swatchBg(h.color) }} />
+                <View style={{ width: 4, backgroundColor: highlightSwatch(colors, h.color) }} />
                 <View style={{ flex: 1, padding: 12 }}>
                   <Text
                     style={{

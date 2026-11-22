@@ -1,10 +1,9 @@
 import { useMyAnnotations } from "@foxing/client";
-import { useCallback } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { CaretLeft } from "phosphor-react-native";
-import { useColors } from "@/constants/colors";
+import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
 // Every highlight the reader has made, newest first, from GET /annotations.
@@ -14,30 +13,6 @@ export default function HighlightsScreen() {
   const highlights = useMyAnnotations(["highlight"]);
   const rows = highlights.data ?? [];
   const loading = highlights.isPending;
-
-  const swatch = useCallback(
-    (c: string | null) => {
-      switch (c) {
-        case "amber":
-          return colors.hlAmberT;
-        case "auburn":
-          return colors.hlAuburnT;
-        case "yellow":
-          return colors.hlYellowT;
-        case "sage":
-          return colors.hlSageT;
-        case "cobalt":
-          return colors.hlCobaltT;
-        case "crimson":
-          return colors.hlCrimsonT;
-        case "purple":
-          return colors.hlPurpleT;
-        default:
-          return colors.borderDefault;
-      }
-    },
-    [colors],
-  );
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
@@ -91,7 +66,7 @@ export default function HighlightsScreen() {
               delayLongPress={350}
               className="mb-3 rounded-2xl flex-row overflow-hidden border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
             >
-              <View style={{ width: 4, backgroundColor: swatch(h.color) }} />
+              <View style={{ width: 4, backgroundColor: highlightSwatch(colors, h.color) }} />
               <View style={{ flex: 1, padding: 14 }}>
                 <Text
                   style={{

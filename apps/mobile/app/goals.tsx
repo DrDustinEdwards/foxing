@@ -10,12 +10,11 @@ import {
 } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
+import { Text, ScrollView, ActivityIndicator } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-import { CaretLeft } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
 import { YearGoalCard } from "@/components/goals/year-goal-card";
 import { StreakCard } from "@/components/goals/streak-card";
 import { WeeklySummaryCard } from "@/components/goals/weekly-summary-card";
@@ -81,7 +80,6 @@ function usePeriodGoal(goals: W.GoalWithProgress[] | undefined, period: Period, 
 
 export default function GoalsScreen() {
   const colors = useColors();
-  const router = useRouter();
   const goals = useGoals();
   const streak = useStreak().data ?? null;
   const stats = useStats().data;
@@ -126,27 +124,7 @@ export default function GoalsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable
-          onPress={() => router.back()}
-          hitSlop={10}
-          className="p-2"
-          accessibilityRole="button"
-          accessibilityLabel="Back"
-        >
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Reading Goals
-        </Text>
-      </View>
+      <BackHeader title="Reading Goals" />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48 }}>
         {error || goals.error ? (

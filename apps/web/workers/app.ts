@@ -67,6 +67,7 @@ import {
   runCarrelSchedules,
 } from "../app/lib/carrel/site-api.server";
 import { INDEXNOW_KEY } from "../app/lib/indexnow";
+import { readerAssetContentType } from "../app/lib/reader-asset-type";
 import { ROBOTS_DISALLOW, SITE_NAME } from "../app/lib/seo";
 import { FONT_PRELOADS } from "../app/lib/preloads";
 import { operatorTools } from "../app/lib/operator.server";
@@ -234,28 +235,6 @@ app.route("/api/v1", api);
 // duplicate book text out of search indexes (the canonical page is /books/:slug).
 // Immutable long cache + edge Cache API: first hit streams from R2, the rest are
 // CDN hits with no Worker R2 read.
-const READER_ASSET_CONTENT_TYPES: Record<string, string> = {
-  xhtml: "application/xhtml+xml",
-  html: "text/html",
-  htm: "text/html",
-  css: "text/css",
-  js: "text/javascript",
-  json: "application/json",
-  xml: "application/xml",
-  ncx: "application/x-dtbncx+xml",
-  jpg: "image/jpeg",
-  jpeg: "image/jpeg",
-  png: "image/png",
-  gif: "image/gif",
-  svg: "image/svg+xml",
-  webp: "image/webp",
-  avif: "image/avif",
-  otf: "font/otf",
-  ttf: "font/ttf",
-  woff: "font/woff",
-  woff2: "font/woff2",
-};
-
 app.get("/reader-assets/*", async (c) => {
   const url = new URL(c.req.url);
   const rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
@@ -289,7 +268,6 @@ app.get("/reader-assets/*", async (c) => {
  * inline scripts are refused by the CSP, which they carry no nonce for.)
  */
 function readerAssets(bucket: R2Bucket, path: string) {
-  const ext = path.split(".").pop()?.toLowerCase() ?? "";
   const typed = <T extends R2Object | null>(object: T): T => {
     if (!object) return object;
     return new Proxy(object, {
@@ -297,10 +275,7 @@ function readerAssets(bucket: R2Bucket, path: string) {
         if (property === "writeHttpMetadata")
           return (headers: Headers) => {
             target.writeHttpMetadata(headers);
-            const stored =
-              headers.get("Content-Type") ??
-              READER_ASSET_CONTENT_TYPES[ext] ??
-              "application/octet-stream";
+            const stored = headers.get("Content-Type") ?? readerAssetContentType(path);
             headers.set(
               "Content-Type",
               /javascript|ecmascript/i.test(stored) ? "text/plain; charset=utf-8" : stored,
