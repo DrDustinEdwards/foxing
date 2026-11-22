@@ -56,7 +56,7 @@ import {
   type WriteResult,
 } from "@dustinedwards/site-api";
 import { SEARCH_FIELDS } from "@dustinedwards/site-api/frontmatter";
-import { d1ScheduledUpdates, utc } from "@dustinedwards/site-api/schedules";
+import { d1ScheduledUpdates, utc, waitingUpdates } from "@dustinedwards/site-api/schedules";
 import { adminEmails } from "@dustinedwards/site-runtime/access";
 import { notFoundReport } from "@dustinedwards/site-runtime/not-found";
 import { adminRepo, type catalogRepo, createDb, type Db } from "@foxing/core";
@@ -488,7 +488,7 @@ export function journalSiteAdapter(options: {
         if (!person) return none;
         authorId = person.id;
       } else if (query.author !== undefined) authorId = null;
-      const waiting = await schedules.waiting();
+      const waiting = await waitingUpdates(env.DB);
       const filter = listFilter(query, [...waiting.keys()], authorId);
       const [rows, total] = await Promise.all([
         adminRepo.listJournalAdmin(db, { ...filter, sort, dir, limit: query.limit + 1, offset }),
