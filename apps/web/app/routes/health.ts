@@ -1,14 +1,13 @@
-import { cronCheck } from "@dustinedwards/site-runtime/cron";
 import {
   aiOutcomeCheck,
   authSpikeCheck,
   durableObjectCheck,
   emailCheck,
-  healthResponse,
   imagesCheck,
   kvCheck,
   queueCheck,
   r2Check,
+  siteHealthResponse,
 } from "@dustinedwards/site-runtime/health";
 import { adminRepo, createDb } from "@foxing/core";
 import { cloudflareContext } from "~/context";
@@ -16,9 +15,8 @@ import { backupStatus } from "~/lib/backup.server";
 import { CRON_WATCHED } from "~/lib/cron-jobs";
 import { COVER_ORIGIN } from "~/lib/origins";
 import type { Route } from "./+types/health";
-import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 
-// GET /health for uptime monitors and the Capsid console: site-runtime's response. FAIL LEVEL IS D1
+// GET /health for uptime monitors and the Capsid console: site-runtime's siteHealthResponse. FAIL LEVEL IS D1
 // ALONE: without it no page, sign-in or API answer works, so 503 is true. Everything else warns,
 // because the catalog still renders without it: the newest dump or a files pass older than 26 hours
 // (under `backup`), the MEDIA and COVERS buckets, APP_KV, Images (cover and journal picture sizes),
@@ -33,10 +31,9 @@ import { deployedAt, deployedSha } from "@dustinedwards/site-runtime/deploy";
 // deploy has none).
 export function loader({ context }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
-  return healthResponse({
-    ping: () => env.DB.prepare("SELECT 1").first(),
+  return siteHealthResponse(env, {
     backup: () => backupStatus(env),
-    sha: deployedSha(env),
+    jobs: [...CRON_WATCHED],
     checks: [
       r2Check("media", env.MEDIA),
       r2Check("covers", env.COVERS),
@@ -50,11 +47,6 @@ export function loader({ context }: Route.LoaderArgs) {
       aiOutcomeCheck("alt-text", env.APP_KV),
       durableObjectCheck("club-room", env.CLUB_ROOM),
       durableObjectCheck("rate-limiter", env.RATE_LIMITER),
-      // The deploy's time holds a job back until its first window since the deploy has passed.
-      cronCheck(env.DB, {
-        jobs: [...CRON_WATCHED],
-        deployedAt: deployedAt(env),
-      }),
       authSpikeCheck(env.DB),
       {
         name: "catalog-data",
