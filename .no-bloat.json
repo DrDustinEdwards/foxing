@@ -4,14 +4,14 @@
     "jscpd": "jscpd@5.3.2"
   },
   "baseline": {
-    "measured_at": "50464ce",
+    "measured_at": "d304184",
     "knip": {
       "files": 2
     },
     "jscpd": {
-      "clones": 158,
-      "lines": 1695,
-      "percentage": 1.99,
+      "clones": 153,
+      "lines": 1607,
+      "percentage": 1.89,
       "unread": 0
     },
     "shared copies": {
@@ -25,7 +25,7 @@
     },
     "comments": {
       "lines": 6015,
-      "code": 73979,
+      "code": 73923,
       "percentage": 7.48
     }
   }

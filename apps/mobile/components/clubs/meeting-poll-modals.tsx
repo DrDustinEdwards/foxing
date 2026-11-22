@@ -1,9 +1,71 @@
 import { useCreateMeeting, useCreatePoll } from "@foxing/client";
 import { useColors } from "@/constants/colors";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { CaretLeft } from "phosphor-react-native";
 import { Fonts } from "@/constants/fonts";
+
+function FormModal({
+  visible,
+  onClose,
+  title,
+  canSave,
+  saving,
+  onSave,
+  children,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  canSave: boolean;
+  saving: boolean;
+  onSave: () => void;
+  children: ReactNode;
+}) {
+  const colors = useColors();
+  return (
+    <Modal
+      visible={visible}
+      animationType="slide"
+      onRequestClose={onClose}
+      presentationStyle="pageSheet"
+    >
+      <View style={{ flex: 1, backgroundColor: colors.bgBase, paddingTop: 16 }}>
+        <View className="flex-row items-center px-3 py-2">
+          <Pressable onPress={onClose} hitSlop={10} className="p-2">
+            <CaretLeft color={colors.textPrimary} size={22} />
+          </Pressable>
+          <Text
+            style={{
+              fontFamily: Fonts.displayBold,
+              fontSize: 18,
+              color: colors.textPrimary,
+              marginLeft: 4,
+              flex: 1,
+            }}
+          >
+            {title}
+          </Text>
+          <Pressable
+            onPress={onSave}
+            disabled={saving || !canSave}
+            style={{
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 999,
+              backgroundColor: canSave ? colors.brandUi : colors.bgDisabled,
+            }}
+          >
+            <Text style={{ fontFamily: Fonts.uiMedium, color: colors.textOnBrand, fontSize: 13 }}>
+              Save
+            </Text>
+          </Pressable>
+        </View>
+        <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>{children}</ScrollView>
+      </View>
+    </Modal>
+  );
+}
 
 export function AddMeetingModal({
   visible,
@@ -56,120 +118,70 @@ export function AddMeetingModal({
   }
 
   return (
-    <Modal
+    <FormModal
       visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      presentationStyle="pageSheet"
+      onClose={onClose}
+      title="New meeting"
+      canSave={Boolean(title.trim() && meetingDate.trim())}
+      saving={saving}
+      onSave={() => void create()}
     >
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: colors.bgBase,
-          paddingTop: 16,
-        }}
-      >
-        <View className="flex-row items-center px-3 py-2">
-          <Pressable onPress={onClose} hitSlop={10} className="p-2">
-            <CaretLeft color={colors.textPrimary} size={22} />
-          </Pressable>
-          <Text
-            style={{
-              fontFamily: Fonts.displayBold,
-              fontSize: 18,
-              color: colors.textPrimary,
-              marginLeft: 4,
-              flex: 1,
-            }}
-          >
-            New meeting
-          </Text>
-          <Pressable
-            onPress={() => void create()}
-            disabled={saving || !title.trim() || !meetingDate.trim()}
-            style={{
-              paddingHorizontal: 14,
-              paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor:
-                title.trim() && meetingDate.trim() ? colors.brandUi : colors.bgDisabled,
-            }}
-          >
-            <Text
+      <FieldInput label="Title" value={title} onChange={setTitle} placeholder="Book club meeting" />
+      <FieldInput
+        label="Date and time (ISO)"
+        value={meetingDate}
+        onChange={setMeetingDate}
+        placeholder="2026-06-15T19:00"
+      />
+      <FieldInput
+        label="Description (optional)"
+        value={description}
+        onChange={setDescription}
+        multiline
+      />
+      <View className="flex-row" style={{ gap: 6 }}>
+        {(["in_person", "virtual", "hybrid"] as const).map((t) => {
+          const active = meetingType === t;
+          return (
+            <Pressable
+              key={t}
+              onPress={() => setMeetingType(t)}
               style={{
-                fontFamily: Fonts.uiMedium,
-                color: colors.textOnBrand,
-                fontSize: 13,
+                flex: 1,
+                paddingVertical: 8,
+                borderRadius: 999,
+                borderWidth: 1,
+                borderColor: active ? colors.brandUi : colors.borderSubtle,
+                backgroundColor: active ? colors.brandSubtle : colors.bgBase,
+                alignItems: "center",
               }}
             >
-              Save
-            </Text>
-          </Pressable>
-        </View>
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
-          <FieldInput
-            label="Title"
-            value={title}
-            onChange={setTitle}
-            placeholder="Book club meeting"
-          />
-          <FieldInput
-            label="Date and time (ISO)"
-            value={meetingDate}
-            onChange={setMeetingDate}
-            placeholder="2026-06-15T19:00"
-          />
-          <FieldInput
-            label="Description (optional)"
-            value={description}
-            onChange={setDescription}
-            multiline
-          />
-          <View className="flex-row" style={{ gap: 6 }}>
-            {(["in_person", "virtual", "hybrid"] as const).map((t) => {
-              const active = meetingType === t;
-              return (
-                <Pressable
-                  key={t}
-                  onPress={() => setMeetingType(t)}
-                  style={{
-                    flex: 1,
-                    paddingVertical: 8,
-                    borderRadius: 999,
-                    borderWidth: 1,
-                    borderColor: active ? colors.brandUi : colors.borderSubtle,
-                    backgroundColor: active ? colors.brandSubtle : colors.bgBase,
-                    alignItems: "center",
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.uiMedium,
-                      fontSize: 12,
-                      color: active ? colors.brandSubtleText : colors.textSecondary,
-                      textTransform: "capitalize",
-                    }}
-                  >
-                    {t.replace("_", " ")}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <FieldInput
-            label="Location name (optional)"
-            value={locationName}
-            onChange={setLocationName}
-          />
-          <FieldInput
-            label="Location URL (optional)"
-            value={locationUrl}
-            onChange={setLocationUrl}
-            placeholder="https://meet.google.com/..."
-          />
-        </ScrollView>
+              <Text
+                style={{
+                  fontFamily: Fonts.uiMedium,
+                  fontSize: 12,
+                  color: active ? colors.brandSubtleText : colors.textSecondary,
+                  textTransform: "capitalize",
+                }}
+              >
+                {t.replace("_", " ")}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
-    </Modal>
+      <FieldInput
+        label="Location name (optional)"
+        value={locationName}
+        onChange={setLocationName}
+      />
+      <FieldInput
+        label="Location URL (optional)"
+        value={locationUrl}
+        onChange={setLocationUrl}
+        placeholder="https://meet.google.com/..."
+      />
+    </FormModal>
   );
 }
 
@@ -216,142 +228,104 @@ export function AddPollModal({
   }
 
   return (
-    <Modal
+    <FormModal
       visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-      presentationStyle="pageSheet"
+      onClose={onClose}
+      title="New poll"
+      canSave={Boolean(title.trim())}
+      saving={saving}
+      onSave={() => void create()}
     >
-      <View style={{ flex: 1, backgroundColor: colors.bgBase, paddingTop: 16 }}>
-        <View className="flex-row items-center px-3 py-2">
-          <Pressable onPress={onClose} hitSlop={10} className="p-2">
-            <CaretLeft color={colors.textPrimary} size={22} />
-          </Pressable>
-          <Text
+      <FieldInput
+        label="Question"
+        value={title}
+        onChange={setTitle}
+        placeholder="Which book next?"
+      />
+      <FieldInput
+        label="Description (optional)"
+        value={description}
+        onChange={setDescription}
+        multiline
+      />
+      <Text
+        style={{
+          fontFamily: Fonts.uiMedium,
+          fontSize: 11,
+          color: colors.textTertiary,
+          textTransform: "uppercase",
+          letterSpacing: 0.6,
+        }}
+      >
+        Options
+      </Text>
+      {options.map((opt, idx) => (
+        <View key={idx} className="flex-row items-center" style={{ gap: 8 }}>
+          <TextInput
+            value={opt}
+            onChangeText={(t) => {
+              const next = [...options];
+              next[idx] = t;
+              setOptions(next);
+            }}
+            placeholder={`Option ${idx + 1}`}
+            placeholderTextColor={colors.textTertiary}
             style={{
-              fontFamily: Fonts.displayBold,
-              fontSize: 18,
-              color: colors.textPrimary,
-              marginLeft: 4,
               flex: 1,
-            }}
-          >
-            New poll
-          </Text>
-          <Pressable
-            onPress={() => void create()}
-            disabled={saving || !title.trim()}
-            style={{
-              paddingHorizontal: 14,
+              fontFamily: Fonts.body,
+              fontSize: 14,
+              color: colors.textPrimary,
+              backgroundColor: colors.bgSurface,
+              borderColor: colors.borderSubtle,
+              borderWidth: 1,
+              borderRadius: 8,
+              paddingHorizontal: 10,
               paddingVertical: 8,
-              borderRadius: 999,
-              backgroundColor: title.trim() ? colors.brandUi : colors.bgDisabled,
             }}
-          >
-            <Text
-              style={{
-                fontFamily: Fonts.uiMedium,
-                color: colors.textOnBrand,
-                fontSize: 13,
-              }}
-            >
-              Save
-            </Text>
-          </Pressable>
-        </View>
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 10 }}>
-          <FieldInput
-            label="Question"
-            value={title}
-            onChange={setTitle}
-            placeholder="Which book next?"
           />
-          <FieldInput
-            label="Description (optional)"
-            value={description}
-            onChange={setDescription}
-            multiline
-          />
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            Options
-          </Text>
-          {options.map((opt, idx) => (
-            <View key={idx} className="flex-row items-center" style={{ gap: 8 }}>
-              <TextInput
-                value={opt}
-                onChangeText={(t) => {
-                  const next = [...options];
-                  next[idx] = t;
-                  setOptions(next);
-                }}
-                placeholder={`Option ${idx + 1}`}
-                placeholderTextColor={colors.textTertiary}
-                style={{
-                  flex: 1,
-                  fontFamily: Fonts.body,
-                  fontSize: 14,
-                  color: colors.textPrimary,
-                  backgroundColor: colors.bgSurface,
-                  borderColor: colors.borderSubtle,
-                  borderWidth: 1,
-                  borderRadius: 8,
-                  paddingHorizontal: 10,
-                  paddingVertical: 8,
-                }}
-              />
-              {options.length > 2 ? (
-                <Pressable
-                  onPress={() => setOptions(options.filter((_, i) => i !== idx))}
-                  hitSlop={10}
-                  style={{ padding: 6 }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: Fonts.ui,
-                      fontSize: 18,
-                      color: colors.textTertiary,
-                    }}
-                  >
-                    ×
-                  </Text>
-                </Pressable>
-              ) : null}
-            </View>
-          ))}
-          {options.length < 5 ? (
+          {options.length > 2 ? (
             <Pressable
-              onPress={() => setOptions([...options, ""])}
-              style={{
-                alignSelf: "flex-start",
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: colors.borderSubtle,
-              }}
+              onPress={() => setOptions(options.filter((_, i) => i !== idx))}
+              hitSlop={10}
+              style={{ padding: 6 }}
             >
               <Text
                 style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 12,
-                  color: colors.brandText,
+                  fontFamily: Fonts.ui,
+                  fontSize: 18,
+                  color: colors.textTertiary,
                 }}
               >
-                Add option
+                ×
               </Text>
             </Pressable>
           ) : null}
-        </ScrollView>
-      </View>
-    </Modal>
+        </View>
+      ))}
+      {options.length < 5 ? (
+        <Pressable
+          onPress={() => setOptions([...options, ""])}
+          style={{
+            alignSelf: "flex-start",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: colors.borderSubtle,
+          }}
+        >
+          <Text
+            style={{
+              fontFamily: Fonts.uiMedium,
+              fontSize: 12,
+              color: colors.brandText,
+            }}
+          >
+            Add option
+          </Text>
+        </Pressable>
+      ) : null}
+    </FormModal>
   );
 }
 
