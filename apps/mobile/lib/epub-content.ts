@@ -162,30 +162,6 @@ function epubHtmlToText(html: string): string {
     .trim();
 }
 
-function htmlToParagraphs(html: string): string[] {
-  const noScript = html
-    .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-    .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "");
-  // Capture content between block-level openers/closers; matches paragraphs,
-  // headings, blockquotes, list items. Falls back to splitting on double
-  // newline if no block tags exist (raw text manifests).
-  const blocks: string[] = [];
-  const blockRegex =
-    /<(?:p|div|li|h[1-6]|blockquote|pre)\b[^>]*>([\s\S]*?)<\/(?:p|div|li|h[1-6]|blockquote|pre)>/gi;
-  let m: RegExpExecArray | null;
-  while ((m = blockRegex.exec(noScript)) !== null) {
-    const text = decodeEntities(m[1].replace(/<[^>]+>/g, ""))
-      .replace(/\s+/g, " ")
-      .trim();
-    if (text) blocks.push(text);
-  }
-  if (blocks.length > 0) return blocks;
-  return epubHtmlToText(html)
-    .split(/\n\n+/)
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-}
-
 const NAMED_ENTITIES: Record<string, string> = {
   amp: "&",
   lt: "<",
@@ -204,11 +180,12 @@ const NAMED_ENTITIES: Record<string, string> = {
 
 function decodeEntities(s: string): string {
   return s.replace(/&(#x?[0-9a-f]+|[a-z]+);/gi, (_, ent: string) => {
-    if (ent.startsWith("#x") || ent.startsWith("#X")) {
-      return String.fromCodePoint(parseInt(ent.slice(2), 16));
+    if (ent.startsWith("#")) {
+      const hex = ent[1] === "x" || ent[1] === "X";
+      const code = parseInt(ent.slice(hex ? 2 : 1), hex ? 16 : 10);
+      return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : " ";
     }
-    if (ent.startsWith("#")) return String.fromCodePoint(parseInt(ent.slice(1), 10));
-    return NAMED_ENTITIES[ent.toLowerCase()] ?? ` `;
+    return NAMED_ENTITIES[ent.toLowerCase()] ?? `&${ent};`;
   });
 }
 
@@ -222,8 +199,8 @@ function resolveChapterPath(opened: OpenedEpub, hrefOrPath: string): string | nu
   // the relative href (sometimes Readium strips the leading rootDir).
   for (const item of opened.spine) {
     if (item.href === cleaned) return item.href;
-    if (item.href.endsWith(cleaned)) return item.href;
-    if (cleaned.endsWith(item.href)) return item.href;
+    if (item.href.endsWith(`/${cleaned}`)) return item.href;
+    if (cleaned.endsWith(`/${item.href}`)) return item.href;
   }
   // Fallback: try a direct zip lookup (last-ditch for unusual hrefs).
   if (opened.zip.file(cleaned)) return cleaned;
@@ -232,7 +209,6 @@ function resolveChapterPath(opened: OpenedEpub, hrefOrPath: string): string | nu
 
 export interface ChapterContent {
   text: string;
-  paragraphs: string[];
 }
 
 export async function getChapterContent(
@@ -241,12 +217,11 @@ export async function getChapterContent(
 ): Promise<ChapterContent> {
   const opened = await openEpub(remoteUrl);
   const path = resolveChapterPath(opened, chapterHrefOrLocator);
-  if (!path) return { text: "", paragraphs: [] };
+  if (!path) return { text: "" };
   const file = opened.zip.file(path);
-  if (!file) return { text: "", paragraphs: [] };
+  if (!file) return { text: "" };
   const html = await file.async("text");
   return {
     text: epubHtmlToText(html),
-    paragraphs: htmlToParagraphs(html),
   };
 }

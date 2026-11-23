@@ -7,7 +7,7 @@ import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { X as XIcon } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { decodeLocator, encodeLocator } from "./readium-helpers";
+import { decodeLocator, locatorKey } from "./readium-helpers";
 import { PassageCommentComposer } from "./passage-comment-composer";
 import { PassageCommentList } from "./passage-comment-list";
 
@@ -54,7 +54,14 @@ export function PassageCommentSheet({
   }, [visible, clubs]);
 
   const all = layers.data?.comments ?? [];
-  const comments = all.filter((c) => !c.parentId && c.locator && encodeLocator(c.locator) === cfi);
+  const passage = decodeLocator(cfi ?? undefined);
+  const comments = all.filter(
+    (c) =>
+      !c.parentId &&
+      c.locator &&
+      passage &&
+      locatorKey(c.locator as unknown as Parameters<typeof locatorKey>[0]) === locatorKey(passage),
+  );
   const replies = all.filter((c) => c.parentId && comments.some((p) => p.id === c.parentId));
 
   const toggleReveal = useCallback((key: string) => {

@@ -94,11 +94,6 @@ export function UpgradeSheet({ visible, onClose, feature }: UpgradeSheetProps) {
             Not now
           </Text>
         </Pressable>
-        <Text
-          style={{ fontFamily: Fonts.ui, fontSize: 12, color: colors.textTertiary, marginTop: 4 }}
-        >
-          foxing.app/pricing
-        </Text>
       </View>
     </SheetScaffold>
   );

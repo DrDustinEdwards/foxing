@@ -20,7 +20,7 @@ export function AddBookSheet({
   onMatch: (slug: string) => void;
 }) {
   const colors = useColors();
-  // Two-step sheet: 'choose' shows the three actions; 'url' swaps in a text
+  // Two-step sheet: 'choose' shows the two actions; 'url' swaps in a text
   // input + lookup result. Keeping it inside the same modal avoids modal
   // stacking jank on Android.
   const [mode, setMode] = useState<"choose" | "url">("choose");
@@ -164,8 +164,7 @@ export function AddBookSheet({
   );
 }
 
-// Single row in the chooser, extracted so the three options share their
-// layout and the three Pressables in the parent stay readable.
+// Single row in the chooser, extracted so the options share their layout.
 function AddOption({
   Icon,
   label,

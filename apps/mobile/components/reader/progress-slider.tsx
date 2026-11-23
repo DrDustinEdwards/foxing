@@ -91,6 +91,7 @@ export function ProgressSlider({ value, onSlidingComplete, onSlidingChange }: Pr
       {...responder.panHandlers}
     >
       <View
+        pointerEvents="none"
         style={{
           height: 4,
           borderRadius: 2,
@@ -99,6 +100,7 @@ export function ProgressSlider({ value, onSlidingComplete, onSlidingChange }: Pr
         }}
       >
         <View
+          pointerEvents="none"
           style={{
             height: "100%",
             width: `${filled * 100}%`,

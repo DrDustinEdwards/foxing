@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -71,24 +71,32 @@ export function GoToSheet({
   const [percent, setPercent] = useState<string>("0");
   const [history, setHistory] = useState<PositionEntry[]>([]);
 
+  // The host passes fresh lambdas and a moving progress every render; read them through a ref so
+  // the sheet resets only when it opens.
+  const latest = useRef({ currentProgress, loadToc, loadHistory });
+  useEffect(() => {
+    latest.current = { currentProgress, loadToc, loadHistory };
+  });
+
   useEffect(() => {
     if (!visible) return;
+    const { currentProgress: progress, loadToc: toc0, loadHistory: history0 } = latest.current;
     // oxlint-disable-next-line react/set-state-in-effect -- resets the sheet each time it opens
     setTab("contents");
-    setPercent(String(Math.round(currentProgress * 100)));
+    setPercent(String(Math.round(progress * 100)));
     setTocLoading(true);
-    loadToc()
+    toc0()
       .then((items) => setToc(items))
       .catch(() => setToc([]))
       .finally(() => setTocLoading(false));
-    if (loadHistory) {
-      loadHistory()
+    if (history0) {
+      history0()
         .then(setHistory)
         .catch(() => setHistory([]));
     } else {
       setHistory([]);
     }
-  }, [visible, currentProgress, loadToc, loadHistory]);
+  }, [visible]);
 
   const onGoToPercent = useCallback(() => {
     const n = parseFloat(percent);
@@ -161,7 +169,6 @@ export function GoToSheet({
               <Pressable
                 key={`${i}:${t.href}`}
                 onPress={() => {
-                  // Prefer CFI if foliate gave us one; otherwise pass href to renderer.
                   if (t.cfi) onNavigateCfi(t.cfi);
                   else onNavigateHref?.(t.href);
                   onClose();
@@ -234,9 +241,7 @@ export function GoToSheet({
             </Pressable>
           </View>
 
-          {/* Custom slider, overlay-track + draggable thumb via PanResponder
-                would be more polished. For v1 we use a row of quick-pick
-                presets below the input as the "slider" surrogate. */}
+          {/* Quick-pick presets below the input. */}
           <View className="flex-row" style={{ gap: 6, marginTop: 12 }}>
             {[0, 10, 25, 50, 75, 90].map((p) => (
               <Pressable
@@ -292,7 +297,7 @@ export function GoToSheet({
   );
 }
 
-// "My Places" merges bookmarks and recent history per task.md Section 2d.
+// "My Places" merges bookmarks and recent history.
 // Bookmarks section first (curated by the user), then Recent (auto-built).
 function MyPlacesTab({
   bookmarks,

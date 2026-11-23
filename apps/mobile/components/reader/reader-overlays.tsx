@@ -1,5 +1,5 @@
 import { useColors } from "@/constants/colors";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Pressable, Modal as RNModal, TextInput as RNTextInput, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
@@ -8,11 +8,15 @@ import { Fonts } from "@/constants/fonts";
 // to the reader because no other screen needs it yet.
 export function ReaderToast({ message, onHide }: { message: string | null; onHide: () => void }) {
   const colors = useColors();
+  const onHideRef = useRef(onHide);
+  useEffect(() => {
+    onHideRef.current = onHide;
+  });
   useEffect(() => {
     if (!message) return;
-    const t = setTimeout(onHide, 2500);
+    const t = setTimeout(() => onHideRef.current(), 2500);
     return () => clearTimeout(t);
-  }, [message, onHide]);
+  }, [message]);
   if (!message) return null;
   return (
     <SafeAreaView

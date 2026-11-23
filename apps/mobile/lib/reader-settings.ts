@@ -1,6 +1,5 @@
 // Reader settings: shape, persistence, and presets. Owned by the host
-// (React Native side); the Foliate bridge consumes them via applyTheme()
-// so changes here flow through one apply() call to the WebView.
+// (React Native side); the reader screen projects them into ReaderSettings.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
