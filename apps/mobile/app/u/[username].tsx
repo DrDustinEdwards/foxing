@@ -7,7 +7,7 @@ import { BookOpen, Lock } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
-import { Avatar } from "@/components/feed/feed-row";
+import { Avatar } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/profile/follow-button";
 import { Divider, StatTile } from "@/components/profile/stat-tile";
 

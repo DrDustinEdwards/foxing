@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from "react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { Avatar } from "@/components/feed/feed-row";
+import { Avatar } from "@/components/ui/avatar";
 
 // One reader in a people list, with an optional action on the right.
 export function PersonRow({

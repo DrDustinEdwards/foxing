@@ -1,6 +1,7 @@
 import type * as W from "@foxing/types";
+import { Avatar } from "@/components/ui/avatar";
 import { useColors } from "@/constants/colors";
-import { Image, Pressable, Text, View } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
 import { ChatCircleDots, Eye, EyeSlash } from "phosphor-react-native";
@@ -26,7 +27,6 @@ export function PostCard({
 }) {
   const colors = useColors();
   const name = post.author?.displayName ?? post.author?.username ?? "Reader";
-  const initial = (name || "?")[0]?.toUpperCase() ?? "?";
   const hidden = post.hasSpoiler && !revealed;
 
   return (
@@ -37,35 +37,7 @@ export function PostCard({
       style={{ opacity: nested ? 0.98 : 1 }}
     >
       <Pressable onPress={() => post.author && onOpenAuthor(post.author.username)} hitSlop={4}>
-        <View
-          style={{
-            width: nested ? 32 : 36,
-            height: nested ? 32 : 36,
-            borderRadius: 18,
-            overflow: "hidden",
-            backgroundColor: colors.brandSubtle,
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 10,
-          }}
-        >
-          {post.author?.avatarUrl ? (
-            <Image
-              source={{ uri: post.author.avatarUrl }}
-              style={{ width: "100%", height: "100%" }}
-            />
-          ) : (
-            <Text
-              style={{
-                fontFamily: Fonts.display,
-                fontSize: nested ? 14 : 15,
-                color: colors.brandSubtleText,
-              }}
-            >
-              {initial}
-            </Text>
-          )}
-        </View>
+        <Avatar profile={post.author} size={nested ? 32 : 36} style={{ marginRight: 10 }} />
       </Pressable>
       <View style={{ flex: 1 }}>
         <View className="flex-row items-center" style={{ marginBottom: 2 }}>
