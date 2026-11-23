@@ -3,15 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { ChartBar } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-
-function formatMeetingTime(at: number): string {
-  return new Date(at).toLocaleString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
+import { formatMeetingTime } from "@/lib/relative-time";
 
 export function ClubPollCard({
   p,

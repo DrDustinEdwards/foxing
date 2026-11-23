@@ -27,6 +27,7 @@ import {
 import { DMSans_400Regular, DMSans_500Medium } from "@expo-google-fonts/dm-sans";
 import { DMMono_400Regular, DMMono_500Medium } from "@expo-google-fonts/dm-mono";
 import { FoxingDataProvider, useMe } from "@foxing/client";
+import { ErrorState } from "@/components/ui/error-state";
 import { api, authClient, queryClient, syncNow } from "@/lib/api";
 import { rescheduleAll } from "@/lib/local-notifications";
 import "../global.css";
@@ -125,8 +126,10 @@ function RootLayout() {
     if (inAuthGroup || inOnboarding) router.replace("/(tabs)");
   }, [signedIn, onboarded, segments, authLoading, router]);
 
+  const meFailed = signedIn && me.isError && !me.data;
   const ready =
     splashTimeoutReached ||
+    meFailed ||
     ((fontsLoaded || !!fontsError) && !authLoading && (!signedIn || onboarded !== null));
 
   // Hide the native splash as soon as we're ready. useEffect runs after every
@@ -159,7 +162,11 @@ function RootLayout() {
               it here means individual call sites don't have to remember. */}
           <IconContext.Provider value={{ weight: "regular", size: 20 }}>
             <ReaderProvider>
-              <Stack screenOptions={{ headerShown: false }} />
+              {meFailed ? (
+                <ErrorState onRetry={() => void me.refetch()} />
+              ) : (
+                <Stack screenOptions={{ headerShown: false }} />
+              )}
               <StatusBar style="auto" />
             </ReaderProvider>
           </IconContext.Provider>

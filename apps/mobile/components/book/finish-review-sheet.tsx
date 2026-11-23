@@ -63,13 +63,14 @@ export function FinishReviewSheet({
 
   // Rating is 0..5 in half steps; the diary stores half stars, 1..10.
   const savePage1 = useCallback(async () => {
-    if (rating === 0 && !review.trim()) return;
-    await diary.run({
+    if (rating === 0 && !review.trim()) return true;
+    const saved = await diary.run({
       bookId,
       ratingHalf: rating === 0 ? null : Math.round(rating * 2),
       review: review.trim() || null,
       visibility: isPublic ? "public" : "private",
     });
+    return !!saved;
   }, [bookId, diary, isPublic, rating, review]);
 
   const savePage2 = useCallback(async () => {
@@ -82,13 +83,12 @@ export function FinishReviewSheet({
   }, [bookId, moods]);
 
   const onNext = useCallback(async () => {
-    await savePage1();
-    setPage(2);
+    if (await savePage1()) setPage(2);
   }, [savePage1]);
 
   const onDone = useCallback(async () => {
     if (page === 1) {
-      await savePage1();
+      if (!(await savePage1())) return;
     } else {
       await savePage2();
     }
@@ -348,6 +348,14 @@ export function FinishReviewSheet({
           </View>
         </>
       )}
+      {page === 1 && diary.error ? (
+        <Text
+          accessibilityRole="alert"
+          style={{ fontFamily: Fonts.ui, fontSize: 13, color: colors.error, marginTop: 16 }}
+        >
+          Couldn't save your review. Try again.
+        </Text>
+      ) : null}
     </SheetScaffold>
   );
 }

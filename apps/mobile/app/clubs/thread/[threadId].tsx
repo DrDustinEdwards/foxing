@@ -18,6 +18,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { CaretLeft, Sparkle, ChatCircleDots, PaperPlaneRight } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState, isNotFound } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { PostCard } from "@/components/clubs/post-card";
 
@@ -108,6 +109,13 @@ export default function ThreadScreen() {
       </Screen>
     );
   }
+  if (!page && threadPage.isError && !isNotFound(threadPage.error)) {
+    return (
+      <Screen>
+        <ErrorState onRetry={() => void threadPage.refetch()} />
+      </Screen>
+    );
+  }
   if (!page) {
     return (
       <Screen className="items-center justify-center px-8">
@@ -131,7 +139,13 @@ export default function ThreadScreen() {
   return (
     <Screen>
       <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          className="p-2"
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 4 }}>

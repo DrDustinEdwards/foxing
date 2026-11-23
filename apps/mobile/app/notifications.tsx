@@ -16,6 +16,7 @@ import {
   ChartBar,
   Megaphone,
 } from "phosphor-react-native";
+import { ErrorState } from "@/components/ui/error-state";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
@@ -52,7 +53,13 @@ export default function NotificationsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          className="p-2"
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <Text
@@ -67,7 +74,7 @@ export default function NotificationsScreen() {
           Notifications
         </Text>
         {unreadCount > 0 ? (
-          <Pressable onPress={onMarkAll} hitSlop={8}>
+          <Pressable onPress={onMarkAll} hitSlop={8} accessibilityRole="button">
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}>
               Mark all read
             </Text>
@@ -79,6 +86,8 @@ export default function NotificationsScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />
         </View>
+      ) : notifications.isError && !notifications.data ? (
+        <ErrorState onRetry={() => void notifications.refetch()} />
       ) : rows.length === 0 ? (
         <EmptyState />
       ) : (

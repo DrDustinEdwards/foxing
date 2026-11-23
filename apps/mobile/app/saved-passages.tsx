@@ -18,9 +18,8 @@ import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
 
-// Saved Passages, the merged Highlights + Commonplace view per task.md
-// Section 2a. Pulls every highlight where a note has been written, grouped
-// by book, with public toggle + share + delete.
+// Saved Passages: every highlight where a note has been written, grouped by book, with
+// public toggle + share + delete.
 
 export default function SavedPassagesScreen() {
   const colors = useColors();
@@ -33,17 +32,21 @@ export default function SavedPassagesScreen() {
   const [editing, setEditing] = useState<string | null>(null);
   const [noteDraft, setNoteDraft] = useState("");
 
-  // Group by book title for the section headers, entries without a book
-  // bucket into "Loose pages".
+  // Group by book (two books can share a title); entries without a book bucket into
+  // "Loose pages".
   const grouped = useMemo(() => {
     const m = new Map<string, W.MyAnnotation[]>();
     for (const r of rows) {
-      const key = r.bookTitle ?? r.sourceTitle ?? "Loose pages";
+      const key = r.bookId ?? "loose";
       const list = m.get(key) ?? [];
       list.push(r);
       m.set(key, list);
     }
-    return Array.from(m.entries());
+    return Array.from(m.entries(), ([key, entries]) => ({
+      key,
+      title: entries[0].bookTitle ?? entries[0].sourceTitle ?? "Loose pages",
+      entries,
+    }));
   }, [rows]);
 
   // Edits patch the cached list at once and roll back if the server refuses them.
@@ -109,8 +112,8 @@ export default function SavedPassagesScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
-          {grouped.map(([title, entries]) => (
-            <View key={title} style={{ marginBottom: 18 }}>
+          {grouped.map(({ key, title, entries }) => (
+            <View key={key} style={{ marginBottom: 18 }}>
               <Text
                 style={{
                   fontFamily: Fonts.uiMedium,

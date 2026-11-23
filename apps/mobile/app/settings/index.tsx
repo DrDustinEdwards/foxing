@@ -6,7 +6,7 @@ import {
 } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useCallback, useEffect, useState } from "react";
-import { View, Text, Pressable, ScrollView, Share, Modal } from "react-native";
+import { View, Text, Pressable, ScrollView, Modal, Linking } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -225,9 +225,10 @@ export default function SettingsScreen() {
     if (exporting) return;
     setExporting(true);
     setDataError(null);
+    // The archive holds the reader's personal data, so the cache copy goes once shared.
+    const file = new File(Paths.cache, "foxing-export.json");
     try {
       const archive = await api.get<unknown>("/account/export");
-      const file = new File(Paths.cache, "foxing-export.json");
       await file.write(JSON.stringify(archive, null, 2));
       await Sharing.shareAsync(file.uri, {
         mimeType: "application/json",
@@ -236,6 +237,11 @@ export default function SettingsScreen() {
     } catch {
       setDataError("Could not prepare your data export. Check your connection and try again.");
     } finally {
+      try {
+        if (file.exists) file.delete();
+      } catch {
+        // already gone
+      }
       setExporting(false);
     }
   };
@@ -531,19 +537,19 @@ export default function SettingsScreen() {
           </View>
           <LinkRow
             label="Privacy policy"
-            onPress={() => void Share.share({ message: "https://foxing.app/privacy" })}
+            onPress={() => void Linking.openURL("https://foxing.app/privacy")}
           />
           <LinkRow
             label="Terms of service"
-            onPress={() => void Share.share({ message: "https://foxing.app/terms" })}
+            onPress={() => void Linking.openURL("https://foxing.app/terms")}
           />
           <LinkRow
             label="Send feedback"
-            onPress={() => void Share.share({ message: "mailto:feedback@foxing.app" })}
+            onPress={() => void Linking.openURL("mailto:feedback@foxing.app")}
           />
           <LinkRow
             label="Rate Foxing"
-            onPress={() => void Share.share({ message: "https://foxing.app/rate" })}
+            onPress={() => void Linking.openURL("https://foxing.app/rate")}
           />
         </Section>
 

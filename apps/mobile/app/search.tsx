@@ -15,6 +15,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CaretLeft, MagnifyingGlass, X as XIcon } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import {
   AuthorResult,
@@ -223,8 +224,12 @@ export default function SearchScreen() {
           </View>
         ) : null}
 
+        {search.isError && !searching && totalResults === 0 ? (
+          <ErrorState onRetry={() => void search.refetch()} />
+        ) : null}
+
         {/* Empty state */}
-        {query.trim().length >= 2 && !searching && totalResults === 0 ? (
+        {query.trim().length >= 2 && !searching && !search.isError && totalResults === 0 ? (
           <View style={{ paddingVertical: 32, alignItems: "center", paddingHorizontal: 24 }}>
             <Text
               style={{

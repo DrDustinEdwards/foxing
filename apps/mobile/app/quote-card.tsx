@@ -15,16 +15,6 @@ import { TEMPLATES, type CardType, type TemplateId } from "@/components/quote/ty
 // Five card types now. The original "quote" type renders the editable
 // passage with template picker; the new types are content-shaped one-shots
 // pre-filled from caller route params.
-//
-// SQL SCHEMA (for the saved-card library, already shipped in Phase 8):
-//   create table quote_cards (
-//     id uuid primary key default gen_random_uuid(),
-//     user_id uuid not null references profiles(id) on delete cascade,
-//     book_id uuid references books(id),
-//     passage_text text not null,
-//     template text not null check (template in ('minimal','ornate','dark','sepia')),
-//     created_at timestamptz not null default now()
-//   );
 
 export default function QuoteCardScreen() {
   const colors = useColors();
@@ -142,7 +132,8 @@ export default function QuoteCardScreen() {
     setSaving(true);
     // Save the rendered card to Photos. Permission gate first; on iOS the prompt covers
     // Photos, on Android the Photos API.
-    let toastMessage = "Saved to Photos.";
+    let toastMessage = "Couldn't save the card to Photos.";
+    let ok = false;
     try {
       const perm = await MediaLibrary.requestPermissionsAsync();
       if (perm.status !== "granted") {
@@ -152,13 +143,13 @@ export default function QuoteCardScreen() {
         if (uri) {
           await MediaLibrary.saveToLibraryAsync(uri);
           toastMessage = "Saved to Photos.";
+          ok = true;
         }
       }
     } catch (e) {
       console.warn("[quote-card] image save failed:", e instanceof Error ? e.message : e);
-      toastMessage = "Couldn't save the card to Photos.";
     }
-    setSaved(true);
+    setSaved(ok);
     setSaving(false);
     setToast(toastMessage);
     setTimeout(() => {

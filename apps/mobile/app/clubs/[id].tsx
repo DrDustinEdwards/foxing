@@ -23,6 +23,7 @@ import {
   MembersTab,
   AboutTab,
 } from "@/components/clubs/club-detail-tabs";
+import { ErrorState, isNotFound } from "@/components/ui/error-state";
 import { NewThreadSheet } from "@/components/clubs/new-thread-sheet";
 
 type Tab = "discussions" | "reading" | "members" | "about";
@@ -84,6 +85,13 @@ export default function ClubDetailScreen() {
     );
   }
 
+  if (!page && clubPage.isError && !isNotFound(clubPage.error)) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+        <ErrorState onRetry={() => void clubPage.refetch()} />
+      </SafeAreaView>
+    );
+  }
   if (!page) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
@@ -111,7 +119,13 @@ export default function ClubDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          className="p-2"
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
         <Text

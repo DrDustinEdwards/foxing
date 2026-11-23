@@ -4,6 +4,7 @@ import { View, Text, Pressable, ScrollView, Image, ActivityIndicator } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CaretLeft, BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-react-native";
+import { ErrorState, isNotFound } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
@@ -26,6 +27,13 @@ export default function AuthorScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
         <ActivityIndicator color={colors.brandUi} />
+      </SafeAreaView>
+    );
+  }
+  if (!page && author.isError && !isNotFound(author.error)) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+        <ErrorState onRetry={() => void author.refetch()} />
       </SafeAreaView>
     );
   }
@@ -52,7 +60,13 @@ export default function AuthorScreen() {
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
       <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
+        <Pressable
+          onPress={() => router.back()}
+          hitSlop={10}
+          className="p-2"
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+        >
           <CaretLeft color={colors.textPrimary} size={22} />
         </Pressable>
       </View>

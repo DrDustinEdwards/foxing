@@ -4,6 +4,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { SignOut, BookOpen, GearSix, Sparkle } from "phosphor-react-native";
+import { ErrorState } from "@/components/ui/error-state";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { authClient, queryClient } from "@/lib/api";
@@ -53,7 +54,11 @@ export default function ProfileScreen() {
       </View>
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {!profile ? (
-          <ActivityIndicator color={colors.brandUi} />
+          me.isError ? (
+            <ErrorState onRetry={() => void me.refetch()} />
+          ) : (
+            <ActivityIndicator color={colors.brandUi} />
+          )
         ) : (
           <>
             <ProfileHeader profile={profile} onEdit={() => setEditing(true)} />

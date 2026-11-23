@@ -18,6 +18,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
+import { ErrorState, isNotFound } from "@/components/ui/error-state";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -123,6 +124,13 @@ export default function ListDetailScreen() {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
         <ActivityIndicator color={colors.brandUi} />
+      </SafeAreaView>
+    );
+  }
+  if (!info && listQuery.isError && !isNotFound(listQuery.error)) {
+    return (
+      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+        <ErrorState onRetry={() => void listQuery.refetch()} />
       </SafeAreaView>
     );
   }

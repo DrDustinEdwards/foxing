@@ -52,10 +52,12 @@ export default function OnboardingScreen() {
   const handleOk = USERNAME_RE.test(handle);
   const available = useUsernameAvailable(handle, handleOk);
 
-  // One pass at the end: the profile, then the year goal and the picked books. The
-  // root layout moves on to the tabs once "me" shows the profile.
+  // One pass at the end: the profile first (so a retry never meets "Already onboarded"),
+  // then the year goal and the picked books, which are best-effort. Skipping a step
+  // clears its picks, so only what is still set is sent. The root layout moves on to the
+  // tabs once "me" shows the profile.
   const finish = useCallback(
-    async (save: boolean) => {
+    async (withBooks: boolean) => {
       setSubmitting(true);
       setError(null);
       try {
@@ -63,25 +65,27 @@ export default function OnboardingScreen() {
           username: handle,
           displayName: displayName.trim() || undefined,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          favoriteGenres: save ? [...genres] : undefined,
+          favoriteGenres: genres.size > 0 ? [...genres] : undefined,
         });
-        const target = parseInt(goalBooks, 10);
-        await Promise.all([
-          save && isValidGoal(goalBooks)
-            ? api.post("/goals", {
-                type: "books",
-                target,
-                periodType: "year",
-                year: new Date().getFullYear(),
-              })
-            : null,
-          ...(save ? [...picked] : []).map((id) => api.put(`/library/${id}`, { status: "want" })),
-        ]);
-        await qc.invalidateQueries({ queryKey: keys.me });
       } catch (e) {
         setError(failedRequestMessage(e));
         setSubmitting(false);
+        return;
       }
+      await Promise.allSettled([
+        isValidGoal(goalBooks)
+          ? api.post("/goals", {
+              type: "books",
+              target: parseInt(goalBooks, 10),
+              periodType: "year",
+              year: new Date().getFullYear(),
+            })
+          : null,
+        ...(withBooks ? [...picked] : []).map((id) =>
+          api.put(`/library/${id}`, { status: "want" }),
+        ),
+      ]);
+      await qc.invalidateQueries({ queryKey: keys.me });
     },
     [api, displayName, genres, goalBooks, handle, picked, qc],
   );
@@ -191,6 +195,10 @@ export default function OnboardingScreen() {
           onPress={() => {
             // Skip moves on without this step's picks; the profile itself is required.
             const i = STEP_ORDER.indexOf(step);
+            if (step === "taste") {
+              setGenres(new Set());
+              setGoalBooks("");
+            }
             if (i === STEP_ORDER.length - 1) void finish(false);
             else setStep(STEP_ORDER[i + 1]);
           }}
