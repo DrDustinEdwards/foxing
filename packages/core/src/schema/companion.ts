@@ -1,5 +1,12 @@
 // AI companion history (2 tables, Phase 4). Per-book conversation threads, and the daily usage counter.
-import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  index,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 import { cascadeFk, createdAt, idPk } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";

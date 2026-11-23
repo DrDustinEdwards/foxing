@@ -72,7 +72,12 @@ function hhmmToMinutes(hhmm: string): number {
  *  Intl (available in Workers); no tz database bundled. */
 export function localMinutes(nowUtcMs: number, timezone: string): number {
   const format = (timeZone: string) =>
-    new Intl.DateTimeFormat("en-US", { timeZone, hour: "2-digit", minute: "2-digit", hour12: false });
+    new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
   let parts;
   try {
     parts = format(timezone).formatToParts(new Date(nowUtcMs));

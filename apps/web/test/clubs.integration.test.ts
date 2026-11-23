@@ -293,7 +293,9 @@ describe("clubs API (web -> api -> core -> D1)", () => {
     const { result } = (await closeRes.json()) as { result: { winnerId: string } };
     expect(result.winnerId).toBe("o1");
     // Closing twice would re-notify every member.
-    expect((await call(`/polls/${poll.id}/close`, { method: "POST", user: "owner6" }, hub)).status).toBe(409);
+    expect(
+      (await call(`/polls/${poll.id}/close`, { method: "POST", user: "owner6" }, hub)).status,
+    ).toBe(409);
 
     const db = createDb(env.DB);
     const [row] = await db.select().from(schema.clubPolls).where(eq(schema.clubPolls.id, poll.id));

@@ -17,7 +17,8 @@ export function useBookAnnotations<S extends W.ReaderAnnotations | undefined = u
   return useSeededQuery(
     {
       queryKey: keys.annotations(bookId),
-      queryFn: () => api.get<W.ReaderAnnotations>(`/books/${encodeURIComponent(bookId)}/annotations`),
+      queryFn: () =>
+        api.get<W.ReaderAnnotations>(`/books/${encodeURIComponent(bookId)}/annotations`),
     },
     seed,
   );

@@ -97,9 +97,14 @@ describe("pickCurrentSubscription", () => {
 
 describe("verifyWebhook", () => {
   const secret = "whsec_test";
-  const body = JSON.stringify({ id: "evt_1", type: "invoice.payment_failed", data: { object: { customer: "cus_1" } } });
+  const body = JSON.stringify({
+    id: "evt_1",
+    type: "invoice.payment_failed",
+    data: { object: { customer: "cus_1" } },
+  });
   const client = createStripeBilling({ secretKey: "sk_test", webhookSecret: secret });
-  const header = async (t: number, payload = body) => `t=${t},v1=${await hmacSha256Hex(secret, `${t}.${payload}`)}`;
+  const header = async (t: number, payload = body) =>
+    `t=${t},v1=${await hmacSha256Hex(secret, `${t}.${payload}`)}`;
   const now = () => Math.floor(Date.now() / 1000);
 
   it("accepts a fresh signed event and rejects a tampered or stale one", async () => {

@@ -25,7 +25,10 @@ billingRoutes.post("/billing/checkout", rateLimit("write"), async (c) => {
   const { client, prices } = c.get("billing");
   const origin = new URL(c.req.url).origin;
   // A second checkout would start a second subscription on the same customer.
-  if (profile?.subscriptionTier === "plus" || ["active", "trialing", "past_due"].includes(profile?.subscriptionStatus ?? ""))
+  if (
+    profile?.subscriptionTier === "plus" ||
+    ["active", "trialing", "past_due"].includes(profile?.subscriptionStatus ?? "")
+  )
     throw errors.conflict("You already have a subscription. Manage it from the billing portal.");
 
   try {

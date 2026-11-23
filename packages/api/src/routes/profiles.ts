@@ -76,7 +76,9 @@ profileRoutes.patch("/me/username", rateLimit("write"), async (c) => {
   const { username } = await parseJson(c, z.object({ username: usernameSchema }));
   const existing = await profilesRepo.getProfileByUsername(c.get("db"), username);
   if (existing && existing.id !== session.id) throw errors.conflict("That username is taken.");
-  const profile = await profilesRepo.updateUsername(c.get("db"), session.id, username).catch(usernameRace);
+  const profile = await profilesRepo
+    .updateUsername(c.get("db"), session.id, username)
+    .catch(usernameRace);
   return c.json({ profile: profile && views.myProfile(profile) });
 });
 

@@ -1,6 +1,13 @@
 // Social (5 tables). activity_events is written ONLY by the core event emitter on
 // API write paths, which fixes web/mobile feed parity by construction.
-import { integer, sqliteTable, text, index, primaryKey, uniqueIndex } from "drizzle-orm/sqlite-core";
+import {
+  integer,
+  sqliteTable,
+  text,
+  index,
+  primaryKey,
+  uniqueIndex,
+} from "drizzle-orm/sqlite-core";
 import { bool, cascadeFk, createdAt, idPk, ts, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { books } from "./catalog";

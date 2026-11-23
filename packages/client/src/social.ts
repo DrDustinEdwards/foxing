@@ -111,7 +111,10 @@ export function useMyLists<S extends W.MyList[] | undefined = undefined>(seed?: 
 export function useListPage<S extends W.ListPage | undefined = undefined>(id: string, seed?: S) {
   const api = useApi();
   return useSeededQuery(
-    { queryKey: keys.list(id), queryFn: () => api.get<W.ListPage>(`/lists/${encodeURIComponent(id)}`) },
+    {
+      queryKey: keys.list(id),
+      queryFn: () => api.get<W.ListPage>(`/lists/${encodeURIComponent(id)}`),
+    },
     seed,
   );
 }

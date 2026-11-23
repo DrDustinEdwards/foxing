@@ -207,7 +207,8 @@ export async function threadPage(
 
   // A chapter-gated thread shows no posts before its chapter's unlock date, however the reader got here.
   const unlock = t.chapter
-    ? (await clubsRepo.listSchedule(db, club.id)).find((s) => s.chapterName === t.chapter)?.unlockDate
+    ? (await clubsRepo.listSchedule(db, club.id)).find((s) => s.chapterName === t.chapter)
+        ?.unlockDate
     : undefined;
   const posts = unlock && unlock.getTime() > Date.now() ? [] : await clubsRepo.listPosts(db, t.id);
   const people = await getProfileSummaries(db, [t.authorId, ...posts.map((p) => p.authorId)]);

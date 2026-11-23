@@ -97,12 +97,19 @@ function formFields(value: unknown, key: string, out: URLSearchParams) {
 }
 
 export function createStripeBilling(config: StripeBillingConfig): BillingClient {
-  async function call<T>(method: "GET" | "POST", path: string, params: Record<string, unknown>): Promise<T> {
+  async function call<T>(
+    method: "GET" | "POST",
+    path: string,
+    params: Record<string, unknown>,
+  ): Promise<T> {
     const fields = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) formFields(v, k, fields);
     const init = {
       method,
-      headers: { authorization: `Bearer ${config.secretKey}`, "stripe-version": STRIPE_API_VERSION },
+      headers: {
+        authorization: `Bearer ${config.secretKey}`,
+        "stripe-version": STRIPE_API_VERSION,
+      },
       signal: AbortSignal.timeout(20_000),
     };
     const res =
@@ -147,12 +154,22 @@ export function createStripeBilling(config: StripeBillingConfig): BillingClient 
       for (const [k, v] of parts) if (k === "v1" && (await safeEqual(v, expected))) ok = true;
       if (!ok || Math.abs(Date.now() / 1000 - Number(t)) > WEBHOOK_TOLERANCE_SECONDS)
         throw new Error("Stripe webhook signature is not valid.");
-      const event = JSON.parse(payload) as { id: string; type: string; data: { object: Record<string, unknown> } };
+      const event = JSON.parse(payload) as {
+        id: string;
+        type: string;
+        data: { object: Record<string, unknown> };
+      };
       return { id: event.id, type: event.type, object: event.data.object };
     },
 
     async getSubscription(subscriptionId) {
-      return lite(await call<StripeSubscription>("GET", `subscriptions/${encodeURIComponent(subscriptionId)}`, {}));
+      return lite(
+        await call<StripeSubscription>(
+          "GET",
+          `subscriptions/${encodeURIComponent(subscriptionId)}`,
+          {},
+        ),
+      );
     },
 
     async getCurrentSubscription(customerId) {

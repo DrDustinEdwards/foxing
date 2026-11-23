@@ -67,5 +67,13 @@ export async function isConfirmed(
   if (!k) return false;
   const kv = env.OAUTH_KV;
   const expect = await bound(tool, args);
-  return (await redeemConfirm({ keys: k, token, expect, now, ...(kv ? { kv, prefix: "foxing-mcp-confirm:" } : {}) })).ok;
+  return (
+    await redeemConfirm({
+      keys: k,
+      token,
+      expect,
+      now,
+      ...(kv ? { kv, prefix: "foxing-mcp-confirm:" } : {}),
+    })
+  ).ok;
 }

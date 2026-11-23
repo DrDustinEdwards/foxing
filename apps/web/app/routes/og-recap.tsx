@@ -12,7 +12,8 @@ import { OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const year = Number(params.year);
-  if (!Number.isInteger(year) || year < 2000 || year > 2100) throw new Response("Not found", { status: 404 });
+  if (!Number.isInteger(year) || year < 2000 || year > 2100)
+    throw new Response("Not found", { status: 404 });
   const user = await sessionUserFromRequest(request, env);
   const data = await views.recap(
     createDb(env.DB),
