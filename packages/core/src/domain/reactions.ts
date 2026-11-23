@@ -8,10 +8,25 @@ import * as reactionsRepo from "../repositories/reactions";
 import type { ReactionInput } from "../validators/social";
 import { domainErrors } from "./errors";
 
+async function canReact(
+  db: Db,
+  viewerId: string,
+  { owner, visibility }: { owner: string; visibility: string },
+): Promise<boolean> {
+  if (owner === viewerId || visibility === "public") return true;
+  if (visibility === "friends") return reactionsRepo.isCloseFriendOf(db, owner, viewerId);
+  if (visibility === "club") return reactionsRepo.shareActiveClub(db, owner, viewerId);
+  return false;
+}
+
 export async function addReaction(db: Db, actor: EventActor, input: ReactionInput): Promise<void> {
   const kind = input.kind ?? "like";
-  const ownerId = await reactionsRepo.resolveTargetOwner(db, input.targetType, input.targetId);
-  if (ownerId === null) throw domainErrors.notFound("That item no longer exists.");
+  const target = await reactionsRepo.resolveTarget(db, input.targetType, input.targetId);
+  // A target the actor cannot read answers like a missing one: no existence oracle for private rows.
+  if (!target || !(await canReact(db, actor.userId, target))) {
+    throw domainErrors.notFound("That item no longer exists.");
+  }
+  const ownerId = target.owner;
 
   const already = await reactionsRepo.hasReacted(
     db,

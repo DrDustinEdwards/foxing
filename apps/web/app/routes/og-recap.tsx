@@ -12,7 +12,8 @@ import { OG_CACHE_ORIGIN, SITE_ORIGIN } from "~/lib/origins";
 export async function loader({ context, request, params }: Route.LoaderArgs) {
   const { env } = context.get(cloudflareContext);
   const year = Number(params.year);
-  if (!Number.isInteger(year)) throw new Response("Not found", { status: 404 });
+  if (!Number.isInteger(year) || year < 2000 || year > 2100)
+    throw new Response("Not found", { status: 404 });
   const user = await sessionUserFromRequest(request, env);
   const data = await views.recap(
     createDb(env.DB),
@@ -46,6 +47,7 @@ export async function loader({ context, request, params }: Route.LoaderArgs) {
       `</div>` +
       `<div style="display:flex;align-items:center;font-size:24px;color:#815E41;"><div style="display:flex;width:44px;height:4px;background:#D4622E;margin-right:16px;"></div>foxing.app</div>` +
       `</div>`,
+    3600,
   );
   return card.status === 503 ? Response.redirect(SITE_ORIGIN, 302) : card;
 }

@@ -3,7 +3,7 @@
 // quiet hours (including the wrap past midnight and timezone conversion), and unknown
 // categories. In-app notifications always land; this gate only governs the Expo push.
 import { describe, expect, it } from "vitest";
-import { categoryEnabled, inQuietHours, shouldDeliverPush } from "../src/domain/push";
+import { categoryEnabled, inQuietHours, localMinutes, shouldDeliverPush } from "../src/domain/push";
 
 // A fixed UTC instant: 2026-01-15T03:00:00Z (03:00 UTC).
 const UTC_0300 = Date.UTC(2026, 0, 15, 3, 0, 0);
@@ -49,5 +49,11 @@ describe("shouldDeliverPush", () => {
       deliver: false,
       reason: "unknown_category",
     });
+  });
+});
+
+describe("localMinutes", () => {
+  it("falls back to UTC for a zone Intl does not know", () => {
+    expect(localMinutes(Date.UTC(2026, 0, 1, 3, 30), "Foo/Bar")).toBe(210);
   });
 });

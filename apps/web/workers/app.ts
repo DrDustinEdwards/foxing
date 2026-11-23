@@ -237,7 +237,12 @@ app.route("/api/v1", api);
 // CDN hits with no Worker R2 read.
 app.get("/reader-assets/*", async (c) => {
   const url = new URL(c.req.url);
-  const rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
+  let rest: string;
+  try {
+    rest = decodeURIComponent(url.pathname.replace(/^\/reader-assets\//, ""));
+  } catch {
+    return plainNotFound(); // a malformed escape
+  }
   // Guard against traversal; keys are always reader/<slug>/<path>.
   if (!rest || rest.includes("..")) return plainNotFound();
 

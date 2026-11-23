@@ -32,6 +32,7 @@ async function loadOgFonts() {
 export async function ogCard(
   cacheKey: Request,
   build: (fonts: OgCardFonts) => string | Promise<string>,
+  freshSeconds = 604800,
 ): Promise<Response> {
   let loaded: ReturnType<typeof loadOgFonts> | undefined;
   const fonts = () => {
@@ -45,12 +46,10 @@ export async function ogCard(
     html: async () => build(await fonts()),
   });
   if (card.status !== 200) return card;
-  // The card at its /og address is a public page too (workers/app.ts): stored a week, purged with the
-  // pages. Set after the card is kept under its own key above, which needs the zone cache's s-maxage.
+  // The card at its /og address is a public page too (workers/app.ts): stored a week (a recap, which a reader can make private, an hour: the gateway answers a hit before the
+  // loader checks the profile), purged with the pages. Set after the card is kept under its own key above, which needs the zone cache's s-maxage.
   const headers = new Headers(card.headers);
-  for (const [name, value] of Object.entries(
-    publicPageHeaders({ freshSeconds: 604800, staleSeconds: 0 }),
-  ))
+  for (const [name, value] of Object.entries(publicPageHeaders({ freshSeconds, staleSeconds: 0 })))
     headers.set(name, value);
   return new Response(card.body, { status: card.status, headers });
 }

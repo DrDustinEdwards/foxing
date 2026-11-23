@@ -182,6 +182,12 @@ export async function leaveClub(db: Db, actor: EventActor, clubId: string): Prom
   if (club.creatorId === actor.userId) {
     throw domainErrors.conflict("The creator cannot leave; delete or transfer the club instead.");
   }
+  // Leaving must not overwrite a ban (or a mute): a banned member who "left" could join again.
+  const current = await clubsRepo.getMembership(db, clubId, actor.userId);
+  if (!current || current.status === "banned") {
+    if (current) throw domainErrors.forbidden("You are banned from this club.");
+    return;
+  }
   await clubsRepo.setMemberStatus(db, clubId, actor.userId, "left");
 }
 
@@ -324,6 +330,8 @@ export async function createThread(
   if (membership.isMuted(m.mutedUntil, Date.now())) {
     throw domainErrors.forbidden("You are muted in this club.");
   }
+  // An announcement notifies and pushes every member, so only moderators may post one.
+  if (input.type === "announcement") await requireModerator(db, clubId, actor.userId);
   const club = await clubsRepo.getClubById(db, clubId);
   if (!club) throw domainErrors.notFound("Club not found.");
 
@@ -443,7 +451,9 @@ export async function votePoll(
 ): Promise<{ poll: clubsRepo.ClubPoll; clubId: string; live: LiveMessage }> {
   const poll = await clubsRepo.getPollById(db, pollId);
   if (!poll) throw domainErrors.notFound("Poll not found.");
-  if (poll.isClosed) throw domainErrors.conflict("This poll is closed.");
+  if (poll.isClosed || (poll.closesAt && poll.closesAt.getTime() <= Date.now())) {
+    throw domainErrors.conflict("This poll is closed.");
+  }
   await requireActive(db, poll.clubId, actor.userId);
 
   const optionIds = new Set((poll.options ?? []).map((o) => o.id));
@@ -478,6 +488,7 @@ export async function closePoll(
 }> {
   const poll = await clubsRepo.getPollById(db, pollId);
   if (!poll) throw domainErrors.notFound("Poll not found.");
+  if (poll.isClosed) throw domainErrors.conflict("This poll is already closed.");
   // The poll creator or a moderator may close it.
   if (poll.createdBy !== actor.userId) {
     await requireModerator(db, poll.clubId, actor.userId);
