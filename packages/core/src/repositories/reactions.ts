@@ -4,15 +4,7 @@
 // can notify the target's author without knowing each table's shape.
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { chunked, type Db } from "../db";
-import { alias } from "drizzle-orm/sqlite-core";
-import {
-  annotations,
-  clubMembers,
-  closeFriends,
-  diaryEntries,
-  reactions,
-  readingLists,
-} from "../schema";
+import { annotations, diaryEntries, reactions, readingLists } from "../schema";
 
 export type Reaction = typeof reactions.$inferSelect;
 
@@ -114,34 +106,7 @@ export async function resolveTarget(
 }
 
 /** True when the viewer is one of the owner's close friends. */
-export async function isCloseFriendOf(db: Db, ownerId: string, viewerId: string): Promise<boolean> {
-  const [row] = await db
-    .select({ x: sql<number>`1` })
-    .from(closeFriends)
-    .where(and(eq(closeFriends.userId, ownerId), eq(closeFriends.friendId, viewerId)))
-    .limit(1);
-  return !!row;
-}
-
 /** True when both users are active members of one club. */
-export async function shareActiveClub(db: Db, a: string, b: string): Promise<boolean> {
-  const other = alias(clubMembers, "other");
-  const [row] = await db
-    .select({ x: sql<number>`1` })
-    .from(clubMembers)
-    .innerJoin(other, eq(other.clubId, clubMembers.clubId))
-    .where(
-      and(
-        eq(clubMembers.userId, a),
-        eq(other.userId, b),
-        eq(clubMembers.status, "active"),
-        eq(other.status, "active"),
-      ),
-    )
-    .limit(1);
-  return !!row;
-}
-
 export type LikeSummary = { likeCount: number; likedByMe: boolean };
 
 /** Per-target 'like' counts plus whether the viewer liked each, for a set of targets of

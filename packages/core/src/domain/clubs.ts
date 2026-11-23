@@ -183,10 +183,8 @@ export async function leaveClub(db: Db, actor: EventActor, clubId: string): Prom
     throw domainErrors.conflict("The creator cannot leave; delete or transfer the club instead.");
   }
   // Leaving must not overwrite a ban (or a mute): a banned member who "left" could join again.
-  const current = await clubsRepo.getMembership(db, clubId, actor.userId);
-  if (!current || current.status === "banned") {
-    if (current) throw domainErrors.forbidden("You are banned from this club.");
-    return;
+  if ((await clubsRepo.getMembership(db, clubId, actor.userId))?.status === "banned") {
+    throw domainErrors.forbidden("You are banned from this club.");
   }
   await clubsRepo.setMemberStatus(db, clubId, actor.userId, "left");
 }
@@ -451,9 +449,7 @@ export async function votePoll(
 ): Promise<{ poll: clubsRepo.ClubPoll; clubId: string; live: LiveMessage }> {
   const poll = await clubsRepo.getPollById(db, pollId);
   if (!poll) throw domainErrors.notFound("Poll not found.");
-  if (poll.isClosed || (poll.closesAt && poll.closesAt.getTime() <= Date.now())) {
-    throw domainErrors.conflict("This poll is closed.");
-  }
+  if (poll.isClosed) throw domainErrors.conflict("This poll is closed.");
   await requireActive(db, poll.clubId, actor.userId);
 
   const optionIds = new Set((poll.options ?? []).map((o) => o.id));
@@ -488,7 +484,6 @@ export async function closePoll(
 }> {
   const poll = await clubsRepo.getPollById(db, pollId);
   if (!poll) throw domainErrors.notFound("Poll not found.");
-  if (poll.isClosed) throw domainErrors.conflict("This poll is already closed.");
   // The poll creator or a moderator may close it.
   if (poll.createdBy !== actor.userId) {
     await requireModerator(db, poll.clubId, actor.userId);

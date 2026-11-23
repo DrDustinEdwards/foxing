@@ -20,7 +20,6 @@ import {
   account,
   activityEvents,
   announcements,
-  authEvents,
   annotations,
   books,
   closeFriends,
@@ -325,7 +324,6 @@ async function erasureStatements(
   return [
     ...handover,
     ...REGISTRY.map((entry) => entry.del(db, userId)),
-    db.delete(authEvents).where(eq(authEvents.userId, userId)),
     ...(row?.email ? [db.delete(verification).where(eq(verification.identifier, row.email))] : []),
   ];
 }

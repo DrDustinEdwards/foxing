@@ -8,7 +8,6 @@ import type { Db } from "../db";
 import { normalizeText } from "../domain/text";
 import { annotations, diaryEntries, readingSessions, userBooks, vocabulary } from "../schema";
 import type { SyncOp } from "../validators/sync";
-import { recomputeBookRating } from "./diary";
 
 /** Minimal existence + freshness probe for the LWW decision. updatedAt is epoch ms. */
 export type Existing = { updatedAt: number } | null;
@@ -260,7 +259,6 @@ const diaryAdapter: SyncAdapter = {
       visibility: (p.visibility as string) ?? "private",
       updatedAt: new Date(op.clientTs),
     });
-    await recomputeBookRating(db, p.bookId as string);
   },
   async update(db, userId, op) {
     const p = (op.payload ?? {}) as Record<string, unknown>;
@@ -273,18 +271,11 @@ const diaryAdapter: SyncAdapter = {
       .update(diaryEntries)
       .set(set)
       .where(and(eq(diaryEntries.id, op.id), eq(diaryEntries.userId, userId)));
-    await recomputeBookRating(db, p.bookId as string);
   },
   async remove(db, userId, op) {
-    const [row] = await db
-      .select({ bookId: diaryEntries.bookId })
-      .from(diaryEntries)
-      .where(and(eq(diaryEntries.id, op.id), eq(diaryEntries.userId, userId)))
-      .limit(1);
     await db
       .delete(diaryEntries)
       .where(and(eq(diaryEntries.id, op.id), eq(diaryEntries.userId, userId)));
-    if (row) await recomputeBookRating(db, row.bookId);
   },
   async listChanged(db, userId, sinceMs) {
     return db

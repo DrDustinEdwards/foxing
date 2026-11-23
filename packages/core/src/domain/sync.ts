@@ -10,7 +10,6 @@
 //   - session: append-only; only create applies, updates/deletes are no-ops.
 //   - delete: idempotent; deleting a missing row is success.
 // Every op is scoped to the session user; payload.user_id is never trusted.
-import { logEvent } from "@dustinedwards/site-runtime/log";
 import type { Db } from "../db";
 import { syncAdapters, type Existing } from "../repositories/sync";
 import { syncPayloadSchemas, type SyncOp, type SyncResource } from "../validators/sync";
@@ -69,10 +68,7 @@ export type SyncOpResult = {
  *  fails the batch -- its result carries the error and the rest still apply. */
 export async function applySync(db: Db, userId: string, ops: SyncOp[]): Promise<SyncOpResult[]> {
   const results: SyncOpResult[] = [];
-  const now = Date.now();
-  for (const raw of ops) {
-    // A device clock ahead of the server must not stamp rows in the future: the pull cursor would skip every change before it.
-    const op = { ...raw, clientTs: Math.min(raw.clientTs, now) };
+  for (const op of ops) {
     try {
       // Validate + narrow the payload for the op's resource (delete needs no payload).
       if (op.verb !== "delete") {
@@ -109,12 +105,12 @@ export async function applySync(db: Db, userId: string, ops: SyncOp[]): Promise<
       }
       results.push({ id: op.id, status: "applied", action: decision.action });
     } catch (err) {
-      logEvent(
-        "sync_op_failed",
-        { resource: op.resource, verb: op.verb, error: err },
-        { level: "error" },
-      );
-      results.push({ id: op.id, status: "skipped", action: "noop", error: "apply_failed" });
+      results.push({
+        id: op.id,
+        status: "skipped",
+        action: "noop",
+        error: err instanceof Error ? err.message : "error",
+      });
     }
   }
   return results;

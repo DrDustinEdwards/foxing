@@ -43,14 +43,6 @@ async function notify(c: Context<Env>, clubId: string, live: LiveMessage | LiveM
 }
 
 // Same for closing a departed or banned member's live sockets: the D1 change already stands.
-async function disconnect(c: Context<Env>, clubId: string, userId: string) {
-  try {
-    await c.get("hub").disconnect(clubId, userId);
-  } catch (err) {
-    logEvent("club_disconnect_failed", { club_id: clubId, error: err }, { level: "error" });
-  }
-}
-
 clubRoutes.get("/clubs", async (c) => {
   return c.json({ clubs: await views.publicClubs(c.get("db")) });
 });
@@ -136,7 +128,7 @@ clubRoutes.post("/join/:code", rateLimit("write"), async (c) => {
 clubRoutes.delete("/clubs/:id/members/me", rateLimit("write"), async (c) => {
   const { actor } = actorOf(c);
   await clubsDomain.leaveClub(c.get("db"), actor, c.req.param("id"));
-  await disconnect(c, c.req.param("id"), actor.userId);
+  await c.get("hub").disconnect(c.req.param("id"), actor.userId);
   return c.json({ ok: true });
 });
 
@@ -161,7 +153,7 @@ clubRoutes.post("/clubs/:id/members/:userId/ban", rateLimit("write"), async (c) 
     c.req.param("userId"),
     reason,
   );
-  await disconnect(c, c.req.param("id"), c.req.param("userId"));
+  await c.get("hub").disconnect(c.req.param("id"), c.req.param("userId"));
   return c.json({ member });
 });
 

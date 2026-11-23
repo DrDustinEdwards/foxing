@@ -4,7 +4,13 @@
 // diary). Clubs/social are online-only v1. Payloads are validated per resource; the
 // server always scopes to the session user and never trusts payload.user_id.
 import { z } from "zod";
-import { annotationVisibility, diaryVisibility, highlightColor, userBookStatus } from "../enums";
+import {
+  annotationType,
+  annotationVisibility,
+  diaryVisibility,
+  highlightColor,
+  userBookStatus,
+} from "../enums";
 
 export const syncResourceValues = [
   "annotation",
@@ -25,19 +31,17 @@ export type SyncVerb = z.infer<typeof syncVerb>;
 // with the Readium reader. The contract is Locator-shaped from day one so no
 // uninterpretable position data is ever written.
 const locator = z.record(z.string(), z.unknown());
-const text = z.string().max(20000);
 
-// Personal annotations only: no clubId, parentId or comment type (those need the club
-// membership checks of domain/annotations), and normalizedText is computed on the server.
 const annotationPayload = z.object({
   bookId: z.string().min(1).nullable().optional(),
-  type: z.enum(["highlight", "note", "bookmark", "commonplace"]).optional(),
+  // Never "comment": a comment is club-scoped, and a synced row is always private to its owner.
+  type: annotationType.exclude(["comment"]).optional(),
   locator: locator.nullable().optional(),
-  selectedText: text.nullable().optional(),
-  body: text.nullable().optional(),
+  selectedText: z.string().nullable().optional(),
+  body: z.string().nullable().optional(),
   color: highlightColor.nullable().optional(),
-  chapter: z.string().max(500).nullable().optional(),
-  sourceTitle: z.string().max(500).nullable().optional(),
+  chapter: z.string().nullable().optional(),
+  sourceTitle: z.string().nullable().optional(),
   visibility: annotationVisibility.optional(),
   containsSpoilers: z.boolean().optional(),
   isPinned: z.boolean().optional(),
@@ -51,10 +55,10 @@ const userBookPayload = z.object({
   startedAt: z.number().int().nullable().optional(),
   finishedAt: z.number().int().nullable().optional(),
   pausedAt: z.number().int().nullable().optional(),
-  pausedNote: text.nullable().optional(),
+  pausedNote: z.string().nullable().optional(),
   abandonedAt: z.number().int().nullable().optional(),
-  moodTags: z.array(z.string().max(50)).max(20).nullable().optional(),
-  personalNotes: text.nullable().optional(),
+  moodTags: z.array(z.string()).nullable().optional(),
+  personalNotes: z.string().nullable().optional(),
 });
 
 const sessionPayload = z.object({
@@ -68,10 +72,10 @@ const sessionPayload = z.object({
 
 const vocabularyPayload = z.object({
   bookId: z.string().min(1).nullable().optional(),
-  word: z.string().min(1).max(200),
-  definition: text.min(1),
-  contextSentence: text.nullable().optional(),
-  aiContext: text.nullable().optional(),
+  word: z.string().min(1),
+  definition: z.string().min(1),
+  contextSentence: z.string().nullable().optional(),
+  aiContext: z.string().nullable().optional(),
   mastered: z.boolean().optional(),
   lookedUpAt: z.number().int().optional(),
 });
@@ -80,7 +84,7 @@ const diaryPayload = z.object({
   bookId: z.string().min(1),
   logDate: z.number().int().optional(),
   ratingHalf: z.number().int().min(1).max(10).nullable().optional(),
-  review: text.nullable().optional(),
+  review: z.string().nullable().optional(),
   containsSpoilers: z.boolean().optional(),
   visibility: diaryVisibility.optional(),
 });

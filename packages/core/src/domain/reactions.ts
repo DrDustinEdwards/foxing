@@ -4,6 +4,8 @@
 // author (never self).
 import type { Db } from "../db";
 import { emit, type EventActor } from "../events";
+import * as clubsRepo from "../repositories/clubs";
+import * as readerSocial from "../repositories/reader-social";
 import * as reactionsRepo from "../repositories/reactions";
 import type { ReactionInput } from "../validators/social";
 import { domainErrors } from "./errors";
@@ -14,9 +16,12 @@ async function canReact(
   { owner, visibility }: { owner: string; visibility: string },
 ): Promise<boolean> {
   if (owner === viewerId || visibility === "public") return true;
-  if (visibility === "friends") return reactionsRepo.isCloseFriendOf(db, owner, viewerId);
-  if (visibility === "club") return reactionsRepo.shareActiveClub(db, owner, viewerId);
-  return false;
+  if (visibility === "friends") {
+    return (await readerSocial.closeFriendAuthorIds(db, viewerId)).includes(owner);
+  }
+  if (visibility !== "club") return false;
+  const clubIds = (await clubsRepo.listClubsForUser(db, viewerId)).map((c) => c.id);
+  return (await readerSocial.coReadingAuthorIds(db, clubIds, viewerId)).includes(owner);
 }
 
 export async function addReaction(db: Db, actor: EventActor, input: ReactionInput): Promise<void> {

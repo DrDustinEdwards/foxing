@@ -4,7 +4,6 @@
 // KV) are injected so the whole pipeline is integration-testable against local D1 with a
 // stub fetch -- no device required. In-app notifications are unaffected; this governs
 // only the push.
-import { logEvent } from "@dustinedwards/site-runtime/log";
 import type { Db } from "../db";
 import { shouldDeliverPush } from "../domain/push";
 import * as notificationsRepo from "../repositories/notifications";
@@ -82,11 +81,7 @@ export async function sweepPushDeliveries(
       const seen = await deps.kv.get(key);
       if (seen) continue;
     }
-    // One failing notification must not stop the sweep or leave the cursor behind it.
-    const res = await deliverPush(db, deps, n.id).catch((err) => {
-      logEvent("push_delivery_failed", { error: err }, { level: "error" });
-      return { delivered: 0 };
-    });
+    const res = await deliverPush(db, deps, n.id);
     if (deps.kv) await deps.kv.put(key, "1", { expirationTtl: 7 * 24 * 3600 });
     if (res.delivered > 0) delivered++;
   }

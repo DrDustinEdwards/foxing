@@ -11,23 +11,10 @@ export const username = z
   .max(30)
   .regex(/^[a-z0-9_]+$/, "letters, numbers, and underscores only");
 
-// An IANA zone name Intl knows: an unknown one would throw wherever it is formatted.
-const timezone = z
-  .string()
-  .max(64)
-  .refine((tz) => {
-    try {
-      new Intl.DateTimeFormat("en-US", { timeZone: tz });
-      return true;
-    } catch {
-      return false;
-    }
-  }, "Unknown time zone");
-
 export const onboardInput = z.object({
   username,
   displayName: z.string().trim().max(80).optional(),
-  timezone: timezone.optional(),
+  timezone: z.string().max(64).optional(),
   favoriteGenres: z.array(z.string().max(40)).max(20).optional(),
 });
 export type OnboardInput = z.infer<typeof onboardInput>;
@@ -38,10 +25,11 @@ export const updateMeInput = z
     bio: z.string().max(500).nullable(),
     avatarUrl: webUrl().nullable(),
     backdropUrl: webUrl().nullable(),
+    customUrl: z.string().max(120).nullable(),
     favoriteGenres: z.array(z.string().max(40)).max(20).nullable(),
     languagePreference: z.string().max(10).nullable(),
     themePreference: z.string().max(20).nullable(),
-    timezone: timezone.nullable(),
+    timezone: z.string().max(64).nullable(),
   })
   .partial();
 export type UpdateMeInput = z.infer<typeof updateMeInput>;
