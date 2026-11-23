@@ -223,7 +223,6 @@ function BasicsStep({
   return (
     <View>
       <StepTitle>The basics</StepTitle>
-      <StepHint>Name your club and write a short pitch.</StepHint>
 
       <Label>Name</Label>
       <TextInput
@@ -251,16 +250,6 @@ function BasicsStep({
         <View style={{ flex: 1, paddingRight: 12 }}>
           <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}>
             Public club
-          </Text>
-          <Text
-            style={{
-              fontFamily: Fonts.ui,
-              fontSize: 12,
-              color: colors.textTertiary,
-              marginTop: 2,
-            }}
-          >
-            Anyone can join. Off = invite-only.
           </Text>
         </View>
         <Switch
@@ -297,7 +286,6 @@ function BookStep({
   return (
     <View>
       <StepTitle>What are you reading?</StepTitle>
-      <StepHint>Optional, you can also start without a book and pick one later.</StepHint>
 
       {draft.book ? (
         <View className="flex-row p-3 rounded-xl border bg-bg-selected-light dark:bg-bg-selected-dark border-border-brand-light dark:border-border-brand-dark">
@@ -416,7 +404,6 @@ function PaceStep({
   return (
     <View>
       <StepTitle>Reading pace</StepTitle>
-      <StepHint>Sets expectations, you can change it any time.</StepHint>
 
       {PACE_OPTIONS.map((p) => {
         const selected = draft.pace === p.id;
@@ -461,7 +448,6 @@ function InviteStep({ club }: { club: CreatedClub | null }) {
     return (
       <View>
         <StepTitle>Almost there…</StepTitle>
-        <StepHint>Tap Create on the previous step to finish.</StepHint>
       </View>
     );
   }

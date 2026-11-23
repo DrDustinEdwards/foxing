@@ -117,18 +117,18 @@ export function DiscussionStarterSheet({
         </View>
       }
     >
-      <Text
-        style={{
-          fontFamily: Fonts.body,
-          fontSize: 13,
-          color: colors.textTertiary,
-          marginBottom: 16,
-        }}
-      >
-        {bookTitle
-          ? `Drafted for ${bookTitle}.`
-          : "No current book set, generation will fail until the club picks one."}
-      </Text>
+      {bookTitle ? null : (
+        <Text
+          style={{
+            fontFamily: Fonts.body,
+            fontSize: 13,
+            color: colors.textTertiary,
+            marginBottom: 16,
+          }}
+        >
+          No current book set, generation will fail until the club picks one.
+        </Text>
+      )}
 
       {generating ? (
         <View style={{ paddingVertical: 32, alignItems: "center" }}>
