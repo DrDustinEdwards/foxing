@@ -18,6 +18,7 @@ import {
   Alert,
   Modal,
 } from "react-native";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
@@ -126,22 +127,7 @@ export default function ListDetailScreen() {
       </SafeAreaView>
     );
   }
-  if (!info) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark px-8">
-        <Text
-          style={{
-            fontFamily: Fonts.body,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          List not found.
-        </Text>
-      </SafeAreaView>
-    );
-  }
+  if (!info) return <ErrorScreen query={listQuery} notFound="List not found." />;
 
   const isOwn = page?.isOwner ?? false;
 

@@ -4,6 +4,7 @@ import { View, Text, Pressable, ScrollView, Image, ActivityIndicator } from "rea
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { CaretLeft, BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-react-native";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
@@ -29,25 +30,7 @@ export default function AuthorScreen() {
       </SafeAreaView>
     );
   }
-  if (!page) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          We couldn't find that author.
-        </Text>
-        <Pressable onPress={() => router.back()} className="mt-3">
-          <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Back</Text>
-        </Pressable>
-      </SafeAreaView>
-    );
-  }
+  if (!page) return <ErrorScreen query={author} notFound="We couldn't find that author." />;
 
   return (
     <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">

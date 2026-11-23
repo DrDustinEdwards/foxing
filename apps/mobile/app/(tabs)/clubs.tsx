@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import { UsersThree, Plus, BookOpen } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState } from "@/components/ui/error-state";
 import { CreateClubSheet } from "@/components/clubs/create-club-sheet";
 
 type Tab = "mine" | "discover";
@@ -86,6 +87,8 @@ export default function ClubsScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />
         </View>
+      ) : index.isError && !index.data ? (
+        <ErrorState onRetry={() => void index.refetch()} />
       ) : (
         <FlatList
           data={rows}

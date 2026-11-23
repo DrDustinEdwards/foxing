@@ -23,6 +23,7 @@ import {
   MembersTab,
   AboutTab,
 } from "@/components/clubs/club-detail-tabs";
+import { ErrorScreen } from "@/components/ui/error-state";
 import { NewThreadSheet } from "@/components/clubs/new-thread-sheet";
 
 type Tab = "discussions" | "reading" | "members" | "about";
@@ -84,28 +85,7 @@ export default function ClubDetailScreen() {
     );
   }
 
-  if (!page) {
-    return (
-      <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
-        <Text
-          style={{
-            fontFamily: Fonts.ui,
-            fontSize: 14,
-            color: colors.textTertiary,
-            textAlign: "center",
-          }}
-        >
-          We couldn't find that club.
-        </Text>
-        <Pressable onPress={() => router.back()} className="flex-row items-center mt-3">
-          <CaretLeft color={colors.brandText} size={18} />
-          <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText, marginLeft: 4 }}>
-            Back
-          </Text>
-        </Pressable>
-      </SafeAreaView>
-    );
-  }
+  if (!page) return <ErrorScreen query={clubPage} notFound="We couldn't find that club." />;
   const club = page.club;
 
   return (

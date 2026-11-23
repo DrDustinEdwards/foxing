@@ -5,11 +5,11 @@ import {
   Text,
   Pressable,
   Share,
-  Dimensions,
   ScrollView,
   ActivityIndicator,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  useWindowDimensions,
 } from "react-native";
 import { Screen } from "@/components/ui/screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -52,9 +52,10 @@ export default function YearInReadingScreen() {
   const router = useRouter();
   const params = useLocalSearchParams<{ year?: string }>();
   const [thisYear] = useState(() => new Date().getFullYear());
-  const year = params.year ? parseInt(params.year, 10) : thisYear;
+  const requestedYear = parseInt(params.year ?? "", 10);
+  const year = Number.isFinite(requestedYear) ? requestedYear : thisYear;
 
-  const { width } = Dimensions.get("window");
+  const { width } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const recap = useRecap(year);
   const streak = useStreak().data;
@@ -184,7 +185,7 @@ export default function YearInReadingScreen() {
             {stats.topGenre ? (
               <Text style={styles.heroTitle}>{stats.topGenre}</Text>
             ) : (
-              <Text style={styles.heroTitle}></Text>
+              <Text style={styles.heroTitle}>No highlights this year.</Text>
             )}
             <View style={{ flexDirection: "row", alignItems: "center", marginTop: 12, gap: 6 }}>
               <Books color={C.brandUi} size={16} />

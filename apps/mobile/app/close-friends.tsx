@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { X as XIcon, Plus } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { ErrorState } from "@/components/ui/error-state";
 import { BackHeader } from "@/components/ui/back-header";
 import { PersonRow } from "@/components/profile/person-row";
 
@@ -44,6 +45,8 @@ export default function CloseFriendsScreen() {
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />
         </View>
+      ) : people.isError && !people.data ? (
+        <ErrorState onRetry={() => void people.refetch()} />
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
           <Heading>Your close friends</Heading>

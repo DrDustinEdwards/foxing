@@ -38,7 +38,8 @@ export default function ReadingTimelineScreen() {
       .sort((a, b) => (b.finishedAt ?? 0) - (a.finishedAt ?? 0));
   }, [library.data, diary.data]);
 
-  // Group by the year each book was finished.
+  // Group by the year each book was finished; rows are newest first, so the groups come
+  // out newest first with the undated books last.
   const grouped = useMemo(() => {
     const m = new Map<string, Row[]>();
     for (const r of rows) {
@@ -47,7 +48,7 @@ export default function ReadingTimelineScreen() {
       list.push(r);
       m.set(year, list);
     }
-    return Array.from(m.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+    return Array.from(m.entries());
   }, [rows]);
 
   return (
