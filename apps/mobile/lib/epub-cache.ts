@@ -72,11 +72,14 @@ async function evictCacheEntry(key: string): Promise<void> {
 // sidecar is from an older app version that wrote files under a
 // different naming scheme. Delete those orphans so they don't waste
 // disk and so the next download lands a fresh, sidecar-tagged copy.
-// Cheap (10s of files, one stat each) and runs at most once per launch.
-let cleanedOnce = false;
-async function cleanupOrphans(): Promise<void> {
-  if (cleanedOnce) return;
-  cleanedOnce = true;
+// Cheap (10s of files, one stat each) and runs at most once per launch;
+// every caller awaits the same promise so no download starts mid-sweep.
+let cleanup: Promise<void> | null = null;
+function cleanupOrphans(): Promise<void> {
+  cleanup ??= sweepOrphans();
+  return cleanup;
+}
+async function sweepOrphans(): Promise<void> {
   try {
     const entries = await FileSystem.readDirectoryAsync(CACHE_DIR);
     const epubs = entries.filter((n) => n.endsWith(".epub"));
@@ -101,7 +104,17 @@ async function cleanupOrphans(): Promise<void> {
 // open an HTTPS URL directly. Skips the Base64 read that
 // ensureEpubLocallyCached does, so this is the cheap path for callers
 // that don't need the raw bytes.
-export async function ensureEpubLocalUri(remoteUrl: string): Promise<string> {
+const inFlight = new Map<string, Promise<string>>();
+export function ensureEpubLocalUri(remoteUrl: string): Promise<string> {
+  let pending = inFlight.get(remoteUrl);
+  if (!pending) {
+    pending = downloadEpub(remoteUrl).finally(() => inFlight.delete(remoteUrl));
+    inFlight.set(remoteUrl, pending);
+  }
+  return pending;
+}
+
+async function downloadEpub(remoteUrl: string): Promise<string> {
   await ensureDir();
   await cleanupOrphans();
 

@@ -87,8 +87,8 @@ export function HighlightsSheet({
       else body = exportAsText(payload, bookTitle, bookAuthor);
       try {
         await Share.share({ message: body });
-      } catch {
-        /* user canceled */
+      } catch (e) {
+        console.warn("[highlights] export failed", e);
       }
     },
     [bookAuthor, bookTitle, filtered],
