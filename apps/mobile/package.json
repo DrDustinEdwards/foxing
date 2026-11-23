@@ -13,7 +13,7 @@
     "postinstall": "node scripts/patch-readium.mjs"
   },
   "dependencies": {
-    "@better-auth/expo": "1.7.22",
+    "@better-auth/expo": "1.7.26",
     "@dustinedwards/site-runtime": "github:DrDustinEdwards/site-runtime#v0.179.0",
     "@epubjs-react-native/core": "1.4.8",
     "@expo-google-fonts/dm-mono": "0.4.2",
@@ -29,7 +29,7 @@
     "@sentry/react-native": "8.28.1",
     "@tanstack/react-query": "5.107.1",
     "babel-preset-expo": "58.0.26",
-    "better-auth": "1.7.25",
+    "better-auth": "1.7.26",
     "capsomer": "github:DrDustinEdwards/capsomer#v0.164.3",
     "expo": "58.0.26",
     "expo-asset": "58.0.21",
