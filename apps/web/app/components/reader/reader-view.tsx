@@ -105,7 +105,7 @@ export function ReaderView(props: ReaderViewProps) {
   const [selection, setSelection] = useState<SelectionPayload | null>(null);
   const [noteDraft, setNoteDraft] = useState<{ color: HighlightColor; text: string } | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const editing = annotations.find((a) => a.id === editingId) ?? null; // from the cache, so a colour change shows
+  const editing = annotations.find((a) => a.id === editingId) ?? null; // from the cache, so a color change shows
   const setEditing = (a: ReaderAnnotation | null) => setEditingId(a?.id ?? null);
   // Viewport-space rect of the tapped highlight, so the popover anchors to the
   // passage. Null when opened from the Contents list (then it floats bottom-center).
