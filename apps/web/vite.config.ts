@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import { nativeBuiltins } from "@dustinedwards/devkit/vite/native-builtins";
 import { siteScript } from "@dustinedwards/devkit/vite/site-script";
@@ -30,7 +31,7 @@ function fontDisplayOptional(): Plugin {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   // A per-build id namespaces the edge cache so a deploy never serves stale HTML from
   // the Cache API (which persists across deployments). Old entries expire via TTL.
   define: { __CACHE_VERSION__: JSON.stringify(String(Date.now())) },
@@ -52,6 +53,22 @@ export default defineConfig({
       },
     },
   },
+  // react-dom/server's workerd entry (server.edge.js) also requires the legacy renderToString build, which nothing here
+  // calls; the build points at the edge file that holds renderToReadableStream, the only renderer used (entry.server.tsx).
+  // Dev keeps the package entry. A react-dom that moves the file fails the build rather than the Worker.
+  resolve:
+    command === "build"
+      ? {
+          alias: {
+            "react-dom/server": fileURLToPath(
+              new URL(
+                "cjs/react-dom-server.edge.production.js",
+                import.meta.resolve("react-dom/package.json"),
+              ),
+            ),
+          },
+        }
+      : {},
   plugins: [
     nativeBuiltins(),
     fontDisplayOptional(),
@@ -60,4 +77,4 @@ export default defineConfig({
     tsconfigPaths(),
     siteScript({ toolbar: false }),
   ],
-});
+}));
