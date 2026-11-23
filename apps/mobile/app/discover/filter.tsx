@@ -1,11 +1,12 @@
 import { useBrowse } from "@foxing/client";
 import { useState } from "react";
 import { View, Text, Pressable, FlatList, Image, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CaretLeft, BookOpen } from "phosphor-react-native";
+import { BookOpen } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 type FilterType = "subject" | "era" | "length";
 
@@ -25,22 +26,8 @@ export default function DiscoverFilterScreen() {
   const title = label ?? value ?? "";
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          {title}
-        </Text>
-      </View>
+    <Screen>
+      <BackHeader title={title} />
       {loading ? (
         <View className="flex-1 items-center justify-center">
           <ActivityIndicator color={colors.brandUi} />
@@ -138,6 +125,6 @@ export default function DiscoverFilterScreen() {
           )}
         />
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }

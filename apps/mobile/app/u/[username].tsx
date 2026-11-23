@@ -1,7 +1,7 @@
 import { useCloseFriend, useProfilePage } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Screen } from "@/components/ui/screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BookOpen, Lock } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
@@ -21,7 +21,7 @@ export default function ProfileScreen() {
   const page = query.data;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <BackHeader title="Profile" />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
@@ -65,7 +65,7 @@ export default function ProfileScreen() {
           <PublicProfile page={page} />
         )}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

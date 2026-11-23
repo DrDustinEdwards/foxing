@@ -234,6 +234,7 @@ export default function Library() {
       <View className="flex-row items-center px-4 pt-2 pb-1 gap-2">
         <Pressable
           onPress={() => setSortPickerOpen((v) => !v)}
+          accessibilityRole="button"
           className="flex-row items-center gap-1 px-3 py-1 rounded-full border"
           style={{ borderColor: colors.borderSubtle }}
         >

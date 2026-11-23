@@ -1,13 +1,14 @@
 import { useAuthor, useLibrary } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { View, Text, Pressable, ScrollView, Image, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CaretLeft, BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-react-native";
+import { BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-react-native";
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { SectionLabel } from "@/components/ui/section-label";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 // An author's page: the shared GET /authors/:slug view, with a badge on the books
 // already on the reader's shelf.
@@ -25,14 +26,14 @@ export default function AuthorScreen() {
 
   if (author.isPending) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     );
   }
   if (!page) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center px-8 bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center px-8">
         <Text
           style={{
             fontFamily: Fonts.ui,
@@ -46,17 +47,13 @@ export default function AuthorScreen() {
         <Pressable onPress={() => router.back()} className="mt-3">
           <Text style={{ fontFamily: Fonts.uiMedium, color: colors.brandText }}>Back</Text>
         </Pressable>
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-      </View>
+    <Screen>
+      <BackHeader />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }}>
         <Text
@@ -153,7 +150,7 @@ export default function AuthorScreen() {
           })}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 

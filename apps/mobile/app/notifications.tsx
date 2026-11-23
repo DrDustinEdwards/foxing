@@ -2,10 +2,8 @@ import { useMarkNotificationsRead, useNotifications } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useCallback, useMemo } from "react";
 import { View, Text, Pressable, FlatList, ActivityIndicator, RefreshControl } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import {
-  CaretLeft,
   UserPlus,
   ChatCircleDots,
   Heart,
@@ -20,6 +18,8 @@ import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
 import { SectionLabel } from "@/components/ui/section-label";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 type BucketKey = "today" | "week" | "earlier";
 const BUCKETS: Array<{ key: BucketKey; label: string }> = [
@@ -51,22 +51,8 @@ export default function NotificationsScreen() {
   const buckets = useMemo(() => groupByBucket(rows), [rows]);
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-            flex: 1,
-          }}
-        >
-          Notifications
-        </Text>
+    <Screen>
+      <BackHeader title="Notifications">
         {unreadCount > 0 ? (
           <Pressable onPress={onMarkAll} hitSlop={8}>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.brandText }}>
@@ -74,7 +60,7 @@ export default function NotificationsScreen() {
             </Text>
           </Pressable>
         ) : null}
-      </View>
+      </BackHeader>
 
       {notifications.isPending ? (
         <View className="flex-1 items-center justify-center">
@@ -108,7 +94,7 @@ export default function NotificationsScreen() {
           }
         />
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }
 

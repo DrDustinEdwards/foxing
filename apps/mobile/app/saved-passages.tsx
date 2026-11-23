@@ -11,7 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Screen } from "@/components/ui/screen";
 import { useRouter } from "expo-router";
 import { Trash, ShareNetwork, PencilSimple, Check, BookOpen } from "phosphor-react-native";
 import { highlightSwatch, useColors } from "@/constants/colors";
@@ -86,7 +86,7 @@ export default function SavedPassagesScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <BackHeader title="Saved Passages" />
 
       {loading ? (
@@ -284,6 +284,6 @@ export default function SavedPassagesScreen() {
           ))}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }

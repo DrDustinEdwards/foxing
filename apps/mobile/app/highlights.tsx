@@ -1,10 +1,11 @@
 import { useMyAnnotations } from "@foxing/client";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { CaretLeft } from "phosphor-react-native";
+
 import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 // Every highlight the reader has made, newest first, from GET /annotations.
 export default function HighlightsScreen() {
@@ -15,22 +16,8 @@ export default function HighlightsScreen() {
   const loading = highlights.isPending;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Highlights
-        </Text>
-      </View>
+    <Screen>
+      <BackHeader title="Highlights" />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 32 }}>
         {loading ? (
@@ -109,6 +96,6 @@ export default function HighlightsScreen() {
           ))
         )}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
