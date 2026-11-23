@@ -1,32 +1,18 @@
-// Cross-screen user preferences that don't belong to a single component.
-// Persisted to AsyncStorage with a single namespaced key so a future
-// migration to a `profiles.preferences` JSONB column can pull the same shape.
+// Device-only user preferences that don't belong to a single component.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const PREFS_KEY = "user_prefs_v1";
 const WPM_KEY = "user_calibrated_wpm";
 
-export type AppLanguage = "en" | "es" | "fr" | "de" | "pt" | "it" | "ja" | "zh";
-type AiLanguage = AppLanguage;
 type SpeedUnit = "wpm" | "pages_per_hour";
 
 export interface UserPrefs {
-  appLanguage: AppLanguage;
-  aiLanguage: AiLanguage;
-  // For displaying reading rate in the reader / coach screens.
+  // For displaying reading rate in settings.
   speedUnit: SpeedUnit;
-  // When true, the reader saves font/theme keyed by book_id and prefers
-  // that over the global default on next open.
-  rememberPerBook: boolean;
 }
 
-export const DEFAULT_USER_PREFS: UserPrefs = {
-  appLanguage: "en",
-  aiLanguage: "en",
-  speedUnit: "wpm",
-  rememberPerBook: false,
-};
+export const DEFAULT_USER_PREFS: UserPrefs = { speedUnit: "wpm" };
 
 export async function getUserPrefs(): Promise<UserPrefs> {
   try {
@@ -55,14 +41,3 @@ export async function getCalibratedWpm(): Promise<number | null> {
 export async function setCalibratedWpm(wpm: number): Promise<void> {
   await AsyncStorage.setItem(WPM_KEY, String(Math.round(wpm)));
 }
-
-export const APP_LANGUAGE_OPTIONS: Array<{ value: AppLanguage; label: string }> = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Español" },
-  { value: "fr", label: "Français" },
-  { value: "de", label: "Deutsch" },
-  { value: "pt", label: "Português" },
-  { value: "it", label: "Italiano" },
-  { value: "ja", label: "日本語" },
-  { value: "zh", label: "中文" },
-];

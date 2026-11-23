@@ -1,5 +1,5 @@
 import { useColors } from "@/constants/colors";
-import { Section } from "@/components/goals/section";
+import { SectionBlock } from "@/components/ui/section-label";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 
@@ -32,7 +32,7 @@ export function PeriodGoalCard({
 }: PeriodGoalCardProps) {
   const ratio = row ? Math.max(0, Math.min(1, finished / row.target)) : 0;
   return (
-    <Section title={title}>
+    <SectionBlock title={title} inset={0}>
       <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <View className="flex-row items-center gap-2">
           <TextInput
@@ -131,6 +131,6 @@ export function PeriodGoalCard({
           </View>
         ) : null}
       </View>
-    </Section>
+    </SectionBlock>
   );
 }

@@ -14,6 +14,7 @@ import {
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // All-options bottom sheet shown on long-press of the pill. Mirrors the inline
 // menu with full labels. Each action calls the handler the pill already wires.
@@ -127,19 +128,7 @@ export function AllOptionsSheet({
       variant="bottom"
       scroll={false}
       header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            paddingHorizontal: 20,
-            marginBottom: 8,
-          }}
-        >
-          Actions
-        </Text>
+        <SectionLabel style={{ paddingHorizontal: 20, marginBottom: 8 }}>Actions</SectionLabel>
       }
     >
       {items.map((item, i) => {
@@ -258,22 +247,28 @@ export function PillAction({
 }
 
 // Small lock badge overlaid on the top-right of a gated action's icon.
-function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
+export function LockBadge({
+  colors,
+  size = 13,
+}: {
+  colors: ReturnType<typeof useColors>;
+  size?: number;
+}) {
   return (
     <View
       style={{
         position: "absolute",
-        top: -5,
-        right: -7,
-        width: 13,
-        height: 13,
-        borderRadius: 7,
+        top: -size * 0.4,
+        right: -size * 0.5,
+        width: size,
+        height: size,
+        borderRadius: size / 2,
         backgroundColor: colors.bgSurface,
         alignItems: "center",
         justifyContent: "center",
       }}
     >
-      <Lock color={colors.brandText} size={9} weight="fill" />
+      <Lock color={colors.brandText} size={Math.round(size * 0.7)} weight="fill" />
     </View>
   );
 }

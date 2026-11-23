@@ -2,6 +2,7 @@ import type * as W from "@foxing/types";
 import { useMemo, useState } from "react";
 import { View, Text, Pressable, Image, TextInput as RNTextInput } from "react-native";
 import { CaretRight, Sparkle, ChatCircle, BookOpen, Plus, PushPin } from "phosphor-react-native";
+import { Avatar } from "@/components/ui/avatar";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { MeetingsPollsSection } from "@/components/clubs/meetings-polls-section";
@@ -397,42 +398,13 @@ export function MembersTab({
     <View>
       {members.map((m) => {
         const name = m.profile?.displayName ?? m.profile?.username ?? "Reader";
-        const initial = (name || "?")[0]?.toUpperCase() ?? "?";
         return (
           <Pressable
             key={m.userId}
             onPress={() => m.profile && onOpenMember(m.profile.username)}
             className="flex-row items-center p-3 mb-2 rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
-            <View
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                overflow: "hidden",
-                backgroundColor: colors.brandSubtle,
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              {m.profile?.avatarUrl ? (
-                <Image
-                  source={{ uri: m.profile.avatarUrl }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-              ) : (
-                <Text
-                  style={{
-                    fontFamily: Fonts.display,
-                    fontSize: 16,
-                    color: colors.brandSubtleText,
-                  }}
-                >
-                  {initial}
-                </Text>
-              )}
-            </View>
+            <Avatar profile={m.profile} size={40} style={{ marginRight: 12 }} />
             <View style={{ flex: 1 }}>
               <Text
                 style={{ fontFamily: Fonts.uiMedium, fontSize: 14, color: colors.textPrimary }}

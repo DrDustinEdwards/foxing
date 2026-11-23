@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Modal, Pressable, ScrollView, useWindowDimensions } from "react-native";
+import { View, Text, Modal, Pressable, ScrollView } from "react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import {
@@ -9,9 +9,9 @@ import {
   saveCustomTheme,
 } from "@/lib/reader-settings";
 import { LanguageTab } from "./typography-language-tab";
-import { CanvasTab, FontTab, LayoutTab, ThemesTab } from "./typography-tabs";
+import { CanvasTab, FontTab, ThemesTab } from "./typography-tabs";
 
-type TabKey = "font" | "layout" | "canvas" | "themes" | "language";
+type TabKey = "font" | "canvas" | "themes" | "language";
 
 interface TypographySheetProps {
   visible: boolean;
@@ -42,10 +42,6 @@ export function TypographySheet({
   const [savedThemes, setSavedThemes] = useState<SavedTheme[]>([]);
   const [savingTheme, setSavingTheme] = useState(false);
   const [themeName, setThemeName] = useState("");
-  const { width } = useWindowDimensions();
-  // Two-column option only surfaces on tablets, sub-768 phones don't get
-  // it, even though the underlying setting is persisted regardless.
-  const isTablet = width >= 768;
 
   useEffect(() => {
     if (!visible) return;
@@ -117,7 +113,7 @@ export function TypographySheet({
             className="flex-row mb-4 rounded-full p-1 bg-bg-sunken-light dark:bg-bg-sunken-dark"
             accessibilityRole="tablist"
           >
-            {(["font", "layout", "canvas", "themes", "language"] as const).map((t) => {
+            {(["font", "canvas", "themes", "language"] as const).map((t) => {
               const active = t === tab;
               return (
                 <Pressable
@@ -149,7 +145,6 @@ export function TypographySheet({
             showsVerticalScrollIndicator={false}
           >
             {tab === "font" && <FontTab prefs={prefs} set={set} />}
-            {tab === "layout" && <LayoutTab prefs={prefs} set={set} isTablet={isTablet} />}
             {tab === "canvas" && <CanvasTab prefs={prefs} set={set} />}
             {tab === "themes" && (
               <ThemesTab

@@ -40,7 +40,6 @@ import {
 } from "./readium-helpers";
 
 // Readium implementation of the ReaderRef contract in reader-types.ts.
-// Auto-scroll and columns are no-op stubs.
 
 const HIGHLIGHTS_GROUP = "highlights";
 const TTS_SENTENCE_GROUP = "tts-sentence";
@@ -399,11 +398,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
         if (locator) viewRef.current?.goTo(locator);
       },
       applySettings: (s: ReaderSettings) => {
-        // Only theme + fontSize are wired so far. See
-        // settingsToReadiumPreferences for the mapping + clamp logic.
-        // Other Foliate settings (bold, lineHeight, marginPx, etc.)
-        // are silently ignored until each is mapped against a
-        // verified Readium range.
         setReadiumPrefs(settingsToReadiumPreferences(s));
       },
       addHighlight: (cfi: string, color: HighlightColor) => {
@@ -448,20 +442,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
       ) => {
         setPopularMarkers(list);
         if (colorHex) setPopularColor(colorHex);
-      },
-      startAutoScroll: (_wpm: number) => {
-        // TODO Phase 3.x: simulate via timed goForward calls; Readium
-        // has no native auto-scroll
-      },
-      stopAutoScroll: () => {
-        // TODO Phase 3.x
-      },
-      setColumns: (_count: number) => {
-        // TODO Phase 3.x: re-enable once Preferences are wired (spread +
-        // columnCount). Both fields pass straight through enum parsers
-        // in NitroTypeConverters so they're safe to send, but the
-        // surrounding Preferences object needs the range-checked fields
-        // either valid or absent first.
       },
       getChapterText: async () => {
         const href = currentLocatorRef.current?.href;

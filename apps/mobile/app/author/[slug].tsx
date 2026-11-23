@@ -1,13 +1,15 @@
 import { useAuthor, useLibrary } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { View, Text, Pressable, ScrollView, Image, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CaretLeft, BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-react-native";
+import { BookOpen, CheckCircle, Bookmark, Clock } from "phosphor-react-native";
 import { ErrorScreen } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 // An author's page: the shared GET /authors/:slug view, with a badge on the books
 // already on the reader's shelf.
@@ -25,20 +27,16 @@ export default function AuthorScreen() {
 
   if (author.isPending) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     );
   }
   if (!page) return <ErrorScreen query={author} notFound="We couldn't find that author." />;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-      </View>
+    <Screen>
+      <BackHeader />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48 }}>
         <Text
@@ -135,7 +133,7 @@ export default function AuthorScreen() {
           })}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -146,20 +144,5 @@ function StatusIcon({ status }: { status: W.ShelfStatus }) {
 }
 
 function SectionHeading({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginTop: 18,
-        marginBottom: 10,
-      }}
-    >
-      {children}
-    </Text>
-  );
+  return <SectionLabel style={{ marginTop: 18, marginBottom: 10 }}>{children}</SectionLabel>;
 }

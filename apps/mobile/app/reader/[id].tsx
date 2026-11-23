@@ -424,40 +424,6 @@ export default function Reader() {
     };
   }, []);
 
-  // Auto-scroll → bridge. Starts/stops a per-page interval that calls
-  // renderer.next() at the rate the user set in the Aa sheet.
-  useEffect(() => {
-    if (readerState !== "ready") return;
-    if (prefs.autoScroll) readerRef.current?.startAutoScroll(prefs.autoScrollWpm);
-    else readerRef.current?.stopAutoScroll();
-  }, [prefs.autoScroll, prefs.autoScrollWpm, readerState]);
-
-  // Columns → bridge: 1 or 2 based on prefs (with a tablet upgrade applied below).
-  useEffect(() => {
-    if (readerState !== "ready") return;
-    readerRef.current?.setColumns(prefs.columnMode === "two" ? 2 : 1);
-  }, [prefs.columnMode, readerState]);
-
-  // One-time tablet column upgrade. New tablet users get a 2-column spread
-  // on first reader open; subsequent opens read the persisted pref. Tracked
-  // via an AsyncStorage flag keyed by user so the upgrade isn't re-applied
-  // if the user later toggles back to single in the Aa sheet.
-  useEffect(() => {
-    if (!isTablet || !userId || readerState !== "ready") return;
-    let canceled = false;
-    void AsyncStorage.getItem(`foxing.tablet-columns-applied.${userId}`).then((applied) => {
-      if (canceled || applied === "true") return;
-      if (prefs.columnMode === "single") {
-        changePrefs({ ...prefs, columnMode: "two" });
-      }
-      AsyncStorage.setItem(`foxing.tablet-columns-applied.${userId}`, "true").catch(() => {});
-    });
-    return () => {
-      canceled = true;
-    };
-    // oxlint-disable-next-line react/exhaustive-deps -- a one-shot; changePrefs and prefs would re-fire it on every prefs change
-  }, [isTablet, userId, readerState]);
-
   const toggleChrome = useCallback(() => setChrome((v) => !v), []);
 
   function saveProgress() {
@@ -550,7 +516,7 @@ export default function Reader() {
     savePrefs(userId, next).catch((e) => console.warn("[reader] save prefs failed:", e));
     // Push the resolved settings into the WebView so the change is visible
     // immediately, same code path as initial mount.
-    readerRef.current?.applySettings(prefsToSettings(next, isTablet));
+    readerRef.current?.applySettings(prefsToSettings(next));
   }
 
   function dismissPill() {
@@ -763,9 +729,6 @@ export default function Reader() {
           }
         })();
         break;
-      case "go-to":
-        setGoToOpen(true);
-        break;
       case "sleep-timer":
         setSleepSheetOpen(true);
         break;
@@ -856,7 +819,7 @@ export default function Reader() {
   }
 
   const themeColors = CANVAS_PALETTE[prefs.canvasTheme];
-  const initialSettings: ReaderSettings = prefsToSettings(prefs, isTablet);
+  const initialSettings: ReaderSettings = prefsToSettings(prefs);
 
   // Wood-engraving chrome: cream surface (bgBase maps to the Cream token in
   // light, warm near-black in dark), translucent so the reading canvas reads

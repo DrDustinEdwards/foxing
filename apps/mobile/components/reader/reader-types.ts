@@ -7,19 +7,7 @@ interface ReaderTheme {
 
 export interface ReaderSettings {
   fontSize: number;
-  lineHeight: number;
   theme: ReaderTheme;
-  // Optional extended controls, host can omit; bridge applies defaults.
-  fontFamily?: string;
-  bold?: boolean;
-  paragraphSpacing?: number;
-  marginPx?: number;
-  justify?: boolean;
-  letterSpacingEm?: number;
-  firstLineIndent?: boolean;
-  dropCap?: boolean;
-  warmScreen?: boolean;
-  focusMode?: boolean;
 }
 
 export interface ReaderRect {
@@ -49,9 +37,6 @@ export interface ReaderRef {
     list: Array<{ text?: string; cfi: string; count: number }>,
     colorHex?: string,
   ) => void;
-  startAutoScroll: (wpm: number) => void;
-  stopAutoScroll: () => void;
-  setColumns: (count: number) => void;
   // Async bridge, returns chapter plain text for TTS.
   getChapterText: () => Promise<string>;
   // Async bridge, returns chapter TOC items.

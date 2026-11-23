@@ -9,9 +9,9 @@
       "files": 2
     },
     "jscpd": {
-      "clones": 150,
-      "lines": 1560,
-      "percentage": 1.83,
+      "clones": 109,
+      "lines": 1138,
+      "percentage": 1.36,
       "unread": 0
     },
     "shared copies": {
@@ -21,15 +21,10 @@
     "legacy": {},
     "size": {
       "apps/mobile/app/book/[id].tsx": 1030,
-      "apps/mobile/app/lists/[id].tsx": 511,
       "apps/mobile/app/onboarding/index.tsx": 610,
-      "apps/mobile/app/reader/[id].tsx": 1461,
-      "apps/mobile/app/settings/index.tsx": 618,
-      "apps/mobile/components/clubs/club-detail-tabs.tsx": 510,
-      "apps/mobile/components/clubs/create-club-sheet.tsx": 548,
-      "apps/mobile/components/reader/go-to-sheet.tsx": 512,
-      "apps/mobile/components/reader/readium-reader.tsx": 620,
-      "apps/mobile/components/reader/typography-tabs.tsx": 503,
+      "apps/mobile/app/reader/[id].tsx": 1424,
+      "apps/mobile/components/clubs/create-club-sheet.tsx": 534,
+      "apps/mobile/components/reader/readium-reader.tsx": 600,
       "apps/web/app/components/reader/reader-panels.tsx": 504,
       "apps/web/app/components/reader/reader-view.tsx": 708,
       "apps/web/app/components/settings/account-sections.tsx": 807,
@@ -48,9 +43,9 @@
       "cases": 368
     },
     "comments": {
-      "lines": 5911,
+      "lines": 5877,
       "code": 73909,
-      "percentage": 7.51
+      "percentage": 7.49
     }
   }
 }

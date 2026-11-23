@@ -1,13 +1,4 @@
-import {
-  type CanvasTheme,
-  FONT_FAMILY_CSS,
-  FONT_SIZE_PX,
-  LETTER_SPACING_EM,
-  LINE_SPACING_VAL,
-  MARGIN_PX,
-  PARAGRAPH_SPACING_EM,
-  type ReaderPrefs,
-} from "@/lib/reader-settings";
+import { type CanvasTheme, FONT_SIZE_PX, type ReaderPrefs } from "@/lib/reader-settings";
 import { Colors } from "@/constants/colors";
 import type { ReaderSettings } from "@/components/reader/reader-types";
 
@@ -43,24 +34,7 @@ export function hexToRgba(hex: string, alpha: number): string {
 }
 
 // Project a ReaderPrefs (step-space, persistent) into the flat ReaderSettings
-// the WebView consumes (concrete pixel/multiplier values). The isTablet flag
-// scales margins up so text doesn't run edge-to-edge on iPad-class widths.
-export function prefsToSettings(prefs: ReaderPrefs, isTablet: boolean): ReaderSettings {
-  const palette = CANVAS_PALETTE[prefs.canvasTheme];
-  const baseMargin = MARGIN_PX[prefs.marginWidth];
-  return {
-    fontSize: FONT_SIZE_PX[prefs.fontSize],
-    lineHeight: LINE_SPACING_VAL[prefs.lineSpacing],
-    theme: palette,
-    fontFamily: FONT_FAMILY_CSS[prefs.fontFamily],
-    bold: prefs.bold,
-    paragraphSpacing: PARAGRAPH_SPACING_EM[prefs.paragraphSpacing],
-    marginPx: isTablet ? Math.round(baseMargin * 1.5) : baseMargin,
-    justify: prefs.alignment === "justified",
-    letterSpacingEm: LETTER_SPACING_EM[prefs.letterSpacing],
-    firstLineIndent: prefs.firstLineIndent,
-    dropCap: prefs.dropCap,
-    warmScreen: prefs.warmScreen,
-    focusMode: prefs.focusMode,
-  };
+// the renderer consumes.
+export function prefsToSettings(prefs: ReaderPrefs): ReaderSettings {
+  return { fontSize: FONT_SIZE_PX[prefs.fontSize], theme: CANVAS_PALETTE[prefs.canvasTheme] };
 }

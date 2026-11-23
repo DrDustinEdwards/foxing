@@ -4,6 +4,7 @@ import { Fonts } from "@/constants/fonts";
 import type * as W from "@foxing/types";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
 import { STATUS_SHELVES } from "@/components/library/library-types";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function BulkActionButton({
   Icon,
@@ -62,19 +63,9 @@ export function BulkShelfPicker({
       variant="bottom"
       scroll={false}
       header={
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            paddingHorizontal: 20,
-            marginBottom: 8,
-          }}
-        >
+        <SectionLabel style={{ paddingHorizontal: 20, marginBottom: 8 }}>
           Move to shelf
-        </Text>
+        </SectionLabel>
       }
     >
       {STATUS_SHELVES.map((s, i) => (

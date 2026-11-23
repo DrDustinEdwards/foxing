@@ -10,9 +10,9 @@ import {
   ChipRow,
   ClubMiniCard,
   SectionRow,
-  SectionWrap,
   TodaysPickHero,
 } from "@/components/discover/discover-sections";
+import { SectionBlock } from "@/components/ui/section-label";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
@@ -173,7 +173,7 @@ export default function Discover() {
         ) : null}
 
         {page && page.clubs.length > 0 ? (
-          <SectionWrap title="Clubs to join">
+          <SectionBlock title="Clubs to join">
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -187,7 +187,7 @@ export default function Discover() {
                 />
               ))}
             </ScrollView>
-          </SectionWrap>
+          </SectionBlock>
         ) : null}
       </ScrollView>
     </SafeAreaView>

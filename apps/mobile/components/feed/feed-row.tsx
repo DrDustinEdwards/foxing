@@ -13,6 +13,7 @@ import {
 } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { Avatar } from "@/components/ui/avatar";
 import { relativeTime } from "@/lib/relative-time";
 
 // One row of GET /feed: what someone you follow did, or a new follower of yours.
@@ -108,44 +109,6 @@ export function FeedRow({
           </Pressable>
         ) : null}
       </View>
-    </View>
-  );
-}
-
-export function Avatar({
-  profile,
-  size,
-}: {
-  profile: { avatarUrl: string | null; displayName: string | null; username: string } | null;
-  size: number;
-}) {
-  const colors = useColors();
-  const initial = (profile?.displayName || profile?.username || "?")[0]?.toUpperCase() ?? "?";
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: colors.brandSubtle,
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-      }}
-    >
-      {profile?.avatarUrl ? (
-        <Image source={{ uri: profile.avatarUrl }} style={{ width: "100%", height: "100%" }} />
-      ) : (
-        <Text
-          style={{
-            fontFamily: Fonts.display,
-            fontSize: size * 0.42,
-            color: colors.brandSubtleText,
-          }}
-        >
-          {initial}
-        </Text>
-      )}
     </View>
   );
 }

@@ -11,12 +11,13 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Screen } from "@/components/ui/screen";
 import { useRouter } from "expo-router";
 import { Trash, ShareNetwork, PencilSimple, Check, BookOpen } from "phosphor-react-native";
 import { highlightSwatch, useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // Saved Passages: every highlight where a note has been written, grouped by book, with
 // public toggle + share + delete.
@@ -88,7 +89,7 @@ export default function SavedPassagesScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <BackHeader title="Saved Passages" />
 
       {loading ? (
@@ -114,18 +115,7 @@ export default function SavedPassagesScreen() {
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
           {grouped.map(({ key, title, entries }) => (
             <View key={key} style={{ marginBottom: 18 }}>
-              <Text
-                style={{
-                  fontFamily: Fonts.uiMedium,
-                  fontSize: 11,
-                  color: colors.textTertiary,
-                  textTransform: "uppercase",
-                  letterSpacing: 0.6,
-                  marginBottom: 8,
-                }}
-              >
-                {title}
-              </Text>
+              <SectionLabel style={{ marginBottom: 8 }}>{title}</SectionLabel>
               {entries.map((e) => (
                 <View
                   key={e.id}
@@ -297,6 +287,6 @@ export default function SavedPassagesScreen() {
           ))}
         </ScrollView>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }

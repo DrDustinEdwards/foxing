@@ -1,19 +1,12 @@
 import { useCreateList } from "@foxing/client";
 import { useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  TextInput,
-  ActivityIndicator,
-  Alert,
-  ScrollView,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, Pressable, TextInput, ActivityIndicator, Alert, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import { CaretLeft, Eye, EyeSlash } from "phosphor-react-native";
+import { Eye, EyeSlash } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 export default function NewListScreen() {
   const colors = useColors();
@@ -39,22 +32,8 @@ export default function NewListScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-            flex: 1,
-          }}
-        >
-          New list
-        </Text>
+    <Screen>
+      <BackHeader title="New list">
         <Pressable
           onPress={() => void save()}
           disabled={saving || !title.trim()}
@@ -79,7 +58,7 @@ export default function NewListScreen() {
             </Text>
           )}
         </Pressable>
-      </View>
+      </BackHeader>
 
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
         <TextInput
@@ -141,6 +120,6 @@ export default function NewListScreen() {
           </Text>
         </Pressable>
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

@@ -3,7 +3,7 @@ import { View, Text } from "react-native";
 import { Flame } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { Section } from "./section";
+import { SectionBlock } from "@/components/ui/section-label";
 
 export function StreakCard({
   streak,
@@ -13,7 +13,7 @@ export function StreakCard({
   colors: ReturnType<typeof useColors>;
 }) {
   return (
-    <Section title="Streak">
+    <SectionBlock title="Streak" inset={0}>
       <View className="p-4 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark">
         <View className="flex-row items-center">
           <Flame color={colors.brandUi} size={42} weight="fill" />
@@ -44,6 +44,6 @@ export function StreakCard({
           </View>
         </View>
       </View>
-    </Section>
+    </SectionBlock>
   );
 }

@@ -6,6 +6,7 @@ import { useCreateDiaryEntry } from "@foxing/client";
 import { queueWrite } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // Post-finish review sheet, two pages. Page 1 is rating + review, saved as a
 // diary entry; Page 2 collects optional mood tags for the book on the shelf.
@@ -223,32 +224,9 @@ export function FinishReviewSheet({
     >
       {page === 1 ? (
         <>
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              marginBottom: 8,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            Your rating
-          </Text>
+          <SectionLabel style={{ marginBottom: 8 }}>Your rating</SectionLabel>
           <HalfStarRow value={rating} onChange={setRating} />
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              marginTop: 20,
-              marginBottom: 8,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            Quick review
-          </Text>
+          <SectionLabel style={{ marginTop: 20, marginBottom: 8 }}>Quick review</SectionLabel>
           <TextInput
             value={review}
             onChangeText={(t) => setReview(longForm ? t : t.slice(0, 140))}
@@ -298,18 +276,7 @@ export function FinishReviewSheet({
         </>
       ) : (
         <>
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              marginBottom: 8,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-            }}
-          >
-            How did it feel?
-          </Text>
+          <SectionLabel style={{ marginBottom: 8 }}>How did it feel?</SectionLabel>
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
             {MOOD_CHIPS.map((m) => {
               const active = moods.has(m);

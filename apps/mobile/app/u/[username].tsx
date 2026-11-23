@@ -1,16 +1,17 @@
 import { useCloseFriend, useProfilePage } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { View, Text, Pressable, ScrollView, ActivityIndicator, Image } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Screen } from "@/components/ui/screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { BookOpen, Lock } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { ErrorState, isNotFound } from "@/components/ui/error-state";
 import { BackHeader } from "@/components/ui/back-header";
-import { Avatar } from "@/components/feed/feed-row";
+import { Avatar } from "@/components/ui/avatar";
 import { FollowButton } from "@/components/profile/follow-button";
 import { Divider, StatTile } from "@/components/profile/stat-tile";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // A reader's profile: the shared GET /u/:username page. A private profile shows only
 // who it is; following and close-friend toggles patch this page in place.
@@ -21,7 +22,7 @@ export default function ProfileScreen() {
   const page = query.data;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <BackHeader title="Profile" />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
@@ -67,7 +68,7 @@ export default function ProfileScreen() {
           <PublicProfile page={page} />
         )}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
 
@@ -295,21 +296,9 @@ function PublicProfile({ page }: { page: Extract<W.ProfilePage, { isPrivate: fal
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors();
   return (
     <View style={{ marginBottom: 20 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 10,
-        }}
-      >
-        {title}
-      </Text>
+      <SectionLabel style={{ marginBottom: 10 }}>{title}</SectionLabel>
       {children}
     </View>
   );

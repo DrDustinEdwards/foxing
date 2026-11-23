@@ -2,16 +2,8 @@ import { useClubPage, useJoinClub, useLeaveClub } from "@foxing/client";
 import type * as W from "@foxing/types";
 import { useCallback, useMemo, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  CaretLeft,
-  ChatCircle,
-  BookOpen,
-  UsersThree,
-  Info,
-  ShareNetwork,
-} from "phosphor-react-native";
+import { ChatCircle, BookOpen, UsersThree, Info, ShareNetwork } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { authClient } from "@/lib/api";
@@ -25,6 +17,8 @@ import {
 } from "@/components/clubs/club-detail-tabs";
 import { ErrorScreen } from "@/components/ui/error-state";
 import { NewThreadSheet } from "@/components/clubs/new-thread-sheet";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 type Tab = "discussions" | "reading" | "members" | "about";
 
@@ -79,9 +73,9 @@ export default function ClubDetailScreen() {
 
   if (clubPage.isPending) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
@@ -89,23 +83,8 @@ export default function ClubDetailScreen() {
   const club = page.club;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          numberOfLines={1}
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-            flex: 1,
-          }}
-        >
-          {club.name}
-        </Text>
+    <Screen>
+      <BackHeader title={club.name}>
         <Pressable
           onPress={() =>
             router.push({
@@ -136,7 +115,7 @@ export default function ClubDetailScreen() {
           }
           onLeave={() => leave.fire({ clubId: club.id })}
         />
-      </View>
+      </BackHeader>
 
       <View className="flex-row px-2 mb-2">
         <TabButton
@@ -206,7 +185,7 @@ export default function ClubDetailScreen() {
           router.push(`/clubs/thread/${threadId}` as never);
         }}
       />
-    </SafeAreaView>
+    </Screen>
   );
 }
 

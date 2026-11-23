@@ -3,23 +3,12 @@ import { Image, Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import type * as W from "@foxing/types";
 import { BookOpen, Plus, User, UserPlus, UsersThree } from "phosphor-react-native";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function ResultsSection({ title, children }: { title: string; children: React.ReactNode }) {
-  const colors = useColors();
   return (
     <View style={{ marginTop: 12 }}>
-      <Text
-        style={{
-          fontFamily: Fonts.uiMedium,
-          fontSize: 11,
-          color: colors.textTertiary,
-          textTransform: "uppercase",
-          letterSpacing: 0.6,
-          marginBottom: 8,
-        }}
-      >
-        {title}
-      </Text>
+      <SectionLabel style={{ marginBottom: 8 }}>{title}</SectionLabel>
       {children}
     </View>
   );

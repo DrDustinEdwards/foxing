@@ -2,6 +2,7 @@ import { useColors } from "@/constants/colors";
 import { Pressable, Text, View } from "react-native";
 import { Fonts } from "@/constants/fonts";
 import { useState } from "react";
+import { SectionLabel } from "@/components/ui/section-label";
 
 export function SecondaryButton({
   Icon,
@@ -44,22 +45,10 @@ export function SecondaryButton({
 }
 
 export function SectionHeading({ children }: { children: React.ReactNode }) {
-  const colors = useColors();
   return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginTop: 22,
-        marginBottom: 10,
-        paddingHorizontal: 20,
-      }}
-    >
+    <SectionLabel style={{ marginTop: 22, marginBottom: 10, paddingHorizontal: 20 }}>
       {children}
-    </Text>
+    </SectionLabel>
   );
 }
 

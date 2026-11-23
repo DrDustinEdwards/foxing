@@ -11,15 +11,17 @@ import {
   Image,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as Haptics from "expo-haptics";
-import { CaretLeft } from "phosphor-react-native";
+
 import { resolveScannedIsbn, type ResolvedMeta } from "@/lib/scan-book";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { PillBtn, Section } from "@/components/scan/scan-controls";
+import { SectionLabel } from "@/components/ui/section-label";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 const STATUS_LABELS: Array<{ value: W.ShelfStatus; label: string }> = [
   { value: "want", label: "Want to read" },
@@ -108,31 +110,17 @@ export default function ScanScreen() {
 
   if (!permission) {
     return (
-      <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark items-center justify-center">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     );
   }
 
   const showCamera = permission.granted && scanning && !book && !notFound && !loading;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-          }}
-        >
-          Scan a barcode
-        </Text>
-      </View>
+    <Screen>
+      <BackHeader title="Scan a barcode" />
 
       {showCamera ? (
         <View style={{ flex: 1, position: "relative" }}>
@@ -268,7 +256,7 @@ export default function ScanScreen() {
 
               {/* READ FREE: public-domain edition in the catalog. */}
               {book.readable ? (
-                <Section colors={colors} label="Read free">
+                <Section label="Read free">
                   <PillBtn
                     label="Read now"
                     onPress={() => router.push(`/reader/${book.id}` as never)}
@@ -277,7 +265,7 @@ export default function ScanScreen() {
               ) : null}
 
               {/* LIBRARY: add with a status. */}
-              <Section colors={colors} label="Add to your library">
+              <Section label="Add to your library">
                 <View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
                   {STATUS_LABELS.map((s) => (
                     <PillBtn
@@ -293,7 +281,7 @@ export default function ScanScreen() {
 
               {/* CLUBS: where the reader's clubs are reading it now. */}
               {readingClubs.length > 0 ? (
-                <Section colors={colors} label="Your clubs reading it">
+                <Section label="Your clubs reading it">
                   <View className="flex-row" style={{ gap: 8, flexWrap: "wrap" }}>
                     {readingClubs.map((c) => (
                       <PillBtn
@@ -356,19 +344,9 @@ export default function ScanScreen() {
             </View>
           ) : null}
 
-          <Text
-            style={{
-              fontFamily: Fonts.uiMedium,
-              fontSize: 11,
-              color: colors.textTertiary,
-              textTransform: "uppercase",
-              letterSpacing: 0.6,
-              marginTop: 8,
-              marginBottom: 8,
-            }}
-          >
+          <SectionLabel style={{ marginTop: 8, marginBottom: 8 }}>
             Or enter ISBN manually
-          </Text>
+          </SectionLabel>
           <View className="flex-row" style={{ gap: 8 }}>
             <TextInput
               value={manualIsbn}
@@ -413,6 +391,6 @@ export default function ScanScreen() {
           </View>
         </ScrollView>
       )}
-    </SafeAreaView>
+    </Screen>
   );
 }

@@ -5,13 +5,23 @@ import { CaretLeft } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
-export function BackHeader({ title, children }: { title: string; children?: ReactNode }) {
+// The back row every pushed screen starts with. `children` sit at the right (or fill the row
+// when there is no title); `onBack` replaces router.back() for a header inside a modal.
+export function BackHeader({
+  title,
+  children,
+  onBack,
+}: {
+  title?: string;
+  children?: ReactNode;
+  onBack?: () => void;
+}) {
   const colors = useColors();
   const router = useRouter();
   return (
     <View className="flex-row items-center px-3 py-2">
       <Pressable
-        onPress={() => router.back()}
+        onPress={onBack ?? (() => router.back())}
         hitSlop={10}
         className="p-2"
         accessibilityRole="button"
@@ -19,17 +29,20 @@ export function BackHeader({ title, children }: { title: string; children?: Reac
       >
         <CaretLeft color={colors.textPrimary} size={22} />
       </Pressable>
-      <Text
-        style={{
-          flex: 1,
-          fontFamily: Fonts.display,
-          fontSize: 18,
-          color: colors.textPrimary,
-          marginLeft: 4,
-        }}
-      >
-        {title}
-      </Text>
+      {title ? (
+        <Text
+          numberOfLines={1}
+          style={{
+            flex: 1,
+            fontFamily: Fonts.display,
+            fontSize: 18,
+            color: colors.textPrimary,
+            marginLeft: 4,
+          }}
+        >
+          {title}
+        </Text>
+      ) : null}
       {children}
     </View>
   );

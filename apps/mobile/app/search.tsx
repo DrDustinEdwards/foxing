@@ -9,10 +9,9 @@ import {
   ActivityIndicator,
   type TextInputInstance,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { CaretLeft, MagnifyingGlass, X as XIcon } from "phosphor-react-native";
+import { MagnifyingGlass, X as XIcon } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { ErrorState } from "@/components/ui/error-state";
@@ -24,6 +23,9 @@ import {
   PersonResult,
   ResultsSection,
 } from "@/components/search/search-results";
+import { SectionLabel } from "@/components/ui/section-label";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 type FilterKey = "all" | "books" | "authors" | "people" | "clubs";
 
@@ -105,11 +107,8 @@ export default function SearchScreen() {
     visibleBooks.length + visibleAuthors.length + visiblePeople.length + visibleClubs.length;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
+    <Screen>
+      <BackHeader>
         <View
           className="flex-row items-center flex-1 px-3 py-2 rounded-full border"
           style={{
@@ -143,7 +142,7 @@ export default function SearchScreen() {
             </Pressable>
           ) : null}
         </View>
-      </View>
+      </BackHeader>
 
       <ScrollView
         horizontal
@@ -183,18 +182,7 @@ export default function SearchScreen() {
         {/* Recent searches */}
         {showRecent ? (
           <View>
-            <Text
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 11,
-                color: colors.textTertiary,
-                textTransform: "uppercase",
-                letterSpacing: 0.6,
-                marginBottom: 8,
-              }}
-            >
-              Recent searches
-            </Text>
+            <SectionLabel style={{ marginBottom: 8 }}>Recent searches</SectionLabel>
             {recent.map((r) => (
               <View key={r} className="flex-row items-center mb-1">
                 <Pressable
@@ -312,6 +300,6 @@ export default function SearchScreen() {
           </View>
         ) : null}
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }

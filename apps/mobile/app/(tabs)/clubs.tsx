@@ -63,6 +63,8 @@ export default function ClubsScreen() {
             <Pressable
               key={t}
               onPress={() => setTab(t)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: active }}
               className="flex-1 py-2 items-center"
               style={{
                 borderBottomWidth: 2,

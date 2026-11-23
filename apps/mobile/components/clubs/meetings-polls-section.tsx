@@ -8,6 +8,7 @@ import { Fonts } from "@/constants/fonts";
 import { ClubMeetingCard } from "./club-meeting-card";
 import { ClubPollCard } from "./club-poll-card";
 import { AddMeetingModal, AddPollModal } from "./meeting-poll-modals";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // The club page's upcoming meetings and open polls. RSVPs and votes patch the cached
 // club page, so counts move as soon as you tap.
@@ -30,17 +31,7 @@ export function MeetingsPollsSection({ page, signedIn }: { page: W.ClubPage; sig
   return (
     <View style={{ marginTop: 16 }}>
       <View className="flex-row items-center justify-between" style={{ marginBottom: 10 }}>
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-          }}
-        >
-          Meetings
-        </Text>
+        <SectionLabel>Meetings</SectionLabel>
         {canModerate ? (
           <Pressable onPress={() => setAddMeetingOpen(true)} hitSlop={10}>
             <Plus color={colors.brandUi} size={18} weight="bold" />
@@ -73,17 +64,7 @@ export function MeetingsPollsSection({ page, signedIn }: { page: W.ClubPage; sig
         className="flex-row items-center justify-between"
         style={{ marginTop: 16, marginBottom: 10 }}
       >
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-          }}
-        >
-          Polls
-        </Text>
+        <SectionLabel>Polls</SectionLabel>
         {canModerate ? (
           <Pressable onPress={() => setAddPollOpen(true)} hitSlop={10}>
             <Plus color={colors.brandUi} size={18} weight="bold" />

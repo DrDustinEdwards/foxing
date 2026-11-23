@@ -19,21 +19,14 @@ import {
   Modal,
 } from "react-native";
 import { ErrorScreen } from "@/components/ui/error-state";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  CaretLeft,
-  Plus,
-  Trash,
-  Eye,
-  EyeSlash,
-  MagnifyingGlass,
-  PencilSimple,
-} from "phosphor-react-native";
+import { Plus, Trash, Eye, EyeSlash, MagnifyingGlass, PencilSimple } from "phosphor-react-native";
 import { authClient } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { ListLikeButton } from "@/components/lists/list-like-button";
+import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 
 // A reading list from GET /lists/:id. Its owner edits, adds and removes books in place;
 // everyone else can like it.
@@ -122,9 +115,9 @@ export default function ListDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-bg-base-light dark:bg-bg-base-dark">
+      <Screen className="items-center justify-center">
         <ActivityIndicator color={colors.brandUi} />
-      </SafeAreaView>
+      </Screen>
     );
   }
   if (!info) return <ErrorScreen query={listQuery} notFound="List not found." />;
@@ -132,23 +125,8 @@ export default function ListDetailScreen() {
   const isOwn = page?.isOwner ?? false;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-            flex: 1,
-          }}
-          numberOfLines={1}
-        >
-          {info.title}
-        </Text>
+    <Screen>
+      <BackHeader title={info.title}>
         {isOwn ? (
           <Pressable
             onPress={startEditing}
@@ -167,7 +145,7 @@ export default function ListDetailScreen() {
             canLike={signedIn}
           />
         )}
-      </View>
+      </BackHeader>
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 48 }}>
         {info.description ? (
@@ -282,7 +260,13 @@ export default function ListDetailScreen() {
               ) : null}
             </View>
             {isOwn ? (
-              <Pressable onPress={() => removeBook(b.bookId)} hitSlop={10} style={{ padding: 4 }}>
+              <Pressable
+                onPress={() => removeBook(b.bookId)}
+                hitSlop={10}
+                style={{ padding: 4 }}
+                accessibilityRole="button"
+                accessibilityLabel="Remove book"
+              >
                 <Trash color={colors.textTertiary} size={16} />
               </Pressable>
             ) : null}
@@ -317,22 +301,8 @@ export default function ListDetailScreen() {
         onRequestClose={() => setAdding(false)}
         presentationStyle="pageSheet"
       >
-        <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-          <View className="flex-row items-center px-3 py-2">
-            <Pressable onPress={() => setAdding(false)} hitSlop={10} className="p-2">
-              <CaretLeft color={colors.textPrimary} size={22} />
-            </Pressable>
-            <Text
-              style={{
-                fontFamily: Fonts.displayBold,
-                fontSize: 18,
-                color: colors.textPrimary,
-                marginLeft: 4,
-              }}
-            >
-              Add a book
-            </Text>
-          </View>
+        <Screen>
+          <BackHeader title="Add a book" onBack={() => setAdding(false)} />
           <View
             className="mx-4 mb-2 flex-row items-center rounded-xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
             style={{ paddingHorizontal: 12 }}
@@ -399,7 +369,7 @@ export default function ListDetailScreen() {
               </Pressable>
             ))}
           </ScrollView>
-        </SafeAreaView>
+        </Screen>
       </Modal>
 
       <Modal
@@ -408,22 +378,8 @@ export default function ListDetailScreen() {
         onRequestClose={() => setEditing(false)}
         presentationStyle="pageSheet"
       >
-        <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
-          <View className="flex-row items-center px-3 py-2">
-            <Pressable onPress={() => setEditing(false)} hitSlop={10} className="p-2">
-              <CaretLeft color={colors.textPrimary} size={22} />
-            </Pressable>
-            <Text
-              style={{
-                fontFamily: Fonts.displayBold,
-                fontSize: 18,
-                color: colors.textPrimary,
-                marginLeft: 4,
-                flex: 1,
-              }}
-            >
-              Edit list
-            </Text>
+        <Screen>
+          <BackHeader title="Edit list" onBack={() => setEditing(false)}>
             <Pressable
               onPress={() => void saveEdit()}
               style={{
@@ -443,7 +399,7 @@ export default function ListDetailScreen() {
                 Save
               </Text>
             </Pressable>
-          </View>
+          </BackHeader>
           <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
             <TextInput
               value={editTitle}
@@ -504,8 +460,8 @@ export default function ListDetailScreen() {
               </Text>
             </Pressable>
           </ScrollView>
-        </SafeAreaView>
+        </Screen>
       </Modal>
-    </SafeAreaView>
+    </Screen>
   );
 }

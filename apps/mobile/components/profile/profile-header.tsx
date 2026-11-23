@@ -3,7 +3,7 @@ import { View, Text, Pressable } from "react-native";
 import { PencilSimple } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
-import { Avatar } from "@/components/feed/feed-row";
+import { Avatar } from "@/components/ui/avatar";
 
 export function ProfileHeader({ profile, onEdit }: { profile: W.MyProfile; onEdit: () => void }) {
   const colors = useColors();

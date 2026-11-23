@@ -11,6 +11,7 @@ import { Fonts } from "@/constants/fonts";
 import { CardPreview } from "@/components/quote/card-preview";
 import { TemplatePicker } from "@/components/quote/template-picker";
 import { TEMPLATES, type CardType, type TemplateId } from "@/components/quote/types";
+import { SectionLabel } from "@/components/ui/section-label";
 
 // Five card types now. The original "quote" type renders the editable
 // passage with template picker; the new types are content-shaped one-shots
@@ -215,36 +216,12 @@ export default function QuoteCardScreen() {
         {/* Template picker, quote type is fully editable; the content
               types ship with a sensible default but the picker stays
               available in case the user wants a different look. */}
-        <Text
-          style={{
-            fontFamily: Fonts.uiMedium,
-            fontSize: 11,
-            color: colors.textTertiary,
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-            marginTop: 18,
-            marginBottom: 8,
-          }}
-        >
-          Template
-        </Text>
+        <SectionLabel style={{ marginTop: 18, marginBottom: 8 }}>Template</SectionLabel>
         <TemplatePicker template={template} setTemplate={setTemplate} colors={colors} />
 
         {cardType === "quote" ? (
           <>
-            <Text
-              style={{
-                fontFamily: Fonts.uiMedium,
-                fontSize: 11,
-                color: colors.textTertiary,
-                textTransform: "uppercase",
-                letterSpacing: 0.6,
-                marginTop: 18,
-                marginBottom: 8,
-              }}
-            >
-              Passage
-            </Text>
+            <SectionLabel style={{ marginTop: 18, marginBottom: 8 }}>Passage</SectionLabel>
             <TextInput
               value={passage}
               onChangeText={setPassage}

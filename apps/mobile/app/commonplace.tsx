@@ -14,12 +14,12 @@ import {
 import { Screen } from "@/components/ui/screen";
 import { ErrorState } from "@/components/ui/error-state";
 import { SheetScaffold } from "@/components/ui/sheet-scaffold";
-import { useRouter } from "expo-router";
-import { CaretLeft, Plus, ShareNetwork, Trash, Eye, EyeSlash } from "phosphor-react-native";
+import { Plus, ShareNetwork, Trash, Eye, EyeSlash } from "phosphor-react-native";
 import { queryClient, queueWrite } from "@/lib/api";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { relativeTime } from "@/lib/relative-time";
+import { BackHeader } from "@/components/ui/back-header";
 
 type Filter = "all" | "public" | "private";
 
@@ -30,7 +30,6 @@ const TYPES: W.AnnotationType[] = ["commonplace", "note"];
 
 export default function CommonplaceScreen() {
   const colors = useColors();
-  const router = useRouter();
   const query = useMyAnnotations(TYPES);
   const entries = useMemo(() => query.data ?? [], [query.data]);
   const loading = query.isPending;
@@ -121,27 +120,13 @@ export default function CommonplaceScreen() {
 
   return (
     <Screen>
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
-        <Text
-          style={{
-            fontFamily: Fonts.displayBold,
-            fontSize: 18,
-            color: colors.textPrimary,
-            marginLeft: 4,
-            flex: 1,
-          }}
-        >
-          Commonplace Book
-        </Text>
+      <BackHeader title="Commonplace Book">
         <Pressable
           onPress={() => void exportAll()}
           hitSlop={10}
           className="p-2"
           accessibilityRole="button"
-          accessibilityLabel="Share"
+          accessibilityLabel="Share all"
         >
           <ShareNetwork color={colors.textSecondary} size={20} />
         </Pressable>
@@ -154,7 +139,7 @@ export default function CommonplaceScreen() {
         >
           <Plus color={colors.brandUi} size={22} weight="bold" />
         </Pressable>
-      </View>
+      </BackHeader>
 
       <View className="flex-row gap-2 px-4 pb-3">
         {(["all", "public", "private"] as Filter[]).map((f) => (
@@ -280,21 +265,7 @@ export default function CommonplaceScreen() {
         onClose={() => setAddOpen(false)}
         contentContainerStyle={{ padding: 16, gap: 12 }}
         header={
-          <View className="flex-row items-center px-3 py-2">
-            <Pressable onPress={() => setAddOpen(false)} hitSlop={10} className="p-2">
-              <CaretLeft color={colors.textPrimary} size={22} />
-            </Pressable>
-            <Text
-              style={{
-                fontFamily: Fonts.displayBold,
-                fontSize: 18,
-                color: colors.textPrimary,
-                marginLeft: 4,
-                flex: 1,
-              }}
-            >
-              Save a passage
-            </Text>
+          <BackHeader title="Save a passage" onBack={() => setAddOpen(false)}>
             <Pressable
               onPress={() => void saveEntry()}
               disabled={!passage.trim()}
@@ -313,7 +284,7 @@ export default function CommonplaceScreen() {
                 Save
               </Text>
             </Pressable>
-          </View>
+          </BackHeader>
         }
       >
         <TextInput

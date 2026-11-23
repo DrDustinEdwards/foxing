@@ -7,13 +7,13 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
-  Image,
   Animated,
   Easing,
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { X as XIcon, ChatCircleDots } from "phosphor-react-native";
+import { Avatar } from "@/components/ui/avatar";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 
@@ -61,22 +61,20 @@ export function ClubPanelSheet({
   const members = (page.data?.members ?? []).filter((m) => m.status === "active");
   const loading = tab === "discussion" ? layers.isPending : page.isPending;
 
-  // Slide-up animation. Translate from off-screen to 0 when visible.
+  // Slide up from the bottom each time the panel opens. It unmounts at once on close.
   const slide = useMemo(() => new Animated.Value(panelHeight), [panelHeight]);
   useEffect(() => {
+    if (!visible) return;
+    slide.setValue(panelHeight);
     Animated.timing(slide, {
-      toValue: visible ? 0 : panelHeight,
+      toValue: 0,
       duration: 220,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
   }, [visible, panelHeight, slide]);
 
-  if (!visible) {
-    // Keep the panel mounted only when visible so the Animated value
-    // doesn't churn while the reader is uninvolved.
-    return null;
-  }
+  if (!visible) return null;
 
   return (
     <Animated.View
@@ -322,38 +320,13 @@ function MembersList({ members, online }: { members: W.ClubMemberItem[]; online:
     <ScrollView contentContainerStyle={{ padding: 12, paddingBottom: 24 }}>
       {members.map((m) => {
         const name = m.profile?.displayName ?? m.profile?.username ?? "Reader";
-        const initial = (name || "?")[0]?.toUpperCase() ?? "?";
         const here = online.has(m.userId);
         return (
           <View
             key={m.userId}
             className="flex-row items-center p-3 mb-2 rounded-2xl border bg-bg-surface-light dark:bg-bg-surface-dark border-border-subtle-light dark:border-border-subtle-dark"
           >
-            <View
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: 18,
-                overflow: "hidden",
-                backgroundColor: colors.brandSubtle,
-                alignItems: "center",
-                justifyContent: "center",
-                marginRight: 12,
-              }}
-            >
-              {m.profile?.avatarUrl ? (
-                <Image
-                  source={{ uri: m.profile.avatarUrl }}
-                  style={{ width: "100%", height: "100%" }}
-                />
-              ) : (
-                <Text
-                  style={{ fontFamily: Fonts.display, fontSize: 15, color: colors.brandSubtleText }}
-                >
-                  {initial}
-                </Text>
-              )}
-            </View>
+            <Avatar profile={m.profile} size={36} style={{ marginRight: 12 }} />
             <Text
               numberOfLines={1}
               style={{

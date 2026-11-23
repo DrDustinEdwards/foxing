@@ -15,12 +15,13 @@ import {
 import { KeyboardStickyView } from "react-native-keyboard-controller";
 import { Screen } from "@/components/ui/screen";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { CaretLeft, Sparkle, ChatCircleDots, PaperPlaneRight } from "phosphor-react-native";
+import { Sparkle, ChatCircleDots, PaperPlaneRight } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { ErrorScreen } from "@/components/ui/error-state";
 import { authClient } from "@/lib/api";
 import { PostCard } from "@/components/clubs/post-card";
+import { BackHeader } from "@/components/ui/back-header";
 
 // A club thread: GET /threads/:id, kept fresh by the club's live socket while you
 // are a member, so new posts appear without a reload.
@@ -116,10 +117,7 @@ export default function ThreadScreen() {
 
   return (
     <Screen>
-      <View className="flex-row items-center px-3 py-2">
-        <Pressable onPress={() => router.back()} hitSlop={10} className="p-2">
-          <CaretLeft color={colors.textPrimary} size={22} />
-        </Pressable>
+      <BackHeader>
         <View style={{ flex: 1, marginLeft: 4 }}>
           <View className="flex-row items-center gap-1">
             {thread.isAiStarter ? (
@@ -150,7 +148,7 @@ export default function ThreadScreen() {
             </Text>
           ) : null}
         </View>
-      </View>
+      </BackHeader>
 
       <ScrollView
         ref={scrollRef}

@@ -19,6 +19,8 @@ import {
 } from "phosphor-react-native";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { SectionLabel } from "@/components/ui/section-label";
+import { LockBadge } from "./floating-pill-parts";
 
 /** Companion tools that open as one answer sheet (the server's action names). */
 export type CompanionTool =
@@ -37,7 +39,6 @@ export type MenuAction =
   | "quote-card"
   | "my-clubs"
   | "listen"
-  | "go-to"
   | "sleep-timer";
 
 /** What each companion tool's sheet is called. */
@@ -194,7 +195,9 @@ export function MenuSheet({
             {showCompanion ? (
               <View style={{ paddingBottom: 4 }}>
                 <View style={{ paddingHorizontal: 12 }}>
-                  <SectionLabel label="This book" />
+                  <SectionLabel style={{ marginTop: 4, marginBottom: 8, paddingHorizontal: 4 }}>
+                    This book
+                  </SectionLabel>
                   {/* Prominent standalone Ask/Chat entry: opens the companion
                       in general mode (book + chapter context, no seed). */}
                   <Pressable
@@ -226,7 +229,9 @@ export function MenuSheet({
                     {locked ? <Lock color={colors.textOnBrand} size={16} weight="fill" /> : null}
                   </Pressable>
                   <Row items={BOOK_TOOLS} onSelect={handleSelect} locked={locked} />
-                  <SectionLabel label="This chapter" />
+                  <SectionLabel style={{ marginTop: 4, marginBottom: 8, paddingHorizontal: 4 }}>
+                    This chapter
+                  </SectionLabel>
                   <Row items={CHAPTER_TOOLS} onSelect={handleSelect} locked={locked} />
                 </View>
               </View>
@@ -286,7 +291,7 @@ function Row({ items, onSelect, locked }: RowProps) {
               }}
             >
               <item.Icon color={colors.brandUi} size={20} weight="regular" />
-              {isLocked ? <LockBadge colors={colors} /> : null}
+              {isLocked ? <LockBadge colors={colors} size={16} /> : null}
             </View>
             <Text
               numberOfLines={1}
@@ -302,47 +307,5 @@ function Row({ items, onSelect, locked }: RowProps) {
         );
       })}
     </View>
-  );
-}
-
-// Small lock badge for gated AI tiles (top-right of the icon).
-function LockBadge({ colors }: { colors: ReturnType<typeof useColors> }) {
-  return (
-    <View
-      style={{
-        position: "absolute",
-        top: -3,
-        right: -3,
-        width: 16,
-        height: 16,
-        borderRadius: 8,
-        backgroundColor: colors.bgElevated,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Lock color={colors.brandText} size={10} weight="fill" />
-    </View>
-  );
-}
-
-// Group heading inside the Companion hub ("This book" / "This chapter").
-function SectionLabel({ label }: { label: string }) {
-  const colors = useColors();
-  return (
-    <Text
-      style={{
-        fontFamily: Fonts.uiMedium,
-        fontSize: 11,
-        color: colors.textTertiary,
-        textTransform: "uppercase",
-        letterSpacing: 0.6,
-        marginTop: 4,
-        marginBottom: 8,
-        paddingHorizontal: 4,
-      }}
-    >
-      {label}
-    </Text>
   );
 }
