@@ -7,7 +7,6 @@ import {
 import type * as W from "@foxing/types";
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, Share, Modal } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as DocumentPicker from "expo-document-picker";
@@ -19,7 +18,6 @@ import { importCsv, type ImportResult, type ImportSource } from "@/lib/import";
 import { rescheduleAll } from "@/lib/local-notifications";
 import { getHapticsEnabled, setHapticsEnabled } from "@/lib/haptics";
 import {
-  APP_LANGUAGE_OPTIONS,
   DEFAULT_USER_PREFS,
   type UserPrefs,
   getCalibratedWpm,
@@ -29,6 +27,7 @@ import {
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { BackHeader } from "@/components/ui/back-header";
+import { Screen } from "@/components/ui/screen";
 import {
   LinkRow,
   MetaHeader,
@@ -48,9 +47,6 @@ const APP_VERSION = "1.0.0";
 // on the server through /me, the same ones the web settings page edits.
 const LOCAL_REMINDERS_KEY = "notification_prefs";
 const READING_DEFAULTS_KEY = "reading_defaults";
-const A11Y_HIGH_CONTRAST_KEY = "a11y_high_contrast";
-const A11Y_REDUCE_MOTION_KEY = "a11y_reduce_motion";
-const TTS_SPEED_KEY = "tts_speed";
 
 /** What lib/local-notifications schedules on the device. streakAtRisk follows the
  *  account's "streak" push switch, so one toggle governs streak nudges everywhere. */
@@ -68,19 +64,12 @@ const DEFAULT_LOCAL_REMINDERS: LocalReminders = {
   streakAtRisk: true,
 };
 
+// Only keepAwake is read (by the reader screen).
 interface ReadingDefaults {
-  font: "source-serif" | "georgia" | "opendyslexic" | "system-sans";
-  size: "S" | "M" | "L" | "XL";
-  theme: "default" | "sepia" | "dark" | "oled";
   keepAwake: boolean;
 }
 
-const DEFAULT_READING_DEFAULTS: ReadingDefaults = {
-  font: "source-serif",
-  size: "M",
-  theme: "default",
-  keepAwake: false,
-};
+const DEFAULT_READING_DEFAULTS: ReadingDefaults = { keepAwake: false };
 
 type Sheet = "email" | "delete" | null;
 
@@ -97,9 +86,6 @@ export default function SettingsScreen() {
   const [reminders, setReminders] = useState<LocalReminders>(DEFAULT_LOCAL_REMINDERS);
   const [userPrefs, setUserPrefsState] = useState<UserPrefs>(DEFAULT_USER_PREFS);
   const [calibratedWpm, setCalibratedWpmState] = useState<number | null>(null);
-  const [highContrast, setHighContrast] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
-  const [ttsSpeed, setTtsSpeed] = useState<number>(1.0);
   const [sheet, setSheet] = useState<Sheet>(null);
   const [importing, setImporting] = useState<{
     source: ImportSource;
@@ -116,12 +102,9 @@ export default function SettingsScreen() {
   useEffect(() => {
     let mounted = true;
     void (async () => {
-      const [local, defaults, hc, rm, tts] = await Promise.all([
+      const [local, defaults] = await Promise.all([
         AsyncStorage.getItem(LOCAL_REMINDERS_KEY),
         AsyncStorage.getItem(READING_DEFAULTS_KEY),
-        AsyncStorage.getItem(A11Y_HIGH_CONTRAST_KEY),
-        AsyncStorage.getItem(A11Y_REDUCE_MOTION_KEY),
-        AsyncStorage.getItem(TTS_SPEED_KEY),
       ]);
       if (!mounted) return;
       if (local) {
@@ -137,12 +120,6 @@ export default function SettingsScreen() {
         } catch {
           /* ignore */
         }
-      }
-      if (hc === "true") setHighContrast(true);
-      if (rm === "true") setReduceMotion(true);
-      if (tts) {
-        const parsed = parseFloat(tts);
-        if (Number.isFinite(parsed) && parsed > 0) setTtsSpeed(parsed);
       }
       setHapticsOn(await getHapticsEnabled());
       setUserPrefsState(await getUserPrefs());
@@ -243,50 +220,13 @@ export default function SettingsScreen() {
   const accountError = setVisibility.error ?? setPrefs.error;
 
   return (
-    <SafeAreaView className="flex-1 bg-bg-base-light dark:bg-bg-base-dark">
+    <Screen>
       <BackHeader title="Settings" />
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 48 }}>
         <MetaHeader>Reading</MetaHeader>
 
         <Section title="Defaults">
-          <SegmentedRow
-            label="Font"
-            value={readingDefaults.font}
-            options={[
-              { value: "source-serif", label: "Serif" },
-              { value: "georgia", label: "Georgia" },
-              { value: "opendyslexic", label: "OpenDys" },
-              { value: "system-sans", label: "Sans" },
-            ]}
-            onChange={(v) =>
-              void updateReadingDefaults({ ...readingDefaults, font: v as ReadingDefaults["font"] })
-            }
-          />
-          <SegmentedRow
-            label="Size"
-            value={readingDefaults.size}
-            options={(["S", "M", "L", "XL"] as const).map((v) => ({ value: v, label: v }))}
-            onChange={(v) =>
-              void updateReadingDefaults({ ...readingDefaults, size: v as ReadingDefaults["size"] })
-            }
-          />
-          <SegmentedRow
-            label="Theme"
-            value={readingDefaults.theme}
-            options={[
-              { value: "default", label: "Default" },
-              { value: "sepia", label: "Sepia" },
-              { value: "dark", label: "Dark" },
-              { value: "oled", label: "OLED" },
-            ]}
-            onChange={(v) =>
-              void updateReadingDefaults({
-                ...readingDefaults,
-                theme: v as ReadingDefaults["theme"],
-              })
-            }
-          />
           <ToggleRow
             label="Keep screen awake while reading"
             value={readingDefaults.keepAwake}
@@ -302,60 +242,9 @@ export default function SettingsScreen() {
           />
         </Section>
 
-        <Section title="Accessibility">
+        <Section title="Reading speed">
           <SegmentedRow
-            label="Text-to-speech speed"
-            value={String(ttsSpeed) as "0.75" | "1" | "1.25" | "1.5"}
-            options={[
-              { value: "0.75", label: "0.75×" },
-              { value: "1", label: "1×" },
-              { value: "1.25", label: "1.25×" },
-              { value: "1.5", label: "1.5×" },
-            ]}
-            onChange={(v) => {
-              const parsed = parseFloat(v);
-              if (!Number.isFinite(parsed) || parsed <= 0) return;
-              setTtsSpeed(parsed);
-              void AsyncStorage.setItem(TTS_SPEED_KEY, String(parsed));
-            }}
-          />
-          <ToggleRow
-            label="High contrast mode"
-            value={highContrast}
-            onChange={(v) => {
-              setHighContrast(v);
-              void AsyncStorage.setItem(A11Y_HIGH_CONTRAST_KEY, v ? "true" : "false");
-            }}
-          />
-          <ToggleRow
-            label="Reduce motion"
-            value={reduceMotion}
-            onChange={(v) => {
-              setReduceMotion(v);
-              void AsyncStorage.setItem(A11Y_REDUCE_MOTION_KEY, v ? "true" : "false");
-            }}
-          />
-        </Section>
-
-        <Section title="Language">
-          <SegmentedRow
-            label="App language"
-            value={userPrefs.appLanguage}
-            options={APP_LANGUAGE_OPTIONS}
-            onChange={(v) =>
-              void updateUserPrefs({ ...userPrefs, appLanguage: v as UserPrefs["appLanguage"] })
-            }
-          />
-          <SegmentedRow
-            label="AI explanation language"
-            value={userPrefs.aiLanguage}
-            options={APP_LANGUAGE_OPTIONS}
-            onChange={(v) =>
-              void updateUserPrefs({ ...userPrefs, aiLanguage: v as UserPrefs["aiLanguage"] })
-            }
-          />
-          <SegmentedRow
-            label="Reading speed unit"
+            label="Unit"
             value={userPrefs.speedUnit}
             options={[
               { value: "wpm", label: "Words/min" },
@@ -365,17 +254,9 @@ export default function SettingsScreen() {
               void updateUserPrefs({ ...userPrefs, speedUnit: v as UserPrefs["speedUnit"] })
             }
           />
-        </Section>
-
-        <Section title="Personalization">
-          <ToggleRow
-            label="Remember font and theme per book"
-            value={userPrefs.rememberPerBook}
-            onChange={(v) => void updateUserPrefs({ ...userPrefs, rememberPerBook: v })}
-          />
           <View className="px-3 py-3 border-t" style={{ borderTopColor: colors.borderSubtle }}>
             <Text style={{ fontFamily: Fonts.uiMedium, fontSize: 12, color: colors.textTertiary }}>
-              Reading speed
+              Your pace
             </Text>
             <Text
               style={{
@@ -618,6 +499,6 @@ export default function SettingsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-    </SafeAreaView>
+    </Screen>
   );
 }

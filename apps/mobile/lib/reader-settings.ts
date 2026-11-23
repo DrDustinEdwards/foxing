@@ -1,89 +1,26 @@
-// Reader settings: shape, persistence, and presets. Owned by the host
-// (React Native side); the Foliate bridge consumes them via applyTheme()
-// so changes here flow through one apply() call to the WebView.
+// Reader settings: shape, persistence, and presets, owned by the reader screen.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export type CanvasTheme = "default" | "sepia" | "dark" | "oled";
-export type FontFamilyKey = "foxing" | "classic" | "dyslexic" | "modern";
 export type FontSizeStep = "xs" | "s" | "m" | "l" | "xl" | "2xl" | "3xl";
-export type LineSpacingStep = "tight" | "normal" | "relaxed" | "spacious";
-export type LetterSpacingStep = "tight" | "normal" | "wide";
-export type MarginWidthStep = "narrow" | "normal" | "wide" | "extra-wide";
-export type ParagraphSpacingStep = "compact" | "normal" | "spacious";
-export type FlowMode = "paginated" | "scrolled";
-export type ColumnMode = "single" | "two";
-export type AlignmentMode = "justified" | "left";
-export type RulerStyle = "highlight" | "block-rest";
-export type RulerColor = "amber" | "cream" | "charcoal";
-export type PageAnim = "none" | "slide" | "fade";
 
+// Only what the Readium renderer applies (settingsToReadiumPreferences) or the
+// reader screen reads. A control whose value nothing reads does not belong here.
 export interface ReaderPrefs {
-  // Font tab
   fontSize: FontSizeStep;
-  fontFamily: FontFamilyKey;
-  bold: boolean;
-  lineSpacing: LineSpacingStep;
-  letterSpacing: LetterSpacingStep;
-  firstLineIndent: boolean;
-  dropCap: boolean;
-  // Layout tab
-  marginWidth: MarginWidthStep;
-  alignment: AlignmentMode;
-  paragraphSpacing: ParagraphSpacingStep;
-  flowMode: FlowMode;
-  columnMode: ColumnMode;
-  // Canvas tab
   canvasTheme: CanvasTheme;
-  rulerEnabled: boolean;
-  rulerColor: RulerColor;
-  rulerStyle: RulerStyle;
   popularHighlightsEnabled: boolean;
-  pageAnim: PageAnim;
-  // Phase D additions, canvas/comfort toggles
-  warmScreen: boolean;
-  focusMode: boolean;
-  autoScroll: boolean;
-  autoScrollWpm: number;
-  // Phase I, language learning
   targetLanguage: string;
 }
 
 export const DEFAULT_PREFS: ReaderPrefs = {
   fontSize: "m",
-  fontFamily: "foxing",
-  bold: false,
-  lineSpacing: "normal",
-  letterSpacing: "normal",
-  firstLineIndent: false,
-  dropCap: false,
-  marginWidth: "normal",
-  alignment: "justified",
-  paragraphSpacing: "normal",
-  flowMode: "paginated",
-  columnMode: "single",
   canvasTheme: "dark",
-  rulerEnabled: false,
-  rulerColor: "amber",
-  rulerStyle: "highlight",
   popularHighlightsEnabled: false,
-  pageAnim: "slide",
-  warmScreen: false,
-  focusMode: false,
-  autoScroll: false,
-  autoScrollWpm: 220,
   targetLanguage: "Spanish",
 };
 
-export const LETTER_SPACING_EM: Record<LetterSpacingStep, number> = {
-  tight: -0.01,
-  normal: 0,
-  wide: 0.05,
-};
-
-// Resolved units used by the Foliate WebView. Steps map to concrete
-// pixel/multiplier values here, the host stays in step-space so the UI
-// can present friendly labels.
 export const FONT_SIZE_PX: Record<FontSizeStep, number> = {
   xs: 14,
   s: 16,
@@ -92,33 +29,6 @@ export const FONT_SIZE_PX: Record<FontSizeStep, number> = {
   xl: 22,
   "2xl": 26,
   "3xl": 30,
-};
-export const LINE_SPACING_VAL: Record<LineSpacingStep, number> = {
-  tight: 1.4,
-  normal: 1.7,
-  relaxed: 1.9,
-  spacious: 2.2,
-};
-export const MARGIN_PX: Record<MarginWidthStep, number> = {
-  narrow: 8,
-  normal: 16,
-  wide: 28,
-  "extra-wide": 44,
-};
-export const PARAGRAPH_SPACING_EM: Record<ParagraphSpacingStep, number> = {
-  compact: 0.3,
-  normal: 0.7,
-  spacious: 1.2,
-};
-
-export const FONT_FAMILY_CSS: Record<FontFamilyKey, string> = {
-  foxing: '"Source Serif 4", "SourceSerif4_400Regular", Georgia, serif',
-  classic: "Georgia, serif",
-  // OpenDyslexic isn't bundled, fall through to system serif. The label
-  // is still shown in the picker so we can ship the font later without
-  // changing the picker UI.
-  dyslexic: 'OpenDyslexic, "Comic Sans MS", system-ui, sans-serif',
-  modern: 'system-ui, -apple-system, "DMSans_400Regular", sans-serif',
 };
 
 const STORAGE_PREFIX = "foxing.reader-prefs.";
@@ -164,13 +74,7 @@ export const PRESET_THEMES: SavedTheme[] = [
     id: "preset-compact",
     name: "Compact",
     isPreset: true,
-    prefs: {
-      ...DEFAULT_PREFS,
-      fontSize: "s",
-      lineSpacing: "tight",
-      marginWidth: "narrow",
-      paragraphSpacing: "compact",
-    },
+    prefs: { ...DEFAULT_PREFS, fontSize: "s" },
   },
   {
     id: "preset-standard",
@@ -182,25 +86,13 @@ export const PRESET_THEMES: SavedTheme[] = [
     id: "preset-large",
     name: "Large",
     isPreset: true,
-    prefs: {
-      ...DEFAULT_PREFS,
-      fontSize: "xl",
-      lineSpacing: "relaxed",
-      marginWidth: "wide",
-    },
+    prefs: { ...DEFAULT_PREFS, fontSize: "xl" },
   },
   {
     id: "preset-low-vision",
     name: "Low Vision",
     isPreset: true,
-    prefs: {
-      ...DEFAULT_PREFS,
-      fontSize: "3xl",
-      bold: true,
-      lineSpacing: "spacious",
-      marginWidth: "wide",
-      paragraphSpacing: "spacious",
-    },
+    prefs: { ...DEFAULT_PREFS, fontSize: "3xl" },
   },
 ];
 
