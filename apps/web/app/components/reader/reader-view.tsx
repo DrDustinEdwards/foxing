@@ -72,6 +72,9 @@ export function ReaderView(props: ReaderViewProps) {
   const engineRef = useRef<ReaderEngine | null>(null);
   const currentLocatorRef = useRef<Locator | null>(initialLocator);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The position waiting out the debounce, saved at once when the reader leaves.
+  const pendingSave = useRef<Locator | null>(null);
+  const persistRef = useRef<(loc: Locator) => void>(() => {});
   // Last position we actually persisted (seeded with the restored one), so we never
   // re-save an unchanged position.
   const lastSavedRef = useRef<Locator | null>(initialLocator);
@@ -196,22 +199,26 @@ export function ReaderView(props: ReaderViewProps) {
     engineRef.current?.applyPopular(popularSpecs, theme);
   }, [reapplyHighlights]);
 
+  const persistPosition = useCallback(
+    (loc: Locator) => {
+      pendingSave.current = null;
+      // Don't re-persist the position we already saved (the restore navigation
+      // re-emits it, which would flash "Saving..." on every reload for nothing).
+      if (samePosition(loc, lastSavedRef.current)) return;
+      lastSavedRef.current = loc;
+      saveFire({ bookId: book.id, locator: loc, progressPct: annotationPct(loc) ?? 0 });
+    },
+    [book.id, saveFire],
+  );
+  persistRef.current = persistPosition;
+
   const scheduleSave = useCallback(
     (loc: Locator) => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
-      saveTimer.current = setTimeout(() => {
-        // Don't re-persist the position we already saved (the restore navigation
-        // re-emits it, which would flash "Saving..." on every reload for nothing).
-        if (samePosition(loc, lastSavedRef.current)) return;
-        lastSavedRef.current = loc;
-        saveFire({
-          bookId: book.id,
-          locator: loc,
-          progressPct: annotationPct(loc) ?? 0,
-        });
-      }, PROGRESS_DEBOUNCE);
+      pendingSave.current = loc;
+      saveTimer.current = setTimeout(() => persistPosition(loc), PROGRESS_DEBOUNCE);
     },
-    [book.id, saveFire],
+    [persistPosition],
   );
 
   // Boot: load saved settings, build the engine, wire listeners. Mounts once per
@@ -323,6 +330,7 @@ export function ReaderView(props: ReaderViewProps) {
     return () => {
       destroyed = true;
       if (saveTimer.current) clearTimeout(saveTimer.current);
+      if (pendingSave.current) persistRef.current(pendingSave.current);
       void engineRef.current?.destroy();
       engineRef.current = null;
     };
