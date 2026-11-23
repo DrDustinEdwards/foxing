@@ -1,9 +1,7 @@
 // Local (device-scheduled) notifications via expo-notifications.
 //
-// expo-notifications is a native module, only available in the 1.0.1+
-// runtime build. We import it conditionally so the bundle still resolves
-// on 1.0.0 devices and gracefully no-ops every call. After the build is
-// installed, the imports succeed and scheduling lights up.
+// expo-notifications is required inside a try so a build without the native
+// module no-ops every call.
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -124,8 +122,8 @@ export async function rescheduleAll(): Promise<void> {
       await Notifications.scheduleNotificationAsync({
         identifier: STREAK_RISK_ID,
         content: {
-          title: "Don't break your streak",
-          body: "A few pages keeps it going.",
+          title: "Keep your streak going",
+          body: "A few pages today keeps it going.",
         },
         trigger: { hour: 20, minute: 0, repeats: true },
       });

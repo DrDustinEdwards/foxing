@@ -22,7 +22,7 @@ import type {
   ReaderRect,
   ReaderRef,
   ReaderSettings,
-} from "@/components/reader/foliate-reader-webview";
+} from "@/components/reader/reader-types";
 import { ReadiumReader } from "@/components/reader/readium-reader";
 import { PassageCommentSheet } from "@/components/reader/passage-comment-sheet";
 import { TypographySheet } from "@/components/reader/typography-sheet";
@@ -182,6 +182,7 @@ export default function Reader() {
   const [sleepRemainingMs, setSleepRemainingMs] = useState<number | null>(null);
   const sleepIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sleepEndAtRef = useRef<number | null>(null);
+  const sleepNavTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Position history, last 50 unique CFIs per book, persisted to AsyncStorage.
   // We hold the canonical copy in a ref so onLocation can mutate without
@@ -242,8 +243,7 @@ export default function Reader() {
   // call the latest version that closes over the current `book`.
   const saveProgressRef = useRef<() => void>(() => {});
 
-  // Design-token-aware highlight palette pushed into the WebView so the
-  // foliate annotation rects match what the FloatingPill swatches preview.
+  // Design-token-aware highlight palette, so highlights match the FloatingPill swatches.
   const palette = useMemo<Record<HighlightColor, string>>(() => highlightPalette(colors), [colors]);
 
   useEffect(() => {
@@ -547,7 +547,7 @@ export default function Reader() {
     setToast("Your place is saved.");
     // Brief delay so the toast registers before the reader unmounts and
     // the library tab paints over it.
-    setTimeout(() => {
+    sleepNavTimerRef.current = setTimeout(() => {
       router.replace("/(tabs)/library" as never);
     }, 1200);
   }, [router]);
@@ -582,9 +582,14 @@ export default function Reader() {
     [expireSleepTimer],
   );
 
-  // Clear the interval on unmount so the setInterval doesn't outlive the
-  // reader and try to update state on a stale tree.
-  useEffect(() => () => clearSleepInterval(), []);
+  // Clear the timers on unmount so they don't outlive the reader.
+  useEffect(
+    () => () => {
+      clearSleepInterval();
+      if (sleepNavTimerRef.current) clearTimeout(sleepNavTimerRef.current);
+    },
+    [],
+  );
 
   // ── Pill action handlers ────────────────────────────────────────────────
 
@@ -962,9 +967,7 @@ export default function Reader() {
 
       {/* BOTTOM CHROME BAR - Kindle-style: progress slider, chapter
           position, settings icon. Auto-hides with the top bar.
-          The slider is visual-only for now (filled portion = progress
-          fraction). Drag-to-jump needs a Readium goTo with totalProgression
-          which is a separate piece of work. */}
+          Releasing the slider jumps to that fraction of the book. */}
       {chrome ? (
         <SafeAreaView
           edges={["bottom"]}
@@ -1037,9 +1040,7 @@ export default function Reader() {
                 </Pressable>
               ) : null}
               {/* Chapter label on the left, a prominent percent read-out on
-                  the right so progress is legible at a glance. Streaks are
-                  intentionally not shown here: reading_streaks recording is an
-                  unverified device bug, so we surface progress only. */}
+                  the right so progress is legible at a glance. */}
               <Text
                 numberOfLines={1}
                 style={{
@@ -1113,8 +1114,7 @@ export default function Reader() {
                   </Text>
                 </View>
               ) : null}
-              {/* Companion button (Phase 1 stub). Opens the existing This
-                  book and chapter tools. */}
+              {/* Companion button: opens the This book and chapter tools. */}
               <Pressable
                 onPress={() => {
                   setMenuInitialView("companion");
@@ -1384,16 +1384,8 @@ export default function Reader() {
           await clearPositionHistory(book.id);
         }}
         onNavigateCfi={(cfi) => readerRef.current?.goTo(cfi)}
-        onNavigatePercent={(p) => {
-          // foliate-view doesn't expose a direct "go to percentage" API;
-          // for v1 we no-op with a toast so users know it's coming.
-          console.log("[reader] goTo percent (not yet wired):", p);
-          setToast("Jump-to-percent lands in the next reader build.");
-        }}
+        onNavigatePercent={(p) => readerRef.current?.jumpToProgress(p)}
         onNavigateHref={(href) => {
-          // The renderer accepts hrefs directly via goTo when CFI isn't
-          // available on a TOC entry. Falls back to logging if foliate
-          // doesn't recognize it.
           readerRef.current?.goTo(href);
         }}
         onClose={() => setGoToOpen(false)}

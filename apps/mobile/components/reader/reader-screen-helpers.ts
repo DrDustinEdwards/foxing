@@ -1,6 +1,6 @@
 import { type CanvasTheme, FONT_SIZE_PX, type ReaderPrefs } from "@/lib/reader-settings";
 import { Colors } from "@/constants/colors";
-import type { ReaderSettings } from "@/components/reader/foliate-reader-webview";
+import type { ReaderSettings } from "@/components/reader/reader-types";
 
 // Reading canvas modes are decoupled from the app's UI theme, they're
 // applied to the WebView body (and via setStyles to each chapter iframe).

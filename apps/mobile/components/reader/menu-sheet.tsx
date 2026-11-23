@@ -88,7 +88,7 @@ interface MenuItem {
   label: string;
 }
 
-// Phase 1 overflow: lean utility set. Listen relocated here from the top bar.
+// Overflow: lean utility set.
 const SECONDARY: MenuItem[] = [
   { key: "listen", Icon: SpeakerHigh, label: "Listen" },
   { key: "sleep-timer", Icon: Moon, label: "Sleep Timer" },

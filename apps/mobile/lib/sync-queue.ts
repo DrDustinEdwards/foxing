@@ -66,12 +66,24 @@ async function readQueue(): Promise<SyncOp[]> {
   }
 }
 
+// A failed write throws: the caller must know the op was not stored.
 async function writeQueue(ops: SyncOp[]): Promise<void> {
-  try {
-    await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(ops));
-  } catch (e) {
-    console.warn("[sync-queue] write failed:", e instanceof Error ? e.message : e);
-  }
+  await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(ops));
+}
+
+// Every read-modify-write of the stored queue runs one at a time, so an enqueue during a
+// flush cannot be overwritten by the flush's stale snapshot.
+let chain: Promise<unknown> = Promise.resolve();
+function exclusive<T>(fn: () => Promise<T>): Promise<T> {
+  const next = chain.then(fn, fn);
+  chain = next.catch(() => undefined);
+  return next;
+}
+
+// Drop every queued op. Called on sign-out and account deletion: the queue is device-wide,
+// so leftover ops would replay into the next account.
+export function clearQueue(): Promise<void> {
+  return exclusive(() => AsyncStorage.removeItem(QUEUE_KEY));
 }
 
 // Queue one offline write. Returns the op id (also the row primary key) so the caller can
@@ -89,9 +101,7 @@ export async function enqueue(input: {
     payload: input.verb === "delete" ? undefined : (input.payload ?? {}),
     clientTs: Date.now(),
   };
-  const cur = await readQueue();
-  cur.push(op);
-  await writeQueue(cur);
+  await exclusive(async () => writeQueue([...(await readQueue()), op]));
   return op.id;
 }
 
@@ -132,12 +142,15 @@ export async function flush(
       // will not become valid on retry), so we drop those too and rely on the server result.
       const answered = new Set(results.map((r) => r.id));
       pushed += results.filter((r) => r.status === "applied").length;
-      const rest = queue.filter((op) => !answered.has(op.id));
-      await writeQueue(rest);
+      // Re-read under the lock: ops enqueued during the request stay, a clear stays cleared.
+      const rest = await exclusive(async () => {
+        const fresh = (await readQueue()).filter((op) => !answered.has(op.id));
+        await writeQueue(fresh);
+        return fresh;
+      });
       // No forward progress (server answered for nothing in this batch): stop to avoid a
       // hot loop on a persistently failing head op.
-      if (rest.length === queue.length) break;
-      if (rest.length === 0) break;
+      if (results.length === 0 || rest.length === 0) break;
     }
     return { pushed, remaining: (await readQueue()).length };
   } finally {

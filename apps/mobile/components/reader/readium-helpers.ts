@@ -1,4 +1,4 @@
-import type { ReaderSettings } from "@/components/reader/foliate-reader-webview";
+import type { ReaderSettings } from "@/components/reader/reader-types";
 import type { Locator, Preferences } from "react-native-readium";
 
 // Soften a 6-digit hex color to an 8-digit one with ~20% alpha so the
@@ -10,9 +10,7 @@ export function toSoftTint(hex: string): string {
   return hex;
 }
 
-// Same regex the TtsBar uses to split chapter text into utterances. Keep
-// these two in sync so highlightSentence(index) lines up with the index
-// the bar reports.
+// Splits chapter text into utterances; TtsBar and highlightSentence share it so indexes line up.
 export function splitSentences(chapterText: string): string[] {
   const parts = (chapterText ?? "").replace(/\s+/g, " ").match(/[^.!?]+[.!?]+["')\]]*\s*/g) ?? [];
   return parts.map((s) => s.trim()).filter((s) => s.length > 0);
@@ -56,4 +54,9 @@ export function decodeLocator(cfi: string | undefined): Locator | undefined {
 
 export function encodeLocator(locator: Locator | Record<string, unknown>): string {
   return JSON.stringify(locator);
+}
+
+// Comments on one passage share this key: the chapter plus the first 200 characters of the passage text.
+export function locatorKey(locator: { href: string; text?: { highlight?: string } }): string {
+  return `${locator.href}|${(locator.text?.highlight ?? "").slice(0, 200)}`;
 }
