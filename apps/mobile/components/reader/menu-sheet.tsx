@@ -8,6 +8,7 @@ import {
   Student,
   Users,
   Books,
+  Highlighter,
   ImageSquare,
   Share as ShareIcon,
   Moon,
@@ -92,6 +93,7 @@ interface MenuItem {
 const SECONDARY: MenuItem[] = [
   { key: "listen", Icon: SpeakerHigh, label: "Listen" },
   { key: "sleep-timer", Icon: Moon, label: "Sleep Timer" },
+  { key: "highlights", Icon: Highlighter, label: "Highlights" },
   { key: "vocabulary", Icon: Books, label: "Vocabulary" },
   { key: "quote-card", Icon: ImageSquare, label: "Quote Card" },
   { key: "share", Icon: ShareIcon, label: "Share" },
