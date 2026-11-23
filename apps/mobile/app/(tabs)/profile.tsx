@@ -8,6 +8,7 @@ import { ErrorState } from "@/components/ui/error-state";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { authClient, queryClient } from "@/lib/api";
+import { clearQueue } from "@/lib/sync-queue";
 import { EditProfileSheet } from "@/components/profile/edit-profile-sheet";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { FavoritesStrip } from "@/components/profile/favorites-strip";
@@ -35,6 +36,7 @@ export default function ProfileScreen() {
   const anchorBookId = reading?.bookId ?? publicPage?.finishedBooks[0]?.bookId ?? null;
 
   const signOut = async () => {
+    await clearQueue();
     await authClient.signOut();
     queryClient.clear();
   };

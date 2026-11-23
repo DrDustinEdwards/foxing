@@ -7,6 +7,7 @@ import { Field, inputStyle } from "@/components/ui/form-field";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
 import { authClient, queryClient } from "@/lib/api";
+import { clearQueue } from "@/lib/sync-queue";
 
 // Account changes that go through Better Auth (email, linked Apple and Google accounts)
 // or /api/v1/account (deletion).
@@ -266,6 +267,7 @@ export function DeleteAccountSheet({
       owned.filter((c) => c.candidates.length > 0).map((c) => [c.clubId, successorOf(c)]),
     );
     if (!(await del.run({ successors }))) return;
+    await clearQueue();
     await authClient.signOut();
     queryClient.clear();
   };

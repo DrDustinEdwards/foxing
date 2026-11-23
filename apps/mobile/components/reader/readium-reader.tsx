@@ -29,7 +29,7 @@ import type {
   ReaderSettings,
   PassageCommentMarker,
   ReaderRect,
-} from "@/components/reader/foliate-reader-webview";
+} from "@/components/reader/reader-types";
 import { getChapterContent } from "@/lib/epub-content";
 import {
   decodeLocator,
@@ -39,34 +39,8 @@ import {
   toSoftTint,
 } from "./readium-helpers";
 
-// Foliate -> Readium reader migration. Implements the same ReaderRef
-// contract so app/reader/[id].tsx can switch renderers without changing
-// the surrounding screen wiring.
-//
-// What works:
-//   - render an EPUB from its URL
-//   - goForward / goBackward / goTo (Locator-based)
-//   - applySettings -> Readium Preferences (theme, font size, line height,
-//     family, justification, page margins)
-//   - addHighlight / removeHighlight as DecorationGroup updates
-//   - text selection: single-word -> onWordTapped with surrounding context,
-//     multi-word -> onPassageSelected; both route through the floating pill
-//   - tap-to-hide chrome via an RNGH Tap gesture with tight movement and
-//     duration thresholds so swipes / long-press pass through to Readium
-//   - location persistence with 1500ms debounce so we don't save progress
-//     on every page swipe (also fixes the historical CFI oscillation bug)
-//   - getChapterText / getChapterParagraphs by parsing the EPUB in-process
-//     via lib/epub-content (jszip + OPF parser + HTML stripper)
-//   - getToc populated from Readium's onPublicationReady event
-//   - highlightSentence(index) paints a text-based Locator decoration; the
-//     Readium navigator matches the text against the rendered page
-//
-// What's stubbed (Phase 3.x follow-up):
-//   - popular-highlight inline labels, passage-comment dots,
-//     bilingual paragraph translations: all require DecorationGroup rebuilds
-//     with custom DecorationStyle.html
-//   - Auto-scroll: Readium has no native API, would need to be simulated
-//     with timed goForward calls + scroll-mode preferences
+// Readium implementation of the ReaderRef contract in reader-types.ts.
+// Auto-scroll and columns are no-op stubs.
 
 const HIGHLIGHTS_GROUP = "highlights";
 const TTS_SENTENCE_GROUP = "tts-sentence";
@@ -96,22 +70,6 @@ interface ReadiumReaderProps {
   onTap?: () => void;
   onPassageCommentTapped?: (cfi: string | null, passageText: string) => void;
 }
-
-// Preferences mapping is intentionally minimal. EpubPreferences's init
-// block enforces range constraints (the original Foliate values crashed
-// the navigator). Only two fields are wired so far:
-//
-//   theme     - mapped from Foliate's background color to the Readium
-//               enum ('light' | 'dark' | 'sepia').
-//   fontSize  - Readium treats fontSize as a SCALE FACTOR, not a pixel
-//               value. We derive it as Foliate's px / 16 (approx
-//               default body size) and clamp to a conservative range
-//               of 0.5..2.0 so the EpubPreferences init's require()
-//               never fires.
-//
-// Every other Foliate setting (lineHeight, paragraphSpacing, marginPx,
-// letterSpacing, justify, etc.) stays unset until we map each one
-// against a verified Readium range.
 
 export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function ReadiumReader(
   {
@@ -143,6 +101,8 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   // rendered chapter -- it doesn't try every spine item -- so the href
   // we pass has to match where the rendered content lives.
   const [commentMarkers, setCommentMarkers] = useState<PassageCommentMarker[]>([]);
+  const commentMarkersRef = useRef<PassageCommentMarker[]>([]);
+  const highlightColorKeysRef = useRef(new Map<string, HighlightColor>());
   const [commentColor, setCommentColor] = useState<string>("#A33B20");
   const [popularMarkers, setPopularMarkers] = useState<
     Array<{ text?: string; cfi: string; count: number }>
@@ -233,23 +193,19 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   const passageCommentDecorations: Decoration[] = useMemo(() => {
     if (!currentHref || commentMarkers.length === 0) return [];
     const type = currentLocatorRef.current?.type ?? "application/xhtml+xml";
-    return commentMarkers
-      .filter((m) => m.passageText && m.passageText.trim().length > 0)
-      .map((m, i) => ({
-        // ID derived from a hash of the passage text + index keeps the
-        // ID stable across re-renders so Readium doesn't churn the
-        // decoration on every render.
-        id: `pc-${i}-${m.passageText.length}`,
-        locator: {
-          href: currentHref,
-          type,
-          text: { highlight: m.passageText.slice(0, 200) },
-        },
-        style: {
-          type: "underline",
-          tint: commentColor,
-        },
-      }));
+    return commentMarkers.map((m, i) => ({
+      // The index keys back to commentMarkersRef for the marker's cfi.
+      id: `pc-${i}-${m.passageText.length}`,
+      locator: {
+        href: currentHref,
+        type,
+        text: { highlight: m.passageText.slice(0, 200) },
+      },
+      style: {
+        type: "underline",
+        tint: commentColor,
+      },
+    }));
   }, [commentMarkers, commentColor, currentHref]);
 
   // Popular-highlight decorations: soft 'highlight' tint over the
@@ -301,7 +257,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     const serialized = encodeLocator(locator);
     if (serialized === lastSavedLocatorRef.current) return;
     lastSavedLocatorRef.current = serialized;
-    const progression = locator.locations?.progression ?? 0;
+    const progression = locator.locations?.totalProgression ?? 0;
     onLocationChangeRef.current?.(serialized, progression, undefined, locator.text?.highlight);
   }, []);
 
@@ -315,16 +271,17 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
 
   const handleLocationChange = useCallback(
     (locator: Locator) => {
+      const hrefChanged = currentLocatorRef.current?.href !== locator.href;
       currentLocatorRef.current = locator;
       // Mirror href into state so the passage-comment decoration memo
       // refreshes on chapter changes. Same-href returns prev so a
       // mid-chapter page turn doesn't re-render.
       setCurrentHref((prev) => (prev === locator.href ? prev : locator.href));
       fireReadyOnce();
-      // Chapter changed? Drop any stale sentence decoration so we don't
-      // paint a previous chapter's TTS highlight on the new page.
-      chapterSentencesRef.current = [];
-      setSentenceDecoration(null);
+      if (hrefChanged) {
+        chapterSentencesRef.current = [];
+        setSentenceDecoration(null);
+      }
       if (locator.title) {
         onChapterChangeRef.current?.({ title: locator.title, index: 0 });
       }
@@ -428,7 +385,8 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
     // to a sheet. Ignore activations from any other group.
     if (event.group !== PASSAGE_COMMENT_GROUP) return;
     const passageText = event.decoration.locator.text?.highlight ?? "";
-    onPassageCommentTappedRef.current?.(encodeLocator(event.decoration.locator), passageText);
+    const index = Number(event.decoration.id.split("-")[1]);
+    onPassageCommentTappedRef.current?.(commentMarkersRef.current[index]?.cfi ?? null, passageText);
   }, []);
 
   useImperativeHandle(
@@ -451,6 +409,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
       addHighlight: (cfi: string, color: HighlightColor) => {
         const locator = decodeLocator(cfi);
         if (!locator) return;
+        highlightColorKeysRef.current.set(cfi, color);
         setHighlights((prev) => {
           const next = prev.filter((d) => d.id !== cfi);
           return [
@@ -466,23 +425,21 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
           ];
         });
       },
-      removeHighlight: (cfi: string) => {
-        setHighlights((prev) => prev.filter((d) => d.id !== cfi));
-      },
       setHighlightColors: (map: Record<HighlightColor, string>) => {
         highlightPaletteRef.current = map;
         // Re-tint existing decorations
         setHighlights((prev) =>
           prev.map((d) => {
-            const colorKey = (Object.entries(map).find(([, hex]) => hex === d.style.tint)?.[0] ??
-              null) as HighlightColor | null;
+            const colorKey = highlightColorKeysRef.current.get(d.id);
             if (!colorKey) return d;
             return { ...d, style: { ...d.style, tint: map[colorKey] } };
           }),
         );
       },
       setPassageComments: (comments: PassageCommentMarker[], colorHex?: string) => {
-        setCommentMarkers(comments);
+        const valid = comments.filter((m) => m.passageText.trim().length > 0);
+        commentMarkersRef.current = valid;
+        setCommentMarkers(valid);
         if (colorHex) setCommentColor(colorHex);
       },
       setPopularHighlights: (
@@ -512,12 +469,6 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
         const { text } = await getChapterContent(epubUrl, href);
         chapterSentencesRef.current = splitSentences(text);
         return text;
-      },
-      getChapterParagraphs: async () => {
-        const href = currentLocatorRef.current?.href;
-        if (!href) return [];
-        const { paragraphs } = await getChapterContent(epubUrl, href);
-        return paragraphs;
       },
       getToc: async () => tocRef.current,
       jumpToProgress: (fraction: number) => {
@@ -622,7 +573,7 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   // Pass a non-empty selectionActions array so EpubReaderFragment
   // installs its custom ActionMode.Callback instead of falling back to
   // the WebView's default Copy / Translate / Select all / Share menu.
-  // Our patch in patches/react-native-readium+5.0.0-rc.17.patch makes
+  // Our patch in scripts/patch-readium.mjs makes
   // that callback's onCreateActionMode return false so Android never
   // shows the toolbar; the selection itself still happens and our
   // onSelectionChange-driven floating pill is the user-facing surface.
@@ -666,6 +617,4 @@ export const ReadiumReader = forwardRef<ReaderRef, ReadiumReaderProps>(function 
   );
 });
 
-// Bind unused props to silence ESLint when the feature-flagged migration
-// path isn't fully exercised yet.
 ReadiumReader.displayName = "ReadiumReader";

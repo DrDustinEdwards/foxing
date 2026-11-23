@@ -87,6 +87,8 @@ export async function findCatalogBook(
     norm(author ?? "")
       .split(" ")
       .pop() ?? "";
+  // A title with no a-z0-9 (non-Latin, punctuation) would match any book by that surname.
+  if (!title) return null;
   const page = await api.get<W.SearchPage>(
     `/search?q=${encodeURIComponent(`${title} ${surname}`.trim())}`,
   );

@@ -5,6 +5,7 @@ import { Play, Pause, SkipBack, SkipForward, X as XIcon, Moon } from "phosphor-r
 import * as Speech from "expo-speech";
 import { useColors } from "@/constants/colors";
 import { Fonts } from "@/constants/fonts";
+import { splitSentences } from "./readium-helpers";
 
 const SPEED_OPTIONS = [0.75, 1.0, 1.25, 1.5, 2.0] as const;
 const SLEEP_TIMERS = [15, 30, 45, 60] as const;
@@ -29,11 +30,7 @@ export function TtsBar({ visible, chapterText, onCurrentSentence, onClose }: Tts
 
   const sleepTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Sentence split, rough but workable. Splits on . ! ? followed by space or end.
-  const sentences = useMemo(() => {
-    const parts = (chapterText ?? "").replace(/\s+/g, " ").match(/[^.!?]+[.!?]+["')\]]*\s*/g) ?? [];
-    return parts.map((s) => s.trim()).filter((s) => s.length > 0);
-  }, [chapterText]);
+  const sentences = useMemo(() => splitSentences(chapterText), [chapterText]);
 
   const stop = useCallback(() => {
     try {
